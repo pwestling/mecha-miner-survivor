@@ -1,0 +1,16 @@
+weapon_id,weapon,damage_stat,damage_base,damage_increment,stat_2,stat_2_base,stat_2_increment,stat_3,stat_3_base,stat_3_increment,activation_model,burst_10_dps,sustained_30_dps,favorable_horde_dps,fixed_properties
+W-AB,Rail Lance,Damage,96,9.6,Beam width,0.60M,0.06M,Range,12M,1.2M,96 damage every 3.0 s,38.4,32.0,128,"30M/s projectile; pierces four targets"
+W-AC,Cluster Mortar,Damage,128,12.8,Blast radius,2.40M,0.20M,Attack rate,0.250/s,0.025/s,128 damage every 4.0 s,38.4,32.0,160,"12M targeting range; 1.2 s impact delay"
+W-AD,Gravity Projector,Field damage,36/s,3.6/s,Field radius,2.50M,0.20M,Field duration,1.50s,0.15s,36/s for 1.5 s every 2.5 s,21.6,21.6,173,"10M targeting range; 2M/s inward pull"
+W-AE,Attack Drones,Shot damage,8,0.8,Attack rate,1.333/s,0.133/s,Operational range,8M,0.8M,Three drones dealing 8 every 0.75 s,32.0,32.0,32,"Three permanent drones; 6M/s repositioning speed"
+W-AF,Tracking Laser,Base damage rate,18/s,1.8/s,Range,9M,0.9M,Focus gain,20 percentage points/s,2 percentage points/s,18/s focusing linearly to 36/s,31.5,36.0,36,"Focus multiplier 1x to 2x; resets on target loss"
+W-BC,Pulse Repeater,Damage,12,1.2,Attack rate,2.667/s,0.267/s,Range,8M,0.8M,12 damage every 0.375 s,32.4,32.0,32,"16M/s projectile; 0.25M hit push"
+W-BD,Mine Layer,Damage,27,2.7,Blast radius,1.80M,0.15M,Parent capacity,6,1,One mine per base-travel second,24.3,27.0,135,"0.5 s arm; 18 s life"
+W-BE,Sentry Pod,Shot damage,8,0.8,Attack rate,1.400/s,0.140/s,Range,7M,0.7M,Up to three pods dealing 8 every 0.714 s,15.7,33.6,33.6,"First pod immediate; then one every 6 s; 24 s life; maximum three active; oldest replaced at cap"
+W-BF,Orbital Cutters,Contact damage,8,0.8,Cutter radius,0.40M,0.04M,Orbit speed,0.500 rev/s,0.050 rev/s,Four cutters dealing 8 per 1.0 s contact cycle,32.0,32.0,128,"2.2M orbit radius; per-cutter/per-enemy repeat interval"
+W-CD,Arc Emitter,Arc damage,16,1.6,Attack rate,2.000/s,0.200/s,Chain range,3M,0.3M,16 damage every 0.5 s to up to five targets,32.0,32.0,160,"8M initial acquisition range; maximum five total targets"
+W-CE,Reactor Pulse,Pulse damage,27,2.7,Pulse radius,3M,0.25M,Pulse rate,0.667/s,0.067/s,27 damage every 1.5 s,18.9,18.0,180,Damages every valid target in radius
+W-CF,Wake Projector,Segment damage,18/s,1.8/s,Wake width,1.20M,0.10M,Segment duration,5.0s,0.5s,18/s per segment with two-segment overlap cap,34.2,36.0,144,"Segment every 0.25 base-travel seconds; two-segment target overlap cap"
+W-DE,Scatter Array,Pellet damage,9,0.9,Attack rate,1.000/s,0.100/s,Range,5M,0.5M,Five pellets dealing 9 every 1.0 s,45.0,45.0,45,"60 degree cone; 18M/s projectile"
+W-DF,Ram Field,Contact damage,16,1.6,Ram width,1.50M,0.12M,Knockback,0.60M,0.06M,16 per target every 0.5 s,32.0,32.0,128,"1.2M forward reach; per-target repeat interval"
+W-EF,Missile Rack,Missile damage,26,2.6,Blast radius,1M,0.1M,Salvo rate,0.333/s,0.033/s,Four missiles dealing 26 every 3.0 s,41.6,34.7,69,"12M acquire range; 8M/s speed; 5 s life; 180 degrees/s turn rate"

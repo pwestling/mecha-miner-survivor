@@ -1,0 +1,52 @@
+category,key,value,unit,notes
+player,maximum_hull,100,Hull,Shared fresh baseline before modifiers
+player,starting_hull,100,Hull,Starts at current maximum
+player,armor,0,Hull per hit,Subtract after outgoing damage modifiers and rounding
+player,passive_recovery,0,Hull/s,Requires an explicit source
+player,revival_charges,0,charges,Requires an explicit source
+player,base_movement_speed,3.0,M/s,One base-travel second equals 3.0M
+player,collision_diameter,1.0,M,Circular collision and hurt footprint
+damage,same_enemy_contact_interval,0.75,s,Cooldown persists through brief separation
+damage,global_contact_grace,0.20,s,Blocks contact only
+damage,universal_post_hit_invulnerability,0,s,None in the shared baseline
+damage,largest_initial_standard_hit,46,Hull,Asterite-resonant Skybreaker contact after rounding
+damage,two_hit_survival_floor,8,Hull,100 minus two 46-Hull hits
+enemy,riftjaw_charge_speed,5.40,M/s,180 percent of base mech speed
+enemy,riftjaw_charge_damage,27,Hull,33 under Asterite after rounding
+enemy,needler_projectile_speed,2.25,M/s,75 percent of base mech speed
+enemy,needler_projectile_damage,14,Hull,17 under Cinderglass after rounding
+enemy,prism_projectile_speed,2.25,M/s,75 percent of base mech speed
+enemy,prism_projectile_damage,18,Hull,22 under Cinderglass after rounding
+enemy,skybreaker_landing_damage,35,Hull,42 under Asterite
+recovery,health_pack_repair,25,Hull,Immediate and no overheal
+recovery,health_pack_pickup_radius,0.25,M,Collection at 0.75M center distance for base mech
+recovery,target_packs_per_successful_run_min,4,packs,Fresh-account natural-play capture target
+recovery,target_packs_per_successful_run_max,8,packs,Fresh-account natural-play capture target
+rock,hull,100,Hull,Zero Armor
+rock,damage_footprint_diameter,0.80,M,Non-solid to movement but collides with weapon hits
+rock,spawn_distance_min,18,M,Six base-travel seconds
+rock,spawn_distance_max,45,M,Fifteen base-travel seconds
+rock,visible_margin,2,M,Must also be beyond current camera rectangle
+rock,health_pack_drop_chance,0.20,probability,Independent fixed roll
+rock,target_destruction_rate_min,0.75,rocks/min,Fresh-account purposeful-exploration capture target
+rock,target_destruction_rate_max,1.25,rocks/min,Fresh-account purposeful-exploration capture target
+rock,drought_check_destroyed_rocks,11,rocks,No-drop probability is below 10 percent
+control,timed_effect_minimum,0.05,s,Minimum visible positive resolved duration
+control,ordinary_hard_control_immunity,0.25,s,Starts after hard control ends
+control,elite_hard_control_immunity,0.75,s,Starts after hard control ends
+control,boss_hard_control_immunity,1.50,s,Starts after hard control ends
+control,driftmetal_post_resistance_multiplier,0.80,multiplier,Applies to displacement magnitude and timed-control duration
+difficulty,reach_riftjaw_min,0.85,probability,Understands controls and has no PowerUps
+difficulty,reach_riftjaw_max,0.95,probability,Understands controls and has no PowerUps
+difficulty,reach_brood_min,0.70,probability,Understands controls and has no PowerUps
+difficulty,reach_brood_max,0.85,probability,Understands controls and has no PowerUps
+difficulty,reach_prism_min,0.55,probability,Understands controls and has no PowerUps
+difficulty,reach_prism_max,0.75,probability,Understands controls and has no PowerUps
+difficulty,reach_skybreaker_min,0.40,probability,Understands controls and has no PowerUps
+difficulty,reach_skybreaker_max,0.65,probability,Understands controls and has no PowerUps
+difficulty,fresh_extraction_min,0.30,probability,Understands controls and has no PowerUps
+difficulty,fresh_extraction_max,0.50,probability,Understands controls and has no PowerUps
+difficulty,experienced_fresh_extraction_min,0.65,probability,Experienced player intentionally using a fresh account
+difficulty,experienced_fresh_extraction_max,0.85,probability,Experienced player intentionally using a fresh account
+difficulty,max_power_extraction_min,0.85,probability,Experienced player with maximum PowerUps
+difficulty,max_power_extraction_max,0.97,probability,Experienced player with maximum PowerUps

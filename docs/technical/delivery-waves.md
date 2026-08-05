@@ -1,0 +1,531 @@
+---
+doc_id: TDD-DELIVERY-WAVES
+title: Parallel Delivery Waves and Stream Ownership
+status: active
+authoritative: false
+---
+
+# Parallel Delivery Waves and Stream Ownership
+
+> **Non-normative coordination material.** This document adds no requirements and
+> overrides nothing. It carves the already-accepted work packages into
+> self-contained streams so that parallel agent sessions in separate threads can
+> pick up work without colliding on files or contracts.
+>
+> The normative decomposition remains
+> [Implementation Plan for AI Agents](./110-implementation-plan-for-ai-agents.md).
+> Every package ID, deliverable, dependency, and completion gate below is quoted
+> from doc 110; where this document and doc 110 differ, **doc 110 controls and
+> this document is wrong and must be corrected**. Ownership, boundaries, and
+> contract IDs come from
+> [Component, Contract, and Schema Registry](./115-component-contract-and-schema-registry.md).
+> Decision authority, evidence, and escalation come from
+> [Autonomous Agent Execution Protocol](./114-autonomous-agent-execution-protocol.md).
+>
+> Nothing here relaxes the milestone gates. In particular doc 110's M0 rule still
+> holds: **"No one creates gameplay systems during M0."**
+
+## Integration ownership
+
+Doc 114 § Work states and integration:
+
+> For parallel work, one integration owner controls shared project/solution files,
+> generated registries, and contract changes for that wave. Consumer agents return
+> focused changes; the integration owner resolves cross-task conflicts according to
+> ownership rather than merging both behaviors.
+
+**This session is the integration owner.** It landed `FND-001` and owns the shared
+surface for wave 0 and the wave boundaries after it.
+
+### Integration-owner-only files
+
+A consumer stream must not edit any of these. It **requests** the change from the
+integration owner, which lands it as its own change with its own evidence, then
+the consumer rebases.
+
+| Shared surface | Why the integration owner holds it |
+| --- | --- |
+| `MechaMiner.sln` | every stream would otherwise add projects concurrently and conflict on one file |
+| `Directory.Build.props`, `Directory.Build.targets` | repository-wide compiler, analyzer, nullable, warnings-as-errors, and determinism policy |
+| `Directory.Packages.props`, `NuGet.config`, every `packages.lock.json` | exact locked dependency graph; doc 100 § Dependency policy requires the recorded dependency request before a package appears |
+| `global.json` | pinned .NET SDK |
+| `.editorconfig` | formatting and naming policy |
+| `game/project.godot` | one engine configuration file that every presentation and UI stream would otherwise touch |
+| `game/MechaMiner.Game.csproj`, every other `*.csproj` | project reference edges are the architecture boundary of doc 115 |
+| generated registries and any generated artifact under `generated/` | doc 110: "Generated files are changed through their generator" |
+| `tests/verification/*.json` for a package a stream does not own | `VER-*` IDs are never renumbered or reused |
+| `docs/technical/**` normative documents | doc 114 § Specification maintenance autonomy still applies for a genuine contract correction, but a shared-contract edit is coordinated, "never an incidental edit hidden in a consumer task" (doc 110) |
+| `build/` scripts shared across streams (`bootstrap-*`, `verify-*`, and, once it exists, `build.sh` / `build.ps1`) | one workflow entrypoint; AGENTS.md: "Do not create competing workflow entrypoints" |
+
+Adding a top-level ownership directory is always an integration-owner change:
+doc 100 § Repository structure requires the registry and the architecture tests to
+be updated in the same task.
+
+## Rules every stream follows
+
+1. **Write the verification registry first.** Add the stream's
+   `tests/verification/<work-package-id>.json` entries **before** implementing, per
+   doc 91 § Verification registry. Entries are never renumbered; retired ones keep a
+   tombstone and successor. At least one non-compilation verification per
+   implementation task.
+2. **Emit evidence.** Every task produces a validating `SCH-OBS-003` summary at
+   `artifacts/evidence/<task-id>/<build-id>/evidence.json` (doc 114 § Required
+   evidence bundle). Until `FND-010` lands the canonical emitter, produce the same
+   field set by hand and record its path and checksum in the handoff. Compilation
+   alone is never completion.
+3. **One PR per task or tight task group.** Small, reviewable, and independently
+   rerunnable from a clean checkout.
+4. **Never edit another stream's owned scope.** Return a focused change and request
+   the cross-scope edit.
+5. **Never start a consumer against a contract that is not Done.** Doc 114: only
+   Done dependencies satisfy downstream prerequisites, and "Do not start a consumer
+   against a guessed future contract merely to increase parallelism." A stream may
+   do read-only analysis while it waits.
+6. **Leave the repository buildable** and the stream's own tests passing at every
+   merge.
+7. **Fix the smallest owning layer.** Do not compensate in an unrelated layer, and
+   do not disable a gate, loosen a tolerance, or accept a golden to go green
+   (doc 114 § Failure and retry policy).
+
+### Branch and PR convention
+
+The accepted documents impose no branch naming. **Local choice for this program,
+not a requirement:**
+
+- one branch per stream, named `claude/<stream-id>-<work-package>` - for example
+  `claude/w1-sim-SIM-003`, `claude/w2-cat-DAT-007`;
+- small PRs, one task or one tight task group each;
+- on conflict the integration owner rebases consumers rather than merging both
+  behaviors, which is the `RSK-017` first response in
+  [Technical Risk Register](./113-technical-risk-register.md): "freeze consumer
+  work; land one owner/contract and rebase consumers."
+
+## Wave overview
+
+| Wave | Theme | Parallelism | Starts when |
+| --- | --- | --- | --- |
+| 0 | Foundation and toolchain | integration owner only, sequential | now |
+| 1 | Pure contracts | 2 streams | `FND-003` test harness is Done |
+| 2 | Cores on top of contracts | 4-5 streams | the wave 1 contract it consumes is Done |
+| 3 | Gameplay vertical slice | many streams | wave 2 cores are Done |
+| 4 | Catalog breadth | widest | the wave 3 primitive it extends is Done |
+| 5 | M4 integration, then M5 breadth, then M6/M7 | integration owner, then breadth | wave 4 |
+
+---
+
+## Wave 0 - foundation
+
+**Integration owner only. Sequential. Blocks every other wave.** Owned scope is
+the whole shared surface listed above, so no consumer stream can run concurrently
+with it.
+
+### Step 1
+
+| Package | Deliverable (doc 110) | Depends on | Completion gate | Owned file scope |
+| --- | --- | --- | --- | --- |
+| `FND-001` | Pin Godot/.NET versions, solution/project skeleton, repository layout, editor/analyzer settings | none | clean restore/build and version report | `MechaMiner.sln`, `global.json`, `Directory.Build.*`, `Directory.Packages.props`, `NuGet.config`, `.editorconfig`, `.gitignore`, every `*.csproj`, `game/project.godot`, `game/scenes/Boot.tscn`, `game/BootCompositionRoot.cs`, `build/bootstrap-linux.sh`, `build/verify-architecture.sh`, `build/verify-policies.sh`, `build/policy-fixtures/`, `tests/verification/FND-001.json` |
+
+Done in this PR (`TASK-FND-001-001`, `TASK-FND-001-002`, `TASK-FND-001-003`).
+
+### Step 2
+
+| Package | Deliverable | Depends on | Completion gate | Owned file scope |
+| --- | --- | --- | --- | --- |
+| `FND-002` | Root wrapper/typed command host, doctor/bootstrap/format/build base verbs, and stable registration surface for later content/import/run/export owners | `FND-001` | implemented verbs run noninteractively and unavailable owner verbs return a typed nonzero status until their package lands | `build.sh`, `build.ps1`, `src/MechaMiner.Tools/` command host, `build/` |
+| `FND-003` | Pure NUnit test projects and Godot integration-test harness | `FND-001` | sample pure and engine tests pass headlessly | `tests/MechaMiner.*.Tests/` shared fixture support, `tests/MechaMiner.Game.Tests/`, engine test scenes under `game/` |
+
+`FND-002` and `FND-003` are independent of each other and may be two sessions, but
+both are integration-owner scope because they touch the shared workflow entrypoint
+and every test project. `FND-003` is the gate that opens wave 1.
+
+### Step 3
+
+| Package | Deliverable | Depends on | Completion gate | Owned file scope |
+| --- | --- | --- | --- | --- |
+| `FND-004` | Build identity/version service and generated build manifest | `FND-001` | identity visible in tool/game test and diagnostics | build identity owner, `generated/` build manifest, `SCH-BLD-001` |
+| `FND-007` | Structured logging, stable diagnostic codes, redaction, rotating local files | `FND-004` | schema/redaction/rate-limit tests pass | diagnostics logging owner (`CMP-OBS-001`), `CTR-OBS-001` |
+| `FND-008` | Profiler marker/metric registry and benchmark report format | `FND-004` | sample CPU/count/allocation report produced | diagnostics metric owner, `SCH-OBS-002` |
+| `FND-009` | Architecture dependency tests plus complete documentation/requirement/component/contract/schema/verification/work ID registry validator | `FND-001`, `FND-003` | forbidden project edges and missing/duplicate/dangling registry IDs/links fail fixtures | architecture tests, registry/document validation tooling, `SCH-QUA-001` validator |
+
+Doc 110 makes `FND-007` and `FND-008` depend on `FND-004`, so inside this step
+`FND-004` lands first and then `FND-007`/`FND-008` can run in parallel with
+`FND-009`. `FND-009` replaces `build/verify-architecture.sh`'s reference-graph
+assertions with real architecture tests (`TASK-FND-009-001`) and takes over
+validating `tests/verification/*.json` (`TASK-FND-009-002`).
+
+### Step 4
+
+| Package | Deliverable | Depends on | Completion gate | Owned file scope |
+| --- | --- | --- | --- | --- |
+| `FND-005` | Initial CI fast suite with locked restore and artifact summaries | `FND-002`, `FND-003` | pull-request-equivalent job passes cleanly | CI configuration only |
+| `FND-006` | Windows/Linux Godot export presets and local-platform adapter | `FND-001`, `FND-002` | packaged empty builds launch without Steam | `game/export_presets.cfg`, platform boundary |
+| `FND-010` | Task evidence schema, deterministic emitter/validator, and CI artifact integration | `FND-004`, `FND-005`, `FND-007`, `FND-009` | complete/incomplete/redaction/reproducibility fixtures and sample retained artifact | evidence tooling/tests, `SCH-OBS-003` |
+
+`FND-006` creates exactly the four preset names doc 100 § Godot import and export
+requires: `Windows Development x86-64`, `Windows Release x86-64`,
+`Linux/Steam Deck Development x86-64`, `Linux/Steam Deck Release x86-64`.
+
+Then the M0 close gate, `TASK-FND-005-002`: "run and close the complete M0
+clean-checkout/import/launch/export gate", hard dependency "all prior M0 tasks",
+owned scope "integration configuration/evidence only", close evidence "M0 evidence
+bundle with no unexplained warning or manual repair".
+
+---
+
+## Wave 1 - pure contracts
+
+**Starts when `FND-003` is Done.** Two streams, no file overlap. These are the
+contract-first packages that every later wave consumes, so nothing downstream may
+begin against them until each package is Done.
+
+### `W1-DAT` - content contracts
+
+| Package | Deliverable | Depends on | Completion gate |
+| --- | --- | --- | --- |
+| `DAT-001` | Common definition envelope, stable-ID rules, schema infrastructure, diagnostic format | `FND-001`, `FND-003` | invalid/valid fixture suite |
+| `DAT-002` | Resource, mech, enemy, boss, mining, encounter, map schemas and typed models | `DAT-001` | accepted initial definitions parse/validate |
+| `DAT-003` | Weapon, branch, utility, relic, PowerUp, unlock schemas and typed models | `DAT-001` | graph/cardinality/price validators pass |
+| `DAT-004` | Behavior/target/formula/modifier registry manifest and registration validator | `DAT-002`, `DAT-003` | unknown/duplicate/mismatched registrations fail |
+| `DAT-005` | Cross-reference, semantic, analytical, localization, asset, and source-trace validators | `DAT-002`, `DAT-003` | complete invalid-fixture coverage |
+| `DAT-006` | Canonical bundle compiler, hash, normalized defaults, deterministic ordering | `DAT-005` | source-order permutation yields identical hash |
+
+- **Owned file scope:** `src/MechaMiner.Content/`, `tests/MechaMiner.Content.Tests/`,
+  `content/schemas/`. Compiler/report entry points it needs inside
+  `src/MechaMiner.Tools/` are requested from the integration owner while `FND-002`
+  owns the command host.
+- **Contracts it owns:** `CMP-CNT-001`, `CMP-CNT-002`; `CTR-CNT-001`,
+  `CTR-CNT-002`; `SCH-CNT-001`, `SCH-CNT-002`, `SCH-CNT-003`, `SCH-CNT-004`.
+- **Requirements:** `TR-DAT-001` through `TR-DAT-006`, applicable `TR-AST-*`.
+- `TASK-DAT-001-001` is already decomposed in doc 110's M0 queue: "establish strict
+  JSON codec, schema diagnostics, common envelope, and valid/invalid sample
+  definition", owned scope "Content project and content schema/sample fixture only".
+- Do not transcribe catalogs here. Content breadth is `W2-CAT`.
+
+### `W1-SIM` - simulation contracts
+
+| Package | Deliverable | Depends on | Completion gate |
+| --- | --- | --- | --- |
+| `SIM-001` | Fixed 60 Hz host, accumulator, catch-up limit, clock domains | `FND-003` | clock/edge/final-boundary fixtures |
+| `SIM-002` | Pause-reason set, lifecycle, focus/suspend hooks | `SIM-001` | overlapping pause matrix |
+| `SIM-003` | Generational entity IDs and packed category stores | `FND-003` | reuse/stale/capacity/property tests |
+| `SIM-004` | Command admission, sequence/idempotency, paused transaction shell | `SIM-001`, `SIM-003` | command/atomic rejection fixtures |
+| `SIM-005` | Exact PCG32 implementation, SplitMix64 child derivation, registered stream families, recovery state, scripted test sources | `FND-003` | golden vectors, bounded conversion, stable sequences, serialization, and independence tests |
+| `SIM-006` | Domain/presentation event buffers, provenance, stable ordering | `SIM-003` | simultaneous/order/event-loss fixtures |
+| `SIM-007` | Immutable/double-buffered presentation snapshot and view-model primitives | `SIM-003`, `SIM-006` | reconstruction/no-mutation tests |
+
+- **Owned file scope:** `src/MechaMiner.Simulation/` runtime, clock, entity,
+  command, event, snapshot, and RNG subtrees, plus their mirrors in
+  `tests/MechaMiner.Simulation.Tests/`. Geometry inside
+  `src/MechaMiner.Simulation/` belongs to `W2-GEO`; the two streams must agree the
+  subdirectory split with the integration owner before both are active.
+- **Contracts it owns:** `CMP-RUN-001`, `CMP-SIM-001`, `CMP-SIM-002`,
+  `CMP-SIM-003`; `CTR-RUN-001`, `CTR-RUN-002`, `CTR-RUN-003`, `CTR-SIM-001`,
+  `CTR-SIM-002`, `CTR-SIM-003`; `SCH-RUN-001`.
+- **Requirements:** `TR-RUN-001` through `TR-RUN-010`, `TR-SIM-001`, `TR-SIM-002`,
+  `TR-SIM-005`, `TR-SIM-006`, `TR-CTR-002`, `TR-CTR-004`.
+
+### The wave 1/2 boundary
+
+Two SIM packages are deliberately outside `W1-SIM`:
+
+| Package | Deliverable | Depends on | Why it is a boundary item |
+| --- | --- | --- | --- |
+| `SIM-008` | Modifier graph, versions, flat/additive/branch/relic layers, snapshot/live fields | `DAT-003`, `SIM-003` | needs `W1-DAT`'s weapon/branch/relic models, so it cannot land inside `W1-SIM` |
+| `SIM-009` | Headless simulation runner, step/advance/script/checksum/report | `SIM-001`-`SIM-008` | needs all of `W1-SIM` plus `SIM-008` |
+
+They land together at the wave 1/2 boundary, owned by whichever of the two streams
+finishes second, coordinated by the integration owner. `SIM-008` carries
+`TR-SIM-003` and `TR-SIM-004`; `SIM-009` closes M1 with `ENC-002` and `PST-005`
+downstream of it.
+
+---
+
+## Wave 2 - cores on top of contracts
+
+Four to five parallel streams. Each starts only when the wave 1 package it
+consumes is Done.
+
+### `W2-GEO` - geometry, navigation, spatial queries
+
+| Package | Deliverable | Depends on | Completion gate |
+| --- | --- | --- | --- |
+| `GEO-001` | Planar math, primitives, inclusive overlap, swept queries, terrain collision | `SIM-003` | brute-force reference comparison |
+| `GEO-002` | Static geometry manifest and raster construction | `GEO-001`, `DAT-002` | connectivity/clearance fixtures |
+| `GEO-003` | Player swept movement/slide and coordinate presentation adapter contract | `GEO-001` | movement/corner/boundary tests |
+| `GEO-004` | Uniform spatial hash and allocation-free query API | `GEO-001` | randomized differential tests and budget |
+| `GEO-005` | Flow-field navigation and ordinary movement integration | `GEO-002`, `GEO-004` | route/stuck/boundary/performance fixtures |
+| `GEO-006` | Boss-clearance routing and re-entry candidate service | `GEO-002`, `GEO-005` | all boss footprints/routes pass |
+| `GEO-007` | Camera footprint, spawn sectors, offscreen validation/recycle candidates | `GEO-002` | all map-edge/camera orientations pass |
+| `GEO-008` | Exploration raster, discovery, marker/waypoint model | `GEO-002` | visible-is-discovered and fog fixtures |
+
+- **Owned file scope:** the geometry subtree of `src/MechaMiner.Simulation/` and its
+  mirror in `tests/MechaMiner.Simulation.Tests/`.
+- **Contracts:** `CMP-GEO-001`, plus `CTR-MAP-002` as a consumer.
+- **Requirements:** `TR-GEO-001` through `TR-GEO-006`.
+- Retires `RSK-005` (flow-navigation clumping) at `GEO-005`.
+
+### `W2-CAT` - gameplay catalog transcription and reports
+
+| Package | Deliverable | Depends on | Completion gate |
+| --- | --- | --- | --- |
+| `DAT-007` | Import accepted gameplay catalogs into initial JSON definitions | `DAT-006` | totals/mappings/numbers match GDD/CSV reports |
+| `DAT-008` | Generate CSV/balance/coverage/traceability reports | `DAT-006` | generated artifacts stable and stale detection works |
+| `DAT-009` | Localization catalogs, named-placeholder validation, pseudo-localization | `DAT-005` | missing/mismatched/expansion fixtures pass |
+
+This is the largest pure-volume item in the program: transcribing the accepted
+gameplay catalogs from the `docs/` Markdown into `content/` JSON. It is almost
+perfectly parallel with everything else because it touches data, not code.
+
+- **Authority direction matters.** `docs/data/*.csv` carries
+  `authoritative: false`; its own index says the files are "intentionally
+  subordinate to the linked authoritative Markdown specification: when values
+  disagree, update the data mirror to match the Markdown". **The Markdown wins.**
+  A CSV/Markdown disagreement is a data-mirror defect to correct, never a new
+  design decision, and doc 114 already authorizes an agent to "fix formulas, units,
+  rounding, or data transcription to match the gameplay source without asking".
+- **Owned file scope:** `content/` catalog directories (all of doc 40's layout
+  except `content/schemas/`, which stays with `W1-DAT`), `content/localization/`,
+  `generated/reports/`, and the report generators the stream adds under
+  `src/MechaMiner.Tools/`.
+- **Contracts:** consumes `SCH-CNT-001`; populates `SCH-CNT-002`, `SCH-CNT-003`;
+  produces through `CMP-CNT-001` into `CTR-CNT-001` / `SCH-CNT-004`.
+- **Requirements:** `TR-DAT-002`, `TR-DAT-004`, `TR-DAT-005`, `TR-DAT-006`.
+- Retires `RSK-012` (content JSON and gameplay docs drift) - its first response is
+  "fail build; update authoritative gameplay + JSON + generated reports together".
+- Split by catalog file so several sessions can run concurrently inside this
+  stream: resources, mechs, enemies, bosses, mining sites, encounters, maps,
+  weapons, branches, utilities, relics, PowerUps, unlocks.
+
+### `W2-PST` - persistence
+
+| Package | Deliverable | Depends on | Completion gate |
+| --- | --- | --- | --- |
+| `PST-001` | Save envelopes, canonical JSON, checksum, schema validation | `FND-003`, `DAT-001` | valid/corrupt/limit fixtures |
+| `PST-002` | Atomic write/backups/corruption recovery | `PST-001` | fault injection at every write step |
+| `PST-003` | Profile/settings/history domain and transactions | `PST-002`, `PRG-005` | load/save/refund/unlock/history fixtures |
+| `PST-004` | Pending extraction settlement idempotency | `PST-002`, `PRG-006` | crash-before/after-commit tests |
+| `PST-005` | Run recovery capture/restore/rebuild | `PST-002`, `SIM-009`, `MAP-007` | checksum round trip and resume-paused |
+| `PST-006` | Sequential migration framework and initial fixtures | `PST-003` | old/current/future-version behavior |
+
+- `PST-001` and `PST-002` start in wave 2 on `DAT-001` alone. `PST-003`-`PST-006`
+  wait for their `PRG`, `SIM-009`, and `MAP-007` dependencies and therefore
+  actually land in wave 3/4; they are listed here so one stream owns the whole
+  persistence surface end to end.
+- **Owned file scope:** `src/MechaMiner.Persistence/`,
+  `tests/MechaMiner.Persistence.Tests/`.
+- **Contracts:** `CMP-PST-001`; `CTR-PST-001`, `CTR-PST-002`, `CTR-PST-003`;
+  `SCH-PST-001` through `SCH-PST-004`, and `SCH-RUN-003` serialization.
+- **Requirements:** `TR-PST-001` through `TR-PST-006`.
+- **Boundary note:** doc 115 permits `MechaMiner.Persistence` to reference "narrow
+  immutable types from `MechaMiner.Simulation`". `FND-001` deliberately did not add
+  that project reference because no such type exists yet. `PST-005` is the package
+  that requests it from the integration owner if `SCH-RUN-003` genuinely needs it;
+  the architecture check's allowed-edge table is updated in the same change.
+- Retires `RSK-010` (recovery snapshot cost) at `PST-005`.
+
+### `W2-SHELL` - Godot shell, camera, UI frame, input
+
+| Package | Deliverable | Depends on | Completion gate |
+| --- | --- | --- | --- |
+| `PRE-001` | Godot run scene, snapshot bridge, entity-handle lifecycle | `FND-003`, `SIM-007` | rebuild/dispose/missed-event tests |
+| `PRE-002` | Orthographic camera, world conversion, clamp, footprint publication | `PRE-001`, `GEO-003` | both aspect ratios and boundary captures |
+| `UI-001` | Route coordinator, immutable view models, shared widgets, focus IDs | `FND-003`, `SIM-007` | route/focus harness |
+| `UI-002` | Logical input, movement adapter, glyph detection, controller disconnect | `UI-001`, `PLY-001` | deadzone/remap/disconnect tests |
+
+- **Owned file scope:** `game/presentation/`, `game/scenes/` (except the
+  integration-owner-held `Boot.tscn`), `game/shaders/`,
+  `tests/MechaMiner.Game.Tests/`. A new `game/` subdirectory is an
+  integration-owner change.
+- **Contracts:** `CMP-PRE-001`, `CMP-PRE-002`, `CMP-UI-001`, `CMP-APP-001` as it
+  replaces `BootCompositionRoot`; `CTR-PRE-001`, `CTR-UI-001`, `CTR-UI-002`,
+  consuming `CTR-SIM-002` and `CTR-SIM-003`.
+- **Requirements:** `TR-PRE-001` through `TR-PRE-004`, `TR-UI-001` through
+  `TR-UI-005`, `TR-RUN-001`, `TR-SIM-005`.
+- `UI-002` needs `PLY-001` (wave 3), so it lands at the wave 2/3 boundary.
+- Retires `RSK-013` (C#/Godot interop cost) at `PRE-001` and `RSK-009`
+  (1280x800 gamepad UI) through the `UI` screenshot/focus matrices.
+
+### `W2-AST` - asset and license ledger
+
+| Package | Deliverable | Depends on | Completion gate |
+| --- | --- | --- | --- |
+| `AST-001` | Asset/license manifest, allowlist, credits/notices generator | `DAT-005` | 100% packaged license coverage fixture |
+
+- **Owned file scope:** `assets-manifest/assets/`, `assets-manifest/licenses/`, the
+  notices generator under `src/MechaMiner.Tools/`.
+- **Contracts:** `SCH-AST-001`.
+- **Requirements:** `TR-AST-001`.
+- Unblocks `AST-002`-`AST-006` and `OPS-002`, so landing it early in wave 2 keeps
+  the whole asset chain off the critical path.
+
+---
+
+## Wave 3 - gameplay vertical slice
+
+The route doc 110 § Vertical-slice sequencing calls "the fastest safe route to M4".
+Many streams, but they are more coupled than wave 2, so each PR must name the
+`CMP-*` it modifies.
+
+| Stream | Packages | Owned file scope | Contracts |
+| --- | --- | --- | --- |
+| `W3-PLY` | `PLY-001` (player movement, facing, Hull/Armor/Recovery/contact grace, damage order; depends `SIM-008`, `GEO-003`) | player subtree of `src/MechaMiner.Simulation/` | `CMP-SIM-001`, `CMP-GEO-001`, player snapshot fields; `TR-SIM-*`, `TR-GEO-*`, `TR-COM-004` |
+| `W3-COM` | `COM-001` scheduler/targeting/provenance (`SIM-006`, `SIM-008`, `GEO-004`, `DAT-004`), `COM-002` projectile/hitscan/beam/zone/explosion (`COM-001`, `GEO-001`), `COM-003` damage pipelines/death/attribution (`COM-002`, `PLY-001`), `COM-004` control/status runtime (`COM-003`) | combat subtree of `src/MechaMiner.Simulation/` | `CMP-COM-001`, combat portions of `CTR-SIM-*`; `TR-COM-001` through `TR-COM-008` |
+| `W3-ENC` | `ENC-001` pure pursuer store/contact/profiles (`DAT-002`, `GEO-005`, `PLY-001`), `ENC-002` director schedule compiler (`DAT-002`, `SIM-009`) | encounter subtree of `src/MechaMiner.Simulation/` | `CMP-ENC-001`, spawn/world-query contracts; `TR-ENC-001` through `TR-ENC-004` |
+| `W3-MIN` | `MIN-001` site store/occupancy/grace/decay/installments (`SIM-003`, `GEO-001`, `DAT-002`), `MIN-002` geode resonance and Hyper Gold threshold history (`MIN-001`, `ENC-001`) | mining subtree of `src/MechaMiner.Simulation/` | `CMP-MIN-001`, mining events/intents; `TR-MIN-001` through `TR-MIN-005` |
+| `W3-MAP` | `MAP-001` profile selector (`DAT-002`, `SIM-005`), `MAP-002` bridgeless region graph (`GEO-002`, `SIM-005`), `MAP-003` spatial embedding (`MAP-002`), `MAP-004` landmarks (`MAP-003`, `DAT-005`), `MAP-005` deployment selection (`MAP-003`, `GEO-007`), `MAP-006` constraint solver (`MAP-005`), `MAP-007` manifest/checksum/retry (`MAP-001`-`MAP-006`) | map-generation subtree of `src/MechaMiner.Simulation/` (or its own generator area agreed with the integration owner) | `CMP-MAP-001`, `CTR-MAP-001`, `CTR-MAP-002`, `SCH-MAP-001`, `SCH-MAP-002`; `TR-MAP-001` through `TR-MAP-006` |
+| `W3-PRG` | `PRG-001` ledger (`SIM-006`, `DAT-002`), `PRG-002` fabrication (`SIM-004`, `SIM-008`, `PRG-001`, `DAT-007`), `PRG-003` utility/radar (`PRG-002`, `GEO-004`), `PRG-004` relic cache transactions (`SIM-004`, `COM-010`, `PRG-001`), `PRG-005` PowerUp/unlock (`DAT-007`, `SIM-004`), `PRG-006` result manifest/settlement (`PRG-001`, `ENC-008`) | progression subtree of `src/MechaMiner.Simulation/` | `CMP-PRG-001`, `CTR-RUN-003`, `CTR-SIM-004`, `SCH-RUN-002`; `TR-PRG-001` through `TR-PRG-005` |
+| `W3-UI` | `UI-003` HUD shell (`UI-001`, `PRE-002`), `UI-004` mining panel/survey/radar (`UI-003`, `MIN-002`, `PRG-003`), `UI-005` minimap/full map (`UI-001`, `GEO-008`), `UI-006` run console/fabrication (`UI-001`, `PRG-002`), `UI-007` relic modal (`UI-006`, `PRG-004`) | `game/presentation/` UI subtree, `game/scenes/` UI scenes | `CMP-UI-001`, `CTR-UI-001`, `CTR-UI-002`; `TR-UI-001` through `TR-UI-005` |
+| `W3-PRE` | `PRE-003` static world instantiation (`PRE-001`, `MAP-007`), `PRE-004` crowd VAT/instancing spike (`PRE-001`, `AST-003`), `PRE-005` durable adapters (`PRE-001`, `DAT-007`), `PRE-006` transient pools/priority (`PRE-001`, `COM-002`), `PRE-007` materials/lighting/quality/warm-up (`PRE-003`-`PRE-006`) | `game/presentation/`, `game/shaders/` | `CMP-PRE-001`, `CMP-PRE-002`, `CTR-PRE-001`; `TR-PRE-001` through `TR-PRE-004` |
+| `W3-AUD` | `AUD-001` mixer buses, audio event registry/service, voice priority/aggregation (`FND-007`, `SIM-006`) | audio subtree of `game/presentation/` | `CMP-AUD-001`, presentation events; `TR-AUD-001`, `TR-AUD-002` |
+
+`PRE-004` is the `RSK-001` and `RSK-002` proof gate (900-instance crowd
+performance and readability) and doc 110 wants it early: "PRE-001/002/004,
+UI-001 through UI-003: establish M2 and performance direction early."
+
+---
+
+## Wave 4 - catalog breadth
+
+Widest parallelism in the program. Each stream extends a wave 3 primitive that is
+already Done, so streams rarely block each other.
+
+| Stream | Packages | Split suggestion | Contracts |
+| --- | --- | --- | --- |
+| `W4-WEAPONS` | `COM-005` Pulse Repeater + Rail Lance direct primitives (`COM-001`-`COM-004`, `DAT-007`), `COM-006` Cluster Mortar + Gravity Projector area/persistent (`COM-001`-`COM-004`), `COM-007` Attack Drones/Sentry Pod autonomous actors (`COM-001`-`COM-004`), `COM-008` remaining base weapon behaviors - 15 base weapons (`COM-005`-`COM-007`), `COM-009` all 45 branch modifiers (`COM-008`), `COM-010` ten relic hook policies and the weapon compatibility matrix (`COM-009`, `PRG-005`), `COM-011` utilities/PowerUps/mech traits (`COM-010`, `DAT-007`) | **one session per weapon family**, then one for branches per family, then relics, then utilities/PowerUps/traits | `CMP-COM-001`; `TR-COM-001` through `TR-COM-008` |
+| `W4-ENC` | `ENC-003` formations/recycling (`ENC-002`, `GEO-007`), `ENC-004` Needler (`ENC-001`, `COM-002`), `ENC-005` elites (`ENC-001`, `ENC-002`), `ENC-006` Riftjaw + Brood Titan (`ENC-003`, `COM-002`), `ENC-007` Prism Crown + Skybreaker Apex (`ENC-006`), `ENC-008` boss warning/re-entry/death/loot/overlap (`ENC-006`, `ENC-007`, `PRG-003`), `ENC-009` Hyper Gold response packages (`ENC-002`, `MIN-002`) | one session per boss state machine | `CMP-ENC-001`; `TR-ENC-001` through `TR-ENC-006` |
+| `W4-MAP` | `MAP-008` dynamic rocks (`MAP-007`, `GEO-007`), `MAP-009` map audit CLI/images/reports/batch runner (`MAP-007`), `MAP-010` nightly profile/signature seed matrix (`MAP-009`, `FND-005`) | sequential inside the stream | `CMP-MAP-001`, `SCH-MAP-002`; `TR-MAP-004`, `TR-MAP-007`. `MAP-009`/`MAP-010` are the `RSK-004` proof gate |
+| `W4-UI` | `UI-008` results/unlocks/Hangar/Mechs/PowerUps/Blueprints/Records (`UI-001`, `PRG-005`, `PRG-006`, `PST-003`), `UI-009` settings/remapping/accessibility (`UI-001`, `UI-002`), `UI-010` onboarding coordinator (`UI-003`-`UI-009`) | one session per screen group | `CMP-UI-001`, `CTR-UI-001`, `CTR-UI-002`; `TR-UI-002`, `TR-UI-003`, `TR-UI-005` |
+| `W4-AST` | `AST-002` pinned Blender/glTF pipeline (`AST-001`, `FND-002`), `AST-003` crowd rig to LOD/VAT (`AST-002`), `AST-004` UI/icon/material identity + accessibility contact sheets (`AST-001`, `DAT-009`), `AST-005` audio/font/VFX validators and budgets (`AST-001`), `AST-006` acquire/adapt the representative CC0 set for M4 (`AST-001`-`AST-005`) | `AST-003` before `PRE-004` needs it; `AST-006` last | `SCH-AST-001`, import/build contracts; `TR-AST-001` through `TR-AST-005`. `AST-003` is an `RSK-001` gate, `AST-006` an `RSK-008` gate |
+| `W4-PLT` | `PLT-001` Steam/local platform adapter (`FND-006`), `PLT-002` Steam Cloud sync and conflict model (`PLT-001`, `PST-003`) | sequential | `CMP-PLT-001`, `CTR-PLT-001`; `TR-PLT-001` through `TR-PLT-003`. See decision 3 below before starting |
+| `W4-PST` | `PST-003` through `PST-006` once their `PRG` dependencies are Done | same owner as `W2-PST` | as `W2-PST` |
+| `W4-QUA` | `QUA-001` WB-01-WB-06 balance harness (`SIM-009`, `COM-008`), `QUA-002` capture metrics/reconciliation (`FND-008`, `PRG-006`), `QUA-003` debug overlay/dev command palette (`FND-008` + "gameplay systems"), `QUA-004` diagnostic package/breadcrumbs (`FND-007`, `FND-008`, `PST-005`), `QUA-005` PERF-01-PERF-08 runner ("presentation/gameplay complete per scenario") | one session per harness | `CMP-OBS-001`, `CTR-OBS-001`; `TR-QUA-001` through `TR-QUA-004`, `TR-OBS-001`, `TR-OBS-002` |
+| `W4-OPS` | `OPS-001` main/nightly/release CI suites (`FND-005`, `QUA-005`), `OPS-002` release packaging/checksums/SBOM (`FND-006`, `AST-001`, `OPS-001`), `OPS-003` Steam staging/depot/rollback (`PLT-002`, `OPS-002`), `OPS-004` retail Steam Deck RC gate (`OPS-003`, M6) | sequential; integration owner for `OPS-002`+ | build/release manifests, `SCH-BLD-001`; `TR-BLD-001` through `TR-BLD-006` |
+
+Three wave 4 packages have dependencies that are **not** package IDs and cannot be
+scheduled from the graph alone: `QUA-003` ("`FND-008`, gameplay systems"),
+`QUA-005` ("presentation/gameplay complete per scenario"), and `OPS-004`
+("`OPS-003`, M6" - a milestone). Their readiness is an integration-owner judgement,
+not a lookup.
+
+`OPS-003` and beyond touch credentials, depots, and external state. Doc 114
+§ Explicit escalation boundary reserves those for a human: "using credentials,
+creating external accounts, publishing a build, changing a storefront/depot".
+
+---
+
+## Wave 5 - M4 integration, then breadth, then release
+
+1. **M4 internal demo integration - integration owner.** Assemble the diagnostic
+   scenario against doc 110 § M4 diagnostic scenario contract and close doc 110
+   § Internal demo acceptance checklist. Doc 110: "Package and validate M4 before
+   completing catalog breadth."
+2. **M5 - full standard-run feature completeness.** Remaining catalog breadth
+   across the wave 4 streams.
+3. **M6 - content/performance production readiness**, then **M7 - release
+   candidate**, driven by `W4-QUA` and `W4-OPS` with the integration owner holding
+   the release gate in doc 100 § Release gate.
+
+Doc 113 requires a risk review at each M0-M7 gate.
+
+---
+
+## Decisions already made
+
+Recorded here so no stream re-litigates them. Each was verified empirically in the
+FND-001 container, not recalled.
+
+### Decision 1 - .NET SDK 10.0.302 with target framework `net8.0`
+
+- **What:** `global.json` pins SDK `10.0.302` (`rollForward: latestPatch`).
+  Every project targets `net8.0` with `LangVersion` pinned to `12.0`.
+- **Why:** doc 00 § Version policy says ".NET SDK selection follows the pinned Godot
+  version's supported baseline". `GodotSharp` 4.7.1 declares `net8.0` and ships only
+  `lib/net8.0`, so `net8.0` is that baseline. 10.0.302 is the SDK actually
+  installable in this environment and is current LTS. `net8.0` assemblies run on the
+  installed .NET 10 runtime because Godot's `GodotPlugins` runtimeconfig rolls
+  forward; `RollForward=LatestMajor` in `Directory.Build.props` does the same for
+  pure test hosts, so no separate .NET 8 runtime install is required.
+- **Consequence:** `LangVersion` is `12.0`, not `latest`. A C# 13+ feature is a
+  build error, proved by `build/policy-fixtures/langversion` (`error CS9202`).
+  Raising it requires raising the target framework first, which is an
+  integration-owner change.
+
+### Decision 2 - Godot 4.7.1 confirmed real and current stable; the pin stands
+
+- **What:** `Godot.NET.Sdk/4.7.1`, editor and export templates at `4.7.1-stable`
+  from the `godot-builds` release assets.
+- **Why:** verified against the official download page at task time, not from
+  memory: 4.7.1 is the current latest stable, released 14 July 2026. It was
+  downloaded, it builds a C# project, and it executes C# under `--headless` with
+  correct exit codes. `4.7.2-rc.1` and `4.8.0-dev.2` exist on nuget.org but doc 114
+  forbids substituting a preview or nightly binary.
+- **Consequence:** no change to doc 00 or `TR-FND-001`. Doc 00 § Version policy
+  keeps Godot minor/major upgrades behind a TDR, and `RSK-014` keeps the project
+  pinned until full compatibility evidence exists.
+- **CI note beyond the pin:** without a Vulkan ICD, Godot silently degrades to
+  OpenGL 3 and the mandated Mobile renderer is never exercised. `mesa-vulkan-drivers`
+  is therefore part of `build/bootstrap-linux.sh`. `--headless` uses the dummy
+  driver and cannot capture screenshots, so visual verification needs
+  `xvfb-run` plus lavapipe. Two distinct CI tiers, not one.
+
+### Decision 3 - `Steamworks.NET 2025.164.1` must be vendored, not restored from NuGet
+
+- **What:** `TR-PLT-001` and doc 110 `PLT-001` pin "Steamworks.NET Standalone
+  2025.164.1/SDK 1.64". **The pin stands.** But the package is not on nuget.org:
+  the newest version published there is `2024.8.0` (Steamworks SDK 1.60).
+  `dotnet add package Steamworks.NET --version 2025.164.1` cannot work. Verified
+  against the registry index and search API at task time.
+- **How PLT-001 obtains it:** `git clone` at tag `2025.164.1` (verified to succeed
+  through the proxy) and build `Standalone2.0/Steamworks.NET.Standard.csproj` from
+  source. The clone contains the CodeGen SDK 1.64 headers and the prebuilt natives
+  including `Plugins/libsteam_api.so`.
+- **Deferred to `PLT-001`.** No vendoring happens before that package is Ready. The
+  integration owner adds the vendored project to `MechaMiner.sln` and records the
+  dependency per doc 100 § Dependency policy.
+- **Steam stays untestable in CI, and the architecture already handles that.** The
+  Valve partner SDK 1.64 download is login-gated, so real Steam behavior cannot be
+  exercised here. That is not a new problem: `CTR-PLT-001` already specifies
+  "unavailable platform returns supported typed local fallback, never blocks play",
+  `TR-PLT-002` requires initialization/callback/shutdown failure to degrade to the
+  local path, and `TR-PST-001` requires the game to be fully playable and savable
+  offline. `PLT-001` is built and verified against that seam plus a fake; real Steam
+  verification happens on a developer machine.
+- **Specification correction owed.** Doc 100 § Toolchain pinning lists
+  "Steamworks.NET Standalone 2025.164.1 and matching Valve Steamworks SDK 1.64/native
+  redistributables" among things to "Pin in version-controlled files", in a list
+  whose neighbouring bullet is "NuGet dependency graph and lock files". That implies
+  a NuGet reference, which is not achievable at the pinned version. `PLT-001` must
+  correct that bullet in the same task to say the managed binding is vendored from
+  the tagged source rather than restored from nuget.org - doc 114 § Specification
+  maintenance autonomy both permits and requires this, because it is the case where
+  "the documented contract cannot be implemented as written".
+
+---
+
+## Note on the four test projects
+
+Doc 100 § Repository structure lists **four** test projects:
+`MechaMiner.Simulation.Tests`, `MechaMiner.Content.Tests`,
+`MechaMiner.Persistence.Tests`, `MechaMiner.Game.Tests`. Doc 10 § Accepted project
+decomposition tables only three, omitting `MechaMiner.Content.Tests`.
+
+**All four are implemented.** Doc 100's layout is the authority for repository
+structure and `TR-BLD-006` ("Repository/project directories follow the accepted
+ownership layout"), and doc 115 supports it directly: "Tests mirror those
+projects", where the projects include `MechaMiner.Content`. Doc 10's table is a
+responsibility summary, not a layout contract, and its omission is an editorial
+gap rather than a decision to leave content untested.
+
+No document was changed for this: the two sources are reconciled by precedence,
+not by editing either. If `FND-009`'s documentation validator later wants the two
+tables to agree literally, adding the missing row to doc 10 is the editorial
+correction, never removing the project.
+
+## Related documents
+
+- [Implementation Plan for AI Agents](./110-implementation-plan-for-ai-agents.md) - normative decomposition
+- [Autonomous Agent Execution Protocol](./114-autonomous-agent-execution-protocol.md) - integration ownership, evidence, escalation
+- [Component, Contract, and Schema Registry](./115-component-contract-and-schema-registry.md) - project boundary and contract IDs
+- [Verification Strategy](./91-verification-strategy.md) - verification registry rules
+- [Technical Risk Register](./113-technical-risk-register.md) - `RSK-017` parallel-agent conflict response
+- [Build, Dependencies, and Release Operations](./100-build-dependencies-and-release-operations.md) - repository structure and command surface

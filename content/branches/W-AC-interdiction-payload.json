@@ -1,0 +1,65 @@
+{
+  "_provenance": {
+    "doc": "docs/71-initial-weapon-numeric-catalog.md",
+    "section": "Interdiction Payload — Functional — 2 Asterite",
+    "lines": "162-167",
+    "extractedFor": "DAT-008",
+    "notes": [
+      "No document in the repository assigns a stable branch ID; `id` and the filename are minted as <weaponId>-<branch-name-kebab-case> per the transcription convention.",
+      "Prerequisites, exclusivity, and the two-unit cost model are stated in docs/65-weapon-stat-and-branch-upgrades.md lines 66 and 68; the cost resource and amount for this branch come from this section's heading.",
+      "`rules` holds every bullet of the section verbatim with its source line; `effects` is the structured transcription of those same bullets.",
+      "The section states no explicit expected-effect estimate, so `expectedEffect` is null."
+    ]
+  },
+  "id": "W-AC-interdiction-payload",
+  "weaponId": "W-AC",
+  "weaponName": "Cluster Mortar",
+  "branchName": "Interdiction Payload",
+  "branchClass": "Functional",
+  "cost": {
+    "resource": "Asterite",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutuallyExclusiveWith": [
+      "W-AC-saturation-cascade",
+      "W-AC-danger-close-protocol"
+    ],
+    "irreversible": true
+  },
+  "sharedRuleRefs": [
+    "docs/65-weapon-stat-and-branch-upgrades.md:66",
+    "docs/65-weapon-stat-and-branch-upgrades.md:68"
+  ],
+  "effects": {
+    "hazardFieldDurationSeconds": 3.0,
+    "hazardFieldPosition": "primary explosion impact point",
+    "hazardFieldTickDamagePercentOfCurrentDamage": 12,
+    "hazardFieldTickIntervalSeconds": 0.5,
+    "additionalDamagePercentForFullDurationStay": 72,
+    "slowPercent": 30,
+    "bossSlowForm": "globally resisted",
+    "fieldsMayOverlapAndDamageIndependently": true
+  },
+  "expectedEffect": null,
+  "rules": [
+    {
+      "line": 164,
+      "text": "The primary explosion leaves a 3.0 s hazard field at its impact point."
+    },
+    {
+      "line": 165,
+      "text": "The field deals 12% current Damage every 0.5 s, for 72% additional damage to an enemy that remains for the full duration."
+    },
+    {
+      "line": 166,
+      "text": "Enemies inside are slowed by 30%; bosses receive the globally resisted form of the slow."
+    },
+    {
+      "line": 167,
+      "text": "Repeated fields may overlap and damage independently."
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "_provenance": {
+    "doc": "docs/71-initial-weapon-numeric-catalog.md",
+    "section": "Fracture Lance — Functional — 2 Barysteel",
+    "lines": "136-141",
+    "extractedFor": "DAT-008",
+    "notes": [
+      "No document in the repository assigns a stable branch ID; `id` and the filename are minted as <weaponId>-<branch-name-kebab-case> per the transcription convention.",
+      "Prerequisites, exclusivity, and the two-unit cost model are stated in docs/65-weapon-stat-and-branch-upgrades.md lines 66 and 68; the cost resource and amount for this branch come from this section's heading.",
+      "`rules` holds every bullet of the section verbatim with its source line; `effects` is the structured transcription of those same bullets."
+    ]
+  },
+  "id": "W-AB-fracture-lance",
+  "weaponId": "W-AB",
+  "weaponName": "Rail Lance",
+  "branchName": "Fracture Lance",
+  "branchClass": "Functional",
+  "cost": {
+    "resource": "Barysteel",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutuallyExclusiveWith": [
+      "W-AB-unbounded-bore",
+      "W-AB-kinetic-capacitor"
+    ],
+    "irreversible": true
+  },
+  "sharedRuleRefs": [
+    "docs/65-weapon-stat-and-branch-upgrades.md:66",
+    "docs/65-weapon-stat-and-branch-upgrades.md:68"
+  ],
+  "effects": {
+    "shockwavesPerEnemyStruck": 1,
+    "shockwaveOrientation": "perpendicular",
+    "shockwaveDelaySeconds": 0.1,
+    "shockwaveDamagePercentOfCurrentDamage": 45,
+    "shockwaveWidth": "current beam width",
+    "shockwaveReachPerSideM": 2.5,
+    "sourceEnemyImmuneToOwnShockwave": true,
+    "maxShockwaveHitsPerOtherEnemyPerShot": 2
+  },
+  "expectedEffect": {
+    "approximate": true,
+    "favorableHordeDamagePercent": {
+      "min": 40,
+      "max": 80
+    },
+    "preservesMainBeamPierceTargetCap": 4
+  },
+  "rules": [
+    {
+      "line": 138,
+      "text": "Every enemy struck emits one perpendicular shockwave after 0.10 s."
+    },
+    {
+      "line": 139,
+      "text": "Each shockwave deals 45% of current Rail Lance Damage, has the current beam width, and reaches 2.5M to each side of its source."
+    },
+    {
+      "line": 140,
+      "text": "The source enemy cannot be hit by its own shockwave. Any other enemy can take at most two shockwave hits from one Rail Lance shot."
+    },
+    {
+      "line": 141,
+      "text": "Expected effect: approximately +40–80% favorable-horde damage while preserving the four-target main-beam cap."
+    }
+  ]
+}

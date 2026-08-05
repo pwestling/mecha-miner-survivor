@@ -1,0 +1,97 @@
+{
+  "_provenance": {
+    "doc": "docs/36-initial-mech-catalog.md",
+    "section": "Catalog overview",
+    "lines": "43-52",
+    "extractedFor": "DAT-007",
+    "notes": [
+      "Row fields id/mech/signature/inherentTrait/selectionRole come from the Catalog overview table (line 52); field order follows that table's column order.",
+      "signatureWeaponId is not present in docs/36; it is resolved by weapon name against the Accepted base catalog assignment table in docs/66-weapon-catalog-and-resource-graph.md and carries its own _source.",
+      "traitNotes are the verbatim bullets of '### Signature and trait' minus the two bullets already captured as signature and inherentTrait.effect.",
+      "crossDocNotes carries the two resolved movement speeds docs/72 states for Razorback; docs/36 states no absolute M/s value for this mech."
+    ]
+  },
+  "id": "MCH-06",
+  "mech": "Razorback",
+  "signature": "Ram Field",
+  "signatureWeaponId": "W-DF",
+  "_source": {
+    "signatureWeaponId": {
+      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
+      "section": "Accepted base catalog assignment",
+      "lines": "54",
+      "notes": [
+        "Only the ID-to-weapon-name mapping is taken from docs/66. Its 'Signature mech' column reads 'Initial signature; mech TBD' and is stale; docs/36 is authoritative for the assignment."
+      ]
+    }
+  },
+  "inherentTrait": {
+    "name": "Overdrive Treads",
+    "effect": "+10% movement speed",
+    "affectedStatistic": "movement speed",
+    "modifier": {
+      "percent": 10
+    }
+  },
+  "selectionRole": "Aggressive movement-driven breaker",
+  "playerFacingIdentity": "Razorback is an aggressive movement chassis. Its wedge-like Ram Field turns forward travel into damage and space, while increased movement speed remains useful for exploration, mining defense, and every later weapon build.",
+  "traitNotes": [
+    "Applies equally in every direction without adding acceleration, momentum, drift, reverse penalties, or a turn radius.",
+    "It does not change enemy movement, weapon projectile speed, Ram Field's activation threshold, or mining extraction rate.",
+    "Combines with Vector Thrusters and other explicit movement modifiers under the shared additive percentage rule."
+  ],
+  "topDownSilhouette": [
+    "Wide triangular prow with two forward ramming prongs and a narrow rear body.",
+    "Strong front-heavy wedge makes facing readable even without a separate arrow.",
+    "Rear track or thruster housings flare outward behind the collision footprint.",
+    "Ram Field projects just ahead of the prow so the weapon boundary does not disappear beneath the model."
+  ],
+  "selectionSummary": "A fast wedge-shaped breaker that rewards committed movement and aggressive routing.",
+  "traitStacking": {
+    "changedBaseline": {
+      "text": "110% movement speed",
+      "statistic": "movement speed",
+      "percent": 110
+    },
+    "withMatchingUtilityRank3BeforePowerUps": {
+      "text": "125% with Vector Thrusters",
+      "utility": "Vector Thrusters",
+      "percent": 125
+    },
+    "_source": {
+      "doc": "docs/36-initial-mech-catalog.md",
+      "section": "Trait comparison and stacking",
+      "lines": "202-211"
+    }
+  },
+  "initialAvailability": {
+    "text": "Available",
+    "available": true,
+    "recommendedDefault": false,
+    "_source": {
+      "doc": "docs/36-initial-mech-catalog.md",
+      "section": "Initial availability",
+      "lines": "215-226"
+    }
+  },
+  "crossDocNotes": [
+    {
+      "note": "Razorback with its +10% trait moves at 3.30M/s.",
+      "movementSpeedMPerSecond": 3.3,
+      "_source": {
+        "doc": "docs/72-player-survivability-and-damage-baseline.md",
+        "section": "Movement and Speed Modifiers",
+        "lines": "55"
+      }
+    },
+    {
+      "note": "Razorback with both maximum Servo Overdrive and Rank-3 Vector Thrusters moves at 4.05M/s: `3.0 × (1 + 0.10 + 0.10 + 0.15)`.",
+      "movementSpeedMPerSecond": 4.05,
+      "_source": {
+        "doc": "docs/72-player-survivability-and-damage-baseline.md",
+        "section": "Movement and Speed Modifiers",
+        "lines": "57"
+      }
+    }
+  ]
+}

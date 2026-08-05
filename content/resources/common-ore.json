@@ -1,0 +1,105 @@
+{
+  "_provenance": {
+    "doc": "docs/60-resources-crafting-progression.md",
+    "section": "Progression layers",
+    "lines": "14-23",
+    "extractedFor": "DAT-007",
+    "notes": [
+      "Common ore has no RES-* or other stable ID in any design doc; the docs name it only as 'common ore' / 'common basic ore'. `id` is a kebab-case slug of that name because no doc identifier exists to copy verbatim, and RES-001..RES-006 are already taken by docs/research/.",
+      "scope / availability / primaryPurpose / persistence are the four columns of the docs/60-resources-crafting-progression.md:18-21 table. That table's first row covers the whole 'Ordinary crafting resources' scope, which includes the six specialized materials as well as common ore; there is no common-ore-only row anywhere in the docs.",
+      "docs/technical/40-content-data-and-validation.md:106 expects a `maximum safe count`; no gameplay doc states one, so maximumSafeCount is null.",
+      "Every numeric payout carries its own `_source` because those values come from docs/40-mining-and-extraction.md rather than from this file's main source section.",
+      "Mining-point class definitions (zone dimensions, installment thresholds, decay, grace, beacons) live in content/mining-sites/; only the resource payout numbers are repeated here.",
+      "Localization keys are not authored here; content/localization/ is owned by a separate stream."
+    ]
+  },
+  "id": "common-ore",
+  "playerFacingName": "common ore",
+  "scope": "Ordinary crafting resources",
+  "availability": "Found primarily in finite deposits through map exploration; common ore also comes from selling relics",
+  "primaryPurpose": "Craft weapons, utilities, individual stat upgrades, and major weapon branches for the current run",
+  "persistence": "Retained after collection for the rest of the run; discarded when the run ends",
+  "resourceClass": "ordinary crafting resource",
+  "inventoryScope": "run-local",
+  "maximumSafeCount": null,
+  "sources": [
+    {
+      "source": "standard ore seam",
+      "orePerInstallment": 10,
+      "installmentSeconds": 1.5,
+      "installmentCount": 10,
+      "totalPerSeam": 100,
+      "depletionSeconds": 15,
+      "seamsPerMap": 20,
+      "totalPerMap": 2000,
+      "_source": {
+        "doc": "docs/40-mining-and-extraction.md",
+        "section": "Standard ore seams",
+        "lines": "60-66"
+      }
+    },
+    {
+      "source": "rich ore seam",
+      "orePerInstallment": 40,
+      "installmentSeconds": 3,
+      "installmentCount": 5,
+      "totalPerSeam": 200,
+      "depletionSeconds": 15,
+      "seamsPerMap": 8,
+      "totalPerMap": 1600,
+      "_source": {
+        "doc": "docs/40-mining-and-extraction.md",
+        "section": "Rich ore seams",
+        "lines": "68-74"
+      }
+    },
+    {
+      "source": "specialized-material geode",
+      "orePerCompletion": 50,
+      "partialPayout": false,
+      "geodesPerMap": {
+        "min": 32,
+        "max": 40
+      },
+      "totalPerMap": {
+        "min": 1600,
+        "max": 2000
+      },
+      "_source": {
+        "doc": "docs/40-mining-and-extraction.md",
+        "section": "Specialized-material geodes",
+        "lines": "76-96",
+        "notes": [
+          "The 1,600-2,000 per-map ore range is stated at docs/60-resources-crafting-progression.md:49 and :135."
+        ]
+      }
+    },
+    {
+      "source": "interval boss defeat",
+      "orePerBoss": 300,
+      "bossCount": 4,
+      "totalPerRun": 1200,
+      "_source": {
+        "doc": "docs/60-resources-crafting-progression.md",
+        "section": "Resource-radar safety valve",
+        "lines": "212"
+      }
+    },
+    {
+      "source": "relic sale",
+      "orePerRelic": 150,
+      "appliesToDisplacedRelic": true,
+      "_source": {
+        "doc": "docs/60-resources-crafting-progression.md",
+        "section": "Relic sale",
+        "lines": "174-178"
+      }
+    }
+  ],
+  "seamTotalPerMap": 3600,
+  "completeRunCeilingBeforeRelicSales": {
+    "min": 6400,
+    "max": 6800
+  },
+  "droppedByOrdinaryEnemiesAndElites": false
+}

@@ -1,0 +1,66 @@
+{
+  "_provenance": {
+    "doc": "docs/71-initial-weapon-numeric-catalog.md",
+    "section": "Containment Lattice — Conversion — 2 Driftmetal",
+    "lines": "223-228",
+    "extractedFor": "DAT-008",
+    "notes": [
+      "No document in the repository assigns a stable branch ID; `id` and the filename are minted as <weaponId>-<branch-name-kebab-case> per the transcription convention.",
+      "Prerequisites, exclusivity, and the two-unit cost model are stated in docs/65-weapon-stat-and-branch-upgrades.md lines 66 and 68; the cost resource and amount for this branch come from this section's heading.",
+      "`rules` holds every bullet of the section verbatim with its source line; `effects` is the structured transcription of those same bullets."
+    ]
+  },
+  "id": "W-AE-containment-lattice",
+  "weaponId": "W-AE",
+  "weaponName": "Attack Drones",
+  "branchName": "Containment Lattice",
+  "branchClass": "Conversion",
+  "cost": {
+    "resource": "Driftmetal",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutuallyExclusiveWith": [
+      "W-AE-replicator-swarm",
+      "W-AE-wolfpack-protocol"
+    ],
+    "irreversible": true
+  },
+  "sharedRuleRefs": [
+    "docs/65-weapon-stat-and-branch-upgrades.md:66",
+    "docs/65-weapon-stat-and-branch-upgrades.md:68"
+  ],
+  "effects": {
+    "dronesStopFiringProjectiles": true,
+    "formation": "rotating triangle around the mech",
+    "linkCount": 3,
+    "linkDamagePerSecondPercentOfOneDroneShotDps": 200,
+    "linkDamagePerSecondFormula": "current shot Damage × current attack rate × 2",
+    "maxLinksDamagingOneEnemySimultaneously": 2,
+    "linkLengthAndFormationSizeScaleWith": "current operational range",
+    "trianglePointFollowsMechFacing": true
+  },
+  "expectedEffect": {
+    "narrative": "rewards sweeping and enclosing crowds rather than target selection"
+  },
+  "rules": [
+    {
+      "line": 225,
+      "text": "The three drones stop firing projectiles and form a rotating triangle around the mech."
+    },
+    {
+      "line": 226,
+      "text": "Each of the three links deals damage per second equal to 200% of one drone's current shot DPS: `current shot Damage × current attack rate × 2`."
+    },
+    {
+      "line": 227,
+      "text": "An enemy may be damaged by at most two links at once. Link length and formation size scale with current operational range."
+    },
+    {
+      "line": 228,
+      "text": "Drones continuously adjust the triangle so one point follows mech facing; the lattice therefore rewards sweeping and enclosing crowds rather than target selection."
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "_provenance": {
+    "doc": "docs/71-initial-weapon-numeric-catalog.md",
+    "section": "Echo Well — Amplification — 2 Asterite",
+    "lines": "180-185",
+    "extractedFor": "DAT-008",
+    "notes": [
+      "No document in the repository assigns a stable branch ID; `id` and the filename are minted as <weaponId>-<branch-name-kebab-case> per the transcription convention.",
+      "Prerequisites, exclusivity, and the two-unit cost model are stated in docs/65-weapon-stat-and-branch-upgrades.md lines 66 and 68; the cost resource and amount for this branch come from this section's heading.",
+      "`rules` holds every bullet of the section verbatim with its source line; `effects` is the structured transcription of those same bullets."
+    ]
+  },
+  "id": "W-AD-echo-well",
+  "weaponId": "W-AD",
+  "weaponName": "Gravity Projector",
+  "branchName": "Echo Well",
+  "branchClass": "Amplification",
+  "cost": {
+    "resource": "Asterite",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutuallyExclusiveWith": [
+      "W-AD-gravity-slingshot",
+      "W-AD-singularity-forge"
+    ],
+    "irreversible": true
+  },
+  "sharedRuleRefs": [
+    "docs/65-weapon-stat-and-branch-upgrades.md:66",
+    "docs/65-weapon-stat-and-branch-upgrades.md:68"
+  ],
+  "effects": {
+    "echoesPerField": 1,
+    "echoLocation": "same location",
+    "echoDelayAfterOriginalEndsSeconds": 1.25,
+    "echoUsesFullStrengthCurrentValues": [
+      "damage",
+      "radius",
+      "duration",
+      "pull"
+    ],
+    "echoesCanCreateEchoes": false,
+    "newOriginalFieldMayCoexistWithOlderEcho": true
+  },
+  "expectedEffect": {
+    "maxDamageIncreasePercent": 100,
+    "condition": "player keeps enemies in the location",
+    "materiallyLessBenefitAgainstMovingBoss": true
+  },
+  "rules": [
+    {
+      "line": 182,
+      "text": "Every field repeats once in the same location 1.25 s after the original ends."
+    },
+    {
+      "line": 183,
+      "text": "The echo uses the current field Damage, radius, duration, and pull values at full strength."
+    },
+    {
+      "line": 184,
+      "text": "Echoes cannot create more echoes. A new original field may coexist with an older echo."
+    },
+    {
+      "line": 185,
+      "text": "Expected effect: up to +100% damage when the player keeps enemies in the location, with materially less benefit against a moving boss."
+    }
+  ]
+}

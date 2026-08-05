@@ -1,0 +1,78 @@
+{
+  "_provenance": {
+    "doc": "docs/36-initial-mech-catalog.md",
+    "section": "Catalog overview",
+    "lines": "43-52",
+    "extractedFor": "DAT-007",
+    "notes": [
+      "Row fields id/mech/signature/inherentTrait/selectionRole come from the Catalog overview table (line 49); field order follows that table's column order.",
+      "signatureWeaponId is not present in docs/36; it is resolved by weapon name against the Accepted base catalog assignment table in docs/66-weapon-catalog-and-resource-graph.md and carries its own _source.",
+      "traitNotes are the verbatim bullets of '### Signature and trait' minus the two bullets already captured as signature and inherentTrait.effect. The extraction-time examples in those bullets are the doc's own stated numbers and are left as prose rather than restructured, because the doc gives them as approximations ('about').",
+      "crossDocNotes is present on every mech for a uniform shape and is empty when docs outside 36 add no numeric fact about this mech."
+    ]
+  },
+  "id": "MCH-03",
+  "mech": "Prospector",
+  "signature": "Missile Rack",
+  "signatureWeaponId": "W-EF",
+  "_source": {
+    "signatureWeaponId": {
+      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
+      "section": "Accepted base catalog assignment",
+      "lines": "55",
+      "notes": [
+        "Only the ID-to-weapon-name mapping is taken from docs/66. Its 'Signature mech' column reads 'Initial signature; mech TBD' and is stale; docs/36 is authoritative for the assignment."
+      ]
+    }
+  },
+  "inherentTrait": {
+    "name": "Industrial Extractors",
+    "effect": "+15% mining extraction rate",
+    "affectedStatistic": "mining extraction rate",
+    "modifier": {
+      "percent": 15
+    }
+  },
+  "selectionRole": "Resource-routing expedition frame",
+  "playerFacingIdentity": "Prospector is an expedition and mining chassis protected by an automatic missile system. Its faster extraction shortens every ordinary-resource and Hyper Gold commitment without determining which weapons or branches the player should pursue.",
+  "traitNotes": [
+    "Applies to standard seams, rich seams, material geodes, and Hyper Gold sites.",
+    "Mining decay remains four times Prospector's current forward extraction rate, preserving the normal leave-and-decay ratio.",
+    "A nominal 15-second seam takes about 13.0 seconds, a 20-second geode about 17.4 seconds, and a 45-second Hyper Gold site about 39.1 seconds before interruption.",
+    "Does not change payouts, beacon thresholds, resonance fields, grace, or completed checkpoints."
+  ],
+  "topDownSilhouette": [
+    "Asymmetric industrial chassis with a visible sensor mast or survey dish on one shoulder and a block missile rack on the other.",
+    "Rear equipment deck and external extraction arms create a work-platform profile rather than a military wedge.",
+    "Missile doors and mining apparatus use separate silhouettes and animations so weapon readiness cannot be confused with active extraction."
+  ],
+  "selectionSummary": "A resource-focused expedition frame that completes every mining hold somewhat faster.",
+  "traitStacking": {
+    "changedBaseline": {
+      "text": "115% extraction rate",
+      "statistic": "mining extraction rate",
+      "percent": 115
+    },
+    "withMatchingUtilityRank3BeforePowerUps": {
+      "text": "135% with Extraction Accelerator",
+      "utility": "Extraction Accelerator",
+      "percent": 135
+    },
+    "_source": {
+      "doc": "docs/36-initial-mech-catalog.md",
+      "section": "Trait comparison and stacking",
+      "lines": "202-208"
+    }
+  },
+  "initialAvailability": {
+    "text": "Available",
+    "available": true,
+    "recommendedDefault": false,
+    "_source": {
+      "doc": "docs/36-initial-mech-catalog.md",
+      "section": "Initial availability",
+      "lines": "215-223"
+    }
+  },
+  "crossDocNotes": []
+}

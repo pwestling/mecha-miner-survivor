@@ -1,0 +1,70 @@
+{
+  "_provenance": {
+    "doc": "docs/71-initial-weapon-numeric-catalog.md",
+    "section": "Saturation Cascade — Amplification — 2 Cinderglass",
+    "lines": "155-160",
+    "extractedFor": "DAT-008",
+    "notes": [
+      "No document in the repository assigns a stable branch ID; `id` and the filename are minted as <weaponId>-<branch-name-kebab-case> per the transcription convention.",
+      "Prerequisites, exclusivity, and the two-unit cost model are stated in docs/65-weapon-stat-and-branch-upgrades.md lines 66 and 68; the cost resource and amount for this branch come from this section's heading.",
+      "`rules` holds every bullet of the section verbatim with its source line; `effects` is the structured transcription of those same bullets."
+    ]
+  },
+  "id": "W-AC-saturation-cascade",
+  "weaponId": "W-AC",
+  "weaponName": "Cluster Mortar",
+  "branchName": "Saturation Cascade",
+  "branchClass": "Amplification",
+  "cost": {
+    "resource": "Cinderglass",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutuallyExclusiveWith": [
+      "W-AC-interdiction-payload",
+      "W-AC-danger-close-protocol"
+    ],
+    "irreversible": true
+  },
+  "sharedRuleRefs": [
+    "docs/65-weapon-stat-and-branch-upgrades.md:66",
+    "docs/65-weapon-stat-and-branch-upgrades.md:68"
+  ],
+  "effects": {
+    "secondaryBlastsPerPrimaryVictim": 1,
+    "secondaryBlastDelaySeconds": 0.4,
+    "secondaryBlastPosition": "that enemy's original hit position",
+    "secondaryBlastDamagePercentOfCurrentDamage": 40,
+    "secondaryBlastRadiusPercentOfCurrentRadius": 60,
+    "secondaryBlastsSeedFurtherBlasts": false,
+    "maxSecondaryBlastHitsPerTargetPerPrimaryShell": 2
+  },
+  "expectedEffect": {
+    "approximate": true,
+    "hordeThroughputPercent": {
+      "min": 40,
+      "max": 100
+    },
+    "scalesWith": "how well the primary impact catches a cluster"
+  },
+  "rules": [
+    {
+      "line": 157,
+      "text": "Each enemy hit by the primary blast seeds a secondary blast 0.40 s later at that enemy's original hit position."
+    },
+    {
+      "line": 158,
+      "text": "Each secondary blast deals 40% current Damage and has 60% current blast radius."
+    },
+    {
+      "line": 159,
+      "text": "Secondary blasts do not seed more blasts. A target can take no more than two secondary-blast hits from one primary shell."
+    },
+    {
+      "line": 160,
+      "text": "Expected effect: approximately +40–100% horde throughput, scaling with how well the primary impact catches a cluster."
+    }
+  ]
+}

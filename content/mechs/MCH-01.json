@@ -1,0 +1,79 @@
+{
+  "_provenance": {
+    "doc": "docs/36-initial-mech-catalog.md",
+    "section": "Catalog overview",
+    "lines": "43-52",
+    "extractedFor": "DAT-007",
+    "notes": [
+      "Row fields id/mech/signature/inherentTrait/selectionRole come from the Catalog overview table (line 47); field order follows that table's column order.",
+      "signatureWeaponId is not present in docs/36; it is resolved by weapon name against the Accepted base catalog assignment table in docs/66-weapon-catalog-and-resource-graph.md and carries its own _source.",
+      "traitNotes are the verbatim bullets of '### Signature and trait' minus the two bullets already captured as signature and inherentTrait.effect.",
+      "inherentTrait.modifier is a structured restatement of the verbatim inherentTrait.effect string; no value is introduced.",
+      "traitStacking values come from the 'Trait comparison and stacking' table; the doc states them as percentages of the shared baseline, not as deltas.",
+      "crossDocNotes is present on every mech for a uniform shape and is empty when docs outside 36 add no numeric fact about this mech."
+    ]
+  },
+  "id": "MCH-01",
+  "mech": "Kestrel",
+  "signature": "Pulse Repeater",
+  "signatureWeaponId": "W-BC",
+  "_source": {
+    "signatureWeaponId": {
+      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
+      "section": "Accepted base catalog assignment",
+      "lines": "46",
+      "notes": [
+        "Only the ID-to-weapon-name mapping is taken from docs/66. Its 'Signature mech' column reads 'Initial signature; mech TBD' and is stale; docs/36 is authoritative for the assignment."
+      ]
+    }
+  },
+  "inherentTrait": {
+    "name": "Accelerated Feed",
+    "effect": "+15% weapon attack rate",
+    "affectedStatistic": "weapon attack rate",
+    "modifier": {
+      "percent": 15
+    }
+  },
+  "selectionRole": "Approachable rapid-fire skirmisher",
+  "playerFacingIdentity": "Kestrel is the recommended first deployment. Its rapid nearest-target fire requires little facing expertise, while its trait makes every later automatic weapon activate more frequently where applicable.",
+  "traitNotes": [
+    "Attack rate means 1.15 times the ordinary activation frequency, not 15% cooldown subtraction.",
+    "It uses the same affected-timing boundaries as Cycle Capacitor: primary weapon activations accelerate, while projectile travel, damage ticks, delayed echoes, arming delays, and non-weapon timers do not unless a weapon specification explicitly maps them to attack rate."
+  ],
+  "topDownSilhouette": [
+    "Compact central chassis with two swept lateral weapon housings.",
+    "Broad rear taper and short forward nose create a clear movement-facing axis.",
+    "Low, agile proportions distinguish it from Bastion's square mass and Razorback's heavy wedge.",
+    "Pulse Repeater emitters flash alternately from the two side housings without changing the weapon's mechanical firing sequence."
+  ],
+  "selectionSummary": "Rapid automatic targeting and faster weapon cycles make Kestrel the most immediately approachable chassis.",
+  "traitStacking": {
+    "changedBaseline": {
+      "text": "115% attack rate",
+      "statistic": "weapon attack rate",
+      "percent": 115
+    },
+    "withMatchingUtilityRank3BeforePowerUps": {
+      "text": "135% with Cycle Capacitor",
+      "utility": "Cycle Capacitor",
+      "percent": 135
+    },
+    "_source": {
+      "doc": "docs/36-initial-mech-catalog.md",
+      "section": "Trait comparison and stacking",
+      "lines": "202-206"
+    }
+  },
+  "initialAvailability": {
+    "text": "Available; recommended default",
+    "available": true,
+    "recommendedDefault": true,
+    "_source": {
+      "doc": "docs/36-initial-mech-catalog.md",
+      "section": "Initial availability",
+      "lines": "215-221"
+    }
+  },
+  "crossDocNotes": []
+}

@@ -1,0 +1,78 @@
+{
+  "_provenance": {
+    "doc": "docs/36-initial-mech-catalog.md",
+    "section": "Catalog overview",
+    "lines": "43-52",
+    "extractedFor": "DAT-007",
+    "notes": [
+      "Row fields id/mech/signature/inherentTrait/selectionRole come from the Catalog overview table (line 50); field order follows that table's column order.",
+      "signatureWeaponId is not present in docs/36; it is resolved by weapon name against the Accepted base catalog assignment table in docs/66-weapon-catalog-and-resource-graph.md and carries its own _source.",
+      "traitNotes are the verbatim bullets of '### Signature and trait' minus the two bullets already captured as signature and inherentTrait.effect.",
+      "crossDocNotes is present on every mech for a uniform shape and is empty when docs outside 36 add no numeric fact about this mech."
+    ]
+  },
+  "id": "MCH-04",
+  "mech": "Lodestar",
+  "signature": "Gravity Projector",
+  "signatureWeaponId": "W-AD",
+  "_source": {
+    "signatureWeaponId": {
+      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
+      "section": "Accepted base catalog assignment",
+      "lines": "43",
+      "notes": [
+        "Only the ID-to-weapon-name mapping is taken from docs/66. Its 'Signature mech' column reads 'Initial signature; mech TBD' and is stale; docs/36 is authoritative for the assignment."
+      ]
+    }
+  },
+  "inherentTrait": {
+    "name": "Field Geometry",
+    "effect": "+15% weapon area",
+    "affectedStatistic": "weapon area",
+    "modifier": {
+      "percent": 15
+    }
+  },
+  "selectionRole": "Crowd-shaping field controller",
+  "playerFacingIdentity": "Lodestar controls broad spaces. Its Gravity Projector immediately demonstrates field placement and grouping, while its trait expands every later weapon dimension explicitly classified as Area.",
+  "traitNotes": [
+    "Uses the same Area mappings and exclusions as Field Expander: scalable radii, widths, blast areas, projectile bodies, cones, and persistent damage zones qualify.",
+    "It does not alter targeting range, placement range, travel distance, orbit radius, mining zones, pickup radius, or resonance fields unless an accepted weapon rule classifies that exact dimension as Area.",
+    "Gravity Projector's field radius receives the bonus in every branch."
+  ],
+  "topDownSilhouette": [
+    "Circular central body surrounded by four evenly spaced field vanes or emitter arms.",
+    "Radial negative spaces remain visible when the model is small or surrounded by enemies.",
+    "A luminous center identifies the gravity source without relying on its resource colors.",
+    "The silhouette is orientation-neutral enough to suit automatic field placement while a small forward marker still communicates persistent facing."
+  ],
+  "selectionSummary": "A field-control platform whose weapons cover larger spaces.",
+  "traitStacking": {
+    "changedBaseline": {
+      "text": "115% weapon area",
+      "statistic": "weapon area",
+      "percent": 115
+    },
+    "withMatchingUtilityRank3BeforePowerUps": {
+      "text": "135% with Field Expander",
+      "utility": "Field Expander",
+      "percent": 135
+    },
+    "_source": {
+      "doc": "docs/36-initial-mech-catalog.md",
+      "section": "Trait comparison and stacking",
+      "lines": "202-209"
+    }
+  },
+  "initialAvailability": {
+    "text": "Available",
+    "available": true,
+    "recommendedDefault": false,
+    "_source": {
+      "doc": "docs/36-initial-mech-catalog.md",
+      "section": "Initial availability",
+      "lines": "215-224"
+    }
+  },
+  "crossDocNotes": []
+}

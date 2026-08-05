@@ -1,0 +1,64 @@
+{
+  "_provenance": {
+    "doc": "docs/71-initial-weapon-numeric-catalog.md",
+    "section": "Coherence Memory — Amplification — 2 Asterite",
+    "lines": "234-238",
+    "extractedFor": "DAT-008",
+    "notes": [
+      "No document in the repository assigns a stable branch ID; `id` and the filename are minted as <weaponId>-<branch-name-kebab-case> per the transcription convention.",
+      "Prerequisites, exclusivity, and the two-unit cost model are stated in docs/65-weapon-stat-and-branch-upgrades.md lines 66 and 68; the cost resource and amount for this branch come from this section's heading.",
+      "`rules` holds every bullet of the section verbatim with its source line; `effects` is the structured transcription of those same bullets."
+    ]
+  },
+  "id": "W-AF-coherence-memory",
+  "weaponId": "W-AF",
+  "weaponName": "Tracking Laser",
+  "branchName": "Coherence Memory",
+  "branchClass": "Amplification",
+  "cost": {
+    "resource": "Asterite",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutuallyExclusiveWith": [
+      "W-AF-target-designator",
+      "W-AF-cutting-vector"
+    ],
+    "irreversible": true
+  },
+  "sharedRuleRefs": [
+    "docs/65-weapon-stat-and-branch-upgrades.md:66",
+    "docs/65-weapon-stat-and-branch-upgrades.md:68"
+  ],
+  "effects": {
+    "focusResetsOnTargetDeathOrRangeBreak": false,
+    "focusDecayPercentagePointsPerSecondWhileUnlocked": 10,
+    "resumesFromRemainingValueOnNewLock": true,
+    "changesFocusCapMultiplier": false,
+    "focusCapMultiplier": 2
+  },
+  "expectedEffect": {
+    "approximate": true,
+    "realizedDamagePercent": {
+      "min": 35,
+      "max": 55
+    },
+    "scene": "target-rich movement scenes"
+  },
+  "rules": [
+    {
+      "line": 236,
+      "text": "Focus no longer resets immediately when the target dies or breaks line of range."
+    },
+    {
+      "line": 237,
+      "text": "While no valid target is locked, the focus meter decays by 10 percentage points per second; locking any new target resumes from the remaining value."
+    },
+    {
+      "line": 238,
+      "text": "This changes reliability rather than the 2× cap and is expected to add roughly 35–55% realized damage in target-rich movement scenes."
+    }
+  ]
+}

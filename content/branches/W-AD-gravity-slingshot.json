@@ -1,0 +1,67 @@
+{
+  "_provenance": {
+    "doc": "docs/71-initial-weapon-numeric-catalog.md",
+    "section": "Gravity Slingshot — Functional — 2 Driftmetal",
+    "lines": "187-192",
+    "extractedFor": "DAT-008",
+    "notes": [
+      "No document in the repository assigns a stable branch ID; `id` and the filename are minted as <weaponId>-<branch-name-kebab-case> per the transcription convention.",
+      "Prerequisites, exclusivity, and the two-unit cost model are stated in docs/65-weapon-stat-and-branch-upgrades.md lines 66 and 68; the cost resource and amount for this branch come from this section's heading.",
+      "`rules` holds every bullet of the section verbatim with its source line; `effects` is the structured transcription of those same bullets."
+    ]
+  },
+  "id": "W-AD-gravity-slingshot",
+  "weaponId": "W-AD",
+  "weaponName": "Gravity Projector",
+  "branchName": "Gravity Slingshot",
+  "branchClass": "Functional",
+  "cost": {
+    "resource": "Driftmetal",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutuallyExclusiveWith": [
+      "W-AD-echo-well",
+      "W-AD-singularity-forge"
+    ],
+    "irreversible": true
+  },
+  "sharedRuleRefs": [
+    "docs/65-weapon-stat-and-branch-upgrades.md:66",
+    "docs/65-weapon-stat-and-branch-upgrades.md:68"
+  ],
+  "effects": {
+    "endOfFieldBurst": true,
+    "burstDamagePercentOfFullDurationDamageBudget": 75,
+    "burstDamageFormula": "current Damage per second × current duration × 0.75",
+    "burstRadius": "current field radius",
+    "burstHitsPerTarget": 1,
+    "ordinaryEnemyLaunchDistanceM": 4,
+    "launchDirection": "directly away from the mech position sampled when the field ends",
+    "bossDisplacementForm": "resisted"
+  },
+  "expectedEffect": {
+    "fullStayDamagePercentOfBaseField": 175,
+    "narrative": "the launch turning grouping into deliberate dispersal"
+  },
+  "rules": [
+    {
+      "line": 189,
+      "text": "When a field ends, it emits a burst dealing 75% of that field's full-duration damage budget: `current Damage per second × current duration × 0.75`."
+    },
+    {
+      "line": 190,
+      "text": "Ordinary survivors are launched 4M directly away from the mech's position sampled when the field ends; bosses receive resisted displacement."
+    },
+    {
+      "line": 191,
+      "text": "The burst has the current field radius and can damage each target once."
+    },
+    {
+      "line": 192,
+      "text": "Expected full-stay damage is 175% of the base field, with the launch turning grouping into deliberate dispersal."
+    }
+  ]
+}

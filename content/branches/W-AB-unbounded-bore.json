@@ -1,0 +1,72 @@
+{
+  "_provenance": {
+    "doc": "docs/71-initial-weapon-numeric-catalog.md",
+    "section": "Unbounded Bore — Amplification — 2 Asterite",
+    "lines": "130-134",
+    "extractedFor": "DAT-008",
+    "notes": [
+      "No document in the repository assigns a stable branch ID; `id` and the filename are minted as <weaponId>-<branch-name-kebab-case> per the transcription convention.",
+      "Prerequisites, exclusivity, and the two-unit cost model are stated in docs/65-weapon-stat-and-branch-upgrades.md lines 66 and 68; the cost resource and amount for this branch come from this section's heading.",
+      "`rules` holds every bullet of the section verbatim with its source line; `effects` is the structured transcription of those same bullets."
+    ]
+  },
+  "id": "W-AB-unbounded-bore",
+  "weaponId": "W-AB",
+  "weaponName": "Rail Lance",
+  "branchName": "Unbounded Bore",
+  "branchClass": "Amplification",
+  "cost": {
+    "resource": "Asterite",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutuallyExclusiveWith": [
+      "W-AB-fracture-lance",
+      "W-AB-kinetic-capacitor"
+    ],
+    "irreversible": true
+  },
+  "sharedRuleRefs": [
+    "docs/65-weapon-stat-and-branch-upgrades.md:66",
+    "docs/65-weapon-stat-and-branch-upgrades.md:68"
+  ],
+  "effects": {
+    "removesPierceTargetLimit": true,
+    "basePierceTargetLimit": 4,
+    "unlimitedPierce": true,
+    "limitedByCurrentMaximumRange": true,
+    "mayDamageEveryEnemyCrossed": true,
+    "unchangedStats": [
+      "damage",
+      "beamWidth",
+      "range",
+      "cadence",
+      "projectileSpeed"
+    ]
+  },
+  "expectedEffect": {
+    "approximate": true,
+    "hordeThroughputPercent": {
+      "min": 35,
+      "max": 70
+    },
+    "scene": "dense aligned stream",
+    "directSingleTargetIncrease": false
+  },
+  "rules": [
+    {
+      "line": 132,
+      "text": "Removes the four-target pierce limit. The lance continues to its current maximum range and may damage every enemy it crosses."
+    },
+    {
+      "line": 133,
+      "text": "Damage, width, range, cadence, and projectile speed are otherwise unchanged."
+    },
+    {
+      "line": 134,
+      "text": "Expected effect: approximately +35–70% horde throughput in a dense aligned stream and no direct single-target increase."
+    }
+  ]
+}

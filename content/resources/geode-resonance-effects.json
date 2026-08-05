@@ -1,0 +1,110 @@
+{
+  "_provenance": {
+    "doc": "docs/40-mining-and-extraction.md",
+    "section": "Geode resonance fields",
+    "lines": "98-115",
+    "extractedFor": "DAT-007",
+    "notes": [
+      "Cohesive aggregate: the six resonance effects have no individual IDs, so they are one file keyed by the geode's material.",
+      "`shortModifier` on each entry is transcribed from the duplicate table at docs/61-specialized-resource-identities.md:94-101 (section 'Geode resonance behavior'), which is an abbreviated restatement of the same six 20% modifiers.",
+      "Divergence between the two tables: docs/61:94-101 omits every named effect (Focused Assault, Dense Plating, Charged Payloads, Vector Lock, Synchronized Aggression, Overclocked Motion) and omits the two non-coupling qualifiers docs/40 states - Eidolon Coral is '20% faster without increasing movement speed' and Flux Amber is '20% higher without increasing attack cadence'. No numeric value diverges; both tables state 20% for all six. docs/40 is used as authoritative because docs/61:103 points back to it.",
+      "materialId is the letter code from the identity map at docs/61-specialized-resource-identities.md:20-27; docs/40's table names materials only.",
+      "modifier.direction is derived from the doc's own wording ('higher', 'lower', 'less', 'faster').",
+      "fieldRules.radiusMeters is null: docs/40-mining-and-extraction.md:48 leaves the exact mining-zone radius and any resource-specific size variation open, and no doc gives the resonance field radius beyond 'larger than its extraction zone'.",
+      "The 20% modifiers are explicitly initial playtest values (docs/40-mining-and-extraction.md:111); their common magnitude does not assert equal practical difficulty."
+    ]
+  },
+  "id": "geode-resonance-effects",
+  "modifierMagnitudePercent": 20,
+  "fieldRules": {
+    "radiusMeters": null,
+    "largerThanExtractionZone": true,
+    "activeBeforeExtractionBegins": true,
+    "activeDuringInterruptions": true,
+    "collapsesWhenGeodeOpens": true,
+    "modifierRetainedAfterLeavingField": false,
+    "appliesTo": [
+      "ordinary enemies",
+      "elites",
+      "bosses"
+    ],
+    "fieldsOverlapOnStandardMaps": false,
+    "summonsEnemies": false,
+    "usesProgressThresholds": false,
+    "modifierNamedInGeodeLabelOrContextualHud": true
+  },
+  "effects": [
+    {
+      "geode": "Asterite",
+      "materialId": "A",
+      "effectName": "Focused Assault",
+      "resonanceEffect": "outgoing enemy damage is 20% higher",
+      "modifier": {
+        "percent": 20,
+        "direction": "increase"
+      },
+      "shortModifier": "Enemy outgoing damage +20%",
+      "edgeCaseRule": null
+    },
+    {
+      "geode": "Barysteel",
+      "materialId": "B",
+      "effectName": "Dense Plating",
+      "resonanceEffect": "enemies take 20% less damage",
+      "modifier": {
+        "percent": 20,
+        "direction": "decrease"
+      },
+      "shortModifier": "Enemy incoming damage −20%",
+      "edgeCaseRule": "Reduces incoming damage only while the enemy remains inside the field and never restores health when the effect ends."
+    },
+    {
+      "geode": "Cinderglass",
+      "materialId": "C",
+      "effectName": "Charged Payloads",
+      "resonanceEffect": "enemy projectile damage is 20% higher",
+      "modifier": {
+        "percent": 20,
+        "direction": "increase"
+      },
+      "shortModifier": "Enemy projectile damage +20%",
+      "edgeCaseRule": "Bonus projectile damage is determined when the empowered enemy creates the projectile; that projectile retains the decided damage after crossing the boundary."
+    },
+    {
+      "geode": "Driftmetal",
+      "materialId": "D",
+      "effectName": "Vector Lock",
+      "resonanceEffect": "player-imposed displacement magnitude and control-effect duration are 20% lower",
+      "modifier": {
+        "percent": 20,
+        "direction": "decrease"
+      },
+      "shortModifier": "Player-imposed displacement and control duration −20%",
+      "edgeCaseRule": "Reduces both forced-movement magnitude and timed control duration without granting immunity."
+    },
+    {
+      "geode": "Eidolon Coral",
+      "materialId": "E",
+      "effectName": "Synchronized Aggression",
+      "resonanceEffect": "enemy attack cadence is 20% faster without increasing movement speed",
+      "modifier": {
+        "percent": 20,
+        "direction": "increase"
+      },
+      "shortModifier": "Enemy attack cadence +20%",
+      "edgeCaseRule": null
+    },
+    {
+      "geode": "Flux Amber",
+      "materialId": "F",
+      "effectName": "Overclocked Motion",
+      "resonanceEffect": "enemy movement speed is 20% higher without increasing attack cadence",
+      "modifier": {
+        "percent": 20,
+        "direction": "increase"
+      },
+      "shortModifier": "Enemy movement speed +20%",
+      "edgeCaseRule": null
+    }
+  ]
+}

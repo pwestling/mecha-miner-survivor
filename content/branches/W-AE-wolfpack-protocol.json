@@ -1,0 +1,69 @@
+{
+  "_provenance": {
+    "doc": "docs/71-initial-weapon-numeric-catalog.md",
+    "section": "Wolfpack Protocol — Functional — 2 Asterite",
+    "lines": "216-221",
+    "extractedFor": "DAT-008",
+    "notes": [
+      "No document in the repository assigns a stable branch ID; `id` and the filename are minted as <weaponId>-<branch-name-kebab-case> per the transcription convention.",
+      "Prerequisites, exclusivity, and the two-unit cost model are stated in docs/65-weapon-stat-and-branch-upgrades.md lines 66 and 68; the cost resource and amount for this branch come from this section's heading.",
+      "`rules` holds every bullet of the section verbatim with its source line; `effects` is the structured transcription of those same bullets."
+    ]
+  },
+  "id": "W-AE-wolfpack-protocol",
+  "weaponId": "W-AE",
+  "weaponName": "Attack Drones",
+  "branchName": "Wolfpack Protocol",
+  "branchClass": "Functional",
+  "cost": {
+    "resource": "Asterite",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutuallyExclusiveWith": [
+      "W-AE-replicator-swarm",
+      "W-AE-containment-lattice"
+    ],
+    "irreversible": true
+  },
+  "sharedRuleRefs": [
+    "docs/65-weapon-stat-and-branch-upgrades.md:66",
+    "docs/65-weapon-stat-and-branch-upgrades.md:68"
+  ],
+  "effects": {
+    "allDronesFocusSameTarget": true,
+    "dronesFocused": 3,
+    "targetPriority": "strongest valid enemy",
+    "switchesTargetOnly": [
+      "target dies",
+      "target leaves operational range"
+    ],
+    "damageBonusPercentPerOtherPermanentDroneLockedToTarget": 15,
+    "damageBonusPercentWithAllThreeLocked": 30,
+    "temporaryDronesCountTowardBonus": false
+  },
+  "expectedEffect": {
+    "singleTargetOutputPercent": 30,
+    "narrative": "much less target waste, paid for with poor crowd distribution"
+  },
+  "rules": [
+    {
+      "line": 218,
+      "text": "All three drones focus the same target, prioritizing the strongest valid enemy and switching only when it dies or leaves operational range."
+    },
+    {
+      "line": 219,
+      "text": "Each drone gains +15% damage for every other permanent drone currently locked to that target. With all three locked, each deals +30% damage."
+    },
+    {
+      "line": 220,
+      "text": "The bonus does not count temporary drones from any external effect."
+    },
+    {
+      "line": 221,
+      "text": "Expected effect: +30% single-target output and much less target waste, paid for with poor crowd distribution."
+    }
+  ]
+}

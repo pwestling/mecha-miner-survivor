@@ -1,0 +1,78 @@
+{
+  "_provenance": {
+    "doc": "docs/71-initial-weapon-numeric-catalog.md",
+    "section": "Kinetic Capacitor — Conversion — 2 Cinderglass",
+    "lines": "143-149",
+    "extractedFor": "DAT-008",
+    "notes": [
+      "No document in the repository assigns a stable branch ID; `id` and the filename are minted as <weaponId>-<branch-name-kebab-case> per the transcription convention.",
+      "Prerequisites, exclusivity, and the two-unit cost model are stated in docs/65-weapon-stat-and-branch-upgrades.md lines 66 and 68; the cost resource and amount for this branch come from this section's heading.",
+      "`rules` holds every bullet of the section verbatim with its source line; `effects` is the structured transcription of those same bullets."
+    ]
+  },
+  "id": "W-AB-kinetic-capacitor",
+  "weaponId": "W-AB",
+  "weaponName": "Rail Lance",
+  "branchName": "Kinetic Capacitor",
+  "branchClass": "Conversion",
+  "cost": {
+    "resource": "Cinderglass",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutuallyExclusiveWith": [
+      "W-AB-unbounded-bore",
+      "W-AB-fracture-lance"
+    ],
+    "irreversible": true
+  },
+  "sharedRuleRefs": [
+    "docs/65-weapon-stat-and-branch-upgrades.md:66",
+    "docs/65-weapon-stat-and-branch-upgrades.md:68"
+  ],
+  "effects": {
+    "replacesRegularShot": true,
+    "chargeTiedToMechMovement": true,
+    "chargeTimeStationarySeconds": 9.0,
+    "chargeRateMultiplierAtFullUnmodifiedMovementSpeed": 2,
+    "chargeTimeAtFullMovementSpeedSeconds": 4.5,
+    "intermediateMovementSpeedInterpolation": "linear",
+    "chargedShotDamagePercentOfCurrentDamage": 175,
+    "chargedShotWidthPercentOfCurrentWidth": 200,
+    "unlimitedPierce": true,
+    "retainsCurrentRange": true,
+    "projectileSpeedMPerSecond": 30,
+    "baseLanceCadenceSecondsForComparison": 3.0,
+    "alwaysFiresLessOftenThanBaseCadence": true,
+    "chargeRetainedWhileBrieflyChangingDirection": true,
+    "chargeLostOnlyByFiring": true,
+    "stoppingSlowsRemainingCharge": true
+  },
+  "expectedEffect": {
+    "narrative": "much stronger mobile lane-clearing weapon whose stationary boss DPS is substantially worse"
+  },
+  "rules": [
+    {
+      "line": 145,
+      "text": "Replaces the regular shot with a charge tied to mech movement."
+    },
+    {
+      "line": 146,
+      "text": "The charge takes 9.0 s while stationary. At full unmodified movement speed it builds twice as fast and fires every 4.5 s; intermediate movement speeds interpolate linearly."
+    },
+    {
+      "line": 147,
+      "text": "The charged lance deals 175% current Damage, has 200% current width, and has unlimited pierce. It retains current range and 30M/s projectile speed. Even at full movement it fires less often than the 3.0 s base lance."
+    },
+    {
+      "line": 148,
+      "text": "The charge is retained while briefly changing direction and is lost only by firing; stopping merely slows the remaining charge."
+    },
+    {
+      "line": 149,
+      "text": "This creates a much stronger mobile lane-clearing weapon whose stationary boss DPS is substantially worse."
+    }
+  ]
+}

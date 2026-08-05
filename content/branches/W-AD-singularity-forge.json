@@ -1,0 +1,97 @@
+{
+  "_provenance": {
+    "doc": "docs/71-initial-weapon-numeric-catalog.md",
+    "section": "Singularity Forge — Conversion — 2 Barysteel",
+    "lines": "194-203",
+    "extractedFor": "DAT-008",
+    "notes": [
+      "No document in the repository assigns a stable branch ID; `id` and the filename are minted as <weaponId>-<branch-name-kebab-case> per the transcription convention.",
+      "Prerequisites, exclusivity, and the two-unit cost model are stated in docs/65-weapon-stat-and-branch-upgrades.md lines 66 and 68; the cost resource and amount for this branch come from this section's heading.",
+      "`rules` holds every bullet of the section verbatim with its source line; `effects` is the structured transcription of those same bullets."
+    ]
+  },
+  "id": "W-AD-singularity-forge",
+  "weaponId": "W-AD",
+  "weaponName": "Gravity Projector",
+  "branchName": "Singularity Forge",
+  "branchClass": "Conversion",
+  "cost": {
+    "resource": "Barysteel",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutuallyExclusiveWith": [
+      "W-AD-echo-well",
+      "W-AD-gravity-slingshot"
+    ],
+    "irreversible": true
+  },
+  "sharedRuleRefs": [
+    "docs/65-weapon-stat-and-branch-upgrades.md:66",
+    "docs/65-weapon-stat-and-branch-upgrades.md:68"
+  ],
+  "effects": {
+    "replacesNormalCadence": true,
+    "cycleSeconds": 7.0,
+    "collectionSeconds": 4.0,
+    "collectionFieldRadius": "current radius",
+    "collectionFieldPull": "current pull",
+    "collectionFieldDamagePercentOfCurrentDamagePerSecond": 60,
+    "hullPerMassPoint": 50,
+    "massHullSource": "non-boss enemy Hull drawn into the inner half of the field",
+    "massRoundingPerEnemy": "up",
+    "eliteMinimumMassContribution": 2,
+    "bossMassContribution": 4,
+    "massCap": 12,
+    "contributionsPerEnemyPerCollectionCycle": 1,
+    "contributionTrigger": "the first time it enters the inner half",
+    "contributionUsesMaximumHull": true,
+    "roundTargetingRangeM": 12,
+    "roundTargetPriority": "strongest enemy",
+    "singularityDuration": "current field duration",
+    "singularityRadiusPercentOfCurrentRadius": 150,
+    "singularityDamagePerSecondFormula": "current field Damage × (4 + 0.25 × mass)",
+    "singularityDamageMultiplierAtMaximumMass": 7,
+    "noTargetWaitSeconds": 2.0,
+    "noTargetFallback": "detonates at the collection point"
+  },
+  "expectedEffect": {
+    "narrative": "deliberately infrequent and devastating: even a low-mass shot improves boss output, while a well-fed shot can erase a dense zone"
+  },
+  "rules": [
+    {
+      "line": 196,
+      "text": "Replaces the normal cadence with a fixed 7.0 s cycle: a 4.0 s collection field followed by a fired singularity round."
+    },
+    {
+      "line": 197,
+      "text": "The collection field uses current radius and pull but deals only 60% current field Damage per second."
+    },
+    {
+      "line": 198,
+      "text": "It gains one mass point per 50 points of non-boss enemy Hull drawn into the inner half of the field, rounded up per enemy; elites contribute at least two and bosses contribute four. Mass caps at 12."
+    },
+    {
+      "line": 199,
+      "text": "An enemy contributes only once per collection cycle, the first time it enters the inner half; the calculation uses its maximum Hull rather than remaining Hull."
+    },
+    {
+      "line": 200,
+      "text": "At the end of collection, a round targets the strongest enemy in 12M and creates a singularity lasting current field duration with 150% current radius."
+    },
+    {
+      "line": 201,
+      "text": "The singularity deals `current field Damage × (4 + 0.25 × mass)` per second. At maximum mass this is 7× current field Damage per second."
+    },
+    {
+      "line": 202,
+      "text": "If no target exists when collection ends, the round waits up to 2.0 s and then detonates at the collection point."
+    },
+    {
+      "line": 203,
+      "text": "This is deliberately infrequent and devastating: even a low-mass shot improves boss output, while a well-fed shot can erase a dense zone."
+    }
+  ]
+}

@@ -1,0 +1,239 @@
+{
+  "_provenance": {
+    "doc": "docs/71-initial-weapon-numeric-catalog.md",
+    "section": "Rank-Zero Values and Ore-Stat Increments",
+    "lines": "70-90",
+    "extractedFor": "DAT-007",
+    "notes": [
+      "`M` is one unmodified mech collision diameter, a relative spatial unit, not a metric distance (docs/71-initial-weapon-numeric-catalog.md:24); numeric keys therefore carry an `M` suffix rather than `Meters`.",
+      "Ore-stat units differ per stat, so each entry in `oreUpgradeableStats` carries an explicit `unit` field instead of encoding the unit in the key name.",
+      "`signatureMech` comes from docs/36-initial-mech-catalog.md:45, which is authoritative for the assignment. The `Signature mech` column of docs/66-weapon-catalog-and-resource-graph.md:39 still reads \"Initial signature; mech TBD\" and docs/weapons/README.md:20 only records Yes/No; both agree on signature membership but neither names the mech.",
+      "The `Status at DEC-075` column of docs/66-weapon-catalog-and-resource-graph.md:39 is deliberately not transcribed: docs/66-weapon-catalog-and-resource-graph.md:37 states DEC-125 moved every row to a different status, so the column is stale.",
+      "`favorableHordeDps` is an analytic scene estimate, not a cap; docs/71-initial-weapon-numeric-catalog.md:68 states the assumed simultaneous-victim counts and that benchmark captures supersede it.",
+      "The content envelope required by docs/technical/40-content-data-and-validation.md:76-89 (`schema_version`, `content_version`, `status`, `name_key`, `summary_key`, `tags`, `source_refs`, `presentation_id`) is not populated: no design document supplies values for those fields, and this transcription follows the DAT-007 field conventions."
+    ]
+  },
+  "id": "W-AC",
+  "name": "Cluster Mortar",
+  "recipePair": {
+    "notation": "A + C",
+    "materialCodes": [
+      "A",
+      "C"
+    ],
+    "materialNames": [
+      "Asterite",
+      "Cinderglass"
+    ],
+    "_source": {
+      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
+      "section": "Accepted base catalog assignment",
+      "lines": "35-55"
+    }
+  },
+  "signatureMech": null,
+  "fabricationCost": {
+    "materials": [
+      {
+        "materialCode": "A",
+        "material": "Asterite",
+        "units": 1
+      },
+      {
+        "materialCode": "C",
+        "material": "Cinderglass",
+        "units": 1
+      }
+    ],
+    "signatureWeaponBeginsEquippedWithoutPayingCost": true,
+    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost.",
+    "_source": {
+      "doc": "docs/60-resources-crafting-progression.md",
+      "section": "Base-weapon availability",
+      "lines": "104-110"
+    }
+  },
+  "baseAutomaticAttack": {
+    "text": "Fires at a telegraphed, committed ground position selected from the densest enemy concentration, then explodes there after a delay",
+    "_source": {
+      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
+      "section": "Accepted base catalog assignment",
+      "lines": "35-55"
+    }
+  },
+  "baseBehavior": {
+    "text": "selects the densest enemy concentration within 12M when ready and locks its current ground position. A warning marker remains at that committed point for the fixed 1.2 s shell delay; the explosion then damages every enemy in its current radius.",
+    "_source": {
+      "doc": "docs/71-initial-weapon-numeric-catalog.md",
+      "section": "W-AC — Cluster Mortar",
+      "lines": "151-153"
+    }
+  },
+  "oreUpgradeableStatLabels": {
+    "labels": [
+      "Damage",
+      "blast radius",
+      "attack rate"
+    ],
+    "_source": {
+      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
+      "section": "Accepted base catalog assignment",
+      "lines": "35-55"
+    }
+  },
+  "oreUpgradeableStats": [
+    {
+      "slot": 1,
+      "name": "Damage",
+      "rankZero": 128,
+      "incrementPerRank": 12.8,
+      "unit": "damage",
+      "discrete": false
+    },
+    {
+      "slot": 2,
+      "name": "Blast radius",
+      "rankZero": 2.4,
+      "incrementPerRank": 0.2,
+      "unit": "M",
+      "discrete": false
+    },
+    {
+      "slot": 3,
+      "name": "Attack rate",
+      "rankZero": 0.25,
+      "incrementPerRank": 0.025,
+      "unit": "activations per second",
+      "discrete": false
+    }
+  ],
+  "fixedProperties": {
+    "targetingRangeM": 12,
+    "impactDelaySeconds": 1.2,
+    "impactPositionLocksAtLaunch": true,
+    "raw": "12M targeting range, 1.2 s impact delay"
+  },
+  "damageModel": {
+    "rankZeroDamageModel": "128 every 4.0 s",
+    "burst10Dps": 38.4,
+    "sustained30Dps": 32.0,
+    "favorableHordeDps": 160,
+    "primaryLimitation": "Delayed impact at a committed ground marker",
+    "_source": {
+      "doc": "docs/71-initial-weapon-numeric-catalog.md",
+      "section": "Base Weapon Summary",
+      "lines": "46-68"
+    }
+  },
+  "globalAttackRateMapping": {
+    "affectedTiming": "Shell launch rate",
+    "unaffectedTiming": "1.2 s travel delay, marker duration, and payload-field ticks",
+    "_source": {
+      "doc": "docs/71-initial-weapon-numeric-catalog.md",
+      "section": "Global weapon Attack Rate mapping",
+      "lines": "102-124"
+    }
+  },
+  "branches": {
+    "amplification": {
+      "name": "Saturation Cascade",
+      "fundingMaterialCode": "C",
+      "fundingMaterial": "Cinderglass",
+      "cost": {
+        "material": "Cinderglass",
+        "units": 2,
+        "_source": [
+          {
+            "doc": "docs/71-initial-weapon-numeric-catalog.md",
+            "section": "Saturation Cascade — Amplification — 2 Cinderglass",
+            "lines": "155"
+          },
+          {
+            "doc": "docs/60-resources-crafting-progression.md",
+            "section": "Weapon stat and branch upgrading",
+            "lines": "160-170"
+          }
+        ]
+      },
+      "_source": [
+        {
+          "doc": "docs/66-weapon-catalog-and-resource-graph.md",
+          "section": "Accepted base catalog assignment",
+          "lines": "35-55"
+        },
+        {
+          "doc": "docs/weapons/README.md",
+          "section": "Catalog lookup",
+          "lines": "18-36"
+        }
+      ]
+    },
+    "functional": {
+      "name": "Interdiction Payload",
+      "fundingMaterialCode": "A",
+      "fundingMaterial": "Asterite",
+      "cost": {
+        "material": "Asterite",
+        "units": 2,
+        "_source": [
+          {
+            "doc": "docs/71-initial-weapon-numeric-catalog.md",
+            "section": "Interdiction Payload — Functional — 2 Asterite",
+            "lines": "162"
+          },
+          {
+            "doc": "docs/60-resources-crafting-progression.md",
+            "section": "Weapon stat and branch upgrading",
+            "lines": "160-170"
+          }
+        ]
+      },
+      "_source": [
+        {
+          "doc": "docs/66-weapon-catalog-and-resource-graph.md",
+          "section": "Accepted base catalog assignment",
+          "lines": "35-55"
+        },
+        {
+          "doc": "docs/weapons/README.md",
+          "section": "Catalog lookup",
+          "lines": "18-36"
+        }
+      ]
+    },
+    "conversion": {
+      "name": "Danger-Close Protocol",
+      "fundingMaterialCode": "F",
+      "fundingMaterial": "Flux Amber",
+      "cost": {
+        "material": "Flux Amber",
+        "units": 2,
+        "_source": [
+          {
+            "doc": "docs/71-initial-weapon-numeric-catalog.md",
+            "section": "Danger-Close Protocol — Conversion — 2 Flux Amber",
+            "lines": "169"
+          },
+          {
+            "doc": "docs/60-resources-crafting-progression.md",
+            "section": "Weapon stat and branch upgrading",
+            "lines": "160-170"
+          }
+        ]
+      },
+      "_source": [
+        {
+          "doc": "docs/66-weapon-catalog-and-resource-graph.md",
+          "section": "Accepted base catalog assignment",
+          "lines": "35-55"
+        },
+        {
+          "doc": "docs/weapons/README.md",
+          "section": "Catalog lookup",
+          "lines": "18-36"
+        }
+      ]
+    },
+    "_note": "Branch mechanics are transcribed separately into content/branches/; only the branch identity, transformation class, funding material, and specialized-material price are recorded here."
+  }
+}

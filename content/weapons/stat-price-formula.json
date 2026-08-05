@@ -1,0 +1,68 @@
+{
+  "_provenance": {
+    "doc": "docs/65-weapon-stat-and-branch-upgrades.md",
+    "section": "Individual stat upgrades",
+    "lines": "44-50",
+    "extractedFor": "DAT-007",
+    "notes": [
+      "The price depends on the weapon's shared upgrade depth (total ranks bought across all three of its stats), not on the individual stat's rank; each weapon tracks its own depth.",
+      "There is no explicit rank cap; available ore and the 35-minute run limit form the practical cap (docs/65-weapon-stat-and-branch-upgrades.md:44)."
+    ]
+  },
+  "id": "weapon-stat-price-formula",
+  "name": "Weapon common-ore stat upgrade price",
+  "currency": "common ore",
+  "formula": "5n(n + 1)",
+  "variable": {
+    "symbol": "n",
+    "meaning": "purchase number, equal to the weapon's current shared upgrade depth plus one"
+  },
+  "equivalentByDepth": {
+    "formula": "5(d + 1)(d + 2)",
+    "variable": {
+      "symbol": "d",
+      "meaning": "current shared upgrade depth"
+    }
+  },
+  "firstTenPrices": [
+    10,
+    30,
+    60,
+    100,
+    150,
+    210,
+    280,
+    360,
+    450,
+    550
+  ],
+  "cumulativeCostCheckpoints": [
+    {
+      "purchases": 3,
+      "cumulativeCost": 100
+    },
+    {
+      "purchases": 4,
+      "cumulativeCost": 200
+    },
+    {
+      "purchases": 5,
+      "cumulativeCost": 350
+    },
+    {
+      "purchases": 10,
+      "cumulativeCost": 2200
+    }
+  ],
+  "appliesTo": "Every common-ore stat track of every base weapon; all three tracks of a weapon share one depth and therefore one next price.",
+  "definingProse": "For purchase number `n`, the shared next price is `5n(n + 1)` common ore. Because `n` is current depth plus one, a depth-`d` weapon pays `5(d + 1)(d + 2)`. The first ten prices are 10, 30, 60, 100, 150, 210, 280, 360, 450, and 550 ore. Cumulative cost reaches 100 after three purchases, 200 after four, 350 after five, and 2,200 after ten.",
+  "priceCurveDecision": {
+    "id": "DEC-085",
+    "note": "The shared common-ore price curve is fixed globally by DEC-085 (docs/weapons/README.md:48).",
+    "_source": {
+      "doc": "docs/weapons/README.md",
+      "section": "Design state",
+      "lines": "44-49"
+    }
+  }
+}

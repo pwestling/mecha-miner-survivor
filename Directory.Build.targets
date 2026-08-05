@@ -1,0 +1,33 @@
+<Project>
+
+  <!--
+    Policy that a project must not be able to weaken locally.
+
+    Directory.Build.targets is imported AFTER the project body, so a value set
+    here wins over anything an individual .csproj declares. Warnings-as-errors
+    lives here rather than in Directory.Build.props precisely so that no work
+    package can quietly opt its own project out.
+
+    Authority: docs/technical/100-build-dependencies-and-release-operations.md
+                 § C# project standards ("project warnings treated as errors in CI")
+               docs/technical/114-autonomous-agent-execution-protocol.md
+                 § Failure and retry policy ("An agent must not disable a gate,
+                 loosen a tolerance, edit a golden, suppress a warning ...")
+    Requirements: TR-BLD-001
+    Verification: VER-FND-001-006 through VER-FND-001-010
+
+    Doc 100 requires warnings as errors in CI. This repository applies it in every
+    build instead of only under a CI flag, so a local build cannot pass work that
+    CI will reject. That is strictly stronger than the requirement and removes a
+    class of "green locally, red in CI" churn.
+  -->
+
+  <PropertyGroup>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Deliberately empty: no warning is exempt from the policy. -->
+    <WarningsNotAsErrors></WarningsNotAsErrors>
+    <!-- Deliberately empty: no warning is suppressed repository-wide. -->
+    <NoWarn></NoWarn>
+  </PropertyGroup>
+
+</Project>

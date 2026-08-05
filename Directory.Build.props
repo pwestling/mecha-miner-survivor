@@ -45,4 +45,35 @@
     <NeutralLanguage>en-US</NeutralLanguage>
   </PropertyGroup>
 
+  <!--
+    C# project standards (doc 100 § C# project standards). Each of these is
+    proved by a deliberately invalid fixture under build/policy-fixtures/,
+    executed by build/verify-policies.sh.
+  -->
+
+  <PropertyGroup Label="Nullable reference checking (VER-FND-001-006)">
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Analyzers (VER-FND-001-007, VER-FND-001-008)">
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <!-- Pinned to the pinned target framework, not floating with the SDK. -->
+    <AnalysisLevel>8.0</AnalysisLevel>
+    <AnalysisMode>Default</AnalysisMode>
+    <!-- Makes the .editorconfig naming policy a build diagnostic, not editor-only. -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Deterministic build (VER-FND-001-011)">
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Unsafe code disabled by default (VER-FND-001-010)">
+    <!--
+      doc 100: "Unsafe code disabled by default; a measured hot-path exception
+      requires isolated ownership, tests, and a TDR if it becomes architectural."
+    -->
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+
 </Project>

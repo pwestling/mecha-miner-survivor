@@ -1,0 +1,84 @@
+{
+  "_provenance": {
+    "doc": "docs/40-mining-and-extraction.md",
+    "section": "### Hyper Gold sites",
+    "lines": "117-128",
+    "extractedFor": "DAT-008",
+    "notes": [
+      "id is null: this mining-site class has no ID and no table anywhere in docs/. A stable-ID decision is required before docs/technical/40-content-data-and-validation.md:67 (\"Reuse accepted gameplay IDs exactly\") can be satisfied; minting one is a boundary decision, not a transcription choice.",
+      "Field names are derived from prose because the source has no column headers.",
+      "extractionZoneRadiusMeters is null: docs/40-mining-and-extraction.md:48 states \"Exact radius and any resource-specific size variation remain open.\"",
+      "Arithmetic check: 3 sites x 100 Hyper Gold = 300 Hyper Gold, matching \"The sites contain 300 Hyper Gold in total\" (docs/40-mining-and-extraction.md:121).",
+      "The 25/50/75% threshold seconds (11.25 / 22.5 / 33.75) are stated verbatim at docs/40-mining-and-extraction.md:123 and equal the stated fractions of the 45-second extraction.",
+      "Beacon response sizes, formations, and elite additions are owned by the encounter schedule (content/encounters/standard-encounter-schedule.json, from docs/32-standard-wave-and-beacon-schedule.md:100-113) and are referenced rather than duplicated.",
+      "Per-boss Hyper Gold drops (25 each, docs/40-mining-and-extraction.md:121) are boss loot, not a mining-site payout, and belong to content/bosses/.",
+      "presentation, map marker, and spawn exclusions (required by docs/technical/40-content-data-and-validation.md:140) are not specified for this class; placement guarantees are transcribed in content/maps/standard-map-generation-contract.json."
+    ]
+  },
+  "id": null,
+  "siteClass": "hyper-gold-site",
+  "className": "Hyper Gold sites",
+  "countPerStandardMap": 3,
+  "placement": "randomized locations",
+  "extractionDurationSeconds": 45,
+  "completionOnlyReward": true,
+  "completionPayout": {
+    "resource": "Hyper Gold",
+    "amount": 100
+  },
+  "partialPayout": "none; no partial Hyper Gold is granted merely for building progress",
+  "totalPayoutPerMap": {
+    "resource": "Hyper Gold",
+    "amount": 300
+  },
+  "extractionZoneRadiusMeters": null,
+  "progressDecay": {
+    "graceSeconds": 0.5,
+    "decayRateMultiplierOfForwardRate": 4,
+    "securedCheckpoint": null,
+    "rule": "Leaving the area puts the entire pending reward at risk because unfinished progress decays rapidly."
+  },
+  "resonanceField": null,
+  "beaconThresholds": [
+    {
+      "trigger": "Activation",
+      "progress": null,
+      "atUninterruptedSecondsFromZero": null,
+      "detail": "The first extraction progress on a Hyper Gold site activates its threat beacon and begins a focused alien response."
+    },
+    {
+      "trigger": "25%",
+      "progress": {
+        "percent": 25
+      },
+      "atUninterruptedSecondsFromZero": 11.25,
+      "detail": null
+    },
+    {
+      "trigger": "50%",
+      "progress": {
+        "percent": 50
+      },
+      "atUninterruptedSecondsFromZero": 22.5,
+      "detail": null
+    },
+    {
+      "trigger": "75%",
+      "progress": {
+        "percent": 75
+      },
+      "atUninterruptedSecondsFromZero": 33.75,
+      "detail": null
+    }
+  ],
+  "beaconRules": [
+    "Each threshold can trigger only once for that site, even if decay later pulls progress below it.",
+    "Beacon enemies enter from valid navigable ground outside the camera using the horde director's normal readable-spawn rule.",
+    "Leaving the zone stops further beacon escalation while the player is absent, but every summoned enemy remains active.",
+    "Returning resumes extraction and permits any not-yet-triggered thresholds to fire.",
+    "Completion stops all new beacon-generated responses; surviving summoned enemies remain."
+  ],
+  "beaconResponseSource": "docs/32-standard-wave-and-beacon-schedule.md#hyper-gold-threat-beacon-response",
+  "depletedState": "non-interactive mapped landmark for the rest of the run",
+  "persistence": "Completing the site places its resource in an unsecured state for the remainder of the level; it is kept permanently only by surviving until the time limit and completing mission extraction. Dying before the time limit forfeits it."
+}

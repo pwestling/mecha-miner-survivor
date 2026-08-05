@@ -1,0 +1,64 @@
+{
+  "_provenance": {
+    "doc": "docs/72-player-survivability-and-damage-baseline.md",
+    "section": "## Health Packs and Destructible Rocks",
+    "lines": "178-209",
+    "extractedFor": "DAT-008",
+    "notes": [
+      "Two entries in one aggregate: docs/technical/40-content-data-and-validation.md:148 lists \"rock rules\" under map generation, and the health pack exists only as the destructible rock's drop, so the pair is the smallest cohesive aggregate (docs/technical/40-content-data-and-validation.md:63).",
+      "Secondary source for both entries: docs/51-standard-map-generation-contract.md:144-156 (\"## Destructible rocks\"), which states the same 100 Hull, 0 Armor, 0.80M footprint, 20% health-pack chance, 0.25M pickup radius, and 25-Hull repair.",
+      "id is null for both entries: neither the rock nor the health pack receives an ID in any document, and docs/technical/40-content-data-and-validation.md:67 lists no ID scheme for world props. A stable-ID decision is required.",
+      "Rock field order follows the \"Property | Initial value\" table at docs/72-player-survivability-and-damage-baseline.md:192-201.",
+      "Spawn/replenishment behavior (16-rock cap, one attempt per second, 10% success) is transcribed in content/maps/standard-map-generation-contract.json under destructibleRockRules; the distance and camera-margin values are repeated here because they appear in the rock's own property table.",
+      "presentation is null: docs/51-standard-map-generation-contract.md:156 states \"Audiovisual treatment remains production work\"."
+    ]
+  },
+  "props": [
+    {
+      "id": null,
+      "prop": "Destructible rock",
+      "hull": 100,
+      "armor": 0,
+      "damageFootprintDiameterMeters": 0.8,
+      "movementCollision": "Non-solid to mech and enemies",
+      "controlResponse": "Immune; displacement and status are ignored",
+      "healthPackChance": {
+        "percent": 20,
+        "detail": "independently per destroyed rock"
+      },
+      "validSpawnDistanceFromMechMeters": {
+        "min": 18,
+        "max": 45
+      },
+      "extraVisibleScreenMarginMeters": 2,
+      "rules": [
+        "A valid position must satisfy both the 18–45M annulus and the offscreen-plus-2M condition. If no position does, the successful attempt produces nothing.",
+        "Enemy-selecting weapons consider a rock only when no valid enemy is inside that weapon's acquisition range. Facing, radial, trail, field, orbit, contact, and explosion attacks may damage rocks incidentally under their ordinary geometry.",
+        "A weapon attack may damage enemies and a rock in the same event if its normal area or pierce permits. Rocks do not count toward enemy target caps or chain routing unless a branch explicitly names world objects.",
+        "A non-piercing projectile that directly hits a rock deals damage and ends normally; piercing attacks may continue according to their ordinary rule. \"Non-solid\" refers to movement, not immunity to weapon collision.",
+        "Rocks never receive enemy damage, resonance modifiers, elite or boss multipliers, control, kill effects, or ordinary-enemy defeat credit.",
+        "Damaging or destroying a rock never builds weapon focus, momentum, mass, charge, replication, exposure, or another enemy-hit or enemy-kill counter. It may still satisfy the basic requirement for an automatic weapon to launch an attack when no enemy is available."
+      ],
+      "presentation": null
+    },
+    {
+      "id": null,
+      "prop": "Health pack",
+      "repairHull": 25,
+      "canExceedMaximumHull": false,
+      "pickupRadiusMeters": 0.25,
+      "collectionCenterDistanceWithStandardMechCircleMeters": 0.75,
+      "movementCollision": "Non-solid",
+      "persistence": "persists until collected or run end",
+      "attraction": "none beyond contact",
+      "mapOrRadarMarker": false,
+      "rules": [
+        "One pack repairs 25 Hull immediately and cannot exceed current maximum Hull.",
+        "A pack is consumed at full Hull and wastes all excess repair above maximum.",
+        "Repair amount is unaffected by Armor, Recovery, maximum-Hull modifiers, PowerUps, utilities, relics, current health, elapsed time, or hidden difficulty adjustment."
+      ],
+      "source": "destroyed destructible rock, 20% chance independently per rock",
+      "presentation": null
+    }
+  ]
+}

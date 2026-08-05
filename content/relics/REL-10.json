@@ -1,0 +1,248 @@
+{
+  "_provenance": {
+    "doc": "docs/69-initial-relic-catalog.md",
+    "section": "REL-10 — Sequential Reactor",
+    "lines": "157-166",
+    "extractedFor": "DAT-008",
+    "notes": [
+      "Field order follows the doc 69 `## Catalog overview` column order (ID, Relic, Primary transformation, Core tradeoff), then the per-relic prose fields.",
+      "Catalog-overview table row for this relic is docs/69-initial-relic-catalog.md:37; the fresh/unlocked availability rules are docs/69-initial-relic-catalog.md:39-59.",
+      "`rules` holds the relic's prose bullets verbatim with their source line numbers; numbers stated in that prose are also structured under `effects`.",
+      "`_source` marks every value or rule folded in from a document other than docs/69-initial-relic-catalog.md."
+    ]
+  },
+  "id": "REL-10",
+  "name": "Sequential Reactor",
+  "primaryTransformation": "Extreme rotating weapon phases",
+  "coreTradeoff": "Only one equipped weapon operates at a time",
+  "discoverySentence": {
+    "text": "Only one weapon operates at a time, rotating every four seconds, but the active weapon receives five times its normal output.",
+    "lines": "159"
+  },
+  "affectedScope": "all equipped weapons",
+  "trigger": {
+    "condition": "the active weapon advances through occupied weapon slots every 4 active-simulation seconds",
+    "rotationIntervalSeconds": 4,
+    "lines": "161"
+  },
+  "effects": {
+    "simultaneouslyActiveWeapons": 1,
+    "rotationIntervalSeconds": 4,
+    "rotationOrder": "stable loadout order through occupied weapon slots; empty slots are skipped",
+    "activeWeaponOutputRateMultiplier": 5,
+    "inactiveWeaponsMayBeginNewAttacksOrDamage": false,
+    "alreadyCreatedFiniteActorsFinishAuthoredBehavior": true,
+    "inactiveWeaponsMayBeginNewAutonomousAttackEvents": false
+  },
+  "pauseBehavior": {
+    "rule": "Fabrication and other full-simulation pauses freeze phase time.",
+    "lines": "165"
+  },
+  "liveStateMeter": {
+    "meter": "active weapon, remaining phase time, and next weapon",
+    "hudTreatment": "concise status pip or meter beside the relic slot",
+    "_source": [
+      {
+        "doc": "docs/69-initial-relic-catalog.md",
+        "lines": "165"
+      },
+      {
+        "doc": "docs/73-interface-screen-flow-and-information-architecture.md",
+        "lines": "165"
+      }
+    ]
+  },
+  "acquisition": {
+    "method": "found in a relic cache through map exploration",
+    "fabricable": false,
+    "minable": false,
+    "listedInGeologicalSurvey": false,
+    "poolAvailability": "hyper-gold-unlock",
+    "unlock": {
+      "unlockId": "UNL-06",
+      "costHyperGold": 400,
+      "currency": "Hyper Gold",
+      "permanent": true,
+      "refundable": false,
+      "canBeDisabled": false,
+      "effect": "Permanently adds the relic to the random relic-cache selection pool; it neither equips nor guarantees that relic.",
+      "_source": [
+        {
+          "doc": "docs/69-initial-relic-catalog.md",
+          "section": "Fresh-profile and unlocked availability",
+          "lines": "49-59"
+        },
+        {
+          "doc": "docs/63-permanent-option-unlock-catalog.md",
+          "section": "Catalog overview",
+          "lines": "55"
+        },
+        {
+          "doc": "docs/decisions/DEC-121-accept-initial-option-unlock-catalog.md",
+          "lines": "24"
+        }
+      ]
+    },
+    "cachesPerStandardMap": 3,
+    "cacheOpening": "automatic on mech contact; freezes the complete gameplay simulation",
+    "relicsDrawnPerRun": 3,
+    "drawWithoutReplacement": true,
+    "duplicatesWithinOneRun": false,
+    "resolution": "immediate install-or-sell; no relic inventory or deferred decision",
+    "saleValueCommonOre": 150,
+    "displacedRelicAutoSaleCommonOre": 150,
+    "saleValueVariesByIdentityOrderDurationOrProgress": false,
+    "_source": [
+      {
+        "doc": "docs/69-initial-relic-catalog.md",
+        "section": "Fresh-profile and unlocked availability",
+        "lines": "39-59"
+      },
+      {
+        "doc": "docs/69-initial-relic-catalog.md",
+        "lines": "183"
+      },
+      {
+        "doc": "docs/67-mech-relics.md",
+        "section": "Acquisition",
+        "lines": "28-34"
+      },
+      {
+        "doc": "docs/67-mech-relics.md",
+        "section": "Install-or-sell choice",
+        "lines": "36-49"
+      },
+      {
+        "doc": "docs/51-standard-map-generation-contract.md",
+        "section": "Relic caches",
+        "lines": "130-142"
+      },
+      {
+        "doc": "docs/50-maps-resources-and-navigation.md",
+        "section": "Relics as exploration rewards",
+        "lines": "96-100"
+      },
+      {
+        "doc": "docs/60-resources-crafting-progression.md",
+        "section": "Relic sale",
+        "lines": "174-178"
+      },
+      {
+        "doc": "docs/73-interface-screen-flow-and-information-architecture.md",
+        "section": "Relic Cache Discovery and Resolution",
+        "lines": "353-384"
+      },
+      {
+        "doc": "docs/technical/24-mining-fabrication-and-progression-runtime.md",
+        "section": "Relic cache transaction",
+        "lines": "135-143"
+      }
+    ]
+  },
+  "rarityAndWeighting": {
+    "rarityTier": null,
+    "cacheSelectionWeight": null,
+    "selectionModel": "three distinct relics drawn without replacement from the currently unlocked pool and assigned to the three caches during generation",
+    "freshProfilePoolSize": 5,
+    "fullyUnlockedPoolSize": 10,
+    "inFreshProfilePool": false,
+    "guaranteedToAppear": false,
+    "_source": [
+      {
+        "doc": "docs/69-initial-relic-catalog.md",
+        "section": "Fresh-profile and unlocked availability",
+        "lines": "41-59"
+      },
+      {
+        "doc": "docs/63-permanent-option-unlock-catalog.md",
+        "section": "Relic-pool behavior",
+        "lines": "107-111"
+      },
+      {
+        "doc": "docs/73-interface-screen-flow-and-information-architecture.md",
+        "section": "Cache selection and signaling",
+        "lines": "355-361"
+      }
+    ]
+  },
+  "stackingAndExclusivity": {
+    "relicSlots": 1,
+    "simultaneouslyActiveRelics": 1,
+    "stacksWithOtherRelics": false,
+    "installReplacesActiveRelic": true,
+    "runLocal": true,
+    "persistsAfterRun": false,
+    "combinesWith": [
+      "weapon branches",
+      "weapon stat ranks",
+      "utilities",
+      "mech traits",
+      "PowerUps"
+    ],
+    "modifierOrder": "Relic-specific multipliers apply after the additive percentage modifiers supplied by mech traits, utilities, and PowerUps unless the relic explicitly replaces targeting or cadence.",
+    "appliesToEveryDamagingComponentDerivedFromAnEquippedWeapon": true,
+    "alreadyCreatedFiniteInstancesRetainCreationTimeRelicState": true,
+    "overridesOrReplaces": [
+      "weapon-slot activation (only one weapon active at a time)"
+    ],
+    "_source": [
+      {
+        "doc": "docs/69-initial-relic-catalog.md",
+        "section": "Shared interaction and preview rules",
+        "lines": "168-175"
+      },
+      {
+        "doc": "docs/69-initial-relic-catalog.md",
+        "section": "Catalog principles",
+        "lines": "22"
+      },
+      {
+        "doc": "docs/67-mech-relics.md",
+        "section": "Replacement and interaction rules",
+        "lines": "63-71"
+      },
+      {
+        "doc": "docs/70-combat-and-economy-balance-framework.md",
+        "section": "Stacking and comparison order",
+        "lines": "264"
+      }
+    ]
+  },
+  "behaviorRegistration": {
+    "hook": "weapon-slot activation gate and rotating phase",
+    "registrationModel": "Relics are cross-cutting policies registered by stable relic ID. They modify well-defined hook points rather than scattering ID checks through every weapon.",
+    "perWeaponCompatibilityManifest": "produced from tests; states fully affected, partially affected with disclosed reason, or invalid. The initial design expects no invalid pairing.",
+    "_source": {
+      "doc": "docs/technical/22-combat-and-weapon-runtime.md",
+      "section": "Relic integration",
+      "lines": "148-166"
+    }
+  },
+  "rules": [
+    {
+      "text": "The active weapon advances through occupied weapon slots in stable loadout order every four active-simulation seconds. Empty slots are skipped.",
+      "lines": "161"
+    },
+    {
+      "text": "Only the active weapon may begin new attacks, deal continuous or contact damage, apply new control, or create movement-triggered output.",
+      "lines": "162"
+    },
+    {
+      "text": "The active weapon produces five times its otherwise final output rate. For discrete attacks this ordinarily means five times the activation frequency; continuous, contact, and distance-triggered weapons receive an equivalent visible output-rate mapping.",
+      "lines": "163"
+    },
+    {
+      "text": "Finite projectiles, mines, fields, trails, and autonomous attacks created during an active phase remain present and finish their already-authored behavior after the source weapon rotates inactive, but they cannot begin new autonomous attack events while inactive.",
+      "lines": "164"
+    },
+    {
+      "text": "The HUD shows the active weapon, remaining phase time, and next weapon. Fabrication and other full-simulation pauses freeze phase time.",
+      "lines": "165"
+    },
+    {
+      "text": "The five-times factor intentionally makes the relic a raw-power increase with a severe coverage and timing constraint, including when fewer than four weapon slots are occupied.",
+      "lines": "166"
+    }
+  ],
+  "crossDocumentRules": []
+}

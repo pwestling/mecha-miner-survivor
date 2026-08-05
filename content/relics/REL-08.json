@@ -1,0 +1,272 @@
+{
+  "_provenance": {
+    "doc": "docs/69-initial-relic-catalog.md",
+    "section": "REL-08 — Redline Crucible",
+    "lines": "136-145",
+    "extractedFor": "DAT-008",
+    "notes": [
+      "Field order follows the doc 69 `## Catalog overview` column order (ID, Relic, Primary transformation, Core tradeoff), then the per-relic prose fields.",
+      "Catalog-overview table row for this relic is docs/69-initial-relic-catalog.md:35; the fresh/unlocked availability rules are docs/69-initial-relic-catalog.md:39-59.",
+      "`rules` holds the relic's prose bullets verbatim with their source line numbers; numbers stated in that prose are also structured under `effects`.",
+      "`_source` marks every value or rule folded in from a document other than docs/69-initial-relic-catalog.md."
+    ]
+  },
+  "id": "REL-08",
+  "name": "Redline Crucible",
+  "primaryTransformation": "Stationary heat overclock",
+  "coreTradeoff": "Redline heat burns Hull until vented through movement",
+  "discoverySentence": {
+    "text": "Remaining near the same position heats and strengthens every weapon, but maximum heat burns Hull until movement vents it.",
+    "lines": "138"
+  },
+  "affectedScope": "all equipped weapons",
+  "trigger": {
+    "condition": "heat builds while the mech remains within a small tolerance around the same world position; sustained travel outside that tolerance vents it",
+    "lines": "140"
+  },
+  "effects": {
+    "addsVisibleHeatMeter": true,
+    "positionalToleranceMeters": null,
+    "heatBuildRatePerSecond": null,
+    "heatVentRatePerSecond": null,
+    "maxHeatWeaponDamageBonus": {
+      "percent": 100
+    },
+    "maxHeatAttackRateBonus": {
+      "percent": 50
+    },
+    "maxHeatWeaponAreaBonus": {
+      "percent": 50
+    },
+    "redlineHullIntegrityLossPerActiveSecond": 3,
+    "redlinePassiveRecovery": false,
+    "redlineDamageNegatableByArmorOrHitNegation": false,
+    "redlineDamageCanKillMech": true,
+    "healthPacksStillRestoreHull": true,
+    "miningItselfGeneratesHeat": false
+  },
+  "pauseBehavior": {
+    "rule": "Heat, damage, and venting freeze during full-simulation pauses.",
+    "lines": "145"
+  },
+  "liveStateMeter": {
+    "meter": "heat meter",
+    "hudTreatment": "concise status pip or meter beside the relic slot",
+    "_source": [
+      {
+        "doc": "docs/69-initial-relic-catalog.md",
+        "lines": "140"
+      },
+      {
+        "doc": "docs/73-interface-screen-flow-and-information-architecture.md",
+        "lines": "165"
+      }
+    ]
+  },
+  "acquisition": {
+    "method": "found in a relic cache through map exploration",
+    "fabricable": false,
+    "minable": false,
+    "listedInGeologicalSurvey": false,
+    "poolAvailability": "hyper-gold-unlock",
+    "unlock": {
+      "unlockId": "UNL-05",
+      "costHyperGold": 350,
+      "currency": "Hyper Gold",
+      "permanent": true,
+      "refundable": false,
+      "canBeDisabled": false,
+      "effect": "Permanently adds the relic to the random relic-cache selection pool; it neither equips nor guarantees that relic.",
+      "_source": [
+        {
+          "doc": "docs/69-initial-relic-catalog.md",
+          "section": "Fresh-profile and unlocked availability",
+          "lines": "49-59"
+        },
+        {
+          "doc": "docs/63-permanent-option-unlock-catalog.md",
+          "section": "Catalog overview",
+          "lines": "54"
+        },
+        {
+          "doc": "docs/decisions/DEC-121-accept-initial-option-unlock-catalog.md",
+          "lines": "23"
+        }
+      ]
+    },
+    "cachesPerStandardMap": 3,
+    "cacheOpening": "automatic on mech contact; freezes the complete gameplay simulation",
+    "relicsDrawnPerRun": 3,
+    "drawWithoutReplacement": true,
+    "duplicatesWithinOneRun": false,
+    "resolution": "immediate install-or-sell; no relic inventory or deferred decision",
+    "saleValueCommonOre": 150,
+    "displacedRelicAutoSaleCommonOre": 150,
+    "saleValueVariesByIdentityOrderDurationOrProgress": false,
+    "_source": [
+      {
+        "doc": "docs/69-initial-relic-catalog.md",
+        "section": "Fresh-profile and unlocked availability",
+        "lines": "39-59"
+      },
+      {
+        "doc": "docs/69-initial-relic-catalog.md",
+        "lines": "183"
+      },
+      {
+        "doc": "docs/67-mech-relics.md",
+        "section": "Acquisition",
+        "lines": "28-34"
+      },
+      {
+        "doc": "docs/67-mech-relics.md",
+        "section": "Install-or-sell choice",
+        "lines": "36-49"
+      },
+      {
+        "doc": "docs/51-standard-map-generation-contract.md",
+        "section": "Relic caches",
+        "lines": "130-142"
+      },
+      {
+        "doc": "docs/50-maps-resources-and-navigation.md",
+        "section": "Relics as exploration rewards",
+        "lines": "96-100"
+      },
+      {
+        "doc": "docs/60-resources-crafting-progression.md",
+        "section": "Relic sale",
+        "lines": "174-178"
+      },
+      {
+        "doc": "docs/73-interface-screen-flow-and-information-architecture.md",
+        "section": "Relic Cache Discovery and Resolution",
+        "lines": "353-384"
+      },
+      {
+        "doc": "docs/technical/24-mining-fabrication-and-progression-runtime.md",
+        "section": "Relic cache transaction",
+        "lines": "135-143"
+      }
+    ]
+  },
+  "rarityAndWeighting": {
+    "rarityTier": null,
+    "cacheSelectionWeight": null,
+    "selectionModel": "three distinct relics drawn without replacement from the currently unlocked pool and assigned to the three caches during generation",
+    "freshProfilePoolSize": 5,
+    "fullyUnlockedPoolSize": 10,
+    "inFreshProfilePool": false,
+    "guaranteedToAppear": false,
+    "_source": [
+      {
+        "doc": "docs/69-initial-relic-catalog.md",
+        "section": "Fresh-profile and unlocked availability",
+        "lines": "41-59"
+      },
+      {
+        "doc": "docs/63-permanent-option-unlock-catalog.md",
+        "section": "Relic-pool behavior",
+        "lines": "107-111"
+      },
+      {
+        "doc": "docs/73-interface-screen-flow-and-information-architecture.md",
+        "section": "Cache selection and signaling",
+        "lines": "355-361"
+      }
+    ]
+  },
+  "stackingAndExclusivity": {
+    "relicSlots": 1,
+    "simultaneouslyActiveRelics": 1,
+    "stacksWithOtherRelics": false,
+    "installReplacesActiveRelic": true,
+    "runLocal": true,
+    "persistsAfterRun": false,
+    "combinesWith": [
+      "weapon branches",
+      "weapon stat ranks",
+      "utilities",
+      "mech traits",
+      "PowerUps"
+    ],
+    "modifierOrder": "Relic-specific multipliers apply after the additive percentage modifiers supplied by mech traits, utilities, and PowerUps unless the relic explicitly replaces targeting or cadence.",
+    "appliesToEveryDamagingComponentDerivedFromAnEquippedWeapon": true,
+    "alreadyCreatedFiniteInstancesRetainCreationTimeRelicState": true,
+    "overridesOrReplaces": [],
+    "_source": [
+      {
+        "doc": "docs/69-initial-relic-catalog.md",
+        "section": "Shared interaction and preview rules",
+        "lines": "168-175"
+      },
+      {
+        "doc": "docs/69-initial-relic-catalog.md",
+        "section": "Catalog principles",
+        "lines": "22"
+      },
+      {
+        "doc": "docs/67-mech-relics.md",
+        "section": "Replacement and interaction rules",
+        "lines": "63-71"
+      },
+      {
+        "doc": "docs/70-combat-and-economy-balance-framework.md",
+        "section": "Stacking and comparison order",
+        "lines": "264"
+      }
+    ]
+  },
+  "behaviorRegistration": {
+    "hook": "position-history heat and conditional modifiers/self-damage",
+    "registrationModel": "Relics are cross-cutting policies registered by stable relic ID. They modify well-defined hook points rather than scattering ID checks through every weapon.",
+    "perWeaponCompatibilityManifest": "produced from tests; states fully affected, partially affected with disclosed reason, or invalid. The initial design expects no invalid pairing.",
+    "_source": {
+      "doc": "docs/technical/22-combat-and-weapon-runtime.md",
+      "section": "Relic integration",
+      "lines": "148-166"
+    }
+  },
+  "rules": [
+    {
+      "text": "The relic adds a visible heat meter. Remaining within a small tolerance around the same world position builds heat; sustained travel outside that tolerance vents it.",
+      "lines": "140"
+    },
+    {
+      "text": "Heat scales continuously from no bonus to a maximum of +100% weapon Damage, +50% Attack Rate, and +50% weapon Area.",
+      "lines": "141"
+    },
+    {
+      "text": "At maximum heat, the mech loses 3 Hull Integrity per active-simulation second and receives no passive Recovery until heat falls below redline.",
+      "lines": "142"
+    },
+    {
+      "text": "Redline damage cannot be negated by Armor or a hit-negation utility and can kill the mech. Health packs can still restore Hull.",
+      "lines": "143"
+    },
+    {
+      "text": "Mining does not itself generate heat; the player's limited movement inside an extraction zone determines whether heat builds or vents.",
+      "lines": "144"
+    },
+    {
+      "text": "Heat, damage, and venting freeze during full-simulation pauses. Exact positional tolerance and heating and venting rates remain tuning.",
+      "lines": "145"
+    }
+  ],
+  "crossDocumentRules": [
+    {
+      "rule": "Redline Crucible's self-damage remains Armor-ignoring.",
+      "_source": {
+        "doc": "docs/62-permanent-powerup-catalog.md",
+        "lines": "134"
+      }
+    },
+    {
+      "rule": "Contact grace does not block projectiles, boss landings, hazards, or relic self-damage.",
+      "_source": {
+        "doc": "docs/technical/22-combat-and-weapon-runtime.md",
+        "lines": "129"
+      }
+    }
+  ]
+}

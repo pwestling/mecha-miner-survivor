@@ -1,0 +1,214 @@
+{
+  "_provenance": {
+    "doc": "docs/69-initial-relic-catalog.md",
+    "section": "REL-06 — Event-Horizon Coupler",
+    "lines": "115-123",
+    "extractedFor": "DAT-008",
+    "notes": [
+      "Field order follows the doc 69 `## Catalog overview` column order (ID, Relic, Primary transformation, Core tradeoff), then the per-relic prose fields.",
+      "Catalog-overview table row for this relic is docs/69-initial-relic-catalog.md:33; the fresh/unlocked availability rules are docs/69-initial-relic-catalog.md:39-59.",
+      "`rules` holds the relic's prose bullets verbatim with their source line numbers; numbers stated in that prose are also structured under `effects`.",
+      "`_source` marks every value or rule folded in from a document other than docs/69-initial-relic-catalog.md."
+    ]
+  },
+  "id": "REL-06",
+  "name": "Event-Horizon Coupler",
+  "primaryTransformation": "Pull and cluster amplification",
+  "coreTradeoff": "Attacks compact the horde around their geometry",
+  "discoverySentence": {
+    "text": "Every weapon pulls enemies into its attacks, and enemies clustered together take 50% more weapon damage.",
+    "lines": "117"
+  },
+  "affectedScope": "all equipped weapons",
+  "trigger": {
+    "condition": "pull applies on every damaging weapon hit; clustered-damage bonus applies while an enemy is within the displayed clustering distance of at least one other living enemy",
+    "lines": "119-121"
+  },
+  "effects": {
+    "pullOnEveryDamagingWeaponHit": true,
+    "weaponAuthoredKnockbackReversedIntoPull": true,
+    "nonDisplacementControlChanged": false,
+    "clusteredEnemyWeaponDamageBonus": {
+      "percent": 50
+    },
+    "clusteringDistanceMeters": null,
+    "minimumOtherLivingEnemiesForClustering": 1,
+    "pullResistanceScalesForElitesAndBosses": true
+  },
+  "pauseBehavior": null,
+  "liveStateMeter": null,
+  "acquisition": {
+    "method": "found in a relic cache through map exploration",
+    "fabricable": false,
+    "minable": false,
+    "listedInGeologicalSurvey": false,
+    "poolAvailability": "fresh-profile",
+    "unlock": null,
+    "cachesPerStandardMap": 3,
+    "cacheOpening": "automatic on mech contact; freezes the complete gameplay simulation",
+    "relicsDrawnPerRun": 3,
+    "drawWithoutReplacement": true,
+    "duplicatesWithinOneRun": false,
+    "resolution": "immediate install-or-sell; no relic inventory or deferred decision",
+    "saleValueCommonOre": 150,
+    "displacedRelicAutoSaleCommonOre": 150,
+    "saleValueVariesByIdentityOrderDurationOrProgress": false,
+    "_source": [
+      {
+        "doc": "docs/69-initial-relic-catalog.md",
+        "section": "Fresh-profile and unlocked availability",
+        "lines": "39-59"
+      },
+      {
+        "doc": "docs/69-initial-relic-catalog.md",
+        "lines": "183"
+      },
+      {
+        "doc": "docs/67-mech-relics.md",
+        "section": "Acquisition",
+        "lines": "28-34"
+      },
+      {
+        "doc": "docs/67-mech-relics.md",
+        "section": "Install-or-sell choice",
+        "lines": "36-49"
+      },
+      {
+        "doc": "docs/51-standard-map-generation-contract.md",
+        "section": "Relic caches",
+        "lines": "130-142"
+      },
+      {
+        "doc": "docs/50-maps-resources-and-navigation.md",
+        "section": "Relics as exploration rewards",
+        "lines": "96-100"
+      },
+      {
+        "doc": "docs/60-resources-crafting-progression.md",
+        "section": "Relic sale",
+        "lines": "174-178"
+      },
+      {
+        "doc": "docs/73-interface-screen-flow-and-information-architecture.md",
+        "section": "Relic Cache Discovery and Resolution",
+        "lines": "353-384"
+      },
+      {
+        "doc": "docs/technical/24-mining-fabrication-and-progression-runtime.md",
+        "section": "Relic cache transaction",
+        "lines": "135-143"
+      }
+    ]
+  },
+  "rarityAndWeighting": {
+    "rarityTier": null,
+    "cacheSelectionWeight": null,
+    "selectionModel": "three distinct relics drawn without replacement from the currently unlocked pool and assigned to the three caches during generation",
+    "freshProfilePoolSize": 5,
+    "fullyUnlockedPoolSize": 10,
+    "inFreshProfilePool": true,
+    "guaranteedToAppear": false,
+    "_source": [
+      {
+        "doc": "docs/69-initial-relic-catalog.md",
+        "section": "Fresh-profile and unlocked availability",
+        "lines": "41-59"
+      },
+      {
+        "doc": "docs/63-permanent-option-unlock-catalog.md",
+        "section": "Relic-pool behavior",
+        "lines": "107-111"
+      },
+      {
+        "doc": "docs/73-interface-screen-flow-and-information-architecture.md",
+        "section": "Cache selection and signaling",
+        "lines": "355-361"
+      }
+    ]
+  },
+  "stackingAndExclusivity": {
+    "relicSlots": 1,
+    "simultaneouslyActiveRelics": 1,
+    "stacksWithOtherRelics": false,
+    "installReplacesActiveRelic": true,
+    "runLocal": true,
+    "persistsAfterRun": false,
+    "combinesWith": [
+      "weapon branches",
+      "weapon stat ranks",
+      "utilities",
+      "mech traits",
+      "PowerUps"
+    ],
+    "modifierOrder": "Relic-specific multipliers apply after the additive percentage modifiers supplied by mech traits, utilities, and PowerUps unless the relic explicitly replaces targeting or cadence.",
+    "appliesToEveryDamagingComponentDerivedFromAnEquippedWeapon": true,
+    "alreadyCreatedFiniteInstancesRetainCreationTimeRelicState": true,
+    "overridesOrReplaces": [
+      "weapon-authored knockback direction"
+    ],
+    "_source": [
+      {
+        "doc": "docs/69-initial-relic-catalog.md",
+        "section": "Shared interaction and preview rules",
+        "lines": "168-175"
+      },
+      {
+        "doc": "docs/69-initial-relic-catalog.md",
+        "section": "Catalog principles",
+        "lines": "22"
+      },
+      {
+        "doc": "docs/67-mech-relics.md",
+        "section": "Replacement and interaction rules",
+        "lines": "63-71"
+      },
+      {
+        "doc": "docs/70-combat-and-economy-balance-framework.md",
+        "section": "Stacking and comparison order",
+        "lines": "264"
+      }
+    ]
+  },
+  "behaviorRegistration": {
+    "hook": "per-hit pull and clustered target multiplier",
+    "registrationModel": "Relics are cross-cutting policies registered by stable relic ID. They modify well-defined hook points rather than scattering ID checks through every weapon.",
+    "perWeaponCompatibilityManifest": "produced from tests; states fully affected, partially affected with disclosed reason, or invalid. The initial design expects no invalid pairing.",
+    "_source": {
+      "doc": "docs/technical/22-combat-and-weapon-runtime.md",
+      "section": "Relic integration",
+      "lines": "148-166"
+    }
+  },
+  "rules": [
+    {
+      "text": "Every damaging weapon hit applies an inward displacement toward the nearest meaningful centerline, impact point, field center, projectile path, or other visible center of that attack's geometry.",
+      "lines": "119"
+    },
+    {
+      "text": "Existing weapon-authored knockback reverses into pull instead of applying both directions. Non-displacement control such as slow or stun remains unchanged.",
+      "lines": "120"
+    },
+    {
+      "text": "An enemy within the displayed clustering distance of at least one other living enemy takes 50% more weapon damage.",
+      "lines": "121"
+    },
+    {
+      "text": "Pull resistance continues to scale for elites and bosses, but the clustered-damage rule applies whenever their spatial condition is satisfied.",
+      "lines": "122"
+    },
+    {
+      "text": "The relic makes piercing, area, and persistent attacks exceptionally effective while intentionally compacting pursuers into more dangerous concentrations.",
+      "lines": "123"
+    }
+  ],
+  "crossDocumentRules": [
+    {
+      "rule": "Apply target-state multipliers such as Barysteel resonance or Event-Horizon clustering.",
+      "meaning": "clustered-damage bonus resolves at step 3 of the enemy/rock damage pipeline, after source-side relic reductions or amplification",
+      "_source": {
+        "doc": "docs/technical/22-combat-and-weapon-runtime.md",
+        "lines": "114"
+      }
+    }
+  ]
+}

@@ -1,0 +1,1677 @@
+{
+  "_provenance": {
+    "doc": "docs/32-standard-wave-and-beacon-schedule.md",
+    "section": "Standard Wave and Beacon Schedule",
+    "lines": "1-144",
+    "extractedFor": "DAT-008",
+    "notes": [
+      "One aggregate file per docs/technical/40-content-data-and-validation.md:144, which requires 'One aggregate standard schedule file' containing mode ID, duration, minute rows, composition weights, minimums, pulses, formations, boss warnings/arrivals, beacon response table, and population ceilings.",
+      "modeId is null: no mode identifier is stated anywhere in the source document.",
+      "Enemy and boss references use the exact IDs from docs/31-initial-alien-roster.md:39-48 and :123-126.",
+      "authoredEventOrBoundary holds the source cell verbatim; debutEnemyIds, bossWarningAt, bossArrival, scheduledElites, and formationEvents are structured restatements of that same cell and add no information.",
+      "minute 33 formationEvent has at=null: the cell reads 'Streams rotate through four sectors at 33:15 intervals', which does not resolve to explicit event times.",
+      "DEC-011 (25-minute timer) and DEC-012 (five-minute boss cadence) are status: superseded and were not used."
+    ]
+  },
+  "modeId": null,
+  "mode": "standard",
+  "durationMinutes": 35,
+  "extractionAt": "35:00",
+  "extractionRule": "At 35:00 the living player extracts immediately. No fifth boss, invincible pursuer, final damage pulse, or post-timer survival check appears. Enemies and unresolved attacks cease with the run state.",
+  "directorVocabulary": {
+    "composition": "the ordinary identities selected by weighted share for baseline replenishment. Shares are approximate and sum to 100%.",
+    "minimum": "the desired baseline number of ordinary enemies active around the player. A living boss, scheduled elite, boss-spawned minion, or threat-beacon enemy does not reduce this minimum.",
+    "pulse": "the batch size and active-simulation interval used while the baseline population is below its desired minimum. Once the minimum is met, baseline spawning waits until attrition creates room.",
+    "event": "a deterministic authored formation layered over baseline replenishment at the listed time."
+  },
+  "populationCeilings": {
+    "baselineOrdinaryCount": 450,
+    "scheduledEventOverflowCount": 100,
+    "persistentBeaconTaggedCount": 150,
+    "bossesCountTowardCeilings": false,
+    "overflowRule": "If a ceiling is reached, pending authored enemies wait and enter as capacity opens rather than being canceled or converted into stronger invisible statistics."
+  },
+  "bossArrivalMinuteRule": {
+    "minimumReductionFromPrecedingMinute": {
+      "percentMin": 10,
+      "percentMax": 20
+    },
+    "additionalScheduledFormation": false,
+    "statement": "Boss-arrival minutes deliberately reduce the baseline minimum by roughly 10–20% from the preceding minute and contain no additional scheduled formation."
+  },
+  "bossArrivalWarningSeconds": 15,
+  "phasePressureCurve": [
+    {
+      "phase": "0:00–1:00",
+      "purpose": "Survey orientation",
+      "referenceStylePressureTranslation": "A few fragile bodies demonstrate automatic combat without contesting survey reading"
+    },
+    {
+      "phase": "1:00–7:00",
+      "purpose": "Establish the build",
+      "referenceStylePressureTranslation": "Population rises steadily; durable bodies and simple formations begin to constrain mining"
+    },
+    {
+      "phase": "7:00–14:00",
+      "purpose": "Early escalation",
+      "referenceStylePressureTranslation": "Boss relief is brief; more mixed silhouettes test coverage and route choice"
+    },
+    {
+      "phase": "14:00–21:00",
+      "purpose": "Mid-run complication",
+      "referenceStylePressureTranslation": "Fast variants, the sole projectile specialist, elites, and flank events appear"
+    },
+    {
+      "phase": "21:00–28:00",
+      "purpose": "Mature-build test",
+      "referenceStylePressureTranslation": "Late durable identities combine with fast bodies and specialist pressure"
+    },
+    {
+      "phase": "28:00–35:00",
+      "purpose": "Final crescendo",
+      "referenceStylePressureTranslation": "The last boss arrives with temporary density relief, followed by sustained screen saturation and frequent formations"
+    }
+  ],
+  "spawnFormations": [
+    {
+      "formation": "Stream",
+      "definition": "repeated narrow batches enter from one off-screen sector along parallel paths."
+    },
+    {
+      "formation": "Wall",
+      "definition": "a broad line advances from one side with at least one clearly readable traversal gap."
+    },
+    {
+      "formation": "Swarm",
+      "definition": "a dense but bounded cluster enters from one quadrant."
+    },
+    {
+      "formation": "Twin flanks",
+      "definition": "matched streams enter from two separated sectors, leaving two other escape directions."
+    },
+    {
+      "formation": "Encirclement",
+      "definition": "a loose off-screen ring converges while preserving a visible 70–90-degree escape arc."
+    },
+    {
+      "formation": "Convergence",
+      "definition": "four smaller groups enter from cardinal sectors with diagonal gaps."
+    },
+    {
+      "formation": "Rolling ring",
+      "definition": "two separated incomplete encirclements arrive sequentially rather than spawning simultaneously."
+    }
+  ],
+  "formationConstraints": [
+    "Formations reuse the listed identities and their ordinary fixed profiles. They do not grant new movement, damage, drops, or hidden buffs.",
+    "Ordinary baseline and event enemies spawn on valid navigable ground outside the active camera."
+  ],
+  "minuteRows": [
+    {
+      "minute": 0,
+      "composition": [
+        {
+          "enemyId": "EN-01",
+          "enemy": "Skitterling",
+          "share": {
+            "percent": 100
+          }
+        }
+      ],
+      "minimumCount": 8,
+      "pulse": {
+        "batchCount": 2,
+        "intervalSeconds": 1.5
+      },
+      "authoredEventOrBoundary": "Survey orientation; no formation",
+      "debutEnemyIds": [],
+      "bossWarningAt": null,
+      "bossArrival": null,
+      "scheduledElites": [],
+      "formationEvents": []
+    },
+    {
+      "minute": 1,
+      "composition": [
+        {
+          "enemyId": "EN-01",
+          "enemy": "Skitterling",
+          "share": {
+            "percent": 80
+          }
+        },
+        {
+          "enemyId": "EN-02",
+          "enemy": "Ripper",
+          "share": {
+            "percent": 20
+          }
+        }
+      ],
+      "minimumCount": 18,
+      "pulse": {
+        "batchCount": 3,
+        "intervalSeconds": 1.2
+      },
+      "authoredEventOrBoundary": "Standard escalation begins",
+      "debutEnemyIds": [],
+      "bossWarningAt": null,
+      "bossArrival": null,
+      "scheduledElites": [],
+      "formationEvents": []
+    },
+    {
+      "minute": 2,
+      "composition": [
+        {
+          "enemyId": "EN-01",
+          "enemy": "Skitterling",
+          "share": {
+            "percent": 65
+          }
+        },
+        {
+          "enemyId": "EN-02",
+          "enemy": "Ripper",
+          "share": {
+            "percent": 35
+          }
+        }
+      ],
+      "minimumCount": 24,
+      "pulse": {
+        "batchCount": 4,
+        "intervalSeconds": 1.0
+      },
+      "authoredEventOrBoundary": "None",
+      "debutEnemyIds": [],
+      "bossWarningAt": null,
+      "bossArrival": null,
+      "scheduledElites": [],
+      "formationEvents": []
+    },
+    {
+      "minute": 3,
+      "composition": [
+        {
+          "enemyId": "EN-01",
+          "enemy": "Skitterling",
+          "share": {
+            "percent": 55
+          }
+        },
+        {
+          "enemyId": "EN-02",
+          "enemy": "Ripper",
+          "share": {
+            "percent": 45
+          }
+        }
+      ],
+      "minimumCount": 30,
+      "pulse": {
+        "batchCount": 5,
+        "intervalSeconds": 0.9
+      },
+      "authoredEventOrBoundary": "3:30 Skitterling stream from one side",
+      "debutEnemyIds": [],
+      "bossWarningAt": null,
+      "bossArrival": null,
+      "scheduledElites": [],
+      "formationEvents": [
+        {
+          "at": [
+            "3:30"
+          ],
+          "timingUnresolved": false,
+          "formations": [
+            "Stream"
+          ],
+          "enemyIds": [
+            "EN-01"
+          ],
+          "text": "3:30 Skitterling stream from one side"
+        }
+      ]
+    },
+    {
+      "minute": 4,
+      "composition": [
+        {
+          "enemyId": "EN-02",
+          "enemy": "Ripper",
+          "share": {
+            "percent": 55
+          }
+        },
+        {
+          "enemyId": "EN-01",
+          "enemy": "Skitterling",
+          "share": {
+            "percent": 25
+          }
+        },
+        {
+          "enemyId": "EN-03",
+          "enemy": "Shellback",
+          "share": {
+            "percent": 20
+          }
+        }
+      ],
+      "minimumCount": 36,
+      "pulse": {
+        "batchCount": 5,
+        "intervalSeconds": 0.8
+      },
+      "authoredEventOrBoundary": "Shellback debut",
+      "debutEnemyIds": [
+        "EN-03"
+      ],
+      "bossWarningAt": null,
+      "bossArrival": null,
+      "scheduledElites": [],
+      "formationEvents": []
+    },
+    {
+      "minute": 5,
+      "composition": [
+        {
+          "enemyId": "EN-02",
+          "enemy": "Ripper",
+          "share": {
+            "percent": 50
+          }
+        },
+        {
+          "enemyId": "EN-04",
+          "enemy": "Lurker",
+          "share": {
+            "percent": 30
+          }
+        },
+        {
+          "enemyId": "EN-03",
+          "enemy": "Shellback",
+          "share": {
+            "percent": 20
+          }
+        }
+      ],
+      "minimumCount": 42,
+      "pulse": {
+        "batchCount": 6,
+        "intervalSeconds": 0.75
+      },
+      "authoredEventOrBoundary": "Lurker debut",
+      "debutEnemyIds": [
+        "EN-04"
+      ],
+      "bossWarningAt": null,
+      "bossArrival": null,
+      "scheduledElites": [],
+      "formationEvents": []
+    },
+    {
+      "minute": 6,
+      "composition": [
+        {
+          "enemyId": "EN-02",
+          "enemy": "Ripper",
+          "share": {
+            "percent": 45
+          }
+        },
+        {
+          "enemyId": "EN-04",
+          "enemy": "Lurker",
+          "share": {
+            "percent": 30
+          }
+        },
+        {
+          "enemyId": "EN-03",
+          "enemy": "Shellback",
+          "share": {
+            "percent": 25
+          }
+        }
+      ],
+      "minimumCount": 50,
+      "pulse": {
+        "batchCount": 7,
+        "intervalSeconds": 0.7
+      },
+      "authoredEventOrBoundary": "6:30 loose encirclement; 6:45 boss warning",
+      "debutEnemyIds": [],
+      "bossWarningAt": "6:45",
+      "bossArrival": null,
+      "scheduledElites": [],
+      "formationEvents": [
+        {
+          "at": [
+            "6:30"
+          ],
+          "timingUnresolved": false,
+          "formations": [
+            "Encirclement"
+          ],
+          "enemyIds": [],
+          "text": "6:30 loose encirclement"
+        }
+      ]
+    },
+    {
+      "minute": 7,
+      "composition": [
+        {
+          "enemyId": "EN-02",
+          "enemy": "Ripper",
+          "share": {
+            "percent": 55
+          }
+        },
+        {
+          "enemyId": "EN-03",
+          "enemy": "Shellback",
+          "share": {
+            "percent": 45
+          }
+        }
+      ],
+      "minimumCount": 44,
+      "pulse": {
+        "batchCount": 6,
+        "intervalSeconds": 0.75
+      },
+      "authoredEventOrBoundary": "7:00 Riftjaw arrives; no formation",
+      "debutEnemyIds": [],
+      "bossWarningAt": null,
+      "bossArrival": {
+        "bossId": "BOSS-01",
+        "boss": "Riftjaw",
+        "at": "7:00"
+      },
+      "scheduledElites": [],
+      "formationEvents": []
+    },
+    {
+      "minute": 8,
+      "composition": [
+        {
+          "enemyId": "EN-04",
+          "enemy": "Lurker",
+          "share": {
+            "percent": 45
+          }
+        },
+        {
+          "enemyId": "EN-02",
+          "enemy": "Ripper",
+          "share": {
+            "percent": 35
+          }
+        },
+        {
+          "enemyId": "EN-01",
+          "enemy": "Skitterling",
+          "share": {
+            "percent": 20
+          }
+        }
+      ],
+      "minimumCount": 58,
+      "pulse": {
+        "batchCount": 7,
+        "intervalSeconds": 0.65
+      },
+      "authoredEventOrBoundary": "None",
+      "debutEnemyIds": [],
+      "bossWarningAt": null,
+      "bossArrival": null,
+      "scheduledElites": [],
+      "formationEvents": []
+    },
+    {
+      "minute": 9,
+      "composition": [
+        {
+          "enemyId": "EN-04",
+          "enemy": "Lurker",
+          "share": {
+            "percent": 45
+          }
+        },
+        {
+          "enemyId": "EN-03",
+          "enemy": "Shellback",
+          "share": {
+            "percent": 30
+          }
+        },
+        {
+          "enemyId": "EN-02",
+          "enemy": "Ripper",
+          "share": {
+            "percent": 25
+          }
+        }
+      ],
+      "minimumCount": 66,
+      "pulse": {
+        "batchCount": 8,
+        "intervalSeconds": 0.6
+      },
+      "authoredEventOrBoundary": "9:30 Lurker wall with central gap",
+      "debutEnemyIds": [],
+      "bossWarningAt": null,
+      "bossArrival": null,
+      "scheduledElites": [],
+      "formationEvents": [
+        {
+          "at": [
+            "9:30"
+          ],
+          "timingUnresolved": false,
+          "formations": [
+            "Wall"
+          ],
+          "enemyIds": [
+            "EN-04"
+          ],
+          "text": "9:30 Lurker wall with central gap"
+        }
+      ]
+    },
+    {
+      "minute": 10,
+      "composition": [
+        {
+          "enemyId": "EN-05",
+          "enemy": "Gloomwing",
+          "share": {
+            "percent": 45
+          }
+        },
+        {
+          "enemyId": "EN-01",
+          "enemy": "Skitterling",
+          "share": {
+            "percent": 30
+          }
+        },
+        {
+          "enemyId": "EN-04",
+          "enemy": "Lurker",
+          "share": {
+            "percent": 25
+          }
+        }
+      ],
+      "minimumCount": 74,
+      "pulse": {
+        "batchCount": 8,
+        "intervalSeconds": 0.55
+      },
+      "authoredEventOrBoundary": "Gloomwing debut",
+      "debutEnemyIds": [
+        "EN-05"
+      ],
+      "bossWarningAt": null,
+      "bossArrival": null,
+      "scheduledElites": [],
+      "formationEvents": []
+    },
+    {
+      "minute": 11,
+      "composition": [
+        {
+          "enemyId": "EN-05",
+          "enemy": "Gloomwing",
+          "share": {
+            "percent": 40
+          }
+        },
+        {
+          "enemyId": "EN-02",
+          "enemy": "Ripper",
+          "share": {
+            "percent": 35
+          }
+        },
+        {
+          "enemyId": "EN-04",
+          "enemy": "Lurker",
+          "share": {
+            "percent": 25
+          }
+        }
+      ],
+      "minimumCount": 82,
+      "pulse": {
+        "batchCount": 9,
+        "intervalSeconds": 0.5
+      },
+      "authoredEventOrBoundary": "None",
+      "debutEnemyIds": [],
+      "bossWarningAt": null,
+      "bossArrival": null,
+      "scheduledElites": [],
+      "formationEvents": []
+    },
+    {
+      "minute": 12,
+      "composition": [
+        {
+          "enemyId": "EN-03",
+          "enemy": "Shellback",
+          "share": {
+            "percent": 40
+          }
+        },
+        {
+          "enemyId": "EN-05",
+          "enemy": "Gloomwing",
+          "share": {
+            "percent": 35
+          }
+        },
+        {
+          "enemyId": "EN-01",
+          "enemy": "Skitterling",
+          "share": {
+            "percent": 25
+          }
+        }
+      ],
+      "minimumCount": 90,
+      "pulse": {
+        "batchCount": 10,
+        "intervalSeconds": 0.48
+      },
+      "authoredEventOrBoundary": "12:30 Skitterling quadrant swarm",
+      "debutEnemyIds": [],
+      "bossWarningAt": null,
+      "bossArrival": null,
+      "scheduledElites": [],
+      "formationEvents": [
+        {
+          "at": [
+            "12:30"
+          ],
+          "timingUnresolved": false,
+          "formations": [
+            "Swarm"
+          ],
+          "enemyIds": [
+            "EN-01"
+          ],
+          "text": "12:30 Skitterling quadrant swarm"
+        }
+      ]
+    },
+    {
+      "minute": 13,
+      "composition": [
+        {
+          "enemyId": "EN-07",
+          "enemy": "Razorling",
+          "share": {
+            "percent": 40
+          }
+        },
+        {
+          "enemyId": "EN-02",
+          "enemy": "Ripper",
+          "share": {
+            "percent": 35
+          }
+        },
+        {
+          "enemyId": "EN-03",
+          "enemy": "Shellback",
+          "share": {
+            "percent": 25
+          }
+        }
+      ],
+      "minimumCount": 100,
+      "pulse": {
+        "batchCount": 10,
+        "intervalSeconds": 0.45
+      },
+      "authoredEventOrBoundary": "Razorling debut; 13:30 one elite Ripper; 13:45 boss warning",
+      "debutEnemyIds": [
+        "EN-07"
+      ],
+      "bossWarningAt": "13:45",
+      "bossArrival": null,
+      "scheduledElites": [
+        {
+          "at": "13:30",
+          "count": 1,
+          "enemyId": "EN-02",
+          "enemy": "Ripper"
+        }
+      ],
+      "formationEvents": []
+    },
+    {
+      "minute": 14,
+      "composition": [
+        {
+          "enemyId": "EN-07",
+          "enemy": "Razorling",
+          "share": {
+            "percent": 55
+          }
+        },
+        {
+          "enemyId": "EN-03",
+          "enemy": "Shellback",
+          "share": {
+            "percent": 45
+          }
+        }
+      ],
+      "minimumCount": 86,
+      "pulse": {
+        "batchCount": 9,
+        "intervalSeconds": 0.5
+      },
+      "authoredEventOrBoundary": "14:00 Brood Titan arrives; no formation",
+      "debutEnemyIds": [],
+      "bossWarningAt": null,
+      "bossArrival": {
+        "bossId": "BOSS-02",
+        "boss": "Brood Titan",
+        "at": "14:00"
+      },
+      "scheduledElites": [],
+      "formationEvents": []
+    },
+    {
+      "minute": 15,
+      "composition": [
+        {
+          "enemyId": "EN-07",
+          "enemy": "Razorling",
+          "share": {
+            "percent": 45
+          }
+        },
+        {
+          "enemyId": "EN-05",
+          "enemy": "Gloomwing",
+          "share": {
+            "percent": 35
+          }
+        },
+        {
+          "enemyId": "EN-04",
+          "enemy": "Lurker",
+          "share": {
+            "percent": 20
+          }
+        }
+      ],
+      "minimumCount": 108,
+      "pulse": {
+        "batchCount": 10,
+        "intervalSeconds": 0.45
+      },
+      "authoredEventOrBoundary": "None",
+      "debutEnemyIds": [],
+      "bossWarningAt": null,
+      "bossArrival": null,
+      "scheduledElites": [],
+      "formationEvents": []
+    },
+    {
+      "minute": 16,
+      "composition": [
+        {
+          "enemyId": "EN-02",
+          "enemy": "Ripper",
+          "share": {
+            "percent": 40
+          }
+        },
+        {
+          "enemyId": "EN-07",
+          "enemy": "Razorling",
+          "share": {
+            "percent": 40
+          }
+        },
+        {
+          "enemyId": "EN-06",
+          "enemy": "Needler",
+          "share": {
+            "percent": 20
+          }
+        }
+      ],
+      "minimumCount": 120,
+      "pulse": {
+        "batchCount": 11,
+        "intervalSeconds": 0.42
+      },
+      "authoredEventOrBoundary": "Needler debut; no separate formation",
+      "debutEnemyIds": [
+        "EN-06"
+      ],
+      "bossWarningAt": null,
+      "bossArrival": null,
+      "scheduledElites": [],
+      "formationEvents": []
+    },
+    {
+      "minute": 17,
+      "composition": [
+        {
+          "enemyId": "EN-04",
+          "enemy": "Lurker",
+          "share": {
+            "percent": 40
+          }
+        },
+        {
+          "enemyId": "EN-07",
+          "enemy": "Razorling",
+          "share": {
+            "percent": 40
+          }
+        },
+        {
+          "enemyId": "EN-06",
+          "enemy": "Needler",
+          "share": {
+            "percent": 20
+          }
+        }
+      ],
+      "minimumCount": 132,
+      "pulse": {
+        "batchCount": 12,
+        "intervalSeconds": 0.4
+      },
+      "authoredEventOrBoundary": "17:30 Razorling stream",
+      "debutEnemyIds": [],
+      "bossWarningAt": null,
+      "bossArrival": null,
+      "scheduledElites": [],
+      "formationEvents": [
+        {
+          "at": [
+            "17:30"
+          ],
+          "timingUnresolved": false,
+          "formations": [
+            "Stream"
+          ],
+          "enemyIds": [
+            "EN-07"
+          ],
+          "text": "17:30 Razorling stream"
+        }
+      ]
+    },
+    {
+      "minute": 18,
+      "composition": [
+        {
+          "enemyId": "EN-01",
+          "enemy": "Skitterling",
+          "share": {
+            "percent": 50
+          }
+        },
+        {
+          "enemyId": "EN-08",
+          "enemy": "Iron Ripper",
+          "share": {
+            "percent": 30
+          }
+        },
+        {
+          "enemyId": "EN-06",
+          "enemy": "Needler",
+          "share": {
+            "percent": 20
+          }
+        }
+      ],
+      "minimumCount": 145,
+      "pulse": {
+        "batchCount": 13,
+        "intervalSeconds": 0.38
+      },
+      "authoredEventOrBoundary": "Iron Ripper debut",
+      "debutEnemyIds": [
+        "EN-08"
+      ],
+      "bossWarningAt": null,
+      "bossArrival": null,
+      "scheduledElites": [],
+      "formationEvents": []
+    },
+    {
+      "minute": 19,
+      "composition": [
+        {
+          "enemyId": "EN-05",
+          "enemy": "Gloomwing",
+          "share": {
+            "percent": 40
+          }
+        },
+        {
+          "enemyId": "EN-08",
+          "enemy": "Iron Ripper",
+          "share": {
+            "percent": 35
+          }
+        },
+        {
+          "enemyId": "EN-06",
+          "enemy": "Needler",
+          "share": {
+            "percent": 25
+          }
+        }
+      ],
+      "minimumCount": 158,
+      "pulse": {
+        "batchCount": 14,
+        "intervalSeconds": 0.36
+      },
+      "authoredEventOrBoundary": "19:30 twin Gloomwing flanks",
+      "debutEnemyIds": [],
+      "bossWarningAt": null,
+      "bossArrival": null,
+      "scheduledElites": [],
+      "formationEvents": [
+        {
+          "at": [
+            "19:30"
+          ],
+          "timingUnresolved": false,
+          "formations": [
+            "Twin flanks"
+          ],
+          "enemyIds": [
+            "EN-05"
+          ],
+          "text": "19:30 twin Gloomwing flanks"
+        }
+      ]
+    },
+    {
+      "minute": 20,
+      "composition": [
+        {
+          "enemyId": "EN-08",
+          "enemy": "Iron Ripper",
+          "share": {
+            "percent": 40
+          }
+        },
+        {
+          "enemyId": "EN-03",
+          "enemy": "Shellback",
+          "share": {
+            "percent": 35
+          }
+        },
+        {
+          "enemyId": "EN-07",
+          "enemy": "Razorling",
+          "share": {
+            "percent": 25
+          }
+        }
+      ],
+      "minimumCount": 172,
+      "pulse": {
+        "batchCount": 15,
+        "intervalSeconds": 0.34
+      },
+      "authoredEventOrBoundary": "20:30 one elite Iron Ripper; 20:45 boss warning",
+      "debutEnemyIds": [],
+      "bossWarningAt": "20:45",
+      "bossArrival": null,
+      "scheduledElites": [
+        {
+          "at": "20:30",
+          "count": 1,
+          "enemyId": "EN-08",
+          "enemy": "Iron Ripper"
+        }
+      ],
+      "formationEvents": []
+    },
+    {
+      "minute": 21,
+      "composition": [
+        {
+          "enemyId": "EN-08",
+          "enemy": "Iron Ripper",
+          "share": {
+            "percent": 55
+          }
+        },
+        {
+          "enemyId": "EN-06",
+          "enemy": "Needler",
+          "share": {
+            "percent": 45
+          }
+        }
+      ],
+      "minimumCount": 150,
+      "pulse": {
+        "batchCount": 13,
+        "intervalSeconds": 0.38
+      },
+      "authoredEventOrBoundary": "21:00 Prism Crown arrives; no formation",
+      "debutEnemyIds": [],
+      "bossWarningAt": null,
+      "bossArrival": {
+        "bossId": "BOSS-03",
+        "boss": "Prism Crown",
+        "at": "21:00"
+      },
+      "scheduledElites": [],
+      "formationEvents": []
+    },
+    {
+      "minute": 22,
+      "composition": [
+        {
+          "enemyId": "EN-01",
+          "enemy": "Skitterling",
+          "share": {
+            "percent": 50
+          }
+        },
+        {
+          "enemyId": "EN-08",
+          "enemy": "Iron Ripper",
+          "share": {
+            "percent": 30
+          }
+        },
+        {
+          "enemyId": "EN-09",
+          "enemy": "Siegeback",
+          "share": {
+            "percent": 20
+          }
+        }
+      ],
+      "minimumCount": 185,
+      "pulse": {
+        "batchCount": 15,
+        "intervalSeconds": 0.34
+      },
+      "authoredEventOrBoundary": "Siegeback debut",
+      "debutEnemyIds": [
+        "EN-09"
+      ],
+      "bossWarningAt": null,
+      "bossArrival": null,
+      "scheduledElites": [],
+      "formationEvents": []
+    },
+    {
+      "minute": 23,
+      "composition": [
+        {
+          "enemyId": "EN-07",
+          "enemy": "Razorling",
+          "share": {
+            "percent": 40
+          }
+        },
+        {
+          "enemyId": "EN-05",
+          "enemy": "Gloomwing",
+          "share": {
+            "percent": 35
+          }
+        },
+        {
+          "enemyId": "EN-09",
+          "enemy": "Siegeback",
+          "share": {
+            "percent": 25
+          }
+        }
+      ],
+      "minimumCount": 200,
+      "pulse": {
+        "batchCount": 16,
+        "intervalSeconds": 0.32
+      },
+      "authoredEventOrBoundary": "23:30 Razorling wall with two gaps",
+      "debutEnemyIds": [],
+      "bossWarningAt": null,
+      "bossArrival": null,
+      "scheduledElites": [],
+      "formationEvents": [
+        {
+          "at": [
+            "23:30"
+          ],
+          "timingUnresolved": false,
+          "formations": [
+            "Wall"
+          ],
+          "enemyIds": [
+            "EN-07"
+          ],
+          "text": "23:30 Razorling wall with two gaps"
+        }
+      ]
+    },
+    {
+      "minute": 24,
+      "composition": [
+        {
+          "enemyId": "EN-08",
+          "enemy": "Iron Ripper",
+          "share": {
+            "percent": 40
+          }
+        },
+        {
+          "enemyId": "EN-10",
+          "enemy": "Dreadwing",
+          "share": {
+            "percent": 35
+          }
+        },
+        {
+          "enemyId": "EN-01",
+          "enemy": "Skitterling",
+          "share": {
+            "percent": 25
+          }
+        }
+      ],
+      "minimumCount": 215,
+      "pulse": {
+        "batchCount": 17,
+        "intervalSeconds": 0.3
+      },
+      "authoredEventOrBoundary": "Dreadwing debut",
+      "debutEnemyIds": [
+        "EN-10"
+      ],
+      "bossWarningAt": null,
+      "bossArrival": null,
+      "scheduledElites": [],
+      "formationEvents": []
+    },
+    {
+      "minute": 25,
+      "composition": [
+        {
+          "enemyId": "EN-07",
+          "enemy": "Razorling",
+          "share": {
+            "percent": 45
+          }
+        },
+        {
+          "enemyId": "EN-10",
+          "enemy": "Dreadwing",
+          "share": {
+            "percent": 35
+          }
+        },
+        {
+          "enemyId": "EN-06",
+          "enemy": "Needler",
+          "share": {
+            "percent": 20
+          }
+        }
+      ],
+      "minimumCount": 232,
+      "pulse": {
+        "batchCount": 18,
+        "intervalSeconds": 0.28
+      },
+      "authoredEventOrBoundary": "25:30 twin Razorling flanks",
+      "debutEnemyIds": [],
+      "bossWarningAt": null,
+      "bossArrival": null,
+      "scheduledElites": [],
+      "formationEvents": [
+        {
+          "at": [
+            "25:30"
+          ],
+          "timingUnresolved": false,
+          "formations": [
+            "Twin flanks"
+          ],
+          "enemyIds": [
+            "EN-07"
+          ],
+          "text": "25:30 twin Razorling flanks"
+        }
+      ]
+    },
+    {
+      "minute": 26,
+      "composition": [
+        {
+          "enemyId": "EN-08",
+          "enemy": "Iron Ripper",
+          "share": {
+            "percent": 45
+          }
+        },
+        {
+          "enemyId": "EN-06",
+          "enemy": "Needler",
+          "share": {
+            "percent": 30
+          }
+        },
+        {
+          "enemyId": "EN-09",
+          "enemy": "Siegeback",
+          "share": {
+            "percent": 25
+          }
+        }
+      ],
+      "minimumCount": 250,
+      "pulse": {
+        "batchCount": 19,
+        "intervalSeconds": 0.27
+      },
+      "authoredEventOrBoundary": "None",
+      "debutEnemyIds": [],
+      "bossWarningAt": null,
+      "bossArrival": null,
+      "scheduledElites": [],
+      "formationEvents": []
+    },
+    {
+      "minute": 27,
+      "composition": [
+        {
+          "enemyId": "EN-07",
+          "enemy": "Razorling",
+          "share": {
+            "percent": 40
+          }
+        },
+        {
+          "enemyId": "EN-10",
+          "enemy": "Dreadwing",
+          "share": {
+            "percent": 35
+          }
+        },
+        {
+          "enemyId": "EN-09",
+          "enemy": "Siegeback",
+          "share": {
+            "percent": 25
+          }
+        }
+      ],
+      "minimumCount": 270,
+      "pulse": {
+        "batchCount": 20,
+        "intervalSeconds": 0.26
+      },
+      "authoredEventOrBoundary": "27:20 one elite Dreadwing; 27:30 encirclement; 27:45 boss warning",
+      "debutEnemyIds": [],
+      "bossWarningAt": "27:45",
+      "bossArrival": null,
+      "scheduledElites": [
+        {
+          "at": "27:20",
+          "count": 1,
+          "enemyId": "EN-10",
+          "enemy": "Dreadwing"
+        }
+      ],
+      "formationEvents": [
+        {
+          "at": [
+            "27:30"
+          ],
+          "timingUnresolved": false,
+          "formations": [
+            "Encirclement"
+          ],
+          "enemyIds": [],
+          "text": "27:30 encirclement"
+        }
+      ]
+    },
+    {
+      "minute": 28,
+      "composition": [
+        {
+          "enemyId": "EN-10",
+          "enemy": "Dreadwing",
+          "share": {
+            "percent": 60
+          }
+        },
+        {
+          "enemyId": "EN-08",
+          "enemy": "Iron Ripper",
+          "share": {
+            "percent": 40
+          }
+        }
+      ],
+      "minimumCount": 230,
+      "pulse": {
+        "batchCount": 18,
+        "intervalSeconds": 0.28
+      },
+      "authoredEventOrBoundary": "28:00 Skybreaker Apex arrives; no formation",
+      "debutEnemyIds": [],
+      "bossWarningAt": null,
+      "bossArrival": {
+        "bossId": "BOSS-04",
+        "boss": "Skybreaker Apex",
+        "at": "28:00"
+      },
+      "scheduledElites": [],
+      "formationEvents": []
+    },
+    {
+      "minute": 29,
+      "composition": [
+        {
+          "enemyId": "EN-10",
+          "enemy": "Dreadwing",
+          "share": {
+            "percent": 40
+          }
+        },
+        {
+          "enemyId": "EN-07",
+          "enemy": "Razorling",
+          "share": {
+            "percent": 35
+          }
+        },
+        {
+          "enemyId": "EN-09",
+          "enemy": "Siegeback",
+          "share": {
+            "percent": 25
+          }
+        }
+      ],
+      "minimumCount": 275,
+      "pulse": {
+        "batchCount": 20,
+        "intervalSeconds": 0.25
+      },
+      "authoredEventOrBoundary": "29:20 and 29:45 alternating walls",
+      "debutEnemyIds": [],
+      "bossWarningAt": null,
+      "bossArrival": null,
+      "scheduledElites": [],
+      "formationEvents": [
+        {
+          "at": [
+            "29:20",
+            "29:45"
+          ],
+          "timingUnresolved": false,
+          "formations": [
+            "Wall"
+          ],
+          "enemyIds": [],
+          "text": "29:20 and 29:45 alternating walls"
+        }
+      ]
+    },
+    {
+      "minute": 30,
+      "composition": [
+        {
+          "enemyId": "EN-10",
+          "enemy": "Dreadwing",
+          "share": {
+            "percent": 40
+          }
+        },
+        {
+          "enemyId": "EN-07",
+          "enemy": "Razorling",
+          "share": {
+            "percent": 35
+          }
+        },
+        {
+          "enemyId": "EN-06",
+          "enemy": "Needler",
+          "share": {
+            "percent": 25
+          }
+        }
+      ],
+      "minimumCount": 300,
+      "pulse": {
+        "batchCount": 22,
+        "intervalSeconds": 0.23
+      },
+      "authoredEventOrBoundary": "30:30 Needler-backed loose encirclement",
+      "debutEnemyIds": [],
+      "bossWarningAt": null,
+      "bossArrival": null,
+      "scheduledElites": [],
+      "formationEvents": [
+        {
+          "at": [
+            "30:30"
+          ],
+          "timingUnresolved": false,
+          "formations": [
+            "Encirclement"
+          ],
+          "enemyIds": [
+            "EN-06"
+          ],
+          "text": "30:30 Needler-backed loose encirclement"
+        }
+      ]
+    },
+    {
+      "minute": 31,
+      "composition": [
+        {
+          "enemyId": "EN-08",
+          "enemy": "Iron Ripper",
+          "share": {
+            "percent": 40
+          }
+        },
+        {
+          "enemyId": "EN-05",
+          "enemy": "Gloomwing",
+          "share": {
+            "percent": 35
+          }
+        },
+        {
+          "enemyId": "EN-09",
+          "enemy": "Siegeback",
+          "share": {
+            "percent": 25
+          }
+        }
+      ],
+      "minimumCount": 325,
+      "pulse": {
+        "batchCount": 24,
+        "intervalSeconds": 0.21
+      },
+      "authoredEventOrBoundary": "31:30 four-sector convergence",
+      "debutEnemyIds": [],
+      "bossWarningAt": null,
+      "bossArrival": null,
+      "scheduledElites": [],
+      "formationEvents": [
+        {
+          "at": [
+            "31:30"
+          ],
+          "timingUnresolved": false,
+          "formations": [
+            "Convergence"
+          ],
+          "enemyIds": [],
+          "text": "31:30 four-sector convergence"
+        }
+      ]
+    },
+    {
+      "minute": 32,
+      "composition": [
+        {
+          "enemyId": "EN-10",
+          "enemy": "Dreadwing",
+          "share": {
+            "percent": 40
+          }
+        },
+        {
+          "enemyId": "EN-09",
+          "enemy": "Siegeback",
+          "share": {
+            "percent": 30
+          }
+        },
+        {
+          "enemyId": "EN-06",
+          "enemy": "Needler",
+          "share": {
+            "percent": 30
+          }
+        }
+      ],
+      "minimumCount": 350,
+      "pulse": {
+        "batchCount": 26,
+        "intervalSeconds": 0.19
+      },
+      "authoredEventOrBoundary": "32:30 one elite Siegeback plus encirclement",
+      "debutEnemyIds": [],
+      "bossWarningAt": null,
+      "bossArrival": null,
+      "scheduledElites": [
+        {
+          "at": "32:30",
+          "count": 1,
+          "enemyId": "EN-09",
+          "enemy": "Siegeback"
+        }
+      ],
+      "formationEvents": [
+        {
+          "at": [
+            "32:30"
+          ],
+          "timingUnresolved": false,
+          "formations": [
+            "Encirclement"
+          ],
+          "enemyIds": [
+            "EN-09"
+          ],
+          "text": "32:30 one elite Siegeback plus encirclement"
+        }
+      ]
+    },
+    {
+      "minute": 33,
+      "composition": [
+        {
+          "enemyId": "EN-07",
+          "enemy": "Razorling",
+          "share": {
+            "percent": 35
+          }
+        },
+        {
+          "enemyId": "EN-08",
+          "enemy": "Iron Ripper",
+          "share": {
+            "percent": 35
+          }
+        },
+        {
+          "enemyId": "EN-10",
+          "enemy": "Dreadwing",
+          "share": {
+            "percent": 30
+          }
+        }
+      ],
+      "minimumCount": 380,
+      "pulse": {
+        "batchCount": 28,
+        "intervalSeconds": 0.18
+      },
+      "authoredEventOrBoundary": "Streams rotate through four sectors at 33:15 intervals",
+      "debutEnemyIds": [],
+      "bossWarningAt": null,
+      "bossArrival": null,
+      "scheduledElites": [],
+      "formationEvents": [
+        {
+          "at": null,
+          "timingUnresolved": true,
+          "formations": [
+            "Stream"
+          ],
+          "enemyIds": [],
+          "text": "Streams rotate through four sectors at 33:15 intervals"
+        }
+      ]
+    },
+    {
+      "minute": 34,
+      "composition": [
+        {
+          "enemyId": "EN-10",
+          "enemy": "Dreadwing",
+          "share": {
+            "percent": 40
+          }
+        },
+        {
+          "enemyId": "EN-09",
+          "enemy": "Siegeback",
+          "share": {
+            "percent": 30
+          }
+        },
+        {
+          "enemyId": "EN-07",
+          "enemy": "Razorling",
+          "share": {
+            "percent": 30
+          }
+        }
+      ],
+      "minimumCount": 420,
+      "pulse": {
+        "batchCount": 30,
+        "intervalSeconds": 0.16
+      },
+      "authoredEventOrBoundary": "Rolling rings at 34:10 and 34:40; extraction warning begins",
+      "debutEnemyIds": [],
+      "bossWarningAt": null,
+      "bossArrival": null,
+      "scheduledElites": [],
+      "formationEvents": [
+        {
+          "at": [
+            "34:10",
+            "34:40"
+          ],
+          "timingUnresolved": false,
+          "formations": [
+            "Rolling ring"
+          ],
+          "enemyIds": [],
+          "text": "Rolling rings at 34:10 and 34:40"
+        }
+      ]
+    }
+  ],
+  "hyperGoldBeaconResponse": {
+    "triggerRule": "A Hyper Gold site triggers four persistent response packages at activation and the first crossing of 25%, 50%, and 75% extraction progress.",
+    "populationSymbol": "P is the current minute's desired minimum ordinary population. Rounded counts use the nearest whole enemy, with the listed floor.",
+    "warningSeconds": 2,
+    "responses": [
+      {
+        "trigger": "Activation",
+        "triggerExtractionProgress": null,
+        "responseSize": {
+          "floorCount": 12,
+          "shareOfCurrentMinuteMinimumCount": {
+            "percent": 15
+          },
+          "expression": "max(12, 15% of P)"
+        },
+        "formation": "One concentrated stream from the site's outward side",
+        "eliteAddition": null
+      },
+      {
+        "trigger": "25%",
+        "triggerExtractionProgress": {
+          "percent": 25
+        },
+        "responseSize": {
+          "floorCount": 16,
+          "shareOfCurrentMinuteMinimumCount": {
+            "percent": 20
+          },
+          "expression": "max(16, 20% of P)"
+        },
+        "formation": "One dense quadrant swarm",
+        "eliteAddition": null
+      },
+      {
+        "trigger": "50%",
+        "triggerExtractionProgress": {
+          "percent": 50
+        },
+        "responseSize": {
+          "floorCount": 20,
+          "shareOfCurrentMinuteMinimumCount": {
+            "percent": 25
+          },
+          "expression": "max(20, 25% of P)"
+        },
+        "formation": "Twin flanks with open retreat directions",
+        "eliteAddition": "One elite of the most common eligible pure pursuer"
+      },
+      {
+        "trigger": "75%",
+        "triggerExtractionProgress": {
+          "percent": 75
+        },
+        "responseSize": {
+          "floorCount": 28,
+          "shareOfCurrentMinuteMinimumCount": {
+            "percent": 35
+          },
+          "expression": "max(28, 35% of P)"
+        },
+        "formation": "Loose encirclement with a 70-degree escape arc",
+        "eliteAddition": "Two elites chosen from eligible pure pursuers in the minute"
+      }
+    ],
+    "rules": [
+      "Each response uses the current minute's ordinary composition rather than a dedicated beacon-only alien.",
+      "Each trigger produces a site pulse, HUD callout, and two-second warning before enemies begin entering from valid off-screen ground.",
+      "The response draws ordinary identities using the current composition weights. Needler may appear as an ordinary responder but is never selected for the elite addition.",
+      "Beacon enemies are tagged to that site and remain active until killed or run end. Leaving stops new extraction thresholds but does not remove or recycle the response.",
+      "If the 150-enemy beacon ceiling is occupied, a triggered response remains queued and enters as tagged enemies die. The player never cancels a response by forcing the ceiling.",
+      "Completion prevents further beacon responses but does not dismiss survivors. Every responder follows its fixed identity profile and drops nothing.",
+      "A boss may be selected by the ordinary profile's movement or resonance modifiers but never counts as part of a beacon response.",
+      "Multiple activated sites keep separate threshold histories and tags. Their surviving forces may overlap if the player deliberately activates more than one."
+    ],
+    "eliteExclusionEnemyId": "EN-06"
+  }
+}

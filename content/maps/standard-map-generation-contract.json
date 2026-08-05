@@ -1,0 +1,297 @@
+{
+  "_provenance": {
+    "doc": "docs/51-standard-map-generation-contract.md",
+    "section": "Standard Map Generation Contract",
+    "lines": "1-228",
+    "extractedFor": "DAT-008",
+    "notes": [
+      "One aggregate file: docs/technical/40-content-data-and-validation.md:148 describes map generation as a single field set (mode/map ID, generation version, region/topology/scale ranges, static obstacle targets, distance bands, site counts, distribution constraints, candidate clearances, retry budgets, discovery settings, rock rules, landmark pools) and docs/technical/40-content-data-and-validation.md:63 allows the smallest cohesive aggregate.",
+      "modeId, mapId, and generationVersion are null: no such identifiers or version appear in the source document.",
+      "retryBudgets is null: docs/51-standard-map-generation-contract.md defines validity rules (lines 184-200) but states no retry budget.",
+      "landmarkPools is null: the document requires one prominent landmark per region and caps repetition (lines 35, 158-166) but enumerates no landmark pool.",
+      "Values labeled \"initial baseline\" in the source are transcribed as-is; docs/51-standard-map-generation-contract.md:12 states they are accepted starting points for playtesting rather than final balance.",
+      "Distances use the document's \"M\" unit (metres) and base-travel time at the 3.0M/s unmodified mech speed.",
+      "Destructible-rock and health-pack property definitions live in content/maps/world-props.json; the dynamic rock population rule is kept here because docs/technical/40-content-data-and-validation.md:148 lists \"rock rules\" under map generation.",
+      "Mining-site payout profiles live in content/mining-sites/; only their placement and distribution constraints are transcribed here."
+    ]
+  },
+  "modeId": null,
+  "mapId": null,
+  "generationVersion": null,
+  "mode": "standard",
+  "distanceLanguage": "Map distances are expressed as base-travel time: the time the shared unmodified mech would need to follow the shortest valid route between two points with no enemies or stops. Account PowerUps, mech traits, utilities, relics, and temporary effects do not change which distance band a location occupies during generation. These bands express route distance through traversable ground, not straight-line distance through obstacles.",
+  "referenceMechSpeedMetersPerSecond": 3.0,
+  "distanceBands": [
+    {
+      "band": "Near",
+      "baseTravelTimeFromDeployment": {
+        "minSecondsExclusive": null,
+        "maxSecondsInclusive": 45
+      },
+      "routeDistanceMeters": {
+        "minExclusive": null,
+        "maxInclusive": 135
+      },
+      "sourceText": "Up to 45 seconds | Up to 135M"
+    },
+    {
+      "band": "Middle",
+      "baseTravelTimeFromDeployment": {
+        "minSecondsExclusive": 45,
+        "maxSecondsInclusive": 90
+      },
+      "routeDistanceMeters": {
+        "minExclusive": 135,
+        "maxInclusive": 270
+      },
+      "sourceText": "More than 45 and up to 90 seconds | More than 135M and up to 270M"
+    },
+    {
+      "band": "Far",
+      "baseTravelTimeFromDeployment": {
+        "minSecondsExclusive": 90,
+        "maxSecondsInclusive": 150
+      },
+      "routeDistanceMeters": {
+        "minExclusive": 270,
+        "maxInclusive": 450
+      },
+      "sourceText": "More than 90 and up to 150 seconds | More than 270M and up to 450M"
+    }
+  ],
+  "worldScale": {
+    "majorRegionCount": {
+      "min": 6,
+      "max": 8,
+      "initialTarget": 7
+    },
+    "traversableDiameterBaseTravelSeconds": {
+      "min": 240,
+      "max": 300,
+      "target": 270
+    },
+    "traversableDiameterMeters": {
+      "min": 720,
+      "max": 900,
+      "target": 810
+    },
+    "maxBaseTravelFromDeploymentToImportantLocationSeconds": 150,
+    "deploymentPlacement": "an interior portion of a randomly selected major region",
+    "regionSizeRule": "Regions are large enough to support normal survivor-like circling, hundreds of pursuing enemies, and a complete mining circle without forcing the mech into a connector.",
+    "regionBoundaryRule": "Region boundaries may be visual, topographic, or loosely implied. They do not need to be rooms enclosed by walls.",
+    "landmarkPerRegion": "Each region has one prominent navigational landmark or terrain composition that is distinguishable at normal gameplay zoom. No two regions use the same primary landmark in one seed."
+  },
+  "topology": {
+    "redundantMajorRoutes": {
+      "minConnectedMajorRegionsPerRegion": 2,
+      "singleConnectorRemovalCannotIsolate": true,
+      "multipleLoopsRequired": true,
+      "compulsoryNarrowBridgeAllowed": false,
+      "primaryConnectorWidthInMiningZoneDiameters": {
+        "minimum": 1,
+        "target": 1.5
+      }
+    },
+    "openCombatGround": {
+      "solidObstacleCoveragePerMajorRegion": {
+        "initialTargetPercentMin": 8,
+        "initialTargetPercentMax": 12,
+        "maximumPercent": 15,
+        "excludes": "the outer world boundary"
+      },
+      "clusteringRule": "Obstacles form sparse local clusters rather than continuous maze walls.",
+      "obstacleDetourTargetSeconds": 6,
+      "longBarrierRule": "A longer barrier requires multiple broad openings.",
+      "weaponPatternRule": "Terrain cannot routinely invalidate radial, orbiting, backward-firing, ground-targeting, or movement-dependent weapon patterns."
+    },
+    "optionalPockets": {
+      "countPerMap": {
+        "min": 0,
+        "max": 2
+      },
+      "maxOneWayDepthSeconds": 20,
+      "terminalAreaRule": "Its terminal area provides enough open ground for the complete mining zone plus an additional maneuvering band around it if a mining point can appear there.",
+      "exitReadableFromTerminalArea": true,
+      "maxHyperGoldSitesAcrossAllPockets": 1,
+      "maxRelicCachesAcrossAllPockets": 1,
+      "nearBandGuaranteesDependOnPockets": false
+    }
+  },
+  "deploymentAndOpeningFairness": {
+    "changesEveryRun": true,
+    "notInsideSpurPocket": true,
+    "notAgainstWorldBoundary": true,
+    "notInsideNarrowConnector": true,
+    "obstacleFreeRadiusInMiningZoneDiameters": 1,
+    "minDistinctBroadDepartureRoutes": 2,
+    "minOffscreenEnemyEntryDirections": 3,
+    "excludedFromInitialCameraView": [
+      "Hyper Gold site",
+      "material geode",
+      "relic cache",
+      "damaging hazard",
+      "automatic-contact choice"
+    ],
+    "nearestStandardOreSeamBaseTravelSeconds": {
+      "min": 10,
+      "max": 20
+    },
+    "nearBandGuarantees": {
+      "standardOreSeamsMin": 2,
+      "richOreSeamsMin": 1,
+      "geodesPerPresentMaterialMin": 1
+    },
+    "directionsRevealedToPlayer": false
+  },
+  "sharedImportantSitePlacementContract": [
+    "It is reachable from deployment through terrain that accommodates the mech's full collision footprint.",
+    "The player can approach and leave it without crossing collision geometry or the world boundary.",
+    "A mining point's entire extraction circle is clear of solid terrain, with an additional one-mech-width maneuvering band outside the circle.",
+    "Extraction circles never overlap one another. Material-geode resonance fields also never overlap.",
+    "A site is not visually hidden under a landmark, tall prop, boundary treatment, or another interactable from the fixed top-down camera.",
+    "Sites do not stack so tightly that their interaction zones or identity cues become ambiguous.",
+    "Random dressing cannot reduce the validated clearance after important sites are placed."
+  ],
+  "visibleMiningOpportunitiesInNormalView": {
+    "targetMin": 1,
+    "targetMax": 3,
+    "hardMax": 4
+  },
+  "sitePlacement": {
+    "specializedMaterialGeodes": {
+      "geodesPerPresentMaterial": {
+        "min": 8,
+        "max": 10
+      },
+      "presentMaterials": 4,
+      "minInNearBandPerMaterial": 1,
+      "minMajorRegionsRepresentedPerMaterial": 5,
+      "maxSameMaterialGeodesPerMajorRegion": 2,
+      "maxShareOfAllGeodesPerMajorRegion": {
+        "percent": 30
+      },
+      "singleDirectionalClusterAllowed": false,
+      "resonanceFieldSeparationEvaluatedOn": "the full field, not only the extraction circle"
+    },
+    "commonOreSeams": {
+      "standardSeamCount": 20,
+      "richSeamCount": 8,
+      "minStandardSeamsPerMajorRegion": 2,
+      "nearBandMinStandardSeams": 2,
+      "nearBandMinRichSeams": 1,
+      "minMajorRegionsWithRichSeams": 4,
+      "maxRichSeamsPerMajorRegion": 2,
+      "maxShareOfAllOreSeamsPerMajorRegion": {
+        "percent": 25
+      },
+      "dominantClusterAllowed": false
+    },
+    "hyperGoldSites": {
+      "count": 3,
+      "distinctMajorRegions": 3,
+      "minSeparationBaseTravelSeconds": 60,
+      "minMiddleBandSites": 1,
+      "minFarBandSites": 1,
+      "allowedInInitialCameraView": false,
+      "maxInOptionalSpurPocket": 1,
+      "totalSiteBasedHyperGold": 300
+    },
+    "relicCaches": {
+      "count": 3,
+      "distinctMajorRegions": 3,
+      "minSeparationBaseTravelSeconds": 45,
+      "minMiddleBandCaches": 1,
+      "minFarBandCaches": 1,
+      "allowedInInitialCameraView": false,
+      "maxInOptionalSpurPocket": 1,
+      "relicAssignment": "The run assigns three distinct relics without replacement from the unlocked pool after these cache locations are valid.",
+      "dedicatedGuardPackage": false,
+      "globalThroughFogBearing": false,
+      "discoveryRule": "Presentation becomes discoverable only when it enters the gameplay view."
+    }
+  },
+  "destructibleRockRules": {
+    "activeCap": 16,
+    "initialCount": 16,
+    "initialPlacement": "valid offscreen positions around deployment",
+    "replenishmentAttemptIntervalSeconds": 1,
+    "replenishmentSuccessChance": {
+      "percent": 10
+    },
+    "successBehavior": "A successful attempt fills an empty slot or replaces the farthest eligible offscreen rock at the cap. If no valid new position and eligible replacement exist, the attempt produces nothing and leaves current rocks unchanged.",
+    "validPositionDistanceFromMechMeters": {
+      "min": 18,
+      "max": 45
+    },
+    "minMetersBeyondVisibleCameraRectangle": 2,
+    "positionConstraints": [
+      "lies on valid traversable ground and never inside blocking terrain",
+      "does not intersect a mining zone, resonance-field source, relic interaction area, boundary, required connector, landmark focal footprint, deployed pickup, or another important object",
+      "cannot appear or disappear while visible",
+      "favors nearby unexplored or recently entered space without becoming a persistent map marker or exploration-completion item"
+    ],
+    "propsDefinedIn": "content/maps/world-props.json"
+  },
+  "landmarksAndRepetition": {
+    "biomesPerSeed": 1,
+    "landmarkIndependentOfRewards": true,
+    "landmarkGuaranteesAdjacentResource": false,
+    "maxAppearancesOfOneAuthoredStructurePerMap": 2,
+    "adjacentRegionRepetitionAllowed": false,
+    "orientationVariationAllowed": true,
+    "structureRecognitionRevealsGlobalPosition": false,
+    "mandatoryEnvironmentalDamageHazards": false
+  },
+  "variationIndependence": [
+    "Resource profile, topology, deployment region, landmarks, mining sites, relic caches, and Hyper Gold sites vary independently except where the validity contract requires distance, clearance, or distribution corrections. Dynamic rocks are selected during play from currently valid offscreen ground.",
+    "Recognizing a topology, chunk, landmark, or biome motif never predicts a particular reward, material, cache, or Hyper Gold site.",
+    "Specialized materials have no preferred region type, landmark, compass direction, or biome subtheme in the initial baseline.",
+    "The same resource profile can occur across substantially different layouts, and a familiar broad layout can host different profiles and reward routes.",
+    "The map does not make the authored horde schedule easier or harder in response to its resource abundance or the selected mech. It supplies valid spawn and re-entry ground for the unchanged director."
+  ],
+  "boundaryAndFogPresentation": [
+    "The finite boundary is solid, non-damaging, and visually unmistakable before the mech contacts it.",
+    "Boundary art cannot resemble an unexplored opening or hide a traversable route.",
+    "The complete world outline is not revealed at deployment. The minimap records boundary segments as the player discovers them under the ordinary fog rules.",
+    "The boundary contains no narrow peninsula holding required Near-band content.",
+    "Offscreen spawn and boss re-entry logic always has valid ground when the camera is clamped near an edge; enemies never appear between the mech and the visible boundary merely because exterior ground is unavailable."
+  ],
+  "validSeedContract": {
+    "invalidIfViolated": [
+      "exact resource, relic, or Hyper Gold counts",
+      "mech-sized reachability from deployment",
+      "major-region route redundancy or connector width",
+      "deployment clearance, opening routes, or offscreen entry ground",
+      "mining-zone or resonance-field clearance and non-overlap",
+      "Near-, Middle-, or Far-band placement guarantees",
+      "per-region distribution and anti-clustering limits",
+      "relic-cache or Hyper Gold separation",
+      "dead-end depth, exit, capacity, or content limits",
+      "landmark and authored-structure repetition limits",
+      "clear finite-boundary presentation"
+    ],
+    "validationDistanceMetric": "navigable route distance rather than straight-line proximity",
+    "retryBudgets": null
+  },
+  "playtestTargets": [
+    "At least 90% of blind first-run players who begin exploring should discover a mining opportunity within 45 seconds without radar guidance.",
+    "During purposeful travel through non-exhausted regions, the median time between newly visible mining opportunities should be 15–30 seconds and rarely exceed 60 seconds.",
+    "A successful player who explores naturally should reveal roughly 45–70% of the traversable world.",
+    "Before the 7:00 boss, a geology-prioritizing route should plausibly produce either one additional weapon or one branch for the signature weapon, plus some common-ore stat investment.",
+    "A normal successful run should commonly discover one or two relic caches. Finding all three should be possible through exploration focus rather than routine.",
+    "One Hyper Gold site should be a plausible incidental discovery. Completing all three should remain an explicit routing priority.",
+    "No clockwise perimeter route, center sweep, landmark sequence, or other repeated pattern should dominate across seeds.",
+    "Profiles may be tactically lopsided, but placement alone should not make a valid recipe or advertised material feel practically absent."
+  ],
+  "initialTuningVariables": [
+    "six-to-eight region count and 4:00–5:00 traversable diameter",
+    "the 45/90/150-second distance bands",
+    "8–12% obstacle coverage and six-second obstacle-detour target",
+    "connector widths relative to the mining zone",
+    "two-pocket maximum and 20-second pocket depth",
+    "per-region distribution caps and site-separation times",
+    "the 16-rock active cap, offscreen spawn validity, one-second attempt interval, 10% spawn chance, and 20% health-pack chance",
+    "expected exploration share and encounter cadence"
+  ],
+  "landmarkPools": null
+}

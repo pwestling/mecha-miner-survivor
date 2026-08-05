@@ -1,0 +1,119 @@
+{
+  "_provenance": {
+    "doc": "docs/31-initial-alien-roster.md",
+    "section": "Ordinary roster overview",
+    "lines": "33-48",
+    "extractedFor": "DAT-007",
+    "notes": [
+      "Field names are camelCase per the CAT-stream transcription convention. docs/technical/40-content-data-and-validation.md:92-100 instead mandates snake_case property names with _m/_m_per_s/_seconds/_hull/_percent suffixes and the common definition envelope at lines 76-89 (id, schema_version, content_version, status, name_key, summary_key, tags, source_refs, presentation_id). Only `id` is emitted here; the remaining envelope fields have no authored values in docs/ and are left to the schema stream (DAT-001..003).",
+      "`M` is one unmodified mech collision diameter (1.0 M), per docs/72-player-survivability-and-damage-baseline.md:47. Keys suffixed `M` or `MPerSecond` use that unit, not metres.",
+      "Percentages are transcribed as {\"percent\": N} objects; ranges as {\"min\": X, \"max\": Y}.",
+      "docs/data/contact-damage-pressure.csv and docs/data/survivability-baseline.csv are non-authoritative mirrors (docs/data/README.md:5,10) and were used only to cross-check. Every overlapping value agrees with the Markdown.",
+      "Earliest minute 0 re-verified against the debut row in docs/32-standard-wave-and-beacon-schedule.md:56.",
+      "Per-minute spawn weights are authored in the 35-minute schedule (docs/32-standard-wave-and-beacon-schedule.md:54-90), not on the enemy definition, and spawn source class is a per-instance director tag (docs/technical/23-encounter-director-and-enemy-runtime.md:31-43).",
+      "No presentation entry ID exists anywhere in docs/, so the presentation reference required by docs/technical/40-content-data-and-validation.md:114 is omitted rather than invented."
+    ]
+  },
+  "id": "EN-01",
+  "identity": "Skitterling",
+  "family": "Six-legged swarm",
+  "hull": 20,
+  "movementSpeed": {
+    "percentOfMechBaseSpeed": {
+      "percent": 42
+    },
+    "worldSpeedMPerSecond": 1.26,
+    "_source": {
+      "doc": "docs/72-player-survivability-and-damage-baseline.md",
+      "section": "Movement and Speed Modifiers",
+      "lines": "61-78"
+    }
+  },
+  "contactDamage": 5,
+  "bodyScaleMultiplier": 0.55,
+  "controlResistance": {
+    "percent": 0
+  },
+  "earliestMinute": 0,
+  "variantOf": null,
+  "behaviorKind": "pure contact pursuer",
+  "armor": 0,
+  "contactFootprint": {
+    "contactDiameterM": 0.44,
+    "centerDistanceThatBeginsContactM": 0.72,
+    "shape": "Circle",
+    "referenceDiameterM": 0.8,
+    "_source": {
+      "doc": "docs/72-player-survivability-and-damage-baseline.md",
+      "section": "Collision and Contact Footprints",
+      "lines": "84-101"
+    }
+  },
+  "contactCadence": {
+    "firstHit": "immediately when an eligible overlap begins",
+    "sameEnemyRepeatIntervalSeconds": 0.75,
+    "globalContactGraceAfterResolvedContactSeconds": 0.2,
+    "_source": {
+      "doc": "docs/72-player-survivability-and-damage-baseline.md",
+      "section": "Contact Cadence and Damage Grace",
+      "lines": "130-142"
+    }
+  },
+  "damagePressure": {
+    "hitsToDefeat100Hull": 20,
+    "continuousOverlapTimeToDefeatSeconds": 14.25,
+    "assumptions": "100 Hull, zero Armor, no healing, no resonance, uninterrupted overlap with one attacker",
+    "_source": {
+      "doc": "docs/72-player-survivability-and-damage-baseline.md",
+      "section": "Damage Pressure Reference",
+      "lines": "144-163"
+    }
+  },
+  "movementCollision": {
+    "solidToMech": false,
+    "solidToOtherEnemies": false,
+    "solidToMiningPointsAndPickups": false,
+    "constrainedBySolidWorldTerrain": true
+  },
+  "appliesToPlayer": {
+    "flinch": false,
+    "forcedMovement": false,
+    "miningInterruption": false,
+    "controlLoss": false,
+    "hitstun": false,
+    "knockback": false,
+    "_source": {
+      "doc": "docs/31-initial-alien-roster.md",
+      "section": "Shared ordinary-enemy rules",
+      "lines": "29-29"
+    }
+  },
+  "postHardControlImmunitySeconds": 0.25,
+  "fixedProfile": true,
+  "scalesWithElapsedTimeOrPlayerState": false,
+  "eliteEligible": true,
+  "drops": {
+    "xp": 0,
+    "commonOre": 0,
+    "hyperGoldUnits": 0,
+    "specializedMaterialUnits": 0,
+    "repairPickups": 0,
+    "temporaryPickups": 0
+  },
+  "specialistAttack": null,
+  "firstPlayableSubset": {
+    "included": true,
+    "temporarySubstitute": null,
+    "_source": {
+      "doc": "docs/31-initial-alien-roster.md",
+      "section": "First-playable subset",
+      "lines": "185-187"
+    }
+  },
+  "description": "A low, tiny six-legged scavenger with a triangular head and wide-spread legs. Skitterlings are fragile orientation enemies and later provide dense chain-reaction or piercing fuel. Their broad leg stance keeps a crowd readable as many separate bodies rather than one texture-colored mass.",
+  "_descriptionSource": {
+    "doc": "docs/31-initial-alien-roster.md",
+    "section": "Six silhouette families",
+    "lines": "52-54"
+  }
+}

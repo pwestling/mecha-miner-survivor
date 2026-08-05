@@ -1,0 +1,91 @@
+{
+  "_provenance": {
+    "doc": "docs/71-initial-weapon-numeric-catalog.md",
+    "section": "Tethered Reaper — Conversion — 2 Eidolon Coral",
+    "lines": "344-349",
+    "extractedFor": "DAT-008",
+    "notes": [
+      "Branch sections in this document carry no standalone branch ID token; the heading supplies only name, class, and cost. The id is composed as <weaponId>-<branch-name-kebab-case>.",
+      "Section prose states no prerequisite. prerequisites is empty per docs/65-weapon-stat-and-branch-upgrades.md:50,66 (\"Branches have no stat-rank prerequisites\"; no rank, level, time, or boss prerequisite).",
+      "Exclusivity and irreversibility are not restated in this section; they come from docs/65-weapon-stat-and-branch-upgrades.md:56,68 and apply to all 45 branches.",
+      "Internally consistent: 200% base + up to 200% speed bonus = the stated 400% cap."
+    ]
+  },
+  "id": "W-BF-tethered-reaper",
+  "weaponId": "W-BF",
+  "weaponName": "Orbital Cutters",
+  "branchName": "Tethered Reaper",
+  "class": "Conversion",
+  "cost": {
+    "resource": "Eidolon Coral",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutuallyExclusiveWith": [
+      "W-BF-kinetic-flywheel",
+      "W-BF-deflection-ring"
+    ],
+    "irreversibleWithinRun": true,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run.",
+    "refs": [
+      "docs/65-weapon-stat-and-branch-upgrades.md:56",
+      "docs/65-weapon-stat-and-branch-upgrades.md:68"
+    ]
+  },
+  "availability": {
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite.",
+    "refs": [
+      "docs/65-weapon-stat-and-branch-upgrades.md:50",
+      "docs/65-weapon-stat-and-branch-upgrades.md:66"
+    ]
+  },
+  "effects": {
+    "cuttersCombinedInto": 1,
+    "bladeRadiusPercentOfCurrentCutterRadius": {
+      "percent": 200
+    },
+    "contactDamageBasePercentOfCurrentDamage": {
+      "percent": 200
+    },
+    "contactDamageSpeedBonusPercentMax": {
+      "percent": 200
+    },
+    "contactDamagePercentCap": {
+      "percent": 400
+    },
+    "speedScaling": "linear with blade world speed from stationary to one base mech full-speed",
+    "orbits": false,
+    "followsMechRecentPath": true,
+    "pathFollowDelaySeconds": 0.5,
+    "followDistance": "the current orbit distance",
+    "perEnemyRepeatIntervalSeconds": 0.5,
+    "singleTargetCeilingAtZeroBladeSpeed": "the same as four ordinary cutters",
+    "singleTargetCeilingMultiplierAtFullBonus": 2
+  },
+  "favorableSceneEffect": {
+    "magnitude": {
+      "singleTargetCeilingMultiplierAtFullBonus": 2
+    },
+    "qualitative": "the player must drag the delayed blade through enemies; abrupt turns and reversals become the core aiming method"
+  },
+  "rules": [
+    {
+      "line": 346,
+      "text": "The four cutters combine into one blade with 200% current cutter radius. Its contact Damage is `200% + up to 200%` of current Damage, scaling linearly with blade world speed from stationary to one base mech full-speed and capped at 400%."
+    },
+    {
+      "line": 347,
+      "text": "The blade follows the mech's recent path with a 0.5 s delay at the current orbit distance instead of orbiting."
+    },
+    {
+      "line": 348,
+      "text": "It may damage a given enemy every 0.5 s, giving the same single-target ceiling as four ordinary cutters at zero blade speed and a 2× ceiling at full bonus."
+    },
+    {
+      "line": 349,
+      "text": "The player must drag the delayed blade through enemies; abrupt turns and reversals become the core aiming method."
+    }
+  ]
+}

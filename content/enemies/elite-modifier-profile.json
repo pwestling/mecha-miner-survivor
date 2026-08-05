@@ -1,0 +1,105 @@
+{
+  "_provenance": {
+    "doc": "docs/31-initial-alien-roster.md",
+    "section": "Elite treatment",
+    "lines": "100-115",
+    "extractedFor": "DAT-007",
+    "notes": [
+      "Field names are camelCase per the CAT-stream transcription convention. docs/technical/40-content-data-and-validation.md:92-100 instead mandates snake_case property names with _m/_m_per_s/_seconds/_hull/_percent suffixes and the common definition envelope at lines 76-89 (id, schema_version, content_version, status, name_key, summary_key, tags, source_refs, presentation_id). Only `id` is emitted here; the remaining envelope fields have no authored values in docs/ and are left to the schema stream (DAT-001..003).",
+      "`M` is one unmodified mech collision diameter (1.0 M), per docs/72-player-survivability-and-damage-baseline.md:47. Keys suffixed `M` or `MPerSecond` use that unit, not metres.",
+      "Percentages are transcribed as {\"percent\": N} objects; ranges as {\"min\": X, \"max\": Y}.",
+      "docs/data/contact-damage-pressure.csv and docs/data/survivability-baseline.csv are non-authoritative mirrors (docs/data/README.md:5,10) and were used only to cross-check. Every overlapping value agrees with the Markdown.",
+      "No document assigns a stable ID to the elite modifier profile, so `id` is null; docs/technical/40-content-data-and-validation.md:67 requires reusing accepted gameplay IDs exactly and none exists. Minting one is a boundary decision, not a transcription choice.",
+      "This is a single shared modifier profile applied at spawn to a base ordinary enemy definition; it is not a second enemy catalog row (docs/technical/23-encounter-director-and-enemy-runtime.md:154-160).",
+      "`addedControlResistance` is additive in percentage points, not a multiplier (docs/31-...md:110, docs/72-...md:236)."
+    ]
+  },
+  "id": null,
+  "maximumHullMultiplier": 4,
+  "movementSpeedMultiplier": 1.1,
+  "contactDamageMultiplier": 1.5,
+  "bodyScaleMultiplier": 1.25,
+  "addedControlResistance": {
+    "percentagePoints": 25,
+    "capPercent": 90
+  },
+  "contactDiameterMultiplier": {
+    "value": 1.25,
+    "_source": {
+      "doc": "docs/72-player-survivability-and-damage-baseline.md",
+      "section": "Collision and Contact Footprints",
+      "lines": "101-101"
+    }
+  },
+  "eligibleEnemyIds": [
+    "EN-01",
+    "EN-02",
+    "EN-03",
+    "EN-04",
+    "EN-05",
+    "EN-07",
+    "EN-08",
+    "EN-09",
+    "EN-10"
+  ],
+  "excludedEnemyIds": [
+    "EN-06"
+  ],
+  "exclusionReason": "Needler does not become an elite in the initial standard schedule because combining its projectile with the shared elite multipliers reduces readability.",
+  "addsBehavior": false,
+  "addsAttacksPhasesAuraOrSupportAi": false,
+  "addsLoot": false,
+  "retainsBaseIdentityBehavior": "pure pursuit and contact",
+  "maxScheduledElitesAtOnce": 2,
+  "beaconElitesAdditional": "Hyper Gold beacons may temporarily add their separately specified elite counts.",
+  "recycling": {
+    "ordinaryElites": "may be recycled only under ordinary off-screen pressure rules",
+    "beaconTaggedElites": "remain active until killed or run end"
+  },
+  "postHardControlImmunitySeconds": {
+    "value": 0.75,
+    "_source": {
+      "doc": "docs/72-player-survivability-and-damage-baseline.md",
+      "section": "Control Resistance and Status Stacking",
+      "lines": "244-244"
+    }
+  },
+  "modifierApplicationOrder": {
+    "order": [
+      "base",
+      "elite",
+      "resonance",
+      "Claim-Jumper"
+    ],
+    "_source": {
+      "doc": "docs/technical/23-encounter-director-and-enemy-runtime.md",
+      "section": "Resonance evaluation",
+      "lines": "133-133"
+    }
+  },
+  "presentationRequirements": {
+    "required": [
+      "luminous crown organ",
+      "thicker outline",
+      "persistent minimap pip",
+      "distinct entrance cry",
+      "larger death effect"
+    ],
+    "insufficient": "Scale or palette alone is insufficient."
+  },
+  "workedExamples": [
+    {
+      "subject": "Elite Siegeback contact",
+      "baseDamage": 36,
+      "resonantDamage": 44,
+      "resonanceSource": "Asterite",
+      "freshMechHitsToDefeatAtResonantValue": 3,
+      "derivation": "EN-09 contact 24 x the 1.50 elite contact-damage multiplier is 36",
+      "_source": {
+        "doc": "docs/72-player-survivability-and-damage-baseline.md",
+        "section": "Damage Pressure Reference",
+        "lines": "167-174"
+      }
+    }
+  ]
+}

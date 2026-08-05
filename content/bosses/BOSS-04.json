@@ -1,0 +1,208 @@
+{
+  "_provenance": {
+    "doc": "docs/31-initial-alien-roster.md",
+    "section": "Interval boss overview",
+    "lines": "117-128",
+    "extractedFor": "DAT-007",
+    "notes": [
+      "Field names are camelCase per the CAT-stream transcription convention. docs/technical/40-content-data-and-validation.md:92-100 instead mandates snake_case property names with _m/_m_per_s/_seconds/_hull/_percent suffixes and the common definition envelope at lines 76-89 (id, schema_version, content_version, status, name_key, summary_key, tags, source_refs, presentation_id). Only `id` is emitted here; the remaining envelope fields have no authored values in docs/ and are left to the schema stream (DAT-001..003).",
+      "`M` is one unmodified mech collision diameter (1.0 M), per docs/72-player-survivability-and-damage-baseline.md:47. Keys suffixed `M` or `MPerSecond` use that unit, not metres.",
+      "Percentages are transcribed as {\"percent\": N} objects; ranges as {\"min\": X, \"max\": Y}.",
+      "docs/data/contact-damage-pressure.csv and docs/data/survivability-baseline.csv are non-authoritative mirrors (docs/data/README.md:5,10) and were used only to cross-check. Every overlapping value agrees with the Markdown.",
+      "`arrival.activeSecondsIntoRun` is the doc's 28:00 timecode converted to active simulation seconds; the timecode is preserved verbatim.",
+      "No document states a boss Armor value; ordinary enemies are explicitly 0 Armor (docs/31-...md:25) but bosses are not covered, so `armor` is null.",
+      "Boss Hull values are initial anchors validated against the no-relic progression in docs/71-initial-weapon-numeric-catalog.md, not a substitute for time-to-kill validation (docs/31-...md:128).",
+      "No presentation entry ID exists anywhere in docs/, so the presentation reference required by docs/technical/40-content-data-and-validation.md:114 is omitted.",
+      "Making the airborne boss untargetable would be a player-visible gameplay change, not a visual choice (docs/technical/23-encounter-director-and-enemy-runtime.md:197)."
+    ]
+  },
+  "id": "BOSS-04",
+  "boss": "Skybreaker Apex",
+  "arrival": {
+    "timecode": "28:00",
+    "activeSecondsIntoRun": 1680,
+    "warningLeadSeconds": 15,
+    "_source": {
+      "doc": "docs/31-initial-alien-roster.md",
+      "section": "Boss arrival, persistence, and reward",
+      "lines": "167-170"
+    }
+  },
+  "initialHull": 45000,
+  "movementSpeed": {
+    "percentOfMechBaseSpeed": {
+      "percent": 50
+    },
+    "worldSpeedMPerSecond": 1.5,
+    "_source": {
+      "doc": "docs/72-player-survivability-and-damage-baseline.md",
+      "section": "Movement and Speed Modifiers",
+      "lines": "78-78"
+    }
+  },
+  "contactDamage": 38,
+  "controlResistance": {
+    "percent": 95
+  },
+  "definingBehavior": "Leaps onto a locked ground marker",
+  "armor": null,
+  "behaviorKind": "persistent giant pursuer with exactly one additional behavior",
+  "contactFootprint": {
+    "contactAndWeaponHurtDiameterM": 1.9,
+    "centerDistanceThatBeginsContactM": 1.45,
+    "shape": "Circle",
+    "appendagesOutsideFootprint": "may pass over the mech harmlessly",
+    "attackGeometryUsesSeparateDisplay": "charge lanes, projectile shapes, and landing circles use their separately displayed attack geometry rather than the boss contact circle",
+    "_source": {
+      "doc": "docs/72-player-survivability-and-damage-baseline.md",
+      "section": "Collision and Contact Footprints",
+      "lines": "103-112"
+    }
+  },
+  "contactCadence": {
+    "matchesSharedOrdinaryCadence": true,
+    "sameEnemyRepeatIntervalSeconds": 0.75,
+    "globalContactGraceAfterResolvedContactSeconds": 0.2,
+    "addedAttackDefinesOwnDamageEvent": true,
+    "_source": {
+      "doc": "docs/31-initial-alien-roster.md",
+      "section": "Interval boss overview",
+      "lines": "119-119"
+    }
+  },
+  "damagePressure": {
+    "contactDamage": 38,
+    "hitsToDefeat100Hull": 3,
+    "continuousOverlapTimeToDefeatSeconds": 1.5,
+    "assumptions": "100 Hull, zero Armor, no healing, no resonance, uninterrupted overlap with one attacker",
+    "_source": {
+      "doc": "docs/72-player-survivability-and-damage-baseline.md",
+      "section": "Damage Pressure Reference",
+      "lines": "163-163"
+    }
+  },
+  "targetTimeToKillSeconds": {
+    "min": 90,
+    "max": 120
+  },
+  "requiredRealizedBuildDps": {
+    "min": 375,
+    "max": 500,
+    "_source": {
+      "doc": "docs/70-combat-and-economy-balance-framework.md",
+      "section": "Build milestone boss-DPS budgets",
+      "lines": "174-182"
+    }
+  },
+  "milestoneReachTargetProbability": {
+    "percent": {
+      "min": 40,
+      "max": 65
+    },
+    "cohort": "players who understand movement and fabrication but have no permanent PowerUps",
+    "_source": {
+      "doc": "docs/72-player-survivability-and-damage-baseline.md",
+      "section": "Run-level margins",
+      "lines": "271-271"
+    }
+  },
+  "ability": {
+    "kind": "locked-marker leap",
+    "cadenceSeconds": 9,
+    "crouchDurationSeconds": 1.5,
+    "landingDamage": 35,
+    "markerShape": "Circle",
+    "markerDiameterM": null,
+    "markerPlacement": "a circular area centered on the mech's sampled position",
+    "markerTracksAfterAppearing": false,
+    "markerVisibility": "its boundary plus countdown remain visible beneath player and enemy effects",
+    "airborneDealsContactDamage": false,
+    "airborneRemainsTargetable": true,
+    "invalidLandingResolution": "the landing cannot place the boss in solid terrain; an invalid point moves to the nearest valid ground without moving the marker closer to the mech",
+    "resumesPursuitImmediatelyAfterLanding": true,
+    "resonantDamageReference": {
+      "baseDamage": 35,
+      "resonantDamage": 42,
+      "resonanceSource": "Asterite",
+      "freshMechHitsToDefeatAtResonantValue": 3,
+      "_source": {
+        "doc": "docs/72-player-survivability-and-damage-baseline.md",
+        "section": "Damage Pressure Reference",
+        "lines": "167-172"
+      }
+    },
+    "designRole": "provides the boss's anti-distance pressure without adding a second ability",
+    "_source": {
+      "doc": "docs/31-initial-alien-roster.md",
+      "section": "BOSS-04 — Skybreaker Apex",
+      "lines": "158-165"
+    },
+    "_additionalSource": {
+      "doc": "docs/technical/23-encounter-director-and-enemy-runtime.md",
+      "section": "Boss behavior state machines",
+      "lines": "193-198"
+    }
+  },
+  "postHardControlImmunitySeconds": 1.5,
+  "abilityTimelineCancellableByPlayerControl": false,
+  "persistence": {
+    "neverDespawns": true,
+    "countsTowardOrdinaryPopulation": false,
+    "maxSimultaneousBosses": 4,
+    "persistsUntilKilled": true,
+    "laterBossesMayOverlap": true,
+    "requiredForExtraction": false,
+    "disposedWithoutRewardIfRunExtractsWhileAlive": true,
+    "spawnRule": "enters from valid navigable ground outside the camera; never on the mech, inside an active mining zone, or in an unavoidable collision path",
+    "reentry": {
+      "trigger": "remains far outside the combat area",
+      "behavior": "re-enters from a telegraphed valid off-screen approach",
+      "abilityCooldownRestartsAfterReentry": true,
+      "nonDamagingWhilePending": true,
+      "_source": {
+        "doc": "docs/technical/23-encounter-director-and-enemy-runtime.md",
+        "section": "Boss re-entry",
+        "lines": "157-167"
+      }
+    },
+    "_source": {
+      "doc": "docs/31-initial-alien-roster.md",
+      "section": "Boss arrival, persistence, and reward",
+      "lines": "167-175"
+    }
+  },
+  "arrivalWarningPresentation": [
+    "15-second HUD warning",
+    "directional boss icon",
+    "distinctive distant cry",
+    "edge treatment"
+  ],
+  "resonance": {
+    "receivesSameGeodeResonanceModifiersAsOrdinaryEnemies": true,
+    "controlResistanceCombinesWithDriftmetal": "without reaching complete immunity unless a later rule says so",
+    "_source": {
+      "doc": "docs/31-initial-alien-roster.md",
+      "section": "Boss arrival, persistence, and reward",
+      "lines": "173-173"
+    }
+  },
+  "defeatReward": {
+    "commonOre": 300,
+    "unsecuredHyperGold": 25,
+    "specializedMaterialUnits": 2,
+    "materialSelection": "each unit independently selects one of the four materials present in the geological profile, with duplicates allowed and absent materials excluded",
+    "delivery": "non-modal physical loot burst scattered onto valid nearby ground, contact-collected, persisting until collected or run end, with an immediate minimap marker",
+    "pausesTimerOrOpensUi": false,
+    "_source": {
+      "doc": "docs/20-run-structure-and-timing.md",
+      "section": "Boss-defeat reward",
+      "lines": "99-103"
+    }
+  },
+  "description": "Skybreaker Apex is a towering four-limbed predator with folded dorsal membranes that open only for its leap.",
+  "_descriptionSource": {
+    "doc": "docs/31-initial-alien-roster.md",
+    "section": "BOSS-04 — Skybreaker Apex",
+    "lines": "158-165"
+  }
+}

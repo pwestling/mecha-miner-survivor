@@ -1,0 +1,73 @@
+{
+  "_provenance": {
+    "doc": "docs/71-initial-weapon-numeric-catalog.md",
+    "section": "Guardian Firmware — Functional — 2 Barysteel",
+    "lines": "313-317",
+    "extractedFor": "DAT-008",
+    "notes": [
+      "Branch sections in this document carry no standalone branch ID token; the heading supplies only name, class, and cost. The id is composed as <weaponId>-<branch-name-kebab-case>.",
+      "Section prose states no prerequisite. prerequisites is empty per docs/65-weapon-stat-and-branch-upgrades.md:50,66 (\"Branches have no stat-rank prerequisites\"; no rank, level, time, or boss prerequisite).",
+      "Exclusivity and irreversibility are not restated in this section; they come from docs/65-weapon-stat-and-branch-upgrades.md:56,68 and apply to all 45 branches.",
+      "Damage and attack rate are explicitly unchanged and the defensive value is not quantified (line 317), so favorableSceneEffect.magnitude is null; only the class-level Functional range at docs/71-initial-weapon-numeric-catalog.md:503 applies."
+    ]
+  },
+  "id": "W-BE-guardian-firmware",
+  "weaponId": "W-BE",
+  "weaponName": "Sentry Pod",
+  "branchName": "Guardian Firmware",
+  "class": "Functional",
+  "cost": {
+    "resource": "Barysteel",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutuallyExclusiveWith": [
+      "W-BE-battery-overclock",
+      "W-BE-forward-bastion"
+    ],
+    "irreversibleWithinRun": true,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run.",
+    "refs": [
+      "docs/65-weapon-stat-and-branch-upgrades.md:56",
+      "docs/65-weapon-stat-and-branch-upgrades.md:68"
+    ]
+  },
+  "availability": {
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite.",
+    "refs": [
+      "docs/65-weapon-stat-and-branch-upgrades.md:50",
+      "docs/65-weapon-stat-and-branch-upgrades.md:66"
+    ]
+  },
+  "effects": {
+    "priorityRadiusFromMechM": 4,
+    "fallbackTargeting": "normal nearest-target behavior",
+    "pushDistanceM": 0.8,
+    "pushDirection": "away from the mech",
+    "staggerSeconds": 0.25,
+    "controlAppliesTo": "ordinary enemies",
+    "bossAndEliteControlHandling": "global control resistance",
+    "damageChanged": false,
+    "attackRateChanged": false
+  },
+  "favorableSceneEffect": {
+    "magnitude": null,
+    "qualitative": "converts distributed fire into a mobile defensive screen"
+  },
+  "rules": [
+    {
+      "line": 315,
+      "text": "Pods prioritize enemies within 4M of the mech, then fall back to normal nearest-target behavior."
+    },
+    {
+      "line": 316,
+      "text": "Every hit pushes an ordinary enemy 0.8M away from the mech and staggers it for 0.25 s. Bosses and elites use global control resistance."
+    },
+    {
+      "line": 317,
+      "text": "Damage and attack rate are unchanged; the branch converts distributed fire into a mobile defensive screen."
+    }
+  ]
+}

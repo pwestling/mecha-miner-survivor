@@ -1,0 +1,243 @@
+{
+  "_provenance": {
+    "doc": "docs/69-initial-relic-catalog.md",
+    "section": "REL-02 — Ghostline Chassis",
+    "lines": "73-82",
+    "extractedFor": "DAT-008",
+    "notes": [
+      "Field order follows the doc 69 `## Catalog overview` column order (ID, Relic, Primary transformation, Core tradeoff), then the per-relic prose fields.",
+      "Catalog-overview table row for this relic is docs/69-initial-relic-catalog.md:29; the fresh/unlocked availability rules are docs/69-initial-relic-catalog.md:39-59.",
+      "`rules` holds the relic's prose bullets verbatim with their source line numbers; numbers stated in that prose are also structured under `effects`.",
+      "`_source` marks every value or rule folded in from a document other than docs/69-initial-relic-catalog.md."
+    ]
+  },
+  "id": "REL-02",
+  "name": "Ghostline Chassis",
+  "primaryTransformation": "Delayed duplicate arsenal",
+  "coreTradeoff": "Original weapon damage is reduced",
+  "discoverySentence": {
+    "text": "Your weapons deal 80% damage, but a spectral mech following 1.5 seconds behind repeats all their attacks at 60% damage.",
+    "lines": "75"
+  },
+  "affectedScope": "all equipped weapons",
+  "trigger": {
+    "condition": "continuous while installed",
+    "lines": "77-79"
+  },
+  "effects": {
+    "ghostDelaySeconds": 1.5,
+    "originalWeaponDamage": {
+      "percent": 80
+    },
+    "ghostWeaponDamage": {
+      "percent": 60
+    },
+    "ghostOccupiesWeaponSlot": false,
+    "ghostCollidesMinesCollectsOpensOrTakesDamage": false,
+    "valuesAreInitialTuning": true
+  },
+  "pauseBehavior": null,
+  "liveStateMeter": null,
+  "acquisition": {
+    "method": "found in a relic cache through map exploration",
+    "fabricable": false,
+    "minable": false,
+    "listedInGeologicalSurvey": false,
+    "poolAvailability": "hyper-gold-unlock",
+    "unlock": {
+      "unlockId": "UNL-02",
+      "costHyperGold": 250,
+      "currency": "Hyper Gold",
+      "permanent": true,
+      "refundable": false,
+      "canBeDisabled": false,
+      "effect": "Permanently adds the relic to the random relic-cache selection pool; it neither equips nor guarantees that relic.",
+      "_source": [
+        {
+          "doc": "docs/69-initial-relic-catalog.md",
+          "section": "Fresh-profile and unlocked availability",
+          "lines": "49-59"
+        },
+        {
+          "doc": "docs/63-permanent-option-unlock-catalog.md",
+          "section": "Catalog overview",
+          "lines": "51"
+        },
+        {
+          "doc": "docs/decisions/DEC-121-accept-initial-option-unlock-catalog.md",
+          "lines": "20"
+        }
+      ]
+    },
+    "cachesPerStandardMap": 3,
+    "cacheOpening": "automatic on mech contact; freezes the complete gameplay simulation",
+    "relicsDrawnPerRun": 3,
+    "drawWithoutReplacement": true,
+    "duplicatesWithinOneRun": false,
+    "resolution": "immediate install-or-sell; no relic inventory or deferred decision",
+    "saleValueCommonOre": 150,
+    "displacedRelicAutoSaleCommonOre": 150,
+    "saleValueVariesByIdentityOrderDurationOrProgress": false,
+    "_source": [
+      {
+        "doc": "docs/69-initial-relic-catalog.md",
+        "section": "Fresh-profile and unlocked availability",
+        "lines": "39-59"
+      },
+      {
+        "doc": "docs/69-initial-relic-catalog.md",
+        "lines": "183"
+      },
+      {
+        "doc": "docs/67-mech-relics.md",
+        "section": "Acquisition",
+        "lines": "28-34"
+      },
+      {
+        "doc": "docs/67-mech-relics.md",
+        "section": "Install-or-sell choice",
+        "lines": "36-49"
+      },
+      {
+        "doc": "docs/51-standard-map-generation-contract.md",
+        "section": "Relic caches",
+        "lines": "130-142"
+      },
+      {
+        "doc": "docs/50-maps-resources-and-navigation.md",
+        "section": "Relics as exploration rewards",
+        "lines": "96-100"
+      },
+      {
+        "doc": "docs/60-resources-crafting-progression.md",
+        "section": "Relic sale",
+        "lines": "174-178"
+      },
+      {
+        "doc": "docs/73-interface-screen-flow-and-information-architecture.md",
+        "section": "Relic Cache Discovery and Resolution",
+        "lines": "353-384"
+      },
+      {
+        "doc": "docs/technical/24-mining-fabrication-and-progression-runtime.md",
+        "section": "Relic cache transaction",
+        "lines": "135-143"
+      }
+    ]
+  },
+  "rarityAndWeighting": {
+    "rarityTier": null,
+    "cacheSelectionWeight": null,
+    "selectionModel": "three distinct relics drawn without replacement from the currently unlocked pool and assigned to the three caches during generation",
+    "freshProfilePoolSize": 5,
+    "fullyUnlockedPoolSize": 10,
+    "inFreshProfilePool": false,
+    "guaranteedToAppear": false,
+    "_source": [
+      {
+        "doc": "docs/69-initial-relic-catalog.md",
+        "section": "Fresh-profile and unlocked availability",
+        "lines": "41-59"
+      },
+      {
+        "doc": "docs/63-permanent-option-unlock-catalog.md",
+        "section": "Relic-pool behavior",
+        "lines": "107-111"
+      },
+      {
+        "doc": "docs/73-interface-screen-flow-and-information-architecture.md",
+        "section": "Cache selection and signaling",
+        "lines": "355-361"
+      }
+    ]
+  },
+  "stackingAndExclusivity": {
+    "relicSlots": 1,
+    "simultaneouslyActiveRelics": 1,
+    "stacksWithOtherRelics": false,
+    "installReplacesActiveRelic": true,
+    "runLocal": true,
+    "persistsAfterRun": false,
+    "combinesWith": [
+      "weapon branches",
+      "weapon stat ranks",
+      "utilities",
+      "mech traits",
+      "PowerUps"
+    ],
+    "modifierOrder": "Relic-specific multipliers apply after the additive percentage modifiers supplied by mech traits, utilities, and PowerUps unless the relic explicitly replaces targeting or cadence.",
+    "appliesToEveryDamagingComponentDerivedFromAnEquippedWeapon": true,
+    "alreadyCreatedFiniteInstancesRetainCreationTimeRelicState": true,
+    "overridesOrReplaces": [
+      "weapon damage attribution between mech and ghost origin"
+    ],
+    "_source": [
+      {
+        "doc": "docs/69-initial-relic-catalog.md",
+        "section": "Shared interaction and preview rules",
+        "lines": "168-175"
+      },
+      {
+        "doc": "docs/69-initial-relic-catalog.md",
+        "section": "Catalog principles",
+        "lines": "22"
+      },
+      {
+        "doc": "docs/67-mech-relics.md",
+        "section": "Replacement and interaction rules",
+        "lines": "63-71"
+      },
+      {
+        "doc": "docs/70-combat-and-economy-balance-framework.md",
+        "section": "Stacking and comparison order",
+        "lines": "264"
+      }
+    ]
+  },
+  "behaviorRegistration": {
+    "hook": "delayed transform history and attack duplication",
+    "registrationModel": "Relics are cross-cutting policies registered by stable relic ID. They modify well-defined hook points rather than scattering ID checks through every weapon.",
+    "perWeaponCompatibilityManifest": "produced from tests; states fully affected, partially affected with disclosed reason, or invalid. The initial design expects no invalid pairing.",
+    "_source": {
+      "doc": "docs/technical/22-combat-and-weapon-runtime.md",
+      "section": "Relic integration",
+      "lines": "148-166"
+    }
+  },
+  "rules": [
+    {
+      "text": "The ghost continuously retraces the mech's recorded position and persistent facing from 1.5 active-simulation seconds earlier.",
+      "lines": "77"
+    },
+    {
+      "text": "Every equipped weapon's ordinary output is attributed either to the mech at 80% damage or to its ghost copy at 60% damage. Both inherit the original weapon's stats, branch, targeting rules, cadence, geometry, and non-damage effects.",
+      "lines": "78"
+    },
+    {
+      "text": "The ghost supplies a delayed second origin for projectiles, fields, pulses, orbiting or contact weapons, movement paths, and autonomous attack events. It does not occupy a weapon slot, collide with enemies, mine, collect pickups, open caches, or take damage.",
+      "lines": "79"
+    },
+    {
+      "text": "Movement-shaped attacks reproduce the ghost's delayed route, making loops, reversals, and passes strategically different from standing near the same location.",
+      "lines": "80"
+    },
+    {
+      "text": "The maximum overlapping damage is intentionally greater than the original arsenal, but delayed spatial separation makes that power conditional on pathing and enemy movement.",
+      "lines": "81"
+    },
+    {
+      "text": "The 1.5-second delay and 80%/60% damage factors are initial tuning values.",
+      "lines": "82"
+    }
+  ],
+  "crossDocumentRules": [
+    {
+      "rule": "The simulation retains at least two seconds of player position/facing history at tick resolution for Ghostline and path-based effects. History is a fixed-capacity ring and freezes with simulation time.",
+      "positionHistoryMinimumSeconds": 2,
+      "_source": {
+        "doc": "docs/technical/22-combat-and-weapon-runtime.md",
+        "lines": "167"
+      }
+    }
+  ]
+}

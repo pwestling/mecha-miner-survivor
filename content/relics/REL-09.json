@@ -1,0 +1,267 @@
+{
+  "_provenance": {
+    "doc": "docs/69-initial-relic-catalog.md",
+    "section": "REL-09 — Claim-Jumper Core",
+    "lines": "147-155",
+    "extractedFor": "DAT-008",
+    "notes": [
+      "Field order follows the doc 69 `## Catalog overview` column order (ID, Relic, Primary transformation, Core tradeoff), then the per-relic prose fields.",
+      "Catalog-overview table row for this relic is docs/69-initial-relic-catalog.md:36; the fresh/unlocked availability rules are docs/69-initial-relic-catalog.md:39-59.",
+      "`rules` holds the relic's prose bullets verbatim with their source line numbers; numbers stated in that prose are also structured under `effects`.",
+      "`_source` marks every value or rule folded in from a document other than docs/69-initial-relic-catalog.md."
+    ]
+  },
+  "id": "REL-09",
+  "name": "Claim-Jumper Core",
+  "primaryTransformation": "Double extraction speed",
+  "coreTradeoff": "Enemies move 50% faster during mining",
+  "discoverySentence": {
+    "text": "Mining is twice as fast, but all enemies move 50% faster while you are actively mining.",
+    "lines": "149"
+  },
+  "affectedScope": "mining extraction rate and enemy movement speed",
+  "trigger": {
+    "condition": "enemy speed bonus is active only while extraction progress is actively advancing; extraction doubling applies to forward extraction",
+    "lines": "151-153"
+  },
+  "effects": {
+    "forwardExtractionRateMultiplier": 2,
+    "appliesToSiteClasses": [
+      "standard ore seams",
+      "rich ore seams",
+      "specialized-material geodes",
+      "Hyper Gold sites"
+    ],
+    "appliesAfterOrdinaryExtractionModifiers": true,
+    "miningDecayMultipleOfCurrentForwardExtractionRate": 4,
+    "enemyMovementSpeedIncreaseWhileMining": {
+      "percent": 50
+    },
+    "enemyMovementSpeedMultiplierWhileMining": 1.5,
+    "affectedEnemyKinds": [
+      "ordinary enemies",
+      "specialists",
+      "elites",
+      "bosses",
+      "already-summoned threat-beacon enemies"
+    ],
+    "acceleratesEnemyAttackCadenceProjectileSpeedStatusDurationsOrSpawnSchedule": false,
+    "changesInstallmentsOrPayouts": false
+  },
+  "pauseBehavior": {
+    "rule": "The enemy speed increase ends immediately when mining stops because the mech leaves, the point completes, or the simulation pauses.",
+    "lines": "153"
+  },
+  "liveStateMeter": null,
+  "acquisition": {
+    "method": "found in a relic cache through map exploration",
+    "fabricable": false,
+    "minable": false,
+    "listedInGeologicalSurvey": false,
+    "poolAvailability": "fresh-profile",
+    "unlock": null,
+    "cachesPerStandardMap": 3,
+    "cacheOpening": "automatic on mech contact; freezes the complete gameplay simulation",
+    "relicsDrawnPerRun": 3,
+    "drawWithoutReplacement": true,
+    "duplicatesWithinOneRun": false,
+    "resolution": "immediate install-or-sell; no relic inventory or deferred decision",
+    "saleValueCommonOre": 150,
+    "displacedRelicAutoSaleCommonOre": 150,
+    "saleValueVariesByIdentityOrderDurationOrProgress": false,
+    "_source": [
+      {
+        "doc": "docs/69-initial-relic-catalog.md",
+        "section": "Fresh-profile and unlocked availability",
+        "lines": "39-59"
+      },
+      {
+        "doc": "docs/69-initial-relic-catalog.md",
+        "lines": "183"
+      },
+      {
+        "doc": "docs/67-mech-relics.md",
+        "section": "Acquisition",
+        "lines": "28-34"
+      },
+      {
+        "doc": "docs/67-mech-relics.md",
+        "section": "Install-or-sell choice",
+        "lines": "36-49"
+      },
+      {
+        "doc": "docs/51-standard-map-generation-contract.md",
+        "section": "Relic caches",
+        "lines": "130-142"
+      },
+      {
+        "doc": "docs/50-maps-resources-and-navigation.md",
+        "section": "Relics as exploration rewards",
+        "lines": "96-100"
+      },
+      {
+        "doc": "docs/60-resources-crafting-progression.md",
+        "section": "Relic sale",
+        "lines": "174-178"
+      },
+      {
+        "doc": "docs/73-interface-screen-flow-and-information-architecture.md",
+        "section": "Relic Cache Discovery and Resolution",
+        "lines": "353-384"
+      },
+      {
+        "doc": "docs/technical/24-mining-fabrication-and-progression-runtime.md",
+        "section": "Relic cache transaction",
+        "lines": "135-143"
+      }
+    ]
+  },
+  "rarityAndWeighting": {
+    "rarityTier": null,
+    "cacheSelectionWeight": null,
+    "selectionModel": "three distinct relics drawn without replacement from the currently unlocked pool and assigned to the three caches during generation",
+    "freshProfilePoolSize": 5,
+    "fullyUnlockedPoolSize": 10,
+    "inFreshProfilePool": true,
+    "guaranteedToAppear": false,
+    "_source": [
+      {
+        "doc": "docs/69-initial-relic-catalog.md",
+        "section": "Fresh-profile and unlocked availability",
+        "lines": "41-59"
+      },
+      {
+        "doc": "docs/63-permanent-option-unlock-catalog.md",
+        "section": "Relic-pool behavior",
+        "lines": "107-111"
+      },
+      {
+        "doc": "docs/73-interface-screen-flow-and-information-architecture.md",
+        "section": "Cache selection and signaling",
+        "lines": "355-361"
+      }
+    ]
+  },
+  "stackingAndExclusivity": {
+    "relicSlots": 1,
+    "simultaneouslyActiveRelics": 1,
+    "stacksWithOtherRelics": false,
+    "installReplacesActiveRelic": true,
+    "runLocal": true,
+    "persistsAfterRun": false,
+    "combinesWith": [
+      "weapon branches",
+      "weapon stat ranks",
+      "utilities",
+      "mech traits",
+      "PowerUps"
+    ],
+    "modifierOrder": "Relic-specific multipliers apply after the additive percentage modifiers supplied by mech traits, utilities, and PowerUps unless the relic explicitly replaces targeting or cadence.",
+    "appliesToEveryDamagingComponentDerivedFromAnEquippedWeapon": true,
+    "alreadyCreatedFiniteInstancesRetainCreationTimeRelicState": true,
+    "overridesOrReplaces": [
+      "forward extraction rate",
+      "enemy movement speed while mining"
+    ],
+    "_source": [
+      {
+        "doc": "docs/69-initial-relic-catalog.md",
+        "section": "Shared interaction and preview rules",
+        "lines": "168-175"
+      },
+      {
+        "doc": "docs/69-initial-relic-catalog.md",
+        "section": "Catalog principles",
+        "lines": "22"
+      },
+      {
+        "doc": "docs/67-mech-relics.md",
+        "section": "Replacement and interaction rules",
+        "lines": "63-71"
+      },
+      {
+        "doc": "docs/70-combat-and-economy-balance-framework.md",
+        "section": "Stacking and comparison order",
+        "lines": "264"
+      }
+    ]
+  },
+  "behaviorRegistration": {
+    "hook": "mining-rate and conditional enemy-speed transformation",
+    "registrationModel": "Relics are cross-cutting policies registered by stable relic ID. They modify well-defined hook points rather than scattering ID checks through every weapon.",
+    "perWeaponCompatibilityManifest": "produced from tests; states fully affected, partially affected with disclosed reason, or invalid. The initial design expects no invalid pairing.",
+    "_source": {
+      "doc": "docs/technical/22-combat-and-weapon-runtime.md",
+      "section": "Relic integration",
+      "lines": "148-166"
+    }
+  },
+  "rules": [
+    {
+      "text": "Doubles forward extraction rate for standard seams, rich seams, material geodes, and Hyper Gold sites after ordinary extraction modifiers.",
+      "lines": "151"
+    },
+    {
+      "text": "Mining decay remains four times the mech's current forward extraction rate, preserving the normal proportional leave-and-decay rule.",
+      "lines": "152"
+    },
+    {
+      "text": "Every living enemy receives +50% movement speed while extraction progress is actively advancing. The increase begins with forward progress and ends immediately when mining stops because the mech leaves, the point completes, or the simulation pauses.",
+      "lines": "153"
+    },
+    {
+      "text": "The speed increase affects ordinary enemies, specialists, elites, bosses, and already-summoned threat-beacon enemies. It does not accelerate their attack cadence, projectile speed, status durations, or spawn schedule.",
+      "lines": "154"
+    },
+    {
+      "text": "Completed installments and payouts remain unchanged. The relic compresses positional exposure rather than increasing resource yield.",
+      "lines": "155"
+    }
+  ],
+  "crossDocumentRules": [
+    {
+      "rule": "Flux Amber resonance then multiplies current enemy movement by 1.20; Claim-Jumper Core multiplies it by 1.50 only while mining progress advances. Those distinct sources multiply because they describe different conditional transformations rather than additions to one displayed player stat.",
+      "enemyMovementMultiplier": 1.5,
+      "multipliesWithEliteMovementMultiplier": 1.1,
+      "multipliesWithFluxAmberResonanceMultiplier": 1.2,
+      "_source": {
+        "doc": "docs/72-player-survivability-and-damage-baseline.md",
+        "lines": "80"
+      }
+    },
+    {
+      "rule": "Claim-Jumper enemy speed is a separate conditional multiplier active only during forward extraction progress. Elite movement multiplies base, elite, resonance, then Claim-Jumper factors.",
+      "enemyMovementMultiplierOrder": [
+        "base",
+        "elite",
+        "resonance",
+        "Claim-Jumper Core"
+      ],
+      "_source": {
+        "doc": "docs/technical/23-encounter-director-and-enemy-runtime.md",
+        "lines": "133"
+      }
+    },
+    {
+      "rule": "Stacks additively with Prospector and Extraction Accelerator. Claim-Jumper Core's doubling applies after their combined additive extraction modifier.",
+      "_source": {
+        "doc": "docs/62-permanent-powerup-catalog.md",
+        "lines": "207"
+      }
+    },
+    {
+      "rule": "Advance by base work rate multiplied by additive extraction bonuses, then explicit relic transformation.",
+      "_source": {
+        "doc": "docs/technical/24-mining-fabrication-and-progression-runtime.md",
+        "lines": "38"
+      }
+    },
+    {
+      "rule": "Modifier matrices cover Prospector, PowerUps, Extraction Accelerator, Extraction Tether, Claim-Jumper, and their specified additive/multiplicative order.",
+      "_source": {
+        "doc": "docs/technical/24-mining-fabrication-and-progression-runtime.md",
+        "lines": "194"
+      }
+    }
+  ]
+}

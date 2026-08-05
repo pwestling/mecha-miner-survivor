@@ -1,0 +1,82 @@
+{
+  "_provenance": {
+    "doc": "docs/71-initial-weapon-numeric-catalog.md",
+    "section": "Carrier Ignition — Functional — 2 Flux Amber",
+    "lines": "409-414",
+    "extractedFor": "DAT-008",
+    "notes": [
+      "Branch sections in this document carry no standalone branch ID token; the heading supplies only name, class, and cost. The id and filename are composed as <weaponId>-<branch-name-kebab-case>.",
+      "weaponId and weaponName come from the enclosing '## W-CF — Wake Projector' heading (line 398).",
+      "`rules` holds every bullet of this section verbatim with its source line; `effects` is a structured restatement of those same bullets and introduces no value that is not written in them.",
+      "Section prose states no prerequisite. prerequisites is empty per docs/65-weapon-stat-and-branch-upgrades.md:50,66 (\"Branches have no stat-rank prerequisites\"; no rank, level, time, or boss prerequisite).",
+      "Exclusivity and irreversibility are not restated in this section; they come from docs/65-weapon-stat-and-branch-upgrades.md:56,68 and apply to all 45 branches.",
+      "expectedEffect is null: no bullet in this section is phrased as an 'Expected effect' estimate, unlike some earlier branch sections in this document. The section's own numeric outcomes are transcribed in `effects` and every bullet is preserved verbatim in `rules`, so nothing is lost."
+    ]
+  },
+  "id": "W-CF-carrier-ignition",
+  "weaponId": "W-CF",
+  "weaponName": "Wake Projector",
+  "branchName": "Carrier Ignition",
+  "class": "Functional",
+  "cost": {
+    "resource": "Flux Amber",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutuallyExclusiveWith": [
+      "W-CF-runaway-wake",
+      "W-CF-circuit-closure"
+    ],
+    "irreversibleWithinRun": true,
+    "existingCommonOreStatTracksStillApply": true,
+    "addsNewStatTrack": false,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run.",
+    "refs": [
+      "docs/65-weapon-stat-and-branch-upgrades.md:56",
+      "docs/65-weapon-stat-and-branch-upgrades.md:68"
+    ]
+  },
+  "availability": {
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite.",
+    "purchase": "Installing one is a single deterministic purchase costing exactly two units of its assigned specialized material.",
+    "refs": [
+      "docs/65-weapon-stat-and-branch-upgrades.md:50",
+      "docs/65-weapon-stat-and-branch-upgrades.md:66"
+    ]
+  },
+  "effects": {
+    "carrierTrigger": "An enemy damaged by the mech's wake leaves its own trail as it moves.",
+    "carrierTrailDurationSeconds": 3.0,
+    "carrierTrailDamagePerSecondOfCurrentSegmentDamage": {
+      "percent": 50
+    },
+    "carrierTrailWidthOfCurrentWakeWidth": {
+      "percent": 50
+    },
+    "carrierTrailsCanIgniteFurtherCarriers": false,
+    "maximumCarrierTrailsPerEnemy": 1,
+    "segmentOverlapCapPerTarget": 2,
+    "overlapCapCountsMechAndCarrierSegments": true
+  },
+  "expectedEffect": null,
+  "rules": [
+    {
+      "line": 411,
+      "text": "An enemy damaged by the mech's wake leaves its own trail for 3.0 s as it moves."
+    },
+    {
+      "line": 412,
+      "text": "Enemy trails deal 50% current segment Damage per second, have 50% current wake width, and cannot ignite more carriers."
+    },
+    {
+      "line": 413,
+      "text": "One carrier trail per enemy may exist at once, and the ordinary two-segment overlap cap includes both mech and carrier segments."
+    },
+    {
+      "line": 414,
+      "text": "The branch turns enemies into moving area denial and is strongest when fast aliens cross through slower crowds."
+    }
+  ]
+}

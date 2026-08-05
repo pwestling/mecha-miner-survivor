@@ -1,0 +1,91 @@
+{
+  "_provenance": {
+    "doc": "docs/71-initial-weapon-numeric-catalog.md",
+    "section": "Guardian Reserve — Functional — 2 Eidolon Coral",
+    "lines": "484-489",
+    "extractedFor": "DAT-008",
+    "notes": [
+      "Branch sections in this document carry no standalone branch ID token; the heading supplies only name, class, and cost. The id and filename are composed as <weaponId>-<branch-name-kebab-case>.",
+      "weaponId and weaponName come from the enclosing '## W-EF — Missile Rack' heading (line 473).",
+      "`rules` holds every bullet of this section verbatim with its source line; `effects` is a structured restatement of those same bullets and introduces no value that is not written in them.",
+      "Section prose states no prerequisite. prerequisites is empty per docs/65-weapon-stat-and-branch-upgrades.md:50,66 (\"Branches have no stat-rank prerequisites\"; no rank, level, time, or boss prerequisite).",
+      "Exclusivity and irreversibility are not restated in this section; they come from docs/65-weapon-stat-and-branch-upgrades.md:56,68 and apply to all 45 branches.",
+      "expectedEffect is null: no bullet in this section is phrased as an 'Expected effect' estimate, unlike some earlier branch sections in this document. The section's own numeric outcomes are transcribed in `effects` and every bullet is preserved verbatim in `rules`, so nothing is lost."
+    ]
+  },
+  "id": "W-EF-guardian-reserve",
+  "weaponId": "W-EF",
+  "weaponName": "Missile Rack",
+  "branchName": "Guardian Reserve",
+  "class": "Functional",
+  "cost": {
+    "resource": "Eidolon Coral",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutuallyExclusiveWith": [
+      "W-EF-mirv-saturation",
+      "W-EF-spiral-barrage"
+    ],
+    "irreversibleWithinRun": true,
+    "existingCommonOreStatTracksStillApply": true,
+    "addsNewStatTrack": false,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run.",
+    "refs": [
+      "docs/65-weapon-stat-and-branch-upgrades.md:56",
+      "docs/65-weapon-stat-and-branch-upgrades.md:68"
+    ]
+  },
+  "availability": {
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite.",
+    "purchase": "Installing one is a single deterministic purchase costing exactly two units of its assigned specialized material.",
+    "refs": [
+      "docs/65-weapon-stat-and-branch-upgrades.md:50",
+      "docs/65-weapon-stat-and-branch-upgrades.md:66"
+    ]
+  },
+  "effects": {
+    "reserveCapacity": 8,
+    "reservePosition": "orbiting reserve around the mech",
+    "diveTriggerEnemyRangeM": 6,
+    "diveTarget": "nearest enemy entering the dive trigger range",
+    "diveDamageOfCurrentDamage": {
+      "percent": 125
+    },
+    "reserveFullBehavior": "If the reserve is full, newly produced missiles launch normally at any target in acquisition range.",
+    "storedMissilesPersistUntilFired": true,
+    "storedMissilesRetargetNormally": true,
+    "blocksEnemyProjectiles": false
+  },
+  "globalAttackRateInteraction": {
+    "branchNamedInMapping": true,
+    "affectedTiming": "Salvo production rate",
+    "unaffectedTiming": "Missile movement, reserve life, and targeting",
+    "_source": {
+      "doc": "docs/71-initial-weapon-numeric-catalog.md",
+      "section": "Global weapon Attack Rate mapping",
+      "lines": "122"
+    }
+  },
+  "expectedEffect": null,
+  "rules": [
+    {
+      "line": 486,
+      "text": "Missiles enter an orbiting reserve around the mech instead of immediately choosing distant targets, up to eight stored missiles."
+    },
+    {
+      "line": 487,
+      "text": "A reserve missile dives at the nearest enemy entering 6M, dealing 125% current Damage. If the reserve is full, newly produced missiles launch normally at any target in acquisition range."
+    },
+    {
+      "line": 488,
+      "text": "Stored missiles persist until fired and retarget normally. They do not block enemy projectiles."
+    },
+    {
+      "line": 489,
+      "text": "The branch banks damage during quiet traversal and releases it automatically when danger reaches the player."
+    }
+  ]
+}

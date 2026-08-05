@@ -1,0 +1,77 @@
+{
+  "_provenance": {
+    "doc": "docs/71-initial-weapon-numeric-catalog.md",
+    "section": "Circuit Closure — Conversion — 2 Driftmetal",
+    "lines": "416-421",
+    "extractedFor": "DAT-008",
+    "notes": [
+      "Branch sections in this document carry no standalone branch ID token; the heading supplies only name, class, and cost. The id and filename are composed as <weaponId>-<branch-name-kebab-case>.",
+      "weaponId and weaponName come from the enclosing '## W-CF — Wake Projector' heading (line 398).",
+      "`rules` holds every bullet of this section verbatim with its source line; `effects` is a structured restatement of those same bullets and introduces no value that is not written in them.",
+      "Section prose states no prerequisite. prerequisites is empty per docs/65-weapon-stat-and-branch-upgrades.md:50,66 (\"Branches have no stat-rank prerequisites\"; no rank, level, time, or boss prerequisite).",
+      "Exclusivity and irreversibility are not restated in this section; they come from docs/65-weapon-stat-and-branch-upgrades.md:56,68 and apply to all 45 branches.",
+      "expectedEffect is null: no bullet in this section is phrased as an 'Expected effect' estimate, unlike some earlier branch sections in this document. The section's own numeric outcomes are transcribed in `effects` and every bullet is preserved verbatim in `rules`, so nothing is lost."
+    ]
+  },
+  "id": "W-CF-circuit-closure",
+  "weaponId": "W-CF",
+  "weaponName": "Wake Projector",
+  "branchName": "Circuit Closure",
+  "class": "Conversion",
+  "cost": {
+    "resource": "Driftmetal",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutuallyExclusiveWith": [
+      "W-CF-runaway-wake",
+      "W-CF-carrier-ignition"
+    ],
+    "irreversibleWithinRun": true,
+    "existingCommonOreStatTracksStillApply": true,
+    "addsNewStatTrack": false,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run.",
+    "refs": [
+      "docs/65-weapon-stat-and-branch-upgrades.md:56",
+      "docs/65-weapon-stat-and-branch-upgrades.md:68"
+    ]
+  },
+  "availability": {
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite.",
+    "purchase": "Installing one is a single deterministic purchase costing exactly two units of its assigned specialized material.",
+    "refs": [
+      "docs/65-weapon-stat-and-branch-upgrades.md:50",
+      "docs/65-weapon-stat-and-branch-upgrades.md:66"
+    ]
+  },
+  "effects": {
+    "closureCondition": "The current wake intersects a segment from the same continuous path and encloses at least the minimum area.",
+    "minimumEnclosedAreaM2": 4,
+    "maximumClaimedInteriorAreaM2": 40,
+    "eruptionDamageAsSecondsOfCurrentSegmentDamage": 6,
+    "oversizedLoopBehavior": "A larger loop still erupts but only enemies in the 40M² nearest the closure point are hit.",
+    "loopSegmentsConsumed": true,
+    "perPathClosureCooldownSeconds": 1.0
+  },
+  "expectedEffect": null,
+  "rules": [
+    {
+      "line": 418,
+      "text": "When the current wake intersects a segment from the same continuous path and encloses at least 4M², the loop closes and all enclosed enemies take an eruption hit equal to six seconds of current segment Damage."
+    },
+    {
+      "line": 419,
+      "text": "A loop may claim at most 40M² of interior area; a larger loop still erupts but only enemies in the 40M² nearest the closure point are hit."
+    },
+    {
+      "line": 420,
+      "text": "The segments forming the loop are consumed. The same continuous path cannot close another loop for 1.0 s."
+    },
+    {
+      "line": 421,
+      "text": "This turns the wake from passive pursuit damage into deliberate lasso-like route drawing."
+    }
+  ]
+}

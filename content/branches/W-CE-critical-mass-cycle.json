@@ -1,0 +1,88 @@
+{
+  "_provenance": {
+    "doc": "docs/71-initial-weapon-numeric-catalog.md",
+    "section": "Critical-Mass Cycle — Amplification — 2 Eidolon Coral",
+    "lines": "378-383",
+    "extractedFor": "DAT-008",
+    "notes": [
+      "Branch sections in this document carry no standalone branch ID token; the heading supplies only name, class, and cost. The id and filename are composed as <weaponId>-<branch-name-kebab-case>.",
+      "weaponId and weaponName come from the enclosing '## W-CE — Reactor Pulse' heading (line 374).",
+      "`rules` holds every bullet of this section verbatim with its source line; `effects` is a structured restatement of those same bullets and introduces no value that is not written in them.",
+      "Section prose states no prerequisite. prerequisites is empty per docs/65-weapon-stat-and-branch-upgrades.md:50,66 (\"Branches have no stat-rank prerequisites\"; no rank, level, time, or boss prerequisite).",
+      "Exclusivity and irreversibility are not restated in this section; they come from docs/65-weapon-stat-and-branch-upgrades.md:56,68 and apply to all 45 branches.",
+      "expectedEffect is null: no bullet in this section is phrased as an 'Expected effect' estimate, unlike some earlier branch sections in this document. The section's own numeric outcomes are transcribed in `effects` and every bullet is preserved verbatim in `rules`, so nothing is lost."
+    ]
+  },
+  "id": "W-CE-critical-mass-cycle",
+  "weaponId": "W-CE",
+  "weaponName": "Reactor Pulse",
+  "branchName": "Critical-Mass Cycle",
+  "class": "Amplification",
+  "cost": {
+    "resource": "Eidolon Coral",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutuallyExclusiveWith": [
+      "W-CE-kinetic-vent",
+      "W-CE-supernova-cycle"
+    ],
+    "irreversibleWithinRun": true,
+    "existingCommonOreStatTracksStillApply": true,
+    "addsNewStatTrack": false,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run.",
+    "refs": [
+      "docs/65-weapon-stat-and-branch-upgrades.md:56",
+      "docs/65-weapon-stat-and-branch-upgrades.md:68"
+    ]
+  },
+  "availability": {
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite.",
+    "purchase": "Installing one is a single deterministic purchase costing exactly two units of its assigned specialized material.",
+    "refs": [
+      "docs/65-weapon-stat-and-branch-upgrades.md:50",
+      "docs/65-weapon-stat-and-branch-upgrades.md:66"
+    ]
+  },
+  "effects": {
+    "chargeName": "Critical Mass",
+    "chargesGrantedPerEnemyHitByPulse": 1,
+    "chargeCap": 20,
+    "chargesApplyToNextPulseOnly": true,
+    "perChargeDamageBonus": {
+      "percent": 2
+    },
+    "perChargeRadiusBonus": {
+      "percent": 1
+    },
+    "maximumDamageBonus": {
+      "percent": 40
+    },
+    "maximumRadiusBonus": {
+      "percent": 20
+    },
+    "chargeConsumption": "Charges are consumed by the next pulse and replaced by the count that pulse hits.",
+    "chargesFromLoneBoss": 1
+  },
+  "expectedEffect": null,
+  "rules": [
+    {
+      "line": 380,
+      "text": "Every enemy hit by a pulse gives one Critical Mass charge for the next pulse, capped at 20 charges."
+    },
+    {
+      "line": 381,
+      "text": "Each charge gives the next pulse +2% Damage and +1% radius, for maximum bonuses of +40% Damage and +20% radius."
+    },
+    {
+      "line": 382,
+      "text": "Charges are consumed by the next pulse and replaced by the count that pulse hits, allowing sustained crowd contact to maintain the bonus."
+    },
+    {
+      "line": 383,
+      "text": "A boss alone supplies one charge; the large benefit requires horde pressure around it."
+    }
+  ]
+}

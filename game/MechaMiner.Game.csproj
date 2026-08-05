@@ -21,6 +21,15 @@
     <!-- Required so Godot can load the game assembly into its own AssemblyLoadContext. -->
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <RootNamespace>MechaMiner.Game</RootNamespace>
+    <!--
+      Redundant with Directory.Build.props on purpose. The Godot editor's C#
+      project check reads the target framework from this file directly; when the
+      property is only inherited, a headless Godot import rewrites the csproj to
+      add it and leaves a MechaMiner.Game.csproj.old backup behind. Declaring it
+      here keeps a headless import from mutating a committed project file. It must
+      stay equal to the repository pin.
+    -->
+    <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>

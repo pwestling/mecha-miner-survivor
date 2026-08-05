@@ -6,7 +6,8 @@
   "notes": [
     "Entries are added before implementation and are never renumbered (docs/technical/91 § Verification registry).",
     "The structural validator for this file is owned by TASK-FND-009-002; until it lands, the shape here is the FND-001 integration owner's declaration of the required fields listed in doc 91.",
-    "Selectors are repository scripts and commands because the pure NUnit harness does not exist until TASK-FND-003-001. TASK-FND-009-001 replaces the architecture selector with an architecture test."
+    "Selectors are repository scripts and commands because the pure NUnit harness does not exist until TASK-FND-003-001. TASK-FND-009-001 replaces the architecture selector with an architecture test.",
+    "VER-FND-001-012 and VER-FND-001-013 use build/verify-godot.sh rather than the bare godot commands: a headless Godot launch exits 0 even when the boot script fails to load, so the exit code alone is not a gate. The script also asserts the stable startup line and the absence of engine ERROR lines."
   ],
   "entries": [
     {
@@ -244,8 +245,8 @@
       ],
       "gameplaySources": [],
       "selector": {
-        "kind": "command",
-        "value": "godot --headless --import --path game"
+        "kind": "script",
+        "value": "build/verify-godot.sh"
       },
       "fixtures": [],
       "scenarios": [],
@@ -265,8 +266,8 @@
       ],
       "gameplaySources": [],
       "selector": {
-        "kind": "command",
-        "value": "godot --headless --path game --quit-after 60"
+        "kind": "script",
+        "value": "build/verify-godot.sh"
       },
       "fixtures": [],
       "scenarios": [],

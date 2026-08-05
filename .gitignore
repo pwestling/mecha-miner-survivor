@@ -1,3 +1,22 @@
+# Python helper tooling
 __pycache__/
 *.py[cod]
 .DS_Store
+
+# Local build output. docs/technical/100 § Repository structure: "artifacts/
+# ignored local outputs".
+artifacts/
+bin/
+obj/
+
+# Godot's local import/build cache. project.godot, *.import / *.uid import
+# sidecars, and export_presets.cfg are deliberately NOT ignored - doc 100
+# § Godot import and export requires them to be committed.
+.godot/
+
+# Godot documents export credentials as confidential (doc 100 § Godot import
+# and export, § Secrets and signing).
+export_credentials.cfg
+
+# Per-developer IDE and user state
+*.user

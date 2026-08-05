@@ -1,0 +1,32 @@
+<Project Sdk="Godot.NET.Sdk/4.7.1">
+
+  <!--
+    CMP-APP-001, CMP-PRE-001, CMP-PRE-002, CMP-UI-001, CMP-AUD-001, CMP-PLT-001.
+    The Godot composition root, input adapters, presentation, UI, audio, and
+    platform adapters.
+
+    Accepted project boundary (docs/technical/115 § Accepted project boundary):
+      allowed project dependencies: all pure projects plus Godot APIs
+      Godot types allowed:          Yes
+
+    This is the ONLY project in the repository allowed to reference Godot.
+    The engine version is pinned by the Sdk attribute above (TR-FND-001,
+    TR-BLD-001) and locked in packages.lock.json.
+
+    MechaMiner.Tools is deliberately not referenced: it is a build/tool-process
+    library, and the game must not depend on tool workflows.
+  -->
+
+  <PropertyGroup>
+    <!-- Required so Godot can load the game assembly into its own AssemblyLoadContext. -->
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <RootNamespace>MechaMiner.Game</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../src/MechaMiner.Content/MechaMiner.Content.csproj" />
+    <ProjectReference Include="../src/MechaMiner.Simulation/MechaMiner.Simulation.csproj" />
+    <ProjectReference Include="../src/MechaMiner.Persistence/MechaMiner.Persistence.csproj" />
+  </ItemGroup>
+
+</Project>

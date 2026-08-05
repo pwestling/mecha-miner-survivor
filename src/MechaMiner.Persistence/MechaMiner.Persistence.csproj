@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    CMP-PST-001. Owns save envelopes, canonical serialization, checksums,
+    migrations, and atomic storage abstractions.
+
+    Accepted project boundary (docs/technical/115 § Accepted project boundary):
+      allowed project dependencies: MechaMiner.Content, plus narrow immutable
+                                    types from MechaMiner.Simulation
+      Godot types allowed:          No
+
+    The MechaMiner.Simulation edge is permitted but deliberately not taken yet:
+    no narrow immutable Simulation type exists to serialize at FND-001. PST-005
+    (run recovery, SCH-RUN-003) is the work package that adds it if and when a
+    real Simulation type must cross the boundary. Keeping the smallest edge now
+    means the architecture check has fewer allowed edges to police.
+  -->
+
+  <ItemGroup>
+    <ProjectReference Include="../MechaMiner.Content/MechaMiner.Content.csproj" />
+  </ItemGroup>
+
+</Project>

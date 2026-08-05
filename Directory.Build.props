@@ -1,0 +1,48 @@
+<Project>
+
+  <!--
+    Repository-wide pins for every C# project in MechaMiner.sln.
+
+    Authority: docs/technical/100-build-dependencies-and-release-operations.md
+               (Toolchain pinning, C# project standards)
+               docs/technical/00-technical-foundation.md (Version policy)
+    Requirements: TR-BLD-001, TR-BLD-006, TR-FND-001
+
+    Owned by the FND-001 integration owner. Consumer work packages must not edit
+    this file; request the change instead (docs/technical/delivery-waves.md).
+  -->
+
+  <PropertyGroup Label="Pinned target framework and language">
+    <!--
+      net8.0 is the .NET baseline of the pinned Godot 4.7.1 .NET distribution:
+      GodotSharp 4.7.1 declares net8.0 and ships only lib/net8.0. Godot's
+      GodotPlugins runtimeconfig rolls forward to the installed .NET 10 runtime.
+    -->
+    <TargetFramework>net8.0</TargetFramework>
+    <!--
+      Pinned, never "preview" or "latest". 12.0 is the C# version that matches
+      the pinned net8.0 target framework, so no language feature can depend on a
+      BCL surface the pinned target does not have.
+    -->
+    <LangVersion>12.0</LangVersion>
+    <!--
+      Only the .NET 10 runtime is installed alongside SDK 10.0.302, so net8.0
+      apps and test hosts must roll forward to it.
+    -->
+    <RollForward>LatestMajor</RollForward>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Locked dependency restore">
+    <!-- Lock files are committed so CI can restore in locked mode. -->
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Repository conventions">
+    <!-- Nothing in this repository is published as a NuGet package. -->
+    <IsPackable>false</IsPackable>
+    <!-- Namespaces are always explicit; see docs/technical/114 C# defaults. -->
+    <ImplicitUsings>disable</ImplicitUsings>
+    <NeutralLanguage>en-US</NeutralLanguage>
+  </PropertyGroup>
+
+</Project>

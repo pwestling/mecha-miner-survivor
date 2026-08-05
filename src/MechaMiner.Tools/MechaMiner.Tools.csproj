@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Owns command-line workflows, audits, generators, reports, and benchmark
+    orchestration.
+
+    Accepted project boundary (docs/technical/115 § Accepted project boundary):
+      allowed project dependencies: all pure projects
+      Godot types allowed:          No; it may launch the pinned Godot
+                                    executable as an external process
+
+    This is a library at FND-001, not an executable. The typed verb dispatcher
+    and process entry point behind ./build.sh and ./build.ps1 are owned by
+    TASK-FND-002-001; FND-001 does not invent a command host.
+  -->
+
+  <ItemGroup>
+    <ProjectReference Include="../MechaMiner.Content/MechaMiner.Content.csproj" />
+    <ProjectReference Include="../MechaMiner.Simulation/MechaMiner.Simulation.csproj" />
+    <ProjectReference Include="../MechaMiner.Persistence/MechaMiner.Persistence.csproj" />
+  </ItemGroup>
+
+</Project>

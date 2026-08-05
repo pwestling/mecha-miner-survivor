@@ -1,0 +1,181 @@
+---
+doc_id: TDD-VERIFICATION
+title: Verification Strategy
+status: active
+authoritative: true
+---
+
+# Verification Strategy
+
+## Purpose
+
+This document defines how agents prove implementation correctness, integration, performance, readability, persistence safety, and gameplay conformance. Verification is part of each work item, not a separate cleanup phase.
+
+## Test layers
+
+| Layer | Runs | Primary use |
+| --- | --- | --- |
+| Pure unit | every change | formulas, geometry, clocks, state transitions, validators, migrations |
+| Property/fuzz | every change for bounded suites; nightly exhaustive | invariants across generated inputs and malformed data |
+| Golden fixture | every change | accepted schedule, catalogs, derivations, saves, map manifests, edge ordering |
+| Headless simulation integration | every change | multi-system run behavior without Godot |
+| Godot engine integration | every change where relevant | scene bindings, imports, input, UI routes, presentation synchronization |
+| Screenshot/render comparison | affected changes plus scheduled matrix | layout, geometry correspondence, accessibility, asset presentation |
+| Export smoke | main branch/release candidates | packaged Windows/Linux launch and basic flow |
+| Performance | local affected scenario, scheduled target-device suite | budget and regression evidence |
+| Soak | nightly/release candidate | leaks, handle reuse, repeated runs, long queues |
+| Usability/manual acceptance | milestone/release candidate | player comprehension and device behavior |
+
+## Test project separation
+
+- Pure simulation/content/persistence tests do not launch Godot.
+- Engine integration uses a dedicated minimal Godot test runner or scenes, not production front-end navigation unless that is the subject.
+- Test fixtures and reference assets are isolated from release content by export filters and manifest status.
+- Tools call the same libraries and validators as the game; they do not reimplement rules for tests.
+- Test-only access occurs through explicit diagnostic APIs/assemblies, not reflection into private state.
+
+## Verification registry
+
+Each work package owns `tests/verification/<work-package-id>.json`. Every entry contains a stable `VER-<WORK-PACKAGE>-###` ID, summary, cited `TR-*` requirements and gameplay sources, automated test selectors or manual/device procedure ID, fixture/seed/scenario IDs, evidence artifact kinds, applicable platforms/tier, and current status. Entries are added before implementation and never renumbered; retired verification retains a tombstone and successor.
+
+The registry validator enforces unique IDs, existing requirements/sources/selectors/scenarios, at least one non-compilation verification for every implementation task, and no accepted behavior registration/content definition without coverage. Test runners emit executed verification IDs into the task evidence bundle. `PERF-*` and `WB-*` remain scenario IDs referenced by one or more `VER-*` entries.
+
+## Determinism and fixture policy
+
+- Every randomized test logs its seed and version identity before execution.
+- Failures print a one-command/tool reproduction description and preserve the minimized input where possible.
+- Golden outputs are canonical, ordered, and reviewable text or compact images.
+- Updating a golden requires an authority-aware diff review of the underlying behavior change plus a regenerated evidence bundle; the implementing agent may perform that review under the [Autonomous Agent Execution Protocol](./114-autonomous-agent-execution-protocol.md), but may not accept snapshots merely to make a test pass.
+- Fixtures declare compatibility scope. A deliberate algorithm-version change creates a new fixture set while retaining at least one migration/rejection test for the old identity.
+
+## Domain coverage requirements
+
+### Runtime and clocks
+
+Fixed tick accumulation, zero/multiple ticks per render, catch-up cap, all pause reasons and overlaps, focus/suspension, command priority, final tick/extraction, technical failure, and scene disposal.
+
+### Geometry and navigation
+
+Every primitive, tangent/boundary case, swept collision, slide/corner, terrain tie, path/reachability, boss clearance, camera edge, spawn validity, fog reveal, waypoint, and offscreen recycle rule.
+
+### Combat
+
+Every base weapon, stat, branch, targeting policy, relic, utility, PowerUp, mech trait, resonance, control, projectile, actor capacity, recursion exclusion, rock fallback, damage order, shield, revival, Armor, contact grace, and statistics attribution.
+
+Use pairwise combinatorial generation across the broad modifier matrix plus explicit exhaustive tests for interactions named in gameplay. Every weapon/relic pairing runs at least one behavior fixture and every branch runs all six benchmark scenes.
+
+### Encounters
+
+All 35 schedule rows, formations, population ceilings/queues, composition allocation, first-playable substitutions, Needler, elite construction, four boss state machines, overlap, re-entry, resonance, physical loot, and extraction with living bosses.
+
+### Mining and economy
+
+Every site class, installment/completion payout, grace/decay, modifiers, beacon threshold history, profile graph, recipes, prices, slots, irreversible branches, utilities/ranks, radar categories, relic transactions, PowerUp purchase/refund, unlock, ledger, and terminal settlement.
+
+### Generation
+
+Every hard map contract plus statistical distribution/independence, retry limits, deterministic manifest, fallback pool, dynamic rocks, and presentation footprint. Nightly coverage spans every signature-valid profile and region count.
+
+### UI/input/accessibility
+
+Every route/direct shortcut/Back path, focus state, controller-only flow, confirmation, rejection, responsive composition, map control, bearing cluster, four-boss HUD, pause, disconnect, remapping, localization expansion, settings preview/revert, reduced-effects modes, and screen resolution.
+
+### Persistence/platform
+
+Every schema migration, atomic failure point, corruption fallback, settlement idempotency, recovery round trip, cloud relation/conflict, offline operation, device-local settings, reset/archive, and platform adapter fake.
+
+### Assets/build
+
+Every manifest, license, import, budget, name, clip, socket, LOD/VAT, localization, export include/exclude, dependency license, and clean-checkout build.
+
+## Reference models
+
+For algorithms where one implementation could repeat its own bug, maintain deliberately simple slow reference logic in tests:
+
+- brute-force spatial queries and collision candidates;
+- exhaustive small-graph route/bridge checks;
+- direct price/resource/DPS calculations;
+- unoptimized site-constraint validation;
+- sequential damage/control resolution; and
+- canonical save/profile comparison.
+
+Random/property tests compare optimized results with the reference within declared numeric tolerance.
+
+## Numeric tolerance
+
+- Integer currency, ranks, ticks, counts, schedule boundaries, and IDs require exact equality.
+- Derived displayed whole Hull values require exact equality after documented rounding.
+- Floating geometry uses central absolute/relative tolerances based on world scale and operation; each assertion names the tolerance.
+- DPS/throughput comparisons use exact fixture inputs and a documented tolerance small enough to catch one missed tick/activation.
+- Screenshot comparison uses region masks and perceptual thresholds but critical geometry overlay pixels have tighter explicit checks.
+
+“Approximately equal” without a named tolerance is not an acceptable test.
+
+## Flake policy
+
+- Tests do not use wall-clock sleeps for simulation behavior.
+- Randomness is seeded and logged.
+- Async persistence/build tests use explicit completion signals and bounded timeouts.
+- Platform-dependent expectations declare platform tags.
+- A flaky required test is a defect. Quarantine requires owner, issue, reason, expiration, and equivalent protective gate; repeated retries do not convert failure into success.
+
+## CI suites
+
+### Fast pull-request suite
+
+- format/analyzer/build with warnings as errors;
+- JSON schema/content/localization/asset-manifest/license validation;
+- pure unit/property bounded/golden tests;
+- headless representative simulation and map seeds;
+- Godot headless import and focused integration tests;
+- changed UI/render captures where applicable; and
+- generated-artifact staleness/diff check.
+
+### Main-branch suite
+
+Adds Windows/Linux debug exports, packaged smoke flows, broader simulation/modifier/map matrices, migrations, recovery, and performance smoke.
+
+### Nightly suite
+
+Adds 10,000+ map seeds per defined partition, full 35-minute sweeps, long soak, pairwise content matrix, all screenshot/accessibility layouts, fuzzed saves/content, and benchmark trend reports.
+
+### Release-candidate suite
+
+Adds signed/final-like packages, clean machines, Steam sandbox/cloud, retail Steam Deck performance, controller families, resolution/window modes, upgrade from every shipped save schema, license/notices/SBOM, crash/recovery, and manual usability checklist.
+
+## Acceptance evidence
+
+Every work item identifies registered verification IDs before implementation. Completion evidence includes:
+
+- commands/suites run and results;
+- generated reports/captures/benchmarks where relevant;
+- requirement and gameplay links;
+- remaining risks or deliberately deferred validation; and
+- no unexplained warnings, skipped tests, or changed goldens.
+
+An agent may not declare completion based solely on compilation or visual inspection.
+
+## Coverage policy
+
+Line/branch coverage is diagnostic, not the acceptance target. Pure domain libraries should maintain high coverage, but required behavior/edge matrices and mutation-sensitive tests matter more. CI reports untested public behavior registrations, content definitions without fixtures, and requirements without verification IDs.
+
+## Manual and usability testing
+
+Automated tests cannot establish combat feel, readability, balance, or comprehension. Each milestone provides deterministic scenarios and capture forms for:
+
+- mining boundary/decay understanding;
+- weapon/relic effect readability;
+- map and radar navigation;
+- fabrication/irreversibility comprehension;
+- controller flow and handheld text;
+- threat/telegraph visibility under peak effects; and
+- progression/settlement clarity.
+
+Engineering tasks and M0–M4 technical gates do not wait for a human session when all deterministic, screenshot, input-script, readability, and benchmark evidence passes. Agents record the scenario build/seed and an empty standardized observation form so a later human session can add subjective findings without reconstructing context. Human findings change gameplay numbers/content through the design workflow, not hidden technical compensation.
+
+## Related documents
+
+- [Performance, Diagnostics, and Observability](./90-performance-diagnostics-and-observability.md)
+- [Content Data and Validation](./40-content-data-and-validation.md)
+- [Implementation Plan for AI Agents](./110-implementation-plan-for-ai-agents.md)
+- [Autonomous Agent Execution Protocol](./114-autonomous-agent-execution-protocol.md)

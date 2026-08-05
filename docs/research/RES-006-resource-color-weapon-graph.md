@@ -58,7 +58,7 @@ For a weapon whose recipe colors are already present, assume its third major bra
 (X - 2) / (Y - 2)
 ```
 
-For the originally proposed utility purchasable with either of two assigned colors, its availability is the `A OR B` fraction derived in [Utility recipes on the same resource graph](#utility-recipes-on-the-same-resource-graph). DEC-109 later rejects this model because its availability is too broad.
+For the originally proposed utility purchasable with either of two assigned colors, its availability is the `A OR B` fraction derived in [Utility recipes on the same resource graph](#utility-recipes-on-the-same-resource-graph--superseded-proposal). DEC-109 later rejects this model because its availability is too broad.
 
 | Total / present | Distinct resource profiles | Pair-weapons total | Pair-weapons available | Catalog available | Off-color branch available for a craftable weapon | `A OR B` utility available |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |

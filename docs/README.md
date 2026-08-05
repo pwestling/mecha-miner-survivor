@@ -32,7 +32,7 @@ This specification covers player-visible behavior, including:
 - Modes, menus, HUD, tutorials, settings, accessibility, audio, visual presentation, narrative delivery, and social features.
 - Edge cases and system interactions that alter what the player experiences.
 
-The future technical specification will describe how the game is implemented. A technical constraint belongs here only when the player can observe its consequence—for example, supported player count, save behavior, input latency targets, or deterministic rules.
+The [Technical Design Specification](./technical/README.md) describes how the game is implemented. A technical constraint belongs here only when the player can observe its consequence—for example, supported player count, save behavior, input latency targets, or deterministic rules.
 
 ## Specification map
 
@@ -78,3 +78,4 @@ Coverage status is an editorial signal, not a statement about implementation pro
 - [Decision Log](./decisions/README.md): durable records of consequential decisions and their rationale.
 - [Glossary](./glossary.md): canonical vocabulary and disambiguation.
 - [Research Index](./research/README.md): sourced external findings and design comparisons.
+- [Technical Design Specification](./technical/README.md): implementation architecture, contracts, verification, and delivery planning derived from this gameplay specification.

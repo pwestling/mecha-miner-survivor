@@ -1,0 +1,148 @@
+{
+  "_provenance": {
+    "doc": "docs/62-permanent-powerup-catalog.md",
+    "section": "PU-E03 — Ore Assay",
+    "lines": "224-237",
+    "extractedFor": "DAT-008",
+    "notes": [
+      "id, domain, powerUp, perRankEffect, cap, maximumEffect and totalCostHyperGold come from the 'Catalog overview' table row at docs/62-permanent-powerup-catalog.md:49; field order follows that table's column order (ID | Domain | PowerUp | Per-rank effect | Cap | Maximum effect | Total cost).",
+      "ranks is the per-PowerUp rank/price table in the 'PU-E03 — Ore Assay' section; one object per doc row in rank order, columns Rank | Total mined common ore | Price | Cumulative cost. The array has 5 entries because the cap is 5; rank-array lengths are deliberately not normalized across PowerUps.",
+      "The 'text' member of each effect object is the doc cell verbatim; the sibling numeric member is the same value typed as a number. No value is introduced.",
+      "rules are the verbatim bullets of the 'PU-E03 — Ore Assay' section, in document order.",
+      "No localization key, presentation identifier, icon, sort order, or content/schema version exists for PowerUps anywhere in docs/; those fields are therefore absent rather than guessed."
+    ]
+  },
+  "id": "PU-E03",
+  "domain": "Mining/economy",
+  "powerUp": "Ore Assay",
+  "perRankEffect": {
+    "text": "+3% mined common ore",
+    "statistic": "mined common ore",
+    "percent": 3
+  },
+  "cap": 5,
+  "maximumEffect": {
+    "text": "+15%",
+    "statistic": "mined common ore",
+    "percent": 15
+  },
+  "totalCostHyperGold": 975,
+  "currency": "Hyper Gold",
+  "uiGrouping": "Mining/economy",
+  "prerequisite": null,
+  "freshProfilePurchasable": true,
+  "ranksMustBeBoughtSequentially": true,
+  "pricesFixed": true,
+  "appliesAccountWide": true,
+  "refundable": true,
+  "purchasableDuringRun": false,
+  "activeRankPolicy": {
+    "minimumActiveRank": 0,
+    "maximumActiveRankEqualsPurchasedRank": true,
+    "changeCostHyperGold": 0,
+    "changeableBetweenRuns": true,
+    "changeableDuringRun": false
+  },
+  "rankEffectColumn": "Total mined common ore",
+  "ranks": [
+    {
+      "rank": 1,
+      "totalEffect": {
+        "text": "+3%",
+        "percent": 3
+      },
+      "priceHyperGold": 75,
+      "cumulativeCostHyperGold": 75
+    },
+    {
+      "rank": 2,
+      "totalEffect": {
+        "text": "+6%",
+        "percent": 6
+      },
+      "priceHyperGold": 125,
+      "cumulativeCostHyperGold": 200
+    },
+    {
+      "rank": 3,
+      "totalEffect": {
+        "text": "+9%",
+        "percent": 9
+      },
+      "priceHyperGold": 175,
+      "cumulativeCostHyperGold": 375
+    },
+    {
+      "rank": 4,
+      "totalEffect": {
+        "text": "+12%",
+        "percent": 12
+      },
+      "priceHyperGold": 250,
+      "cumulativeCostHyperGold": 625
+    },
+    {
+      "rank": 5,
+      "totalEffect": {
+        "text": "+15%",
+        "percent": 15
+      },
+      "priceHyperGold": 350,
+      "cumulativeCostHyperGold": 975
+    }
+  ],
+  "rules": [
+    "Applies to common ore installments from standard and rich seams and to the 50-ore material-geode completion payout.",
+    "Stacks additively with Ore Catalyzer. Fractional bonus ore carries forward and pays one whole ore whenever the accumulated fraction reaches one.",
+    "Does not duplicate specialized materials, increase Hyper Gold, modify boss loot, improve relic sale value, affect refunds, or change other non-mining awards.",
+    "It strengthens run-local fabrication but cannot produce resources without exploration and active mining."
+  ],
+  "_source": {
+    "_catalogOverviewRow": {
+      "doc": "docs/62-permanent-powerup-catalog.md",
+      "section": "Catalog overview",
+      "lines": "49",
+      "notes": [
+        "Source of id, domain, powerUp, perRankEffect, cap, maximumEffect and totalCostHyperGold."
+      ]
+    },
+    "_sharedPurchaseRules": {
+      "doc": "docs/62-permanent-powerup-catalog.md",
+      "section": "Shared purchase rules",
+      "lines": "20-31",
+      "fields": [
+        "currency",
+        "uiGrouping",
+        "prerequisite",
+        "freshProfilePurchasable",
+        "ranksMustBeBoughtSequentially",
+        "pricesFixed",
+        "appliesAccountWide",
+        "refundable",
+        "purchasableDuringRun",
+        "activeRankPolicy"
+      ],
+      "notes": [
+        "These fields are the catalog-wide shared purchase rules and are identical on every PowerUp file.",
+        "prerequisite is null because line 23 states categories have no prerequisite tree, account-level gate, random availability, or purchase-order requirement.",
+        "uiGrouping repeats the Domain column; docs/technical/40-content-data-and-validation.md:136 requires PowerUps to carry rank cap, fixed costs/values by rank, active-rank policy, refundable flag, named-stat contribution, and UI grouping."
+      ]
+    },
+    "totalCostHyperGold": {
+      "doc": "docs/decisions/DEC-120-accept-permanent-powerup-catalog.md",
+      "section": "Decision",
+      "lines": "15",
+      "notes": [
+        "Corroborates the 9,450 Hyper Gold catalog total that the 13 totalCostHyperGold values sum to. DEC-120 is status: accepted, authoritative: false; docs/62 remains the authoritative source for the per-entry number."
+      ]
+    },
+    "maximumEffect": {
+      "doc": "docs/60-resources-crafting-progression.md",
+      "section": "Progression layers",
+      "lines": "74",
+      "notes": [
+        "Restates the fully active account envelope, corroborating this entry's maximumEffect. Also restated verbatim in docs/62-permanent-powerup-catalog.md 'Fully upgraded account envelope' lines 251-256."
+      ]
+    }
+  }
+}

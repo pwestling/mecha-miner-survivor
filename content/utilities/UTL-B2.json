@@ -1,0 +1,122 @@
+{
+  "id": "UTL-B2",
+  "material": "Barysteel",
+  "utility": "Extraction Accelerator",
+  "primaryRole": "Mining speed",
+  "installedToRank3": "+5% → +20% forward extraction rate",
+  "description": "The accelerator modestly increases forward mining extraction speed.",
+  "effect": {
+    "statNames": [
+      "Forward extraction rate"
+    ],
+    "valueKind": "additive-percent",
+    "stackingClassification": "Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative. (docs/68-utility-catalog.md:253)"
+  },
+  "ranks": [
+    {
+      "state": "Installed",
+      "forwardExtractionRate": {
+        "percent": 5
+      }
+    },
+    {
+      "state": "Rank 1",
+      "forwardExtractionRate": {
+        "percent": 10
+      }
+    },
+    {
+      "state": "Rank 2",
+      "forwardExtractionRate": {
+        "percent": 15
+      }
+    },
+    {
+      "state": "Rank 3",
+      "forwardExtractionRate": {
+        "percent": 20
+      }
+    }
+  ],
+  "acquisition": {
+    "materialUnitCost": 1,
+    "utilitySlotsFilled": 1,
+    "rankCount": 3,
+    "rankOreCosts": [
+      50,
+      100,
+      150
+    ],
+    "totalRankOreCost": 300,
+    "rankValuesAreTotalsNotCumulativeAdditions": true,
+    "uniqueInLoadout": true,
+    "hasBranches": false,
+    "hasAlternativeRecipes": false,
+    "replaceable": false,
+    "dismantlable": false,
+    "sellable": false,
+    "refundableDuringRun": false,
+    "requiresManualActivation": false,
+    "previewsAllFourEffectTiers": true
+  },
+  "availability": {
+    "freshProfile": true,
+    "coverageRole": "Mining speed",
+    "unlockId": null,
+    "unlockName": null,
+    "unlockCostHyperGold": null
+  },
+  "effectRules": [
+    "Applies to standard seams, rich seams, material geodes, and Hyper Gold sites.",
+    "A +20% extraction rate completes a nominal 15-second seam in 12.5 seconds, a 20-second geode in about 16.7 seconds, and a 45-second Hyper Gold site in 37.5 seconds before interruptions.",
+    "Mining decay remains four times the mech's current forward extraction rate. The utility shortens successful holds without improving the fraction of progress retained after leaving.",
+    "Does not change payouts, completed checkpoints, the 0.5-second leaving grace period, threat-beacon progress thresholds, or enemies already summoned."
+  ],
+  "catalogWideRules": {
+    "sharedAcquisitionAndRankRules": [
+      "Every non-radar utility costs one unit of its assigned specialized material and permanently fills one of three utility slots.",
+      "Each begins at its listed Installed effect and has three common-ore ranks costing 50, 100, and 150 ore.",
+      "The four values shown for a utility are its Installed, Rank 1, Rank 2, and Rank 3 totals—not cumulative additions.",
+      "A utility is unique within the loadout and cannot be fabricated twice.",
+      "Utilities have no branches, alternative recipes, replacement, dismantling, sale, or refund during a run.",
+      "Fabrication previews all four effect tiers, the current build's affected systems, and any equipped weapon that receives no benefit from a weapon-support utility.",
+      "The resource radar remains outside the material table: it costs 300 common ore, has no ranks, and retains its accepted seven-category directional behavior."
+    ],
+    "modifierAndTimingRules": [
+      "Flat statistic changes apply before percentage modifiers. Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative.",
+      "Attack rate is represented as attacks per second or equivalent frequency; a +20% attack-rate total produces 1.2 times the unmodified activation frequency.",
+      "Recovery sources add in Hull Integrity per second.",
+      "Already-created finite projectiles, zones, mines, and similar weapon instances retain the damage, geometry, and lifetime with which they were created. New instances use the newly fabricated or ranked utility values.",
+      "Persistent autonomous units remain in place and use new utility values for attacks they perform after play resumes.",
+      "Fabrication and utility ranking occur during a complete-simulation pause, so no duration, cooldown, Recovery, or mining state advances while the purchase is reviewed.",
+      "If a later relic explicitly replaces a statistic or rule, its description must state whether it overrides or combines with these utilities. Silent exceptions are not allowed."
+    ]
+  },
+  "externalNumerics": [
+    {
+      "statement": "Prospector's inherent 115% extraction rate reaches 135% with a Rank 3 Extraction Accelerator.",
+      "value": {
+        "percent": 135
+      },
+      "_source": {
+        "doc": "docs/36-initial-mech-catalog.md",
+        "lines": "208",
+        "quote": "| Prospector | 115% extraction rate | 135% with Extraction Accelerator |"
+      }
+    }
+  ],
+  "_provenance": {
+    "doc": "docs/68-utility-catalog.md",
+    "section": "UTL-B2 — Extraction Accelerator",
+    "lines": "101-115",
+    "extractedFor": "DAT-008",
+    "notes": [
+      "Overview-table row and per-utility rank table are both from docs/68-utility-catalog.md; the rank table is authoritative for the four tier values and the overview cell restates Installed and Rank 3.",
+      "acquisition mirrors the catalog-wide '## Shared acquisition and rank rules' at docs/68-utility-catalog.md:25-31; the 300-ore rank total is restated at docs/60-resources-crafting-progression.md:158.",
+      "catalogWideRules duplicates the two catalog-wide rule lists verbatim in every utility file because the mandated content layout (docs/technical/40-content-data-and-validation.md:34-63) provides no shared-rules file inside content/utilities/.",
+      "Markdown emphasis, code markers, and link syntax were removed from transcribed prose; wording is otherwise verbatim.",
+      "effect.stackingClassification is derived from the catalog-wide modifier rules at docs/68-utility-catalog.md:253-255, not from a dedicated doc field.",
+      "availability.coverageRole comes from the '## Fresh-profile and unlocked availability' table (docs/68-utility-catalog.md:265-272), which lists only the six fresh-profile utilities."
+    ]
+  }
+}

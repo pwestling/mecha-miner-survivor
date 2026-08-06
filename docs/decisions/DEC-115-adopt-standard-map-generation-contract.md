@@ -8,6 +8,8 @@ validation: generated-seed-audit-and-playtest
 
 # DEC-115 — Adopt the Standard Map-Generation Contract
 
+> **Completion note:** [DEC-128](./DEC-128-set-extraction-zone-and-resonance-field-radii.md) fixes the mining-zone radii left as separate open work here, making primary connectors at least 6.0M wide and targeting 9.0M. Minimap interaction, exact world signals, and visual biome content remain separate open work.
+
 ## Decision
 
 Adopt the complete first-pass [Standard Map Generation Contract](../51-standard-map-generation-contract.md) as the player-facing baseline for standard maps.

@@ -21,6 +21,8 @@ Each question records:
 - **Status** — `open`, `researching`, `awaiting decision`, `deferred`, or `resolved`
 - **Resolution** — the answer and link to a decision or canonical section
 
+A question whose `Status` is still `open` carries a `Resolution` when a decision has closed part of it. The field opens with "Partially resolved," states what is now settled and where it was decided, and names what remains. `Status` becomes `resolved` only when nothing is left open. A partial answer belongs here rather than in Candidate answers, because Candidate answers are non-canonical by definition and a decided value must not be recorded as a suggestion.
+
 ## Active questions
 
 ### OQ-004 — How does a mining point behave?

@@ -72,7 +72,6 @@
       "description": "What the transformation applies to. At least one: a transformation that applies to nothing is not one, and doc 40 requires compatibility results computed against a scope.",
       "items": {
         "type": "string",
-        "description": null,
         "enum": [
           "all-equipped-weapons",
           "mining-extraction-rate",

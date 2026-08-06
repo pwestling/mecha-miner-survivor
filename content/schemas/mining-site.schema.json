@@ -287,7 +287,6 @@
           "description": "Who the field's modifier applies to.",
           "items": {
             "type": "string",
-            "description": null,
             "enum": [
               "ordinary-enemies",
               "elites",

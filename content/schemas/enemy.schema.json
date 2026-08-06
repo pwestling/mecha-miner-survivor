@@ -482,7 +482,6 @@
           "description": "The properties sampled when the projectile is created rather than read live.",
           "items": {
             "type": "string",
-            "description": null,
             "enum": [
               "speed",
               "damage",

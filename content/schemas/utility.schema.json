@@ -202,7 +202,6 @@
           "description": "One price per rank above Installed.",
           "items": {
             "type": "integer",
-            "description": null,
             "minimum": 1,
             "x-authority": {
               "minimum": {

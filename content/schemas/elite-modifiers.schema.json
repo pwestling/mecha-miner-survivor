@@ -196,7 +196,6 @@
       "description": "The order in which modifier layers apply. Every layer appears exactly once, so this is a total order over the closed vocabulary rather than a subset of it.",
       "items": {
         "type": "string",
-        "description": null,
         "enum": [
           "base",
           "elite",

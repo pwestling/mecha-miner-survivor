@@ -210,6 +210,17 @@ internal sealed class ContentDiagnosticCodesTests
 
         // Schema infrastructure, band 5xxx.
         "MMC-5001", "MMC-5002", "MMC-5003",
+
+        // Semantic, band 6xxx. MMC-6013 is deliberately absent and is not a gap in this
+        // roster: it was withdrawn before any validator emitted it, and the number is left
+        // unused rather than reassigned. See the comment on the 6xxx band in
+        // ContentDiagnosticCodes.
+        "MMC-6001", "MMC-6002", "MMC-6003", "MMC-6004", "MMC-6005", "MMC-6006", "MMC-6007",
+        "MMC-6008", "MMC-6009", "MMC-6010", "MMC-6011", "MMC-6012", "MMC-6014", "MMC-6015",
+
+        // Relational, band 7xxx.
+        "MMC-7001", "MMC-7002", "MMC-7003", "MMC-7004", "MMC-7005", "MMC-7006", "MMC-7007",
+        "MMC-7008",
     };
 
     /// <summary>

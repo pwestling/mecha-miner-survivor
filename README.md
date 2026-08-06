@@ -8,16 +8,20 @@ Godot 4.7.1 (.NET / C#), authoritative 60 Hz simulation, Windows and Steam Deck 
 
 Measured against `master` at `3016fbc`, 6 Aug 2026. This block is refreshed after major merges rather than continuously; `git log --oneline 3016fbc..origin/master` shows exactly what has landed since, which is exactly what this block has not accounted for.
 
-**Playable today: a mech you can drive around an empty test arena.** No enemies, no weapons, no mining, no HUD. It is also not on `master` yet — see [Try it out](#try-it-out) for the branch to check out.
+**Playable today: a mech you can drive around an empty test arena.** No enemies, no weapons, no mining, no HUD. What it does do, verified by execution at the sha below: the mech moves at 3.0 m/s under the authoritative 60 Hz simulation, turns to face the direction it is travelling, stops with its collision circle tangent to the wall of a 40 m square arena, and is shown by a non-rotating orthographic north-up camera whose vertical extent is 24 gameplay metres.
+
+The slice has merged — but into another branch, not into `master`. See [Try it out](#try-it-out) for the branch to check out.
 
 | | Area | State |
 | --- | --- | --- |
 | ✅ | Design + technical specification | Complete, on `master` (`docs/`) |
 | ✅ | Content catalog | 139 JSON definitions on `master` — 15 weapons, 45 branches, 6 mechs, 10 enemies, 4 bosses, 10 relics, 13 utilities, 13 power-ups |
 | 🚧 | Build + toolchain | Works on a branch. `master` carries the provisioning script but **no `./build.sh`** and no CI. |
-| 🚧 | Simulation core | Written, 157 tests passing, not merged — [#11](https://github.com/pwestling/mecha-miner-survivor/pull/11) |
-| 🚧 | Playable slice | Movement only, not merged — [#19](https://github.com/pwestling/mecha-miner-survivor/pull/19) |
+| 🚧 | Simulation core | Written, 252 tests passing in `MechaMiner.Simulation.Tests`, not on `master` — [#11](https://github.com/pwestling/mecha-miner-survivor/pull/11) is open and in draft, with head `claude/hearth-thread-3aamx2` and base `claude/hearth-thread-2vmaro-fnd-002` |
+| 🚧 | Playable slice | Movement only. [#19](https://github.com/pwestling/mecha-miner-survivor/pull/19) **merged** on 6 Aug 2026 — into `claude/hearth-thread-3aamx2` (merge commit `5f9e28c`), **not** into `master`. The scene is still not on `master`. |
 | ⬜ | Everything else | Not started |
+
+Because #19 merged into #11's head branch, #11's own diff now carries the playable slice as well as the simulation core.
 
 ### Milestones
 
@@ -26,19 +30,21 @@ Full definitions: `docs/technical/110-implementation-plan-for-ai-agents.md` § M
 | | | |
 | --- | --- | --- |
 | **M0** | Reproducible foundation — a clean checkout builds, tests, and imports the Godot project | 🚧 in progress |
-| **M1** | Headless simulation skeleton — clocks, entities, commands, events, RNG, snapshots | 🚧 built, not merged |
-| **M2** | Combat graybox — one mech, pursuing enemies, one weapon, hull/HUD, 60 FPS | 🚧 movement only |
+| **M1** | Headless simulation skeleton — clocks, entities, commands, events, RNG, snapshots | 🚧 built, on a branch, not on `master` |
+| **M2** | Combat graybox — one mech, pursuing enemies, one weapon, hull/HUD, 60 FPS | 🚧 movement only, on a branch, not on `master` |
 | **M3** | Core differentiator slice — mining seams, resources, fabrication, radar, map | ⬜ |
 | **M4** | Internal gameplay demo — a 14-minute scenario, two mechs, four weapons, eight enemies, two bosses | ⬜ |
 | **M5** | Full standard run — all 15 weapons and 45 branches, six mechs, the 35-minute schedule | ⬜ |
 | **M6** | Content and performance production readiness | ⬜ |
 | **M7** | Release candidate — exports, Steam staging, release checklist | ⬜ |
 
-Everything executable is stacked in a chain of unmerged branches, each one based on the next rather than on `master`:
+Everything executable is stacked in a chain of unmerged branches, each one based on the next rather than on `master`. Read from the pull-request API on 6 Aug 2026, the chain is now:
 
-`claude/ui-002-first-playable` ([#19](https://github.com/pwestling/mecha-miner-survivor/pull/19)) → `claude/hearth-thread-3aamx2` ([#11](https://github.com/pwestling/mecha-miner-survivor/pull/11)) → `claude/hearth-thread-2vmaro-fnd-002` ([#3](https://github.com/pwestling/mecha-miner-survivor/pull/3)) → `claude/hearth-thread-2vmaro` → `master`
+`claude/hearth-thread-3aamx2` ([#11](https://github.com/pwestling/mecha-miner-survivor/pull/11), open, draft) → `claude/hearth-thread-2vmaro-fnd-002` ([#3](https://github.com/pwestling/mecha-miner-survivor/pull/3), open, draft) → `claude/hearth-thread-2vmaro` (**no open pull request**) → `master`
 
-So #19 merging does not put the playable scene on `master`; it moves it one link along. The `./build.sh` command surface and CI both live on `claude/hearth-thread-2vmaro-fnd-002` and arrive on `master` in the same reconcile, which is why `master` currently has neither — it holds the specification, the content catalog, and an empty Godot shell. The last hop, `claude/hearth-thread-2vmaro` → `master`, has no open pull request yet.
+#19 merging did not put the playable scene on `master`; it moved it one link along, onto the head of #11. The `./build.sh` command surface and CI both live on `claude/hearth-thread-2vmaro-fnd-002` and arrive on `master` in the same reconcile, which is why `master` currently has neither — it holds the specification, the content catalog, and an empty Godot shell.
+
+**The last hop is untracked.** No open pull request proposes `claude/hearth-thread-2vmaro` → `master`, and #3's base is that branch rather than `master`, so nothing on GitHub currently describes how this work reaches the default branch. Today `claude/hearth-thread-2vmaro` is already an ancestor of `master` and holds nothing `master` lacks — `master` is 21 commits ahead of it and 0 behind — so the hop is empty until #3 lands on it, at which point someone has to open the pull request that does not exist yet.
 
 ## Try it out
 
@@ -55,10 +61,10 @@ You will need `git`, `curl` and `unzip`, and then two pinned tools:
 sudo apt-get update && sudo apt-get install -y git curl unzip
 git clone https://github.com/pwestling/mecha-miner-survivor.git
 cd mecha-miner-survivor
-git checkout claude/ui-002-first-playable   # exists only until the scene reaches master
+git checkout claude/hearth-thread-3aamx2   # exists only until the scene reaches master
 ```
 
-If that checkout fails with `did not match any file(s) known to git`, the branch is gone because the work landed — stay on the default branch and carry on with the next block. This branch exists for exactly as long as the merge chain above is unfinished, and disappears when it completes. To pin the precise tree the verification below describes, `git checkout dccc9588` instead — a sha never disappears, but it leaves you on a detached HEAD.
+If that checkout fails with `did not match any file(s) known to git`, the branch is gone because the work landed — stay on the default branch and carry on with the next block. `claude/hearth-thread-3aamx2` exists for exactly as long as the merge chain above is unfinished, and disappears when it completes. To pin the precise tree the verification below describes, `git checkout 5f9e28cc` instead — a sha never disappears, but it leaves you on a detached HEAD. (The earlier branch this page named, `claude/ui-002-first-playable`, is the merged side of #19; it is no longer the branch to check out and may be deleted at any time.)
 
 ```bash
 sudo build/bootstrap-linux.sh   # once per machine, about a minute
@@ -114,7 +120,7 @@ The bundle is named `Godot_mono.app`, not `Godot.app`. Godot publishes SHA512 su
 ```bash
 git clone https://github.com/pwestling/mecha-miner-survivor.git
 cd mecha-miner-survivor
-git checkout claude/ui-002-first-playable   # if this fails, the work landed; stay on the default branch
+git checkout claude/hearth-thread-3aamx2   # if this fails, the work landed; stay on the default branch
 ./build.sh doctor
 ./build.sh build
 ./build.sh godot-import
@@ -125,7 +131,7 @@ godot --path game res://scenes/Run.tscn
 
 #### If you would rather not install GNU bash and coreutils
 
-Step 1 exists only to satisfy the gate scripts. You can skip it and skip `./build.sh` entirely, driving the two pinned tools yourself. This three-command sequence was executed on Linux from a fresh clone with **no `./build.sh` verb invoked at all**, and reached a running scene:
+Step 1 exists only to satisfy the gate scripts. You can skip it and skip `./build.sh` entirely, driving the two pinned tools yourself. This three-command sequence was executed on Linux from a fresh clone at `5f9e28cc` with **no `./build.sh` verb invoked at all**, and reached a running scene:
 
 ```bash
 dotnet build game/MechaMiner.Game.csproj   # exit 0, "Build succeeded", 0 warnings
@@ -143,17 +149,22 @@ What you give up is `doctor`, so check the two pins by hand: `dotnet --version` 
 
 ## What has and hasn't been verified
 
-Run on Linux x86-64 from a fresh HTTPS clone on 6 Aug 2026, at `master` `3016fbc` and `claude/ui-002-first-playable` `dccc9588`:
+Run on Linux x86-64 from a fresh HTTPS clone on 6 Aug 2026, at `master` `3016fbc` and `claude/hearth-thread-3aamx2` `5f9e28cc` — which is the merge commit of #19, so this is the merged slice and not the pre-merge branch:
 
-- ✅ `build/bootstrap-linux.sh` — exit 0 in 63 s, installing .NET SDK 10.0.302 and Godot 4.7.1.stable.mono.official.a13da4feb. Run once, at the earlier tip `91714b0`; the script is byte-identical at both commits, and `doctor` re-confirmed the toolchain it produced. Note it is *not* the same file as `build/bootstrap-linux.sh` on `master`, so run it after the checkout, not before.
+- ✅ `sudo build/bootstrap-linux.sh` — exit 0, reporting .NET SDK 10.0.302 and Godot 4.7.1.stable.mono.official.a13da4feb present and both pins re-verified. This file is byte-identical to the copy verified before the merge (blob `f091537`), and it is *not* the same file as `build/bootstrap-linux.sh` on `master` (blob `ee6b470`), so run it after the checkout, not before. The 63 s figure for a from-scratch install was measured on a fresh machine against that same byte-identical script.
 - ✅ `./build.sh doctor` — exit 0, 10 probes, 0 mismatches
-- ✅ `./build.sh build` — exit 0; `./build.sh test-fast` — exit 0, 260 of 260 tests passing; `./build.sh godot-import` — exit 0
-- ✅ `godot --path game res://scenes/Run.tscn` — launched and stayed up under Xvfb, rendering on Vulkan Forward Mobile with no scene, script or render errors, and exited 0 after `--quit-after 120` frames. The capture harness in `game/tests/` produced screenshots showing the mech rendered, displaced and rotated, and asserted that all four movement actions carry bound events and all eight physical keys resolve to the action they drive.
+- ✅ `./build.sh build` — exit 0, 0 warnings; `./build.sh godot-import` — exit 0
+- ✅ `./build.sh test-fast` — exit 0, total 260, passed 260, failed 0, skipped 0 (252 in `MechaMiner.Simulation.Tests`, 5 in `MechaMiner.Content.Tests`, 3 in `MechaMiner.Persistence.Tests`). The mech stopping at the arena wall is asserted here, not by the harnesses below: `MovementCommandPathTests.TheBodyCannotLeaveTheGrayboxArena` drives east for 20 seconds and requires the body to come to rest at 19.5 m, its collision circle tangent to the wall of the 40 m square graybox arena.
+- ✅ `godot --path game res://scenes/Run.tscn` — launched and stayed up under Xvfb (killed by a 25 s timeout, exit 124), rendering on `Vulkan 1.4.318 - Forward Mobile` with no scene, script or render errors, and exited 0 after `--quit-after 120` frames.
+- ✅ `MECHAMINER_RUN_SLICE_OUTPUT=<dir> godot --headless --path game res://tests/RunSliceEvidenceHarness.tscn` — exit 0, **28 assertions run, 0 failed**, writing a `transcript.tsv` that records 60 ticks per second, a 3.0 m/s base speed, 0.05 m of displacement per tick, 1.5 m travelled per 30-tick leg in each of the four cardinals, facing turning to match each leg, an exact stop on release, and an orthographic camera with `KeepAspect` `Height` and a 24 m vertical extent whose up vector is world −Z.
+- ✅ `MECHAMINER_RUN_SLICE_CAPTURE=<dir> xvfb-run -a godot --path game res://tests/RunSliceCaptureHarness.tscn` — exit 0, writing five PNGs and a `captures.tsv`. It instantiates `res://scenes/Run.tscn` as shipped; the screenshots show the mech rendered, displaced and rotated against the arena floor. Its one gate assertion passed: all four movement actions carry bound events (3 each) and all eight physical keys resolve to the action they drive. That check is now an exit code — the harness exits 4 and captures nothing if it fails — where an earlier revision only logged it.
+
+Neither harness is wired to a `./build.sh` verb; both are run by hand, so neither can turn a gate red.
 
 Not verified, and not claimed:
 
 - ⚠️ **A real keyboard.** A container cannot press keys. The input map — WASD, arrows and stick, bound by physical keycode — and the movement path driven from action state are both verified; that pressing a physical W moves the mech is not.
-- ⚠️ A real GPU (software Vulkan only), audio (dummy driver), and a window on a real desktop rather than Xvfb.
+- ⚠️ A real GPU. Everything above rendered through `llvmpipe`, a software Vulkan implementation. Audio fell back to the dummy driver, and every launch was under Xvfb rather than a window on a real desktop.
 - ⚠️ Exports and packaging. The `export`, `package-demo`, `release-validate` and `run` verbs are unimplemented, and the 1.2 GB Godot export templates are not fetched.
 - ⚠️ **Every macOS and Windows instruction on this page.**
 
@@ -162,7 +173,7 @@ Not verified, and not claimed:
 - `./build.sh run` reads like the launch command and is not implemented — it exits 2 and names FND-006 as its owner. Use the `godot --path game res://scenes/Run.tscn` form.
 - If `./build.sh` is missing after a clone, you are on `master`, which does not have it yet. Check out the branch above.
 - `godot --path game` with no scene argument runs `Boot.tscn`, which prints one line and renders nothing. The scene has to be passed explicitly; `project.godot`'s main scene is deliberately still `Boot.tscn`.
-- No automated check launches `Run.tscn`. `./build.sh godot-import` and `build/verify-godot.sh` exercise `Boot.tscn` only, so a break in the playable scene would not turn a gate red.
+- No automated check launches `Run.tscn`. `./build.sh godot-import` and `build/verify-godot.sh` exercise `Boot.tscn` only, and no verb invokes either run-slice harness in `game/tests/`, so a break in the playable scene would not turn a gate red.
 
 ## Documentation
 

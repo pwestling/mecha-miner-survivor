@@ -45,3 +45,15 @@ Add the policy to `Directory.Build.props` or `Directory.Build.targets`, add a
 fixture directory that violates exactly that policy, register a `VER-FND-001-###`
 entry in `tests/verification/FND-001.json`, and add the row to the table in
 `build/verify-policies.sh`. A policy without a failing fixture is not enforced.
+
+The last step is not optional bookkeeping. `build/verify-policies.sh` asserts that
+the fixtures it enumerates are exactly the projects present under this directory,
+in both directions: a project here that the script does not enumerate fails the
+gate, and an enumerated fixture whose directory is gone fails it too. A fixture
+directory nobody enumerated used to build silently under whatever policy its own
+`.csproj` declared, which is how `seventh/` compiled unsafe pointer code with both
+gates green.
+
+If a policy the fixtures rely on is not expressible as a `.csproj` property, say
+so in `EVALUATED_POLICIES`' comment instead of leaving it implied - the
+`.editorconfig` half of `VER-FND-001-008` is recorded there as an open gap.

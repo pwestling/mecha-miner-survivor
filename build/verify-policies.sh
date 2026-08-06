@@ -198,9 +198,53 @@ fixture_projects+=("build/policy-fixtures/deterministic/deterministic.csproj")
 
 policy_projects=("${product_projects[@]}" "${fixture_projects[@]}")
 
-readonly MINIMUM_POLICY_PROJECTS=15
-if [[ "${#policy_projects[@]}" -lt "${MINIMUM_POLICY_PROJECTS}" ]]; then
-  fail "policy scope enumerated only ${#policy_projects[@]} project(s), fewer than the ${MINIMUM_POLICY_PROJECTS} accepted; the scan is not covering what it claims"
+# The fixture enumeration must be a PARTITION of build/policy-fixtures/, in both
+# directions. A floor ("at least N projects in scope") is not one:
+# build/policy-fixtures/seventh/seventh.csproj with AllowUnsafeBlocks=true,
+# Nullable=disable and LangVersion=latest compiled pointer-dereferencing unsafe
+# code and both verify-policies.sh and verify-architecture.sh exited 0, because
+# nothing asserted that the enumerated fixtures are ALL the fixtures.
+#
+#   found but not enumerated  -> a project builds under a policy nothing asserts
+#   enumerated but not found  -> the enumeration has rotted into an exemption for
+#                                a fixture that no longer exists, and the policy
+#                                it used to prove is silently unproven
+#
+# Any project extension is scanned, not only *.csproj: a fixture written in
+# another language would otherwise be dropped by the very filter that is supposed
+# to be an assertion (the same defect verify-architecture.sh section 2 records).
+found_fixture_projects=()
+while IFS= read -r project; do
+  found_fixture_projects+=("${project}")
+done < <(cd "${REPO_ROOT}" && find build/policy-fixtures -name '*.*proj' \
+  -not -path '*/obj/*' -not -path '*/bin/*' -print 2>/dev/null | sort)
+
+if [[ "${#found_fixture_projects[@]}" -eq 0 ]]; then
+  fail "the fixture scan found no project under build/policy-fixtures/; it cannot see even the enumerated fixtures, so it proves nothing"
+else
+  unenumerated_fixtures="$(comm -13 \
+    <(printf '%s\n' "${fixture_projects[@]}" | sort) \
+    <(printf '%s\n' "${found_fixture_projects[@]}" | sort))"
+  if [[ -z "${unenumerated_fixtures}" ]]; then
+    pass "every one of the ${#found_fixture_projects[@]} project(s) under build/policy-fixtures/ is an enumerated fixture"
+  else
+    fail "unenumerated project under build/policy-fixtures/: $(printf '%s' "${unenumerated_fixtures}" | paste -sd' ' -); it is not a fixture this gate proves anything about, it is code building under a policy nothing here asserts"
+  fi
+fi
+
+absent_fixtures=()
+for project in "${fixture_projects[@]}"; do
+  [[ -f "${REPO_ROOT}/${project}" ]] || absent_fixtures+=("${project}")
+done
+if [[ "${#absent_fixtures[@]}" -eq 0 ]]; then
+  pass "every enumerated fixture exists on disk"
+else
+  fail "enumerated fixture does not exist: $(printf '%s ' "${absent_fixtures[@]}"); the enumeration has become an exemption for a fixture that is gone, and the policy it proved is unproven"
+fi
+
+readonly MINIMUM_PRODUCT_PROJECTS=9
+if [[ "${#product_projects[@]}" -lt "${MINIMUM_PRODUCT_PROJECTS}" ]]; then
+  fail "policy scope found only ${#product_projects[@]} product project(s) under src/ tests/ game/, fewer than the ${MINIMUM_PRODUCT_PROJECTS} accepted; the scan is not covering what it claims (verify-architecture.sh asserts the exact set)"
 else
   pass "policy scope: ${#product_projects[@]} product project(s) plus ${#fixture_projects[@]} fixture project(s)"
 fi

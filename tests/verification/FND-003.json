@@ -4,9 +4,9 @@
   "workPackage": "FND-003",
   "workPackageTitle": "Pure NUnit test projects and Godot integration-test harness",
   "notes": [
-    "Entries are added before implementation and are never renumbered (docs/technical/91 \u00a7 Verification registry).",
+    "Entries are added before implementation and are never renumbered (docs/technical/91 § Verification registry).",
     "The structural validator for this file is owned by TASK-FND-009-002. Until it lands, the shape here matches tests/verification/FND-001.json exactly.",
-    "The pure tiers (MechaMiner.Simulation.Tests, MechaMiner.Content.Tests, MechaMiner.Persistence.Tests) never launch Godot. The engine tier (MechaMiner.Game.Tests) launches the pinned Godot executable as an external process and asserts the emitted report; it holds no Godot type, so game/ remains the only Godot-referencing project (docs/technical/115 \u00a7 Accepted project boundary).",
+    "The pure tiers (MechaMiner.Simulation.Tests, MechaMiner.Content.Tests, MechaMiner.Persistence.Tests) never launch Godot. The engine tier (MechaMiner.Game.Tests) launches the pinned Godot executable as an external process and asserts the emitted report; it holds no Godot type, so game/ remains the only Godot-referencing project (docs/technical/115 § Accepted project boundary).",
     "VER-FND-003-007 through VER-FND-003-010 deliberately assert the runner report rather than the Godot process exit code. A headless Godot launch exits 0 even when the C# script on the boot node fails to load, so exit status alone is not a gate; FND-001 hit this empirically and recorded it in tests/verification/FND-001.json.",
     "The sample tests prove the harness pattern, not domain behavior: at FND-003 the pure production projects contain no domain code. Every later stream replaces these samples with real subject tests using the same shared support types.",
     "Status is current status: an entry whose implementing task has not landed yet is 'registered'. TASK-FND-003-001 entries are implemented in this revision; TASK-FND-003-002 entries flip to 'implemented' when the Godot integration runner lands. Both sets of entries were written before either implementation."

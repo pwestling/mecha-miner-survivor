@@ -4,10 +4,10 @@
   "workPackage": "FND-002",
   "workPackageTitle": "Root wrapper/typed command host, doctor/bootstrap/format/build base verbs, and stable registration surface for later content/import/run/export owners",
   "notes": [
-    "Entries are added before implementation and are never renumbered (docs/technical/91 \u00a7 Verification registry).",
+    "Entries are added before implementation and are never renumbered (docs/technical/91 § Verification registry).",
     "The structural validator for this file is owned by TASK-FND-009-002. Until it lands, the shape here matches tests/verification/FND-001.json exactly.",
-    "Selectors are repository scripts and wrapper invocations rather than NUnit selectors on purpose. doc 100 \u00a7 Repository structure prescribes exactly four test projects and none of them owns the workflow wrapper, so the wrapper's own gates are shell fixtures. TASK-FND-009-002 may move the registered-verb-set assertion into the registry validator.",
-    "Exit classes asserted here are doc 100 \u00a7 Standard command surface classes: 0 success, 2 invalid verb/arguments, 3 missing or mismatched pinned environment, 4 validation/test failure, 5 build/import/export/package failure, 8 unexpected tool-internal failure. There is no class 1.",
+    "Selectors are repository scripts and wrapper invocations rather than NUnit selectors on purpose. doc 100 § Repository structure prescribes exactly four test projects and none of them owns the workflow wrapper, so the wrapper's own gates are shell fixtures. TASK-FND-009-002 may move the registered-verb-set assertion into the registry validator.",
+    "Exit classes asserted here are doc 100 § Standard command surface classes: 0 success, 2 invalid verb/arguments, 3 missing or mismatched pinned environment, 4 validation/test failure, 5 build/import/export/package failure, 8 unexpected tool-internal failure. There is no class 1.",
     "Status is current status: an entry whose implementing task has not landed yet is 'registered'. TASK-FND-002-001 entries are implemented in this revision; TASK-FND-002-002 entries flip to 'implemented' when that task lands. The entries themselves were written before either implementation."
   ],
   "entries": [
@@ -165,7 +165,7 @@
     },
     {
       "id": "VER-FND-002-006",
-      "summary": "The registered verb set is exactly the eighteen verbs of doc 100 \u00a7 Standard command surface, with no extra verb and none missing.",
+      "summary": "The registered verb set is exactly the eighteen verbs of doc 100 § Standard command surface, with no extra verb and none missing.",
       "task": "TASK-FND-002-001",
       "requirements": [
         "TR-BLD-005"

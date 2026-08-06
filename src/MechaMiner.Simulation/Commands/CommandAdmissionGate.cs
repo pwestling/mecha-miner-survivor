@@ -40,14 +40,27 @@ namespace MechaMiner.Simulation.Commands;
 /// <see cref="HighestAdmittedSequence"/>, a high-water mark that no sequence at or below can pass, and the
 /// complete sequence-to-tick history, which recognizes the exact envelope identity however late it arrives.
 /// Either alone would already make re-admission impossible; the history exists so that a re-submission is
-/// diagnosed as <see cref="CommandRejectionReason.Duplicate"/> rather than as a bare regression. A third
-/// barrier sits behind both: the admission tail writes the history with <c>Dictionary.Add</c>, not with an
-/// indexer assignment, so a second admission of one sequence throws on the duplicate key rather than
-/// overwriting the first entry. That is deliberate - a negative control that removed both checks was still
-/// caught here - and it is why the write must not be relaxed to an indexer for tidiness. The same shape
-/// holds for paused transactions: <see cref="Apply"/> has one commit block, reaches it only after the
-/// idempotency history has been consulted, and records the applied result with <c>Add</c> for the same
-/// reason.
+/// diagnosed as <see cref="CommandRejectionReason.Duplicate"/> rather than as a bare regression. The same
+/// shape holds for paused transactions: <see cref="Apply"/> has one commit block, reaches it only after the
+/// idempotency history has been consulted, and the commit itself is <see cref="CommitApplied"/>, which
+/// cannot reach a mutation until that commit's own duplicate-key precondition has been established.
+/// </para>
+/// <para>
+/// <b>The <c>Dictionary.Add</c> on each history is a backstop, not a third defence - and still must not be
+/// relaxed to an indexer.</b> Both histories are written with <c>Add</c> rather than with an indexer
+/// assignment, so a duplicate key throws instead of quietly overwriting the first entry. What that buys is
+/// narrower than it looks, and the narrower reading is the accurate one. Disabling the two checks above and
+/// leaving only the <c>Add</c> was probed directly: in <see cref="Apply"/> the <c>Add</c> is the last
+/// statement of the commit, so it fires after the domain event has been appended, after the replacement
+/// snapshot has been published, and after the state version has advanced. It turns a second application that
+/// has already completed into an exception after the fact; it refuses nothing, and an exception thrown once a
+/// state has been published is the case <c>docs/technical/20-simulation-core.md</c> § Tick transaction rules
+/// out, since an invariant failure there belongs "before commit" and "never publishes a partial state". The
+/// refusal is the idempotency check, and inside the commit it is the precondition
+/// <see cref="CommitApplied"/> is called behind; both run before anything moves. The <c>Add</c> stays
+/// because a history nothing may rewrite should not have a write that can silently rewrite it, which is a
+/// last-resort invariant worth keeping even once it is unreachable - it is simply not what makes "applied at
+/// most once" hold.
 /// </para>
 /// <para>
 /// <b>The history is never evicted.</b> A bounded history would let a duplicate become admissible again once
@@ -582,10 +595,20 @@ public sealed class CommandAdmissionGate
     /// <para>
     /// <b>What "all-or-nothing" means when the commit block itself throws.</b> Every refusal happens before
     /// the first mutation, so a refused transaction changes nothing at all. If the staging callback or the
-    /// publication throws part way through the commit block, doc 20 § Tick transaction already fixes the
-    /// answer: the transaction "never publishes a partial state" and the run ends through the safe
-    /// technical-failure path. The state version is advanced only after the publication has succeeded, so a
-    /// failure mid-commit leaves the authoritative version where it was.
+    /// publication throws part way through the commit, doc 20 § Tick transaction already fixes the answer: the
+    /// transaction "never publishes a partial state" and the run ends through the safe technical-failure path.
+    /// The state version is advanced only after the publication has succeeded, so a failure mid-commit leaves
+    /// the authoritative version where it was.
+    /// </para>
+    /// <para>
+    /// <b>The commit's precondition is checked here, not at the write that records the result.</b> A second
+    /// application of one idempotency key would be the one failure doc 20 § Tick transaction forbids outright,
+    /// because the commit publishes before it records, so a duplicate detected at the recording write would be
+    /// detected after a partial state had been published. The check therefore sits between the last validation
+    /// and the call to <see cref="CommitApplied"/>, where nothing has moved yet, and it is an invariant failure
+    /// rather than a rejection reason: the idempotency check above answers every submission a caller can
+    /// actually make, so reaching this point with the key present means the history was consulted and then
+    /// contradicted, which is a defect in this type and not input a player supplied.
     /// </para>
     /// </remarks>
     public PausedTransactionResult Apply(
@@ -698,7 +721,70 @@ public sealed class CommandAdmissionGate
                     + "'");
         }
 
-        // ---- commit: the single mutating path, reached only with every check above passed ----
+        // ---- the commit's precondition, established before control can reach any mutation ----
+        if (_appliedByClientCommandSequence.ContainsKey(request.ClientCommandSequence))
+        {
+            throw new InvalidOperationException(
+                "client command sequence "
+                    + request.ClientCommandSequence.ToString(CultureInfo.InvariantCulture)
+                    + " is already in the applied-transaction history, so the idempotency check above should "
+                    + "have answered this submission with the applied result. Refusing here, before the commit "
+                    + "has moved anything: doc 20 § Tick transaction ends the run through the safe "
+                    + "technical-failure path on an invariant failure before commit, and never publishes a "
+                    + "partial state");
+        }
+
+        return CommitApplied(
+            request,
+            action,
+            stageReplacementState,
+            publisher,
+            domainEvents,
+            presentationEvents,
+            coalescingPolicy);
+    }
+
+    /// <summary>
+    /// The whole of the mutating commit for one accepted paused transaction: it publishes the replacement
+    /// snapshot, advances the authoritative state version, and records the applied result in the idempotency
+    /// history.
+    /// </summary>
+    /// <param name="request">The request, already validated by <see cref="Apply"/>.</param>
+    /// <param name="action">The registered action <paramref name="request"/> names.</param>
+    /// <param name="stageReplacementState">Stages the post-transaction authoritative state.</param>
+    /// <param name="publisher">The run's <c>CMP-SIM-003</c> publisher.</param>
+    /// <param name="domainEvents">The domain event buffer the applied fact is appended to.</param>
+    /// <param name="presentationEvents">The presentation buffer the publication needs.</param>
+    /// <param name="coalescingPolicy">The explicit presentation coalescing policy.</param>
+    /// <returns>The accepted result, which is also recorded in the idempotency history.</returns>
+    /// <remarks>
+    /// <para>
+    /// <b>Why this is a method and not the tail of <see cref="Apply"/>.</b> Every mutation a commit performs is
+    /// inside this body, and this body has exactly one call site, which <see cref="Apply"/> places after the
+    /// duplicate-key precondition. There is therefore no statement position anywhere in the commit that is
+    /// ahead of that precondition: the ordering is a scope boundary crossed by a call rather than a convention
+    /// about which adjacent statements come first, so a mutation cannot be added ahead of the check without
+    /// moving code out of this method. That is the difference between a second application being caught and its
+    /// being unrepresentable, and it is worth the boundary: when the precondition was only the
+    /// <c>Dictionary.Add</c> at the end of this body, a duplicate was detected after the event had been
+    /// appended, the snapshot published, and the version advanced.
+    /// </para>
+    /// <para>
+    /// It is not a rollback and does not claim to be one. <c>docs/technical/20-simulation-core.md</c> § Tick
+    /// transaction already fixes the answer for a failure raised inside the commit rather than before it: the
+    /// run ends through the safe technical-failure path. What this shape guarantees is the antecedent - that a
+    /// duplicate is never the thing that fails inside the commit, because it cannot get in.
+    /// </para>
+    /// </remarks>
+    private PausedTransactionResult CommitApplied(
+        in PausedTransactionRequest request,
+        TransactionAction action,
+        Action<SnapshotPublisher> stageReplacementState,
+        SnapshotPublisher publisher,
+        DomainEventBuffer domainEvents,
+        PresentationEventBuffer presentationEvents,
+        PresentationCoalescingPolicy coalescingPolicy)
+    {
         long pausedAtTick = publisher.Latest?.Tick ?? 0L;
         long newStateVersion = checked(_transactionStateVersion + 1);
 
@@ -746,6 +832,9 @@ public sealed class CommandAdmissionGate
                 + newStateVersion.ToString(CultureInfo.InvariantCulture)
                 + " and published snapshot "
                 + publication.Version.ToString());
+        // Add rather than an indexer, so this history can never be silently rewritten. The precondition in
+        // Apply is what refuses a duplicate; this write is the last-resort invariant behind it, and reaching it
+        // with the key present is already the double-apply rather than a defence against one.
         _appliedByClientCommandSequence.Add(request.ClientCommandSequence, result);
         return result;
     }

@@ -22,7 +22,7 @@
 
   <ItemGroup Label="Pure managed test harness (NUnit only, per doc 100 C# project standards)">
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
-    <PackageVersion Include="NUnit" Version="4.6.1" />
+    <PackageVersion Include="NUnit" Version="4.6.0" />
     <PackageVersion Include="NUnit3TestAdapter" Version="6.2.0" />
     <PackageVersion Include="NUnit.Analyzers" Version="4.14.0" />
   </ItemGroup>

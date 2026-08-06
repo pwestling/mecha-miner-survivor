@@ -63,4 +63,5 @@ The specification is complete enough for implementation planning: the demo work 
 
 - [Technical Decision Log](./decisions/README.md)
 - [Technical Open Questions](./open-questions.md)
+- [Specification Gaps](./specification-gaps.md) — non-normative, append-only intake for places where the specification read complete and was not. Any stream may append without asking; three sentences is a complete entry and no proposed resolution is required. Entries are triaged into a `TOQ`, an `OQ`, a `DEC`, or a documentation fix.
 - The gameplay [Decision Log](../decisions/README.md) remains the rationale ledger for player-facing rules.

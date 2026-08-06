@@ -1,0 +1,567 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "FND-002",
+  "workPackageTitle": "Root wrapper/typed command host, doctor/bootstrap/format/build base verbs, and stable registration surface for later content/import/run/export owners",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91 § Verification registry).",
+    "The structural validator for this file is owned by TASK-FND-009-002. Until it lands, the shape here matches tests/verification/FND-001.json exactly.",
+    "Selectors are repository scripts and wrapper invocations rather than NUnit selectors on purpose. doc 100 § Repository structure prescribes exactly four test projects and none of them owns the workflow wrapper, so the wrapper's own gates are shell fixtures. TASK-FND-009-002 may move the registered-verb-set assertion into the registry validator.",
+    "Exit classes asserted here are doc 100 § Standard command surface classes: 0 success, 2 invalid verb/arguments, 3 missing or mismatched pinned environment, 4 validation/test failure, 5 build/import/export/package failure, 8 unexpected tool-internal failure. There is no class 1.",
+    "Status is current status: an entry whose implementing task has not landed yet is 'registered'. TASK-FND-002-001 entries are implemented in this revision; TASK-FND-002-002 entries flip to 'implemented' when that task lands. The entries themselves were written before either implementation.",
+    "The 'platforms' list records the platforms an entry has actually been executed on, not the platforms its subject is intended to support. Every entry in this file is linux-x64 only, because linux-x64 is the only platform build/bootstrap-linux.sh provisions and the only one any FND-002 gate has run on. VER-FND-002-008 previously also listed windows-x64 and osx-arm64; that was wrong and is corrected here. Its behavioral half runs build.ps1 on the host it is invoked from, and no Windows or macOS host has ever invoked it, so listing those platforms claimed coverage that did not exist. Adding windows-x64 and osx-arm64 to any entry in this file requires a run on that platform, which needs CI runners for it - FND-005 owns the CI suite and build/toolchain.json's godot.unpinned_platform_policy records the same gap for the Godot pins.",
+    "PowerShell is deliberately NOT pinned (build/toolchain.json optional_tools; docs/technical/delivery-waves.md § Decision 8), so on a clean checkout build/verify-wrapper-parity.sh cannot execute build.ps1 at all and reports its behavioral half as skipped. That script counts the skip and names it in its final summary line, so a run in which a required check did not execute cannot be read, or quoted, as a run in which parity was proved by execution."
+  ],
+  "entries": [
+    {
+      "id": "VER-FND-002-001",
+      "summary": "doctor reports the pinned .NET SDK, Godot editor, and repository-local tool identities and exits 0 in a correct environment without mutating global state.",
+      "task": "TASK-FND-002-001",
+      "requirements": [
+        "TR-BLD-001",
+        "TR-BLD-002",
+        "TR-BLD-005",
+        "TR-FND-001"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#toolchain-pinning",
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "command",
+        "value": "./build.sh doctor"
+      },
+      "fixtures": [
+        "build/toolchain.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output",
+        "verb-result-json"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-002-002",
+      "summary": "doctor exits 3 when a pinned tool is absent or reports a version that does not match its pin.",
+      "task": "TASK-FND-002-001",
+      "requirements": [
+        "TR-BLD-001",
+        "TR-BLD-002",
+        "TR-BLD-005"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-verbs.sh"
+      },
+      "fixtures": [
+        "build/verify-verbs.sh broken-environment fixture"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-002-003",
+      "summary": "An unknown verb prints the usage table and exits 2 without performing any work.",
+      "task": "TASK-FND-002-001",
+      "requirements": [
+        "TR-BLD-005"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-verbs.sh"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-002-004",
+      "summary": "An unknown argument to a known verb, a missing required argument, and an empty invocation each print usage and exit 2.",
+      "task": "TASK-FND-002-001",
+      "requirements": [
+        "TR-BLD-005"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-verbs.sh"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-002-005",
+      "summary": "bootstrap runs noninteractively, performs a locked repository-local restore, ends by running doctor, is idempotent across two consecutive invocations, and never silently mutates global developer configuration.",
+      "task": "TASK-FND-002-001",
+      "requirements": [
+        "TR-BLD-001",
+        "TR-BLD-002",
+        "TR-BLD-005"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#toolchain-pinning",
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "command",
+        "value": "./build.sh bootstrap"
+      },
+      "fixtures": [
+        "build/bootstrap-linux.sh"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output",
+        "verb-result-json"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-002-006",
+      "summary": "The registered verb set is exactly the eighteen verbs of doc 100 § Standard command surface, with no extra verb and none missing.",
+      "task": "TASK-FND-002-001",
+      "requirements": [
+        "TR-BLD-005"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-verbs.sh"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-002-007",
+      "summary": "Every registered verb whose owning work package has not landed returns exit class 2 with stable diagnostic code MMT-2002 and names its owning work-package ID in both the final result line and its structured result artifact.",
+      "task": "TASK-FND-002-002",
+      "requirements": [
+        "TR-BLD-005",
+        "TR-AGT-003"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface",
+        "docs/technical/110-implementation-plan-for-ai-agents.md#foundation-work-packages"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-verbs.sh"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output",
+        "verb-result-json"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-002-008",
+      "summary": "build.sh and build.ps1 expose an identical verb and argument table. Proved two ways: structurally on every platform, by asserting that neither wrapper inspects or dispatches on the verb and that both launch the same host project and forward every argument verbatim; and behaviorally on linux-x64 only, by executing both wrappers and requiring byte-identical usage tables and identical unknown-verb exit classes. The behavioral half needs pwsh, which is unpinned, so on a clean checkout it does not run and the gate reports a counted skip in its summary rather than a bare pass. Behavioral parity on windows-x64 and osx-arm64 is PENDING and has never been executed; it needs a runner on those platforms, which FND-005 owns.",
+      "task": "TASK-FND-002-001",
+      "requirements": [
+        "TR-BLD-005"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-wrapper-parity.sh"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output",
+        "text-diff"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-002-009",
+      "summary": "Every verb invocation writes a structured result document beneath artifacts/ and prints a concise final result line plus that artifact path, including on failure.",
+      "task": "TASK-FND-002-001",
+      "requirements": [
+        "TR-BLD-005",
+        "TR-QUA-001"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface",
+        "docs/technical/114-autonomous-agent-execution-protocol.md#required-evidence-bundle"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-verbs.sh"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "verb-result-json",
+        "command-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented",
+      "successor": "TASK-FND-010-002"
+    },
+    {
+      "id": "VER-FND-002-010",
+      "summary": "format-check fails with exit class 4 on a deliberately misformatted tracked file and writes nothing.",
+      "task": "TASK-FND-002-002",
+      "requirements": [
+        "TR-BLD-001",
+        "TR-BLD-005"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#c-project-standards",
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-format.sh"
+      },
+      "fixtures": [
+        "build/verify-format.sh misformatted fixture"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-002-011",
+      "summary": "format repairs the same misformatted file so that a following format-check passes, and reports the exact files it changed.",
+      "task": "TASK-FND-002-002",
+      "requirements": [
+        "TR-BLD-001",
+        "TR-BLD-005"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#c-project-standards"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-format.sh"
+      },
+      "fixtures": [
+        "build/verify-format.sh misformatted fixture"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output",
+        "changed-file-list"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-002-012",
+      "summary": "build performs a locked restore and compiles the whole solution with zero warnings and zero errors, and asserts the accepted project boundary in the same verb.",
+      "task": "TASK-FND-002-002",
+      "requirements": [
+        "TR-BLD-001",
+        "TR-BLD-002",
+        "TR-BLD-006",
+        "TR-CTR-001"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface",
+        "docs/technical/115-component-contract-and-schema-registry.md#accepted-project-boundary"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "command",
+        "value": "./build.sh build"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "warning-count",
+        "verb-result-json"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-002-013",
+      "summary": "build returns exit class 5 when compilation fails, and never returns success after partial work.",
+      "task": "TASK-FND-002-002",
+      "requirements": [
+        "TR-BLD-005"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-verbs.sh"
+      },
+      "fixtures": [
+        "build/verify-verbs.sh uncompilable-source fixture"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-002-014",
+      "summary": "godot-import performs a cold-cache headless import through the wrapper and asserts the captured import report, not the process exit code alone, because a headless Godot launch exits 0 even when the C# boot script fails to load.",
+      "task": "TASK-FND-002-002",
+      "requirements": [
+        "TR-BLD-002",
+        "TR-BLD-005",
+        "TR-FND-001"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#godot-import-and-export"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "command",
+        "value": "./build.sh godot-import"
+      },
+      "fixtures": [
+        "build/verify-godot.sh"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "import-log",
+        "verb-result-json"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-002-015",
+      "summary": "The three workflow configuration names of doc 100 map onto exactly the three MSBuild configurations Godot.NET.Sdk defines, and each of the three builds the whole solution cleanly with the intended optimization and diagnostic symbol.",
+      "task": "TASK-FND-002-002",
+      "requirements": [
+        "TR-BLD-001",
+        "TR-BLD-003"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#build-configurations"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-configurations.sh"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output",
+        "msbuild-property-values"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-002-016",
+      "summary": "A global.json that pins a .NET SDK version no installed SDK satisfies makes the wrapper exit 3 with MMT-3001 and name the failure as a mismatch, while dotnet is on PATH the whole time. This is the mismatched half of exit class 3; VER-FND-002-002 covers the absent half. It is registered separately because the wrapper originally gated class 3 on the presence of dotnet alone, so a mismatched pin fell through to the verb host's build failure and was reported as class 8 MMT-8001 'unexpected tool-internal failure', which misattributed an operator environment fault to an internal tool bug. The gate carries a negative control: it re-runs the same predicate against a copy of build.sh with the pinned-SDK resolution probe deleted, and requires that copy to be rejected, so the assertion cannot pass against a wrapper that never gained the fix. A genuinely uncompilable verb host still returns class 8 (VER-FND-002-013).",
+      "task": "TASK-FND-002-001",
+      "requirements": [
+        "TR-BLD-001",
+        "TR-BLD-002",
+        "TR-BLD-005"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface",
+        "docs/technical/100-build-dependencies-and-release-operations.md#toolchain-pinning"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-verbs.sh"
+      },
+      "fixtures": [
+        "build/verify-verbs.sh mismatched-pinned-sdk fixture",
+        "build/verify-verbs.sh probe-removed negative-control wrapper"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-002-017",
+      "summary": "doctor hashes the Godot executable that the documented discovery order actually resolves, not a canonical install path it assumed, so a substituted binary is rejected. The fixture is a shell script that prints a version string matching the pinned prefix, which makes the version probe pass and leaves the hash probe as the only check that can catch it; doctor must exit 3 with MMT-3001, mark the godot executable hash row MISMATCH, and report the substitute's own sha256 rather than the pin's. Registered separately because the probe previously preferred the pinned install path over the command it was given, so on any machine with a pinned install present it reported 'sha256 of /opt/godot/... matches the pin' for a file it had never opened, one line below 'resolved as <substitute>', and exited 0 with '0 mismatches'. Two negative controls: the pinned bytes reached through a different path must still pass, proving the gate rejects content rather than an unusual path, and the substitute's hash must genuinely differ from the pin.",
+      "task": "TASK-FND-002-001",
+      "requirements": [
+        "TR-BLD-001",
+        "TR-BLD-002",
+        "TR-BLD-005"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#toolchain-pinning",
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-verbs.sh"
+      },
+      "fixtures": [
+        "build/verify-verbs.sh substituted-godot fixture",
+        "build/verify-verbs.sh pinned-bytes-via-second-path negative control"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output",
+        "file-hash"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-002-018",
+      "summary": "format and format-check fail when the owned-text candidate set cannot be obtained, instead of treating an unobtained set as an empty one and reporting compliance. With a real trailing-whitespace violation on disk and only a stale GIT_DIR, both verbs must exit nonzero and record the file set as not obtained, and neither may print an ok owned-text-rules assertion. Registered separately because the enumeration previously returned an empty list on failure and recorded no failure, so zero files inspected produced zero violations and zero violations read as a clean tree: format-check exited 0 claiming every owned text file satisfied the rules, and format claimed the formatted tree satisfied every gate while leaving the violation in place, against doc 100's requirement that format 'fail if the resulting tree still violates policy'. The negative control runs both verbs on the same tree with a healthy git and requires them to pass, so the gate cannot be satisfied by a verb that merely fails always.",
+      "task": "TASK-FND-002-002",
+      "requirements": [
+        "TR-BLD-001",
+        "TR-BLD-005"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface",
+        "docs/technical/100-build-dependencies-and-release-operations.md#c-project-standards"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-format.sh"
+      },
+      "fixtures": [
+        "build/verify-format.sh stale-GIT_DIR fixture",
+        "build/verify-format.sh healthy-git negative control"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    }
+  ]
+}

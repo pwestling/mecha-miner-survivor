@@ -32,6 +32,22 @@
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup Label="Development scaffolding excluded from Release">
+    <!--
+      game/tests/ holds the minimal Godot integration test runner (TASK-FND-003-002).
+      doc 100 § Godot import and export: "Release filtering excludes source assets,
+      test fixtures, debug scenes, diagnostics commands, development content, temporary
+      captures, and credentials." Removing the tree from compilation is stronger than
+      trusting an export filter: under the Release configuration the runner does not
+      exist in the assembly at all.
+
+      The workflow name for ExportRelease is "release"; see Directory.Build.props
+      § Build configurations for the mapping. FND-006 adds the matching export-preset
+      exclusion for tests/GodotTestRunner.tscn.
+    -->
+    <Compile Remove="tests/**/*.cs" Condition=" '$(Configuration)' == 'ExportRelease' " />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="../src/MechaMiner.Content/MechaMiner.Content.csproj" />
     <ProjectReference Include="../src/MechaMiner.Simulation/MechaMiner.Simulation.csproj" />

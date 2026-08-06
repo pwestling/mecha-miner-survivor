@@ -32,6 +32,67 @@
     <RollForward>LatestMajor</RollForward>
   </PropertyGroup>
 
+  <!--
+    Build configurations (doc 100 § Build configurations).
+
+    Doc 100 names three configurations: Debug, Development, Release. Godot.NET.Sdk
+    declares its own three in its Sdk.props - Debug;ExportDebug;ExportRelease - and
+    Godot's tooling only ever asks for those names: the editor builds Debug, and an
+    export preset's "export with debug" flag selects ExportDebug or ExportRelease.
+    A fourth MSBuild configuration named Development would therefore be one that no
+    Godot export could ever produce.
+
+    Resolution: doc 100's three configurations map 1:1 onto Godot's three MSBuild
+    configuration identities. Nothing is dropped and nothing is invented.
+
+      doc 100 name  MSBuild/Godot identity  optimization  intended use
+      Debug         Debug                   off           local correctness development
+      Development   ExportDebug             on            internal demo, balance, performance
+      Release       ExportRelease           on            external shipping candidate
+
+    The workflow vocabulary stays doc 100's: the configuration argument of
+    ./build.sh build takes "development" and the wrapper translates it (see
+    src/MechaMiner.Tools/Cli/WorkflowConfiguration.cs). Doc 100 § Build
+    configurations was corrected in the same task to state both columns, as doc 114
+    § Specification maintenance autonomy requires when "the documented contract
+    cannot be implemented as written".
+
+    Every project declares the same three so that a ProjectReference built from
+    MechaMiner.Game under ExportRelease does not hand a pure library a configuration
+    it does not know. Microsoft.NET.Sdk only understands Debug and Release, so
+    Optimize and the diagnostic symbol are set explicitly below rather than
+    inherited.
+  -->
+  <PropertyGroup Label="Configuration set">
+    <Configurations>Debug;ExportDebug;ExportRelease</Configurations>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' " Label="doc 100 configuration: Debug">
+    <Optimize>false</Optimize>
+    <DefineConstants>$(DefineConstants);MECHAMINER_DEBUG</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'ExportDebug' " Label="doc 100 configuration: Development">
+    <Optimize>true</Optimize>
+    <DefineConstants>$(DefineConstants);MECHAMINER_DEVELOPMENT</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'ExportRelease' " Label="doc 100 configuration: Release">
+    <Optimize>true</Optimize>
+    <DefineConstants>$(DefineConstants);MECHAMINER_RELEASE</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Symbols">
+    <!--
+      Portable symbols in a separate file for every configuration, including
+      Release: doc 100 § Artifacts requires "symbols/debug mapping in a restricted
+      separate artifact", which needs the pdb to exist and to be separable.
+    -->
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
   <PropertyGroup Label="Locked dependency restore">
     <!-- Lock files are committed so CI can restore in locked mode. -->
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>

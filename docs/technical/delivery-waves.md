@@ -89,16 +89,6 @@ be updated in the same task.
 7. **Fix the smallest owning layer.** Do not compensate in an unrelated layer, and
    do not disable a gate, loosen a tolerance, or accept a golden to go green
    (doc 114 § Failure and retry policy).
-8. **Append to [Specification Gaps](./specification-gaps.md) freely, without
-   asking.** When the specification reads complete but you would have to guess a
-   number or a name to continue, append the finding there: what you were
-   implementing, what you expected to find, what you found instead. Three sentences
-   is a complete entry. No owner, no candidate answers, no proposed resolution, and
-   no justification for raising it. The integration owner triages each entry into a
-   `TOQ`, an `OQ`, a `DEC`, or a documentation fix; an untriaged entry blocks
-   nothing and is not authority for an implementation choice. The file is
-   non-normative, so appending to it is never a shared-surface edit and never needs
-   the integration owner's permission.
 
 ### Branch and PR convention
 

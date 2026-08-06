@@ -9,8 +9,6 @@ authoritative: true
 
 This is the authoritative register of unresolved technical choices. A question appears here only when different answers would materially affect architecture, delivery scope, or implementation sequencing. Routine local coding choices do not belong here.
 
-A finding that is not yet shaped like a question does not belong here yet. [Specification Gaps](./specification-gaps.md) is the non-normative, append-only intake for the case where the specification read complete and was not: a finder records what they were implementing, what they expected to find, and what they found instead, in three sentences, with no owner, no candidate answers, and no obligation to propose a resolution. The integration owner triages each entry into a `TOQ` here, an `OQ` in the gameplay register, a `DEC`, or a documentation fix. `TOQ-004` below arrived that way.
-
 ## Active
 
 Two foundational technical questions currently require owner input; they are recorded below. Autonomous agents otherwise implement accepted/provisional defaults and use the decision and escalation rules in the [Autonomous Agent Execution Protocol](./114-autonomous-agent-execution-protocol.md); they do not convert ordinary local choices into new questions. Subsystem documents may record measured tuning work, production content work, or explicitly deferred product features without treating them as architectural ambiguity.

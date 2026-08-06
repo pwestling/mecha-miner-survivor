@@ -5,8 +5,8 @@
 #            docs/technical/91-verification-strategy.md § Fast pull-request suite
 #            docs/technical/delivery-waves.md § Step 4: "FND-005's CI job calls
 #              ./build.sh verbs, never a script directly. The fast pull-request path
-#              is bootstrap, format-check, build, test-fast; the main path adds
-#              test-main."
+#              is bootstrap, format-check, build, test-fast, godot-import; the main
+#              path adds test-main."
 #            AGENTS.md § Standard workflow surface: "CI uses the same verbs. Do not
 #              create competing workflow entrypoints."
 # Requirements: TR-BLD-001, TR-BLD-002, TR-BLD-005, TR-QUA-001, TR-QUA-003
@@ -31,7 +31,8 @@
 #     step below records the class it saw and re-exits with it, and the final step
 #     fails when the recorded evidence does not account for every step.
 #
-# Two documented gaps rather than silent ones:
+# One documented gap rather than a silent one, and one that used to be stated here
+# wrongly:
 #
 #  * doc 91 § Fast pull-request suite also names JSON schema/content/localization/
 #    asset-manifest/license validation. That is the `content` verb, which is
@@ -40,12 +41,14 @@
 #    gate is "pull-request-equivalent job passes cleanly", and a required step that
 #    can only return 2 would make every pull request red without telling anyone
 #    anything new.
-#  * doc 91 also names Godot headless import and focused integration tests. No verb
-#    exposes those without the whole engine tier: `test-main` is "fast suite plus
-#    Godot integration", and delivery-waves § Step 4 assigns test-main to the main
-#    path. So no engine job exists here. Closing that gap needs either the main-branch
-#    suite (OPS-001) or a verb that runs import plus focused integration alone; it is
-#    not closed by running test-main on pull requests.
+#  * doc 91 also names Godot headless import and focused integration tests. An earlier
+#    version of this header claimed no verb exposed either without the whole engine
+#    tier. That was wrong about the first half: `godot-import` is implemented and owned
+#    by FND-002, runs the headless import from a cold cache, and is a step below. Only
+#    the focused integration tests remain outside this job, because the verb that runs
+#    them is `test-main` ("fast suite plus Godot integration"), which delivery-waves
+#    § Step 4 assigns to the main path. That half is OPS-001's, and it is not closed by
+#    running test-main on pull requests.
 
 name: fast suite
 
@@ -71,7 +74,7 @@ defaults:
 
 jobs:
   fast:
-    name: fast (bootstrap, format-check, build, test-fast)
+    name: fast (bootstrap, format-check, build, test-fast, godot-import)
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -126,6 +129,17 @@ jobs:
           printf 'test-fast\t%s\n' "$class" >> "$RUNNER_TEMP/exit-classes.tsv"
           exit "$class"
 
+      - name: build.sh godot-import
+        # doc 91 § Fast pull-request suite names Godot headless import in the
+        # pull-request tier. The verb imports from a cold cache by construction, which
+        # is what makes it meaningful here: doc 100 forbids CI depending on a
+        # developer's import cache, and nothing in this job restores one.
+        run: |
+          class=0
+          ./build.sh godot-import || class=$?
+          printf 'godot-import\t%s\n' "$class" >> "$RUNNER_TEMP/exit-classes.tsv"
+          exit "$class"
+
       - name: retain the verb evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -144,7 +158,7 @@ jobs:
         if: always()
         run: |
           log="$RUNNER_TEMP/exit-classes.tsv"
-          expected='provision-pinned-toolchain bootstrap format-check build test-fast'
+          expected='provision-pinned-toolchain bootstrap format-check build test-fast godot-import'
 
           {
             echo '### Fast suite exit classes'

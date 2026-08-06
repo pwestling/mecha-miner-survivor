@@ -43,8 +43,8 @@ section below says which of the two it has.
 | `time-tick-index-derived-seconds.txt` | derived seconds for a spread of tick indices as IEEE 754 bit patterns, each obtained by dividing the tick index once by the exact rational rate 60/1 rather than by accumulating a per-tick delta; includes tick 126000, whose derived seconds must be exactly 2100 | doc 10 § Clock domains; doc 20 § Numeric and unit conventions |
 | `time-final-boundary-ordering.txt` | the 35:00 terminal boundary as tick 126000: 125999 is the last tick executed, 126000 never runs, and extraction is evaluated before any event scheduled at or after the boundary — an event at or after 126000 being refused at every point in the run, not only once the boundary has been reached | doc 20 § Boundary and tie ordering; doc 10 § System phase ordering, phase 2 |
 | `runtime-pause-boundary-tick-sequence.txt` | a pause consumes no gameplay time: two runs fed the same 24 frame deltas, one of them blocked by `GeneralPause` for 11/128 s part-way through, render one identical tick sequence, because blocked steps produce no batch at all and blocked wall time is never banked into a later step | doc 10 § Pause contract; doc 20 § Verification |
-| `entities-store-ordering.txt` | the entity comparator as authored priority key ascending, then storage index, then generation, in three cases that each leave exactly one of those three components as the sole discriminator: a live store at tied priority keys, retained records sharing one recycled slot at three generations, and retained records at one shared generation. Storage indices are rendered partition-relative and the partition base is computed from the capacity table by the fixture, never written down as a literal | doc 20 § Entity identity; doc 20 § Authoritative population categories |
-| `events-simultaneous-ordering.txt` | the event comparator as tick, then explicit emission sequence, and nothing further: eight events across four system phases, appended in a scrambled order and again reversed, produce one identical batch. Records the two invariants that replaced the removed phase and entity-ID keys, namely that a sequence is unique within a tick and that phase does not decrease as the sequence rises | doc 10 § System phase ordering; doc 20 § Domain and presentation events |
+| `entities-store-ordering.txt` | the entity comparator as authored priority key ascending, then run session, then storage index, then generation, in four cases that each leave exactly one of those components as the sole discriminator: a live store at tied priority keys, retained records sharing one recycled slot at three generations, retained records at one shared generation, and retained records from two run sessions differing only on the session. Storage indices are rendered partition-relative and the partition base is computed from the capacity table by the fixture, never written down as a literal | doc 20 § Entity identity; doc 20 § Authoritative population categories |
+| `events-simultaneous-ordering.txt` | the event comparator as tick, then explicit emission sequence, and nothing further, in two cases that each leave exactly one of the two keys as the sole discriminator: one published batch of eight events across four system phases at one tick, appended in a scrambled order and again reversed to produce one identical batch, and one retained cross-tick record set whose rows include a pair differing only on tick. Records the two invariants that replaced the removed phase and entity-ID keys, namely that a sequence is unique within a tick and that phase does not decrease as the sequence rises | doc 10 § System phase ordering; doc 20 § Domain and presentation events |
 
 ## Fixed-step time and runtime vectors (SIM-001, SIM-002)
 
@@ -101,7 +101,20 @@ Two things about these two files specifically:
   which degraded comparators the case notices and which it is blind to. The
   blindness is asserted as well as the detection, because the fact that a live
   store cannot reach the generation key is the reason the two retained-record
-  cases exist at all.
+  cases exist at all. `events-simultaneous-ordering.txt` names its cases the same
+  way, and `EventOrderingTests` asserts the same per-case matrix over the two
+  event keys.
+- **Both ordering goldens had a leading key with no control at all, and both now
+  have one.** Every case of `entities-store-ordering.txt` held one run session and
+  every case of `events-simultaneous-ordering.txt` held one tick, so deleting the
+  leading key from either comparator left the whole suite green. Neither hole was
+  visible from the expected values: the files matched, and each file's header
+  asserted a key ordering no input in it reached. A leading key is the easiest one
+  to leave uncontrolled, because the fixture shapes that reach it - records from
+  two run sessions, records from several ticks - are the shapes a live collection
+  cannot produce, so they have to be added deliberately as retained record sets.
+  Any ordering golden added later must name, per case, which key that case leaves
+  as the sole discriminator, and must have at least one case per key.
 - **`events-simultaneous-ordering.txt` was rebuilt during the hardening pass, not
   merely extended.** Its original inputs paired a high system phase with a low
   emission sequence in order to make the sort observably not a no-op, which under

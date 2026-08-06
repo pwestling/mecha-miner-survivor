@@ -210,11 +210,34 @@ public readonly struct EntityId : IEquatable<EntityId>
     /// collection or thread timing.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// doc 20 § Entity identity: "Stable ordering uses the full entity ID after a
-    /// system's authored priority keys." "Full" is why all three components take part:
-    /// index alone would tie two generations of one recycled slot.
+    /// system's authored priority keys", and the key order itself - "The full entity ID
+    /// compares by run session, then storage index, then generation." All three take
+    /// part because index alone would tie two generations of one recycled slot, and
+    /// "Run session leads because it is the outermost component of the identity, so the
+    /// comparison order follows the same nesting the identity has."
     /// doc 10 § System phase ordering: "Simultaneous outcomes use documented stable
     /// ordering rather than collection or thread timing."
+    /// </para>
+    /// <para>
+    /// <b>The leading key is an order, not a fence, and must not become one.</b> Two
+    /// identities from different run sessions meeting here is a defect, but doc 20 §
+    /// Entity identity places its detection at the point an identity is resolved or
+    /// freed - a store "fails closed" and records one diagnostic counter - and rules this
+    /// method out explicitly: "The comparator is therefore not the place to detect it. A
+    /// redundant session check there would only make the boundary check look
+    /// unnecessary." So this returns an order for such a pair rather than throwing.
+    /// </para>
+    /// <para>
+    /// <b>The key is controlled, not merely present.</b> Every ordering fixture that
+    /// holds one run session is blind to this key, and for a while all of them did, so
+    /// deleting it left the whole suite green. The
+    /// <c>retained-cross-session-records</c> case of
+    /// <c>entities-store-ordering.txt</c> is the input that reaches it: two records
+    /// differing only in run session, plus a record from the higher session at a lower
+    /// storage index that still sorts last.
+    /// </para>
     /// </remarks>
     public static int Compare(EntityId left, EntityId right)
     {

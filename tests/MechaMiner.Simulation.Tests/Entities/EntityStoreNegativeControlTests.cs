@@ -31,6 +31,7 @@ namespace MechaMiner.Simulation.Tests.Entities;
 internal sealed class EntityStoreNegativeControlTests
 {
     private const ulong RunSession = 0xDEAD_0001UL;
+    private const ulong OtherRunSession = 0xDEAD_0002UL;
     private const int MiningSiteManifestCount = 8;
     private const int StaticWorldObjectManifestCount = 4;
 
@@ -105,6 +106,19 @@ internal sealed class EntityStoreNegativeControlTests
             [
                 EntityOrderingCases.Degradation.WithoutStorageIndex,
                 EntityOrderingCases.Degradation.WithoutPriorityKey,
+            ]);
+
+        // The case the golden had no equivalent of. Every case above holds one run session, so all three are
+        // blind to WithoutRunSession - which is asserted above by its absence from their expected lists, and
+        // is what let the leading key be deleted with the suite staying green.
+        AssertCaseDetection(
+            "retained-cross-session-records",
+            EntityOrderingCases.RetainedCrossSessionRecords(NewAllocator(), NewOtherSessionAllocator()),
+            partitionOffset,
+            expectedDetections:
+            [
+                EntityOrderingCases.Degradation.WithoutRunSession,
+                EntityOrderingCases.Degradation.WithoutStorageIndex,
             ]);
     }
 
@@ -367,6 +381,15 @@ internal sealed class EntityStoreNegativeControlTests
     {
         return new EntityIdAllocator(
             RunSession,
+            MiningSiteManifestCount,
+            StaticWorldObjectManifestCount);
+    }
+
+    /// <summary>An allocator for a second, higher run session, for the cross-session ordering case.</summary>
+    private static EntityIdAllocator NewOtherSessionAllocator()
+    {
+        return new EntityIdAllocator(
+            OtherRunSession,
             MiningSiteManifestCount,
             StaticWorldObjectManifestCount);
     }

@@ -24,6 +24,11 @@ namespace MechaMiner.Simulation.Tests.Entities;
 internal sealed class PackedEntityStoreTests
 {
     private const ulong RunSession = 0x9F0C_0001UL;
+
+    /// <summary>
+    /// A second run session, higher than <see cref="RunSession"/>, for the golden's cross-session case.
+    /// </summary>
+    private const ulong OtherRunSession = 0x9F0C_0002UL;
     private const int MiningSiteManifestCount = 63;
     private const int StaticWorldObjectManifestCount = 40;
 
@@ -43,17 +48,25 @@ internal sealed class PackedEntityStoreTests
         "# entities-store-ordering\n"
         + "#\n"
         + "# Rule under test: doc 20 § Entity identity - \"Stable ordering uses the full\n"
-        + "# entity ID after a system's authored priority keys.\" Ordering is therefore\n"
-        + "# authored priority key ascending, then storage index, then generation, within\n"
-        + "# one run session.\n"
+        + "# entity ID after a system's authored priority keys\", over an identity that \"the\n"
+        + "# full entity ID compares by run session, then storage index, then generation\".\n"
+        + "# Ordering is therefore authored priority key ascending, then run session, then\n"
+        + "# storage index, then generation.\n"
         + "#\n"
         + "# Storage index precedes generation because it is the only component that\n"
         + "# discriminates among simultaneously-live entities; generation exists to order\n"
-        + "# records that share a recycled slot. Doc 20 § Entity identity gives the ID two\n"
-        + "# components - \"a reusable storage index and a generation\" - and treats the run\n"
-        + "# session as the uniqueness scope: \"IDs are unique only within one run session\".\n"
-        + "# Every case below holds the session constant, so no comparison here crosses\n"
-        + "# sessions.\n"
+        + "# records that share a recycled slot. Run session leads both because it is the\n"
+        + "# outermost component of the identity, which doc 20 § Entity identity states\n"
+        + "# outright, and because \"IDs are unique only within one run session\" makes it the\n"
+        + "# scope the other two components are unique inside. Cases 1 to 3 hold the session\n"
+        + "# constant and are therefore blind to a comparator with no session key at all -\n"
+        + "# deleting it left all three byte-identical - which is why case 4 exists.\n"
+        + "#\n"
+        + "# Case 4 is not a check that a foreign session is refused, and must not become\n"
+        + "# one. doc 20 § Entity identity puts that refusal where an identity is resolved or\n"
+        + "# freed, and rules the comparator out: \"A redundant session check there would only\n"
+        + "# make the boundary check look unnecessary.\" The leading key is an order, not a\n"
+        + "# fence, and case 4 pins only the order.\n"
         + "#\n"
         + "# Storage indices are rendered partition-relative as pickup+N, where N is the\n"
         + "# offset from the first slot of the Pickup partition. The partition offset itself\n"
@@ -64,7 +77,7 @@ internal sealed class PackedEntityStoreTests
         + "# absolute index here would make this ordering golden fail for a capacity reason\n"
         + "# that has nothing to do with ordering.\n"
         + "#\n"
-        + "# Three cases, so that each component is the sole discriminator in at least one\n"
+        + "# Four cases, so that each component is the sole discriminator in at least one\n"
         + "# of them and no component is dead:\n"
         + "#\n"
         + "# 1. live-store-tied-priority-keys - sole discriminator: storage index.\n"
@@ -96,6 +109,20 @@ internal sealed class PackedEntityStoreTests
         + "#    generation can decide nothing. Two share priority key 5 and differ only in\n"
         + "#    storage index. The third has priority key 42 and storage index 3, which\n"
         + "#    falls between the other two, so it sorts last despite its middle index.\n"
+        + "#\n"
+        + "# 4. retained-cross-session-records - sole discriminator: run session.\n"
+        + "#    A retained record set, and the only case in which two sessions meet: no live\n"
+        + "#    collection holds identities from two runs, and doc 20 § Entity identity gives\n"
+        + "#    each of the three ordered collections that sort on the full entity ID an\n"
+        + "#    enforcement point that makes one impossible in it. What legitimately outlives\n"
+        + "#    a run is the diagnostic and statistics record set. Two records share priority\n"
+        + "#    key 10, storage index 3, and generation 1 and differ only in run session, so\n"
+        + "#    for that pair the session is the only component that can decide anything. The\n"
+        + "#    third record comes from the higher session at storage index 0 and still sorts\n"
+        + "#    last: that is the direct proof that run session precedes storage index rather\n"
+        + "#    than the other way round. Both identities are minted by real allocators over\n"
+        + "#    the same manifest counts, which is doc 20's \"Two runs legitimately allocate\n"
+        + "#    the same storage index at the same generation\" rather than a contrived pair.\n"
         + "#\n"
         + "# Derived by: the documented rule read off doc 20, computed in an independent\n"
         + "# Python reference before any C# ran, and cross-checked against an independent\n"
@@ -311,20 +338,99 @@ internal sealed class PackedEntityStoreTests
             EntityOrderingCases.RetainedRecycledSlot(NewAllocator());
         List<EntityOrderingCases.OrderedRecord> tied =
             EntityOrderingCases.RetainedTiedPriorityKeys(NewAllocator());
+        List<EntityOrderingCases.OrderedRecord> crossSession =
+            EntityOrderingCases.RetainedCrossSessionRecords(NewAllocator(), NewOtherSessionAllocator());
 
         AssertRetainedShape(
             "retained-recycled-slot",
             recycled,
             expectedSharedSlotGenerations: 3,
-            requireDistinctGenerationsOnOneSlot: true);
+            requireDistinctGenerationsOnOneSlot: true,
+            expectedSessions: 1);
         AssertRetainedShape(
             "retained-tied-priority-keys",
             tied,
             expectedSharedSlotGenerations: 1,
-            requireDistinctGenerationsOnOneSlot: false);
+            requireDistinctGenerationsOnOneSlot: false,
+            expectedSessions: 1);
+        AssertRetainedShape(
+            "retained-cross-session-records",
+            crossSession,
+            expectedSharedSlotGenerations: 1,
+            requireDistinctGenerationsOnOneSlot: false,
+            expectedSessions: 2);
+        AssertTheCrossSessionCaseHasThePairItClaims(crossSession);
 
         return RenderPermutationIndependentCase("retained-recycled-slot", "generation", recycled, partitionOffset)
-            + RenderPermutationIndependentCase("retained-tied-priority-keys", "storage index", tied, partitionOffset);
+            + RenderPermutationIndependentCase("retained-tied-priority-keys", "storage index", tied, partitionOffset)
+            + RenderPermutationIndependentCase(
+                "retained-cross-session-records", "run session", crossSession, partitionOffset);
+    }
+
+    /// <summary>
+    /// Asserts case 4 holds a pair of records differing only on run session, and a record from the higher
+    /// session at a lower storage index.
+    /// </summary>
+    /// <param name="records">Case 4's records, in arrival order.</param>
+    /// <remarks>
+    /// Without the first fact the case does not reach the leading key and is exactly as vacuous as the three
+    /// session-constant cases it was added to fix. Without the second, the case would not show that the run
+    /// session <em>precedes</em> the storage index rather than merely being consulted.
+    /// </remarks>
+    private static void AssertTheCrossSessionCaseHasThePairItClaims(
+        List<EntityOrderingCases.OrderedRecord> records)
+    {
+        int sessionOnlyPairs = 0;
+        for (int left = 0; left < records.Count; left++)
+        {
+            for (int right = left + 1; right < records.Count; right++)
+            {
+                EntityOrderingCases.OrderedRecord first = records[left];
+                EntityOrderingCases.OrderedRecord second = records[right];
+                if (first.Id.RunSession != second.Id.RunSession
+                    && first.PriorityKey == second.PriorityKey
+                    && first.Id.Index == second.Id.Index
+                    && first.Id.Generation == second.Id.Generation)
+                {
+                    sessionOnlyPairs++;
+                }
+            }
+        }
+
+        ulong highestSession = 0UL;
+        int indexAtHighestSession = int.MaxValue;
+        int lowestIndex = int.MaxValue;
+        foreach (EntityOrderingCases.OrderedRecord record in records)
+        {
+            if (record.Id.RunSession > highestSession)
+            {
+                highestSession = record.Id.RunSession;
+                indexAtHighestSession = record.Id.Index;
+            }
+            else if (record.Id.RunSession == highestSession && record.Id.Index < indexAtHighestSession)
+            {
+                indexAtHighestSession = record.Id.Index;
+            }
+
+            if (record.Id.Index < lowestIndex)
+            {
+                lowestIndex = record.Id.Index;
+            }
+        }
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                sessionOnlyPairs,
+                Is.EqualTo(1),
+                "retained-cross-session-records must hold exactly one pair of records differing only in run "
+                    + "session, or the leading key is not the sole discriminator for anything in it");
+            Assert.That(
+                indexAtHighestSession,
+                Is.EqualTo(lowestIndex),
+                "the higher run session must carry the lowest storage index in the set, or nothing here "
+                    + "shows that the run session precedes the storage index rather than following it");
+        });
     }
 
     /// <summary>
@@ -375,7 +481,8 @@ internal sealed class PackedEntityStoreTests
         string caseName,
         List<EntityOrderingCases.OrderedRecord> records,
         int expectedSharedSlotGenerations,
-        bool requireDistinctGenerationsOnOneSlot)
+        bool requireDistinctGenerationsOnOneSlot,
+        int expectedSessions)
     {
         Dictionary<int, HashSet<uint>> generationsBySlot = new();
         HashSet<ulong> sessions = new();
@@ -404,10 +511,10 @@ internal sealed class PackedEntityStoreTests
         {
             Assert.That(
                 sessions,
-                Has.Count.EqualTo(1),
-                caseName + ": every record must share one run session, because doc 20 § Entity "
-                    + "identity makes the session the scope IDs are unique within, not something to "
-                    + "sort by");
+                Has.Count.EqualTo(expectedSessions),
+                caseName + ": the case must span exactly this many run sessions. One means the leading "
+                    + "run-session key cannot discriminate anything in it, which is true of three of the "
+                    + "four cases and is why the fourth spans two");
             Assert.That(
                 mostSharedSlot,
                 Is.EqualTo(expectedSharedSlotGenerations),
@@ -822,6 +929,22 @@ internal sealed class PackedEntityStoreTests
     {
         return new EntityIdAllocator(
             RunSession,
+            MiningSiteManifestCount,
+            StaticWorldObjectManifestCount);
+    }
+
+    /// <summary>
+    /// An allocator for a second run session, over the same manifest counts as <see cref="NewAllocator"/>.
+    /// </summary>
+    /// <remarks>
+    /// The same manifest counts on purpose: identical partition offsets are what let two sessions issue the
+    /// same storage index at the same generation, which is the pair the golden's fourth case needs and which
+    /// doc 20 § Entity identity names as the reason the run session travels inside the identity at all.
+    /// </remarks>
+    private static EntityIdAllocator NewOtherSessionAllocator()
+    {
+        return new EntityIdAllocator(
+            OtherRunSession,
             MiningSiteManifestCount,
             StaticWorldObjectManifestCount);
     }

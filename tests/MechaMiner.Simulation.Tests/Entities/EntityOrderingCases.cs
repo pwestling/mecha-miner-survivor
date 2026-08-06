@@ -34,9 +34,21 @@ namespace MechaMiner.Simulation.Tests.Entities;
 /// accepts seeded reproducibility without lockstep replay, so no replay log is implied here.
 /// </para>
 /// <para>
-/// <b>Run session is held constant everywhere.</b> doc 20 § Entity identity treats the run session as
-/// the scope within which IDs are unique - "IDs are unique only within one run session" - rather than
-/// as something to sort by, so no comparison in this file crosses sessions.
+/// <b>Run session leads the comparison, and one case has to let two sessions meet.</b> doc 20 § Entity
+/// identity states the order outright: "The full entity ID compares by run session, then storage index,
+/// then generation", and "Run session leads because it is the outermost component of the identity, so the
+/// comparison order follows the same nesting the identity has." A case that holds the session constant
+/// cannot reach that leading key, and cases 1 to 3 all hold it constant: deleting the key from
+/// <see cref="EntityId.Compare"/> left every one of them byte-identical and the whole suite green. Case 4 -
+/// <see cref="RetainedCrossSessionRecords"/> - is the case that reaches it.
+/// </para>
+/// <para>
+/// <b>What that case is not.</b> It is not a check that a foreign session is refused, and the comparator
+/// must not become one. doc 20 § Entity identity places that refusal at the point an identity is resolved or
+/// freed - "A store resolving an identity that carries a foreign or unset run session fails closed" - and
+/// rules the comparator out explicitly: "The comparator is therefore not the place to detect it. A redundant
+/// session check there would only make the boundary check look unnecessary." So case 4 pins a documented
+/// total order over records from two sessions, and nothing more.
 /// </para>
 /// <para>
 /// <b>Every identity here is issued by a real allocator, through allocate and free.</b> "Not built on a
@@ -89,6 +101,14 @@ internal static class EntityOrderingCases
         /// which is the reason the retained-record cases exist.
         /// </remarks>
         GenerationBeforeStorageIndex = 3,
+
+        /// <summary>Priority key, then storage index, then generation. The run session dropped.</summary>
+        /// <remarks>
+        /// The degradation the golden had no control for at all: deleting the leading run-session key from
+        /// <see cref="EntityId.Compare"/> left every session-constant case byte-identical and the whole suite
+        /// green, which is what <see cref="RetainedCrossSessionRecords"/> exists to catch.
+        /// </remarks>
+        WithoutRunSession = 4,
     }
 
     /// <summary>Every degradation, in declaration order, for the control matrix.</summary>
@@ -98,6 +118,7 @@ internal static class EntityOrderingCases
         Degradation.WithoutGeneration,
         Degradation.WithoutPriorityKey,
         Degradation.GenerationBeforeStorageIndex,
+        Degradation.WithoutRunSession,
     ];
 
     /// <summary>
@@ -152,6 +173,62 @@ internal static class EntityOrderingCases
             new OrderedRecord(5L, AdvanceToGeneration(allocator, fresh[9], targetGeneration: 4)),
             new OrderedRecord(5L, AdvanceToGeneration(allocator, fresh[2], targetGeneration: 4)),
             new OrderedRecord(42L, AdvanceToGeneration(allocator, fresh[3], targetGeneration: 4)),
+        ];
+    }
+
+    /// <summary>
+    /// Case 4 - <c>retained-cross-session-records</c>. The run session is the sole discriminator.
+    /// </summary>
+    /// <param name="allocator">
+    /// An allocator for the first run session, whose Pickup partition has issued nothing yet.
+    /// </param>
+    /// <param name="otherSessionAllocator">
+    /// An allocator for a second, higher run session, whose Pickup partition has issued nothing yet.
+    /// </param>
+    /// <remarks>
+    /// <para>
+    /// Two records carry the same priority key, the same storage index, and the same generation, and differ
+    /// only in which run session issued them - so for that pair the run session is the only component that
+    /// can decide anything. A third record comes from the higher session at a <em>lower</em> storage index and
+    /// still sorts last: that is the direct proof that the run session precedes the storage index rather than
+    /// the other way round, which is the same shape
+    /// <see cref="RetainedRecycledSlot"/> uses for generation.
+    /// </para>
+    /// <para>
+    /// A retained record set for the same reason case 2 is, and a stronger one: no live collection holds
+    /// identities from two runs at once. doc 20 § Entity identity names the three ordered collections that
+    /// sort on the full entity ID and gives each an enforcement point that makes a cross-session record
+    /// impossible in it - a packed store by construction, a tick's event batch at the boundary that assembles
+    /// it, and presentation staging at the point an entity is staged. What legitimately outlives one run is
+    /// the diagnostic and statistics record set, and that is what this case models.
+    /// </para>
+    /// <para>
+    /// Both identities are minted by real allocators, as every other case's are. Two allocators over the same
+    /// manifest counts issue the same partition slot at the same first generation, which is exactly doc 20's
+    /// "Two runs legitimately allocate the same storage index at the same generation" - so the pair this case
+    /// needs is not contrived, it is the situation the run session exists to disambiguate.
+    /// </para>
+    /// </remarks>
+    internal static List<OrderedRecord> RetainedCrossSessionRecords(
+        EntityIdAllocator allocator,
+        EntityIdAllocator otherSessionAllocator)
+    {
+        ArgumentNullException.ThrowIfNull(allocator);
+        ArgumentNullException.ThrowIfNull(otherSessionAllocator);
+        Assert.That(
+            otherSessionAllocator.RunSession,
+            Is.GreaterThan(allocator.RunSession),
+            "the second session must sort after the first, or the case cannot show that a lower storage "
+                + "index in the later session still sorts last");
+
+        List<EntityId> firstSession = AllocateFreshPickups(allocator, count: 4);
+        List<EntityId> secondSession = AllocateFreshPickups(otherSessionAllocator, count: 4);
+
+        return
+        [
+            new OrderedRecord(10L, secondSession[3]),
+            new OrderedRecord(10L, firstSession[3]),
+            new OrderedRecord(10L, secondSession[0]),
         ];
     }
 
@@ -344,18 +421,33 @@ internal static class EntityOrderingCases
     {
         switch (degradation)
         {
+            // Every degradation below drops or displaces exactly one component and keeps the rest in
+            // documented order, run session included. Dropping the session as a side effect of dropping
+            // something else would make the matrix report one loss as several.
             case Degradation.WithoutStorageIndex:
                 {
                     int byPriority = left.PriorityKey.CompareTo(right.PriorityKey);
-                    return byPriority != 0
-                        ? byPriority
+                    if (byPriority != 0)
+                    {
+                        return byPriority;
+                    }
+
+                    int bySession = left.Id.RunSession.CompareTo(right.Id.RunSession);
+                    return bySession != 0
+                        ? bySession
                         : left.Id.Generation.CompareTo(right.Id.Generation);
                 }
 
             case Degradation.WithoutGeneration:
                 {
                     int byPriority = left.PriorityKey.CompareTo(right.PriorityKey);
-                    return byPriority != 0 ? byPriority : left.Id.Index.CompareTo(right.Id.Index);
+                    if (byPriority != 0)
+                    {
+                        return byPriority;
+                    }
+
+                    int bySession = left.Id.RunSession.CompareTo(right.Id.RunSession);
+                    return bySession != 0 ? bySession : left.Id.Index.CompareTo(right.Id.Index);
                 }
 
             case Degradation.WithoutPriorityKey:
@@ -369,8 +461,26 @@ internal static class EntityOrderingCases
                         return byPriority;
                     }
 
+                    int bySession = left.Id.RunSession.CompareTo(right.Id.RunSession);
+                    if (bySession != 0)
+                    {
+                        return bySession;
+                    }
+
                     int byGeneration = left.Id.Generation.CompareTo(right.Id.Generation);
                     return byGeneration != 0 ? byGeneration : left.Id.Index.CompareTo(right.Id.Index);
+                }
+
+            case Degradation.WithoutRunSession:
+                {
+                    int byPriority = left.PriorityKey.CompareTo(right.PriorityKey);
+                    if (byPriority != 0)
+                    {
+                        return byPriority;
+                    }
+
+                    int byIndex = left.Id.Index.CompareTo(right.Id.Index);
+                    return byIndex != 0 ? byIndex : left.Id.Generation.CompareTo(right.Id.Generation);
                 }
 
             default:

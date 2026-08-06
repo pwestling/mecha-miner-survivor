@@ -104,10 +104,16 @@ will *own* each directory, not work this branch closed.
 
 **138 definition files plus `content/localization/en.json`** — 139 `*.json` files under `content/` in
 total. The two numbers are different things and are stated separately on purpose. The definition count
-is what the per-directory rows above sum to, and **138 is what the verifier asserts**, as
-`EXPECTED_CONTENT_DEFINITION_JSON_FILES`: `A21`'s inventory covers the population `load_definitions()`
+is what the per-directory rows above sum to, and **138 is what the verifier asserts** — no longer as a
+literal, but as the number of rows in the `A28` manifest
+(`src/MechaMiner.Tools/ContentImport/content-definition-manifest.txt`), which records the
+`(path, id)` pair of every definition. `A21`'s inventory covers the population `load_definitions()`
 loads, which is every `*.json` under `content/` except those beneath a `NON_DEFINITION_DIRS` directory
-(`localization`, `schemas`). The 139 total is asserted by nothing; it is the whole-tree number, and the
+(`localization`, `schemas`). `A28` is what catches a definition being **renamed inside its own
+directory** or having **its `id` edited**, neither of which changes any count: regenerate the manifest
+with `MECHAMINER_GOLDEN_UPDATE=1`, which rewrites it and still fails, then review and commit the diff.
+The manifest is an edit tax that makes such a change loud in review — it is not evidence that any path
+or `id` is correct. The 139 total is asserted by nothing; it is the whole-tree number, and the
 whole tree is what `A26` scans for `null`, which is why `en.json` leaves the definition count without
 losing coverage. `content/` also holds three Markdown files (this one, `transcription-notes.md` and
 `quote-verification-audit.md`) which are documentation, not content, and are counted in neither figure.

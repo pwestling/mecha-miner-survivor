@@ -1,0 +1,104 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "GEO-003",
+  "workPackageTitle": "Player swept movement/slide and coordinate presentation adapter contract",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91-verification-strategy.md § Verification registry). This file was created in the same commit that first implements against it, and every entry below was authored before the production code it names.",
+    "'status' takes exactly one of 'registered', 'implemented', 'retired' (doc 91 § Entry status). 'evidenceKinds' is read against 'status' (doc 91 § What evidenceKinds means): for a 'registered' entry the list is evidence the verification will produce once built, and nothing may treat it as produced.",
+    "The structural validator for this file is owned by TASK-FND-009-002. Until it lands, the shape here matches tests/verification/SIM-007.json exactly.",
+    "This file is deliberately NOT named SIM-0*.json. tests/MechaMiner.Simulation.Tests/Support/NegativeControlCoverageTests.cs globs 'SIM-0*.json' and asserts a totals line accounting for every entry across those seven files, so adding an entry to one of them from another work package would break an unrelated package's gate.",
+    "delivery-waves § W2 assigns the 'coordinate presentation adapter contract' to GEO-003, which is why the simulation-to-presentation ground mapping is a pure type inside MechaMiner.Simulation rather than inside game/. That placement is also what makes it testable at all: tests/MechaMiner.Game.Tests references Content, Persistence, and Simulation but NOT MechaMiner.Game, so no code under game/ is reachable from any test project in this repository.",
+    "The mapping type names no engine type and imports nothing. It returns three doubles - east, height, and the negated north component - and presentation is what feeds those into its own vector type. The boundary is deliberately arithmetic-only.",
+    "Swept circle movement with slide against solid obstacle polygons is the rest of GEO-003's payload and has no entry here yet. It needs GEO-002's static geometry manifest, which does not exist on this ref; this slice constrains the player against a rectangular graybox instead, and VER-GEO-003-003 is an entry about that graybox rather than about terrain."
+  ],
+  "entries": [
+    {
+      "id": "VER-GEO-003-001",
+      "summary": "The presentation ground mapping sends simulation east to world positive X, simulation north to world negative Z, and height to world positive Y, for every quadrant including the axes and the origin.",
+      "task": "TASK-GEO-003-001",
+      "requirements": [
+        "TR-GEO-001",
+        "TR-PRE-001"
+      ],
+      "technicalSources": [
+        "docs/technical/decisions/TDR-005-simulate-gameplay-on-a-two-dimensional-plane.md#coordinate-contract",
+        "docs/technical/21-world-geometry-navigation-and-spatial-queries.md#coordinate-spaces"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Geometry.PresentationGroundMappingTests"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-GEO-003-002",
+      "summary": "The mapping is invertible on the ground plane and never alters the authoritative pair: mapping a position and inverting it returns the original components exactly, so the authoritative ground-plane centre cannot drift through a presentation round trip.",
+      "task": "TASK-GEO-003-001",
+      "requirements": [
+        "TR-GEO-001",
+        "TR-PRE-001"
+      ],
+      "technicalSources": [
+        "docs/technical/decisions/TDR-005-simulate-gameplay-on-a-two-dimensional-plane.md#coordinate-contract"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Geometry.PresentationGroundMappingTests.MappingIsInvertibleOnTheGroundPlane"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-GEO-003-003",
+      "summary": "The graybox arena clamp keeps the whole collision circle inside the arena rather than only its centre: a body driven at any boundary stops with its circle tangent to that boundary, and the clamp is idempotent.",
+      "task": "TASK-GEO-003-001",
+      "requirements": [
+        "TR-GEO-002",
+        "TR-GEO-003"
+      ],
+      "technicalSources": [
+        "docs/technical/21-world-geometry-navigation-and-spatial-queries.md#player-and-enemy-movement"
+      ],
+      "gameplaySources": [
+        "docs/72-player-survivability-and-damage-baseline.md#shared-player-baseline"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Geometry.GrayboxArenaBoundsTests"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    }
+  ]
+}

@@ -59,10 +59,11 @@ internal static class VerbRegistry
             "pure bounded tests, content validation, representative headless fixtures",
             "FND-003",
             TestVerb.RunFastTier),
-        VerbDescriptor.AwaitingOwner(
+        VerbDescriptor.Implemented(
             "test-main",
             "fast suite plus Godot integration, package smoke prerequisites, broader matrices",
-            "FND-003"),
+            "FND-003",
+            TestVerb.RunMainTier),
         VerbDescriptor.AwaitingOwner(
             "test-nightly",
             "exhaustive seeds, full runs, soak/fuzz/screenshot/performance trend suites",

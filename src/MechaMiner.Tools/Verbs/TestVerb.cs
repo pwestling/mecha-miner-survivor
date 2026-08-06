@@ -187,6 +187,8 @@ internal static class TestVerb
         "tests/MechaMiner.Persistence.Tests/MechaMiner.Persistence.Tests.csproj",
     };
 
+    private const string EngineTestProject = "tests/MechaMiner.Game.Tests/MechaMiner.Game.Tests.csproj";
+
     /// <summary>Runs the pure tiers and the build-policy fixtures, and launches no Godot process.</summary>
     internal static VerbOutcome RunFastTier(VerbContext context)
     {
@@ -219,6 +221,35 @@ internal static class TestVerb
         tripwire.Assert(context, failures);
 
         return Summarize(context, tallies, failures, "test-fast");
+    }
+
+    /// <summary>Runs the fast tier, a clean headless import, and the Godot engine tier.</summary>
+    internal static VerbOutcome RunMainTier(VerbContext context)
+    {
+        context.Section("stage 1: the complete fast tier");
+        VerbOutcome fast = RunFastTier(context);
+        if (fast.ExitClass != ExitClass.Success)
+        {
+            return fast;
+        }
+
+        context.Section("stage 2: clean headless Godot import");
+        VerbOutcome import = GodotImportVerb.Execute(context);
+        if (import.ExitClass != ExitClass.Success)
+        {
+            return import;
+        }
+
+        context.Section("stage 3: Godot engine integration tier");
+        List<TestTally> tallies = new();
+        List<string> failures = new();
+        VerbOutcome? failure = RunTestProject(context, EngineTestProject, tallies, failures);
+        if (failure is not null)
+        {
+            return failure;
+        }
+
+        return Summarize(context, tallies, failures, "test-main engine tier");
     }
 
     private static VerbOutcome? RunTestProject(

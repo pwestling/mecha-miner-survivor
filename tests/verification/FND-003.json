@@ -229,7 +229,7 @@
         "linux-x64"
       ],
       "tier": "main",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-FND-003-008",
@@ -260,7 +260,7 @@
         "linux-x64"
       ],
       "tier": "main",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-FND-003-009",
@@ -291,7 +291,7 @@
         "linux-x64"
       ],
       "tier": "main",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-FND-003-010",
@@ -322,7 +322,7 @@
         "linux-x64"
       ],
       "tier": "main",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-FND-003-011",
@@ -385,7 +385,7 @@
         "linux-x64"
       ],
       "tier": "main",
-      "status": "registered"
+      "status": "implemented"
     }
   ]
 }

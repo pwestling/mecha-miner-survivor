@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 
@@ -56,8 +57,34 @@ internal sealed class StageLedger
     /// whose heading carries run-specific detail (a configuration name, an idempotent
     /// no-op). The declared name is what an unrun-stage report uses.
     /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// The index is not one of the declared stages.
+    /// </exception>
     internal void Enter(int index, string heading)
     {
+        // Throws rather than clamping, and this is the interesting line in the file.
+        //
+        // A verb that grows a stage and does not extend its declared list is the exact
+        // failure this class exists to prevent, turned on itself: the headings would read
+        // "stage 4 of 3", and - worse - a failure in stage 1 would report only the stages
+        // the list happens to know about, silently under-reporting what did not run. That
+        // is the same "unproved read as satisfied" conflation, reintroduced by the fix for
+        // it. It happened during this change: `build` gained two stages in a merge while
+        // the ledger still declared three, and nothing complained.
+        //
+        // An out-of-range stage is therefore a programming error and is loud. `build`
+        // reaches this on every invocation, so the first run after a bad edit fails.
+        if (index < 0 || index >= _stages.Count)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(index),
+                index,
+                "this verb entered stage " + (index + 1).ToString(CultureInfo.InvariantCulture)
+                + " but declared only " + _stages.Count.ToString(CultureInfo.InvariantCulture)
+                + " stage(s). Add the new stage to the StageLedger constructor: an unrun-stage "
+                + "report can only name stages the ledger was told about.");
+        }
+
         _current = index;
         _context.Section(
             "stage " + (index + 1).ToString(CultureInfo.InvariantCulture) + " of "

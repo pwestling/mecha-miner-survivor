@@ -260,7 +260,24 @@ internal sealed class ToolchainInspector
                 pin.RequiredBy);
         }
 
-        string? executable = ResolveExecutablePath(command, platformPin);
+        // The hash must be taken over the executable that WOULD ACTUALLY RUN - the same
+        // one ProbeGodot just executed for its version check - and nothing else.
+        //
+        // This previously resolved the pinned install path first and fell back to the
+        // command only if that path was absent. On any machine with a pinned install
+        // present, that meant pointing MECHAMINER_GODOT at a substituted binary produced
+        // "resolved as '<substitute>'" from the version probe and "sha256 of
+        // /opt/godot/... matches the pin" from this one, on adjacent lines, and doctor
+        // exited 0 with "0 mismatches". The probe reported a pin match for a file it had
+        // never opened, which is the one thing a hash probe exists to rule out. doctor is
+        // what every other gate trusts, so a probe here that validates an assumed
+        // canonical path instead of the resolved artifact is load-bearing dishonesty.
+        //
+        // FindOnPath applies the same discovery rule the runner uses: a rooted path is
+        // taken as given, and a bare name is resolved along PATH in PATH order. A symlink
+        // is followed by the hash, so the ordinary install shape - `godot` on PATH
+        // pointing into the pinned install root - still matches the pin.
+        string? executable = FindOnPath(command);
         if (executable is null || !File.Exists(executable))
         {
             return new ToolProbe(
@@ -268,58 +285,36 @@ internal sealed class ToolchainInspector
                 ToolStatus.Mismatched,
                 platformPin.ExecutableSha256,
                 "executable path not resolvable",
-                "expected " + Path.Combine(platformPin.InstallRoot, platformPin.ExecutableRelativePath),
+                "'" + command + "' does not resolve to a file, so there is nothing to hash. "
+                    + "Discovery order: " + string.Join(", ", pin.DiscoveryOrder)
+                    + ". The pinned install is "
+                    + Path.Combine(platformPin.InstallRoot, platformPin.ExecutableRelativePath),
                 pin.RequiredBy);
         }
 
+        string pinnedInstallPath = Path.Combine(platformPin.InstallRoot, platformPin.ExecutableRelativePath);
         string measured = Sha256OfFile(executable);
         bool matches = string.Equals(measured, platformPin.ExecutableSha256, StringComparison.OrdinalIgnoreCase);
+
+        // Naming the hashed file in both branches is deliberate: the reader can see that
+        // the path in this row is the path the version row resolved.
+        string substitutionNote =
+            string.Equals(Path.GetFullPath(executable), Path.GetFullPath(pinnedInstallPath), StringComparison.Ordinal)
+                ? string.Empty
+                : " (this is not the pinned install path " + pinnedInstallPath
+                    + "; it is what '" + command + "' resolves to, and it is what was hashed)";
+
         return new ToolProbe(
             "godot executable hash",
             matches ? ToolStatus.Ok : ToolStatus.Mismatched,
             platformPin.ExecutableSha256,
             measured,
             matches
-                ? "sha256 of " + executable + " matches the pin recorded " + platformPin.RetrievedUtc
-                : "sha256 of " + executable + " does not match the pin; reinstall from "
-                    + platformPin.ArchiveUrl,
+                ? "sha256 of " + executable + " matches the pin recorded "
+                    + platformPin.RetrievedUtc + substitutionNote
+                : "sha256 of " + executable + " does not match the pin" + substitutionNote
+                    + "; reinstall from " + platformPin.ArchiveUrl,
             pin.RequiredBy);
-    }
-
-    private static string? ResolveExecutablePath(string command, GodotPlatformPin platformPin)
-    {
-        string pinned = Path.Combine(platformPin.InstallRoot, platformPin.ExecutableRelativePath);
-        if (File.Exists(pinned))
-        {
-            return pinned;
-        }
-
-        if (Path.IsPathRooted(command) && File.Exists(command))
-        {
-            return command;
-        }
-
-        string? pathVariable = Environment.GetEnvironmentVariable("PATH");
-        if (pathVariable is null)
-        {
-            return null;
-        }
-
-        foreach (string directory in pathVariable.Split(Path.PathSeparator))
-        {
-            if (directory.Length == 0)
-            {
-                continue;
-            }
-
-            string candidate = Path.Combine(directory, command);
-            if (File.Exists(candidate))
-            {
-                return candidate;
-            }
-        }
-
-        return null;
     }
 
     private ToolProbe ProbeExportTemplates(DeferredArchivePin pin)

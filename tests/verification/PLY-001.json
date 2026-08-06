@@ -1,0 +1,313 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "PLY-001",
+  "workPackageTitle": "Player movement, facing, Hull/Armor/Recovery/contact grace, damage order",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91-verification-strategy.md § Verification registry). This file was created in the same commit that first implements against it, and every entry below was authored before the production code it names.",
+    "'status' takes exactly one of 'registered', 'implemented', 'retired' (doc 91 § Entry status). 'evidenceKinds' is read against 'status' (doc 91 § What evidenceKinds means): for a 'registered' entry the list is evidence the verification will produce once built, and nothing may treat it as produced.",
+    "The structural validator for this file is owned by TASK-FND-009-002. Until it lands, the shape here matches tests/verification/SIM-007.json exactly.",
+    "This file is deliberately NOT named SIM-0*.json. tests/MechaMiner.Simulation.Tests/Support/NegativeControlCoverageTests.cs globs 'SIM-0*.json' and asserts a totals line accounting for every entry across those seven files, so adding an entry to one of them from another work package would break an unrelated package's gate.",
+    "This slice implements the movement and facing half of PLY-001 plus the Hull baseline value, and none of the damage half. Armor layers, passive Recovery accrual, same-enemy contact repeat interval, global contact grace, and damage ordering are the remainder; they have no entry here yet and will be appended from VER-PLY-001-011 onward rather than inserted among these.",
+    "PLY-001 also carries the first production implementation of ISimulationWorld in this repository. doc 115 registers that as CMP-SIM-001 and the interface's own remarks say 'the implementation belongs to the later SIM packages that own entity state'; in this slice the only state the world owns is player state, so the world's entries are registered here. Each later gameplay package registers its own entries for the phases it fills. This assignment is a judgement rather than a citation - no delivery document names an owner for the world's composition - and it is recorded here so a later owner can move it deliberately instead of discovering it.",
+    "Every number this package hardcodes carries a comment in the production source naming the content file and document line it came from, because the typed content layer does not exist on this ref. src/MechaMiner.Simulation/Player/PlayerBaseline.cs is the single place they live, so the later data-driven pass has a checklist rather than a search.",
+    "The two provisional members of ISimulationWorld - EvaluateTerminalBoundary and BeginScheduledEvent - are implemented as narrowly as honesty allows and deliberately decide nothing. The interface's own remarks say the second 'is expected to be replaced by the schedule owner's contract, not to become one', so building a scheduling decision behind it would be building something the encounter packages own. VER-PLY-001-010 asserts the narrowness rather than a behaviour."
+  ],
+  "entries": [
+    {
+      "id": "VER-PLY-001-001",
+      "summary": "The player baseline equals the accepted shared baseline: 100 maximum Hull, 0 passive Recovery, 3.0 m/s base movement speed, and a 1.0 m circular collision footprint, with starting Hull at the current maximum.",
+      "task": "TASK-PLY-001-001",
+      "requirements": [
+        "TR-SIM-001",
+        "TR-COM-004"
+      ],
+      "technicalSources": [],
+      "gameplaySources": [
+        "docs/72-player-survivability-and-damage-baseline.md#shared-player-baseline"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Player.PlayerBaselineTests"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-PLY-001-002",
+      "summary": "Nonzero movement intent moves the body at exactly the full base speed for one tick regardless of the intent's magnitude, so a half-deflected analog sample and a fully deflected one travel the same distance and differ only in direction.",
+      "task": "TASK-PLY-001-001",
+      "requirements": [
+        "TR-SIM-001",
+        "TR-GEO-003"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#active-commands",
+        "docs/technical/60-ui-input-and-accessibility.md#movement"
+      ],
+      "gameplaySources": [
+        "docs/30-combat-weapons-movement-camera.md#direct-controls",
+        "docs/72-player-survivability-and-damage-baseline.md#shared-player-baseline"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Player.PlayerMovementTests.NonzeroIntentMovesAtFullBaseSpeedWhateverItsMagnitude"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-PLY-001-003",
+      "summary": "Zero movement intent stops the body within the same tick, with no deceleration, momentum, or residual displacement.",
+      "task": "TASK-PLY-001-001",
+      "requirements": [
+        "TR-SIM-001",
+        "TR-GEO-003"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#active-commands"
+      ],
+      "gameplaySources": [
+        "docs/30-combat-weapons-movement-camera.md#direct-controls"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Player.PlayerMovementTests.ZeroIntentStopsWithinTheSameTick"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-PLY-001-004",
+      "summary": "Facing follows nonzero intent, a zero intent preserves the last nonzero facing rather than resetting it, and before any input the body faces simulation east.",
+      "task": "TASK-PLY-001-001",
+      "requirements": [
+        "TR-SIM-001"
+      ],
+      "technicalSources": [],
+      "gameplaySources": [
+        "docs/30-combat-weapons-movement-camera.md#direct-controls"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Player.PlayerMovementTests"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-PLY-001-005",
+      "summary": "Per-tick displacement is derived from TickRate.SecondsPerTick and from no other duration: the movement integrator exposes no parameter of a time type, so it is structurally incapable of reading a variable frame delta.",
+      "task": "TASK-PLY-001-001",
+      "requirements": [
+        "TR-RUN-002",
+        "TR-SIM-001"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#clock-domains",
+        "docs/technical/20-simulation-core.md#numeric-and-unit-conventions"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Player.PlayerMovementTests.TheIntegratorTakesNoDurationParameter"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-PLY-001-006",
+      "summary": "The world executes the documented tick phases in ascending order within one AdvanceTick call, with command admission observed at phase 1, intent resolution at 4, movement integration at 5, and publication at 14, and it records each phase it entered so the order is asserted rather than assumed.",
+      "task": "TASK-PLY-001-002",
+      "requirements": [
+        "TR-RUN-004",
+        "TR-SIM-001"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#system-phase-ordering",
+        "docs/technical/20-simulation-core.md#tick-transaction"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.World.GameplayWorldTests.PhasesRunInTheDocumentedAscendingOrder"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-PLY-001-007",
+      "summary": "A tick whose admitted command set is empty keeps the previously admitted intent rather than treating absence as a release, so a held direction survives a catch-up burst in which only the first tick carries a command.",
+      "task": "TASK-PLY-001-002",
+      "requirements": [
+        "TR-RUN-003",
+        "TR-SIM-002"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#active-commands",
+        "docs/technical/10-runtime-architecture.md#clock-domains"
+      ],
+      "gameplaySources": [
+        "docs/30-combat-weapons-movement-camera.md#direct-controls"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.World.GameplayWorldTests.AnEmptyAdmittedSetKeepsTheHeldIntent"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-PLY-001-008",
+      "summary": "The published snapshot carries the position and facing that phase 5 integrated and a HUD model carrying the authoritative Hull, so nothing downstream reads gameplay state from anywhere but the snapshot.",
+      "task": "TASK-PLY-001-002",
+      "requirements": [
+        "TR-SIM-005",
+        "TR-CTR-004"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#presentation-snapshot",
+        "docs/technical/10-runtime-architecture.md#system-phase-ordering"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.World.GameplayWorldTests.PublicationCarriesTheIntegratedPositionAndTheHudHull"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-PLY-001-009",
+      "summary": "The whole input path holds end to end through the real host: an envelope submitted for a tick is admitted at phase 1, integrated at phase 5, and observable in the published snapshot at the position derived from the base speed and the tick count, with no other route into player position.",
+      "task": "TASK-PLY-001-002",
+      "requirements": [
+        "TR-RUN-001",
+        "TR-RUN-002",
+        "TR-SIM-002",
+        "TR-SIM-005"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#system-phase-ordering",
+        "docs/technical/20-simulation-core.md#tick-transaction"
+      ],
+      "gameplaySources": [
+        "docs/30-combat-weapons-movement-camera.md#direct-controls"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.World.MovementCommandPathTests"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-PLY-001-010",
+      "summary": "The two provisional members of ISimulationWorld decide nothing: EvaluateTerminalBoundary records that the host reached the boundary without proposing a terminal result, and BeginScheduledEvent records the admitted event without selecting, ordering, or acting on one.",
+      "task": "TASK-PLY-001-002",
+      "requirements": [
+        "TR-RUN-005"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#system-phase-ordering"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.World.GameplayWorldTests.TheProvisionalSeamsDecideNothing"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "UI-002",
+  "workPackageTitle": "Logical input, movement adapter, glyph detection, controller disconnect",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91-verification-strategy.md § Verification registry). This file was created in the same commit that first implements against it, and every entry below was authored before the production code it names.",
+    "'status' takes exactly one of 'registered', 'implemented', 'retired' (doc 91 § Entry status). 'evidenceKinds' is read against 'status' (doc 91 § What evidenceKinds means): for a 'registered' entry the list is evidence the verification will produce once built, and nothing may treat it as produced.",
+    "The structural validator for this file is owned by TASK-FND-009-002. Until it lands, the shape here matches tests/verification/SIM-007.json exactly.",
+    "This file is deliberately NOT named SIM-0*.json. tests/MechaMiner.Simulation.Tests/Support/NegativeControlCoverageTests.cs globs 'SIM-0*.json' and asserts a totals line accounting for every entry across those seven files, so adding an entry to one of them from another work package would break an unrelated package's gate.",
+    "See PRE-001.json's notes for why every entry here is 'registered': no test project may reference MechaMiner.Game under the accepted project boundary, so the adapter is exercised through an engine-tier scene rather than an NUnit selector.",
+    "This slice creates the [input] section of game/project.godot, which declared no input actions at all and whose own header comment assigns them to UI-002. Only the active-play move vector is created. The remaining logical actions in doc 60 § Logical input actions - open status, open fabrication, open map, and every menu and map action - belong to the UI packages that own those routes and have no entry here yet.",
+    "Glyph-family detection and controller disconnect are the rest of UI-002's payload and have no entry here yet. Both need UI-001's route coordinator to have somewhere to show a prompt, and UI-001 does not exist on this ref."
+  ],
+  "entries": [
+    {
+      "id": "VER-UI-002-001",
+      "summary": "Analog movement applies a radial deadzone of 0.18 and remaps the remaining magnitude to [0,1], so a sample inside the deadzone is an exact stop, a sample just outside it is a small nonzero magnitude rather than a jump to 0.18, and a fully deflected sample is exactly 1.",
+      "task": "TASK-UI-002-001",
+      "requirements": [
+        "TR-UI-001",
+        "TR-UI-004"
+      ],
+      "technicalSources": [
+        "docs/technical/60-ui-input-and-accessibility.md#movement"
+      ],
+      "gameplaySources": [
+        "docs/30-combat-weapons-movement-camera.md#direct-controls"
+      ],
+      "selector": {
+        "kind": "engine-scene",
+        "value": "game/tests/RunSliceEvidenceHarness.tscn § deadzone-remaps-radially"
+      },
+      "fixtures": [
+        "engine-report",
+        "canonical-transcript"
+      ],
+      "scenarios": "registered",
+      "evidenceKinds": [
+        "artifacts/engine-tier/run-slice/transcript.tsv"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "main",
+      "status": [
+        "run-slice-drive"
+      ]
+    },
+    {
+      "id": "VER-UI-002-002",
+      "summary": "A sample below the deadzone does not change persistent facing: releasing the stick to a drifting rest position leaves the last nonzero facing intact rather than nudging it toward the drift.",
+      "task": "TASK-UI-002-001",
+      "requirements": [
+        "TR-UI-004"
+      ],
+      "technicalSources": [
+        "docs/technical/60-ui-input-and-accessibility.md#movement"
+      ],
+      "gameplaySources": [
+        "docs/30-combat-weapons-movement-camera.md#direct-controls"
+      ],
+      "selector": {
+        "kind": "engine-scene",
+        "value": "game/tests/RunSliceEvidenceHarness.tscn § subdeadzone-input-preserves-facing"
+      },
+      "fixtures": [
+        "engine-report",
+        "canonical-transcript"
+      ],
+      "scenarios": "registered",
+      "evidenceKinds": [
+        "artifacts/engine-tier/run-slice/transcript.tsv"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "main",
+      "status": [
+        "run-slice-drive"
+      ]
+    },
+    {
+      "id": "VER-UI-002-003",
+      "summary": "The adapter reads logical actions rather than physical keys, and submits each sample as a command envelope targeting the tick the admission window is open for, with a monotonic sequence, so input for a tick that has already frozen is rejected rather than applied late.",
+      "task": "TASK-UI-002-001",
+      "requirements": [
+        "TR-UI-001",
+        "TR-SIM-002"
+      ],
+      "technicalSources": [
+        "docs/technical/60-ui-input-and-accessibility.md#logical-input-actions",
+        "docs/technical/20-simulation-core.md#active-commands"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "engine-scene",
+        "value": "game/tests/RunSliceEvidenceHarness.tscn § samples-target-the-open-tick"
+      },
+      "fixtures": [
+        "engine-report",
+        "canonical-transcript"
+      ],
+      "scenarios": "registered",
+      "evidenceKinds": [
+        "artifacts/engine-tier/run-slice/transcript.tsv"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "main",
+      "status": [
+        "run-slice-drive"
+      ]
+    }
+  ]
+}

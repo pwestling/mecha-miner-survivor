@@ -1,0 +1,16 @@
+[gd_scene load_steps=2 format=3]
+
+; The run slice capture harness scene. Needs a REAL display server, so no --headless:
+;
+;     MECHAMINER_RUN_SLICE_CAPTURE=<dir> xvfb-run -a \
+;       godot --path game res://tests/RunSliceCaptureHarness.tscn --audio-driver Dummy
+;
+; Development scaffolding: game/MechaMiner.Game.csproj removes game/tests/ from compilation
+; under ExportRelease. It instantiates res://scenes/Run.tscn exactly as shipped and adds no
+; seam to production code; it presses physical keys at it through Input.ParseInputEvent so
+; the whole real route from keycode to pixels is exercised.
+
+[ext_resource type="Script" path="res://tests/RunSliceCaptureHarness.cs" id="1_capture"]
+
+[node name="RunSliceCaptureHarness" type="Node"]
+script = ExtResource("1_capture")

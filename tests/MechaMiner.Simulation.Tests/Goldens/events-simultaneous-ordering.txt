@@ -1,0 +1,26 @@
+# events-simultaneous-ordering
+#
+# Rule under test: doc 10 § System phase ordering - "Simultaneous outcomes use
+# documented stable ordering rather than collection or thread timing" - and doc 20
+# § Entity identity - "Stable ordering uses the full entity ID after a system's
+# authored priority keys." For an event batch the keys are: tick, then emitting
+# system phase, then explicit emission sequence, then the full emitting entity ID.
+#
+# Fixture: run session 0xE7E00001, tick 7, eight domain events emitted by four
+# system phases (3, 8, 10, 11) with explicit emission sequences that deliberately
+# disagree with phase order, so sorting cannot be a no-op. The same eight events are
+# appended in two different orders - ascending and reversed - and both batches must
+# equal the text below.
+#
+# Derived by: the documented rule read off doc 10 and doc 20, cross-checked against
+# an independent list sort in EventOrderingTests, not by accepting whatever the
+# buffer emitted.
+#
+  0  domain tick=7 phase= 3 seq=   1 from=entity:2/g1@run3890216961 source=E-FIXTURE kind=resource-awarded#1002 subject=entity:3830/g1@run3890216961 at=(3,-0.5) payload=v1 quantity=2 magnitude=1 content=none
+  1  domain tick=7 phase= 3 seq=   4 from=entity:1/g1@run3890216961 source=E-FIXTURE kind=entity-defeated#1001 subject=entity:3830/g1@run3890216961 at=(7.5,-1.25) payload=v1 quantity=5 magnitude=2.5 content=none
+  2  domain tick=7 phase= 8 seq=   2 from=entity:3/g1@run3890216961 source=E-FIXTURE kind=entity-defeated#1001 subject=entity:3830/g1@run3890216961 at=(4.5,-0.75) payload=v1 quantity=3 magnitude=1.5 content=none
+  3  domain tick=7 phase= 8 seq=   6 from=entity:3/g1@run3890216961 source=E-FIXTURE kind=entity-defeated#1001 subject=entity:3830/g1@run3890216961 at=(10.5,-1.75) payload=v1 quantity=7 magnitude=3.5 content=none
+  4  domain tick=7 phase=10 seq=   3 from=entity:4/g1@run3890216961 source=E-FIXTURE kind=resource-awarded#1002 subject=entity:3830/g1@run3890216961 at=(6,-1) payload=v1 quantity=4 magnitude=2 content=none
+  5  domain tick=7 phase=10 seq=   7 from=entity:4/g1@run3890216961 source=E-FIXTURE kind=resource-awarded#1002 subject=entity:3830/g1@run3890216961 at=(12,-2) payload=v1 quantity=8 magnitude=4 content=none
+  6  domain tick=7 phase=11 seq=   0 from=entity:1/g1@run3890216961 source=E-FIXTURE kind=entity-defeated#1001 subject=entity:3830/g1@run3890216961 at=(1.5,-0.25) payload=v1 quantity=1 magnitude=0.5 content=none
+  7  domain tick=7 phase=11 seq=   5 from=entity:2/g1@run3890216961 source=E-FIXTURE kind=resource-awarded#1002 subject=entity:3830/g1@run3890216961 at=(9,-1.5) payload=v1 quantity=6 magnitude=3 content=none

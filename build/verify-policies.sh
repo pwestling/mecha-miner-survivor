@@ -24,7 +24,7 @@
 # `dotnet build` or `dotnet test` of the product.
 #
 # Fixtures alone cannot prove a policy is on, because a fixture only measures the
-# directory it sits in. The four policy-inheritance guards below close that gap;
+# directory it sits in. The five policy-inheritance guards below close that gap;
 # see the comment above them.
 #
 # Exit classes follow doc 100 § Standard command surface: 0 success,
@@ -90,16 +90,22 @@ clean_fixture() {
 #     private copy of the policy. Root WarningLevel=0 with WarningLevel=9999 in the
 #     same intermediate file does the same to CS8600, CS8602 and CA2200.
 #
-# Four guards, because no one of them is sufficient:
+# Five guards, because no one of them is sufficient:
 #   Guard 1 is structural - no file may shadow the root policy files.
-#   Guard 1b restricts what the files guard 1 PERMITS to exist may say, because a
-#   permitted file is the one place an override can legally sit.
+#   Guard 1b restricts what the one file guard 1 PERMITS to exist, and each fixture
+#   project, may say, because those are the places an override can legally sit.
 #   Guard 2 asserts, per project, that MSBuild actually imported the root pair,
 #   read out of MSBuild's own evaluated import graph.
 #   Guard 3 measures the evaluated property value per project, so a policy that
 #   is off fails even if the file layout looks correct (a flipped root value is
 #   invisible to Guards 1 and 2, and a shadow file that happens to set today's
 #   values is invisible to Guard 3).
+#   Guard 4 compares each fixture's WHOLE evaluated property set against a
+#   designated product project's and requires equality outside a measured
+#   allowlist. It is what makes the suppression-switch family closed, and it
+#   replaces the closure argument guard 1b used to be credited with; see the
+#   comment above DESIGNATED_PRODUCT_PROJECT for the escape that disproved that
+#   argument.
 #
 # Guard 2 exists because Guard 1's allowlist entry for
 # build/policy-fixtures/Directory.Build.props used to be checked by grepping that
@@ -116,20 +122,46 @@ clean_fixture() {
 # catches both. It is NOT immune to a forged claim, though: see the caveat above
 # guard 2 itself.
 #
-# Why guard 1b rather than a longer EVALUATED_POLICIES list. The suppression
-# switches that decouple a fixture from the root policy cannot be enumerated -
-# per-category AnalysisMode<Category>, per-rule severities, RunAnalyzers,
-# RunAnalyzersDuringBuild, WarningLevel, CodeAnalysisTreatWarningsAsErrors, and
-# whatever the next SDK adds. Adding names to guard 3's list leaves the next
-# switch live. But the negative fixtures are already a detector for the whole
-# family: a root RunAnalyzers=false with NO local override silences the CA2200 and
-# IDE1006 fixtures, their expected diagnostics stop appearing, and this gate goes
-# red without knowing that RunAnalyzers exists. What defeats the fixtures is only
-# the SECOND edit, the local override. So guard 1b closes the override rather than
-# enumerating the switches: the files below build/policy-fixtures/ that MSBuild
-# reads may declare nothing outside a small allowlist of properties that provably
-# cannot affect which diagnostics appear. Every future switch is then caught by
-# the fixtures instead of by a list that has to predict it.
+# Why guard 1b is not the reason the suppression-switch family is closed, and what
+# is. The switches that decouple a fixture from the root policy cannot be
+# enumerated - per-category AnalysisMode<Category>, per-rule severities,
+# RunAnalyzers, RunAnalyzersDuringBuild, WarningLevel,
+# CodeAnalysisTreatWarningsAsErrors, and whatever the next SDK adds - so adding
+# names to guard 3's list always leaves the next switch live. Guard 1b was
+# introduced with the argument that this did not matter, because the second edit an
+# escape needs is a LOCAL override and guard 1b leaves it nowhere to sit: "a
+# root-level suppression switch has nowhere local to be switched back on".
+#
+# That argument is false, and this is the counterexample. The switch does not need
+# to be switched back on; it needs never to have applied to the fixtures. One hunk
+# appended to the ROOT Directory.Build.props, no second file:
+#
+#   <PropertyGroup Condition="!$(MSBuildProjectDirectory.Contains('policy-fixtures'))">
+#     <AnalysisModeUsage>None</AnalysisModeUsage>
+#   </PropertyGroup>
+#
+# A real CA2200 rethrow in src/MechaMiner.Content/ went from `error CA2200` to
+# 0 Warning(s) 0 Error(s) while this gate stayed at exit 0 with 0 failures. Three
+# more carriers do the same with one extra file each, and none of them is a file
+# guard 1 or guard 1b looks at: build/policy-fixtures/Directory.Packages.props,
+# build/policy-fixtures/Directory.Build.rsp, and a fixture's .csproj.user.
+#
+# So what guard 1b actually does is narrow: it rejects a suppressive declaration in
+# the files it reads - the one permitted intermediate file and each fixture project.
+# That is worth keeping, it is nearly free, and it caught its own control. It is not
+# a completeness argument for the family.
+#
+# GUARD 4 is the completeness argument. It compares each fixture's whole evaluated
+# property set against a designated product project's and requires equality outside
+# an allowlist established by measurement. Every escape above has the same
+# signature - the fixture evaluates a different configuration from the product - and
+# that is observable without knowing which mechanism produced it, so guard 4 needs
+# neither an enumeration of switches nor an enumeration of carriers.
+#
+# The fixtures remain the detector for the FIRST edit: a root RunAnalyzers=false
+# applied uniformly silences the CA2200 and IDE1006 fixtures, their expected
+# diagnostics stop appearing, and this gate goes red without knowing that
+# RunAnalyzers exists.
 
 readonly ROOT_MSBUILD_FILES=(
   "Directory.Build.props"
@@ -159,12 +191,31 @@ readonly ALLOWED_INTERMEDIATE_MSBUILD_FILES=(
 )
 
 # Guard 1b's allowlist: "<file>|<required Sdk attribute>|<properties it may
-# declare>". Every MSBuild file under build/policy-fixtures/ that MSBuild reads
-# while evaluating a fixture appears here - the permitted intermediate file, and
-# each enumerated fixture project, which is the other place a local override can
-# sit. Anything not listed is a failure, including <ItemGroup>, <Target> and an
-# <Import> of anything other than the root policy, because an item group can
-# remove an analyzer just as effectively as a property can switch one off.
+# declare>". These are the two kinds of file guard 1b READS - the permitted
+# intermediate file, and each enumerated fixture project. Anything not listed
+# inside one of them is a failure, including <ItemGroup>, <Target> and an <Import>
+# of anything other than the root policy, because an item group can remove an
+# analyzer just as effectively as a property can switch one off.
+#
+# This list is NOT a complete enumeration of the MSBuild files MSBuild reads while
+# evaluating a fixture, and a previous version of this comment claimed it was.
+# Three counterexamples, each a full escape on its own:
+# build/policy-fixtures/Directory.Packages.props (MSBuild's own upward search finds
+# it - -getProperty:DirectoryPackagesPropsPath resolves to it - and it is imported
+# AFTER Directory.Build.props, so it wins), build/policy-fixtures/Directory.Build.rsp
+# (an auto-response file, so its -p: arguments arrive as global properties), and
+# build/policy-fixtures/analyzer/analyzer.csproj.user. The first two are not
+# gitignored and are therefore committable; the third needs `git add -f`. What
+# closes all three, and the carrier nobody has thought of yet, is guard 4.
+#
+# One oddity that is accepted rather than rejected, recorded so the next reader does
+# not mistake it for a hole: <Import Project="../policy-fixtures/../../Directory.Build.targets" />
+# written in the intermediate PROPS file normalises to the repository-root
+# Directory.Build.targets, which is a genuine root policy file, so the resolved-path
+# check below accepts it. Importing the .targets from a props position is pointless
+# rather than harmful - it sets TreatWarningsAsErrors early instead of last, and the
+# root .targets is imported again after the project body anyway - but the path is
+# deliberately obfuscated and that alone deserves a second look in review.
 #
 # Only two properties are allowed, and only in the intermediate file:
 #   RestorePackagesWithLockFile  Consumed by NuGet restore to decide whether to
@@ -190,8 +241,8 @@ readonly FIXTURE_PROJECT_ALLOWED_PROPERTIES=""
 # appearing - per-category AnalysisMode<Category>, per-rule
 # dotnet_diagnostic.<ID>.severity, and whatever switch the next SDK ships are all
 # outside it. Nothing here should be read as "these are all the properties that
-# matter". Completeness for that family is guard 1b's job, not this list's; see
-# the argument above ALLOWED_INTERMEDIATE_MSBUILD_FILES.
+# matter". Completeness for that family is GUARD 4's job, not this list's and not
+# guard 1b's; see the comment above DESIGNATED_PRODUCT_PROJECT.
 #
 # Each entry is here because a specific escape was observed or is directly
 # implied. The first group is what the fixtures below depend on:
@@ -219,8 +270,8 @@ readonly FIXTURE_PROJECT_ALLOWED_PROPERTIES=""
 # empty NoWarn.
 #
 # The last three are DEFENCE IN DEPTH for switches that were used to escape this
-# gate, added on top of guard 1b rather than instead of it. Guard 1b is what makes
-# the family closed; these three only make three specific members of it fail twice:
+# gate. Guard 4 is what makes the family closed; these three only make three
+# specific members of it fail twice:
 #   RunAnalyzers / RunAnalyzersDuringBuild  Empty is the value under which the
 #     analyzers run - neither is set anywhere in this repository, and the required
 #     value is that absence rather than "true" so that setting either one at all is
@@ -304,6 +355,16 @@ echo "=== policy scope: the projects every policy below must cover"
 # bin/ and nothing else, so a project parked under a directory named obj is still
 # counted. The rule is not circular: it asks whether the parent holds a project
 # file, which is a fact on disk rather than a result of this scan.
+#
+# It does still leave one position invisible, and this says so rather than claiming
+# the rule prunes nothing else: build/policy-fixtures/analyzer/obj/evil/evil.csproj
+# is pruned, because its ancestor obj/ sits directly under a project directory. It
+# is bounded three ways rather than closed. obj/ is gitignored, so committing it
+# needs `git add -f`; clean_fixture does `rm -rf` on each fixture's obj/ before
+# every build this gate performs, so the gate destroys the file and dirties the
+# tree; and nothing builds it - it is in no solution and no enumeration. A project
+# parked one directory higher, in build/policy-fixtures/obj/, IS counted, which is
+# the case this rule was written for.
 prune_project_intermediates() {
   # Reads repository-relative project paths on stdin, writes the kept ones to
   # stdout. The script is passed with -c, not a heredoc, because a heredoc would
@@ -426,6 +487,18 @@ echo "=== policy inheritance guard 1: no Directory.Build.* or .editorconfig file
 #     worktree of this repository, and
 #   * the file must not be tracked by THIS repository. A tracked file is this
 #     repository's file whatever sits above it, and is always checked.
+#
+# One working-tree-only blind spot remains, recorded because the reason it cannot
+# become a product escape is structural rather than lucky. `git worktree add` a
+# path, `rm -rf` the directory, then recreate it with a hand-written .git file and a
+# shadowing Directory.Build.props: the path is still in `git worktree list
+# --porcelain`, the file is untracked here, so this guard reports the shadow as the
+# nested worktree's and skips it. It could not be turned into an escape because
+# `git worktree add` REFUSES a path that already exists, so a registered worktree
+# path can never be an ancestor of a project directory that was already there - and
+# a shadow that is not an ancestor of a solution project cannot reach
+# `dotnet build MechaMiner.sln`. It also cannot be delivered by a commit, since
+# nothing about the fake .git file or the registration is committable.
 repo_worktree_roots=()
 while IFS= read -r line; do
   [[ "${line}" == "worktree "* ]] || continue
@@ -517,15 +590,22 @@ for file in ${found_policy_files[@]+"${found_policy_files[@]}"}; do
 done
 
 echo
-echo "=== policy inheritance guard 1b: the permitted files below build/policy-fixtures/ override nothing"
+echo "=== policy inheritance guard 1b: the files this guard reads below build/policy-fixtures/ override nothing"
 #
 # Guard 1 permits build/policy-fixtures/Directory.Build.props to exist, because the
 # root sets RestorePackagesWithLockFile=true and the fixtures must not leave an
-# untracked packages.lock.json behind on every run. That permission was the whole
-# escape: root RunAnalyzers=false plus RunAnalyzers=true here, or root
-# WarningLevel=0 plus WarningLevel=9999 here, and the fixtures keep failing with
-# their expected diagnostics while the product compiles violations at 0 warnings.
-# A fixture .csproj is the same lever one directory deeper, so it is checked too.
+# untracked packages.lock.json behind on every run. That permission was one escape:
+# root RunAnalyzers=false plus RunAnalyzers=true here, or root WarningLevel=0 plus
+# WarningLevel=9999 here, and the fixtures keep failing with their expected
+# diagnostics while the product compiles violations at 0 warnings. A fixture .csproj
+# is the same lever one directory deeper, so it is checked too.
+#
+# SCOPE, stated so it is not read as more than it is: this guard rejects a
+# suppressive declaration in the files it reads, and those are exactly the files
+# listed below. It is not a closure argument for the suppression-switch family -
+# a Condition on the ROOT PropertyGroup, a sibling Directory.Packages.props, a
+# Directory.Build.rsp and a .csproj.user each escape it entirely. Guard 4 is what
+# closes those.
 #
 # The check is a whitelist of what these files may CONTAIN, not a blacklist of
 # switches, because the switch family is open-ended and a blacklist would always be
@@ -694,20 +774,33 @@ echo "=== policy inheritance guard 2: MSBuild actually imports the root policy p
 # under each missing filename: had it done so the first time, "imported
 # /some/other/checkout/Directory.Build.props" would have said this immediately,
 # where "never imported Directory.Build.props" said nothing at all.
+#
+# That attribution was still lost for one more round, and this is why: the reason
+# was assigned to this variable INSIDE imported_msbuild_files while the caller ran
+# that function in a command substitution - `imported="$(imported_msbuild_files
+# ...)"` - which is a subshell, so every assignment died with it and the parent read
+# the empty string it was initialised to here. Forcing the failure with an
+# unresolvable <Import> printed `unproven rather than disproven: ` and nothing after
+# the colon; MSBuild's exit code and its captured stderr were both dropped. The
+# function therefore no longer prints the graph: it WRITES the graph to a file the
+# caller names, so the call is a plain command, not a substitution, and an
+# assignment to this variable reaches the caller.
 import_graph_failure=""
 
 imported_msbuild_files() {
-  # $1 project (repository-relative). Prints the absolute path of every file
-  # MSBuild imported while evaluating it, one per line.
+  # $1 project (repository-relative). $2 file to write the absolute path of every
+  # file MSBuild imported while evaluating it to, one per line.
   #
   # Returns 0 when a graph was read, and 1 when it could not be - MSBuild failed,
   # its output would not parse, or it contained no import banner at all, which is
   # equally an infrastructure failure because every SDK-style project imports at
   # least Microsoft.Common.props. An empty graph is never read as compliance.
   # On 1, import_graph_failure carries the reason, with MSBuild's exit code and
-  # captured stderr when MSBuild is what failed.
-  local project="$1"
+  # captured stderr when MSBuild is what failed. Do NOT call this in a command
+  # substitution: that is a subshell and the reason would not survive it.
+  local project="$1" graph_out="$2"
   import_graph_failure=""
+  : >"${graph_out}"
 
   local preprocessed
   if ! preprocessed="$(mktemp)"; then
@@ -778,19 +871,29 @@ PY
     return 1
   fi
   rm -f "${preprocessed}" "${captured_stderr}"
-  printf '%s\n' "${parsed}"
+  printf '%s\n' "${parsed}" >"${graph_out}"
   return 0
 }
 
+if ! import_graph_file="$(mktemp)"; then
+  fail "import-graph guard: mktemp could not create the file the import graph is read into, so no project's import graph can be read"
+  import_graph_file=""
+fi
+
 for project in "${policy_projects[@]}"; do
+  if [[ -z "${import_graph_file}" ]]; then
+    break
+  fi
   if [[ ! -f "${REPO_ROOT}/${project}" ]]; then
     fail "import-graph guard: no project file at ${project}"
     continue
   fi
-  if ! imported="$(imported_msbuild_files "${project}")"; then
+  # NOT a command substitution: see the comment above imported_msbuild_files.
+  if ! imported_msbuild_files "${project}" "${import_graph_file}"; then
     fail "${project}: INFRASTRUCTURE - MSBuild's import graph could not be read at all, so whether the root policy applies to this project is unproven rather than disproven: ${import_graph_failure}"
     continue
   fi
+  imported="$(cat "${import_graph_file}")"
 
   imported_count="$(printf '%s\n' "${imported}" | grep -c .)"
   missing=()
@@ -829,6 +932,7 @@ for project in "${policy_projects[@]}"; do
     fail "${project}: MSBuild's import graph was READ (${imported_count} imported file(s)) and does not contain $(printf '%s ' "${missing[@]}")${lookalike_note} - the policy this gate proves is not the policy this project builds under"
   fi
 done
+[[ -n "${import_graph_file}" ]] && rm -f "${import_graph_file}"
 
 echo
 echo "=== policy inheritance guard 3: evaluated compiler policy per project (VER-FND-001-006 .. VER-FND-001-010)"
@@ -900,6 +1004,372 @@ for project in "${policy_projects[@]}"; do
     pass "$(basename "${project}" .csproj): $(printf '%s' "${evaluated}" | paste -sd' ' -)"
   fi
 done
+
+echo
+echo "=== policy inheritance guard 4: each fixture evaluates the same configuration as the product"
+#
+# WHY THIS EXISTS, and why it is not a fourth enumeration.
+#
+# Guard 1b was introduced with the argument that a root-level suppression switch
+# "has nowhere local to be switched back on", so the fixtures detect the whole
+# family by themselves. That argument was false, and the counterexample needs no
+# second file at all - one hunk appended to the ROOT Directory.Build.props:
+#
+#   <PropertyGroup Condition="!$(MSBuildProjectDirectory.Contains('policy-fixtures'))">
+#     <AnalysisModeUsage>None</AnalysisModeUsage>
+#   </PropertyGroup>
+#
+# The switch is never switched back on; it is simply never applied to the fixtures.
+# A real CA2200 rethrow in src/MechaMiner.Content/ then went from `error CA2200`
+# to 0 Warning(s) 0 Error(s) while this gate stayed at exit 0 with 0 failures:
+# guard 1b saw a compliant intermediate file, guard 2 saw the root pair imported,
+# and guard 3 does not list AnalysisModeUsage. Three more carriers did the same
+# with one extra file each, none of them a file guard 1 or guard 1b looks at:
+# build/policy-fixtures/Directory.Packages.props (found by MSBuild's own upward
+# search and imported AFTER Directory.Build.props, so it wins),
+# build/policy-fixtures/Directory.Build.rsp carrying -p:AnalysisModeUsage=Default,
+# and build/policy-fixtures/analyzer/analyzer.csproj.user.
+#
+# Enumerating conditions, then sibling filenames, then the next carrier is a
+# treadmill. Every one of those escapes has the same observable signature: the
+# fixture ends up evaluating a DIFFERENT policy configuration from the product.
+# So this guard compares the two configurations directly and requires equality.
+# It needs no list of switches and no list of carriers: a Condition on a root
+# PropertyGroup, a sibling props file, a response file, a .user file, or the next
+# mechanism nobody has thought of all surface as a property whose value differs.
+#
+# What it compares: every property MSBuild reports for the project after
+# evaluation - the ~660 in its own "Initial Properties" dump, which is the
+# complete evaluated property set including environment and global properties,
+# not a list this script maintains. Read from `-v:diag` because MSBuild offers no
+# way to ask for all properties by name (-getProperty takes names only and has no
+# wildcard).
+#
+# What it does NOT do: assert that either configuration is CORRECT. Guard 3 does
+# that. A root flip applied uniformly to product and fixtures alike is invisible
+# here and visible there; a fixture decoupled from a correct root is visible here
+# and invisible there. Both are needed.
+readonly DESIGNATED_PRODUCT_PROJECT="src/MechaMiner.Content/MechaMiner.Content.csproj"
+
+# The properties a fixture is permitted to evaluate differently from the designated
+# product project. Established by MEASUREMENT on a clean tree - dump both sets,
+# enumerate the differences that exist - not by guessing, and every entry below was
+# observed. All six fixtures produce exactly the same difference set against
+# MechaMiner.Content: 61 names when the fixture has never been built, 55 once it
+# has, in five families.
+#
+# MechaMiner.Content is the designated project because it is the one product project
+# with no ProjectReference, no PackageReference and no property of its own, so it
+# has the same shape as a fixture and the difference set stays down to what is
+# structural. If it ever declares a property, that property is either a policy the
+# fixtures must share - in which case guard 3 should pin it - or a reason to move
+# this designation to another reference-free project. Growing the list below is the
+# wrong answer to that.
+#
+# (1) Derived from the project's own base file name. A fixture is named after the
+#     policy it violates and a product project after its component, so these can
+#     never be equal; each is the SDK computing a name or a file name from
+#     $(MSBuildProjectName). None reaches a compiler switch or an analyzer.
+# (2) Derived from the project's own directory. Same argument: paths, not policy.
+# (3) Where MSBuild's upward search for Directory.Build.props landed. The fixtures
+#     legitimately resolve it to the guard-1-permitted
+#     build/policy-fixtures/Directory.Build.props. That the ROOT props was still
+#     imported through it is guard 2's assertion, and what that file may say is
+#     guard 1b's; DirectoryBuildTargetsPath, ImportDirectoryBuildProps and
+#     ImportDirectoryBuildTargets stay pinned to fixed values by guard 3.
+# (4) NuGet restore state. The product project has been restored (`dotnet restore
+#     MechaMiner.sln` precedes this gate) and a fixture has not until this gate
+#     builds it, so these are present on one side and absent on the other. They are
+#     consumed by restore and reach no compiler switch. The list is name-based, so
+#     both states pass and neither is required.
+# (5) The one deliberate policy difference, and one per-invocation environment
+#     value. RestorePackagesWithLockFile is load-bearing and already carries its
+#     argument in guard 1b's comment: the root sets it true and the fixtures must
+#     not leave an untracked packages.lock.json behind on every run.
+#     DOTNET_CLI_TELEMETRY_SESSIONID is a fresh GUID the .NET CLI puts in the
+#     environment per invocation, so it differs between any two runs of anything.
+#
+# Adding an entry here is how this guard is defeated, so it must be a deliberate
+# decision carrying its own argument for why the property cannot change which
+# diagnostics appear - the same bar as guard 1b's property allowlist. The assertion
+# below that no entry here is a property guard 3 pins is a floor under that, not a
+# substitute for the argument.
+readonly ALLOWED_CONFIGURATION_DIFFERENCES=(
+  # (1) computed from $(MSBuildProjectName)
+  "AssemblyName"
+  "AssemblyTitle"
+  "Authors"
+  "CleanFile"
+  "Company"
+  "GeneratedAssemblyInfoFile"
+  "GeneratedGlobalUsingsFile"
+  "MSBuildCopyMarkerName"
+  "MSBuildProjectFile"
+  "MSBuildProjectName"
+  "PackageId"
+  "Product"
+  "ProjectDepsFileName"
+  "ProjectFileName"
+  "ProjectName"
+  "ProjectRuntimeConfigFileName"
+  "RootNamespace"
+  "TargetDeployManifestFileName"
+  "TargetFileName"
+  "TargetName"
+  "_DeploymentApplicationManifestIdentity"
+  "_DeploymentDeployManifestIdentity"
+  "_DeploymentTargetApplicationManifestFileName"
+  "_DesignerDepsFileName"
+  "_DesignerDepsFilePath"
+  "_DesignerRuntimeConfigFileName"
+  "_DesignerRuntimeConfigFilePath"
+  "_GenerateBindingRedirectsIntermediateAppConfig"
+  "_GenerateSupportedRuntimeIntermediateAppConfig"
+  "_SGenDllName"
+  # (2) computed from the project's own directory
+  "MSBuildAllProjects"
+  "MSBuildProjectDirectory"
+  "MSBuildProjectDirectoryNoRoot"
+  "MSBuildProjectExtensionsPath"
+  "MSBuildProjectFullPath"
+  "ProjectAssetsCacheFile"
+  "ProjectAssetsFile"
+  "ProjectDepsFilePath"
+  "ProjectDir"
+  "ProjectPath"
+  "ProjectRuntimeConfigFilePath"
+  "RestoreOutputPath"
+  "TargetDir"
+  "TargetPath"
+  "TargetRefPath"
+  "UserRuntimeConfig"
+  "_GeneratePublishDependencyFilePropertyInputsCache"
+  "_GenerateRuntimeConfigurationPropertyInputsCache"
+  "_GenerateSingleFileBundlePropertyInputsCache"
+  "_InitialMSBuildProjectExtensionsPath"
+  "_PublishProfileRootFolder"
+  # (3) where the upward search for Directory.Build.props landed
+  "DirectoryBuildPropsPath"
+  "_DirectoryBuildPropsBasePath"
+  # (4) NuGet restore state, present only for a project that has been restored
+  "NuGetPackageFolders"
+  "NuGetPackageRoot"
+  "NuGetProjectStyle"
+  "NuGetToolVersion"
+  "RestoreSuccess"
+  "RestoreTool"
+  # (5) the deliberate difference, and per-invocation environment
+  "RestorePackagesWithLockFile"
+  "DOTNET_CLI_TELEMETRY_SESSIONID"
+)
+
+# A dump this small cannot be MSBuild's evaluated property set for an SDK-style
+# project (a real one is ~660), so it must not be compared and read as equality.
+readonly MINIMUM_EVALUATED_PROPERTY_COUNT=300
+
+# Set by evaluated_property_set when it returns nonzero. Same rule as guard 2's
+# import_graph_failure, and the same trap: the function writes its output to a FILE
+# the caller names rather than to stdout, because a command substitution is a
+# subshell and this assignment would not survive one.
+property_set_failure=""
+
+evaluated_property_set() {
+  # $1 project (repository-relative). $2 file to write "<name>=<value>" lines to.
+  # Returns 1 with property_set_failure set when MSBuild could not be asked, its
+  # diagnostic output carried no property dump, or the dump was implausibly small.
+  # Do NOT call this in a command substitution.
+  local project="$1" out="$2"
+  property_set_failure=""
+  : >"${out}"
+
+  local logged reader_stderr
+  if ! logged="$(mktemp)"; then
+    property_set_failure="mktemp could not create a temporary file for MSBuild's diagnostic output"
+    return 1
+  fi
+  if ! reader_stderr="$(mktemp)"; then
+    rm -f "${logged}"
+    property_set_failure="mktemp could not create a temporary file for the property reader's stderr"
+    return 1
+  fi
+
+  # GetTargetFrameworks is the cheapest real target that exists in every SDK-style
+  # project. A target has to run, because the property dump is attached to
+  # MSBuild's project-started event; evaluation-only modes such as -getProperty do
+  # not emit one.
+  dotnet msbuild "${REPO_ROOT}/${project}" -nologo -v:diag \
+    -t:GetTargetFrameworks >"${logged}" 2>&1
+  local msbuild_status=$?
+  if [[ "${msbuild_status}" -ne 0 ]]; then
+    property_set_failure="dotnet msbuild -v:diag -t:GetTargetFrameworks exited ${msbuild_status}; output tail: $(tail -c 1200 "${logged}" | tr '\n' '|')"
+    rm -f "${logged}" "${reader_stderr}"
+    return 1
+  fi
+
+  local parsed reader_status count
+  parsed="$(python3 - "${logged}" 2>"${reader_stderr}" <<'PY'
+import re, sys
+
+# MSBuild's diagnostic console output carries the whole evaluated property set as
+#   <prefix>Initial Properties:
+#   <padding>Name = value
+#   ...
+#   <prefix>Initial Items:
+# The padding is exactly as wide as the timestamp/node prefix on the header line,
+# so it is measured from that header rather than hard-coded. A property value
+# containing newlines continues on lines that keep their own deeper indentation,
+# which is why a continuation line cannot be mistaken for "Name = value": after the
+# padding is stripped it still starts with whitespace.
+lines = open(sys.argv[1], errors='replace').read().splitlines()
+start = padding = None
+for index, line in enumerate(lines):
+    match = re.search(r'Initial Properties:\s*$', line)
+    if match:
+        start, padding = index, match.start()
+        break
+if start is None:
+    sys.stderr.write('the diagnostic log carries no "Initial Properties:" section\n')
+    raise SystemExit(2)
+for line in lines[start + 1:]:
+    if re.search(r'Initial Items:\s*$', line):
+        break
+    body = line[padding:] if not line[:padding].strip() else line
+    match = re.match(r'^([A-Za-z_][A-Za-z0-9_]*) = (.*)$', body)
+    if match:
+        sys.stdout.write('%s=%s\n' % match.groups())
+PY
+)"
+  reader_status=$?
+  if [[ "${reader_status}" -ne 0 ]]; then
+    property_set_failure="MSBuild's diagnostic output for ${project} carried no readable property dump (reader exit ${reader_status}: $(tr '\n' '|' <"${reader_stderr}" | cut -c 1-1000)); the log was $(wc -c <"${logged}" 2>/dev/null) byte(s)"
+    rm -f "${logged}" "${reader_stderr}"
+    return 1
+  fi
+  rm -f "${logged}" "${reader_stderr}"
+
+  count="$(printf '%s\n' "${parsed}" | grep -c .)"
+  if [[ "${count}" -lt "${MINIMUM_EVALUATED_PROPERTY_COUNT}" ]]; then
+    property_set_failure="the property dump for ${project} held only ${count} propert(ies), fewer than the ${MINIMUM_EVALUATED_PROPERTY_COUNT} an SDK-style project must evaluate; it cannot be compared"
+    return 1
+  fi
+  printf '%s\n' "${parsed}" >"${out}"
+  return 0
+}
+
+# An entry in the difference allowlist that is also a property guard 3 pins would be
+# an exemption from guard 3 obtained without touching guard 3's list.
+guard3_overlap=()
+for policy in "${EVALUATED_POLICIES[@]}"; do
+  for allowed in "${ALLOWED_CONFIGURATION_DIFFERENCES[@]}"; do
+    [[ "${policy%%|*}" == "${allowed}" ]] && guard3_overlap+=("${allowed}")
+  done
+done
+if [[ "${#guard3_overlap[@]}" -eq 0 ]]; then
+  pass "no property guard 3 pins is exempt from the fixture/product comparison"
+else
+  fail "guard 4: $(printf '%s ' "${guard3_overlap[@]}")appear(s) in both EVALUATED_POLICIES and ALLOWED_CONFIGURATION_DIFFERENCES; a property guard 3 pins must not be exempt from this comparison"
+fi
+
+designated_in_scope=0
+for project in ${product_projects[@]+"${product_projects[@]}"}; do
+  [[ "${project}" == "${DESIGNATED_PRODUCT_PROJECT}" ]] && designated_in_scope=1
+done
+if [[ "${designated_in_scope}" -eq 1 ]]; then
+  pass "the comparison baseline ${DESIGNATED_PRODUCT_PROJECT} is one of the product projects guard 3 asserts"
+else
+  fail "guard 4: ${DESIGNATED_PRODUCT_PROJECT} is not among the product projects found under src/ tests/ game/, so comparing fixtures against it compares them against nothing this gate asserts"
+fi
+
+product_property_file=""
+if ! product_property_file="$(mktemp)"; then
+  fail "guard 4: mktemp could not create the file the product property set is read into"
+  product_property_file=""
+elif ! evaluated_property_set "${DESIGNATED_PRODUCT_PROJECT}" "${product_property_file}"; then
+  fail "guard 4: INFRASTRUCTURE - the evaluated property set of ${DESIGNATED_PRODUCT_PROJECT} could not be read, so no fixture can be compared against it: ${property_set_failure}"
+  rm -f "${product_property_file}"
+  product_property_file=""
+fi
+
+if [[ -n "${product_property_file}" ]]; then
+  fixture_property_file="$(mktemp)" || fixture_property_file=""
+  for project in "${fixture_projects[@]}"; do
+    if [[ -z "${fixture_property_file}" ]]; then
+      fail "guard 4: mktemp could not create the file a fixture property set is read into"
+      break
+    fi
+    if [[ ! -f "${REPO_ROOT}/${project}" ]]; then
+      fail "guard 4: no project file at ${project}"
+      continue
+    fi
+    if ! evaluated_property_set "${project}" "${fixture_property_file}"; then
+      fail "${project}: INFRASTRUCTURE - its evaluated property set could not be read, so whether it evaluates the product's configuration is unproven rather than disproven: ${property_set_failure}"
+      continue
+    fi
+
+    # The reader prints "<compared> <allowed>" first and one violation per line
+    # after it. An absent count line means the reader itself failed, and must not be
+    # read as "no violations".
+    if ! comparison="$(python3 - "${product_property_file}" "${fixture_property_file}" \
+        "${DESIGNATED_PRODUCT_PROJECT}" "${project}" \
+        "${ALLOWED_CONFIGURATION_DIFFERENCES[@]}" <<'PY'
+import sys
+
+product_file, fixture_file, product_name, fixture_name = sys.argv[1:5]
+allowed = set(sys.argv[5:])
+
+def read(path):
+    values = {}
+    for line in open(path, errors='replace'):
+        line = line.rstrip('\n')
+        if '=' in line:
+            name, value = line.split('=', 1)
+            values[name] = value
+    return values
+
+product, fixture = read(product_file), read(fixture_file)
+ABSENT = object()
+
+def show(value):
+    return '<not set>' if value is ABSENT else "'%s'" % value[:200]
+
+compared = allowed_differences = 0
+violations = []
+for name in sorted(set(product) | set(fixture)):
+    compared += 1
+    left, right = product.get(name, ABSENT), fixture.get(name, ABSENT)
+    if left == right:
+        continue
+    if name in allowed:
+        allowed_differences += 1
+        continue
+    violations.append('%s: %s evaluates %s but %s evaluates %s'
+                      % (name, product_name, show(left), fixture_name, show(right)))
+print('%d %d' % (compared, allowed_differences))
+for violation in violations:
+    print(violation)
+PY
+)"; then
+      fail "${project}: INFRASTRUCTURE - its evaluated property set could not be compared with the product's, so whether it evaluates the product's configuration is unproven rather than disproven"
+      continue
+    fi
+    read -r compared_count allowed_count <<<"$(printf '%s\n' "${comparison}" | head -1)"
+    if [[ ! "${compared_count}" =~ ^[0-9]+$ || ! "${allowed_count}" =~ ^[0-9]+$ ]]; then
+      fail "${project}: INFRASTRUCTURE - the property comparison produced no count line, so its silence is not evidence of agreement"
+      continue
+    fi
+    comparison_violations="$(printf '%s\n' "${comparison}" | tail -n +2 | grep -c .)"
+    if [[ "${comparison_violations}" -eq 0 ]]; then
+      pass "$(basename "${project}" .csproj) evaluates the same configuration as $(basename "${DESIGNATED_PRODUCT_PROJECT}" .csproj) across ${compared_count} propert(ies), with ${allowed_count} allowlisted difference(s)"
+    else
+      while IFS= read -r violation; do
+        [[ -n "${violation}" ]] || continue
+        fail "guard 4: ${violation} - the fixture is not measuring the configuration the product builds under, so what it proves is not the product's policy"
+      done < <(printf '%s\n' "${comparison}" | tail -n +2)
+    fi
+  done
+  [[ -n "${fixture_property_file}" ]] && rm -f "${fixture_property_file}"
+  rm -f "${product_property_file}"
+fi
 
 echo
 for entry in "${NEGATIVE_FIXTURES[@]}"; do

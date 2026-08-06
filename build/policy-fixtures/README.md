@@ -69,15 +69,33 @@ whitelist, and today that whitelist is two properties in the intermediate file
 `true` and the fixtures must not leave lock files behind, and `IsPackable`) and
 none at all in a fixture project.
 
-This is not tidiness. A suppression switch takes **two** edits to hide: switch it
-off at the root, then switch it back on locally so the fixtures keep failing with
-the diagnostics they expect. Root `RunAnalyzers=false` plus `RunAnalyzers=true`
-here compiled a `CA2200` rethrow and an `IDE1006` field name at zero warnings
-while the whole gate printed `PASS`. The first edit alone is caught by the
-fixtures themselves - their expected diagnostics simply stop appearing - so
-closing the second edit closes the family, including switches nobody has thought
-of yet. Adding a property here therefore needs an argument, written into guard
-1b's comment, for why it cannot change which diagnostics appear.
+This is not tidiness. Root `RunAnalyzers=false` plus `RunAnalyzers=true` here
+compiled a `CA2200` rethrow and an `IDE1006` field name at zero warnings while the
+whole gate printed `PASS`. Adding a property here therefore needs an argument,
+written into guard 1b's comment, for why it cannot change which diagnostics
+appear.
+
+Guard 1b is **not** why the suppression-switch family is closed, and an earlier
+version of this section claimed it was. The claim was that a switch takes two
+edits to hide - switch it off at the root, switch it back on locally - so removing
+the local half closes the family. It does not: the switch does not need switching
+back on, it needs never to have applied to the fixtures. A single `Condition` on a
+root `PropertyGroup`, such as
+`Condition="!$(MSBuildProjectDirectory.Contains('policy-fixtures'))"` over
+`<AnalysisModeUsage>None</AnalysisModeUsage>`, compiles a real `CA2200` at zero
+warnings with no file here touched at all. Three sibling files do the same and none
+of them is a file guard 1b reads: `Directory.Packages.props` here (found by
+MSBuild's own upward search and imported *after* `Directory.Build.props`, so it
+wins), `Directory.Build.rsp` here, and a fixture's `.csproj.user`. The first two
+are not gitignored and are therefore committable.
+
+What closes the family is **guard 4**: it compares each fixture's whole evaluated
+property set against `src/MechaMiner.Content`'s and requires equality outside a
+measured allowlist of structural differences. Every one of those escapes leaves the
+fixture evaluating a different configuration from the product, which is observable
+without knowing which mechanism produced it. The fixtures themselves remain the
+detector for a root flip applied *uniformly*: their expected diagnostics simply
+stop appearing.
 
 There is also no non-root `.editorconfig` anywhere in this repository, and guard 1
 fails on one. A copy of the root file placed in `naming/` decoupled that fixture

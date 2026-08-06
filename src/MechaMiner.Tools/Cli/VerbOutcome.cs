@@ -43,6 +43,28 @@ internal sealed class VerbOutcome
     /// <summary>Repository-relative artifact paths this verb produced.</summary>
     internal IReadOnlyList<string> Artifacts => _artifacts;
 
+    /// <summary>
+    /// The same classified outcome carrying an amended final-result line, keeping the
+    /// exit class, diagnostic code, warnings, and artifacts unchanged.
+    /// </summary>
+    /// <remarks>
+    /// Used where a caller can say more about a result than the code that produced it
+    /// could - specifically, to name the stages that did not run after an earlier stage
+    /// failed. A bare "failed at stage 1" invites a reader to assume the later stages
+    /// passed, when in fact they were never entered, and those are different statements.
+    /// The class and the code are deliberately not amendable here: only the prose is.
+    /// </remarks>
+    internal VerbOutcome WithFinalResult(string finalResult)
+    {
+        VerbOutcome amended = new(ExitClass, DiagnosticCode, finalResult)
+        {
+            OwningWorkPackage = OwningWorkPackage,
+        };
+        amended._warnings.AddRange(_warnings);
+        amended._artifacts.AddRange(_artifacts);
+        return amended;
+    }
+
     /// <summary>The verb reached its required effect.</summary>
     internal static VerbOutcome Success(string finalResult)
     {

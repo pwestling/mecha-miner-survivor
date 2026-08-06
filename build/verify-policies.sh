@@ -78,16 +78,11 @@ readonly NEGATIVE_FIXTURES=(
   "unsafe|CS0227|AllowUnsafeBlocks=false|VER-FND-001-010"
 )
 
-failures=0
-
-fail() {
-  printf 'FAIL  %s\n' "$*"
-  failures=$((failures + 1))
-}
-
-pass() {
-  printf 'ok    %s\n' "$*"
-}
+# The shared emitters: pass/fail for findings about the subject under test,
+# control_pass/control_fail for anything produced while a negative control's fixture is in
+# place, section/gate_summary so a red run names the failing section. See build/gate-output.sh
+# for why control output is marked and why that marking is enforced rather than conventional.
+source "${REPO_ROOT}/build/gate-output.sh"
 
 clean_fixture() {
   rm -rf "${FIXTURE_ROOT}/$1/obj" "${FIXTURE_ROOT}/$1/bin"
@@ -97,7 +92,7 @@ for entry in "${NEGATIVE_FIXTURES[@]}"; do
   IFS='|' read -r fixture diagnostic policy verification <<<"${entry}"
   project="${FIXTURE_ROOT}/${fixture}/${fixture}.csproj"
 
-  echo "=== ${verification}: ${policy}"
+  section "${verification}: ${policy}"
   if [[ ! -f "${project}" ]]; then
     fail "${verification}: fixture project missing at ${project}"
     echo
@@ -117,7 +112,10 @@ for entry in "${NEGATIVE_FIXTURES[@]}"; do
   matched="$(printf '%s\n' "${output}" | grep -oE ": error ${diagnostic}:.*" | head -1)"
   if [[ -n "${matched}" ]]; then
     pass "${fixture} failed with exit ${status} and the expected diagnostic"
-    printf '      %s\n' "${matched}"
+    # The diagnostic is manufactured by this gate's own invalid fixture and is printed on a
+    # green run, so a reader hunting a real CS8600/CA2200/IDE1006 must not find this one
+    # first and stop. The verdict above is a genuine finding; the quoted compiler text is not.
+    control_detail <<<"${matched}"
   else
     fail "${verification}: ${fixture} failed with exit ${status} but not with error ${diagnostic}"
     printf '%s\n' "${output}" | grep -E ': (error|warning) ' | sort -u | sed 's/^/      /'
@@ -132,7 +130,7 @@ done
 # (Deterministic=false) must NOT, otherwise the assertion above would be
 # vacuously true regardless of the policy.
 
-echo "=== VER-FND-001-011: Deterministic=true"
+section "VER-FND-001-011: Deterministic=true"
 readonly DETERMINISTIC_ASSEMBLY="${FIXTURE_ROOT}/deterministic/bin/Debug/net8.0/deterministic.dll"
 
 hash_deterministic_build() {
@@ -156,23 +154,20 @@ else
   fail "VER-FND-001-011: rebuild differed (${first_hash} vs ${second_hash})"
 fi
 
-echo
-echo "=== VER-FND-001-011 negative control: Deterministic=false"
+section "VER-FND-001-011 negative control: Deterministic=false"
 third_hash="$(hash_deterministic_build false)"
 fourth_hash="$(hash_deterministic_build false)"
 if [[ "${third_hash}" == "BUILD-FAILED" || "${fourth_hash}" == "BUILD-FAILED" ]]; then
-  fail "VER-FND-001-011: negative-control build failed"
+  control_fail "VER-FND-001-011: negative-control build failed"
 elif [[ "${third_hash}" != "${fourth_hash}" ]]; then
-  pass "nondeterministic builds differ as expected (${third_hash:0:16}... vs ${fourth_hash:0:16}...)"
+  control_pass "nondeterministic builds differ as expected (${third_hash:0:16}... vs ${fourth_hash:0:16}...)"
 else
-  fail "VER-FND-001-011: Deterministic=false still produced identical output; the check proves nothing"
+  control_fail "VER-FND-001-011: Deterministic=false still produced identical output; the check proves nothing"
 fi
 clean_fixture deterministic
 
-echo
-if [[ "${failures}" -eq 0 ]]; then
-  echo "verify-policies: PASS"
-  exit 0
-fi
-echo "verify-policies: FAIL (${failures} assertion(s))"
-exit "${EXIT_VALIDATION}"
+# This gate runs negative controls in band, so its log contains failure-shaped text on a
+# green run. Prove the marking that separates that text from genuine findings still holds.
+gate_assert_marking
+
+gate_summary "verify-policies" "${EXIT_VALIDATION}"

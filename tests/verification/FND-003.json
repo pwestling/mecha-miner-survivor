@@ -326,7 +326,7 @@
     },
     {
       "id": "VER-FND-003-011",
-      "summary": "test-fast runs the pure tiers and the build-policy fixtures only, and launches no Godot process at all, observed with a tripwire: an executable named godot is placed first on PATH and in MECHAMINER_GODOT for every pure test process, and the tier fails if it was ever invoked. A negative control proves the assertion can fail.",
+      "summary": "test-fast runs the pure tiers and the build-policy fixtures only. The three pure NUnit test processes launch no Godot process, observed with a tripwire: an executable named godot is placed first on PATH and in MECHAMINER_GODOT for each of those processes, and the tier fails if it was ever invoked. The observation covers stage 2 only. TestVerb.RunFastTier passes tripwire.Environment to the three pure NUnit processes and not to stage 1's build/verify-policies.sh run, so stage 1 is outside the tripwire and this entry claims nothing about it; see docs/technical/delivery-waves.md § Note on FND-003's open items for the propagation question that remains. A negative control proves the assertion can fail.",
       "task": "TASK-FND-003-001",
       "requirements": [
         "TR-BLD-005",

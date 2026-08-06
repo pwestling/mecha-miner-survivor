@@ -193,8 +193,13 @@ internal static class TestVerb
     internal static VerbOutcome RunFastTier(VerbContext context)
     {
         GodotTripwire tripwire = GodotTripwire.Arm(context);
+        StageLedger ledger = new(
+            context,
+            "build-policy fixtures",
+            "pure NUnit tiers (no Godot)",
+            "assert the pure tier launched no Godot process");
 
-        context.Section("stage 1: build-policy fixtures");
+        ledger.Enter(0);
         CommandResult policies = context.RunRepositoryScript(
             "verify-policies",
             "build/verify-policies.sh",
@@ -202,10 +207,11 @@ internal static class TestVerb
             timeout: TimeSpan.FromMinutes(20));
         if (!policies.Succeeded)
         {
-            return VerbOutcome.Validation("a build-policy fixture no longer proves its policy; see the step log");
+            return ledger.Abandon(VerbOutcome.Validation(
+                "a build-policy fixture no longer proves its policy; see the step log"));
         }
 
-        context.Section("stage 2: pure NUnit tiers (no Godot)");
+        ledger.Enter(1);
         List<TestTally> tallies = new();
         List<string> failures = new();
         foreach (string project in PureTestProjects)
@@ -213,11 +219,11 @@ internal static class TestVerb
             VerbOutcome? failure = RunTestProject(context, project, tallies, failures, tripwire.Environment);
             if (failure is not null)
             {
-                return failure;
+                return ledger.Abandon(failure);
             }
         }
 
-        context.Section("stage 3: assert the pure tier launched no Godot process");
+        ledger.Enter(2);
         tripwire.Assert(context, failures);
 
         return Summarize(context, tallies, failures, "test-fast");
@@ -226,27 +232,33 @@ internal static class TestVerb
     /// <summary>Runs the fast tier, a clean headless import, and the Godot engine tier.</summary>
     internal static VerbOutcome RunMainTier(VerbContext context)
     {
-        context.Section("stage 1: the complete fast tier");
+        StageLedger ledger = new(
+            context,
+            "the complete fast tier",
+            "clean headless Godot import",
+            "Godot engine integration tier");
+
+        ledger.Enter(0);
         VerbOutcome fast = RunFastTier(context);
         if (fast.ExitClass != ExitClass.Success)
         {
-            return fast;
+            return ledger.Abandon(fast);
         }
 
-        context.Section("stage 2: clean headless Godot import");
+        ledger.Enter(1);
         VerbOutcome import = GodotImportVerb.Execute(context);
         if (import.ExitClass != ExitClass.Success)
         {
-            return import;
+            return ledger.Abandon(import);
         }
 
-        context.Section("stage 3: Godot engine integration tier");
+        ledger.Enter(2);
         List<TestTally> tallies = new();
         List<string> failures = new();
         VerbOutcome? failure = RunTestProject(context, EngineTestProject, tallies, failures);
         if (failure is not null)
         {
-            return failure;
+            return ledger.Abandon(failure);
         }
 
         return Summarize(context, tallies, failures, "test-main engine tier");

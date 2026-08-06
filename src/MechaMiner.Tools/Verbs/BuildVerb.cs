@@ -23,8 +23,13 @@ internal static class BuildVerb
     internal static VerbOutcome Execute(VerbContext context)
     {
         WorkflowConfiguration configuration = context.Configuration();
+        StageLedger ledger = new(
+            context,
+            "locked restore",
+            "compile with analyzers and warnings as errors",
+            "assert the accepted project boundary");
 
-        context.Section("stage 1: locked restore (" + configuration.WorkflowName + " -> MSBuild "
+        ledger.Enter(0, "locked restore (" + configuration.WorkflowName + " -> MSBuild "
             + configuration.MsbuildName + ")");
         CommandResult restore = context.Runner.Run(
             "dotnet-restore-locked",
@@ -47,12 +52,12 @@ internal static class BuildVerb
             TimeSpan.FromMinutes(10));
         if (!restore.Succeeded)
         {
-            return VerbOutcome.Build(
+            return ledger.Abandon(VerbOutcome.Build(
                 "locked restore failed. CI restores in locked mode and fails if lock files would change "
-                + "(doc 100 § Dependency policy); update Directory.Packages.props and the lock files together.");
+                + "(doc 100 § Dependency policy); update Directory.Packages.props and the lock files together."));
         }
 
-        context.Section("stage 2: compile with analyzers and warnings as errors");
+        ledger.Enter(1);
         CommandResult build = context.Runner.Run(
             "dotnet-build",
             "dotnet",
@@ -100,26 +105,26 @@ internal static class BuildVerb
 
         if (!summaryFound)
         {
-            return VerbOutcome.Build(
+            return ledger.Abandon(VerbOutcome.Build(
                 "the build produced no MSBuild warning/error summary, so a zero-warning tree"
-                + " cannot be asserted; see the dotnet-build step log");
+                + " cannot be asserted; see the dotnet-build step log"));
         }
 
         if (!build.Succeeded || errors > 0)
         {
-            return VerbOutcome.Build(
+            return ledger.Abandon(VerbOutcome.Build(
                 "compilation failed with " + errors.ToString(CultureInfo.InvariantCulture)
-                + " error(s); see the step log");
+                + " error(s); see the step log"));
         }
 
         if (warnings > 0)
         {
-            return VerbOutcome.Build(
+            return ledger.Abandon(VerbOutcome.Build(
                 "compilation reported " + warnings.ToString(CultureInfo.InvariantCulture)
-                + " warning(s); the repository treats every warning as an error");
+                + " warning(s); the repository treats every warning as an error"));
         }
 
-        context.Section("stage 3: assert the accepted project boundary");
+        ledger.Enter(2);
         CommandResult architecture = context.RunRepositoryScript(
             "verify-architecture",
             "build/verify-architecture.sh",
@@ -127,8 +132,8 @@ internal static class BuildVerb
             timeout: TimeSpan.FromMinutes(10));
         if (!architecture.Succeeded)
         {
-            return VerbOutcome.Validation(
-                "the accepted project boundary or repository layout is violated; see the step log");
+            return ledger.Abandon(VerbOutcome.Validation(
+                "the accepted project boundary or repository layout is violated; see the step log"));
         }
 
         return VerbOutcome.Success(

@@ -220,6 +220,8 @@ Neither elites nor player builds change the arithmetic. Needler is excluded from
 
 2,048 rather than 1,024: 1,024 would place a legal peak at approximately 99% of cap, spamming the 80% warning and effectively failing the stress gate. 2,048 places the legal worst case at approximately 49%, keeps the warning line at 1,638, matches the power-of-two vocabulary already used above, and equals the accepted player projectile ceiling, so no new budget shape is introduced. Enemy projectile state is small, so the added headroom is cheap.
 
+2,048 is justified against the *replenishment*-bounded worst case only. Composition shares govern replenishment, not the alive mix, and nothing currently bounds the alive per-identity share; under extreme churn the alive Needler share can exceed its authored composition share and the count can exceed 2,048. That question is unresolved and recorded as [TOQ-003](./open-questions.md#toq-003--what-bounds-the-alive-per-identity-enemy-share). Until it is answered no finite enemy projectile ceiling is provably safe, and this ceiling must not be treated as one.
+
 At Steam Deck peak, combat scheduling, weapon actor simulation, target queries, hit generation, damage, control, and death processing together target at most 2.5 ms CPU at 95th percentile with zero steady-state managed allocation.
 
 ## Verification

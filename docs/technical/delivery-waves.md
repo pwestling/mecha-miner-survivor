@@ -712,7 +712,7 @@ not by editing either. If `FND-009`'s documentation validator later wants the tw
 tables to agree literally, adding the missing row to doc 10 is the editorial
 correction, never removing the project.
 
-## Note on the enemy-projectile capacity ceiling
+## Note on the enemy-projectile capacity ceiling and `TOQ-003`
 
 - **Doc 22 § Performance and capacity now caps enemy projectiles at 2,048, not
   512.** The needle flies for roughly 19 seconds — 2.25M/s against a one-screen-width
@@ -720,6 +720,14 @@ correction, never removing the project.
   twelve-projectile bursts put a legal peak near 1,010, which 512 cannot hold.
   512 was the wrong ceiling, not an illegal build. The enemy-projectile store
   `COM-002` builds should be sized for 2,048.
+- **`TOQ-003` is a prerequisite for `ENC-002`.** Composition shares bound
+  *replenishment*, not the alive identity mix, so nothing yet bounds the alive
+  Needler share and 2,048 is justified only against the replenishment-bounded
+  worst case; the pathological alive-share limit is nearer 3,200. `ENC-002`
+  (director schedule compiler, pulses, weighted residual composition,
+  ceilings/queues) cannot close its capacity behavior until `TOQ-003` is
+  answered. A stream that reaches `ENC-002` surfaces the question to the
+  director's owner — it may need a TDR — rather than choosing an answer locally.
 
 ## Related documents
 

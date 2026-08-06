@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 
 namespace MechaMiner.Simulation.Random;
 
@@ -38,6 +39,31 @@ public static class BoundedRandom
     /// <summary>The number of low bits the 53-bit conversion discards from its 64-bit
     /// pair.</summary>
     internal const int DiscardedLowBits = 11;
+
+    /// <summary>
+    /// The most consecutive rejections <see cref="NextBounded"/> tolerates before it reports a
+    /// source that is not advancing, rather than looping forever.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This cannot make a correct run flaky, because <see cref="RejectionThreshold"/> accepts
+    /// strictly more than half of the <c>2^32</c> possible draws for every bound. For a bound above
+    /// <c>2^31</c> the threshold is exactly <c>2^32 - bound</c>, leaving <c>bound</c> values
+    /// accepted, and <c>bound &gt; 2^31</c>. For a bound at or below <c>2^31</c> the threshold is
+    /// strictly below the bound and therefore below <c>2^31</c>, leaving more than <c>2^31</c>
+    /// accepted. So each draw is accepted with probability above one half, and this many
+    /// consecutive rejections from a genuinely advancing stream has probability below
+    /// <c>2^-256</c>.
+    /// </para>
+    /// <para>
+    /// The only way to reach the bound is a source whose draws do not change, which is what a
+    /// forked <see cref="Pcg32"/> behaves like: a copy replays one value forever. Before this
+    /// bound existed that defect was reported by the run never finishing, and a check that fails
+    /// identically whether the property was violated or the machine died trains people to re-run
+    /// it. <c>VER-SIM-005-011</c> is the gate for the fork itself.
+    /// </para>
+    /// </remarks>
+    internal const int MaxConsecutiveRejections = 256;
 
     /// <summary>
     /// The rejection threshold of doc 20 § Authoritative random-number contract:
@@ -80,14 +106,33 @@ public static class BoundedRandom
     {
         ArgumentNullException.ThrowIfNull(source);
         uint threshold = RejectionThreshold(bound);
-        while (true)
+        uint lastRejected = 0U;
+        for (int rejections = 0; rejections < MaxConsecutiveRejections; rejections++)
         {
             uint draw = source.NextUInt32();
             if (draw >= threshold)
             {
                 return draw % bound;
             }
+
+            lastRejected = draw;
         }
+
+        throw new InvalidOperationException(
+            "rejection sampling rejected "
+                + MaxConsecutiveRejections.ToString(CultureInfo.InvariantCulture)
+                + " consecutive draws for bound "
+                + bound.ToString(CultureInfo.InvariantCulture)
+                + " against threshold "
+                + threshold.ToString(CultureInfo.InvariantCulture)
+                + "; the last rejected draw was 0x"
+                + lastRejected.ToString("X8", CultureInfo.InvariantCulture)
+                + " after " + source.DrawCount.ToString(CultureInfo.InvariantCulture)
+                + " draws from " + source.ToString()
+                + ". More than half of all draws are accepted for every bound, so this is a source "
+                + "that is not advancing rather than an unlucky run: the stream has forked and every "
+                + "draw is a copy of one value (doc 20 § Authoritative random-number contract; "
+                + "VER-SIM-005-011).");
     }
 
     /// <summary>

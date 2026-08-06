@@ -40,6 +40,15 @@ internal sealed class RandomStreamIndependenceTests
     [Test]
     public void AnExtraDrawInOneFamilyShiftsNoOtherFamily()
     {
+        // Checked first, and deliberately outside the Expect.Multiple block below, so that a fork
+        // fails fast and names what diverged. A fork used to be reported by the run never
+        // finishing: every draw becomes a copy of one value, and rejection sampling cannot
+        // terminate against a source that does not advance. A check that fails identically whether
+        // the property was violated or the machine died trains people to re-run it, so the timeout
+        // is now an assertion. Expect.Multiple would defeat that by continuing into the statements
+        // that spin.
+        AssertASourceIsAViewOfItsStreamRatherThanACopy();
+
         GoldenText.Matches(
             RandomVectorRendering.StreamIndependenceGolden,
             RandomGoldenHeaders.StreamIndependence
@@ -88,36 +97,6 @@ internal sealed class RandomStreamIndependenceTests
                 afterExtraDraws[0x0202],
                 Is.Not.EqualTo(undisturbed[0x0202]),
                 "the disturbed family must itself have moved, or the test proves nothing");
-
-            // A source is a view onto the stored stream, not a copy of it. If the set handed out a
-            // copy, or if any internal step copied the struct into a local, the stored state would
-            // not advance and two sources would replay the same values.
-            RandomStreamSet set = new(RandomSchemaVersion.Current, RandomVectorRendering.FixtureMasterSeed);
-            RandomStreamKey key0100 = RandomStreamKey.Create(0x0100, 0UL);
-            IRandomSource first = set.Source(key0100);
-            IRandomSource second = set.Source(key0100);
-            ulong primedState = set.StateOf(key0100);
-
-            uint fromFirst = first.NextUInt32();
-            Assert.That(
-                set.StateOf(key0100),
-                Is.Not.EqualTo(primedState),
-                "drawing through a source must advance the stored stream, not a copy of it");
-            Assert.That(set.DrawCountOf(key0100), Is.EqualTo(1UL));
-
-            uint fromSecond = second.NextUInt32();
-            Assert.That(
-                fromSecond,
-                Is.Not.EqualTo(fromFirst),
-                "two sources for one key are two views of one advancing stream, not two streams");
-            Assert.That(set.DrawCountOf(key0100), Is.EqualTo(2UL));
-            Assert.That(first.DrawCount, Is.EqualTo(2UL), "both views report the same shared count");
-            Assert.That(second.DrawCount, Is.EqualTo(2UL));
-
-            // And the two values are the fixture's first two outputs, in order, so the shared
-            // stream is the pinned one rather than merely a consistent one.
-            Assert.That(fromFirst, Is.EqualTo(0x04552DDAU));
-            Assert.That(fromSecond, Is.EqualTo(0x6013D277U));
 
             // Finally, the accessibility that makes a fork impossible rather than merely
             // untested. No caller can obtain a stream value at all: the generator type is not
@@ -232,6 +211,106 @@ internal sealed class RandomStreamIndependenceTests
             Assert.That(set.NextUInt32(four), Is.EqualTo(0x5BD716A4U));
             Assert.That(set.InstantiatedKeys, Has.Count.EqualTo(2));
         });
+    }
+
+    /// <summary>
+    /// A source is a view onto the stored stream, not a copy of it, and the primitive that used to
+    /// spin against a copy now reports instead.
+    /// </summary>
+    /// <remarks>
+    /// Every assertion here fails fast rather than aggregating, because the defect it detects is the
+    /// one that used to consume the whole run: if the set handed out a copy, or if any internal step
+    /// copied the struct into a local, the stored state would not advance, two sources would replay
+    /// the same values, and any bounded draw would reject forever.
+    /// </remarks>
+    private static void AssertASourceIsAViewOfItsStreamRatherThanACopy()
+    {
+        RandomStreamSet set = new(
+            RandomSchemaVersion.Current,
+            RandomVectorRendering.FixtureMasterSeed);
+        RandomStreamKey key0100 = RandomStreamKey.Create(0x0100, 0UL);
+        IRandomSource first = set.Source(key0100);
+        IRandomSource second = set.Source(key0100);
+        ulong primedState = set.StateOf(key0100);
+
+        uint fromFirst = first.NextUInt32();
+        Assert.That(
+            set.StateOf(key0100),
+            Is.Not.EqualTo(primedState),
+            "drawing through a source must advance the stored stream, not a copy of it; a stream "
+                + "that does not advance is forked, and every later draw is a copy of "
+                + fromFirst.ToString("X8", CultureInfo.InvariantCulture));
+        Assert.That(set.DrawCountOf(key0100), Is.EqualTo(1UL));
+
+        uint fromSecond = second.NextUInt32();
+        Assert.That(
+            fromSecond,
+            Is.Not.EqualTo(fromFirst),
+            "two sources for one key are two views of one advancing stream, not two streams; both "
+                + "returned " + fromFirst.ToString("X8", CultureInfo.InvariantCulture));
+        Assert.That(set.DrawCountOf(key0100), Is.EqualTo(2UL));
+        Assert.That(first.DrawCount, Is.EqualTo(2UL), "both views report the same shared count");
+        Assert.That(second.DrawCount, Is.EqualTo(2UL));
+
+        // And the two values are the fixture's first two outputs, in order, so the shared
+        // stream is the pinned one rather than merely a consistent one.
+        Assert.That(fromFirst, Is.EqualTo(0x04552DDAU));
+        Assert.That(fromSecond, Is.EqualTo(0x6013D277U));
+
+        // A real stream reaches a bounded draw without exhausting the rejection bound, so the bound
+        // is not in the way of correct behaviour.
+        Expect.DoesNotThrow(() => set.NextBounded(RandomStreamKey.Create(0x0220, 3UL), 3U));
+
+        // And the primitive that used to spin now names the divergence. A source whose draws never
+        // change is exactly what a forked Pcg32 behaves like, and rejection sampling cannot
+        // terminate against one; bound 3 has threshold 1, so a constant zero is rejected every
+        // time.
+        InvalidOperationException notAdvancing = Expect.Throws<InvalidOperationException>(
+            () => BoundedRandom.NextBounded(new NonAdvancingSource(0U), 3U));
+        Assert.That(
+            notAdvancing.Message,
+            Does.Contain("not advancing"),
+            "the failure must say what diverged rather than time out");
+        Assert.That(notAdvancing.Message, Does.Contain("0x00000000"), "and name the repeated draw");
+        Assert.That(
+            notAdvancing.Message,
+            Does.Contain("consecutive draws"),
+            "and report the consecutive-rejection count as its evidence, so the message distinguishes "
+                + "a non-advancing source from an unlucky one");
+    }
+
+    /// <summary>
+    /// A source that never advances: every draw is the same value.
+    /// </summary>
+    /// <remarks>
+    /// This is how a forked <c>Pcg32</c> behaves, and it is the input rejection sampling cannot
+    /// terminate against. It is a test double rather than a
+    /// <see cref="ScriptedRandomSource"/> because a scripted source throws on exhaustion, so it
+    /// cannot be made to repeat one value indefinitely.
+    /// </remarks>
+    private sealed class NonAdvancingSource : IRandomSource
+    {
+        private readonly uint _value;
+        private ulong _drawCount;
+
+        internal NonAdvancingSource(uint value)
+        {
+            this._value = value;
+        }
+
+        public ulong DrawCount => this._drawCount;
+
+        public uint NextUInt32()
+        {
+            this._drawCount++;
+            return this._value;
+        }
+
+        public override string ToString()
+        {
+            return "non-advancing test source at 0x"
+                + this._value.ToString("X8", CultureInfo.InvariantCulture);
+        }
     }
 
     private static IReadOnlyList<ushort> RegisteredKeys()

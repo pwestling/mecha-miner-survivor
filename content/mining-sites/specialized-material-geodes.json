@@ -6,7 +6,9 @@
   "name_key": "mining_site.specialized-material-geodes.name",
   "tags": [],
   "source_refs": [
-    "GDD-MINING#specialized-material-geodes"
+    "GDD-MINING#specialized-material-geodes",
+    "resonance_field: GDD-MINING#geode-resonance-fields",
+    "resonance_field.modifier_named_in_geode_label_or_contextual_hud: GDD-SPECIALIZED-RESOURCE-IDENTITIES#geode-resonance-behavior"
   ],
   "site_class": "specialized-material-geode",
   "present_materials_per_run": 4,
@@ -78,6 +80,7 @@
       "percent": 20
     },
     "active_while_unopened": true,
+    "active_before_extraction_begins": true,
     "active_during_interruptions": true,
     "collapses_on_open": true,
     "applies_to": [
@@ -87,8 +90,10 @@
     ],
     "retained_after_leaving_field": false,
     "generation_constraint": "Standard map generation separates unopened geodes far enough that their resonance fields do not overlap.",
+    "fields_overlap_on_standard_maps": false,
     "summons_enemies": false,
-    "uses_progress_thresholds": false
+    "uses_progress_thresholds": false,
+    "modifier_named_in_geode_label_or_contextual_hud": true
   },
   "beacon_thresholds": null,
   "depleted_state": "non-interactive mapped landmark for the rest of the run; cannot be reactivated",

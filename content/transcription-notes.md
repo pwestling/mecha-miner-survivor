@@ -10,9 +10,13 @@ all 141 files and their contents moved here verbatim.
 
 **Count assertion.** 945 note strings were removed from 141 `notes` arrays. This file
 reproduces all 945 verbatim, partitioned between the two sections below — 3 in the contradictions section, 1 under “needs a ruling but not a two-passage contradiction”, 22 quoted inside the structural entries of the shape notes, and 919 in the per-definition listing (3 + 1 + 22 + 919 = 945).
-No note text was edited, merged, summarised, or dropped. Two of the 141 files
-(`content/mechs/shared-baseline.json`, `content/maps/world-props.json`) no longer exist; their
-notes are reproduced here under their former paths.
+No note text was edited, merged, summarised, or dropped. Four of the 141 files
+(`content/mechs/shared-baseline.json`, `content/maps/world-props.json`,
+`content/enemies/elite-modifier-profile.json`, `content/resources/geode-resonance-effects.json`)
+no longer exist and a fifth (`content/utilities/radar-unassigned-id.json`, now
+`content/utilities/UTL-R1.json`) has been renamed; their notes are reproduced here under their
+former paths, and the entries in “Integration-owner rulings applied” below say where each value
+went. Note text stays verbatim even where a ruling has since superseded it.
 
 ## Design-source contradictions requiring a ruling
 
@@ -43,6 +47,15 @@ resolved, not ruled on; see “Sentry Pod deployment interval” in the shape no
 - **Affected definitions:** `EN-07` (`content/enemies/EN-07.json`).
 - **Ruling needed:** either the multiplier becomes `0.625`, or doc 72's stated diameter becomes
   `0.496 M`, or the multiplier is declared presentation-only and not a footprint input.
+- **RULED — third option, and the disagreement dissolves.** See
+  “Ruling 1 — enemies store a body scale, not a derived collision diameter” below. There was never
+  a second authored value: `docs/72:96`'s `0.50 M` is `0.496 M` typeset to two decimals, exactly as
+  every other row of that table is the body scale times `0.80 M` typeset to two decimals. The
+  authored quantity is the `0.62×` scale at `docs/31:45`; the diameter is derived and is now the
+  compiler's to produce (`docs/technical/40-content-data-and-validation.md:114`). The JSON no
+  longer carries a diameter, so nothing is internally inconsistent. The **docs side is being
+  corrected** — `docs/72:96` should read `0.496 M`, not `0.50 M`; that correction is not in this
+  pass's scope (`docs/` is out of scope here) and is the one action still open on C-1.
 
 - **Transcription note, verbatim** (`content/enemies/EN-07.json`):
 
@@ -75,12 +88,20 @@ resolved, not ruled on; see “Sentry Pod deployment interval” in the shape no
 - **Value B — “Resource radar”** (sentence case, heading):
   `docs/50-maps-resources-and-navigation.md:102` and `docs/glossary.md:220`.
 - **Value C — “Resource Radar”** (title case): `docs/71-initial-weapon-numeric-catalog.md:518`.
-- **What the JSON carries:** `utility.radar-unassigned-id.name = "Resource radar"` (Value B, the
-  heading form) in `content/localization/en.json`.
-- **Affected definitions:** the resource radar
-  (`content/utilities/radar-unassigned-id.json`, no stable ID assigned — see the shape notes).
+- **What the JSON carries:** `"Resource radar"` (Value B, the heading form) in
+  `content/localization/en.json`. The key was `utility.radar-unassigned-id.name` when this entry was
+  written and is now `utility.UTL-R1.name`; the string itself never changed.
+- **Affected definitions:** the resource radar, `UTL-R1`
+  (`content/utilities/UTL-R1.json`; the file was `radar-unassigned-id.json` with no stable ID when
+  this entry was written — see “Ruling 2” and the shape notes).
 - **Ruling needed:** same reason as C-2. A single canonical English string is now committed to the
   localization catalog; the docs should be reconciled to it.
+- **RULED — Value B, “Resource radar” (sentence case), confirmed.** The authorities are
+  `docs/glossary.md:220` and the fresh-profile catalog row at `docs/63:28`, where the neighbouring
+  cell (`Universal utility` / the fully title-cased material-utility names in the row below) makes
+  the lowercase `r` deliberate rather than a typo. The key is now `utility.UTL-R1.name`; see
+  “Ruling 2 — the resource radar is a utility and gets `UTL-R1`” below. Value C
+  (`docs/71:518`, title case) and the Value A prose spellings remain the docs-side reconciliation.
 
 - **Transcription note, verbatim** (`content/utilities/radar-unassigned-id.json`):
 
@@ -101,6 +122,9 @@ rather than in the bulk notes because it leaves a `null` in shipped data and nee
 - **Affected definitions:** `WAV-01` (`content/encounters/standard-encounter-schedule.json`).
 - **Ruling needed:** the absolute event times for minute 33, or an accepted interval grammar the
   schedule schema can validate.
+- **RULED — four provisional times, flagged in the data as reconstructed.** See
+  “Ruling 5 — minute 33 of the wave schedule” below. `at` is now
+  `["33:00", "33:15", "33:30", "33:45"]` with `timestamps_reconstructed: true` on the same row.
 
 - **Transcription note, verbatim** (`content/encounters/standard-encounter-schedule.json`):
 
@@ -305,17 +329,25 @@ contradiction:
   never written to a file.
 - `content/maps/standard-map-generation-contract.json` — `id` assigned this pass: **`MGC-01`**
   (ties to `GDD-MAP-GENERATION`). Supersedes the withdrawn `MAPRULE-01`; likewise never written.
+- `content/utilities/UTL-R1.json` — `id` assigned by the integration owner's ruling, **not** by
+  this transcription pass: **`UTL-R1`**, with the file renamed from `radar-unassigned-id.json` and
+  the localization keys rewritten from `utility.radar-unassigned-id.*` to `utility.UTL-R1.*`. See
+  “Ruling 2” above. This is the entry the “BOUNDARY DECISION REQUIRED” note below asked for.
 - Still `"id": null`, and still needing a decision — no document assigns these an ID, and
   `40:67` forbids inventing one. Their localization keys therefore use the **filename stem** as
   the `<stable_id>` segment, which is **provisional** and must be rewritten when IDs are minted:
-  - `content/utilities/radar-unassigned-id.json` → `utility.radar-unassigned-id.*`
   - `content/mining-sites/standard-ore-seams.json` → `mining_site.standard-ore-seams.name`
   - `content/mining-sites/rich-ore-seams.json` → `mining_site.rich-ore-seams.name`
   - `content/mining-sites/hyper-gold-sites.json` → `mining_site.hyper-gold-sites.name`
   - `content/mining-sites/specialized-material-geodes.json` →
     `mining_site.specialized-material-geodes.name`
-  - `content/enemies/elite-modifier-profile.json` — no localized string at all, so no key was
-    minted and no stem was used.
+- No `id` field **at all**, because the file is not a definition and therefore has nothing to
+  identify: `content/enemies/shared-elite-modifiers.json` (Ruling 3). This is a different case from
+  `"id": null` — null means “a definition whose ID has not been minted yet”, absent means “not a
+  definition”, the same treatment the deleted `content/mechs/shared-baseline.json` had. It carries
+  no localized string and no stem-based key.
+- Gone entirely, so no ID was ever needed: `content/enemies/elite-modifier-profile.json`
+  (Ruling 3) and `content/resources/geode-resonance-effects.json` (Ruling 4).
 
 #### Localization keys: what was minted and what was not
 
@@ -332,6 +364,13 @@ display name for them and inventing one would be authoring, not transcription:
   `map.MGC-01.name`; same reason.
 - `content/enemies/elite-modifier-profile.json` — a shared modifier profile, no name field.
 - `content/resources/geode-resonance-effects.json` — an aggregate rules file, no name field.
+
+Both of those last two files are now deleted (Rulings 3 and 4), and because neither ever held a
+localization key, neither deletion removed anything from `en.json`. Their successor
+`content/enemies/shared-elite-modifiers.json` likewise has no `name_key` and no reserved key: it is
+a constants block, not a definition, so there is no name to reserve. The one localization change in
+this pass was the radar's two keys moving from `utility.radar-unassigned-id.*` to
+`utility.UTL-R1.*`, values unchanged (Ruling 2); `en.json` still holds 164 strings.
 
 `summary_key` was minted only where a definition already carried short player-facing prose:
 mechs (`selection_summary`), relics (`discovery_sentence`, whose object held nothing but that
@@ -366,10 +405,499 @@ top-level `source_refs` in the existing `<snake_case json path>: <DOC-ID>#<ancho
 deduplicated against the entries already there. `text` values were kept: they are verbatim
 design-doc prose and are data.
 
-Still present and **not** touched, flagged for a decision: `shared_rule_refs` on 15 branch
-files still holds 30 raw `docs/65-weapon-stat-and-branch-upgrades.md:<line>` strings. It is the
-same unstable-line-number channel under a domain-looking field name, and it was outside the
-stated scope of this pass.
+**Correction.** This paragraph previously read that `shared_rule_refs` on 15 branch files “is still
+present and not touched, flagged for a decision”. **That is no longer true, and was already false
+when written.** The field (spelled `sharedRuleRefs` at the time) held 2 raw
+`docs/65-weapon-stat-and-branch-upgrades.md:<line>` strings on each of the 15 files — 30 in total,
+all of them `:66` or `:68` — and it was removed in the same pass as the rest of this section,
+commit `5becb39`. Both cited lines fall under `## Weapon branches` (`docs/65:54`), so both resolved
+to `GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches`, which the `availability:` and
+`exclusivity:` prefixed entries already carried; the folded refs deduplicated against those and the
+field was deleted. `shared_rule_refs` / `sharedRuleRefs` now appears nowhere under `content/**/*.json`.
+No second provenance channel remains open.
+
+### Integration-owner rulings applied
+
+Five open items were ruled on by the integration owner and applied in this pass. Each entry
+records the ruling, its citations, exactly what changed in `content/`, and — separately — the
+choices the ruling did **not** determine, which are mine and are open to revision. No value was
+removed except the ones named as removed below.
+
+A **second integration-owner pass** then ruled on four of the choices Rulings 1, 3 and 4 had left
+to me. Those are Rulings 6–9, in their own section after Ruling 5. Where a second-pass ruling
+reverses a first-pass choice, the first-pass entry is left as written and carries a
+**superseded-by** pointer — the record of what was decided when is part of the point.
+
+#### Ruling 1 — enemies store a body scale, not a derived collision diameter
+
+**Citations.** `docs/31:45` authors `EN-07` (Razorling) a `0.62×` body scale.
+`docs/72:86` — “The Ripper's rank-zero contact diameter is 0.80M. Every ordinary body scale in the
+alien roster multiplies that diameter.” So the diameter is a product, not an authored number.
+`docs/technical/40-content-data-and-validation.md:114` assigns producing it to the compiler:
+“Validation derives world speeds/footprints and compares them with the survivability report.”
+Storing it alongside the scale would put a second writer on a compiler-owned value.
+
+**Change.** In all ten ordinary enemy definitions (`content/enemies/EN-01.json` … `EN-10.json`):
+
+- `body_scale_multiplier` is renamed **`body_scale_factor`** — a scale, so no unit suffix
+  (`40:92-94` only requires suffixes on ambiguous *dimensional* names). The value is unchanged.
+- `contact_footprint.contact_diameter_m` is **removed**. It was the derived collision diameter.
+
+The ten scales were re-verified against the “Ordinary roster overview” table at
+`docs/31:37-48` (`Body` column), not taken from the ruling's restatement, and the removed
+diameters were re-verified against the “Collision and Contact Footprints” table at
+`docs/72:88-99` before deletion:
+
+| ID | Identity | `body_scale_factor` (`docs/31`) | Removed `contact_diameter_m` (`docs/72`) | scale × `0.80 M` |
+| --- | --- | ---: | ---: | ---: |
+| `EN-01` | Skitterling | 0.55 | 0.44 M | 0.440 |
+| `EN-02` | Ripper | 1.00 | 0.80 M | 0.800 |
+| `EN-03` | Shellback | 1.30 | 1.04 M | 1.040 |
+| `EN-04` | Lurker | 1.05 | 0.84 M | 0.840 |
+| `EN-05` | Gloomwing | 1.20 | 0.96 M | 0.960 |
+| `EN-06` | Needler | 1.00 | 0.80 M | 0.800 |
+| `EN-07` | Razorling | 0.62 | 0.50 M | **0.496** |
+| `EN-08` | Iron Ripper | 1.10 | 0.88 M | 0.880 |
+| `EN-09` | Siegeback | 1.65 | 1.32 M | 1.320 |
+| `EN-10` | Dreadwing | 1.35 | 1.08 M | 1.080 |
+
+Every row reproduces exactly, so nine of the ten removals lost nothing that the compiler cannot
+reproduce from the surviving scale and the `0.80 M` reference.
+
+**`docs/72:96`'s `0.50M` for Razorling is not a second authored value.** It is `0.496`
+typeset to the two decimals the whole column uses; the same rounding is invisible on the other
+nine rows only because their products happen to be exact at two decimals. Reading it as an
+authored diameter is what created contradiction C-1. The **docs side is being corrected** to
+`0.496 M`; that edit is outside this pass (`docs/` is out of scope for this worker).
+
+**What the ruling did not determine, and I chose:**
+
+1. **Which field is “the collision-diameter field”.** I removed only
+   `contact_footprint.contact_diameter_m`. I **kept**
+   `contact_footprint.center_distance_that_begins_contact_m`, `shape`, and
+   `reference_diameter_m` — even though the centre distance is *also* derivable
+   (`contact_diameter ÷ 2 + the mech's 0.50 M collision radius`, `docs/72:86`, which reproduces
+   all ten values). The ruling named one field, singular, and “preserve every value you are not
+   explicitly told to remove” governs the rest. If the compiler is to derive the centre distance
+   too, that is a second removal and a second decision.
+   **→ Superseded by Ruling 6.** That second decision was made: the centre distance is removed too.
+   Also note the field rename in this entry (`body_scale_multiplier` → `body_scale_factor`) is
+   **reverted by Ruling 7**, which puts the name back to `body_scale_multiplier`.
+2. **No new `source_refs` entry for `body_scale_factor`.** The field is a rename of an existing
+   field that carried no prefixed ref, its source did not change, and index 0 of every enemy's
+   `source_refs` is already `GDD-INITIAL-ALIEN-ROSTER#ordinary-roster-overview` — the roster table
+   the `Body` column lives in. The `contact_footprint:` ref to
+   `GDD-PLAYER-SURVIVABILITY-BASELINE#collision-and-contact-footprints` is retained because the
+   surviving footprint fields still come from there.
+
+#### Ruling 2 — the resource radar is a utility and gets `UTL-R1`
+
+**Citations.** `40:128` gives the Utilities schema a field for the “assigned material or ore-only
+radar exception”, so the schema expects the radar *inside* the utility catalog with a marked
+exception rather than outside it. `docs/68:31` — the radar “remains outside the material table: it
+costs 300 common ore, has no ranks” — places it outside the *material table*, which is not the
+catalog. `R` collides with none of the `A`–`F` material letters used by `UTL-A1`…`UTL-F2`.
+
+**Change.**
+
+- `"id"` is `"UTL-R1"` (was `null`).
+- The file is renamed `content/utilities/radar-unassigned-id.json` →
+  **`content/utilities/UTL-R1.json`**.
+- `name_key` is `utility.UTL-R1.name` and `summary_key` is `utility.UTL-R1.summary` (were
+  `utility.radar-unassigned-id.*`). Both keys were renamed in place in
+  `content/localization/en.json`, which stays flat, lexically sorted, duplicate-free and
+  orphan-free at 164 strings; the two English values are unchanged.
+- Display name confirmed as **“Resource radar”**, sentence case — `docs/glossary.md:220` and the
+  catalog row at `docs/63:28`, where the neighbouring `Universal utility` cell and the fully
+  title-cased material-utility names in the row below make the lowercase `r` deliberate. This also
+  closes C-3 above.
+- The “no ID assigned” flag is gone: `"id": null` **was** the flag, and the per-definition note
+  that opened “BOUNDARY DECISION REQUIRED — THIS FILE HAS NO ID” is superseded by this entry. That
+  note is still reproduced verbatim below, under the file's former path, because note text is
+  never edited.
+- Four `source_refs` entries were added for the two things the file now asserts:
+  `id: TDD-CONTENT-DATA#utilities`, `id: GDD-UTILITY-CATALOG#shared-acquisition-and-rank-rules`,
+  `name_key: GDD-GLOSSARY#resource-radar`,
+  `name_key: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#fresh-profile-baseline`. Every pre-existing entry
+  is retained.
+
+Every other field of the definition — including `material: null`, the 300-ore cost, `ranks: null`,
+the seven tracked categories, `effect_rules`, and all seven `external_numerics` — is byte-identical.
+
+**What the ruling did not determine, and I chose:** the four added `source_refs` entries and their
+`json.path:` prefixes. The ruling named `docs/glossary.md:220` and `docs/63:28` as name authorities
+and `40:128` / `docs/68:31` as ID authorities but did not say to cite them in the file.
+
+#### Ruling 3 — `elite-modifier-profile.json` is not a definition; decomposed and deleted
+
+**Citations.** `40:114` puts “elite eligibility” in the *enemy* schema's field list.
+`docs/technical/23:137` — an elite “snapshots the base enemy definition plus the shared elite
+modifiers at spawn. It does not create a second duplicated enemy catalog row.” So there is no
+elite definition to own an ID: there is a per-enemy flag and a block of shared constants.
+
+**Change — eligibility onto the enemies.** `elite_eligible` (boolean) is on all ten enemy
+definitions, `false` on `EN-06` and `true` on the other nine, and each now carries a
+`elite_eligible: GDD-INITIAL-ALIEN-ROSTER#elite-treatment` ref (`EN-06` additionally carries
+`elite_eligible: TDD-ENCOUNTERS#elite-construction`). The `EN-06` exclusion was confirmed at
+source before writing it, in two places. `docs/31:102` states it twice in one sentence — an elite is “a visibly
+enhanced instance of one of the nine pure pursuers” (nine of ten) and “Needler does not become an
+elite in the initial standard schedule because combining its projectile with the shared elite
+multipliers reduces readability”. And — decisively, because it is what makes this a validated field
+rather than prose — `docs/technical/23:141`, “Needler is excluded by content validation.” The former `eligible_enemy_ids` / `excluded_enemy_ids` arrays are gone; their
+content is exactly the ten booleans.
+
+**Change — the five shared multipliers become a constants block.**
+`content/enemies/shared-elite-modifiers.json`, with **no `id`** and **no `name_key`** because it is
+not a definition and has no player-facing name. Envelope (`schema_version`, `content_version`,
+`status`, `tags`, `source_refs`) first, as everywhere else. The five values, verified against
+`docs/31:104-110` and `docs/technical/23:139-140`:
+
+| Property | Value | Note |
+| --- | ---: | --- |
+| `maximum_hull_multiplier` | 4 | Hull ×4 |
+| `movement_speed_multiplier` | 1.1 | |
+| `contact_damage_multiplier` | 1.5 | |
+| `body_scale_multiplier` | 1.25 | stays a **scale**, per the ruling and Ruling 1 |
+| `added_control_resistance_percent` | 25 | **percentage points**, so the name ends `_percent` (`40:95`); the normalized factor is the compiler's |
+
+Also renamed for the same `40:95` reason: `added_control_resistance.cap_percent` (90) is now the
+top-level `control_resistance_cap_percent`. `added_control_resistance.percentage_points` was the
+one property in the file that failed the `*_percent` policy.
+
+`contact_diameter_multiplier` (`{"value": 1.25}`) was **removed** as the derived twin of
+`body_scale_multiplier` — the same `1.25`, by the same argument as Ruling 1, so no value was lost.
+Its `source_refs` entry was re-prefixed onto `body_scale_multiplier:` rather than dropped (the same
+treatment the `world-props` fold used). Everything else from the old file is carried over
+byte-identically: `adds_behavior`, `adds_attacks_phases_aura_or_support_ai`, `adds_loot`,
+`retains_base_identity_behavior`, `exclusion_reason`, `max_scheduled_elites_at_once`,
+`beacon_elites_additional`, `recycling`, `post_hard_control_immunity_seconds`,
+`modifier_application_order`, `presentation_requirements`, `worked_examples`.
+`content/enemies/elite-modifier-profile.json` is deleted.
+
+> **FLAG — the placement of this constants block is my choice, not the spec's.**
+> The ruling says the five multipliers are “a shared constants block, not a definition” and does
+> **not** name a home for it. `content/` has no constants category: `40:34-63` lays out
+> per-catalog definition directories and nothing else. I put it in `content/enemies/` because that
+> is where its only consumer's definitions live and because it sits beside the `elite_eligible`
+> flags it pairs with. Nothing in `docs/` states that. **It may move when the schemas land** — to a
+> `content/constants/` or `content/rules/` directory, into the encounter-director contract, or into
+> the schema stream's own shared-values file. Treat the path
+> `content/enemies/shared-elite-modifiers.json` as provisional. The same caveat applies to the
+> file's *stem*, which no document supplies either.
+
+**What else the ruling did not determine, and I chose:**
+
+1. **`exclusion_reason` stays in the constants block** (verbatim value, verbatim key). With the two
+   ID arrays gone it has no `excluded_enemy_ids` sibling, but its value names Needler explicitly so
+   it is self-describing, and enemy definitions have no prose slot for it. Deleting it would have
+   lost an authored sentence.
+   **→ Superseded by Ruling 8.** The field is dropped; the sentence was never lost, because it is
+   authored prose in `docs/`, and the machine-readable form of the exclusion is `EN-06`'s
+   `elite_eligible: false`.
+2. **The asymmetric names `body_scale_factor` (enemy) vs `body_scale_multiplier` (elite).** The
+   enemy stores its own scale; the elite block multiplies whatever the enemy stores. I read that as
+   two different quantities that should not share a name, but the ruling only fixed the enemy one.
+   **→ Superseded by Ruling 7.** They are the same kind of quantity and now share the name.
+3. **`post_hard_control_immunity_seconds` keeps its `{"value": 0.75}` wrapper**, copied verbatim
+   rather than flattened. Flattening is a shape decision for the schema stream.
+4. **The two added `source_refs` entries** (`TDD-ENCOUNTERS#elite-construction`, and the
+   `control_resistance_cap_percent:` prefix) and the re-prefix onto `body_scale_multiplier:`.
+
+#### Ruling 4 — `geode-resonance-effects.json` is not a definition; decomposed and deleted
+
+**Citations.** Doc 40 splits this deliberately. `40:106` gives the *resource* definition a
+“resonance behavior registration if applicable”, and the authored table is keyed by Material
+(`docs/61:90`, “Geode resonance behavior”), so the shape already matches. `40:140` gives the
+*mining-site* definition the “zone/field dimensions”. Runtime agrees: `docs/technical/24:23` has
+each site store “resonance material and field radius if a geode” — the site references the
+material, the material owns the behavior.
+
+**Change — the six effects onto the six resources.** `content/resources/A.json` … `F.json` each
+gain a `resonance_behavior` object beside the `resonance_effect_name` they already had, carrying
+that material's row byte-identically: `effect_name`, `resonance_effect`, `modifier`
+(`{percent, direction}`), `short_modifier`, `edge_case_rule`. Each also gains
+`resonance_behavior: GDD-MINING#geode-resonance-fields` and
+`resonance_behavior.short_modifier: GDD-SPECIALIZED-RESOURCE-IDENTITIES#geode-resonance-behavior`,
+matching the split the old file's own notes 2 and 3 describe (docs/40 authoritative, docs/61 for
+the abbreviated `short_modifier` wording).
+
+Two fields of each old row were **not** copied, because they were the row's own keys and are
+already the receiving definition's identity: `material_id` (`"A"`) is the resource's `id`, and
+`geode` (`"Asterite"`) is the resource's display name — `en.json`'s `resource.A.name` is exactly
+`"Asterite"` for all six. Nothing is lost; asserted mechanically.
+
+**Change — the field rules onto the geode class.** `content/mining-sites/specialized-material-geodes.json`
+already carried a `resonance_field` block. The `field_rules` values the old file held are now all
+present there, seven of them already matching under the site's own names:
+
+| old `field_rules.*` | site `resonance_field.*` | value |
+| --- | --- | ---: |
+| `radius_m` | `radius_m` | `null` |
+| `larger_than_extraction_zone` | *same* | `true` |
+| `active_during_interruptions` | *same* | `true` |
+| `collapses_when_geode_opens` | `collapses_on_open` | `true` |
+| `modifier_retained_after_leaving_field` | `retained_after_leaving_field` | `false` |
+| `applies_to` | *same* | 3 entries |
+| `summons_enemies` | *same* | `false` |
+| `uses_progress_thresholds` | *same* | `false` |
+| `active_before_extraction_begins` | **added** | `true` |
+| `fields_overlap_on_standard_maps` | **added** | `false` |
+| `modifier_named_in_geode_label_or_contextual_hud` | **added** | `true` |
+
+`modifier_magnitude_percent: 20` was already on the site as
+`resonance_field.modifier_magnitude.percent: 20` and on each per-material `modifier.percent`.
+Two `source_refs` entries were added to the site for the relocated rules.
+`content/resources/geode-resonance-effects.json` is deleted. It had **no** localization keys —
+none were ever minted for it (see “Localization keys” below) — so nothing was removed from
+`en.json`.
+
+**The field radius was never given a number** and stays `null`. `docs/40:100` says only that the
+field is “larger than its extraction zone”; no doc gives a dimension. The existing gap flag is
+kept — note 4 of `specialized-material-geodes` below, “resonanceField.radiusMeters is null:
+docs/40-mining-and-extraction.md:100 states only that the field is ‘larger than its extraction
+zone’; no dimension is given.”
+
+> **FLAG — the six effects need `behavior_kind` registry tokens and do not have them.**
+> `40:156` requires that “every content `behavior_kind` … has exactly one registered descriptor
+> with a compatible parameter schema”, and no registry exists in this tree yet. So each
+> `resonance_behavior` carries `"behavior_kind": null` with
+> `"behavior_kind_registration_pending": true`, and **no token format was invented** — anything
+> written now would look official and would be guessed. The six effect names needing tokens are:
+> **Focused Assault** (`A`, Asterite), **Dense Plating** (`B`, Barysteel),
+> **Charged Payloads** (`C`, Cinderglass), **Vector Lock** (`D`, Driftmetal),
+> **Synchronized Aggression** (`E`, Eidolon Coral), **Overclocked Motion** (`F`, Flux Amber).
+> All six are authored at `docs/40:104-109`. Whoever owns the registry must mint six tokens and
+> replace the six nulls; the pending flag is the machine-readable marker to search for.
+>
+> **→ Superseded by Ruling 9.** The flag's *substance* stands — the six tokens are still unminted
+> and still needed — but it must not live in `content/`. Both `behavior_kind: null` and
+> `behavior_kind_registration_pending: true` are removed from the six resources, and the outstanding
+> work is recorded in this document instead. See Ruling 9 for the list in its new home.
+
+**What else the ruling did not determine, and I chose:**
+
+1. **The three added `resonance_field` keys, and which seven I treated as already present.** The
+   ruling said to move “the field radius”. The remaining ten `field_rules` values had to go
+   somewhere or be lost, and the site's `resonance_field` is where the spec puts field dimensions
+   (`40:140`). `active_before_extraction_begins: true` now sits beside the site's existing
+   `active_while_unopened: true`, which is arguably the same fact under two names — I kept both
+   rather than judge one redundant and drop an authored value. De-duplicating them is a schema
+   decision, exactly as the `world-props` fold's duplicated distance pair was.
+2. **The property names `resonance_behavior` and `behavior_kind_registration_pending`.** `40:106`
+   says “resonance behavior registration”; the snake_case rendering and the pending flag's name are
+   mine. **→ Partly superseded by Ruling 9:** `behavior_kind_registration_pending` is gone, so only
+   `resonance_behavior` remains my naming choice.
+3. **Keeping `resonance_effect_name` as well as `resonance_behavior.effect_name`.** The former was
+   already there with its own note; the latter is part of the relocated row. They agree, and this
+   is asserted.
+
+#### Ruling 5 — minute 33 of the wave schedule
+
+**Citations.** The markdown row is well-formed; only its timing token is not. “at 33:15 intervals”
+parses neither as an `m:ss` timestamp (`33:15` would be one instant, not a set) nor as a period
+(`33:15` is not a duration). The column's contract is “at the listed time”
+(`docs/32:21`, “a deterministic authored formation layered over baseline replenishment at the
+listed time”), and every other repeating row in the table enumerates its times explicitly —
+`29:20 and 29:45`, `34:10 and 34:40`. Four sectors, minute 33, quarter-minute spacing is the only
+reading that satisfies the column contract, the “four sectors” in the cell, and the `33:15` token.
+
+**Change.** In `content/encounters/standard-encounter-schedule.json`, `minute_rows[33]`
+(`minute: 33`), `formation_events[0]`:
+
+- `at` is `["33:00", "33:15", "33:30", "33:45"]` (was `null`).
+- `timing_unresolved` is `false` (was `true`) — the row now carries times.
+- **`timestamps_reconstructed: true`** and `timestamp_provenance: "reconstructed"` are the explicit
+  machine-readable flags marking those four times as reconstructed rather than authored, plus a
+  `reconstruction_basis` sentence stating the reasoning inline. The integration owner's requirement
+  is that this be legible in the data, not laundered into a hashed bundle as authoritative: a
+  consumer that trusts `at` without reading `timestamps_reconstructed` is reading provisional
+  numbers as accepted ones, and a bundle hash over this row must not be cited as evidence the
+  times were authored.
+- `formations`, `enemy_ids`, and the verbatim `text` are unchanged, so the original
+  “Streams rotate through four sectors at 33:15 intervals” cell survives in the data — as does the
+  row-level `authored_event_or_boundary`. Only the *timing token's role as the timing value* is
+  gone; the token itself is still there, verbatim, twice.
+
+**Proof gate — what discharges the flag.** The flag comes off when, and only when, one of these
+lands, and until then the four times must not be treated as accepted content:
+
+1. `docs/32:89` (the minute-33 row) is reauthored to enumerate absolute times, exactly as the
+   minute-29 and minute-34 rows do. If those times are the four written here, the flag is deleted
+   and `source_refs` gains nothing; if they differ, the data changes and only the flag's removal is
+   shared with this pass. This is the expected resolution.
+2. Or the schedule schema grows a validated interval grammar (`40:144` — “Aggregate validation
+   compares 35 contiguous rows, totals, earliest appearance, boss cadence, formation grammar”), in
+   which case the row should hold the interval, not four expanded timestamps, and this
+   reconstruction is discarded rather than confirmed.
+
+A playtest that “feels right” does **not** discharge it: the question is what was authored, not
+what plays well.
+
+**What the ruling did not determine, and I chose:** the flag's *spelling* — the property names
+`timestamps_reconstructed`, `timestamp_provenance`, and `reconstruction_basis`, and the decision to
+flip `timing_unresolved` to `false` rather than leave it `true` beside a populated `at`. The ruling
+required “an explicit machine-readable flag on that row” and did not name it. I also added one
+`source_refs` entry for the reconstructed field.
+
+### Integration-owner rulings applied — second pass
+
+Four further items were ruled on after the first pass and applied here. Three of them reverse a
+choice I had made and recorded above; the fourth confirms two things stay as they are. As before,
+each entry gives the citations, exactly what changed, and separately what the ruling left to me.
+
+**These are deliberate removals, not transcription gaps.** Five fields are absent from `content/`
+by decision rather than because no document supplied them:
+`contact_footprint.contact_diameter_m` and `contact_footprint.center_distance_that_begins_contact_m`
+on the ten enemies (Rulings 1 and 6 — the compiler owns both under `40:114`), and
+`resonance_behavior.behavior_kind`, `resonance_behavior.behavior_kind_registration_pending` and
+`exclusion_reason` (Rulings 8 and 9 — invented metadata no schema declares). A reviewer should not
+read any of the five as missing data, and none should be re-added by a later transcription pass
+finding the value in `docs/` and assuming it was overlooked.
+
+#### Ruling 6 — the centre distance is derived too, and comes out
+
+**Citations.** `docs/72:86` gives the whole derivation in one sentence: “The Ripper's rank-zero
+contact diameter is 0.80M. Every ordinary body scale in the alien roster multiplies that diameter.
+Contact begins when the enemy contact circle and the mech's 0.50M-radius collision circle overlap.”
+So the centre distance is `enemy contact diameter ÷ 2 + 0.50 M`, and
+`docs/technical/40-content-data-and-validation.md:114` assigns producing it to the compiler along
+with the footprint: “Validation derives world speeds/footprints and compares them with the
+survivability report.”
+
+This is a worse coupling than the diameter was, which is why it did not survive the second look.
+The `0.50 M` term is the **player's** collision radius, not anything about the enemy. Storing the
+sum on an enemy definition copies a player-baseline constant into the enemy catalog, so a change to
+the mech's collision radius would silently invalidate ten enemy files — two owners on one value, in
+two different catalogs. That is the same defect as the duplicated diameter, one catalog boundary
+further out.
+
+**Change.** `contact_footprint.center_distance_that_begins_contact_m` is **removed** from all ten
+ordinary enemy definitions (`content/enemies/EN-01.json` … `EN-10.json`). `contact_footprint` keeps
+`shape` and `reference_diameter_m`, and its `source_refs` prefix is retained because those two
+surviving fields still come from `docs/72`. Bosses are untouched: the ruling named the enemy
+definitions, and a boss's circle is authored directly rather than scaled from the Ripper.
+
+The removed values were re-verified against the “Center distance that begins contact” column at
+`docs/72:88-99` before deletion, and every one reproduces from the surviving
+`body_scale_multiplier`:
+
+| ID | Identity | `body_scale_multiplier` | Removed centre distance (`docs/72`) | scale × `0.80 M` ÷ 2 + `0.50 M` |
+| --- | --- | ---: | ---: | ---: |
+| `EN-01` | Skitterling | 0.55 | 0.72 M | 0.720 |
+| `EN-02` | Ripper | 1.00 | 0.90 M | 0.900 |
+| `EN-03` | Shellback | 1.30 | 1.02 M | 1.020 |
+| `EN-04` | Lurker | 1.05 | 0.92 M | 0.920 |
+| `EN-05` | Gloomwing | 1.20 | 0.98 M | 0.980 |
+| `EN-06` | Needler | 1.00 | 0.90 M | 0.900 |
+| `EN-07` | Razorling | 0.62 | 0.75 M | **0.748** |
+| `EN-08` | Iron Ripper | 1.10 | 0.94 M | 0.940 |
+| `EN-09` | Siegeback | 1.65 | 1.16 M | 1.160 |
+| `EN-10` | Dreadwing | 1.35 | 1.04 M | 1.040 |
+
+Nine rows reproduce exactly. `EN-07` is off by `0.002` for the *same* reason it was off by `0.004`
+on the diameter — it is `0.748` typeset to the two decimals the column uses — which is contradiction
+C-1 showing up a second time in a second derived column, and is further evidence that C-1 is a
+typesetting artefact rather than a competing authored value.
+
+**Verifier.** `A20` in `src/MechaMiner.Tools/ContentImport/verify_content.py` now asserts that no
+enemy definition carries either derived field, matching on key names across `content/enemies/` so a
+rename cannot slip past it. `reference_diameter_m` is explicitly allowlisted there, because `0.80 M`
+is the Ripper's authored rank-zero diameter and not a per-enemy derived value.
+
+**What the ruling did not determine, and I chose:** leaving `contact_footprint` as an object with
+two remaining fields rather than flattening `shape` and `reference_diameter_m` onto the definition.
+Flattening is a shape decision for the schema stream.
+
+#### Ruling 7 — `body_scale_factor` goes back to `body_scale_multiplier`
+
+**Citations.** Both documents call it a multiplication. `docs/31:35` — “Body scale multiplies the
+Ripper's 0.80M contact diameter, not its decorative mesh.” `docs/technical/23:139` — “Hull ×4,
+movement ×1.10, contact damage ×1.50, contact diameter ×1.25.”
+
+**Change.** `body_scale_factor` is renamed **`body_scale_multiplier`** on all ten ordinary enemy
+definitions. **All ten values are unchanged.** This reverts the rename Ruling 1 made and restores
+the name the files carried before this pass began.
+
+The point is the composition chain, which now reads in one vocabulary:
+`0.80 M` Ripper reference × the enemy's `body_scale_multiplier` × the elite block's
+`body_scale_multiplier` (`1.25`). My first-pass reasoning — that the enemy's own scale and the
+elite's scaling-of-a-scale are different quantities deserving different names — was wrong: both are
+multipliers applied to the same reference, and naming them differently made a two-step product look
+like two unrelated ideas. `content/enemies/shared-elite-modifiers.json` was already
+`body_scale_multiplier` and is unchanged.
+
+#### Ruling 8 — `exclusion_reason` comes out of the shared elite modifiers
+
+**Citations.** `40:249` — an agent “must not … add an unvalidated optional field”. The exclusion
+already has a machine-readable carrier: `docs/technical/23:141` says “Needler is excluded by content
+validation”, and that validation reads `EN-06`'s `elite_eligible: false`, which is the field
+`40:114` puts in the enemy schema. The *reason* is authored prose at `docs/31:102` (“Needler does not
+become an elite in the initial standard schedule because combining its projectile with the shared
+elite multipliers reduces readability”) and restated at `docs/technical/23:141`.
+
+**Change.** `exclusion_reason` is **removed** from `content/enemies/shared-elite-modifiers.json`.
+Nothing else in the file changed.
+
+No authored sentence was lost, which is where my first-pass reasoning went wrong: the sentence is
+still at `docs/31:102`, where it is owned and maintained. Copying it into `content/` gave the same
+prose a second writer with no validator to keep the two in step, so the copy could drift from the
+source and nothing would notice. The exclusion **is** `elite_eligible: false` on `EN-06`; that is
+the assertion a validator can act on, and it is already in the data.
+
+#### Ruling 9 — `behavior_kind: null` and the pending flag come out of the six resources
+
+**Citations.** `40:249` again — no unvalidated optional fields, and `40:90` — “Unknown fields are
+errors rather than silently ignored.” `behavior_kind_registration_pending` is a field no schema will
+ever declare: it describes the state of this transcription, not the state of the game. And
+`behavior_kind: null` is a *nulled* optional field where the envelope's own rule for an
+unavailable optional value is omission — the same treatment `presentation_id` gets throughout this
+tree (`A4` in the verifier asserts it).
+
+**Change.** In `content/resources/A.json` … `F.json`, both keys are removed from
+`resonance_behavior`. The key is **omitted**, not set to `null`. Everything else in each
+`resonance_behavior` block — `effect_name`, `resonance_effect`, `modifier`, `short_modifier`,
+`edge_case_rule` — and both `source_refs` entries are unchanged.
+
+**No tokens were minted, deliberately.** `DAT-004` owns the behavior registry manifest; it is
+generated and staleness-checked, so a token grammar invented in a content PR would look official,
+would not match the generated manifest, and would have to be re-minted — with the invented spelling
+already referenced from six files by then. Guessing here costs more than waiting.
+
+**Outstanding work, recorded here because it does not belong in `content/`.** Six resonance
+behaviors need registry tokens and do not have them. `DAT-004` should mint against these six names,
+all authored in the “Geode resonance fields” table at **`docs/40-mining-and-extraction.md:98-109`**:
+
+| Resource | Geode | Effect name | Authored effect |
+| --- | --- | --- | --- |
+| `A` | Asterite | **Focused Assault** | outgoing enemy damage is 20% higher |
+| `B` | Barysteel | **Dense Plating** | enemies take 20% less damage |
+| `C` | Cinderglass | **Charged Payloads** | enemy projectile damage is 20% higher |
+| `D` | Driftmetal | **Vector Lock** | player-imposed displacement magnitude and control-effect duration are 20% lower |
+| `E` | Eidolon Coral | **Synchronized Aggression** | enemy attack cadence is 20% faster without increasing movement speed |
+| `F` | Flux Amber | **Overclocked Motion** | enemy movement speed is 20% higher without increasing attack cadence |
+
+`40:156` requires that every content `behavior_kind` have exactly one registered descriptor with a
+compatible parameter schema. When the registry exists, each of the six resources gains a
+`behavior_kind` holding its minted token. Until then the six `resonance_behavior` blocks carry the
+authored effect and its `modifier` and no registration — which is accurate, because there is no
+registration to carry. Each material's `effect_name` is the string to search on; that is authored
+content, not a flag.
+
+#### Ruling 10 — two things confirmed unchanged
+
+Neither of these is a change; both were reviewed in the second pass and left as they are.
+
+1. **`content/enemies/shared-elite-modifiers.json` keeps its location.** The FLAG under Ruling 3
+   calls the path my choice and provisional; the ruling confirms `content/enemies/` is right for now.
+   Elite modifiers are enemy values used by the enemy catalog — same domain — so the
+   “unrelated convenience file” objection at `114:90`, which is what moved the player baseline out
+   of the mech catalog (see the `shared-baseline.json` handoff above), does not apply here. The
+   file's *stem* is still unsourced, and the path may still move when the schemas land.
+2. **The geode resonance field radius stays `null`.** The integration owner is registering
+   provisional values in `docs/technical/24`; no number goes into
+   `content/mining-sites/specialized-material-geodes.json` before a citation exists for
+   `source_refs` to point at. Ruling 4's gap flag on `resonance_field.radius_m` therefore stands
+   unchanged.
 
 ### Per-definition notes, by catalog
 

@@ -128,6 +128,22 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       A missing deployment field is only a warning, because the field name
       is unvalidated until content/schemas/ exists.                    WARNING
 
+  A20 No enemy definition carries a compiler-derived footprint value. An
+      enemy authors body_scale_multiplier; both the contact diameter
+      (scale x 0.80 M) and the centre distance that begins contact
+      (diameter / 2 + the player's 0.50 M collision radius) are products of
+      it and belong to the compiler. Checked on KEY NAMES across
+      content/enemies/, with reference_diameter_m allowlisted because
+      0.80 M is the Ripper's authored rank-zero diameter, not a per-enemy
+      derived value.
+      Mandate: docs/technical/40-content-data-and-validation.md:114
+      ("Validation derives world speeds/footprints and compares them with
+      the survivability report")                                      FAILURE
+
+  A21 content/ holds exactly EXPECTED_CONTENT_JSON_FILES (139) *.json
+      files, so a file in a directory no A12 row covers is still caught.
+      The two Markdown files under content/ are listed, not counted.   FAILURE
+
 Not asserted here: no structural JSON Schema validation happens, because
 content/schemas/ (40:36) does not exist yet. Domain field names outside the
 envelope are therefore unvalidated and will need one reconciliation pass when
@@ -148,6 +164,15 @@ LOCALIZATION = CONTENT / "localization" / "en.json"
 
 # Directories under content/ that are not catalogs of definitions.
 NON_DEFINITION_DIRS = ("localization", "schemas")
+
+# A21 - total *.json inventory under content/. This is the sum of the A12 rows
+# plus content/localization/en.json, and it is asserted separately so that a
+# file appearing in a directory A12 does not cover is still caught.
+#
+# content/ also holds two Markdown files - README.md and transcription-notes.md
+# - which are documentation, not content. So `find content -type f` reports 141
+# while this count is 139; that difference is correct and is not a discrepancy.
+EXPECTED_CONTENT_JSON_FILES = 139
 
 # --------------------------------------------------------------------------
 # A2/A4/A5 - envelope
@@ -170,41 +195,58 @@ STATUS_VOCABULARY = ("development", "enabled", "disabled", "retired")
 #     appear inside MGC-01.
 #
 # The members below are expected, for two different reasons:
-#   - The resource radar and the four mining-site classes have NO doc-assigned
-#     ID at all. The radar is the thirteenth utility
-#     (docs/50-maps-resources-and-navigation.md:106) but never receives a UTL-*
-#     token; the four site classes are prose-only
-#     (docs/40-mining-and-extraction.md:58-132) with no table to carry an ID.
-#     Minting one here would be inventing content.
-#   - elite-modifier-profile and geode-resonance-effects are held pending a
-#     ruling on whether they are standalone definitions at all, or belong inside
-#     the enemy schema (40:114) and the mining-site schema (40:140)
-#     respectively, in which case they never get their own ID.
+#   - The four mining-site classes have NO doc-assigned ID at all: they are
+#     prose-only (docs/40-mining-and-extraction.md:58-132) with no table to
+#     carry an ID, so minting one here would be inventing content.
+#   - shared-elite-modifiers.json is not a definition. The rulings pass settled
+#     that elite treatment is not its own entity: elite ELIGIBILITY is a
+#     validated field on each enemy, which is where the enemy schema puts it
+#     (40:114, "elite eligibility"), and the shared multipliers
+#     (docs/31-initial-alien-roster.md:104) are a constants block those enemies
+#     read. A constants block has nothing to be referenced BY, so it carries no
+#     stable ID and no name_key. It is deliberately not in EXPECTATIONS as an
+#     item either - it is the enemies directory's one aggregate file.
+#
+# Three files that used to be listed here are gone from this list:
+#   - enemies/elite-modifier-profile.json was DELETED, superseded by the
+#     shared-elite-modifiers.json constants block plus the per-enemy
+#     elite_eligible field.
+#   - resources/geode-resonance-effects.json was DELETED: each resonance effect
+#     moved onto the resource that owns it and the field radius onto the geode
+#     site class, per the mining-site schema (40:140).
+#   - utilities/radar-unassigned-id.json is now utilities/UTL-R1.json. The
+#     radar is the thirteenth utility
+#     (docs/50-maps-resources-and-navigation.md:106) and the rulings pass gave
+#     it the stable ID UTL-R1 and the player-facing name "Resource radar", so
+#     it is an ordinary item in the utilities count and belongs in neither list.
 ID_NULL_EXPECTED = frozenset(
     {
-        "content/enemies/elite-modifier-profile.json",
+        "content/enemies/shared-elite-modifiers.json",
         "content/mining-sites/hyper-gold-sites.json",
         "content/mining-sites/rich-ore-seams.json",
         "content/mining-sites/specialized-material-geodes.json",
         "content/mining-sites/standard-ore-seams.json",
-        "content/resources/geode-resonance-effects.json",
-        "content/utilities/radar-unassigned-id.json",
     }
 )
 
 # A3/A19 - definitions that legitimately omit name_key.
 #
 # name_key is required only where a definition has a genuinely player-facing
-# name. None of these four is player-facing: WAV-01 and MGC-01 are authoring
-# contracts, and the other two are internal aggregates. Putting their titles in
-# the localization catalog would imply a UI surface that does not exist, so the
-# compiler supplies the default instead (40:90).
+# name. None of these three is player-facing: WAV-01 and MGC-01 are authoring
+# contracts, and shared-elite-modifiers is a constants block, not an entity the
+# UI ever names. Putting their titles in the localization catalog would imply a
+# UI surface that does not exist, so the compiler supplies the default instead
+# (40:90).
+#
+# The two files removed from this list are the same deletions and the same
+# rename described above ID_NULL_EXPECTED: elite-modifier-profile.json and
+# geode-resonance-effects.json no longer exist, and the radar is now UTL-R1 with
+# the real name_key utility.UTL-R1.name.
 NAME_KEY_OMITTED = frozenset(
     {
         "content/encounters/standard-encounter-schedule.json",
-        "content/enemies/elite-modifier-profile.json",
+        "content/enemies/shared-elite-modifiers.json",
         "content/maps/standard-map-generation-contract.json",
-        "content/resources/geode-resonance-effects.json",
     }
 )
 
@@ -260,7 +302,12 @@ EXPECTATIONS = [
         selector=("id_regex", r"^EN-\d{2}$"),
         items=10,
         aggregates=1,
-        label="ordinary enemies (+ 1 elite modifier profile aggregate)",
+        # The one aggregate is shared-elite-modifiers.json, the shared elite
+        # constants block. It is not an eleventh enemy: it has no id and no
+        # name_key (see ID_NULL_EXPECTED), so the id_regex selector correctly
+        # buckets it as the directory's aggregate. The former
+        # elite-modifier-profile.json definition it replaced is deleted.
+        label="ordinary enemies (+ 1 shared elite modifier constants block)",
         source="docs/31-initial-alien-roster.md:37 + docs/31-initial-alien-roster.md:104",
     ),
     dict(
@@ -289,10 +336,14 @@ EXPECTATIONS = [
     ),
     dict(
         dir="utilities",
-        selector=("id_regex", r"^UTL-[A-F][12]$"),
-        items=12,
-        aggregates=1,
-        label="utilities (12 UTL-* + the resource radar, which has no doc ID)",
+        # UTL-R1, the resource radar, is a utility with a stable ID like any
+        # other, so the selector admits it. The old ^UTL-[A-F][12]$ pattern
+        # matched only the twelve material utilities and therefore counted the
+        # radar as an aggregate file, which it is not.
+        selector=("id_regex", r"^UTL-(?:[A-F][12]|R1)$"),
+        items=13,
+        aggregates=0,
+        label="utilities (12 material UTL-* + the resource radar UTL-R1)",
         source="docs/68-utility-catalog.md:35 + docs/50-maps-resources-and-navigation.md:106",
     ),
     dict(
@@ -1114,11 +1165,100 @@ def check_totals(docs: dict[Path, object]) -> list[tuple]:
 # every 6 s". A generic derived-value detector is not possible without schemas.
 # --------------------------------------------------------------------------
 
+# A20 - the two compiler-derived enemy footprint values, which no enemy
+# definition may carry. Both are derived under
+# docs/technical/40-content-data-and-validation.md:114 ("Validation derives
+# world speeds/footprints and compares them with the survivability report"), so
+# storing either alongside the authored body scale puts a second writer on a
+# compiler-owned value - exactly the 0.004 M disagreement that started this.
+#
+# What the enemy DOES author is body_scale_multiplier. Everything below is a
+# product of it:
+#   contact diameter  = body_scale_multiplier x 0.80 M   (docs/72:86)
+#   centre distance   = contact diameter / 2 + 0.50 M    (docs/72:86)
+# The 0.50 M in the second is the PLAYER's collision radius, so storing the
+# centre distance on an enemy encodes a player-baseline constant into the enemy
+# catalog - a worse coupling than the diameter was.
+#
+# reference_diameter_m is allowlisted and must stay: 0.80 M is the Ripper's
+# authored rank-zero contact diameter (docs/72:86), the shared reference the
+# scale multiplies. It is an authored constant, not a per-enemy derived value.
+ENEMY_DERIVED_FIELD_ALLOWED = frozenset({"reference_diameter_m"})
+ENEMY_DERIVED_FIELDS = (
+    (
+        "collision/contact diameter",
+        re.compile(r"(?i)(?:diameter|radius)"),
+        "body_scale_multiplier x 0.80 M",
+    ),
+    (
+        "centre distance that begins contact",
+        re.compile(r"(?i)cent(?:er|re)_distance|distance_that_begins_contact"),
+        "contact diameter / 2 + the player's 0.50 M collision radius",
+    ),
+)
+
 SENTRY_POD_WEAPON_ID = "W-BE"
 SENTRY_POD_DEPLOYMENT_SECONDS = 6.0  # docs/71-initial-weapon-numeric-catalog.md:83
 DERIVED_DEPLOYMENT_SECONDS = 12  # derived from 6 s x (3 pods - 1), never authored
 DEPLOYMENT_KEY = re.compile(r"(?i)deploy|ramp")
 DEPLOYMENT_INTERVAL_KEY = re.compile(r"(?i)deploy.*(?:interval|cadence|seconds|period)")
+
+
+def check_file_inventory() -> list[tuple]:
+    """A21 - the total *.json inventory under content/."""
+    json_files = sorted(CONTENT.rglob("*.json"))
+    other_files = sorted(p for p in CONTENT.rglob("*") if p.is_file() and p.suffix != ".json")
+    actual = len(json_files)
+    rows = [
+        (
+            "*.json files under content/",
+            EXPECTED_CONTENT_JSON_FILES,
+            actual,
+            "ok" if actual == EXPECTED_CONTENT_JSON_FILES else "FAIL",
+        ),
+        (
+            "non-JSON files (documentation, not content)",
+            "",
+            f"{len(other_files)}: {', '.join(rel(p) for p in other_files) or 'none'}",
+            "ok",
+        ),
+    ]
+    if actual != EXPECTED_CONTENT_JSON_FILES:
+        fail(
+            f"content/ holds {actual} *.json file(s), expected "
+            f"{EXPECTED_CONTENT_JSON_FILES}. Either a definition was added or removed without "
+            f"updating EXPECTED_CONTENT_JSON_FILES and the matching A12 row, or a file is in a "
+            f"directory no A12 row covers."
+        )
+    return rows
+
+
+def check_enemy_derived_fields(docs: dict[Path, object]) -> list[tuple]:
+    """A20 - no enemy definition may carry a compiler-derived footprint value."""
+    rows = []
+    for label, rx, derivation in ENEMY_DERIVED_FIELDS:
+        hits: list[str] = []
+        for path, doc in sorted(files_in("enemies", docs).items()):
+            for jpath, key, value in walk(doc):
+                if not key or key in ENEMY_DERIVED_FIELD_ALLOWED:
+                    continue
+                if rx.search(key):
+                    hits.append(f"{rel(path)}{jpath[1:]} = {value!r}")
+        rows.append(
+            (
+                f"no enemy carries a {label} field",
+                0,
+                len(hits),
+                "ok" if not hits else "FAIL",
+            )
+        )
+        if hits:
+            fail(
+                f"{len(hits)} enemy field(s) hold a {label}, which the compiler derives as "
+                f"{derivation} (40:114, 40:100); the enemy authors body_scale_multiplier only: "
+                f"{hits[:10]}"
+            )
+    return rows
 
 
 def check_derived_values(docs: dict[Path, object]) -> list[tuple]:
@@ -1332,6 +1472,8 @@ def main() -> int:
     total_rows = check_totals(docs)
     ref_rows = check_references(docs)
     derived_rows = check_derived_values(docs)
+    enemy_derived_rows = check_enemy_derived_fields(docs)
+    inventory_rows = check_file_inventory()
     loc_rows = check_localization(stats)
 
     table(
@@ -1343,8 +1485,14 @@ def main() -> int:
     table("A14 Doc-stated totals (Hyper Gold)", ("total", "expected", "actual", "status"), total_rows)
     table("A15 Referential integrity", ("check", "refs", "dangling", "status"), ref_rows)
     table("A18 Derived-vs-authored guard", ("check", "expected", "actual", "status"), derived_rows)
+    table(
+        "A20 Enemy footprint fields the compiler owns",
+        ("check", "expected", "actual", "status"),
+        enemy_derived_rows,
+    )
     table("A10/A11 Localization", ("check", "expected", "actual", "status"), loc_rows)
     table("A19 Expected exception sets", ("set", "expected", "actual", "status"), set_rows)
+    table("A21 File inventory", ("check", "expected", "actual", "status"), inventory_rows)
 
     print(f"\nA2-A9 envelope/naming: {stats['checked']} definition(s) checked, "
           f"{stats['source_refs']} source_refs resolved against docs/")

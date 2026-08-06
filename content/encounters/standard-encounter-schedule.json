@@ -5,7 +5,8 @@
   "status": "enabled",
   "tags": [],
   "source_refs": [
-    "GDD-STANDARD-WAVE-SCHEDULE#standard-wave-and-beacon-schedule"
+    "GDD-STANDARD-WAVE-SCHEDULE#standard-wave-and-beacon-schedule",
+    "minute_rows[33].formation_events[].timestamps_reconstructed: GDD-STANDARD-WAVE-SCHEDULE#complete-35-minute-schedule"
   ],
   "mode_id": null,
   "mode": "standard",
@@ -1531,8 +1532,16 @@
       "scheduled_elites": [],
       "formation_events": [
         {
-          "at": null,
-          "timing_unresolved": true,
+          "at": [
+            "33:00",
+            "33:15",
+            "33:30",
+            "33:45"
+          ],
+          "timing_unresolved": false,
+          "timestamps_reconstructed": true,
+          "timestamp_provenance": "reconstructed",
+          "reconstruction_basis": "The source cell's timing token 'at 33:15 intervals' parses neither as a timestamp nor as a period; the column's contract is 'at the listed time' (GDD-STANDARD-WAVE-SCHEDULE#complete-35-minute-schedule) and every other repeat row enumerates its times explicitly, so the four quarter-minute times are a provisional reconstruction and are not authored values. See content/transcription-notes.md.",
           "formations": [
             "Stream"
           ],

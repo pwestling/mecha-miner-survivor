@@ -12,6 +12,8 @@
     "contact_cadence: GDD-PLAYER-SURVIVABILITY-BASELINE#contact-cadence-and-damage-grace",
     "damage_pressure: GDD-PLAYER-SURVIVABILITY-BASELINE#damage-pressure-reference",
     "applies_to_player: GDD-INITIAL-ALIEN-ROSTER#shared-ordinary-enemy-rules",
+    "elite_eligible: GDD-INITIAL-ALIEN-ROSTER#elite-treatment",
+    "elite_eligible: TDD-ENCOUNTERS#elite-construction",
     "specialist_attack.projectile: TDD-ENCOUNTERS#needler",
     "specialist_attack.resonant_damage_reference: GDD-PLAYER-SURVIVABILITY-BASELINE#damage-pressure-reference",
     "first_playable_subset: GDD-INITIAL-ALIEN-ROSTER#first-playable-subset",
@@ -35,8 +37,6 @@
   "behavior_kind": "pursuit and contact plus one telegraphed straight projectile",
   "armor": 0,
   "contact_footprint": {
-    "contact_diameter_m": 0.8,
-    "center_distance_that_begins_contact_m": 0.9,
     "shape": "Circle",
     "reference_diameter_m": 0.8
   },

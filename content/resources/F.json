@@ -6,7 +6,9 @@
   "name_key": "resource.F.name",
   "tags": [],
   "source_refs": [
-    "GDD-SPECIALIZED-RESOURCE-IDENTITIES#accepted-identity-map"
+    "GDD-SPECIALIZED-RESOURCE-IDENTITIES#accepted-identity-map",
+    "resonance_behavior: GDD-MINING#geode-resonance-fields",
+    "resonance_behavior.short_modifier: GDD-SPECIALIZED-RESOURCE-IDENTITIES#geode-resonance-behavior"
   ],
   "material_character": "Translucent metastable resin containing moving inclusions",
   "loose_association": "Multiplication, instability, conversion, unusual patterns",
@@ -18,5 +20,15 @@
   "persistence": "Run-local; unspent units are lost when the run ends",
   "shared_economy_tier": true,
   "maximum_safe_count": null,
-  "resonance_effect_name": "Overclocked Motion"
+  "resonance_effect_name": "Overclocked Motion",
+  "resonance_behavior": {
+    "effect_name": "Overclocked Motion",
+    "resonance_effect": "enemy movement speed is 20% higher without increasing attack cadence",
+    "modifier": {
+      "percent": 20,
+      "direction": "increase"
+    },
+    "short_modifier": "Enemy movement speed +20%",
+    "edge_case_rule": null
+  }
 }

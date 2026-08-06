@@ -12,6 +12,7 @@
     "contact_cadence: GDD-PLAYER-SURVIVABILITY-BASELINE#contact-cadence-and-damage-grace",
     "damage_pressure: GDD-PLAYER-SURVIVABILITY-BASELINE#damage-pressure-reference",
     "applies_to_player: GDD-INITIAL-ALIEN-ROSTER#shared-ordinary-enemy-rules",
+    "elite_eligible: GDD-INITIAL-ALIEN-ROSTER#elite-treatment",
     "first_playable_subset: GDD-INITIAL-ALIEN-ROSTER#first-playable-subset",
     "description: GDD-INITIAL-ALIEN-ROSTER#four-production-efficient-variants"
   ],
@@ -33,8 +34,6 @@
   "behavior_kind": "pure contact pursuer",
   "armor": 0,
   "contact_footprint": {
-    "contact_diameter_m": 0.5,
-    "center_distance_that_begins_contact_m": 0.75,
     "shape": "Circle",
     "reference_diameter_m": 0.8
   },

@@ -1,12 +1,14 @@
 {
-  "id": null,
   "schema_version": 1,
   "content_version": 1,
   "status": "enabled",
   "tags": [],
   "source_refs": [
     "GDD-INITIAL-ALIEN-ROSTER#elite-treatment",
-    "contact_diameter_multiplier: GDD-PLAYER-SURVIVABILITY-BASELINE#collision-and-contact-footprints",
+    "TDD-ENCOUNTERS#elite-construction",
+    "body_scale_multiplier: GDD-PLAYER-SURVIVABILITY-BASELINE#collision-and-contact-footprints",
+    "added_control_resistance_percent: GDD-PLAYER-SURVIVABILITY-BASELINE#control-resistance-and-status-stacking",
+    "control_resistance_cap_percent: GDD-PLAYER-SURVIVABILITY-BASELINE#control-resistance-and-status-stacking",
     "post_hard_control_immunity_seconds: GDD-PLAYER-SURVIVABILITY-BASELINE#control-resistance-and-status-stacking",
     "modifier_application_order: TDD-ENCOUNTERS#resonance-evaluation",
     "worked_examples[]: GDD-PLAYER-SURVIVABILITY-BASELINE#damage-pressure-reference"
@@ -15,28 +17,8 @@
   "movement_speed_multiplier": 1.1,
   "contact_damage_multiplier": 1.5,
   "body_scale_multiplier": 1.25,
-  "added_control_resistance": {
-    "percentage_points": 25,
-    "cap_percent": 90
-  },
-  "contact_diameter_multiplier": {
-    "value": 1.25
-  },
-  "eligible_enemy_ids": [
-    "EN-01",
-    "EN-02",
-    "EN-03",
-    "EN-04",
-    "EN-05",
-    "EN-07",
-    "EN-08",
-    "EN-09",
-    "EN-10"
-  ],
-  "excluded_enemy_ids": [
-    "EN-06"
-  ],
-  "exclusion_reason": "Needler does not become an elite in the initial standard schedule because combining its projectile with the shared elite multipliers reduces readability.",
+  "added_control_resistance_percent": 25,
+  "control_resistance_cap_percent": 90,
   "adds_behavior": false,
   "adds_attacks_phases_aura_or_support_ai": false,
   "adds_loot": false,

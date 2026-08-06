@@ -665,6 +665,45 @@ echo "=== 7. doc 40's minted content-ID prefixes: the row set, and one minting a
 # production input breaks, so a probe built at fixture size can pass while the real thing
 # fails. doc 40 is ~400 lines and is the subject; there is no reason to substitute a smaller
 # stand-in for it.
+#
+# WHICH ASSERTION CATCHES THE DEFECT THIS EXISTS FOR, checked before it was ever run,
+# because a reader that cannot fail on the case it was written for is not the reader. At
+# 3742aa2b - this branch's state before the merge - the WAV- ROW said
+# `Minted in [Encounter schedule]`, `### Encounter schedule` made no minting claim at all,
+# and the omnibus sentence under `### Map generation` claimed `WAV-01`. So there was
+# exactly ONE claim, in the wrong section: assertion 1 is green (the row set is intact),
+# assertion 2 is green (#encounter-schedule exists), and assertion 3's FIRST half is green
+# too (no two sections claim it). Only assertion 3's second half - the section that claims
+# a prefix must be the section its row names - goes red. Measured: "WAV-: its row names
+# Minted in 'Encounter schedule' but the section claiming to mint it is 'Map generation'".
+# That half is the whole reason this is three assertions and not one, and it is the half a
+# row-set check cannot have.
+#
+# WHAT THIS CANNOT SEE. Stated because every gate on this repository that turned out to be
+# a problem today had coverage narrower than its name.
+#
+#   Population: the lines of ONE file, docs/technical/40-content-data-and-validation.md.
+#   It says nothing about any other document, and nothing about content/ - a prefix with a
+#   correct row here and no definition on disk, or a definition whose id violates the
+#   grammar in its own row's Grammar cell, is outside this stage entirely. The grammar cell
+#   is read as text and never applied to anything.
+#
+#   Comparison: prefixes only, never IDs. `SITE-01` through `SITE-04` is one row and one
+#   claim; a document that minted `SITE-02` twice, or numbered from `-02`, or contradicted
+#   its own "the set is closed at four" prose, satisfies every assertion here.
+#
+#   Claim detection is textual and conservative. A minting claim is the phrase "minted
+#   here" in a clause naming a `PFX-nn` token; the owning section is the nearest preceding
+#   heading. A section that mints a prefix in ANY other wording - "this section grants",
+#   "the authority for X is here" - is invisible, so assertion 3 can miss a second
+#   authority phrased differently. It cannot invent one: the two redirect shapes are
+#   handled, and that direction was a real bug rather than a hypothetical, found by running
+#   the predicate against the base branch before wiring it. The base's own correct sentence
+#   joins two clauses with a semicolon - "`MGC-01` is minted here; `WAV-01` is minted under
+#   [Encounter schedule] above" - and a period-only split attributed the claim to both IDs,
+#   so this check accused a document that was right. Clause-level splitting fixed it. If
+#   the wording drifts again the failure direction is a false accusation, which is loud, but
+#   do not read a green stage 7 as proof that no section anywhere claims a prefix twice.
 readonly DOC40="${REPO_ROOT}/docs/technical/40-content-data-and-validation.md"
 readonly DOC40_EXPECTED="${REPO_ROOT}/build/doc40-minted-content-prefixes.expected"
 
@@ -736,17 +775,29 @@ for number, line in enumerate(lines, 1):
         current = line.lstrip("#").strip()
     section_of_line[number] = current
 
+# Clauses, not sentences. Splitting on periods alone was a false-accusation bug found
+# before this check ever ran: the base branch's own correct wording is one sentence
+# joined by a semicolon - "`MGC-01` is minted here; `WAV-01` is minted under [Encounter
+# schedule] above" - and a period-only split attributed the "minted here" to BOTH IDs,
+# so the reader accused a document that was right. Semicolons and colons end a clause
+# here for that reason.
 claims = {}
 for number, line in enumerate(lines, 1):
     if "minted here" not in line:
         continue
-    for sentence in re.split(r"(?<=[.])\s+", line):
-        if "minted here" not in sentence:
+    for clause in re.split(r"(?<=[.;:])\s+", line):
+        if "minted here" not in clause:
             continue
-        for prefix in {m + "-" for m in re.findall(r"`([A-Z]+)-[0-9A-Z]", sentence)}:
-            # "`WAV-01` is **not**: it is minted under ..." disclaims rather than claims.
-            disclaimer = re.search(re.escape("`" + prefix) + r"[0-9A-Z]*`\s+is\s+\*\*not\*\*", sentence)
-            if disclaimer:
+        for prefix in {m + "-" for m in re.findall(r"`([A-Z]+)-[0-9A-Z]", clause)}:
+            token = re.escape("`" + prefix) + r"[0-9A-Z]*`"
+            # Two shapes redirect rather than claim, and both appear in this document:
+            #   "`WAV-01` is **not**: it is minted under ..."   an explicit disclaimer
+            #   "`WAV-01` is minted under [Encounter schedule]"  a pointer to the owner
+            # Either one names a DIFFERENT section as the authority, so neither is this
+            # section claiming the prefix.
+            if re.search(token + r"\s+is\s+\*\*not\*\*", clause):
+                continue
+            if re.search(token + r"\s+is\s+minted\s+(under|in)\s", clause):
                 continue
             claims.setdefault(prefix, set()).add(section_of_line[number])
 

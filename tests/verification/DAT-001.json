@@ -304,10 +304,10 @@
         "docs/technical/40-content-data-and-validation.md#stable-id-policy"
       ],
       "gameplaySources": [
-        "docs/33-initial-mech-catalog.md",
-        "docs/34-initial-alien-roster.md",
-        "docs/40-weapon-catalog.md",
-        "docs/45-utility-catalog.md"
+        "docs/36-initial-mech-catalog.md",
+        "docs/31-initial-alien-roster.md",
+        "docs/66-weapon-catalog-and-resource-graph.md",
+        "docs/68-utility-catalog.md"
       ],
       "selector": {
         "kind": "nunit",

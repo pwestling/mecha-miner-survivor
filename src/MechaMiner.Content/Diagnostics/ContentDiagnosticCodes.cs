@@ -114,6 +114,14 @@ public static class ContentDiagnosticCodes
     /// <summary>A localization key's role does not match the field carrying it.</summary>
     public const string LocalizationKeyRoleMismatch = "MMC-2008";
 
+    /// <summary>
+    /// A declared-optional field is present but empty. The empty string is what the
+    /// compiler materializes for an omitted field, so an authored empty string would be
+    /// a second way to say "absent" - the ambiguity doc 40 removes by banning
+    /// <c>null</c>.
+    /// </summary>
+    public const string EmptyOptionalField = "MMC-2009";
+
     // --- Identity, band 3xxx ------------------------------------------------
 
     /// <summary>An ID does not match the pattern its content category declares.</summary>
@@ -199,6 +207,8 @@ public static class ContentDiagnosticCodes
             "a localization key is not <category>.<stable_id>.<role>; name_key and summary_key never carry literal player-facing text"),
         Describe(LocalizationKeyRoleMismatch, nameof(LocalizationKeyRoleMismatch), ContentValidationStage.Structural,
             "a localization key's role does not match the envelope field carrying it"),
+        Describe(EmptyOptionalField, nameof(EmptyOptionalField), ContentValidationStage.Structural,
+            "a declared-optional field is present but empty; the empty string is the value the compiler materializes for an omitted field, so authoring one is a second way to say absent"),
 
         Describe(IdMalformedForCategory, nameof(IdMalformedForCategory), ContentValidationStage.Identity,
             "an ID does not match the pattern its content category declares"),

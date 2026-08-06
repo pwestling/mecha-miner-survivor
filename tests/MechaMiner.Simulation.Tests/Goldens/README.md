@@ -1,12 +1,13 @@
 # Simulation golden vectors
 
 This directory holds the canonical golden fixtures for
-`MechaMiner.Simulation`. Two work-package groups share it:
+`MechaMiner.Simulation`. Three work-package groups share it:
 
 | Group | Files | Work package |
 | --- | --- | --- |
 | Authoritative random-number contract | `random-*.txt` | SIM-005 |
 | Fixed-step time and runtime | `time-*.txt`, `runtime-*.txt` | SIM-001, SIM-002 |
+| Stable ordering | `entities-store-ordering.txt`, `events-simultaneous-ordering.txt` | SIM-003, SIM-006 |
 
 Every file here is canonical, ordered, reviewable text per doc 91 § Determinism
 and fixture policy: LF endings, no trailing whitespace, exactly one final
@@ -14,6 +15,20 @@ newline, and a `#` header naming the authority and the derivation. No file here
 was produced by the C# implementation it checks, and § "A mismatch is
 investigated, never regenerated" at the end of this document governs all of
 them.
+
+**How much "not produced by the implementation" means is not the same for every
+file, and the difference is worth knowing before trusting one.** The six
+`random-*.txt` files have *commit-order* independence: they were committed at
+`a5a6929`, before any file under `src/MechaMiner.Simulation/Random/` existed, so
+the implementation could not have shaped them even accidentally. That is the
+strongest form of the property available and it is checkable from the history.
+The other five files do not have it: they were committed alongside or after the
+code they check. Their independence rests instead on a separate re-derivation
+performed afterwards, restating the governing document sections and rebuilding
+the expected values from that restatement rather than from observed output. That
+is a real check and it caught real defects, but it is a weaker guarantee than
+commit order, because the same person read the same document twice. Each group's
+section below says which of the two it has.
 
 ## Files
 
@@ -28,6 +43,8 @@ them.
 | `time-tick-index-derived-seconds.txt` | derived seconds for a spread of tick indices as IEEE 754 bit patterns, each obtained by dividing the tick index once by the exact rational rate 60/1 rather than by accumulating a per-tick delta; includes tick 126000, whose derived seconds must be exactly 2100 | doc 10 § Clock domains; doc 20 § Numeric and unit conventions |
 | `time-final-boundary-ordering.txt` | the 35:00 terminal boundary as tick 126000: 125999 is the last tick executed, 126000 never runs, and extraction is evaluated before any event scheduled at or after the boundary — an event at or after 126000 being refused at every point in the run, not only once the boundary has been reached | doc 20 § Boundary and tie ordering; doc 10 § System phase ordering, phase 2 |
 | `runtime-pause-boundary-tick-sequence.txt` | a pause consumes no gameplay time: two runs fed the same 24 frame deltas, one of them blocked by `GeneralPause` for 11/128 s part-way through, render one identical tick sequence, because blocked steps produce no batch at all and blocked wall time is never banked into a later step | doc 10 § Pause contract; doc 20 § Verification |
+| `entities-store-ordering.txt` | the entity comparator as authored priority key ascending, then storage index, then generation, in three cases that each leave exactly one of those three components as the sole discriminator: a live store at tied priority keys, retained records sharing one recycled slot at three generations, and retained records at one shared generation. Storage indices are rendered partition-relative and the partition base is computed from the capacity table by the fixture, never written down as a literal | doc 20 § Entity identity; doc 20 § Authoritative population categories |
+| `events-simultaneous-ordering.txt` | the event comparator as tick, then explicit emission sequence, and nothing further: eight events across four system phases, appended in a scrambled order and again reversed, produce one identical batch. Records the two invariants that replaced the removed phase and entity-ID keys, namely that a sequence is unique within a tick and that phase does not decrease as the sequence rises | doc 10 § System phase ordering; doc 20 § Domain and presentation events |
 
 ## Fixed-step time and runtime vectors (SIM-001, SIM-002)
 
@@ -54,6 +71,47 @@ Two conventions in these files are worth knowing before reading them:
   `runtime-pause-boundary-tick-sequence.txt` is deliberately not a whole number
   of ticks (11/128 s = 5.15625 ticks).
 
+These two files have re-derivation independence, not commit-order independence:
+they landed with the time and runtime implementation, and the Python references
+were written from the document sections rather than from the C# output.
+
+## Stable ordering vectors (SIM-003, SIM-006)
+
+`docs/technical/20-simulation-core.md` § Entity identity and § Authoritative
+population categories are the normative sources for
+`entities-store-ordering.txt`. `docs/technical/10-runtime-architecture.md`
+§ System phase ordering, together with doc 20 § Domain and presentation events
+for the event-sequence contract, are the normative sources for
+`events-simultaneous-ordering.txt`. Each file's own header quotes the sentences
+it depends on and names the comparator it pins.
+
+Both were derived by an independent Python reference rather than by the C# under
+test, for the same reason the other groups were, and both were then re-derived a
+second time from the documents during the hardening pass. Neither has
+commit-order independence: both landed with the code they check, so the
+re-derivation is what their independence rests on.
+
+Two things about these two files specifically:
+
+- **An ordering golden's weak point is its inputs, not its expected values.** A
+  case whose records cannot distinguish two comparators proves nothing about the
+  difference between them, and the file will still match. So each case in
+  `entities-store-ordering.txt` names the one component it leaves as the sole
+  discriminator, and `EntityStoreNegativeControlTests` asserts, per case, exactly
+  which degraded comparators the case notices and which it is blind to. The
+  blindness is asserted as well as the detection, because the fact that a live
+  store cannot reach the generation key is the reason the two retained-record
+  cases exist at all.
+- **`events-simultaneous-ordering.txt` was rebuilt during the hardening pass, not
+  merely extended.** Its original inputs paired a high system phase with a low
+  emission sequence in order to make the sort observably not a no-op, which under
+  the contract is a state the system cannot produce: the sequence is issued at
+  emission and emission happens in phase order. The old file therefore pinned an
+  impossible input. The current values reflect the two-key `(tick, sequence)`
+  comparator, not the earlier three-key phase/sequence/entity-ID one, and the
+  file reaches that same non-no-op property by scrambling the append order
+  instead.
+
 ## Authoritative random-number vectors (SIM-005)
 
 Work package SIM-005.
@@ -71,9 +129,10 @@ recorded behaviour of schema version 1.
 
 ### Why these vectors were not produced by the C# implementation
 
-The random vectors were generated by an **independent pure-Python
-reference implementation of PCG-XSH-RR 64/32 and SplitMix64**, written directly
-from doc 20:51-91 and committed *before* the C# implementation existed.
+These six files are the ones with commit-order independence. The random vectors
+were generated by an **independent pure-Python reference implementation of
+PCG-XSH-RR 64/32 and SplitMix64**, written directly from doc 20:51-91 and
+committed *before* the C# implementation existed.
 
 This matters, and it is the entire point of the work package. If the goldens had
 been generated by running the C# under test, they would prove only that the
@@ -241,3 +300,13 @@ those, or that the governing section of doc 10 or doc 20 changed — in which ca
 the tick rate, boundary, or pause rule is restated from the new text and the
 vectors are regenerated as a reviewed act. Neither is a licence to edit the
 golden to match observed output.
+
+A mismatch in `entities-store-ordering.txt` or `events-simultaneous-ordering.txt`
+means the first of those, or that the documented comparator itself changed. A
+comparator change is not a golden edit: doc 10 § System phase ordering requires a
+regression test for any observable ordering change, so the new key order is
+restated from the document, the per-case detection matrix in the negative control
+is updated to say which cases now reach which key, and only then are the values
+rebuilt. A case that stops noticing a degradation it used to notice is the same
+kind of defect as a mismatch, because it means the file is no longer evidence
+about the component it was added for.

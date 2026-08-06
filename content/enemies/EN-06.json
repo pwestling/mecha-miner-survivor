@@ -27,8 +27,7 @@
   "movement_speed": {
     "percent_of_mech_base_speed": {
       "percent": 40
-    },
-    "world_speed_m_per_s": 1.2
+    }
   },
   "contact_damage": 8,
   "body_scale_multiplier": 1.0,
@@ -89,8 +88,7 @@
       "speed": {
         "percent_of_mech_base_speed": {
           "percent": 75
-        },
-        "world_speed_m_per_s": 2.25
+        }
       },
       "lifetime_description": "carries it slightly beyond one screen width",
       "homing": false,

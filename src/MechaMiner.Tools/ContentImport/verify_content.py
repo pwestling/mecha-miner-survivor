@@ -218,10 +218,16 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
           own it. content/maps/ joined the rule because the health pack
           stored 0.75 = its authored 0.25 M pickup radius + 0.50 M
           (docs/72:185).
-      Checked on KEY NAMES in the covered directories, so a rename inside
-      one of them cannot slip past. It does NOT catch the value reappearing
-      under an unrelated name or in an uncovered directory - see the
-      per-rule scopes above and README.md.
+      Checked on KEY NAMES in the covered directories. That catches a
+      rename ONLY INTO A NAME THE PATTERN STILL MATCHES, which is a narrow
+      thing and was previously written as though it were a general one: an
+      earlier revision of this paragraph said "a rename inside one of them
+      cannot slip past" and then, in the next sentence, that a value
+      reappearing under an unrelated name is not caught. Those contradict,
+      and the second is the true one. A20 has NO value layer, so a derived
+      footprint value reintroduced under any name the pattern misses, or in
+      an uncovered directory, passes - see the per-rule scopes above and
+      README.md.
       Mandate: docs/technical/40-content-data-and-validation.md:114
       ("Validation derives world speeds/footprints and compares them with
       the survivability report")                                      FAILURE
@@ -389,6 +395,172 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       Mandate: content/quote-verification-audit.md (adopted rule and its
       stated corpus dependency)                                     FAILURE
 
+  A31 RENAMED FROM A28. If you arrived here from a review comment, a commit
+      message or a branch note that says "A28" and means the derived-value
+      families, this row is that rule and A31 is its label. The number is out
+      of sequence with its neighbours for that reason and not by accident.
+      WHY IT MOVED: two streams independently claimed A28. This branch's
+      derived-value-family rule (PR #10) and the definition (path, id)
+      manifest (master, PR #12) both wrote "A28", and the merge that brought
+      master in put both under one label. Master's shipped: it is on the trunk
+      and referenced from its own A21 row, this file's manifest section, the
+      tool README, content/README.md and .gitattributes. An identifier that
+      has shipped does not move - the same principle content IDs follow. This
+      branch's label had not shipped, so this is the side that moved. A28
+      below is master's and keeps its number. Two rules under one label is a
+      defect that compounds with every new reference, so it was fixed at the
+      merge rather than deferred.
+      ONE LABEL, NOT TWO, for the two layers below, and THE MAPPING IS THE
+      REASON: two table numbers would make "the rule the review calls A28"
+      ambiguous, which is the thing this note exists to prevent - a reader
+      arriving from an un-editable comment must land on one row rather than
+      choose between two. The layers also share one expectation file, one
+      mandate set and one summary heading, which is consistent with keeping
+      them together but is the weaker reason.
+      (An earlier draft cited A24a/A24b here as precedent for naming a rule's
+      internal parts. WITHDRAWN - that pair is two labels over one rule's two
+      halves, so it is precedent for SPLITTING and argued the opposite of what
+      it was cited for. See content/transcription-notes.md.)
+      THE CAUSE IS NOT FIXED HERE. Labels are still allocated by whoever adds
+      one, on their own branch, so the next two parallel additions collide the
+      same way - see the minted-assertion-label-table open item in
+      content/transcription-notes.md.
+      No definition carries a compiler-derived value from any of the SIX
+      families removed by the derived-value pass. SIX RULES WITH SIX
+      DIFFERENT SCOPES, for the same reason A20 is two rules with two
+      scopes: some of these patterns flag legitimately AUTHORED fields in
+      a directory they do not cover. An absolute metres-per-second value is
+      always derived in content/enemies/ and content/bosses/, where a speed
+      is authored as a percentage of the mech baseline - and always
+      authored in content/weapons/, where projectile_speed_m_per_s is the
+      real number. So the world-speed rule covers the first two and not the
+      third.
+      SIX, not the nine an earlier draft asserted: the damage-pressure
+      block (32 values) and the resonant hit counts (5) are the COMPARAND
+      40:114 has the compiler compare its derivation against, not derived
+      duplicates, and the stat price curve (14) would have moved fourteen
+      checkable numbers into an unchecked prose string. All 51 restored.
+      See pulled_from_this_pass in the expectation file.
+      TWO LAYERS, and neither is a complete guard on its own:
+      (1) a NAME layer over pointer SEGMENT NAMES. It catches a rename only
+      within its own word class. It does NOT make a rename impossible: a
+      value reintroduced under a name the class does not carry passes, and
+      that was measured, not assumed - a semantic-neighbour probe defeated
+      all nine drafts of these rules before they were widened, and a probe
+      chosen against the widened classes would defeat some of them too.
+      Segments, not just the leaf key, because some families store the
+      number under a generic leaf (`amount`, `minimum`, `maximum`) inside a
+      specifically named parent - a leaf-key-only rule would miss
+      total_payout_per_map.amount entirely.
+      (2) a VALUE layer, which is what a name rule cannot do: for each
+      removed value, no non-operand numeric leaf inside its own derivation
+      site may carry that value. Exact Fractions, no tolerance. This one
+      survives a rename, a relocation within the site, a different unit
+      suffix, and scalar -> [scalar]. Its RADIUS is the limit and is stated
+      rather than hidden: the derivation site, not the file and not the
+      scope. The three radii are COMPUTED, in the generator's
+      measure_search_radii(), under one definition on the pinned sweep ref,
+      and carried in search_radius_measurement in the expectation file so
+      the ratio a reader is shown reproduces from the artifact: 1 : 40 : 668
+      coincidental pairs at site, file and scope radius, almost all
+      magnitude coincidences between unrelated quantities. An earlier
+      revision quoted 55 and 400; no code computed either and neither
+      reproduced. One exception is declared, enumerated and justified, and
+      it FAILS if it stops colliding on the current tree - a claim that was
+      false in both tools before this pass.
+      A SECOND LIMIT, which the reported radius concealed: the guard is only
+      as large as what survived inside the site. 13 of the 115 removed
+      values sit in a container the removal left with no numeric leaves at
+      all, so their guard searches nothing. That count is asserted
+      (EMPTY_SITE_GUARD_RECORDS) and the per-record distribution prints
+      beneath the table, because the earlier line - "299 numeric leaves
+      across 115 removed values" - is a mean of 2.6 that reads as coverage
+      of all 115 and is what hid the empty-site defect: for a root-level
+      pointer the site was computed as "" and then filtered out as falsy, so
+      six records searched zero leaves and could not fail on anything.
+      Two segment names are ALLOWLISTED, in the shape A20 allowlists
+      reference_diameter_m: `purchases` (the authored checkpoint index the
+      removed cumulative cost derives FROM, which matches only by
+      inheriting its parent's name) and total_seam_payout_multiplier (left
+      authored; its sibling exposure_per_secured_payout_multiplier has no
+      stated derivation at all).
+      The rules, scopes and allowlists are READ FROM
+      expected_derived_value_removals.json rather than duplicated here, so
+      the assertion and the prediction cannot drift apart.
+      Mandate: per family, the docs/ line recorded in that file -
+      40:114 (world speeds; the survivability report), 40:136 ("Validators
+      recompute total catalog costs"), 40:140 ("their totals"), 40:203
+      ("Recalculate ... price curves, total costs ... resource totals")
+                                                                    FAILURE
+
+  A29 The numeric multiset the tree LOST equals the committed expectation,
+      as SET EQUALITY over all 115 elements - each (file, pointer, value)
+      present in one side and the other - not as two totals that happen to
+      agree. 115 == 115 would also hold if one value were removed by
+      mistake and a different one kept by mistake; element-wise equality
+      would not.
+      Measured, not asserted: the sweep-ref tree is read out of git at the
+      SHA the expectation file names, its numeric leaves are enumerated,
+      and the worktree's are subtracted. The expectation file was committed
+      BEFORE any content/ file changed (see that commit's --stat), so this
+      check compares a prediction against a measurement rather than a diff
+      against itself.
+      It does NOT assert that the added side is empty. That row was
+      deliberately deleted this pass: it is a property of one commit range,
+      not an invariant. Adding an authored numeric leaf to EN-01 PASSES, by
+      design.
+      ONLY HALF OF THIS IS A STANDING INVARIANT, and the asymmetry is
+      stated because it is not obvious. The `missing` half - every predicted
+      removal must still be missing - holds for every future commit. The
+      `unexpected` half - nothing else may be missing - does not: deleting
+      any authored numeric leaf, for any reason, fails it. Controlled:
+      deleting EN-01.earliest_minute FAILS with "1 removed-but-unpredicted",
+      while retuning EN-01 hull 20 -> 25 in place passes. So a future commit
+      that legitimately deletes a field will false-fail A29 and the fix is
+      to re-derive the expectation from a newer sweep ref, deliberately.
+      Mandate: docs/technical/40-content-data-and-validation.md:100
+      ("Derived values include source operands and calculation version in
+      reports"), which is what makes a stored operand-plus-result pair the
+      compiler's to emit and not content's to author         FAILURE
+
+  A30 docs/data/contact-damage-pressure.csv and content/ agree on every
+      value they share - 98 comparisons, seven columns x 14 actors, exact
+      Fraction arithmetic. Four columns compare against an authored content
+      field; three against values derived from surviving operands, which is
+      the comparison docs/40 section "Enemies and bosses" describes. Two
+      unguarded mirrors of one report is the shape where a later edit to
+      either produces a silent contradiction, so agreement is ASSERTED
+      rather than observed (Ruling 45 observed it and nothing kept it).
+      The comparison COUNT is asserted at 98, because a mirror check over
+      zero values passes for free.
+      NO TOLERANCE, including inside the declared exceptions: a declared
+      lower-precision pair names the CSV's written value AND the single
+      exact content-side value it covers, so the band an earlier revision
+      allowed ([0.61875, 0.625) for EN-07's body_scale_multiplier) is gone.
+      Two pairs are declared, both EN-07's, and both record an OPEN design
+      question rather than settling it. A declared pair that stops
+      diverging FAILS in either direction.
+      Not settled by this rule: which mirror is authoritative. When that
+      lands the loser becomes derived and A30 becomes redundant in the good
+      way rather than wrong.
+      Mandate: docs/technical/40-content-data-and-validation.md:114
+      ("Validation derives world speeds/footprints and compares them with
+      the survivability report") and :203 ("Reports compare with accepted
+      gameplay tables")                                     FAILURE
+  LABEL MAP: A28 (this branch, before the merge with master) -> A31. Two
+     streams independently claimed A28 - this branch's six derived-value
+     families and the definition (path, id) manifest immediately below, which
+     came from master's PR #12. The A28 below is master's and is the one that
+     keeps the number, because it has shipped on the trunk. If a review
+     comment, commit message or note says "A28" and describes derived-value
+     families, name layers, value layers or the 115 removed values, it means
+     A31 above. Enumerated at the merge: master's PR added exactly {A28} and
+     this branch added {A28, A29, A30}, so A28 was the only collision - A29
+     and A30 are this branch's alone and did not move.
+     The allocation problem behind it is recorded as an open item (a minted
+     assertion-label table) in content/transcription-notes.md and is
+     deliberately not built in this PR.
+
   A28 The definition population's (relative_path, id) PAIRS equal the
       committed manifest at content-definition-manifest.txt, compared in both
       directions: a path in the tree and not the manifest, a path in the
@@ -478,7 +650,10 @@ from __future__ import annotations
 import json
 import os
 import re
+import subprocess
 import sys
+import textwrap
+from fractions import Fraction
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -2498,8 +2673,1076 @@ def check_derived_footprint_fields(docs: dict[Path, object]) -> list[tuple]:
     return rows
 
 
+# --------------------------------------------------------------------------
+# A29 / A31 - the six derived-value families the compiler owns.
+#
+# The rules live in expected_derived_value_removals.json, which was committed in
+# its own commit BEFORE any content/ file changed. Reading them from there rather
+# than restating them here is deliberate: a rule restated in two places can drift,
+# and the whole point of the prediction-first ordering is that the assertion and
+# the prediction are the same artifact.
+# --------------------------------------------------------------------------
+
+DERIVED_EXPECTATION = Path(__file__).resolve().parent / "expected_derived_value_removals.json"
+
+# The two counts the generator declares, restated here ON PURPOSE. This is the
+# one place in the A29/A31 code where duplication is right: everything else is
+# read from the expectation file so the assertion and the prediction cannot drift,
+# but a count read only from the file it is meant to police cannot police it. An
+# empty `families` list, a family with no records, and the counts overwritten with
+# 9999/99 all passed verify_content.py before these existed - only
+# `derive --check` caught them, by regenerating and byte-comparing, which is a
+# file-integrity check and not an assertion inside the rule.
+DECLARED_FAMILY_COUNT = 6
+DECLARED_TOTAL_REMOVED = 115
+
+# How many removed values sit in a container the removal left with no numeric
+# leaves at all, so that A31's value layer searches nothing for them. Asserted,
+# not remarked on: emptying a container empties its guard, and the number must not
+# grow without someone deciding that it may. The 13 are the `{}` and
+# `{"resource": "common ore"}` residues under content/resources/,
+# content/mining-sites/ - NOT the six root-level records, whose site is the
+# document itself.
+EMPTY_SITE_GUARD_RECORDS = 13
+
+# The three search-radius figures A31 PRINTS on a green run, declared here so that
+# the tool which prints them also asserts them. They are computed by
+# derive_derived_value_expectations.py on the pinned sweep ref and byte-checked by
+# `derive --check`; that is a different tool, which nobody running verify_content.py
+# has to run. Measured before this existed: editing file_radius_pairs back to the old
+# unreproducible 55 made A31 print "1 : 55 : 668" at exit 0 with 0 failures. A figure
+# a reader meets on a passing run and no assertion binds is indistinguishable from a
+# figure that was made up, which is precisely what 55 and 400 were.
+# (site, file, scope), as measured on the expectation's sweep_ref.
+SEARCH_RADIUS_DECLARED = (1, 40, 668)
+
+
+def load_derived_expectation() -> dict:
+    if not DERIVED_EXPECTATION.exists():
+        fail(
+            f"A29/A31: {rel(DERIVED_EXPECTATION)} is missing. It is the committed prediction of "
+            f"exactly which derived values this tree no longer authors, and both rules read their "
+            f"scopes and patterns from it. Regenerate it with "
+            f"derive_derived_value_expectations.py."
+        )
+        return {}
+    return json.loads(DERIVED_EXPECTATION.read_text())
+
+
+def check_derived_expectation_counts(docs: dict[Path, object]) -> list[tuple]:
+    """A29/A31 vacuity guards - the four declared counts, asserted HERE.
+
+    `total_removed`, `family_count`, `declared_family_count` and
+    `declared_total_removed` were written by the generator and read by nothing in
+    this file: `grep -n declared verify_content.py` returned no hit anywhere in the
+    A29/A31 code. verify_content.py on its own therefore passed every vacuity
+    injection - an empty `families` list, a scope pointed at a directory holding no
+    definitions, every family's `records` emptied, an empty
+    `removed_numeric_multiset` with `sweep_ref` repinned to HEAD, and the counts
+    overwritten with 9999/99. Only `derive --check` caught those, and it caught
+    them by regenerating the file and byte-comparing it: a file-integrity check,
+    which fails for any edit at all and says nothing about whether the RULE has
+    content. These rows are the rule saying it.
+
+    The scope row is deliberately measured against the CURRENT tree rather than
+    against the sweep ref, because a scope that resolves to nothing here is a rule
+    searching nothing here, whatever it searched when the prediction was written.
+    """
+    expectation = load_derived_expectation()
+    if not expectation:
+        return []
+    families = expectation.get("families") or []
+    built_records = sum(len(f.get("records") or []) for f in families)
+    multiset = expectation.get("removed_numeric_multiset") or []
+
+    empty_families = sorted(f.get("name", "?") for f in families if not (f.get("records") or []))
+
+    # The three figures A31 prints, plus the prose half of the same measurement. The
+    # numbers and the sentence are two writers on one measurement, so an edit to
+    # either alone has to fail: the row above pins the numbers, this pins the sentence
+    # to them.
+    measured_radii = expectation.get("search_radius_measurement") or {}
+    site, file_r, scope_r = (measured_radii.get(k) for k in
+                             ("site_radius_pairs", "file_radius_pairs", "scope_radius_pairs"))
+    conclusion = measured_radii.get("conclusion") or ""
+    if not all(isinstance(n, int) for n in (site, file_r, scope_r)):
+        radius_conclusion_state = "radii missing or not integers"
+    else:
+        wanted = (
+            f"Ratio {site} : {file_r} : {scope_r}",
+            f"file would need {file_r - site} more",
+            f"scope {scope_r - site} more",
+        )
+        absent = [w for w in wanted if w not in conclusion]
+        radius_conclusion_state = "consistent" if not absent else f"text disagrees: {absent}"
+
+    empty_scopes: list[str] = []
+    for family in families:
+        for scope in family.get("scopes") or []:
+            directory = scope.strip("/").split("/", 1)[1] if "/" in scope.strip("/") else ""
+            in_scope = files_in(directory, docs) if directory else {}
+            leaves = sum(1 for path in in_scope for _ in numeric_pointer_leaves(in_scope[path]))
+            if not in_scope or not leaves:
+                empty_scopes.append(f"{family.get('name', '?')} -> {scope}")
+
+    checks = [
+        (
+            "families in the expectation file",
+            DECLARED_FAMILY_COUNT,
+            len(families),
+            len(families) == DECLARED_FAMILY_COUNT,
+        ),
+        (
+            "family_count as written by the generator",
+            DECLARED_FAMILY_COUNT,
+            expectation.get("family_count"),
+            expectation.get("family_count") == DECLARED_FAMILY_COUNT,
+        ),
+        (
+            "declared_family_count as written by the generator",
+            DECLARED_FAMILY_COUNT,
+            expectation.get("declared_family_count"),
+            expectation.get("declared_family_count") == DECLARED_FAMILY_COUNT,
+        ),
+        (
+            "records summed over every family",
+            DECLARED_TOTAL_REMOVED,
+            built_records,
+            built_records == DECLARED_TOTAL_REMOVED,
+        ),
+        (
+            "total_removed as written by the generator",
+            DECLARED_TOTAL_REMOVED,
+            expectation.get("total_removed"),
+            expectation.get("total_removed") == DECLARED_TOTAL_REMOVED,
+        ),
+        (
+            "declared_total_removed as written by the generator",
+            DECLARED_TOTAL_REMOVED,
+            expectation.get("declared_total_removed"),
+            expectation.get("declared_total_removed") == DECLARED_TOTAL_REMOVED,
+        ),
+        (
+            "elements in removed_numeric_multiset (A29's comparand)",
+            DECLARED_TOTAL_REMOVED,
+            len(multiset),
+            len(multiset) == DECLARED_TOTAL_REMOVED,
+        ),
+        (
+            "families whose records list is EMPTY (a rule over no values passes free)",
+            0,
+            len(empty_families),
+            not empty_families,
+        ),
+        (
+            "family scopes holding no numeric leaves in the CURRENT tree",
+            0,
+            len(empty_scopes),
+            not empty_scopes,
+        ),
+        (
+            "search radii A31 PRINTS (site : file : scope), asserted by the tool that prints them",
+            " : ".join(str(n) for n in SEARCH_RADIUS_DECLARED),
+            " : ".join(str(measured_radii.get(k, "?"))
+                       for k in ("site_radius_pairs", "file_radius_pairs", "scope_radius_pairs")),
+            tuple(measured_radii.get(k) for k in
+                  ("site_radius_pairs", "file_radius_pairs", "scope_radius_pairs"))
+            == SEARCH_RADIUS_DECLARED,
+        ),
+        (
+            "the printed radii and the conclusion sentence's own arithmetic agree",
+            f"file-site={SEARCH_RADIUS_DECLARED[1] - SEARCH_RADIUS_DECLARED[0]}, "
+            f"scope-site={SEARCH_RADIUS_DECLARED[2] - SEARCH_RADIUS_DECLARED[0]} in the text",
+            radius_conclusion_state,
+            radius_conclusion_state == "consistent",
+        ),
+        (
+            "the pair definition is present, so the printed figures print with what they counted",
+            "present",
+            "present" if (measured_radii.get("definition") or "").strip() else "MISSING",
+            bool((measured_radii.get("definition") or "").strip()),
+        ),
+    ]
+    rows = [(label, expected, actual, "ok" if good else "FAIL")
+            for label, expected, actual, good in checks]
+    bad = [f"{label}: expected {expected}, got {actual!r}"
+           for label, expected, actual, good in checks if not good]
+    if bad:
+        fail(
+            f"A29/A31 {len(bad)} declared count(s)/vacuity guard(s) in "
+            f"{rel(DERIVED_EXPECTATION)} do not hold. These are the rows that stop the rule from "
+            f"passing over nothing, so a mismatch is a failure of the rule and not only of the "
+            f"file: {bad}"
+            + (f" empty families={empty_families}" if empty_families else "")
+            + (f" empty scopes={empty_scopes}" if empty_scopes else "")
+        )
+    return rows
+
+
+def pointer_segments(pointer: str) -> list[str]:
+    return [s for s in re.split(r"\.|\[\d+\]", pointer) if s]
+
+
+def derived_rule_matches(family: dict, pointer: str) -> bool:
+    """A31's matcher: a family's rule against a pointer's SEGMENT NAMES.
+
+    The allowlist is consulted on the LEAF segment, which is A20's semantics
+    (`if key in DERIVED_FOOTPRINT_FIELD_ALLOWED: continue`) - an allowlisted leaf
+    is exempt even when an ANCESTOR name matches, which is the only case that
+    arises: `purchases` matches nothing itself, it inherits the match from
+    `cumulative_cost_checkpoints` above it.
+    """
+    segments = pointer_segments(pointer)
+    if not segments:
+        return False
+    allow = family.get("allowlisted_segments") or {}
+    if segments[-1] in allow:
+        return False
+    child_rx = re.compile(family["pointer_segment_rule"])
+    parent = family.get("pointer_parent_rule")
+    if parent:
+        parent_rx = re.compile(parent)
+        for index, seg in enumerate(segments):
+            if parent_rx.search(seg) and any(child_rx.search(s) for s in segments[index + 1 :]):
+                return True
+        return False
+    return any(child_rx.search(seg) for seg in segments)
+
+
+def numeric_pointer_leaves(obj, prefix: str = ""):
+    """Yield (pointer, value) for every numeric leaf. Bools are not numbers."""
+    if isinstance(obj, dict):
+        items = obj.items()
+    elif isinstance(obj, list):
+        items = ((f"[{i}]", v) for i, v in enumerate(obj))
+    else:
+        return
+    for key, value in items:
+        child = key if (isinstance(obj, dict) and not prefix) else (
+            f"{prefix}.{key}" if isinstance(obj, dict) else f"{prefix}{key}"
+        )
+        if isinstance(value, bool):
+            continue
+        if isinstance(value, (int, float)):
+            yield child, value
+        else:
+            yield from numeric_pointer_leaves(value, child)
+
+
+def check_derived_family_absence(docs: dict[Path, object]) -> list[tuple]:
+    """A31 - none of the six removed families may reappear.
+
+    Two layers. This is the NAME layer, over pointer segment names; it catches a
+    rename only within its own word class and cannot make one impossible. The
+    VALUE layer - no non-operand leaf inside a derivation site may carry the
+    derived value - is asserted by the generator against the pinned sweep ref and
+    recorded in the expectation file, because it is a property of the removal set
+    rather than of the current tree.
+    """
+    expectation = load_derived_expectation()
+    rows = []
+    for family in expectation.get("families", []):
+        hits: list[str] = []
+        for scope in family["scopes"]:
+            directory = scope.strip("/").split("/", 1)[1]
+            for path, doc in sorted(files_in(directory, docs).items()):
+                for pointer, value in numeric_pointer_leaves(doc):
+                    if derived_rule_matches(family, pointer):
+                        hits.append(f"{rel(path)}.{pointer} = {value!r}")
+        rows.append(
+            (
+                f"no {family['name']} value in {' + '.join(family['scopes'])}",
+                0,
+                len(hits),
+                "ok" if not hits else "FAIL",
+            )
+        )
+        if hits:
+            fail(
+                f"A31 {len(hits)} field(s) under {' + '.join(family['scopes'])} hold a "
+                f"'{family['name']}' value, which the compiler owns per "
+                f"{family['doc_assignment'].split(' - ')[0]}. Matched on pointer segment names "
+                f"/{family['pointer_segment_rule']}/"
+                + (f" under /{family['pointer_parent_rule']}/" if family.get("pointer_parent_rule")
+                   else "")
+                + f". This is the NAME layer, which catches a rename only within its own word "
+                f"class - a value reintroduced under a name the class does not carry passes it, and "
+                f"the value layer is what covers that: {hits[:10]}"
+            )
+    return rows, (
+        "NOT CAUGHT by this layer: a derived value reintroduced under a name outside the family's "
+        "word class, or in a directory the family does not scope. Probed per family with a "
+        "semantic-neighbour name - caught 0 of 6. That figure is a HAND-RUN PROBE, not a "
+        "measurement this run made: six injections, one per family, each reintroducing the family's "
+        "value under a name outside its word class, and no assertion here recomputes it. This "
+        "layer catches a rename only WITHIN its own word class. Layer 2 below is the one that "
+        "does not depend on the name at all.",
+    )
+
+
+def derivation_site(pointer: str) -> str:
+    """The pointer of the object that HELD the removed leaf.
+
+    A trailing `[i]` means the container is the list, so the index is dropped;
+    otherwise the last dotted segment is dropped. A ROOT-LEVEL leaf has neither,
+    and the object that held it is the DOCUMENT ITSELF - returned as "" and read
+    by is_in_site() as the whole document, NOT as "no site".
+
+    That last case was a hole rather than a subtlety. An earlier revision returned
+    "" here and then filtered with `if not (site and ...): continue`, so a falsy
+    site skipped EVERY leaf: six root-level records searched nothing at all and
+    could not fail on any injection, including the removed value reinjected into
+    the same file. The six were content/resources/common-ore.json
+    seam_total_per_map, content/resources/hyper-gold.json run_ceiling, and
+    total_depletion_seconds plus total_uninterrupted_extraction_per_map_seconds on
+    both content/mining-sites/*-ore-seams.json.
+
+    Kept as a shared helper with the same name and body in the generator, because
+    `derive --check` regenerates the expectation from the same definition and the
+    two must not drift.
+    """
+    if pointer.endswith("]"):
+        return pointer[: pointer.rindex("[")]
+    return pointer.rsplit(".", 1)[0] if "." in pointer else ""
+
+
+def is_in_site(leaf: str, site: str) -> bool:
+    """Is `leaf` the site itself or inside its subtree? "" is the document root."""
+    if site == "":
+        return True
+    return leaf == site or leaf.startswith(site + ".") or leaf.startswith(site + "[")
+
+
+def check_derived_family_values(docs: dict[Path, object]) -> list[tuple]:
+    """A31's VALUE layer, over the CURRENT tree - the half a name rule cannot do.
+
+    For every value this pass removed, no non-operand numeric leaf inside its own
+    derivation site may carry that value. Compared exactly, as Fractions, with no
+    tolerance: a stored 32.0 and a stored 32 are the same number and both fail.
+
+    This is what makes the guard indifferent to spelling. A reintroduction
+    survives a rename, a relocation inside the site, a different unit suffix and a
+    change of arity (32.0 -> [32.0]) without changing the number, and all four are
+    caught here while all four defeat the name layer.
+
+    TWO THINGS LIMIT ITS REACH AND BOTH PRINT ON A GREEN RUN.
+
+    (1) THE RADIUS: the derivation site, not the file and not the scope. A value
+        relocated OUT of its site still passes. The choice is measured, not
+        assumed - the generator's measure_search_radii() counts what each
+        candidate radius would flag under one definition and writes the three
+        numbers into search_radius_measurement in the expectation file, which is
+        where the ratio printed below comes from.
+
+    (2) THE GUARD IS ONLY AS BIG AS WHAT SURVIVED IN THE SITE. Emptying a
+        container empties its guard: where the removal left the containing object
+        with no numeric leaves at all, this layer searches ZERO leaves for that
+        record and cannot fail on anything short of a leaf reappearing inside that
+        same object. The count of such records is asserted and printed, because a
+        mean ("299 leaves across 115 values") reads as coverage of all 115 and is
+        exactly what hid the empty-site bug above.
+    """
+    expectation = load_derived_expectation()
+    exceptions = {
+        (e["file"], e["derived_pointer"], e["colliding_pointer"])
+        for e in expectation.get("value_collision_exceptions", [])
+    }
+    exceptions_used: set = set()
+    by_path = {rel(p): d for p, d in docs.items()}
+    rows = []
+    per_record: list[int] = []
+    for family in expectation.get("families", []):
+        hits: list[str] = []
+        for record in family["records"]:
+            doc = by_path.get(record["file"])
+            if doc is None:
+                continue
+            pointer = record["pointer"]
+            site = derivation_site(pointer)
+            own = {p.split("::", 1)[1] for p in record.get("operand_pointers", [])
+                   if p.split("::", 1)[0] == record["file"]}
+            target = Fraction(str(record["value"]))
+            searched_here = 0
+            for leaf, value in numeric_pointer_leaves(doc):
+                if not is_in_site(leaf, site):
+                    continue
+                searched_here += 1
+                if Fraction(str(value)) != target:
+                    continue
+                if leaf in own:
+                    continue
+                if (record["file"], pointer, leaf) in exceptions:
+                    exceptions_used.add((record["file"], pointer, leaf))
+                    continue
+                hits.append(f"{record['file']}.{leaf} = {value!r} (the removed {pointer})")
+            per_record.append(searched_here)
+        rows.append(
+            (
+                f"no {family['name']} VALUE at its derivation site",
+                0,
+                len(hits),
+                "ok" if not hits else "FAIL",
+            )
+        )
+        if hits:
+            fail(
+                f"A31 value layer: {len(hits)} numeric leaf/leaves carry a value this pass removed "
+                f"as a '{family['name']}', inside that value's own derivation site and not as one "
+                f"of its operands. Matched on the NUMBER, so a rename, a relocation within the "
+                f"site, a new unit suffix and a scalar-to-list change all fail it. If a hit is a "
+                f"genuine coincidence, add it to VALUE_COLLISION_EXCEPTIONS with a reason: "
+                f"{sorted(hits)[:10]}"
+            )
+
+    # A STALE DECLARED EXCEPTION FAILS, HERE AND NOT ONLY IN THE GENERATOR. This
+    # is A30's pattern - `set(CSV_MIRROR_ROUNDED) - declared_used`, computed
+    # against the tree in front of it - and it is here because the sentence "a
+    # stale exception now fails too" was false in BOTH tools: this file had no
+    # staleness check at all and consulted the set only as an exclusion, while the
+    # generator checked it against the pinned sweep ref, where the colliding value
+    # collides by construction. Control: content/utilities/UTL-R1.json
+    # acquisition.rank_count 0 -> 1 ends the only declared collision, and before
+    # this row both tools still exited 0.
+    stale = sorted(exceptions - exceptions_used)
+    rows.append(
+        (
+            "declared value-collision exceptions that no longer collide (stale exceptions)",
+            0,
+            len(stale),
+            "ok" if not stale else "FAIL",
+        )
+    )
+    if stale:
+        fail(
+            f"A31 value layer: {len(stale)} declared value-collision exception(s) no longer suppress "
+            f"anything on this tree, so the justification recorded for each is no longer true. A "
+            f"stale exception silently widens the gate - delete it from "
+            f"VALUE_COLLISION_EXCEPTIONS in the generator and regenerate: {stale}"
+        )
+
+    # A record whose containing object lost all its numeric leaves has an empty
+    # guard, and the count of those is an assertion rather than a remark: if a
+    # later pass empties more containers, this row moves and someone has to look.
+    blind = sum(1 for n in per_record if n == 0)
+    rows.append(
+        (
+            "removed values whose site still holds numeric leaves to search "
+            "(the rest have an EMPTY guard)",
+            f"{len(per_record) - EMPTY_SITE_GUARD_RECORDS} of {len(per_record)}",
+            f"{len(per_record) - blind} of {len(per_record)}",
+            "ok" if blind == EMPTY_SITE_GUARD_RECORDS else "FAIL",
+        )
+    )
+    if blind != EMPTY_SITE_GUARD_RECORDS:
+        fail(
+            f"A31 value layer: {blind} removed value(s) have a derivation site holding no numeric "
+            f"leaves, so this layer searches nothing for them; "
+            f"EMPTY_SITE_GUARD_RECORDS declares {EMPTY_SITE_GUARD_RECORDS}. This is not a pass/fail "
+            f"about the tree's correctness - it is the SIZE OF THE BLIND SPOT, and it is asserted so "
+            f"that emptying another container cannot shrink the guard quietly."
+        )
+
+    radii = expectation.get("search_radius_measurement") or {}
+    distribution = ", ".join(
+        f"{n} leaf/leaves x{per_record.count(n)}" for n in sorted(set(per_record))
+    )
+    # WHAT THIS CHECK SEARCHED AND WHAT IT CANNOT SEE, on the same table a passing
+    # run prints. A limitation recorded only in a docstring or a notes file is not
+    # disclosed to the person reading a green run. Reported as a DISTRIBUTION, not
+    # as a total or a mean: the previous line said "299 numeric leaves across 115
+    # removed values", which is a mean of 2.6 that reads as coverage of all 115
+    # and concealed 19 records searching nothing.
+    return rows, (
+        f"RADIUS SEARCHED: the object that held each removed leaf, plus its subtree. Per-record "
+        f"distribution over {len(per_record)} removed values - {distribution} - so the MINIMUM is "
+        f"{min(per_record) if per_record else 0} and {blind} record(s) search nothing at all. "
+        f"{len(exceptions)} declared exception(s), each asserted to still collide. Values compare "
+        f"exactly as Fractions; there is no tolerance and no rounding.",
+        f"NOT CAUGHT (1) - RADIUS: a removed value relocated OUT of its derivation site, elsewhere "
+        f"in the same file or anywhere else in the scope. Probed per family - caught 0 of 6. Rename, "
+        f"unit suffix and arity change (32.0 -> [32.0]) are caught 6 of 6. BOTH of those are "
+        f"HAND-RUN PROBES - twelve injections done by hand, six per row - and no assertion in this "
+        f"run recomputes either; unlike the three radii below, which this tool asserts. Wider radii "
+        f"were measured "
+        f"under one definition on the pinned sweep ref and are recorded in "
+        f"search_radius_measurement: {radii.get('site_radius_pairs', '?')} coincidental pair(s) at "
+        f"site radius, {radii.get('file_radius_pairs', '?')} at file radius and "
+        f"{radii.get('scope_radius_pairs', '?')} at scope radius. Widening needs that many "
+        f"hand-written exceptions, which is what makes it unlandable rather than merely unchosen. "
+        f"WHAT A PAIR IS, stated here rather than pointed at, because a reader meeting "
+        f"'{radii.get('site_radius_pairs', '?')} : {radii.get('file_radius_pairs', '?')} : "
+        f"{radii.get('scope_radius_pairs', '?')}' cannot otherwise tell what was counted: "
+        f"{(radii.get('definition') or 'DEFINITION MISSING from the expectation file').strip()} "
+        f"These three figures are ASSERTED by this tool against SEARCH_RADIUS_DECLARED "
+        f"({' : '.join(str(n) for n in SEARCH_RADIUS_DECLARED)}) in the A29/A31 declared-counts "
+        f"rows above, not merely printed from the expectation file; the file's own byte-integrity is "
+        f"a separate check (derive_derived_value_expectations.py --check).",
+        f"NOT CAUGHT (2) - EMPTY GUARDS: {blind} of {len(per_record)} removed values sit in a "
+        f"container the removal left with NO numeric leaves ({{}} and {{'resource': ...}} residues), "
+        f"so their guard searches nothing and only a leaf reappearing inside that same object could "
+        f"fail it. Emptying a container empties its guard. The 6 root-level records are NOT in this "
+        f"set any more - their site is the document, which is the object that held them.",
+    )
+
+
+# --------------------------------------------------------------------------
+# A30 - the docs CSV mirror and content/ must agree, value by value.
+#
+# docs/data/contact-damage-pressure.csv and content/ both carry the survivability
+# report. Ruling 45 found all overlapping values agreeing and said so; nothing
+# KEPT them agreeing. Two unguarded mirrors is the exact shape where a later edit
+# to one produces a silent contradiction, so agreement is asserted rather than
+# observed.
+#
+# This does NOT wait on the authority question (which of the two is the accepted
+# gameplay table docs/40 section 'Analytical' compares against). It is worth having
+# either way, and when the question lands, the loser becomes derived and this check
+# becomes redundant in the good way rather than wrong.
+#
+# NO TOLERANCE, AND THAT SENTENCE IS NOW TRUE FOR THE DECLARED PAIRS TOO. Values
+# compare exactly as Fractions. Where the CSV states a value at lower precision
+# than the derivation produces, the pair must be DECLARED below - enumerated with
+# a reason, never absorbed by a threshold.
+#
+# A declared entry names BOTH numbers: the CSV's written value and the EXACT
+# content-side value it is allowed to stand for. Both must hold. An earlier
+# revision required only that the content value ROUND to the CSV value at the
+# CSV's written precision, which is a tolerance of half the last decimal place
+# hiding inside a rule whose comment said "never absorbed by a threshold":
+# EN-07's body_scale_multiplier could sit anywhere in [0.61875, 0.625) undetected,
+# a band disclosed nowhere. It is now pinned to the single value 0.496, so any
+# retune of the scale fails, and the rounding clause is kept as a second condition
+# so a declaration cannot silently cover a pair that is not even close.
+# --------------------------------------------------------------------------
+PRESSURE_CSV = REPO_ROOT / "docs/data/contact-damage-pressure.csv"
+
+# (actor, column) -> (EXACT content-side value this declaration covers, reason).
+# The exact value is what removes the tolerance: nothing else passes, in either
+# direction.
+CSV_MIRROR_ROUNDED = {
+    ("EN-07", "contact_diameter_m"): (
+        "0.496",
+        "OPEN QUESTION, NOT A SETTLED ONE, and it is with the design owner: which contact diameter "
+        "was the Razorling meant to have? This entry records the question and the evidence on both "
+        "sides. It does not decide it, and an earlier version of this text did - it asserted the "
+        "0.496 was 'not a content defect, it is the exact product of the authored scale', which "
+        "reads as settled and is not supported. "
+        "THE DIVERGENCE: docs/31 section 'Ordinary roster overview' states the Razorling body scale "
+        "as 0.62x, so 0.62 x 0.80 = 0.496 M exactly; docs/72 section 'Collision and Contact "
+        "Footprints' states its footprint as 0.50 M and this CSV mirrors 72. EN-07 is the ONLY "
+        "actor whose derived diameter misses the CSV; the other 13 are exact. "
+        "THE ARGUMENT WITH FORCE, and it points at 0.50 being the exact one: every other ordinary "
+        "body scale is a multiple of 0.05 (0.55, 1.00, 1.30, 1.05, 1.20, 1.00, 1.10, 1.65, 1.35). "
+        "0.62 is not - but NEITHER IS 0.625. The Razorling breaks the pattern under either "
+        "hypothesis, so the pattern alone decides nothing; what the hypotheses differ on is whether "
+        "the break is MOTIVATED. Under 0.625 it is: a designer targeting a clean 0.50 M contact "
+        "diameter back-computes 0.50 / 0.80 = 0.625 and the scale is whatever falls out. Under 0.62 "
+        "it is not: someone working in 0.05 steps who wanted a small variant picks 0.60 or 0.65. A "
+        "motivated exception is better evidence than an unmotivated one, so this is the strongest "
+        "single argument on the table and it points at 0.625 - which is why the evidence LEANS that "
+        "way rather than sitting balanced. What it does not do is settle the question; see the "
+        "closing paragraphs. "
+        "THREE ARGUMENTS THAT DO NOT DISCRIMINATE, recorded as non-discriminating so a later reader "
+        "does not weigh them. (1) 'Both docs/72 figures come out exact under 0.625' is ONE "
+        "coincidence, not two: start distance is diameter / 2 + 0.50, so once the diameter is "
+        "exactly 0.50 the start distance is exactly 0.75 automatically. The second figure carries no "
+        "independent information. (2) 'docs/31 prints every scale at two decimals' is "
+        "ZERO-discriminating: all nine other scales are multiples of 0.05, so two decimals always "
+        "suffice for them - the column has never NEEDED a third decimal and therefore cannot "
+        "distinguish 'authored at two decimals' from 'presented at two decimals'. It is a fit over a "
+        "population incapable of falsifying it. (3) The delegation sentence at docs/31 section "
+        "'Ordinary roster overview' ('Exact derived values and boss circles appear in the "
+        "survivability baseline') obliges docs/72 to carry the exact value but says nothing about "
+        "WHICH value is exact, so it is consistent with both readings - which is why each side has "
+        "read it as supporting theirs. "
+        "WHAT IS WRONG IN THE REPOSITORY EITHER WAY: the framing 'content/ follows the source it "
+        "cites' is false for this field. EN-07's own source_refs scopes contact_footprint to "
+        "GDD-PLAYER-SURVIVABILITY-BASELINE#collision-and-contact-footprints - docs/72, the 0.50 "
+        "side - while the scale it stores comes from docs/31. Corrected in README.md too. "
+        "WHERE THE EVIDENCE POINTS, AND WHY THAT IS STILL NOT A DECISION: it LEANS TOWARD 0.625. "
+        "The motivated-exception argument above is the strongest single argument here and it points "
+        "that way, and the three arguments below discriminate nothing, so nothing pulls the other "
+        "way with comparable force. It is NOT DECISIVE, for two reasons that are not weak: it is an "
+        "inference about a designer's intent, and it runs against the LITERAL TEXT of docs/31, "
+        "which states 0.62x and is a document of record; and against the operand-home argument - "
+        "docs/31's roster is where body scales live, so the scale column is the natural home of the "
+        "authored quantity and docs/72's 0.50 M is the natural home of a presented consequence. A "
+        "leaning inference does not overturn a stated number, so the question stays OPEN and it is "
+        "the design owner's to close. "
+        "WHY THE CURRENT STATE IS HELD, AND ON WHAT GROUNDS: on COST, not on evidence - the lean is "
+        "recorded above and holding does not deny it. "
+        "The current state is internally consistent under the 0.62 reading. If that reading wins "
+        "there is nothing to do; if the other wins the work is one content value plus a document "
+        "revert, travelling with the merges. The magnitude is 0.8% of a hitbox, so nothing is at "
+        "risk in the interval, and the question belongs to the design owner as a DESIGN question "
+        "rather than being inferred from typography. "
+        "AND WHY HOLDING IS SAFE RATHER THAN MERELY CHEAP: A30 fails in BOTH directions while the "
+        "question is open. Because this entry pins the exact content-side value, changing "
+        "body_scale_multiplier fails; because a declared pair that stops diverging is a failure, "
+        "correcting docs/72 to 0.496 fails too. Neither side can be taken quietly."
+    ),
+    ("EN-07", "contact_start_distance_m"): (
+        "0.748",
+        "The same 0.496 propagated: 0.496 / 2 + 0.50 = 0.748, which docs/72 section 'Collision and "
+        "Contact Footprints' states as 0.75. ONE divergence, not two - and that is exactly why the "
+        "'both figures are exact under 0.625' argument carries no independent weight; see the "
+        "contact_diameter_m entry."
+    ),
+}
+
+CSV_MIRROR_EXPECTED_COMPARISONS = 98
+
+# How many definitions must author contact_footprint.reference_diameter_m, the
+# operand A30's diameter column multiplies. Ten - the ordinary enemy roster. The
+# four bosses author their diameters flat (docs/72:105-110) and have no reference,
+# which is why this is 10 and not 14.
+CSV_MIRROR_REFERENCE_DIAMETER_AUTHORS = 10
+
+
+def _csv_decimals(text: str) -> int:
+    return len(text.split(".", 1)[1]) if "." in text else 0
+
+
+def check_csv_mirror_agreement(docs: dict[Path, object]) -> list[tuple]:
+    """A30 - every value docs/data/contact-damage-pressure.csv shares with content/.
+
+    Seven columns x 14 actors. Four columns compare against an AUTHORED content
+    field; three compare against a value the compiler derives from surviving
+    operands, which is the comparison docs/40 section "Enemies and bosses" actually
+    describes ("derives world speeds/footprints and compares them with the
+    survivability report").
+    """
+    if not PRESSURE_CSV.exists():
+        fail(
+            f"A30 {rel(PRESSURE_CSV)} is missing, so the CSV/content mirror is unmeasured. This "
+            f"rule is not allowed to pass by being unable to run."
+        )
+        return [("pressure CSV readable", "present", "missing", "FAIL")], ()
+
+    contract = None
+    for path, doc in docs.items():
+        if path.name == "standard-map-generation-contract.json":
+            contract = doc
+    if not isinstance(contract, dict) or "reference_mech_speed_m_per_s" not in contract:
+        fail("A30 could not read reference_mech_speed_m_per_s, an operand of the speed column.")
+        return [("mech base speed readable", "present", "missing", "FAIL")], ()
+    base_speed = Fraction(str(contract["reference_mech_speed_m_per_s"]))
+
+    # THE PLAYER'S COLLISION RADIUS IS THE ONE OPERAND WITH NO AUTHORED MIRROR, and
+    # the asymmetry with reference_diameter_m below is deliberate rather than an
+    # oversight. docs/72:86 states it: "Contact begins when the enemy contact circle
+    # and the mech's 0.50M-radius collision circle overlap." It is a PLAYER-baseline
+    # constant, and A20's centre-distance rule exists precisely to keep it OUT of
+    # content/enemies/, content/bosses/ and content/maps/ - storing the sum there put
+    # a second writer on it in fifteen files (Ruling 12, content/transcription-notes.md
+    # sections on the centre distance). So there is nothing in the tree to read and
+    # this literal is the repository's only copy of it.
+    # SEARCHED BEFORE CONCLUDING: every numeric leaf equal to 0.5 under
+    # content/**/*.json is 20 leaves, none of them a player/mech footprint field
+    # (pulse intervals, arm/grace/decay seconds, per-rank increments, a charging
+    # multiplier, an anchor collapse distance); no key anywhere under content/ matches
+    # player_radius / collision_radius; and the only occurrences of the phrase are
+    # prose in content/README.md and content/transcription-notes.md, which are
+    # documentation of this derivation, not values it may read. If the mech baseline
+    # ever becomes authored content, read it here the way ref_diameter is read.
+    player_radius = Fraction("0.50")  # docs/72:86 - no authored mirror; see above
+
+    by_id = {}
+    for path, doc in docs.items():
+        if isinstance(doc, dict) and isinstance(doc.get("id"), str):
+            if path.parent.name in ("enemies", "bosses"):
+                by_id[doc["id"]] = doc
+
+    # THE OTHER OPERAND OF THE DIAMETER COLUMN IS AUTHORED, SO IT IS READ FROM THE
+    # TREE. All ten enemy files store contact_footprint.reference_diameter_m = 0.8,
+    # A20's DERIVED_FOOTPRINT_FIELD_ALLOWED allowlists it as authored and required to
+    # stay, and this derivation multiplies it. It used to be hardcoded here as
+    # Fraction("0.80"), which made the derivation agree with ITSELF rather than with
+    # the tree: setting the field to 1.0 in all ten files left the whole suite green,
+    # 0 failures, 10 of 10 escaped, and 0.9 and 0.8000001 likewise - while the sibling
+    # operand body_scale_multiplier went red, so the field was stored, mirrored in the
+    # CSV's derivation, allowlisted as authored, and read by nothing.
+    # TWO ROWS, because reading it is not enough on its own. The per-actor read makes
+    # an edit to ONE file fail that actor's diameter and start-distance comparisons;
+    # the population and distinct-value rows make DELETING the field, or giving one
+    # file a different reference from the other nine, fail as well - the shared
+    # reference is one quantity with one owner, and a per-file reference would be a
+    # second owner smuggled in one file at a time.
+    authored_ref_diameters: dict[str, Fraction] = {}
+    for actor_id, doc in by_id.items():
+        footprint = doc.get("contact_footprint") or {}
+        if "reference_diameter_m" in footprint:
+            authored_ref_diameters[actor_id] = Fraction(str(footprint["reference_diameter_m"]))
+    distinct_ref_diameters = sorted(set(authored_ref_diameters.values()))
+
+    import csv as _csv
+
+    compared = 0
+    exact_hits = 0
+    declared_used: set = set()
+    mismatches: list[str] = []
+    missing_actors: list[str] = []
+    missing_ref_diameter: list[str] = []
+
+    with PRESSURE_CSV.open() as handle:
+        for row in _csv.DictReader(handle):
+            actor = row["actor_id"]
+            doc = by_id.get(actor)
+            if doc is None:
+                missing_actors.append(actor)
+                continue
+            footprint = doc.get("contact_footprint") or {}
+            if "contact_and_weapon_hurt_diameter_m" in footprint:
+                diameter = Fraction(str(footprint["contact_and_weapon_hurt_diameter_m"]))
+                diameter_basis = "authored contact_and_weapon_hurt_diameter_m"
+            elif actor in authored_ref_diameters:
+                ref_diameter = authored_ref_diameters[actor]
+                diameter = Fraction(str(doc["body_scale_multiplier"])) * ref_diameter
+                diameter_basis = (
+                    f"body_scale_multiplier x authored contact_footprint."
+                    f"reference_diameter_m {ref_diameter}"
+                )
+            else:
+                # No authored diameter and no authored reference to derive one from.
+                # The population row below is what reports this; skipping here also
+                # drops the comparison count, so the vacuity guard fails too.
+                missing_ref_diameter.append(actor)
+                continue
+            percent = Fraction(
+                str(doc["movement_speed"]["percent_of_mech_base_speed"]["percent"])
+            )
+            block = doc.get("damage_pressure") or {}
+
+            candidates = [
+                ("contact_diameter_m", diameter, diameter_basis),
+                ("contact_start_distance_m", diameter / 2 + player_radius,
+                 f"{diameter_basis} / 2 + {player_radius}"),
+                ("move_speed_mps", percent / 100 * base_speed,
+                 f"percent_of_mech_base_speed / 100 x {base_speed}"),
+                ("contact_damage", Fraction(str(doc["contact_damage"])), "authored contact_damage"),
+                ("control_resistance", Fraction(str(doc["control_resistance"]["percent"])) / 100,
+                 "authored control_resistance.percent / 100"),
+            ]
+            if "hits_to_defeat_100_hull" in block:
+                candidates.append(
+                    ("hits_to_defeat_100", Fraction(str(block["hits_to_defeat_100_hull"])),
+                     "authored damage_pressure.hits_to_defeat_100_hull")
+                )
+            if "continuous_overlap_time_to_defeat_seconds" in block:
+                candidates.append(
+                    ("continuous_overlap_ttd_s",
+                     Fraction(str(block["continuous_overlap_time_to_defeat_seconds"])),
+                     "authored damage_pressure.continuous_overlap_time_to_defeat_seconds")
+                )
+
+            for column, got, basis in candidates:
+                raw = row.get(column)
+                if raw is None or raw == "":
+                    continue
+                compared += 1
+                want = Fraction(raw)
+                if want == got:
+                    exact_hits += 1
+                    continue
+                key = (actor, column)
+                places = _csv_decimals(raw)
+                quantum = Fraction(10) ** places
+                rounded = Fraction(int(got * quantum + Fraction(1, 2)), quantum)
+                declared = CSV_MIRROR_ROUNDED.get(key)
+                # BOTH conditions. The exact-value clause is what makes "no
+                # tolerance" true: without it the declaration accepted any value
+                # rounding to the CSV's figure, a half-last-place band nobody had
+                # disclosed. The rounding clause stays so a declaration cannot
+                # cover a pair that is not even close to the CSV.
+                if declared is not None and got == Fraction(declared[0]) and rounded == want:
+                    declared_used.add(key)
+                    continue
+                mismatches.append(
+                    f"{actor}.{column}: CSV {raw} vs content {got} (= {float(got)!r}, from "
+                    f"{basis})"
+                )
+
+    stale = sorted(set(CSV_MIRROR_ROUNDED) - declared_used)
+    rows = [
+        (
+            f"docs CSV vs content/: every shared value agrees ({compared} compared, "
+            f"{exact_hits} exactly, {len(declared_used)} at the CSV's stated precision)",
+            0,
+            len(mismatches),
+            "ok" if not mismatches else "FAIL",
+        ),
+        (
+            f"comparisons made (vacuity guard; a mirror check over 0 values passes for free)",
+            CSV_MIRROR_EXPECTED_COMPARISONS,
+            compared,
+            "ok" if compared == CSV_MIRROR_EXPECTED_COMPARISONS else "FAIL",
+        ),
+        (
+            "declared lower-precision pairs that no longer diverge (stale exceptions)",
+            0,
+            len(stale),
+            "ok" if not stale else "FAIL",
+        ),
+        (
+            "enemy files authoring contact_footprint.reference_diameter_m (the operand "
+            "this rule reads instead of hardcoding)",
+            CSV_MIRROR_REFERENCE_DIAMETER_AUTHORS,
+            len(authored_ref_diameters),
+            "ok" if len(authored_ref_diameters) == CSV_MIRROR_REFERENCE_DIAMETER_AUTHORS
+            else "FAIL",
+        ),
+        (
+            "distinct authored reference diameters (one shared reference, one owner)",
+            "1 (0.8)",
+            f"{len(distinct_ref_diameters)} ({', '.join(str(float(d)) for d in distinct_ref_diameters) or 'none'})",
+            "ok" if len(distinct_ref_diameters) == 1 else "FAIL",
+        ),
+    ]
+    if mismatches:
+        fail(
+            f"A30 {len(mismatches)} value(s) disagree between {rel(PRESSURE_CSV)} and content/. "
+            f"Both carry the survivability report and neither is derived from the other, so a "
+            f"divergence is a silent contradiction between two mirrors: {sorted(mismatches)[:10]}"
+        )
+    if compared != CSV_MIRROR_EXPECTED_COMPARISONS:
+        fail(
+            f"A30 compared {compared} value(s), expected {CSV_MIRROR_EXPECTED_COMPARISONS}. A "
+            f"mirror-agreement rule that compares nothing passes vacuously, so the count is "
+            f"asserted. If a column or an actor was legitimately added or removed, update "
+            f"CSV_MIRROR_EXPECTED_COMPARISONS deliberately."
+        )
+    if missing_actors:
+        fail(
+            f"A30 {len(missing_actors)} CSV actor(s) have no definition under content/enemies/ or "
+            f"content/bosses/: {missing_actors}"
+        )
+    if stale:
+        fail(
+            f"A30 {len(stale)} declared lower-precision pair(s) now agree exactly. A stale "
+            f"exception silently widens the rule - delete it: {stale}"
+        )
+    if len(authored_ref_diameters) != CSV_MIRROR_REFERENCE_DIAMETER_AUTHORS:
+        fail(
+            f"A30 {len(authored_ref_diameters)} enemy definition(s) author "
+            f"contact_footprint.reference_diameter_m, expected "
+            f"{CSV_MIRROR_REFERENCE_DIAMETER_AUTHORS}. It is the authored operand this rule "
+            f"multiplies by body_scale_multiplier, and A20's DERIVED_FOOTPRINT_FIELD_ALLOWED "
+            f"allowlists it on the basis that it stays. Missing from: "
+            f"{sorted(set(by_id) - set(authored_ref_diameters))[:12]}"
+        )
+    if len(distinct_ref_diameters) != 1:
+        fail(
+            f"A30 the authored reference diameter is not one shared value: "
+            f"{[str(d) for d in distinct_ref_diameters]}. docs/72:86 gives ONE reference (the "
+            f"Ripper's 0.80 M rank-zero contact diameter) that every ordinary body scale "
+            f"multiplies, so a per-file reference is a second owner for one quantity."
+        )
+    if missing_ref_diameter:
+        fail(
+            f"A30 {len(missing_ref_diameter)} actor(s) have neither an authored contact diameter "
+            f"nor an authored reference to derive one from, so their diameter and start-distance "
+            f"columns were not compared: {sorted(missing_ref_diameter)}"
+        )
+    # A30's own limits, on the output a green run prints. A30 caught 7 of 8
+    # attacks when it was reviewed; the one that escaped went through the declared
+    # exception, which is the note below.
+    return rows, (
+        f"WHAT IS COMPARED: {compared} value(s) - the 7 CSV columns x 14 actors that both sides "
+        f"carry. 4 columns compare against an AUTHORED content field; 3 against values derived from "
+        f"surviving operands (diameter, start distance, world speed), which is the comparison docs/40 "
+        f"section 'Enemies and bosses' describes. The count is asserted at "
+        f"{CSV_MIRROR_EXPECTED_COMPARISONS} because a mirror check over zero values passes free.",
+        f"WHERE THE DERIVED COLUMNS' OPERANDS COME FROM, named because a hardcoded operand makes a "
+        f"derivation agree with itself: reference_mech_speed_m_per_s READ from "
+        f"content/maps/standard-map-generation-contract.json; contact_footprint."
+        f"reference_diameter_m READ per actor from the "
+        f"{len(authored_ref_diameters)} enemy definition(s) that author it (asserted above, one "
+        f"distinct value: {', '.join(str(float(d)) for d in distinct_ref_diameters) or 'none'}); "
+        f"body_scale_multiplier and the authored boss diameters READ per actor. The player's "
+        f"{float(player_radius):.2f} M collision radius is the ONLY hardcoded operand, from "
+        f"docs/72:86, and it "
+        f"is hardcoded because A20 keeps it out of content/ deliberately - it is a player-baseline "
+        f"constant and storing it in an enemy, boss or map file put a second writer on it.",
+        f"DECLARED EXCEPTIONS ARE EXACT PAIRS, NOT BANDS: {len(CSV_MIRROR_ROUNDED)} declared, each "
+        f"naming the CSV value AND the single exact content-side value it covers ("
+        + ", ".join(f"{a}.{c} = {v[0]}" for (a, c), v in sorted(CSV_MIRROR_ROUNDED.items()))
+        + "). An earlier revision required only that the content value round to the CSV's written "
+        "precision, which let EN-07's body_scale_multiplier sit anywhere in [0.61875, 0.625) "
+        "undetected while this module's comment claimed NO TOLERANCE. There is now no band.",
+        "NOT CAUGHT by A30: a value neither side carries, a column the CSV does not have, and an "
+        "edit made to BOTH mirrors in the same commit - it asserts agreement, not correctness. It "
+        "also does not settle which mirror is authoritative; when that lands the loser becomes "
+        "derived and this rule becomes redundant rather than wrong. The EN-07 divergence is an OPEN "
+        "design question, recorded with its evidence in CSV_MIRROR_ROUNDED, and A30 fails in both "
+        "directions while it stays open.",
+    )
+
+
+def _numeric_multiset_at_ref(ref: str, paths: list[str]) -> dict[tuple[str, str], object]:
+    out: dict[tuple[str, str], object] = {}
+    for path in paths:
+        blob = subprocess.run(
+            ["git", "-C", str(REPO_ROOT), "show", f"{ref}:{path}"],
+            capture_output=True,
+            text=True,
+        )
+        if blob.returncode != 0:
+            continue
+        for pointer, value in numeric_pointer_leaves(json.loads(blob.stdout)):
+            out[(path, pointer)] = value
+    return out
+
+
+def check_derived_removal_delta() -> list[tuple]:
+    """A29 - the measured numeric delta IS the committed expectation, per element.
+
+    ONE ROW, AND DELIBERATELY ONE. Earlier drafts also asserted "0 numeric leaves
+    added" and "0 surviving numeric leaves changed value" against the sweep ref.
+    Both are true of THIS diff and neither belongs in a standing validator: they
+    are one-shot properties of one commit range, so the first ordinary tuning
+    commit after merge - EN-01 hull 20 -> 25, an authored non-derived value -
+    would fail a rule about derived values. Worse, the only way to clear that
+    failure is to re-pin sweep_ref to a newer commit, which makes A29 compare the
+    tree against itself and destroys the prediction-first property that is the
+    whole point. Those two measurements are evidence for this pull request and
+    live in its body.
+
+    ONLY HALF OF WHAT REMAINS IS A STANDING INVARIANT, and an earlier revision of
+    this docstring said the whole of it was. Set equality has two halves and they
+    have different futures:
+      `missing`    - every predicted removal must STILL be missing. This does hold
+                     for every future commit: nothing legitimately re-authors a
+                     value the compiler owns.
+      `unexpected` - nothing ELSE may be missing. This does NOT. Deleting any
+                     authored numeric leaf, for any reason, fails it.
+    Controlled individually: retuning EN-01 hull 20 -> 25 in place PASSES, adding
+    an authored numeric leaf to EN-01 PASSES, and deleting EN-01.earliest_minute
+    FAILS with "1 removed-but-unpredicted". So A29 WILL false-fail on a future
+    commit that deletes a field, and the fix then is to re-derive the expectation
+    from a newer sweep ref as a deliberate act - not to loosen this rule.
+    """
+    expectation = load_derived_expectation()
+    if not expectation:
+        return []
+    ref = expectation["sweep_ref"]
+
+    listing = subprocess.run(
+        ["git", "-C", str(REPO_ROOT), "ls-tree", "-r", "--name-only", ref, "content/"],
+        capture_output=True,
+        text=True,
+    )
+    if listing.returncode != 0:
+        fail(
+            f"A29 could not read the sweep ref {ref[:12]} out of git, so the removal delta is "
+            f"unmeasured. This rule is not allowed to pass by being unable to run: "
+            f"{listing.stderr.strip()}"
+        )
+        return [("sweep ref readable", ref[:12], "unreadable", "FAIL")]
+    sweep_paths = sorted(p for p in listing.stdout.splitlines() if p.endswith(".json"))
+
+    before = _numeric_multiset_at_ref(ref, sweep_paths)
+    after: dict[tuple[str, str], object] = {}
+    for path in sorted(CONTENT.rglob("*.json")):
+        for pointer, value in numeric_pointer_leaves(json.loads(path.read_text())):
+            after[(rel(path), pointer)] = value
+
+    measured_removed = {key: value for key, value in before.items() if key not in after}
+
+    predicted = {(f, p): v for f, p, v in expectation["removed_numeric_multiset"]}
+    n = len(predicted)
+
+    missing = sorted(key for key in predicted if key not in measured_removed)
+    unexpected = sorted(key for key in measured_removed if key not in predicted)
+    wrong_value = sorted(
+        f"{f}.{p}: predicted {predicted[(f, p)]!r}, tree had {measured_removed[(f, p)]!r}"
+        for (f, p) in predicted.keys() & measured_removed.keys()
+        if predicted[(f, p)] != measured_removed[(f, p)]
+    )
+
+    equal = not missing and not unexpected and not wrong_value
+    rows = [
+        (
+            f"set equality over {n} element(s): predicted removals == measured removals",
+            f"{n} of {n}",
+            f"{n - len(missing)} matched, {len(unexpected)} unpredicted, "
+            f"{len(wrong_value)} value mismatch(es)",
+            "ok" if equal else "FAIL",
+        ),
+    ]
+    if not equal:
+        fail(
+            f"A29 the removal set measured against {ref[:12]} is NOT the committed expectation. "
+            f"This is set equality over {n} elements, not a total: "
+            f"{len(missing)} predicted-but-still-present {missing[:6]}, "
+            f"{len(unexpected)} removed-but-unpredicted {unexpected[:6]}, "
+            f"{len(wrong_value)} predicted with the wrong value {wrong_value[:6]}"
+        )
+    return rows
+
+
 def check_derived_values(docs: dict[Path, object]) -> list[tuple]:
     rows = []
+
+    # THE BANNED VALUE IS DERIVED FROM THE TREE, not hardcoded, for the reason A30's
+    # reference diameter was: 12 is cadence x (pods - 1), and both operands are
+    # AUTHORED in content/weapons/W-BE.json (deployment_cadence_seconds = 6.0,
+    # maximum_active_pod_count = 3). Hardcoding the product made this ban agree with
+    # itself: retuning the pod cap to 4 makes the derived total 18, and a ban on 12
+    # would then police a figure nobody would author while the real derived value
+    # walked in unchallenged - the ban narrows to nothing, silently. So the product is
+    # computed from the two authored operands and DERIVED_DEPLOYMENT_SECONDS is the
+    # DECLARED expectation it must equal, which turns a retune into a deliberate
+    # re-declaration instead of a quiet loss of coverage.
+    pod_props: dict = {}
+    for _, doc in sorted(files_in("weapons", docs).items()):
+        if isinstance(doc, dict) and doc.get("id") == SENTRY_POD_WEAPON_ID:
+            pod_props = doc.get("fixed_properties") or {}
+    cadence = pod_props.get("deployment_cadence_seconds")
+    pods = pod_props.get("maximum_active_pod_count")
+    if (
+        isinstance(cadence, (int, float))
+        and not isinstance(cadence, bool)
+        and isinstance(pods, int)
+        and not isinstance(pods, bool)
+        and pods > 1
+    ):
+        derived_total = Fraction(str(cadence)) * (pods - 1)
+        basis = f"{cadence} x ({pods} - 1)"
+        rows.append(
+            (
+                "banned deployment total, derived from W-BE's authored operands "
+                f"({basis}), == the declared {DERIVED_DEPLOYMENT_SECONDS}",
+                DERIVED_DEPLOYMENT_SECONDS,
+                str(float(derived_total)),
+                "ok" if derived_total == DERIVED_DEPLOYMENT_SECONDS else "FAIL",
+            )
+        )
+        if derived_total != DERIVED_DEPLOYMENT_SECONDS:
+            fail(
+                f"the Sentry Pod deployment total derived from content/weapons/ is "
+                f"{float(derived_total)} s ({basis}), but DERIVED_DEPLOYMENT_SECONDS declares "
+                f"{DERIVED_DEPLOYMENT_SECONDS}. The ban below is on the DERIVED value, so a retune "
+                f"of the cadence or the pod cap has to re-declare it deliberately - otherwise this "
+                f"rule keeps banning a stale figure and stops covering the live one."
+            )
+    else:
+        derived_total = Fraction(DERIVED_DEPLOYMENT_SECONDS)
+        basis = f"declared {DERIVED_DEPLOYMENT_SECONDS} (operands not readable)"
+        warn(
+            f"{SENTRY_POD_WEAPON_ID}: deployment_cadence_seconds / maximum_active_pod_count were "
+            f"not both readable, so the banned deployment total falls back to the declared "
+            f"{DERIVED_DEPLOYMENT_SECONDS} s instead of being derived from the tree (field names "
+            f"are unvalidated until content/schemas/ exists)"
+        )
+        rows.append(
+            (
+                "banned deployment total, derived from W-BE's authored operands",
+                DERIVED_DEPLOYMENT_SECONDS,
+                "operands not readable - using the declared value",
+                "WARN",
+            )
+        )
+
     banned_hits: list[str] = []
     for path, doc in sorted(files_in("weapons", docs).items()):
         for jpath, key, value in walk(doc):
@@ -2508,12 +3751,13 @@ def check_derived_values(docs: dict[Path, object]) -> list[tuple]:
                 and DEPLOYMENT_KEY.search(key)
                 and not isinstance(value, bool)
                 and isinstance(value, (int, float))
-                and value == DERIVED_DEPLOYMENT_SECONDS
+                and Fraction(str(value)) == derived_total
             ):
                 banned_hits.append(f"{rel(path)}{jpath[1:]} = {value}")
     rows.append(
         (
-            "no authored 12 s deployment/ramp value in content/weapons/",
+            f"no authored {float(derived_total):g} s deployment/ramp value in content/weapons/ "
+            f"({basis})",
             0,
             len(banned_hits),
             "ok" if not banned_hits else "FAIL",
@@ -2522,8 +3766,8 @@ def check_derived_values(docs: dict[Path, object]) -> list[tuple]:
     if banned_hits:
         fail(
             f"{len(banned_hits)} deployment/ramp field(s) in content/weapons/ hold "
-            f"{DERIVED_DEPLOYMENT_SECONDS}, which is DERIVED from the {SENTRY_POD_DEPLOYMENT_SECONDS} s "
-            f"cadence, not authored (docs/71-initial-weapon-numeric-catalog.md:83, 40:100): "
+            f"{float(derived_total):g}, which is DERIVED from W-BE's authored operands "
+            f"({basis}), not authored (docs/71-initial-weapon-numeric-catalog.md:83, 40:100): "
             f"{banned_hits}"
         )
 
@@ -3216,18 +4460,28 @@ def check_polarity_agreement(docs: dict[Path, object]) -> list[tuple]:
 # --------------------------------------------------------------------------
 
 
-def table(title: str, headers: tuple, rows: list[tuple]) -> None:
+def table(title: str, headers: tuple, rows: list[tuple], notes: tuple = ()) -> None:
+    """Print an assertion table, then any `notes` beneath it.
+
+    `notes` exists so a rule can disclose WHAT IT CANNOT SEE on the same output a
+    passing run produces. A limitation that lives only in a docstring or in
+    content/transcription-notes.md is not disclosed to the person reading a green
+    run, which is the only person who needs to be told.
+    """
     print(f"\n{title}")
-    if not rows:
+    if rows:
+        cols = [str(h) for h in headers]
+        body = [[("" if c is None else str(c)) for c in row] for row in rows]
+        widths = [max(len(cols[i]), *(len(r[i]) for r in body)) for i in range(len(cols))]
+        print("  " + "  ".join(c.ljust(widths[i]) for i, c in enumerate(cols)))
+        print("  " + "  ".join("-" * widths[i] for i in range(len(cols))))
+        for row in body:
+            print("  " + "  ".join(row[i].ljust(widths[i]) for i in range(len(cols))))
+    else:
         print("  (nothing to report)")
-        return
-    cols = [str(h) for h in headers]
-    body = [[("" if c is None else str(c)) for c in row] for row in rows]
-    widths = [max(len(cols[i]), *(len(r[i]) for r in body)) for i in range(len(cols))]
-    print("  " + "  ".join(c.ljust(widths[i]) for i, c in enumerate(cols)))
-    print("  " + "  ".join("-" * widths[i] for i in range(len(cols))))
-    for row in body:
-        print("  " + "  ".join(row[i].ljust(widths[i]) for i in range(len(cols))))
+    for note in notes:
+        for i, line in enumerate(textwrap.wrap(note, 104)):
+            print(("  ! " if i == 0 else "    ") + line)
 
 
 def main() -> int:
@@ -3251,6 +4505,11 @@ def main() -> int:
     ref_rows = check_references(docs)
     derived_rows = check_derived_values(docs)
     footprint_rows = check_derived_footprint_fields(docs)
+    derived_counts_rows = check_derived_expectation_counts(docs)
+    derived_family_rows, derived_family_notes = check_derived_family_absence(docs)
+    derived_value_rows, derived_value_notes = check_derived_family_values(docs)
+    csv_mirror_rows, csv_mirror_notes = check_csv_mirror_agreement(docs)
+    removal_delta_rows = check_derived_removal_delta()
     prefix_rows = check_scope_prefixes(docs)
     bound_rows = check_bound_spelling(docs)
     manifest_rows, manifest_size = check_definition_manifest(docs)
@@ -3285,6 +4544,46 @@ def main() -> int:
         "A20 Footprint fields the compiler owns",
         ("check", "expected", "actual", "status"),
         footprint_rows,
+    )
+    table(
+        "A29/A31 declared counts and vacuity guards (asserted here, not only by derive --check)",
+        ("check", "expected", "actual", "status"),
+        derived_counts_rows,
+        (
+            "These rows exist because total_removed, family_count, declared_family_count and "
+            "declared_total_removed were written by the generator and read by nothing here. Without "
+            "them this file passes an empty family list, empty records, an empty removal multiset "
+            "and the counts overwritten with 9999/99. The last three rows are the same defect for "
+            "the three search radii A31 PRINTS: editing file_radius_pairs back to the old "
+            "unreproducible 55 used to make this tool print '1 : 55 : 668' at exit 0, with only "
+            "derive --check objecting.",
+        ),
+    )
+    table(
+        "A31 layer 1 of 2 - NAME: no derived-value family reappears under a matching name "
+        "(six rules, six scopes; catches a rename only within its own word class)",
+        ("check", "expected", "actual", "status"),
+        derived_family_rows,
+        derived_family_notes,
+    )
+    table(
+        "A31 layer 2 of 2 - VALUE: no removed value sits at a non-operand leaf inside its own "
+        "derivation site (exact Fractions; indifferent to name, unit suffix and arity)",
+        ("check", "expected", "actual", "status"),
+        derived_value_rows,
+        derived_value_notes,
+    )
+    table(
+        "A30 docs/data/contact-damage-pressure.csv and content/ agree on every shared value "
+        "(two unguarded mirrors of one report; exact Fractions, declared exceptions only)",
+        ("check", "expected", "actual", "status"),
+        csv_mirror_rows,
+        csv_mirror_notes,
+    )
+    table(
+        "A29 Removal delta == the expectation committed before the removals",
+        ("check", "expected", "actual", "status"),
+        removal_delta_rows,
     )
     table(
         "A24 No line-number citation and no repository path in any string value",

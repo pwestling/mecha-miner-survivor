@@ -57,8 +57,7 @@
         "text": "+5%",
         "percent": 5
       },
-      "price_hyper_gold": 25,
-      "cumulative_cost_hyper_gold": 25
+      "price_hyper_gold": 25
     },
     {
       "rank": 2,
@@ -66,8 +65,7 @@
         "text": "+10%",
         "percent": 10
       },
-      "price_hyper_gold": 50,
-      "cumulative_cost_hyper_gold": 75
+      "price_hyper_gold": 50
     },
     {
       "rank": 3,
@@ -75,8 +73,7 @@
         "text": "+15%",
         "percent": 15
       },
-      "price_hyper_gold": 75,
-      "cumulative_cost_hyper_gold": 150
+      "price_hyper_gold": 75
     },
     {
       "rank": 4,
@@ -84,8 +81,7 @@
         "text": "+20%",
         "percent": 20
       },
-      "price_hyper_gold": 100,
-      "cumulative_cost_hyper_gold": 250
+      "price_hyper_gold": 100
     },
     {
       "rank": 5,
@@ -93,8 +89,7 @@
         "text": "+25%",
         "percent": 25
       },
-      "price_hyper_gold": 150,
-      "cumulative_cost_hyper_gold": 400
+      "price_hyper_gold": 150
     }
   ],
   "rules": [

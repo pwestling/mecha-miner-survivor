@@ -25,20 +25,16 @@
       "ore_per_installment": 10,
       "installment_seconds": 1.5,
       "installment_count": 10,
-      "total_per_seam": 100,
       "depletion_seconds": 15,
-      "seams_per_map": 20,
-      "total_per_map": 2000
+      "seams_per_map": 20
     },
     {
       "source": "rich ore seam",
       "ore_per_installment": 40,
       "installment_seconds": 3,
       "installment_count": 5,
-      "total_per_seam": 200,
       "depletion_seconds": 15,
-      "seams_per_map": 8,
-      "total_per_map": 1600
+      "seams_per_map": 8
     },
     {
       "source": "specialized-material geode",
@@ -48,16 +44,12 @@
         "minimum": 32,
         "maximum": 40
       },
-      "total_per_map": {
-        "minimum": 1600,
-        "maximum": 2000
-      }
+      "total_per_map": {}
     },
     {
       "source": "interval boss defeat",
       "ore_per_boss": 300,
-      "boss_count": 4,
-      "total_per_run": 1200
+      "boss_count": 4
     },
     {
       "source": "relic sale",
@@ -65,10 +57,6 @@
       "applies_to_displaced_relic": true
     }
   ],
-  "seam_total_per_map": 3600,
-  "complete_run_ceiling_before_relic_sales": {
-    "minimum": 6400,
-    "maximum": 6800
-  },
+  "complete_run_ceiling_before_relic_sales": {},
   "dropped_by_ordinary_enemies_and_elites": false
 }

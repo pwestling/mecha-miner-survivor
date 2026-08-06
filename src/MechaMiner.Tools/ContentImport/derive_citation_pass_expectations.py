@@ -24,7 +24,11 @@ So the practice this file establishes is mechanical rather than narrative:
      expectation to.
   2. The change lands in a SECOND commit.
   3. `--verify` measures the second commit against the first and asserts the
-     measured delta equals the committed expectation, element by element.
+     measured delta equals the committed expectation, element by element. The
+     "second commit" is PINNED as `PASS_REF`, not read as HEAD: what is asserted
+     is a one-shot claim about this pass's range, and asking it of a later HEAD
+     turns it into "nothing has changed since". See PASS_REF for the measurement
+     that made that concrete, and for the two standing assertions that remain.
 
 The expectation is derived from the frozen evidence artifact and from a live
 sweep of the tree at a named git ref — never from a diff.
@@ -80,6 +84,38 @@ import check_quote_mismatch_evidence as Q  # noqa: E402
 
 PREVIOUS_PASS_REF = "origin/master"
 
+# THE COMMIT THAT LANDED THIS PASS - the "after" side of the range `--verify`
+# measures, and PINNED for the reason below.
+#
+# WHY THIS EXISTS (it was HEAD, and that made the tool red at baseline). `--verify`
+# used to measure `sweep_ref -> HEAD`, which is right on the day the pass lands and
+# wrong forever after: every row here is a ONE-SHOT CLAIM ABOUT ONE PASS's RANGE -
+# "applying sweep_16's 13 targets adds exactly these 13 source_refs elements and
+# these 13 string leaves, and moves NO number at all". Pointed at a later HEAD it
+# stops asserting that and starts asserting "nothing has changed since", which no
+# branch can satisfy and which nothing here ever claimed. Measured on this branch:
+# the numeric row is unmoved at 3b0a55a (the pass), fefb7a3 (the PR #8 merge) and
+# fcde187, and moves first at 19dcf42 - the derived-value removal commit of the NEXT
+# pull request, which removes 166 authored numeric leaves and later restores 51, net
+# 115. So `--verify` exited 1 with "numeric multiset moved: ... removed {...}" at
+# every head of that branch, for a diff it was never a claim about.
+#
+# This is the same defect that removed A29's rows 2 and 3 this round ("0 numeric
+# leaves added", "0 surviving numeric leaves changed value") - a one-shot property of
+# one commit range wired into a standing check - and it was left standing here, in a
+# tool one pull request older, because a fix pass looks at what it is fixing.
+#
+# WHY PINNING RATHER THAN DELETING. A29's two rows had no range that made them true:
+# they were properties of a diff, and re-pinning their ref would have made A29
+# compare the tree against itself. This row does have one. The claim "the citation
+# pass changed strings and no numbers" is TRUE, checkable, and worth keeping
+# checkable: pinned to `sweep_ref -> PASS_REF` it re-derives the 13 pairs from the
+# frozen artifact and measures the actual delta, so it still fails if the expectation
+# file is edited, if the derivation drifts, or if the pass's commits leave HEAD's
+# history (asserted below). What it is NOT, after the pin, is a statement about the
+# current tree - and it never was. A29/A31 in verify_content.py are what police that.
+PASS_REF = "3b0a55a0db57d47ed0ea14abebb5ba5dd702da28"
+
 # The candidate gate of content/quote-verification-audit.md section 2, and the
 # WORD half of its decidability gate. The 40-character half is deliberately
 # dropped for this sweep and the choice is recorded rather than buried: at
@@ -94,6 +130,13 @@ ALL_CAPS = re.compile(r"^[A-Z0-9][A-Z0-9 _\-./%+]*$")
 def sh(*args: str) -> str:
     return subprocess.run(args, cwd=REPO_ROOT, capture_output=True, text=True,
                           check=True).stdout
+
+
+def ancestor(older: str, newer: str) -> bool:
+    return subprocess.run(
+        ["git", "merge-base", "--is-ancestor", older, newer],
+        cwd=REPO_ROOT, capture_output=True, text=True,
+    ).returncode == 0
 
 
 def resolve(ref: str) -> str:
@@ -400,12 +443,38 @@ def report_set_equality(label: str, derived: set, measured: set,
           f"{'YES' if derived == measured else 'NO'}")
 
 
-def verify(expected: dict) -> int:
-    """Measure HEAD against `sweep_ref` and assert the delta equals the prediction."""
+def verify(expected: dict, after_ref: str = PASS_REF) -> int:
+    """Measure the pass's own range and assert the delta equals the prediction.
+
+    The range is `sweep_ref -> after_ref`, and `after_ref` defaults to the PINNED
+    PASS_REF rather than to HEAD. See PASS_REF's comment for why: every row here is a
+    one-shot claim about one pass, so measuring to HEAD turns it into "nothing has
+    changed since" and makes this tool red at every later head.
+    """
     failures = []
+    after_sha = resolve(after_ref)
+    pinned = after_sha == resolve(PASS_REF)
+
+    # STANDING, unlike the delta rows: the pass's commits must still be in HEAD's
+    # history. Pinning a range is only honest while the range is still reachable -
+    # if the pass is rebased away or dropped, this measurement is of history that
+    # the branch no longer contains and has to fail rather than keep passing.
+    if not ancestor(expected["sweep_ref"], after_sha):
+        failures.append(
+            f"{expected['sweep_ref'][:7]} is not an ancestor of the measured after-ref "
+            f"{after_sha[:7]}, so the range is not a range"
+        )
+    if not ancestor(after_sha, resolve("HEAD")):
+        failures.append(
+            f"the measured after-ref {after_sha[:7]} is not an ancestor of HEAD: the citation "
+            f"pass this file predicts is no longer in this branch's history, so the pinned range "
+            f"measures history the tree no longer contains. Re-pin PASS_REF deliberately, or "
+            f"delete this expectation with the pass it belonged to."
+        )
+
     with tempfile.TemporaryDirectory() as tmp:
         before = materialize(expected["sweep_ref"], Path(tmp) / "before")
-        after = materialize(resolve("HEAD"), Path(tmp) / "after")
+        after = materialize(after_sha, Path(tmp) / "after")
         bs, bn = leaf_multisets(before)
         as_, an = leaf_multisets(after)
         sd = multiset_delta(bs, as_)
@@ -416,11 +485,19 @@ def verify(expected: dict) -> int:
     print("=" * 78)
     print(f"  expectation committed at   : {expected['sweep_ref'][:7]} "
           f"(zero content/ files in that commit)")
-    print(f"  measured                   : {expected['sweep_ref'][:7]} -> HEAD")
+    print(f"  measured                   : {expected['sweep_ref'][:7]} -> {after_sha[:7]}"
+          f"{'  [PINNED to the pass that landed it]' if pinned else '  [OVERRIDDEN via --after-ref]'}")
+    print(f"  HEAD is                    : {resolve('HEAD')[:7]}"
+          f"{'' if pinned else ' - rows below are NOT claims about it'}")
+    print("  WHAT THIS VERB IS: a reproduction of ONE citation pass over ITS OWN range - the 13")
+    print("  (file, scope) re-pointings, the 13 string leaves they add, and the zero numbers they")
+    print("  move. It is NOT a check on the current tree, and it never was: pointed at HEAD it")
+    print("  reads as 'nothing has changed since', which the next pull request's 115 numeric")
+    print("  removals falsify by design. A29/A31 in verify_content.py police the current tree.")
     print()
     this_derived = {f"{r['file']} :: {r['pointer']}"
                     for r in expected["sweep_16"] if r["target"]}
-    this_added, this_removed = element_delta(expected["sweep_ref"], resolve("HEAD"))
+    this_added, this_removed = element_delta(expected["sweep_ref"], after_sha)
     report_set_equality("THIS pass's new (file, scope) pairs",
                         this_derived, this_added, this_removed, failures)
     print()
@@ -452,13 +529,39 @@ def verify(expected: dict) -> int:
     print(f"    added     : {nd['added'] or '{}'}")
     print(f"    removed   : {nd['removed'] or '{}'}")
     if nd["added"] or nd["removed"]:
-        failures.append(f"numeric multiset moved: added {nd['added']} removed {nd['removed']}")
+        failures.append(
+            f"numeric multiset moved over {expected['sweep_ref'][:7]} -> {after_sha[:7]}: "
+            f"added {nd['added']} removed {nd['removed']}"
+            + (
+                ""
+                if pinned
+                else f". WHY THIS FAILED, and it is very likely not a defect in the tree: this row "
+                f"is a ONE-SHOT claim about the citation pass's own range (sweep_ref -> PASS_REF "
+                f"{PASS_REF}), namely that the pass moved no numbers. You have pointed it at "
+                f"{after_sha[:7]} instead, so it is now asserting that NOTHING has moved a number "
+                f"since - which any later pass legitimately falsifies (the derived-value removal "
+                f"pass moves 115). Drop --after-ref to measure the pinned range."
+            )
+        )
     print()
     print("  Scope of each proof, named: the numeric multiset covers int/float leaves and")
     print("  nothing else; the string multiset covers string leaves and nothing else. The")
     print("  three Markdown files under content/ are prose and are in neither. The evidence")
     print("  artifact under src/ is a measurement, not a value store, and is deliberately")
     print("  excluded - its own bookkeeping strings change by construction on every pass.")
+    print(f"  RANGE, which is the other half of every scope above: {expected['sweep_ref'][:7]} ->")
+    print(f"  {after_sha[:7]}, four rows, all four ONE-SHOT claims about that range and none of")
+    print("  them standing claims about HEAD. The two STANDING assertions here are the ancestry")
+    print("  ones: the range must be a range, and the pass must still be in HEAD's history.")
+    print("  NOT CHECKED, and this tool has no verb for it: that expected_citation_deltas.json")
+    print("  still REGENERATES from its inputs. It cannot, and that is a property of the inputs")
+    print("  rather than a missing flag - `build` reads previous_pass_ref as the moving")
+    print("  `origin/master` and reads quote_mismatch_evidence.json from the WORKTREE, and both")
+    print("  have moved since (regenerating today gives outside_the_frozen_378 = 0, because the")
+    print("  artifact now contains the 16). The prediction's integrity therefore rests on git")
+    print(f"  history - the file is committed with ZERO content/ files in it - not on a byte")
+    print("  compare. `derive_derived_value_expectations.py --check` has that verb because its")
+    print("  inputs are a pinned ref only.")
     print()
     for f in failures:
         print(f"  FAIL: {f}")
@@ -472,14 +575,18 @@ def main() -> int:
                     help="tree the live sweep runs against (the pre-change tree)")
     ap.add_argument("--previous-ref", default=PREVIOUS_PASS_REF)
     ap.add_argument("--verify", action="store_true",
-                    help="measure HEAD against the committed expectation")
+                    help="measure the pass's own pinned range against the committed expectation")
+    ap.add_argument("--after-ref", default=PASS_REF,
+                    help=f"the 'after' side of the measured range (default the pinned {PASS_REF}, "
+                         f"the commit that landed the pass; passing HEAD asks a one-shot claim to "
+                         f"hold over every commit since, which it will not)")
     args = ap.parse_args()
 
     if args.verify:
         if not OUTPUT.exists():
             print(f"FAIL: no committed expectation at {OUTPUT}")
             return 1
-        return verify(json.loads(OUTPUT.read_text(encoding="utf-8")))
+        return verify(json.loads(OUTPUT.read_text(encoding="utf-8")), args.after_ref)
 
     payload = build(args.ref, args.previous_ref)
     OUTPUT.write_text(json.dumps(payload, indent=1, ensure_ascii=False) + "\n",

@@ -34,8 +34,7 @@
   "movement_speed": {
     "percent_of_mech_base_speed": {
       "percent": 42
-    },
-    "world_speed_m_per_s": 1.26
+    }
   },
   "contact_damage": 18,
   "control_resistance": {
@@ -84,8 +83,7 @@
     "charge_speed": {
       "percent_of_mech_base_speed": {
         "percent": 180
-      },
-      "world_speed_m_per_s": 5.4
+      }
     },
     "charge_contact_damage": 27,
     "ordinary_contact_damage_replaced_during_charge": 18,

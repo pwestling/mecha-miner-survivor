@@ -108,7 +108,10 @@ checks:
 - referential integrity for branch → weapon, encounter → enemy, and mech → signature weapon, with the
   reference property names discovered from the data rather than hardcoded;
 - one derived-value regression guard: the Sentry Pod deployment interval is the authored 6.0 s, and the
-  derived 12 s must not appear as an authored deployment or ramp value in `content/weapons/`; and
+  derived 12 s must not appear as an authored deployment or ramp value in `content/weapons/`. The banned
+  figure is **computed from `W-BE`'s two authored operands** — `deployment_cadence_seconds × (
+  maximum_active_pod_count − 1)` — and asserted equal to the declared `12`, so retuning the pod cap fails
+  loudly instead of leaving the ban policing a stale number while the live derived value walks in; and
 - the footprint second-writer guard, which is two rules with two different scopes. No definition under
   `content/enemies/` may carry a contact **diameter** — an enemy authors `body_scale_multiplier` and the
   diameter is `scale × 0.80 M` — and no definition under `content/enemies/`, `content/bosses/` **or**
@@ -120,13 +123,194 @@ checks:
   (`docs/31:121-128` has no `Body` column, and `docs/72:86` scopes the derivation to "every **ordinary**
   body scale") and the survivability baseline states the four boss diameters flat (`docs/72:105-110`).
   `reference_diameter_m` is allowlisted, being the Ripper's authored rank-zero diameter rather than a
-  per-enemy derived value.
+  per-enemy derived value — and A30 now **reads** it out of the ten enemy files instead of hardcoding
+  `0.80`, because a hardcoded operand made that derivation agree with itself: setting the field to `1.0`
+  in all ten left the suite green, 10 of 10 escaped, while the sibling operand `body_scale_multiplier`
+  went red. The player's `0.50 M` collision radius stays a literal in the checker, and that asymmetry is
+  deliberate: it has **no authored mirror anywhere in `content/`** — these very rules keep it out — so
+  there is nothing to read, and the constant is cited to `docs/72:86` where it is stated.
 
 **What the footprint guard does not do.** Both rules match specific key-name patterns in specific
 directories. A derived value reintroduced under a name neither pattern matches, or in a directory
 neither rule covers, passes — the guard raises the cost of the mistake, it does not make it impossible.
-It is checked on key names rather than values so that a *rename* inside a covered directory cannot slip
-past, which is a narrower claim than "fails the build if the field reappears under any name".
+It is checked on key names rather than values, which catches a *rename inside the rule's own key-name
+pattern* and nothing beyond it. **It does not catch a rename generally** — an earlier draft of this
+paragraph said it did, and that was false: a rename to a name the pattern does not match is exactly the
+case that passes, which is the sentence immediately above. Both claims are narrower than "fails the
+build if the field reappears under any name". A31's value layer is the shape that closes this for the
+families it covers; A20 has no value layer yet, and adding one is the next design step.
+
+**A31 — the six derived-value families, six rules, six scopes, two layers.**
+*Renamed from A28.* This rule was labelled `A28` for the whole of PR #10's first two review passes, and
+review comments that cannot be edited still say `A28`. It moved because merging `master` brought in PR
+#12's definition (path, id) manifest, which had independently claimed `A28` — that rule is on the trunk
+and referenced from `.gitattributes`, `content/README.md` and this file, so it kept the number and this
+one moved. `A28` in this document now means only the manifest rule (below, "Why the manifest and not
+`stem == id`"). The label-allocation problem behind the collision is recorded as an open item in
+`content/transcription-notes.md` and is deliberately not fixed here.
+A20 generalised: **115**
+stored numbers across **six** families were removed because the compiler owns them, and A31 asserts each
+family cannot return.
+
+**Six, not the nine an earlier draft of this pass claimed, and the arithmetic is 166 − 51 = 115.** Three
+families were built, verified to reproduce exactly, and then *pulled*:
+
+| Pulled family | Values | Why |
+| --- | ---: | --- |
+| damage-pressure survivability block | 32 | **Three writers on one report and no settled authority**, so deleting a copy silently decides which survivor is authoritative — a decision nobody has made, taken as a side effect of a deduplication pass. The three are `docs/data/contact-damage-pressure.csv`, the content block, and the compiler `docs/40` § *Source-of-truth boundary* and § *Enemies and bosses* say derives it. *(An earlier draft argued removal would make the `docs/40` § *Enemies and bosses* comparison a tautology. Withdrawn: the CSV supplies an independent comparand regardless — A30 now asserts the two agree. The reason above holds whether or not another mirror exists.)* |
+| resonant-value hit count | 5 | Same — rows of that same report, also stated in full at `docs/72` § *Damage Pressure Reference*. |
+| stat upgrade price curve | 14 | **Would move checkable numbers into an unchecked string.** All 14 are restated in prose in the same file (`defining_prose`), and A31 only matches numeric leaves. Editing the prose is *not* the fix and was not done — it is a verified doc quotation, so rewriting its numerals would falsify the citation while every validator stayed green. |
+
+Reproducibility was never the issue for any of the three: all 51 reproduce exactly. **Reproducibility is
+orthogonal to ownership** — it says nothing about who authors a value or which copy is authoritative, which
+is the question that actually decided these three.
+
+Its **name layer** has the same shape as A20. It does **not** have the same limits, and an earlier revision
+of this sentence said it did — which contradicted *What the footprint guard does not do* above, where A20 is
+recorded as having no value layer at all. That was the same sentence flagged and corrected in
+`verify_content.py` while this copy was left, so it is worth naming the failure mode: the correction pass
+looked at one copy. **Grep for the claim, not for the file.** The differences:
+
+- rules are matched against every **name segment** of a pointer, not only the leaf key, because three
+  families store their number under a generic leaf (`amount`, `minimum`, `maximum`) inside a
+  specifically named parent — `total_payout_per_map.amount` is invisible to a leaf-key-only rule;
+- each family's pattern is a **word class**, not a name, and every one of the nine was widened after a
+  negative control defeated it. Two rounds of controls were run. The first round *renamed* each removed
+  field and all nine guards of that draft fired. The second round injected, per guard, a field **semantically inside
+  the family but lexically outside the pattern** — the shape that had already walked
+  `aggregate_payout_per_map` past the mining-site draft `total|jackpot` — and **all nine guards missed**:
+  `traverse_rate_metres_per_second`, `survivability_pressure.hits_to_defeat_100_hull`,
+  `impacts_to_destroy_fresh_mech`, `accrued_cost_hyper_gold`, `accrued_rank_ore_cost`, `price_ladder`,
+  `yield_per_seam`, `rolled_up_payout_per_map`, `hyper_gold_from_all_sites`. Nine word lists written by
+  listing the spellings already in the tree had the same hole. The rules now name what the family is
+  *about*: the world-speed rule matches the **unit** (`m_per_s|metres_per_second|velocity|traverse`), the
+  damage-pressure **parent** is the class `pressure|survivability` rather than the one name
+  `damage_pressure`, the price-curve rule is a price-or-cost word crossed with a series word, and the four
+  aggregate families share `AGGREGATE_WORDS`, which carries the cumulative half
+  (`cumulative|accru|accumulat|rolled_up|to_date|so_far|subtotal|tally|…`) as well as the summation half.
+  Widening changed **no `content/` value**: each rule was re-controlled at the pinned `sweep_ref` and still
+  matches its own removal set and nothing else, so the 115-element prediction is byte-identical;
+- the scopes differ per rule for the same reason A20's two do, and so do two exclusions from the word
+  classes. An absolute metres-per-second value is *always* derived under `content/enemies/` and
+  `content/bosses/`, where a speed is authored as a percentage of the mech baseline, and *always* authored
+  under `content/weapons/`, where `projectile_speed_m_per_s` is the real number — so the world-speed rule
+  covers the first two only. `content/powerups/` is the one family that cannot use the summation half of
+  the aggregate class at all: `total_` is authored **71** times there and every one survives
+  (13 `total_cost_hyper_gold` + 58 `total_effect`; check with
+  `grep -ho '"total_[a-z_]*"' content/powerups/*.json | sort | uniq -c`), so the class would flag 71
+  surviving fields. Its rule is `AGGREGATE_WORDS_NO_TOTAL`. For the same reason `payout` is kept out of the
+  mining-site class (`payout_per_installment`, `completion_payout`,
+  `exposure_per_secured_payout_multiplier` are authored there) and a bare `all` is kept out of the
+  aggregate class (`content/maps/` authors `maximum_hyper_gold_sites_across_all_pockets` and
+  `maximum_share_of_all_geodes_per_major_region`, authored bounds on counts rather than sums — hence
+  `from_all` and `all_sites$`). **This is why the rules are per-family and not one.** Consolidating them
+  reintroduces the `total_` collision; the reason is stated in the code beside `AGGREGATE_WORDS`;
+- **a second, VALUE-KEYED layer, which is the one that does not depend on names at all.** For each
+  removed value, no non-operand numeric leaf inside its own derivation site may carry that value —
+  compared exactly as `Fraction`, with no tolerance. It survives a rename, a relocation within the site,
+  a different unit suffix, and a change of arity (`32.0` → `[32.0]`), because none of those change the
+  number. Its **radius is the limit, and it is stated rather than hidden**: the derivation site, not the
+  file and not the scope. That choice is **computed, not quoted**: the generator's
+  `measure_search_radii()` counts, under one definition on the pinned `sweep_ref`, how many
+  `(removed value, numeric leaf)` pairs each candidate radius would flag, and writes the three numbers
+  into `search_radius_measurement` in the expectation file, which is where the figures printed on a
+  green run come from. Those printed figures are now **asserted by the tool that prints them**
+  (`SEARCH_RADIUS_DECLARED` in `verify_content.py`, plus a row tying the conclusion sentence's own
+  arithmetic to the same three numbers and a row requiring the pair definition to be present — which
+  A31 now prints beside the figures, so a reader meeting `1 : 40 : 668` can see what was counted).
+  Before that, editing `file_radius_pairs` back to `55` made a green run print `1 : 55 : 668` at
+  **exit 0**; only `derive --check` objected, and that is a different tool nobody has to run.
+  The ratio is **1 : 40 : 668** for site, file and scope radius — almost all of the
+  widening is magnitude coincidences between unrelated quantities (a `1.5` m/s world speed against a
+  `1.5` s control-immunity window; a hit count of `4` against `maximum_simultaneous_bosses`). An
+  exception list of 39 or 667 entries could not be justified entry by entry, so the radius is narrow
+  *and said to be narrow*. An earlier revision of this paragraph quoted **55** and **400**; no code
+  computed either and neither reproduced, which is why they are computed now. **One** exception is
+  declared, with its reason: `UTL-R1`'s removed `acquisition.total_rank_ore_cost` is `0` (the sum of an
+  empty list) and its `acquisition.rank_count` is independently `0`. A declared exception that stops
+  colliding **fails**, in `verify_content.py` and in the generator, both measured against the tree in
+  front of them — an earlier revision claimed this and had it in neither place;
+- **the guard is only as big as what survived inside the site, and that is a second limit.** Emptying a
+  container empties its guard: **13 of the 115** removed values sit in an object the removal left with no
+  numeric leaves at all (the `{}` and `{"resource": "common ore"}` residues), so this layer searches
+  nothing for them. The count is asserted (`EMPTY_SITE_GUARD_RECORDS`) and the per-record distribution
+  prints beneath the table. It replaced the line "299 numeric leaves across 115 removed values", which is
+  a **mean of 2.6** reading as coverage of all 115 — and which concealed a defect: for a root-level
+  pointer the site was computed as `""` and then discarded as falsy, so **six** records searched zero
+  leaves and could not fail on any injection at all. A root-level leaf's containing object is the
+  document.
+
+**What A31 still does not do, after the widening.** A word class is still a word class. The **six**
+surviving guards moved from "catches renames" to "catches renames and the obvious semantic neighbours"; a
+further probe chosen adversarially against the *new* lists would pass some of them. (The nine-guard counts
+in the paragraph above are history — they describe the draft the probes were run against, before three
+families were pulled.) Structural assertion — no numeric leaf of **any** name may sit under a given block —
+was reached only for the damage-pressure family, which is one of the three that were **pulled**, so no
+surviving family has it; generalising that form to the six is the next design step, not a claim this rule
+set makes.
+
+Two segment names are allowlisted, exactly as `reference_diameter_m` is: `purchases` (the authored
+checkpoint index the removed cumulative cost derives *from*, which matches only by inheriting its
+parent's name) and `total_seam_payout_multiplier` (left authored, because its sibling
+`exposure_per_secured_payout_multiplier` has no stated derivation at all).
+
+The rules, scopes and allowlists are **read from `expected_derived_value_removals.json`** rather than
+restated in `verify_content.py`, so the assertion and the prediction cannot drift apart.
+
+**A30 — the docs CSV mirror and `content/` must agree, value by value.** `docs/data/contact-damage-pressure.csv`
+and the `content/` `damage_pressure` blocks are two mirrors of one report, neither derived from the other.
+Agreement was previously observed and nothing kept it. A30 asserts it over **98 comparisons** — seven columns
+× 14 actors — in exact `Fraction` arithmetic with no tolerance: four columns against authored content fields,
+three against values derived from surviving operands. The comparison count is asserted too, since a mirror
+check over zero values passes for free.
+
+Writing it surfaced a pre-existing divergence: **96 of 98 agree exactly.** `EN-07`'s derived diameter is
+`0.62 × 0.80 = 0.496 M` (`docs/31` § *Ordinary roster overview*) where the CSV states `0.50 M`
+(`docs/72` § *Collision and Contact Footprints*), and its start distance `0.748` against `0.75`. Two `docs/`
+sources disagree, and this is an **open design question escalated to the design owner** — which contact
+diameter the Razorling was meant to have — not something to settle from typography. Both pairs are declared
+with the evidence on each side recorded in `CSV_MIRROR_ROUNDED`, including which arguments are
+*non-discriminating* and why. The argument with actual force points the other way from the earlier text: every
+other ordinary body scale is a multiple of `0.05` and **neither `0.62` nor `0.625` is**, so the Razorling
+breaks the pattern either way — but under `0.625` the break is *motivated* (back-computed from a clean
+`0.50 M` diameter, `0.50 / 0.80 = 0.625`) and under `0.62` it is not. So the evidence **leans toward
+`0.625`** — that is the strongest single argument and it points there — and it is **not decisive** against
+the literal `0.62×` of `docs/31` plus the operand-home argument, so the question stays open and the current
+state is held **on cost grounds rather than on evidence**. An earlier revision called the evidence
+"balanced" ten lines after calling one argument better than another; leaning-but-undecided is what it is,
+and it has no tension in it.
+
+**The framing "`content/` follows the source it cites" is wrong for this field**, and it was used here before.
+`EN-07`'s own `source_refs` scopes `contact_footprint` to
+`GDD-PLAYER-SURVIVABILITY-BASELINE#collision-and-contact-footprints` — `docs/72`, the `0.50` side — while the
+scale it stores comes from `docs/31`. So content does *not* follow the source it cites for the footprint.
+
+A declared pair names the CSV's written value **and the single exact content-side value** it covers, so
+there is no tolerance band: an earlier revision accepted anything rounding to the CSV's written precision,
+which let `body_scale_multiplier` sit anywhere in `[0.61875, 0.625)` undetected while the module comment
+said **NO TOLERANCE**. A declared pair that stops diverging **fails** too, so the rule fails in *both*
+directions while the question is open — which is what makes holding safe rather than merely cheap.
+
+**A29 — the removal delta is the committed prediction, as set equality, and it is now ONE row.** `115 == 115` would also hold
+if one value were removed by mistake and a different one kept by mistake. A29 therefore reads the
+sweep-ref tree out of git at the SHA the expectation file names, enumerates its numeric leaves,
+subtracts the worktree's, and compares **element by element**: every `(file, pointer, value)` predicted
+must be missing, and nothing else may be. It does **not** assert that the added side is empty, and it does
+not assert that no surviving numeric leaf changed value. Both rows were deliberately deleted this pass as
+properties of one commit range rather than invariants, and an earlier revision of this paragraph still
+claimed them — adding an authored numeric leaf to `EN-01` **passes**, by design. Only *half* of what
+remains is a standing invariant: the `missing` half holds for every future commit, the `unexpected` half
+does not, because deleting any authored numeric leaf fails it (`EN-01.earliest_minute` → "1
+removed-but-unpredicted") while retuning one in place passes. If the sweep ref cannot be read out of git
+the rule **fails**; it is not allowed to pass by being unable to run.
+
+**The four declared counts are asserted in `verify_content.py`, not only by `derive --check`.**
+`total_removed`, `family_count`, `declared_family_count` and `declared_total_removed` were written by the
+generator and read by nothing here, so this file alone passed every vacuity injection — an empty `families`
+list, a scope pointed at a directory holding no definitions, every family's `records` emptied, an empty
+`removed_numeric_multiset` with `sweep_ref` repinned to HEAD, and the counts overwritten with `9999`/`99`.
+Only `derive --check` caught those, and it caught them by regenerating and byte-comparing, which is a
+file-integrity check rather than an assertion inside the rule.
 
 One reconciliation heuristic still reports as a warning rather than a failure, because no schema exists
 to settle it: formulas held as strings rather than a registered formula kind plus parameters (`40:99`).
@@ -285,8 +469,54 @@ what a citation pass is expected to change: the `(file, scope)` pairs, and the e
 multiset deltas with multiplicity kept. The derivation and its committed output go in a commit that
 touches **zero files under `content/`**, so `git show <that commit> --stat` is itself the ordering
 proof; the change lands in a second commit and `--verify` fails unless the measured delta equals the
-committed expectation element by element. `content/transcription-notes.md`, Ruling 43 records why this
+committed expectation element by element.
+
+`--verify` measures **the pass's own pinned range** (`sweep_ref → PASS_REF`), not `sweep_ref → HEAD`, and
+that is a fix rather than a detail: every row it checks is a **one-shot claim about one pass** — these 13
+`(file, scope)` pairs, these 13 string leaves, **zero** numbers moved — so pointed at a later `HEAD` it
+silently becomes "nothing has changed since". It was therefore **red at baseline** on this branch, exit 1
+with `numeric multiset moved`, because the next pull request's derived-value pass removes 115 numeric
+leaves by design (unmoved at `3b0a55a`, `fefb7a3` and `fcde187`; moves first at `19dcf42`). This is the
+same defect that deleted A29's rows 2 and 3 — a one-shot property of one commit range wired into a
+standing check — left standing here in a tool one pull request older. Pinning keeps the claim checkable
+instead of deleting it, two **standing** assertions remain (the range must be a range, and the pass must
+still be in `HEAD`'s history), and `--after-ref` can still point it anywhere, where its failure text now
+explains this rather than reading as a defect in the tree. There is deliberately **no `--check` verb**:
+`build` reads `previous_pass_ref` as the moving `origin/master` and the evidence artifact from the
+worktree, both of which have moved, so the file cannot regenerate byte-identically and the prediction's
+integrity rests on git history instead — which `--verify` now says on every run. `content/transcription-notes.md`, Ruling 43 records why this
 replaced a narrated "enumerated before it was measured" claim that no commit supported.
 
 It also carries the live sweep that found the 16 mis-citations of audit §13 — the ones a frozen
 394-record list structurally cannot see. Audit §14 records that limitation as the next design step.
+
+## `derive_derived_value_expectations.py` and `expected_derived_value_removals.json`
+
+```sh
+python3 src/MechaMiner.Tools/ContentImport/derive_derived_value_expectations.py          # derive
+python3 src/MechaMiner.Tools/ContentImport/derive_derived_value_expectations.py --check  # regenerates?
+```
+
+Enumerates, from a pinned commit SHA rather than `HEAD`, the stored numbers `content/` no longer authors
+because the compiler derives them, and records for each one its operands, its arithmetic, and the
+`docs/` line that assigns the derivation. Its output is the input to A31 and A29 — the rules are not
+restated in `verify_content.py`, so the assertion and the prediction are one artifact.
+
+A candidate qualifies only if it reproduces **exactly** in `fractions.Fraction`, never in binary float;
+every operand survives the removal; a document assigns the derivation; and no `source_refs` scope prefix
+is left dangling. A stored value that disagrees with its operands is a defect, not a redundancy: the
+script names both numbers and exits non-zero rather than removing it. It also refuses to write unless
+each family's A31 rule matches that family's removal set **and nothing else** in its scope at the sweep
+ref — a rule that also flagged a surviving authored field would be unlandable, and one that flagged
+fewer would let part of the family return.
+
+Six things reproduce exactly and are still retained, listed with their arithmetic in the file, because
+no `docs/` line assigns them: the beacon threshold times, `sources[].depletion_seconds`,
+`resonant_damage`, `ordinary_contact_damage_replaced_during_charge`, the three
+`relative_to_standard_seam` multipliers, and the 45 weapon DPS estimates. The DPS family is the
+interesting one — `40:203` *does* assign "DPS estimates" to the compiler, so it passes the document test
+and fails the arithmetic one: the burst and horde rules vary with each weapon's behaviour kind and no
+single rule reproduces all 45. It is out of scope, not cleared.
+
+Six further values are derived **and** operands; the file records why each stays, including
+`total_cost_hyper_gold`, which is the operand A14's second row sums to the doc-stated 9,450.

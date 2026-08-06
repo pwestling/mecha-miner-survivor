@@ -34,8 +34,7 @@
   "movement_speed": {
     "percent_of_mech_base_speed": {
       "percent": 45
-    },
-    "world_speed_m_per_s": 1.35
+    }
   },
   "contact_damage": 30,
   "control_resistance": {
@@ -88,8 +87,7 @@
       "speed": {
         "percent_of_mech_base_speed": {
           "percent": 75
-        },
-        "world_speed_m_per_s": 2.25
+        }
       },
       "homing": false,
       "lifetime_description": "disappears after crossing slightly more than one screen width or hitting solid terrain"

@@ -3526,12 +3526,20 @@ substitute for this one, and doc 91 § Acceptance evidence asks for this one.
 ## What these transcripts do not establish
 
 A negative control shows a gate can fail for the reason named. It does not show the gate is
-sufficient, and three specific limits are worth stating rather than leaving to be discovered.
+sufficient, and four specific limits are worth stating rather than leaving to be discovered.
 
 - A control that turns several tests red at once has not shown those tests to be independently
   effective. Where independence matters it was probed separately, one guard at a time.
 - The committed allowed-call lists in `PostPublicationRegionTests` are an edit tax rather than
   evidence: adding a call to the region and to the list passes. See doc 20 § Mid-commit invalidation.
-- Six guards in the simulation cannot fail from any public entry point, so no control exists for them
+- A negative control proves a gate can fail. **A label asserting a guard cannot be reached is a
+  different kind of claim, and no control here checks it.** A false label is invisible to a green run
+  and to a red one alike: the perturbation a control would apply is one nothing executes, so the
+  transcript records no change and the label still reads as substantiated. Of the six such labels
+  that existed, one was false, `PackedEntityStore.ResolveDense`'s two slot-range clauses, now covered
+  by `EntityIdTests.AnIdentityFromBelowThisStoresPartitionFailsClosed` and
+  `AnIdentityFromAboveThisStoresPartitionFailsClosed`, and one kept its conclusion on a false reason,
+  so a surviving label now has to state its unreachability in a form someone could try to falsify.
+- Five guards in the simulation cannot fail from any public entry point, so no control exists for them
   and none is claimed. Each is labelled where it is registered, with its own reason, in the notes of
   `SIM-003.json`, `SIM-004.json`, `SIM-005.json`, and `SIM-007.json`.

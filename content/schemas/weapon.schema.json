@@ -89,17 +89,17 @@
     "behavior_kind": {
       "type": "string",
       "description": "The registered behavior. A lower-kebab-case token. Whether it resolves to exactly one registered behavior descriptor is the behavior registry's check and is deliberately not asserted here.",
-      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
     },
     "targeting_policy": {
       "type": "string",
       "description": "The registered targeting policy. A lower-kebab-case token. Whether it resolves to exactly one registered behavior descriptor is the behavior registry's check and is deliberately not asserted here.",
-      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
     },
     "rock_targeting_behavior": {
       "type": "string",
       "description": "The registered rock-targeting behavior. A lower-kebab-case token. Whether it resolves to exactly one registered behavior descriptor is the behavior registry's check and is deliberately not asserted here.",
-      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
     },
     "ore_upgradeable_stats": {
       "type": "array",

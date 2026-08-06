@@ -246,7 +246,7 @@
     "behavior_kind": {
       "type": "string",
       "description": "The registered behavior. A lower-kebab-case token. Whether it resolves to exactly one registered behavior descriptor is the behavior registry's check and is deliberately not asserted here.",
-      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
     },
     "specialist_attack": {
       "title": "An enemy's specialist attack",
@@ -257,7 +257,7 @@
         "kind": {
           "type": "string",
           "description": "The registered specialist attack kind. A lower-kebab-case token. Whether it resolves to exactly one registered behavior descriptor is the behavior registry's check and is deliberately not asserted here.",
-          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
         },
         "cadence_seconds": {
           "type": "number",

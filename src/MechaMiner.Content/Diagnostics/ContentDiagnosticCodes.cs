@@ -319,7 +319,7 @@ public static class ContentDiagnosticCodes
             "a token-valued field carries a token its closed vocabulary does not contain; the comparison is exact "
                 + "case-sensitive ASCII, so a near-miss spelling is rejected rather than read as a future token"),
         Describe(BehaviorTokenMalformed, nameof(BehaviorTokenMalformed), ContentValidationStage.Semantic,
-            "a behavior, formation, or effect token does not match ^[a-z0-9]+(-[a-z0-9]+)*$; this checks the token's "
+            "a behavior, formation, or effect token does not match ^[a-z][a-z0-9]*(-[a-z0-9]+)*$; this checks the token's "
                 + "grammar only, and never that a registered descriptor exists for it, which is the behavior "
                 + "registry's own check"),
         Describe(DerivedValueAuthored, nameof(DerivedValueAuthored), ContentValidationStage.Semantic,

@@ -371,7 +371,7 @@
     },
     {
       "id": "VER-DAT-002-011",
-      "summary": "behavior_kind is a token matched against the lower-kebab-case grammar ^[a-z0-9]+(-[a-z0-9]+)*$, so a prose sentence such as 'pure contact pursuer' is rejected. The route is grammar only: whether the token has exactly one registered descriptor is DAT-004's registry check and is deliberately not asserted here, so an unregistered but well-formed token passes this gate.",
+      "summary": "behavior_kind is a token matched against the lower-kebab-case grammar ^[a-z][a-z0-9]*(-[a-z0-9]+)*$, so a prose sentence such as 'pure contact pursuer' is rejected. The route is grammar only: whether the token has exactly one registered descriptor is DAT-004's registry check and is deliberately not asserted here, so an unregistered but well-formed token passes this gate.",
       "task": "TASK-DAT-002-001",
       "requirements": [
         "TR-DAT-001",

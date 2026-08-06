@@ -16,6 +16,20 @@ namespace MechaMiner.Content.Vocabulary;
 /// token from a sentence at a glance.
 /// </para>
 /// <para>
+/// <b>The first character is a letter.</b> A token beginning with a digit reads as a
+/// number wherever a token appears without quotes - a log line, a build diagnostic, a
+/// report column - and the reader who has to tell <c>3-shot-burst</c> from a quantity is
+/// doing work the grammar can do once. Digits are otherwise unrestricted, so
+/// <c>burst-3</c> and <c>tier-2-armor</c> are tokens.
+/// </para>
+/// <para>
+/// <b>There is no length bound, deliberately.</b> No accepted document states one, and a
+/// number nobody can derive is worse than no number: it looks considered, it is the first
+/// thing a genuine long token trips over, and under
+/// <c>content/schemas/README.md</c> § <c>x-authority</c> every bound in a schema here has
+/// to state where it came from. There is nowhere for an invented ceiling to come from.
+/// </para>
+/// <para>
 /// <b>This is a grammar check and never a registry check.</b> Whether a token has
 /// exactly one registered descriptor with a compatible parameter schema is the
 /// behavior registry's question, owned by <c>DAT-004</c>. Conflating the two here
@@ -27,7 +41,7 @@ namespace MechaMiner.Content.Vocabulary;
 public static class TokenGrammar
 {
     /// <summary>The accepted token pattern, as written.</summary>
-    public const string Pattern = "^[a-z0-9]+(-[a-z0-9]+)*$";
+    public const string Pattern = "^[a-z][a-z0-9]*(-[a-z0-9]+)*$";
 
     private static readonly Regex Token = new(
         Pattern,
@@ -54,7 +68,8 @@ public static class TokenGrammar
     /// <summary>Renders the grammar for a diagnostic.</summary>
     public static string Describe()
     {
-        return "a token matches " + Pattern + ": lower-kebab-case, exact and case-sensitive. "
+        return "a token matches " + Pattern + ": lower-kebab-case, exact and case-sensitive, "
+            + "beginning with a letter so that a token is never read as a number. "
             + "A prose sentence, a camelCase token, and a display name are all rejected. Whether "
             + "the token resolves to a registered behavior descriptor is a separate check owned by "
             + "the behavior registry and is deliberately not asserted here";

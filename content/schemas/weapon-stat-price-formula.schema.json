@@ -44,7 +44,7 @@
     "formula_kind": {
       "type": "string",
       "description": "The registered formula kind. Doc 40 requires a registered kind plus parameters rather than an arbitrary script string, so there is no field here that accepts an expression. A lower-kebab-case token. Whether it resolves to exactly one registered behavior descriptor is the behavior registry's check and is deliberately not asserted here.",
-      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
     },
     "currency_resource_id": {
       "type": "string",

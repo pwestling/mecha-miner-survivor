@@ -236,7 +236,28 @@ loader enforces the same rules, so the gate holds from both directions.
 
 `SchemaAuthorityCoverageTests` additionally asserts, per document, that every
 schema under `content/schemas/` either declares a bound or is named in an
-enumerated list of documents declared bound-free.
+enumerated list of documents declared bound-free. That list names
+**repository-relative paths**, not file names. The glob is recursive, so
+`content/schemas/a/x.schema.json` and `content/schemas/b/x.schema.json` would be
+one entry to a list keyed by name, and one exemption would waive both — the same
+arity failure as a shared `x-authority`, one level out from the bound. It is
+latent while the corpus is a single flat file, which makes the control the whole
+of the guarantee: two documents with colliding names, one exempted, and the other
+still reported by name.
+
+**A position no reader visits is worse than a rule that accepts too much.** Every
+hole above was a check that said yes when it should have said no, and each one
+could be repaired by tightening the reader that was already there. Two were not
+of that kind. The five fields inside an `x-authority` entry could park a subschema
+that the loader never parsed and the corpus walk stepped over by design; and a
+`$ref` inside a `$defs` declared on a *subschema* was resolution-checked by
+nobody, because the attribution walk parses those nodes and drops them while
+reference resolution runs afterwards over what survived —
+`{"properties":{"a":{"$defs":{"x":{"$ref":"#/$defs/nope"}}}}}` loaded clean. There
+is no rule to tighten in that situation, because there is no reader whose rule was
+wrong. The question that finds this class is not *what does this check accept* but
+*which reader visits this position at all*, and the answer "the one that discards
+what it reads" is the same as "none".
 
 **When adding or changing a gate here, write a negative control with two of the
 guarded thing where only one satisfies the rule.** Checking that the walk

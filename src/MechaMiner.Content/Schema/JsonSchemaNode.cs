@@ -83,4 +83,28 @@ internal sealed class JsonSchemaNode
     /// beside it.
     /// </remarks>
     internal IReadOnlyDictionary<string, SchemaAuthority>? Authorities { get; set; }
+
+    /// <summary>
+    /// The subschemas of a <c>$defs</c> declared on this subschema rather than at the
+    /// root: parsed, checked, and never evaluated.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// No <c>$ref</c> of this evaluator reaches them - the two supported forms are
+    /// <c>#</c> and <c>#/$defs/&lt;name&gt;</c>, and only the root's <c>$defs</c> populates
+    /// <see cref="JsonSchemaDocument"/>'s definition map - so nothing here is ever
+    /// evaluated against an instance. They are kept anyway because the rules that hold at
+    /// load time do not care whether a node is reachable: an unattributed bound in this
+    /// position is still an unattributed bound, and a <c>$ref</c> that resolves to nothing
+    /// is still a dangling reference.
+    /// </para>
+    /// <para>
+    /// That second one is why this property exists at all. The nodes used to be parsed and
+    /// thrown away on the spot, which reached the parse-time rules and nothing else:
+    /// reference resolution runs after the whole document is read, over the node graph, and
+    /// by then these nodes were gone. A <c>$ref</c> here was checked by neither reader, so
+    /// <c>{"properties":{"a":{"$defs":{"x":{"$ref":"#/$defs/nope"}}}}}</c> loaded clean.
+    /// </para>
+    /// </remarks>
+    internal IReadOnlyDictionary<string, JsonSchemaNode>? UnevaluatedDefinitions { get; set; }
 }

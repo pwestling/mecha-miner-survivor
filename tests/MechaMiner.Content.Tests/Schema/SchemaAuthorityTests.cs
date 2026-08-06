@@ -26,7 +26,8 @@ namespace MechaMiner.Content.Tests.Schema;
 /// vouched for every bound beside it.
 /// </para>
 /// <para>
-/// Verification: <c>VER-DAT-001-025</c>, <c>VER-DAT-001-031</c>, <c>VER-DAT-001-032</c>.
+/// Verification: <c>VER-DAT-001-025</c>, <c>VER-DAT-001-031</c>, <c>VER-DAT-001-032</c>,
+/// <c>VER-DAT-001-034</c>, <c>VER-DAT-001-038</c>.
 /// </para>
 /// </remarks>
 [TestFixture]
@@ -209,18 +210,29 @@ internal sealed class SchemaAuthorityTests
         });
     }
 
-    [Test]
-    public void AProjectSchemaStillLoadsWithItsAuthorities()
+    /// <summary>
+    /// The positive control for the three gates above: an attributed project schema still
+    /// loads, so none of them is a ban on the keyword it guards.
+    /// </summary>
+    /// <remarks>
+    /// Per document, like its three siblings. It was one test looping the corpus with a
+    /// bare assert, which stops at the first schema that fails to load and says nothing
+    /// about the rest: two broken schemas reported as one, and the second one surfacing
+    /// only after the first is repaired reads as a new defect rather than the other half of
+    /// the same one. Not a fail-open - the run does go red - but a corpus-wide gate cannot
+    /// answer "which of these files is wrong", which is the only question the failure
+    /// raises.
+    /// </remarks>
+    [TestCaseSource(nameof(ProjectSchemas))]
+    public void AProjectSchemaStillLoadsWithItsAuthorities(string path)
     {
-        foreach (string path in ProjectSchemas)
-        {
-            JsonSchemaLoadResult load = JsonSchemaLoader.Load(
-                File.ReadAllBytes(path), TestArtifacts.Relative(path));
-            Assert.That(
-                load.IsValid,
-                Is.True,
-                () => TestArtifacts.Relative(path) + ": " + string.Join("; ", load.Diagnostics));
-        }
+        JsonSchemaLoadResult load = JsonSchemaLoader.Load(
+            File.ReadAllBytes(path), TestArtifacts.Relative(path));
+
+        Assert.That(
+            load.IsValid,
+            Is.True,
+            () => TestArtifacts.Relative(path) + ": " + string.Join("; ", load.Diagnostics));
     }
 
     [TestCase("{\"maximum\":1,\"x-authority\":{\"maximum\":{\"kind\":\"sourced\",\"source\":\"TDD-COMBAT\",\"section\":\"Performance and capacity\",\"derivation\":\"worst case ~1010; x2 headroom; rounded to a power of two\"}}}", true)]

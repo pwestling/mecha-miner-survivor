@@ -37,7 +37,8 @@ namespace MechaMiner.Content.Tests.Schema;
 /// <see cref="DocumentsDeclaredBoundFree"/>.
 /// </para>
 /// <para>
-/// Verification: <c>VER-DAT-001-027</c>, <c>VER-DAT-001-030</c>.
+/// Verification: <c>VER-DAT-001-027</c>, <c>VER-DAT-001-030</c>,
+/// <c>VER-DAT-001-035</c>.
 /// </para>
 /// </remarks>
 [TestFixture]
@@ -232,11 +233,19 @@ internal sealed class SchemaAuthorityCoverageTests
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>This is a list of file names. It is not a pattern, a prefix, or a predicate.</b>
-    /// A schema that loses every bound it had must fail until somebody writes its name
-    /// here, because writing a name here is a line in a diff that a reviewer can argue
-    /// with. A rule that matched names instead would grant the same waiver to files nobody
-    /// has read yet.
+    /// <b>This is a list of repository-relative paths. It is not a pattern, a prefix, or a
+    /// predicate.</b> A schema that loses every bound it had must fail until somebody writes
+    /// its path here, because writing a path here is a line in a diff that a reviewer can
+    /// argue with. A rule that matched names instead would grant the same waiver to files
+    /// nobody has read yet.
+    /// </para>
+    /// <para>
+    /// <b>A path rather than a file name, for the same reason.</b> The glob is recursive, so
+    /// a bare name is not an identity: two schemas called <c>x.schema.json</c> in two
+    /// subdirectories would be one entry to this list, and exempting either would exempt
+    /// both. That is the defect this list is here to avoid, keyed one level up.
+    /// <see cref="TwoDocumentsSharingAFileNameAreExemptedSeparately"/> holds it, and it has
+    /// to, because a corpus of one flat file cannot.
     /// </para>
     /// <para>
     /// <b>Why an exemption list is right here, when the attribution gate deliberately has
@@ -297,8 +306,9 @@ internal sealed class SchemaAuthorityCoverageTests
                     + "and are named by no exemption: "
                     + string.Join(", ", coverage.UndeclaredBoundFree)
                     + ". Either the document lost its bounds, which is the accident this "
-                    + "gate exists to catch, or it genuinely has none and its file name "
-                    + "belongs in " + nameof(DocumentsDeclaredBoundFree)
+                    + "gate exists to catch, or it genuinely has none and its "
+                    + "repository-relative path belongs in "
+                    + nameof(DocumentsDeclaredBoundFree)
                     + " as a deliberate, reviewable line");
             Assert.That(
                 coverage.StaleExemptions,
@@ -450,6 +460,71 @@ internal sealed class SchemaAuthorityCoverageTests
     }
 
     /// <summary>
+    /// Two documents whose file names collide are two documents to the exemption list, and
+    /// exempting one leaves the other reported.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The corpus is one flat file today, so nothing else here can tell a per-name key from
+    /// a per-document one, and the day a subdirectory appears the difference is one
+    /// exemption silently waiving two files. The glob is already recursive: this state needs
+    /// no change to the gate to arrive, only a schema added under
+    /// <c>content/schemas/&lt;something&gt;/</c>.
+    /// </para>
+    /// <para>
+    /// The names come from <see cref="NameOf"/> rather than being written out, because the
+    /// naming is the thing under test. A control that spelled the two names itself would
+    /// pass over any keying at all, including the bare-name keying it exists to reject.
+    /// </para>
+    /// </remarks>
+    [Test]
+    public void TwoDocumentsSharingAFileNameAreExemptedSeparately()
+    {
+        string exempt = Path.Combine(SchemaDirectory, "a", "shared-name.schema.json");
+        string reported = Path.Combine(SchemaDirectory, "b", "shared-name.schema.json");
+
+        SchemaBoundCoverage.Result coverage = SchemaBoundCoverage.Of(
+            new[]
+            {
+                new SchemaBoundCoverage.Document(NameOf(exempt), BoundFreeDocument()),
+                new SchemaBoundCoverage.Document(NameOf(reported), BoundFreeDocument()),
+            },
+            new[] { NameOf(exempt) });
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                NameOf(reported),
+                Is.Not.EqualTo(NameOf(exempt)),
+                "two schemas in different directories are two documents, so the name the "
+                    + "exemption list uses has to tell them apart. A bare file name does not");
+            Assert.That(
+                coverage.UndeclaredBoundFree,
+                Is.EqualTo(new[] { NameOf(reported) }),
+                () => "only the unexempted document may be reported. Keyed by bare file name, "
+                    + "the exemption for its namesake waives it too and this list is empty - "
+                    + "one line in a diff, granting a waiver to a file nobody named: "
+                    + string.Join(", ", coverage.UndeclaredBoundFree));
+            Assert.That(
+                coverage.StaleExemptions,
+                Is.Empty,
+                () => "the exempted document is in the corpus: "
+                    + string.Join(", ", coverage.StaleExemptions));
+            Assert.That(
+                coverage.UnnecessaryExemptions,
+                Is.Empty,
+                () => "the exempted document really does declare no bound: "
+                    + string.Join(", ", coverage.UnnecessaryExemptions));
+        });
+    }
+
+    /// <summary>A schema with no numeric bound in it, for a synthetic corpus.</summary>
+    private static byte[] BoundFreeDocument()
+    {
+        return System.Text.Encoding.UTF8.GetBytes("{\"type\":\"object\"}");
+    }
+
+    /// <summary>
     /// The negative control for the counts: they are counts, not constants.
     /// </summary>
     /// <remarks>
@@ -508,19 +583,35 @@ internal sealed class SchemaAuthorityCoverageTests
 
     /// <summary>
     /// Every document the gate walks, named as <see cref="DocumentsDeclaredBoundFree"/>
-    /// names them: by file name, so that an exemption reads as the file a reviewer would
-    /// open.
+    /// names them.
     /// </summary>
     private static IReadOnlyList<SchemaBoundCoverage.Document> TheCorpusDocuments()
     {
         List<SchemaBoundCoverage.Document> documents = new();
         foreach (string path in Glob())
         {
-            documents.Add(new SchemaBoundCoverage.Document(
-                Path.GetFileName(path), File.ReadAllBytes(path)));
+            documents.Add(new SchemaBoundCoverage.Document(NameOf(path), File.ReadAllBytes(path)));
         }
 
         return documents;
+    }
+
+    /// <summary>
+    /// The name a document is known by, to the corpus and to
+    /// <see cref="DocumentsDeclaredBoundFree"/> alike: its repository-relative path.
+    /// </summary>
+    /// <remarks>
+    /// A bare file name is not an identity. The glob is recursive, so
+    /// <c>content/schemas/a/x.schema.json</c> and <c>content/schemas/b/x.schema.json</c>
+    /// are two documents with one name, and one exemption would waive both - the same
+    /// keyed-per-name-where-it-should-be-keyed-per-thing defect the <c>x-authority</c> map
+    /// was reshaped to fix. Latent while the corpus is one flat file, which is why
+    /// <see cref="TwoDocumentsSharingAFileNameAreExemptedSeparately"/> is the only thing
+    /// that will ever exercise it.
+    /// </remarks>
+    private static string NameOf(string absolutePath)
+    {
+        return TestArtifacts.Relative(absolutePath);
     }
 
     /// <summary>

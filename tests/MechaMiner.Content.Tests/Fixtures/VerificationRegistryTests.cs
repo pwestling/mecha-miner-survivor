@@ -37,16 +37,12 @@ internal sealed class VerificationRegistryTests
 
     private static JsonDocument Registry()
     {
-        return JsonDocument.Parse(File.ReadAllBytes(
-            Path.Combine(TestArtifacts.RepositoryRoot, "tests", "verification", "DAT-001.json")));
+        return VerificationRegistry.Open();
     }
 
     private static IEnumerable<JsonElement> Entries(JsonDocument registry)
     {
-        foreach (JsonElement entry in registry.RootElement.GetProperty("entries").EnumerateArray())
-        {
-            yield return entry;
-        }
+        return VerificationRegistry.Entries(registry);
     }
 
     /// <summary>

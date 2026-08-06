@@ -33,7 +33,7 @@ namespace MechaMiner.Content.Tests.Fixtures;
 /// roster here, so a deletion fails a test that names the code and the file.
 /// </para>
 /// <para>
-/// Verification: <c>VER-DAT-001-028</c>.
+/// Verification: <c>VER-DAT-001-028</c>, <c>VER-DAT-001-037</c>.
 /// </para>
 /// </remarks>
 [TestFixture]
@@ -258,6 +258,351 @@ internal sealed class FixtureCorpusCoverageTests
                 "every code the invalid corpus provokes must appear in this roster, and the "
                     + "roster must name no code the corpus does not provoke");
         });
+    }
+
+    /// <summary>
+    /// How <c>Fixtures/schema/</c> is named, in the vocabulary its claims use.
+    /// </summary>
+    /// <remarks>
+    /// The verification registry cites repository-relative paths, so the partition below
+    /// speaks in those rather than in file names. That is also the right key on its own
+    /// terms: a bare name is not an identity in a tree, and one name standing for two files
+    /// is the defect this sweep has been closing everywhere else.
+    /// </remarks>
+    private const string SchemaFixturePrefix = "tests/MechaMiner.Content.Tests/Fixtures/schema/";
+
+    private static string SchemaFixtureDirectory =>
+        Path.Combine(FixtureCorpus.Root, "schema");
+
+    /// <summary>
+    /// The schema fixtures that no verification-registry entry claims, on purpose.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Empty is the honest state today, and it is not the same as absent.</b> Every one
+    /// of the 33 fixtures in <c>Fixtures/schema/</c> is cited by an entry in
+    /// <c>tests/verification/DAT-001.json</c>. The list exists so that the next fixture
+    /// which genuinely should not be cited has somewhere to go that is a line in a diff,
+    /// rather than being waved through by a check with a hole in it.
+    /// </para>
+    /// <para>
+    /// It is a partition and not an exemption list, and the difference is what happens when
+    /// somebody wants the check to stop complaining. Under an orphan scan, adding the file
+    /// here is the fix, and nothing afterwards can tell "deliberately uncited" from
+    /// "quietened". Under a partition, adding it here is a claim in the other direction that
+    /// <see cref="AFixtureBothClaimedAndDeclaredUnclaimedIsReported"/> checks and that moves
+    /// <see cref="TheSchemaFixtureCountTheRegistryClaims"/>, so the file cannot both be
+    /// evidence for something and be declared to be evidence for nothing.
+    /// </para>
+    /// </remarks>
+    private static readonly string[] SchemaFixturesDeliberatelyUnclaimed = [];
+
+    /// <summary>
+    /// How many fixtures in <c>Fixtures/schema/</c> a registry entry claims, written out.
+    /// </summary>
+    /// <remarks>
+    /// <b>A literal, and it has to be.</b> Every other finding in the partition is "this
+    /// list is empty", and a fixture deleted together with its registry citation satisfies
+    /// all of them: the directory and the registry still agree, the corpus is simply one
+    /// proof smaller and nothing says so. A count derived from either side agrees with
+    /// itself on that input - see
+    /// <see cref="AFixtureAndItsClaimDeletedTogetherAreCaughtOnlyByTheCount"/> - so the
+    /// expected number is the one part of this that must not be computed. Changing it is a
+    /// deliberate change to what the corpus proves.
+    /// </remarks>
+    private const int TheSchemaFixtureCountTheRegistryClaims = 33;
+
+    /// <summary>
+    /// Every file in <c>Fixtures/schema/</c> is either claimed by a verification-registry
+    /// entry or declared deliberately unclaimed, and the number claimed is the number
+    /// stated.
+    /// </summary>
+    /// <remarks>
+    /// The mirror of <see cref="EveryFileInTheInvalidDirectoryIsClaimedByExactlyOneTableEntry"/>
+    /// for the other fixture directory, which had no such check: a <c>.schema.json</c>
+    /// dropped into <c>Fixtures/schema/</c> that no test reads and no entry cites runs
+    /// nothing, while a reader counting the directory believes the corpus is one proof
+    /// larger than it is.
+    /// </remarks>
+    [Test]
+    public void EverySchemaFixtureIsClaimedByTheRegistryOrDeclaredUnclaimed()
+    {
+        SchemaFixturePartition.Result partition = SchemaFixturePartition.Of(
+            SchemaFixtureNames(),
+            VerificationRegistry.CitedFixturesUnder(SchemaFixturePrefix),
+            SchemaFixturesDeliberatelyUnclaimed);
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                partition.FilesChecked,
+                Is.GreaterThan(0),
+                "a partition over zero files satisfies every emptiness assertion below, which "
+                    + "is the fail-open the whole fixture exists for");
+            Assert.That(
+                partition.Unclassified,
+                Is.Empty,
+                () => "these schema fixtures are in neither class - no entry in "
+                    + "tests/verification/DAT-001.json cites them and "
+                    + nameof(SchemaFixturesDeliberatelyUnclaimed)
+                    + " does not name them - so they prove nothing while looking like corpus: "
+                    + string.Join(", ", partition.Unclassified)
+                    + ". Cite the fixture from the entry whose claim it is evidence for, or "
+                    + "declare it unclaimed and say why");
+            Assert.That(
+                partition.ClaimedYetDeclaredUnclaimed,
+                Is.Empty,
+                () => "these schema fixtures are cited by a registry entry and also declared "
+                    + "unclaimed: " + string.Join(", ", partition.ClaimedYetDeclaredUnclaimed)
+                    + ". The two classes are exclusive; a fixture in both has a classification "
+                    + "no reader can settle, and the likeliest way to arrive here is silencing "
+                    + "the check on a file that was evidence all along");
+            Assert.That(
+                partition.StaleUnclaimedDeclarations,
+                Is.Empty,
+                () => "these names in " + nameof(SchemaFixturesDeliberatelyUnclaimed)
+                    + " match no file under Fixtures/schema/: "
+                    + string.Join(", ", partition.StaleUnclaimedDeclarations)
+                    + ". A declaration for a file that is not there classifies nothing today "
+                    + "and pre-classifies whatever file takes that name tomorrow");
+            Assert.That(
+                partition.Claimed.Count,
+                Is.EqualTo(TheSchemaFixtureCountTheRegistryClaims),
+                () => "the registry claims " + partition.Claimed.Count + " schema fixtures and "
+                    + nameof(TheSchemaFixtureCountTheRegistryClaims) + " says "
+                    + TheSchemaFixtureCountTheRegistryClaims
+                    + ". A fixture deleted along with its citation leaves every other "
+                    + "assertion here green, because the directory and the registry still "
+                    + "agree with each other; this literal is the only reader that does not "
+                    + "shrink with the corpus. If the change was deliberate, move the number");
+        });
+    }
+
+    /// <summary>
+    /// The positive control: a directory whose files are all classified, one of each way,
+    /// reports nothing and counts only the claimed.
+    /// </summary>
+    /// <remarks>
+    /// Without this the four controls below would be satisfied by a partition that reports
+    /// everything.
+    /// </remarks>
+    [Test]
+    public void AFullyClassifiedSchemaFixtureDirectoryIsAccepted()
+    {
+        SchemaFixturePartition.Result partition = SchemaFixturePartition.Of(
+            ThreeFixtures,
+            new[] { ThreeFixtures[0], ThreeFixtures[1] },
+            new[] { ThreeFixtures[2] });
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(partition.FilesChecked, Is.EqualTo(3));
+            Assert.That(
+                partition.Claimed,
+                Is.EqualTo(new[] { ThreeFixtures[0], ThreeFixtures[1] }),
+                () => "the declared-unclaimed file is not claimed evidence: "
+                    + string.Join(", ", partition.Claimed));
+            Assert.That(partition.Unclassified, Is.Empty);
+            Assert.That(partition.ClaimedYetDeclaredUnclaimed, Is.Empty);
+            Assert.That(partition.StaleUnclaimedDeclarations, Is.Empty);
+        });
+    }
+
+    /// <summary>
+    /// The orphan: a fixture in neither class is reported by name.
+    /// </summary>
+    /// <remarks>
+    /// The finding the partition exists to force. It looks like corpus, it is counted as
+    /// corpus by anyone reading the directory, and it asserts nothing.
+    /// </remarks>
+    [Test]
+    public void AFixtureNoRegistryEntryClaimsIsReported()
+    {
+        SchemaFixturePartition.Result partition = SchemaFixturePartition.Of(
+            ThreeFixtures,
+            new[] { ThreeFixtures[0], ThreeFixtures[1] },
+            System.Array.Empty<string>());
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                partition.Unclassified,
+                Is.EqualTo(new[] { ThreeFixtures[2] }),
+                () => "the uncited fixture must be reported, and it must be the only one: "
+                    + string.Join(", ", partition.Unclassified));
+            Assert.That(
+                partition.Claimed.Count,
+                Is.EqualTo(2),
+                "an unclassified file is not claimed evidence and must not be counted as any");
+        });
+    }
+
+    /// <summary>
+    /// A fixture that is both cited and declared unclaimed is reported.
+    /// </summary>
+    /// <remarks>
+    /// This is the control for the silencer. Under a plain orphan scan, adding a file to the
+    /// list is how the report is made to go away, and the file goes on being evidence for a
+    /// registry claim while the list says it is evidence for nothing. Here the contradiction
+    /// fails, and the claimed count moves as well, so the silencing is visible twice.
+    /// </remarks>
+    [Test]
+    public void AFixtureBothClaimedAndDeclaredUnclaimedIsReported()
+    {
+        SchemaFixturePartition.Result partition = SchemaFixturePartition.Of(
+            ThreeFixtures,
+            ThreeFixtures,
+            new[] { ThreeFixtures[2] });
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                partition.ClaimedYetDeclaredUnclaimed,
+                Is.EqualTo(new[] { ThreeFixtures[2] }),
+                () => "the contradicted fixture must be reported, and the two consistent ones "
+                    + "must not: " + string.Join(", ", partition.ClaimedYetDeclaredUnclaimed));
+            Assert.That(
+                partition.Claimed.Count,
+                Is.EqualTo(2),
+                "a fixture whose classification is contradicted cannot answer for the claimed "
+                    + "count either, so the literal count catches this too");
+            Assert.That(
+                partition.Unclassified,
+                Is.Empty,
+                () => "a contradiction is not also an orphan: "
+                    + string.Join(", ", partition.Unclassified));
+        });
+    }
+
+    /// <summary>
+    /// A declaration naming no file in the directory is reported.
+    /// </summary>
+    /// <remarks>
+    /// Otherwise the list rots into declarations about files that no longer exist, and each
+    /// one is a classification already granted to whatever file next takes that name.
+    /// </remarks>
+    [Test]
+    public void AnUnclaimedDeclarationNamingNoFixtureIsReported()
+    {
+        SchemaFixturePartition.Result partition = SchemaFixturePartition.Of(
+            ThreeFixtures,
+            ThreeFixtures,
+            new[] { SchemaFixturePrefix + "deleted-long-ago.schema.json" });
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                partition.StaleUnclaimedDeclarations,
+                Is.EqualTo(new[] { SchemaFixturePrefix + "deleted-long-ago.schema.json" }),
+                () => "the declaration naming no file must be reported: "
+                    + string.Join(", ", partition.StaleUnclaimedDeclarations));
+            Assert.That(
+                partition.Claimed.Count,
+                Is.EqualTo(3),
+                "a stale declaration classifies none of the files that are there");
+        });
+    }
+
+    /// <summary>
+    /// A fixture deleted while its registry citation stays behind is caught by the count.
+    /// </summary>
+    /// <remarks>
+    /// The citation outliving its file is also caught by
+    /// <c>VerificationRegistryTests.EveryNamedFixturePathExists</c>, which is why this is the
+    /// milder of the two deletion controls; the point here is that the partition's own
+    /// emptiness assertions see nothing, because nothing on disk is misclassified.
+    /// </remarks>
+    [Test]
+    public void AFixtureDeletedWhileItsClaimRemainsIsCaughtOnlyByTheCount()
+    {
+        SchemaFixturePartition.Result partition = SchemaFixturePartition.Of(
+            new[] { ThreeFixtures[0], ThreeFixtures[1] },
+            ThreeFixtures,
+            System.Array.Empty<string>());
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(partition.Unclassified, Is.Empty);
+            Assert.That(partition.ClaimedYetDeclaredUnclaimed, Is.Empty);
+            Assert.That(partition.StaleUnclaimedDeclarations, Is.Empty);
+            Assert.That(
+                partition.Claimed.Count,
+                Is.EqualTo(2),
+                "every emptiness assertion passes on this input; only the count against a "
+                    + "stated literal notices that a fixture left");
+        });
+    }
+
+    /// <summary>
+    /// A fixture and its registry citation deleted in the same change are caught by nothing
+    /// except the count.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The correlated deletion, and the reason
+    /// <see cref="TheSchemaFixtureCountTheRegistryClaims"/> is a literal rather than
+    /// something derived. The directory and the registry agree with each other perfectly on
+    /// this input: no orphan, no contradiction, no stale declaration, and no citation
+    /// pointing at a missing file for <c>EveryNamedFixturePathExists</c> to find. The corpus
+    /// is simply one proof smaller.
+    /// </para>
+    /// <para>
+    /// The second assertion is the whole argument: a count taken from what is present equals
+    /// what is present, so any expected value computed from either side of the partition
+    /// would have agreed and passed.
+    /// </para>
+    /// </remarks>
+    [Test]
+    public void AFixtureAndItsClaimDeletedTogetherAreCaughtOnlyByTheCount()
+    {
+        string[] survivingFixtures = { ThreeFixtures[0], ThreeFixtures[1] };
+        string[] survivingClaims = { ThreeFixtures[0], ThreeFixtures[1] };
+
+        SchemaFixturePartition.Result partition = SchemaFixturePartition.Of(
+            survivingFixtures, survivingClaims, System.Array.Empty<string>());
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(partition.Unclassified, Is.Empty);
+            Assert.That(partition.ClaimedYetDeclaredUnclaimed, Is.Empty);
+            Assert.That(partition.StaleUnclaimedDeclarations, Is.Empty);
+            Assert.That(
+                partition.Claimed.Count,
+                Is.EqualTo(survivingClaims.Length),
+                "the file set and the claim set agree with each other, which is exactly why "
+                    + "neither can be the expected count");
+            Assert.That(
+                partition.Claimed.Count,
+                Is.EqualTo(2),
+                "and the corpus is one proof smaller than it was, which only a literal stated "
+                    + "elsewhere can say");
+        });
+    }
+
+    /// <summary>
+    /// A three-file schema-fixture directory for the partition controls: enough for one
+    /// file to be reported while two must not be.
+    /// </summary>
+    private static readonly string[] ThreeFixtures =
+    {
+        SchemaFixturePrefix + "reach-root.schema.json",
+        SchemaFixturePrefix + "reach-defs.schema.json",
+        SchemaFixturePrefix + "no-bounds.schema.json",
+    };
+
+    /// <summary>
+    /// Every file under <c>Fixtures/schema/</c>, named as the registry names it.
+    /// </summary>
+    private static IReadOnlyList<string> SchemaFixtureNames()
+    {
+        List<string> names = new();
+        foreach (string absolute in
+                 Directory.GetFiles(SchemaFixtureDirectory, "*", SearchOption.AllDirectories))
+        {
+            names.Add(TestArtifacts.Relative(absolute));
+        }
+
+        return names;
     }
 
     /// <summary>One diagnostic code and every invalid fixture that proves it.</summary>

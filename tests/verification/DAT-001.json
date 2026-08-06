@@ -827,6 +827,123 @@
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-035",
+      "summary": "The per-document bound-free exemption list keys a schema by its repository-relative path rather than by its bare file name. The glob over content/schemas is recursive, so content/schemas/a/x.schema.json and content/schemas/b/x.schema.json were one name to the list and a single exemption would have waived both: the same defect this sweep has been closing everywhere else - a check keyed per name where the guarded thing is a document - sitting in the list that was written to fix the aggregate version of it. It is latent today, because the corpus is one flat file and the exemption list is empty, so the control is the whole of the deliverable. The control is two documents whose file names collide in different directories, one of them exempted, and the other must still be reported by name. Both names are taken from the production naming function rather than written out, because the naming is the thing under test and a control that spelled the two names itself would pass over bare-name keying too. Under the previous keying it fails twice: the two names compare equal, and the unexempted document is reported by nothing.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy",
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.SchemaAuthorityCoverageTests"
+      },
+      "fixtures": [
+        "content/schemas/envelope.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-036",
+      "summary": "A $ref inside a $defs declared on a subschema is resolution-checked like any other. {\"properties\":{\"a\":{\"$defs\":{\"x\":{\"$ref\":\"#/$defs/nope\"}}}}} loaded clean, because the position fell between the loader's two readers rather than being accepted by either: a subschema-level $defs is parsed only so the parse-time rules reach it and its nodes were then dropped on the spot, since no $ref of this evaluator can resolve to them; and reference resolution runs afterwards over the node graph, which needs the finished document to resolve against and by then no longer contained them. That is a worse class than a rule that accepts too much - there was no reader whose rule could have been wrong, so no rule could be tightened - and it is the same class as the x-authority entry fields that neither the loader nor the corpus walk reached. The nodes are now kept on the enclosing node in a field the evaluator never reads and the document's definition map never receives, so the deliberate part of the discard is unchanged: nothing under a subschema's $defs becomes evaluable and no $ref can reach it. Controls: the exact document above, which must fail with MMC-5002 pointed at /properties/a/$defs/x/$ref rather than merely fail, and a resolvable $ref in that same position, which must still load - otherwise the fix would be a ban on $ref under a nested $defs rather than a check that it resolves.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy",
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.JsonSchemaEvaluatorTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/unresolvable-ref.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-037",
+      "summary": "Every file in Fixtures/schema/ is partitioned into exactly one of two classes - claimed by a verification-registry entry, or named on an explicit list of deliberately unclaimed fixtures - and the number claimed is compared against a literal stated in the test. Fixtures/invalid/ has had an orphan check since VER-DAT-001-028; Fixtures/schema/ had nothing, so a .schema.json dropped into 33 files that no test reads and no entry cites ran nothing while a reader counting the directory believed the corpus was one proof larger. A partition rather than an orphan scan, because an orphan scan has its own silencer: the way to stop the report is to add the file to whatever list the scan consults, and afterwards nothing distinguishes deliberately uncited from quietened. Under a partition the classification is forced on whoever adds the file, and a file in both classes is a contradiction that fails. The count is a literal and not derived because the correlated deletion satisfies every emptiness assertion at once: a fixture removed together with its citation leaves the directory and the registry agreeing with each other, no orphan, no contradiction, no stale declaration, and no citation for EveryNamedFixturePathExists to find - demonstrated by deleting reach-contains.schema.json, its citation, and its reach test case, after which 814 tests passed and only the literal count failed. Controls: an uncited fixture reported by name; a fixture both cited and declared unclaimed, which is the silencing case; a declaration naming no file, which pre-classifies whatever file next takes that name; a fixture deleted while its citation remains; the correlated deletion, which additionally asserts that a count taken from either side of the partition agrees with itself on that input and so could not have been the expected value; and a positive control with one file of each class, so the five cannot be satisfied by a partition that reports everything.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy",
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Fixtures.FixtureCorpusCoverageTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/schema",
+        "tests/verification/DAT-001.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-038",
+      "summary": "AProjectSchemaStillLoadsWithItsAuthorities is asserted per document, by TestCaseSource, like the three gates it is the positive control for. It was one test looping the whole corpus with a bare assert, so it stopped at the first schema that failed to load and said nothing about the rest: with two broken schemas in content/schemas the run reported one failure naming one file, and the second surfaced only after the first was repaired, where it reads as a new defect rather than the other half of the same one. Not a fail-open - the run does go red either way - but a corpus-wide assertion cannot answer the only question its failure raises, which is which of these files is wrong. Per document it reports two failures, each named by its path.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy",
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.SchemaAuthorityTests"
+      },
+      "fixtures": [
+        "content/schemas/envelope.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-039",
+      "summary": "REGISTERED, NOT IMPLEMENTED. The content-ID grammars minted in docs/technical/40-content-data-and-validation.md must agree with the id patterns in content/schemas/** and with the grammars in ContentCategories. Today nothing reads the document. EnvelopeSchemaPatternTests holds the schema patterns and the C# constants equal to each other, which stops those two drifting apart and does nothing to stop them drifting from the document together - two-party agreement is not verification when both parties derive from a third thing and neither reads it. They already have: resource IDs currently carry three mutually disagreeing grammars, which is what this class of hole looks like once it has been open a while. Design constraints the implementation has to honour. (1) It reads the document's machine-readable grammar table - prefix, pattern, category, where instances live - and not its prose. A check that scrapes English breaks on the first editorial rewrite and is then deleted as flaky, which leaves the repository worse off than never having had it. (2) The agreement is three-way and must be asserted pairwise across all three of document, schemas, and C#; a check that compares two of them passes while both drift from the third, which is the present failure restated. (3) A prefix minted in prose with no row in the table is a coverage gap the check reports, not a case it skips - a gate that quietly ignores what it cannot represent has stopped being one. Route covered: every content-ID prefix present in the document's grammar table. Route not covered: a prefix minted in prose without a table row, which is reported as a gap rather than checked. Why this is registered rather than written: the document's minting statements live on a branch this one does not descend from, and the machine-readable grammar table the check reads is still being written. The entry records the obligation so the merge carries it, instead of it being something two sessions remember agreeing to.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-002", "TR-DAT-004"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#stable-id-policy",
+        "docs/technical/40-content-data-and-validation.md#content-catalogs"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.EnvelopeSchemaPatternTests"
+      },
+      "fixtures": [
+        "content/schemas/envelope.schema.json",
+        "docs/technical/40-content-data-and-validation.md"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "registered"
     }
   ]
 }

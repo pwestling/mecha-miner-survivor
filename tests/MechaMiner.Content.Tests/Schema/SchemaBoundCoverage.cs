@@ -93,7 +93,14 @@ internal static class SchemaBoundCoverage
             Bytes = bytes;
         }
 
-        /// <summary>The document's file name.</summary>
+        /// <summary>
+        /// What identifies this document to the exemption list.
+        /// </summary>
+        /// <remarks>
+        /// A name has to be unique across the corpus or an exemption is not for one
+        /// document. A caller globbing a directory tree must therefore pass a path and not
+        /// a file name; the caller in this repository passes the repository-relative path.
+        /// </remarks>
         internal string Name { get; }
 
         /// <summary>The document's raw JSON.</summary>

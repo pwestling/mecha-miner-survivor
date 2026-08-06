@@ -293,7 +293,14 @@ public static class JsonSchemaLoader
                 // and be seen by nobody: not the evaluator, which never resolves it, and
                 // not the reader, who assumes anything under $defs is checked like the
                 // rest. Skipping it was a hole in this walker, not a saving.
-                return atRoot || ParseSubschemaMapForValidation(value, at, sourcePath, bag);
+                if (atRoot)
+                {
+                    return true;
+                }
+
+                node.UnevaluatedDefinitions =
+                    ParseUnevaluatedSubschemaMap(value, at, sourcePath, bag);
+                return node.UnevaluatedDefinitions is not null;
 
             case SchemaAuthority.Keyword:
                 node.Authorities = ReadAuthorities(value, at, sourcePath, bag);
@@ -456,18 +463,30 @@ public static class JsonSchemaLoader
     }
 
     /// <summary>
-    /// Parses every subschema in a name-to-subschema object purely so that the rules
-    /// checked at parse time - <c>x-authority</c> placement above all - reach it, and
-    /// discards the result.
+    /// Parses every subschema of a <c>$defs</c> declared on a subschema, so that the rules
+    /// which do not depend on reachability reach it.
     /// </summary>
     /// <remarks>
-    /// The nodes are discarded because nothing can evaluate them: a nested <c>$defs</c>
-    /// is unreachable by this evaluator's two <c>$ref</c> forms. Discarding the node is
-    /// not the same as not reading it, and the difference is the whole point - a bound
-    /// nobody evaluates still has to say where its number came from, because the next
-    /// person to make it reachable will not re-derive it.
+    /// <para>
+    /// The result never becomes evaluable: it goes to
+    /// <see cref="JsonSchemaNode.UnevaluatedDefinitions"/> and not to the document's
+    /// definition map, so neither of this evaluator's two <c>$ref</c> forms can reach it.
+    /// That is the deliberate part, and it stands - a nested <c>$defs</c> is unreachable by
+    /// construction. Parsing it anyway is the other deliberate part: a bound nobody
+    /// evaluates still has to say where its number came from, because the next person to
+    /// make it reachable will not re-derive it.
+    /// </para>
+    /// <para>
+    /// What the nodes may not be is <em>dropped</em>, which is what happened before. The
+    /// parse-time rules ran on them and then they were gone, so
+    /// <see cref="VerifyReferencesResolve"/> - which runs afterwards over the node graph,
+    /// because it needs the finished document to resolve against - never saw them. A
+    /// <c>$ref</c> in this position was checked by nobody, which is a hole of a worse kind
+    /// than a rule that accepts too much: there was no reader whose rule could have been
+    /// wrong.
+    /// </para>
     /// </remarks>
-    private static bool ParseSubschemaMapForValidation(
+    private static Dictionary<string, JsonSchemaNode>? ParseUnevaluatedSubschemaMap(
         JsonElement value,
         JsonPointer at,
         string sourcePath,
@@ -476,19 +495,23 @@ public static class JsonSchemaLoader
         if (value.ValueKind != JsonValueKind.Object)
         {
             bag.Add(Malformed(sourcePath, at, "$defs is an object of name to subschema"));
-            return false;
+            return null;
         }
 
+        Dictionary<string, JsonSchemaNode> definitions = new(StringComparer.Ordinal);
         foreach (JsonProperty definition in value.EnumerateObject())
         {
-            if (ParseNode(definition.Value, at.AppendProperty(definition.Name), sourcePath, bag)
-                is null)
+            JsonSchemaNode? node =
+                ParseNode(definition.Value, at.AppendProperty(definition.Name), sourcePath, bag);
+            if (node is null)
             {
-                return false;
+                return null;
             }
+
+            definitions[definition.Name] = node;
         }
 
-        return true;
+        return definitions;
     }
 
     private static void VerifyReferencesResolve(
@@ -520,6 +543,23 @@ public static class JsonSchemaLoader
                     schema,
                     property.Value,
                     pointer.AppendProperty("properties").AppendProperty(property.Key),
+                    sourcePath,
+                    bag);
+            }
+        }
+
+        // A $defs on a subschema. Nothing evaluates these, and that is exactly why they are
+        // walked here: an unreachable node is where a dangling reference sits unseen, since
+        // the reader who would have caught it is the one that only visits what a $ref can
+        // reach.
+        if (node.UnevaluatedDefinitions is not null)
+        {
+            foreach (KeyValuePair<string, JsonSchemaNode> definition in node.UnevaluatedDefinitions)
+            {
+                VerifyReferencesResolve(
+                    schema,
+                    definition.Value,
+                    pointer.AppendProperty("$defs").AppendProperty(definition.Key),
                     sourcePath,
                     bag);
             }

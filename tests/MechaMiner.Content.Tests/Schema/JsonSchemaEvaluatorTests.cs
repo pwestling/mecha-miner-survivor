@@ -13,7 +13,8 @@ namespace MechaMiner.Content.Tests.Schema;
 /// The draft 2020-12 evaluator, including the ways it refuses to be a silent no-op.
 /// </summary>
 /// <remarks>
-/// Verification: <c>VER-DAT-001-020</c>, <c>VER-DAT-001-033</c>.
+/// Verification: <c>VER-DAT-001-020</c>, <c>VER-DAT-001-033</c>,
+/// <c>VER-DAT-001-036</c>.
 /// </remarks>
 [TestFixture]
 internal sealed class JsonSchemaEvaluatorTests
@@ -53,6 +54,71 @@ internal sealed class JsonSchemaEvaluatorTests
                 result.Diagnostics[0].Code,
                 Is.EqualTo(ContentDiagnosticCodes.SchemaReferenceUnresolved));
         });
+    }
+
+    /// <summary>
+    /// A <c>$ref</c> inside a <c>$defs</c> declared on a subschema is resolution-checked
+    /// like any other.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This position was read by neither half of the loader. <c>$defs</c> on a subschema is
+    /// parsed only so that the parse-time rules reach it and its nodes are then discarded,
+    /// because no <c>$ref</c> of this evaluator can reach them; and
+    /// <c>VerifyReferencesResolve</c> walks the node graph, which by then no longer contains
+    /// them. So the document below loaded clean with a reference to a definition that does
+    /// not exist - not a rule that let something through, but a position outside the
+    /// existence of the rule.
+    /// </para>
+    /// <para>
+    /// The nodes are still not evaluable and still not in the document's definition map. The
+    /// discard is about what a <c>$ref</c> can reach, and it stands; what changed is that
+    /// they are now read once more, for resolution, before being dropped.
+    /// </para>
+    /// </remarks>
+    [Test]
+    public void AnUnresolvableReferenceInsideASubschemaDefsFailsTheLoad()
+    {
+        JsonSchemaLoadResult result = JsonSchemaLoader.Load(
+            Encoding.UTF8.GetBytes("{\"properties\":{\"a\":{\"$defs\":{\"x\":{\"$ref\":\"#/$defs/nope\"}}}}}"),
+            "inline.schema.json");
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                result.IsValid,
+                Is.False,
+                "a dangling $ref under a subschema's $defs is a silent accept: the attribution "
+                    + "walk parses those nodes and throws them away, and the reference check "
+                    + "walks only the nodes that survived");
+            Assert.That(
+                result.Diagnostics[0].Code,
+                Is.EqualTo(ContentDiagnosticCodes.SchemaReferenceUnresolved));
+            Assert.That(
+                result.Diagnostics[0].Location.Value,
+                Is.EqualTo("/properties/a/$defs/x/$ref"),
+                () => "the diagnostic must point at the reference rather than at the subschema "
+                    + "holding it: " + string.Join("; ", result.Diagnostics));
+        });
+    }
+
+    /// <summary>
+    /// The other direction: a resolvable <c>$ref</c> in that same position still loads.
+    /// </summary>
+    /// <remarks>
+    /// Without this the check above would be satisfied by a rule that banned <c>$ref</c>
+    /// under a subschema's <c>$defs</c> outright, which is a different statement.
+    /// </remarks>
+    [Test]
+    public void AResolvableReferenceInsideASubschemaDefsStillLoads()
+    {
+        JsonSchemaLoadResult result = JsonSchemaLoader.Load(
+            Encoding.UTF8.GetBytes(
+                "{\"$defs\":{\"real\":{\"type\":\"string\"}},"
+                    + "\"properties\":{\"a\":{\"$defs\":{\"x\":{\"$ref\":\"#/$defs/real\"}}}}}"),
+            "inline.schema.json");
+
+        Assert.That(result.IsValid, Is.True, () => string.Join("; ", result.Diagnostics));
     }
 
     [Test]

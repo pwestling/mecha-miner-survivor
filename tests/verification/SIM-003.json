@@ -15,7 +15,7 @@
     "VER-SIM-003-010's fixtures name the retained-cross-session-records case, not only the file that holds it, because cases 1 to 3 hold the run session constant and the run-session key the summary's \"full entity ID\" covers was unreachable from any fixture the entry named until case 4 landed. An entry whose summary describes a claim while its evidence names only the artifacts that could not test it is a specific failure shape rather than a loose pointer: nothing in the entry is false, and nothing in it separates a key under test from a key no input can reach, so the gap is invisible to a reader checking the entry against its own fields. Naming the case that closed it is what stops the entry reading as though it was always covered, which a bare file path cannot do now that the file carries all four cases. No new entry was added for the case: this summary already covers the run-session component, so a second entry would restate the claim rather than record the artifact that made it testable. The 'case=' form follows tests/verification/FND-003.json, which already qualifies a fixture path by case. Nothing was added to evidenceKinds: the case produces golden text and a diff, both already listed, and 'negative-control' is excluded from the doc 91 \u00a7 What a kind may name inventory as a technique rather than a kind, so it is not the missing kind its absence here might suggest.",
     "Three guards in the entity path are structurally unreachable from any public entry point, so nothing in this file verifies them and no entry here should be read as though it did. Every one is kept and none is made testable by widening visibility: a guard against a future in-assembly caller is worth having unreached. Each is unreachable for its own reason. (1) PackedEntityStore.ResolveDense's two slot-range clauses, 'id.Index < _slotOffset' and 'id.Index >= _slotOffset + _capacity.HardCapacity': reaching either needs an identity whose storage index lies outside the store's own partition, and EntityId.Create is internal, so the test assembly cannot forge one. This one is expected to resolve at merge rather than being permanent - InternalsVisibleTo arrives with the base, and once the test assembly can mint an identity these two clauses become ordinary testable guards and should be covered then, not accepted as unreachable forever. (2) EntityIdAllocator's constructor guard on '!TryAllocate(PopulationCategory.Player, out _)': it runs immediately after the Player partition was sized from StoreCapacities.Player, whose hard capacity is one and whose free list is still untouched, so the allocation cannot fail; there is no public entry point at all, because the guard precedes the constructor returning. (3) EntityId.Create's 'runSession == 0' guard: Create is internal and its only two callers are in EntityIdAllocator, which passes the run session its own constructor already rejected zero for, so zero cannot arrive here. An unreached guard is a guard, not a verified behaviour.",
     "The 'platforms' list records the platforms an entry has actually been executed on, not the platforms its subject is intended to support, following tests/verification/FND-001.json and FND-002.json, which state the same convention and were corrected to it. On that reading windows-x64 and osx-arm64 are declared applicable and unexercised for every entry in this file: the subjects are portable .NET with no platform-conditional code, so they are expected to hold there, and that expectation is not coverage. linux-x64 is the only platform any run has covered. And there is no CI on this branch, so even the linux-x64 result is a local invocation on one machine rather than a runner's record; the retained artifact under artifacts/verbs/ names the invocation and its source_revision. Adding a platform back to any entry here requires a real run on it, which needs a runner FND-005 owns. No entry field holds 'applicable but unexercised': doc 91 \u00a7 Verification registry lists the accepted fields and there is no 'pendingPlatforms', so this note is where the applicability claim lives rather than a field invented for it.",
-    "Entries in this file whose evidenceKinds include 'negative-control' are substantiated by tests/verification/SIM-negative-controls.md, a sibling of this file: the perturbation, the exact command, the exact failure text, and the forced-rebuild method that makes each transcript a claim about a build rather than about a source file. It is committed rather than cited from a reviewer's scratch directory, because a path only one person can open is not evidence.",
+    "tests/verification/SIM-negative-controls.md, a sibling of this file, records fourteen perturbation controls: the perturbation, the exact command, the exact failure text, and the forced-rebuild method that makes each transcript a claim about a build rather than about a source file. It is committed rather than cited from a reviewer's scratch directory, because a path only one person can open is not evidence. It is no longer scoped by an evidenceKinds value, because that value is gone from every entry: the entries whose control it records name it in their own fixtures, qualified by section. In this file the document records the stale-reference control, removing the RecordStaleReference call from PackedEntityStore.ResolveDense's generation-mismatch branch while keeping the fail-closed return, whose transcript shows VER-SIM-003-012's own selector going red alongside VER-SIM-003-002 and VER-SIM-003-009. VER-SIM-003-012 names that section in its fixtures.",
     "On 'negative-control' in evidenceKinds. doc 91 \u00a7 What a kind may name rules that a technique is not a kind, and excludes the value from the minted inventory a kind must be added to before it may appear in a registry file, so it is a defect to correct in this file rather than a value grandfathered into it. Correcting it is a removal and not a substitution, because a negative control's evidence is not a different form of thing from an ordinary test's: a control run as an NUnit test produces exactly the artifact form a positive NUnit test produces. So an affected entry takes the kind its artifact form already gives it, which is the kind it already carries: 'test-counts' with 'test-output' for an nunit selector, the pair 53 positive nunit entries of that shape across these registries carry, and 'golden-text' with 'test-counts' and 'text-diff' for a golden comparison, the shape 11 positive entries carry. Nothing is minted, no kind is added, and no entry loses a kind its evidence needs. What the label carried is that the gate has a negative control, which is a fact about the gate and not about the form of its evidence, so it is required here to appear in prose that can say what a label could not: the entry summary names the perturbation injected and what was observed, and where tests/verification/SIM-negative-controls.md records that control the entry's fixtures name it, qualified by section, so the entry's own pointer reaches the transcript rather than only the artifact that cannot demonstrate a control. Summary text in these files is otherwise not reworded; the integration owner authorized 'summary or notes' for this correction specifically, and summary is the only per-entry prose field available, because doc 91 \u00a7 Verification registry lists the accepted entry fields and no per-entry 'notes' is among them, while doc 115 \u00a7 Schema registry has SCH-QUA-001 reject unknown fields. A field invented to hold it would repeat exactly the coining that produced this defect."
   ],
   "entries": [
@@ -66,7 +66,6 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-counts",
-        "diagnostic-counter",
         "test-output"
       ],
       "platforms": [
@@ -243,8 +242,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-counts",
-        "test-output",
-        "diagnostic-counter"
+        "test-output"
       ],
       "platforms": [
         "linux-x64"
@@ -272,7 +270,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-counts",
-        "diagnostic-counter",
+        "test-output",
         "seed-identity"
       ],
       "platforms": [
@@ -316,7 +314,7 @@
     },
     {
       "id": "VER-SIM-003-011",
-      "summary": "A packed store performs a full allocate-mutate-free churn cycle with zero managed allocation after warm-up and without unsafe code, proving the storage is index-addressed plain arrays rather than a reflection-driven or pointer-based component table.",
+      "summary": "A packed store performs a full allocate-mutate-free churn cycle with zero managed allocation after warm-up and without unsafe code, proving the storage is index-addressed plain arrays rather than a reflection-driven or pointer-based component table. The fast-tier method is an identity invariant and not a measurement: the dense storage fields are asserted to be readonly plain arrays, so they are reference-identical for the store's lifetime and a churn cycle has nothing to allocate, and the store-growth counter is asserted to stay at zero across 64 admit-mutate-resolve-order-remove cycles, with a companion case driving an authored-enemy store past its ceiling to prove that counter can rise at all. A budget in measured bytes is deferred to a benchmark scenario the QUA-005 work package owns. No VER-* ID is named for it because the scenario does not exist yet, and this entry carried QUA-005 in successor, which is a work-package ID on an implemented entry and so was neither a retirement nor a successor; doc 91 \u00a7 What 'successor' means sends a deferred-work pointer here instead.",
       "task": "TASK-SIM-003-002",
       "requirements": [
         "TR-SIM-002"
@@ -335,15 +333,12 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-counts",
-        "test-output",
-        "reference-identity",
-        "diagnostic-counter"
+        "test-output"
       ],
       "platforms": [
         "linux-x64"
       ],
       "tier": "fast",
-      "successor": "QUA-005",
       "status": "implemented"
     },
     {
@@ -363,12 +358,13 @@
         "kind": "nunit",
         "value": "MechaMiner.Simulation.Tests.Entities.EntityStoreNegativeControlTests.IdentityAndOrderingAssertionsFailAgainstDeliberatelyBrokenStubs"
       },
-      "fixtures": [],
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 Entities: the stale-reference gate refuses without counting"
+      ],
       "scenarios": [],
       "evidenceKinds": [
         "test-counts",
-        "test-output",
-        "negative-control"
+        "test-output"
       ],
       "platforms": [
         "linux-x64"

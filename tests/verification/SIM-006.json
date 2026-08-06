@@ -17,7 +17,7 @@
     "TASK-SIM-006-003 is the third independently landable task on this package: it fences the assembled event batch to the publishing run session. The guard lives in SnapshotPublisher rather than in either buffer, so VER-SIM-006-012's selector names a test under MechaMiner.Simulation.Tests.Snapshots even though the entry belongs to SIM-006. That is deliberate and matches how the ordering invariant is placed: CMP-SIM-003 owns the assembled batch, and a buffer that carried a run session of its own would give that fact a second owner. Test namespaces mirror production namespaces, so a guard in the Snapshots namespace is tested from the Snapshots test namespace whichever package registers it.",
     "VER-SIM-006-011's fixtures name the retained-multi-tick-records case, not only the file that holds it, because until that case landed every row in this golden shared tick 7 and the tick key the summary states was unreachable from any fixture the entry named. An entry whose summary describes a claim while its evidence names only the artifacts that could not test it is a specific failure shape rather than a loose pointer: nothing in the entry is false, and nothing in it separates a key under test from a key no input can reach, so the gap is invisible to a reader checking the entry against its own fields. Naming the case that closed it is what stops the entry reading as though it was always covered, which a bare file path cannot do now that the file carries both cases. No new entry was added for the case: this summary already states the tick key, so a second entry would restate the claim rather than record the artifact that made it testable. The 'case=' form follows tests/verification/FND-003.json, which already qualifies a fixture path by case. Nothing was added to evidenceKinds: the case produces golden text and a diff, both already listed, and minting doc 91 \u00a7 What a kind may name's unused 'canonical-ordering' here would report coverage the case did not add.",
     "The 'platforms' list records the platforms an entry has actually been executed on, not the platforms its subject is intended to support, following tests/verification/FND-001.json and FND-002.json, which state the same convention and were corrected to it. On that reading windows-x64 and osx-arm64 are declared applicable and unexercised for every entry in this file: the subjects are portable .NET with no platform-conditional code, so they are expected to hold there, and that expectation is not coverage. linux-x64 is the only platform any run has covered. And there is no CI on this branch, so even the linux-x64 result is a local invocation on one machine rather than a runner's record; the retained artifact under artifacts/verbs/ names the invocation and its source_revision. Adding a platform back to any entry here requires a real run on it, which needs a runner FND-005 owns. No entry field holds 'applicable but unexercised': doc 91 \u00a7 Verification registry lists the accepted fields and there is no 'pendingPlatforms', so this note is where the applicability claim lives rather than a field invented for it.",
-    "Entries in this file whose evidenceKinds include 'negative-control' are substantiated by tests/verification/SIM-negative-controls.md, a sibling of this file: the perturbation, the exact command, the exact failure text, and the forced-rebuild method that makes each transcript a claim about a build rather than about a source file. It is committed rather than cited from a reviewer's scratch directory, because a path only one person can open is not evidence.",
+    "tests/verification/SIM-negative-controls.md, a sibling of this file, records fourteen perturbation controls: the perturbation, the exact command, the exact failure text, and the forced-rebuild method that makes each transcript a claim about a build rather than about a source file. It is committed rather than cited from a reviewer's scratch directory, because a path only one person can open is not evidence. It is no longer scoped by an evidenceKinds value, because that value is gone from every entry: the entries whose control it records name it in their own fixtures, qualified by section. In this file the document records the ceiling-drop control against the production Events/DomainEventBuffer.cs, which reddens VER-SIM-006-001 and is the same perturbation VER-SIM-006-010 asserts against a stub, so that entry names the events section in its fixtures. It records nothing for VER-SIM-006-011 or VER-SIM-006-012. VER-SIM-006-011's control is inside its own gate and runs on every invocation, so the committed test is the artifact. VER-SIM-006-012's control transcript was left in an uncommitted review file and is recorded here as a gap rather than as evidence: the gate itself runs and is green, and the control that showed the batch fence load-bearing is not in the tree, so no pointer here can reach it.",
     "On 'negative-control' in evidenceKinds. doc 91 \u00a7 What a kind may name rules that a technique is not a kind, and excludes the value from the minted inventory a kind must be added to before it may appear in a registry file, so it is a defect to correct in this file rather than a value grandfathered into it. Correcting it is a removal and not a substitution, because a negative control's evidence is not a different form of thing from an ordinary test's: a control run as an NUnit test produces exactly the artifact form a positive NUnit test produces. So an affected entry takes the kind its artifact form already gives it, which is the kind it already carries: 'test-counts' with 'test-output' for an nunit selector, the pair 53 positive nunit entries of that shape across these registries carry, and 'golden-text' with 'test-counts' and 'text-diff' for a golden comparison, the shape 11 positive entries carry. Nothing is minted, no kind is added, and no entry loses a kind its evidence needs. What the label carried is that the gate has a negative control, which is a fact about the gate and not about the form of its evidence, so it is required here to appear in prose that can say what a label could not: the entry summary names the perturbation injected and what was observed, and where tests/verification/SIM-negative-controls.md records that control the entry's fixtures name it, qualified by section, so the entry's own pointer reaches the transcript rather than only the artifact that cannot demonstrate a control. Summary text in these files is otherwise not reworded; the integration owner authorized 'summary or notes' for this correction specifically, and summary is the only per-entry prose field available, because doc 91 \u00a7 Verification registry lists the accepted entry fields and no per-entry 'notes' is among them, while doc 115 \u00a7 Schema registry has SCH-QUA-001 reject unknown fields. A field invented to hold it would repeat exactly the coining that produced this defect."
   ],
   "entries": [
@@ -190,7 +190,6 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-counts",
-        "diagnostic-counter",
         "test-output"
       ],
       "platforms": [
@@ -304,12 +303,13 @@
         "kind": "nunit",
         "value": "MechaMiner.Simulation.Tests.Events.EventBufferNegativeControlTests.LossAndOrderingAssertionsFailAgainstDeliberatelyBrokenStubs"
       },
-      "fixtures": [],
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 Events: the domain buffer drops at its ceiling"
+      ],
       "scenarios": [],
       "evidenceKinds": [
         "test-counts",
-        "test-output",
-        "negative-control"
+        "test-output"
       ],
       "platforms": [
         "linux-x64"
@@ -319,7 +319,7 @@
     },
     {
       "id": "VER-SIM-006-011",
-      "summary": "Simultaneous events order by tick, then explicit emission sequence, and by nothing further: two runs that emit the same events in different collection order produce identical batches, so no observable order can come from collection or thread timing. The emission sequence is per-tick global, so the two facts that make a phase key and an entity-ID key unreachable are asserted instead of being encoded as dead comparator keys - a duplicate sequence within a tick fails loudly, and the system phase must not decrease as the emission sequence rises.",
+      "summary": "Simultaneous events order by tick, then explicit emission sequence, and by nothing further: two runs that emit the same events in different collection order produce identical batches, so no observable order can come from collection or thread timing. The emission sequence is per-tick global, so the two facts that make a phase key and an entity-ID key unreachable are asserted instead of being encoded as dead comparator keys - a duplicate sequence within a tick fails loudly, and the system phase must not decrease as the emission sequence rises. The negative control is inside the gate and runs on every invocation rather than being a transcript of a perturbation someone once applied: each case is sorted through a comparison with the tick key deleted and again with the emission-sequence key deleted, in both arrival orders because a dropped key shows up as a tie and a tie under a stable sort is only visible as a disagreement between permutations. The gate then asserts which degradation each case notices and which it is blind to. The retained-multi-tick case notices both deletions, the one-tick case notices the missing sequence key, and the one-tick case is asserted to be blind to the missing tick key because every row in it shares tick 7, which is the hole the retained case was added to fill.",
       "task": "TASK-SIM-006-002",
       "requirements": [
         "TR-RUN-005",
@@ -343,8 +343,7 @@
       "evidenceKinds": [
         "test-counts",
         "golden-text",
-        "text-diff",
-        "negative-control"
+        "text-diff"
       ],
       "platforms": [
         "linux-x64"
@@ -374,8 +373,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-counts",
-        "test-output",
-        "negative-control"
+        "test-output"
       ],
       "platforms": [
         "linux-x64"

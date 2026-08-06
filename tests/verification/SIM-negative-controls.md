@@ -1,8 +1,16 @@
 # SIM negative-control transcripts
 
-Every `SIM-00*.json` entry in this directory whose `evidenceKinds` includes `negative-control`
-asserts that its gate can fail. This file is that evidence, so the claim lives beside the entries it
-substantiates rather than in a pull-request description or a reviewer's scratch directory.
+Fourteen perturbation controls are recorded below, each with the exact command and the exact failure
+text, so the claim that a gate can fail lives beside the entries it substantiates rather than in a
+pull-request description or a reviewer's scratch directory.
+
+This file is no longer scoped by an `evidenceKinds` value. It was, by `negative-control`, and that
+value is gone from every `SIM-00*.json` entry: `docs/technical/91-verification-strategy.md` § What a
+kind may name rules that a technique is not a kind and excludes it from the minted inventory. The
+entries whose control is recorded here name this file in their own `fixtures`, qualified by section,
+and each registry file's `notes` say which of its entries that is. An entry whose summary describes a
+control that is **not** recorded here is substantiated by the committed test its selector names, not
+by this file, and no transcript here should be read as covering it.
 
 Authority: `docs/technical/91-verification-strategy.md` § Acceptance evidence, which requires
 evidence that a gate can fail; and its negative-control adequacy rules.

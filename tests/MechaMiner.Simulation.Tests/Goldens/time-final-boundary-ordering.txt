@@ -1,0 +1,42 @@
+# authority: docs/technical/20-simulation-core.md § Boundary and tie ordering
+#   "Active ticks cover times strictly before 35:00. After the tick covering the final
+#   pre-boundary interval commits, the clock reaches 35:00 and successful extraction is
+#   evaluated before any attack, spawn, hazard, or other event scheduled for 35:00 or
+#   later can begin."
+#   docs/technical/10-runtime-architecture.md § System phase ordering, phase 2: "the 35:00
+#   terminal boundary is handled before another tick can begin."
+#
+# derived by: reading the two rules above, not by the C# implementation under test. Every
+#   line below is what those rules require, in the order they require it.
+#
+# The 35:00 boundary is tick 35 * 60 * 60 = 126000 by exact integer arithmetic against
+# the rational 60 Hz rate. A tick with index i covers [i/60, (i+1)/60), so 125999 is the
+# final pre-boundary tick and 126000 is never executed.
+#
+# An event scheduled at or after 126000 is refused at every point in the run, before the
+# boundary as well as after it. Refusing it only once the boundary had been reached would
+# leave a window during the final pre-boundary tick in which a 35:00 event could begin,
+# and doc 20 requires extraction to be evaluated before any of them.
+#
+# Consecutive advance-tick calls are collapsed into one range line so the file stays
+# reviewable; the count column makes the collapse lossless.
+#
+# An admitted event appears as the begin-scheduled-event call the host actually made; a
+# refused one appears as an admission-refused line, because there is no call to show.
+#
+# line kinds: begin-scheduled-event | admission-refused |
+#   advance-tick-range (first, last, count) | evaluate-terminal-boundary
+#
+# columns (tab separated): kind, then that kind's fields
+begin-scheduled-event	60	SCH-0100-WAVE
+admission-refused	126000	SCH-3500-EXTRACTION
+admission-refused	126001	SCH-3500-LATER
+advance-tick-range	0	125995	125996
+begin-scheduled-event	125999	SCH-3459-PULSE
+admission-refused	126000	SCH-3500-EXTRACTION
+advance-tick-range	125996	125999	4
+evaluate-terminal-boundary	126000
+admission-refused	125999	SCH-3459-PULSE
+admission-refused	126000	SCH-3500-EXTRACTION
+committed-ticks	126000
+blocking-reasons	TerminalTransition

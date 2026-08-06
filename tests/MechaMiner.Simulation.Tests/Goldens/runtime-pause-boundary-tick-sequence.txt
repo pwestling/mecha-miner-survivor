@@ -1,0 +1,47 @@
+# authority: docs/technical/10-runtime-architecture.md § Pause contract
+#   "The simulation executes no ticks while any blocking reason is present."
+#   "Run time, AI, movement, spawning, projectiles, attacks, cooldowns, status effects,
+#   mining progress and decay, hazards, pickups, and gameplay physics remain unchanged."
+#   docs/technical/20-simulation-core.md § Verification.
+#
+# derived by: an independent Python reference implementation of the fixed-step
+#   accumulator, written from doc 10 § Clock domains, not by the C# under test.
+#
+# A pause consumes no gameplay time. Two runs are fed the same 24 frame deltas:
+# one unpaused throughout, one that raises GeneralPause after the 8th delta, is fed four
+# further steps totalling 11/128 s while blocked, and then clears the pause and continues. Both
+# must render exactly this sequence: the paused steps produce no batch at all, so they
+# cannot appear here, and the blocked wall time is never banked into a later step.
+#
+# Frame deltas are exact binary fractions (multiples of 1/128 s) so that the sequence is
+# a property of the accumulator rather than of decimal rounding in the fixture.
+# The blocked interval is deliberately not a whole number of ticks (11/128 s = 5.15625), so
+# an implementation that banked paused wall time could not have its debt cancelled exactly.
+#
+# Only steps that executed at least one tick appear, so a zero-tick step - whether it is
+# zero because the interval was short or because the run was blocked - cannot change the
+# text.
+#
+# columns (tab separated): batchOrdinal, ticksExecuted, firstTick, lastTick
+# entries=19
+1	1	0	0
+2	1	1	1
+3	2	2	3
+4	1	4	4
+5	2	5	6
+6	1	7	7
+7	3	8	10
+8	1	11	11
+9	2	12	13
+10	1	14	14
+11	1	15	15
+12	2	16	17
+13	1	18	18
+14	3	19	21
+15	1	22	22
+16	2	23	24
+17	2	25	26
+18	3	27	29
+19	3	30	32
+committed-ticks	33
+run-seconds-ieee754	0x3FE199999999999A

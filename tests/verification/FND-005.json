@@ -1,0 +1,263 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "FND-005",
+  "workPackageTitle": "Initial CI fast suite with locked restore and artifact summaries",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91 § Verification registry).",
+    "The subject of this registry is a GitHub Actions workflow, .github/workflows/fast.yml, whose only job invokes ./build.sh verbs. selector.kind is therefore 'command' for the verb a given entry is about and 'script' for the two files the job runs as files; there is no 'workflow' selector kind and this registry does not invent one. What the workflow itself contributes is reachability: the entries below assert that the named gate is reached from a clean hosted checkout and that its exit class survives to the job result.",
+    "Every entry names what its negative control proves rather than what the check intends, because a gate that cannot fail is this repository's dominant defect class and 'the job is green' is evidence of nothing on its own. VER-FND-005-002 through VER-FND-005-005 are the controls: one violating commit per gate family reachable from the fast path, each pushed to its own scratch branch so its run is unambiguous, each required to turn this same job red with a named exit class.",
+    "The controls are coherent violations, not broken states (doc 91 § Negative control adequacy). That rule decided the shape of VER-FND-005-003: an accepted-boundary violation committed without its regenerated lock files is rejected one stage earlier by --locked-mode as class 5, so a red run would have proved the locked-restore gate while leaving the boundary assertion entirely unreached. The boundary control therefore commits the regenerated lock file, which is also what a real violating commit looks like.",
+    "Two gaps in this suite are deliberate and documented in the workflow header rather than silently absent. doc 91 § Fast pull-request suite additionally names content/localization/asset-manifest/license validation, which is the `content` verb owned by DAT-006 and today returns class 2; and Godot headless import plus focused integration tests, which no verb exposes short of `test-main`, and delivery-waves § Step 4 assigns test-main to the main path. Neither is closed here. OPS-001 owns the main and nightly suites; FND-010 owns evidence-bundle emission into these artifacts.",
+    "Status is current status. VER-FND-005-008 is 'registered': its second half, a step that never ran while no step reported a failing class, has no evidence yet because no observed run has produced that state."
+  ],
+  "entries": [
+    {
+      "id": "VER-FND-005-001",
+      "summary": "A pull-request-equivalent job runs on a clean GitHub-hosted checkout and reaches exit class 0 by invoking build/bootstrap-linux.sh once for provisioning and then ./build.sh bootstrap, format-check, build, and test-fast, with no cache action, no inlined dotnet command, and no direct build/verify-*.sh call anywhere in the workflow. The green result is only evidence in combination with VER-FND-005-002 through VER-FND-005-005: those four commits turn this same job red, so passing is a distinction the job draws rather than the only result it can produce. A caching step would also make this entry false rather than merely slower, because doc 100 states CI 'cannot depend on a developer's Godot import cache, global NuGet cache contents, uncommitted generated files, or editor state'.",
+      "task": "TASK-FND-005-001",
+      "requirements": [
+        "TR-BLD-002",
+        "TR-BLD-005",
+        "TR-QUA-001"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#continuous-integration",
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface",
+        "docs/technical/91-verification-strategy.md#fast-pull-request-suite",
+        "docs/technical/delivery-waves.md#step-4"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": ".github/workflows/fast.yml"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output",
+        "verb-result-json"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-005-002",
+      "summary": "A commit whose only defect is trailing whitespace in a tracked owned text file turns the job red at the format-check step with exit class 4, and that class appears in the job output. What the control proves is narrower and more useful than 'format-check runs': the violating commit compiles, restores in locked mode, satisfies the accepted project boundary, and passes every pure test, so nothing except gate 3 of format-check can account for the red run. It also proves the step's own exit path, because a whitespace-only violation is invisible to the compiler and to every other gate in the fast path.",
+      "task": "TASK-FND-005-001",
+      "requirements": [
+        "TR-BLD-005",
+        "TR-QUA-001"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface",
+        "docs/technical/91-verification-strategy.md#negative-control-adequacy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "command",
+        "value": "./build.sh format-check"
+      },
+      "fixtures": [
+        "scratch-branch commit: trailing whitespace in a tracked owned text file"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-005-003",
+      "summary": "A commit adding a project-reference edge outside doc 115's accepted project boundary, together with the regenerated lock file that edge requires, turns the job red at the build step with exit class 4. The control proves that build stage 3 is actually reached in CI and that a validation class rather than a build class survives to the job result. The same violation committed without the regenerated lock file proves something different and weaker: it is rejected by --locked-mode in stage 1 as class 5, so the run would be red with the boundary assertion never evaluated, which is exactly the reading a reviewer would otherwise be entitled to take from a red build step.",
+      "task": "TASK-FND-005-001",
+      "requirements": [
+        "TR-BLD-002",
+        "TR-BLD-006",
+        "TR-QUA-001"
+      ],
+      "technicalSources": [
+        "docs/technical/115-component-contract-and-schema-registry.md#accepted-project-boundary",
+        "docs/technical/100-build-dependencies-and-release-operations.md#repository-structure",
+        "docs/technical/91-verification-strategy.md#negative-control-adequacy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "command",
+        "value": "./build.sh build"
+      },
+      "fixtures": [
+        "scratch-branch commit: MechaMiner.Simulation references MechaMiner.Persistence, with regenerated packages.lock.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-005-004",
+      "summary": "A commit changing a central package version without updating the committed lock files turns the job red at the build step with exit class 5, and CI does not rewrite the lock file to make the restore succeed. The control proves the restore is locked in CI specifically, which no green run can establish: a CI job that restored without --locked-mode would pass this same commit, silently resolve a different dependency graph than the one committed, and leave the repository's exact-locked-versions claim (TR-BLD-001) unenforced everywhere it matters most.",
+      "task": "TASK-FND-005-001",
+      "requirements": [
+        "TR-BLD-001",
+        "TR-BLD-002"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#dependency-policy",
+        "docs/technical/100-build-dependencies-and-release-operations.md#continuous-integration"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "command",
+        "value": "./build.sh build"
+      },
+      "fixtures": [
+        "scratch-branch commit: Directory.Packages.props version change with the lock files left untouched"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-005-005",
+      "summary": "A commit that makes one existing pure NUnit assertion false turns the job red at the test-fast step with exit class 4, and the retained evidence records the nonzero failed count. The control proves CI observes the test outcome rather than the runner's startup: a job that only checked that `dotnet test` produced output, or that treated a nonzero failed count as a warning, would pass this commit while a real regression shipped. Paired with VER-FND-005-001, which requires a nonzero discovered-test count, it also excludes the opposite vacuity, a green test step that ran nothing.",
+      "task": "TASK-FND-005-001",
+      "requirements": [
+        "TR-QUA-001",
+        "TR-QUA-003"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#ci-suites",
+        "docs/technical/91-verification-strategy.md#negative-control-adequacy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "command",
+        "value": "./build.sh test-fast"
+      },
+      "fixtures": [
+        "scratch-branch commit: one pure NUnit assertion made false"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "test-counts"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-005-006",
+      "summary": "Every step records the exit class its verb returned and re-exits with it, and the final report step prints one row per expected step and exits with the first nonzero class, so the class reaches the job result instead of being collapsed into a bare failure. The controls prove the distinction is real rather than nominal: the boundary commit (VER-FND-005-003) and the lock-file commit (VER-FND-005-004) both fail at the same `build` step, and their runs report 4 and 5 respectively. A workflow that had reduced the eight classes to pass/fail would be indistinguishable from this one on either run alone, and identical on both. doc 100 defines eight classes and deliberately no class 1; a job result of 1 from this workflow would itself be a defect.",
+      "task": "TASK-FND-005-001",
+      "requirements": [
+        "TR-BLD-005",
+        "TR-QUA-001"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": ".github/workflows/fast.yml"
+      },
+      "fixtures": [
+        "scratch-branch commits for VER-FND-005-003 (class 4) and VER-FND-005-004 (class 5) at the same step"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-005-007",
+      "summary": "The job retains the verb evidence tree under artifacts/ as a bounded run artifact, and fails the upload when that set is empty. The control that matters here is the empty-set one: with if-no-files-found left at its default the step is green when nothing was collected, so 'no evidence was produced' and 'evidence was retained' would look the same in the run list, and the concise summaries TASK-FND-005-001 closes on would be unfalsifiable. Each retained result.json carries the verb, its exit class and class name, its diagnostic code, the source revision, the step logs, and the named artifacts.",
+      "task": "TASK-FND-005-001",
+      "requirements": [
+        "TR-QUA-001",
+        "TR-BLD-005"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#continuous-integration",
+        "docs/technical/91-verification-strategy.md#acceptance-evidence"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": ".github/workflows/fast.yml"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "verb-result-json",
+        "captured-artifact"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-005-008",
+      "summary": "The report step fails with exit class 8 when no step recorded an exit class at all, and when every recorded class is 0 yet an expected step never ran. Both halves exist because the report step is the last thing the job does and runs with if: always(), which is precisely the position from which a step can convert a job that proved nothing into a green result: an absent record has nothing to disagree with. The controls this needs are a run in which the record is absent and a run in which a step is skipped without any step failing; neither has been observed yet, so this entry is registered rather than implemented and the guard is currently code-reviewed only.",
+      "task": "TASK-FND-005-001",
+      "requirements": [
+        "TR-QUA-001",
+        "TR-QUA-003"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#negative-control-adequacy",
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": ".github/workflows/fast.yml"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    }
+  ]
+}

@@ -39,7 +39,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -75,7 +75,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -110,7 +110,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -144,7 +144,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -180,7 +180,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -215,7 +215,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -251,7 +251,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -288,7 +288,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -323,7 +323,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -359,7 +359,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -393,7 +393,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -430,7 +430,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -466,7 +466,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -500,7 +500,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -535,7 +535,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -572,7 +572,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -608,7 +608,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -644,7 +644,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -679,7 +679,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -715,7 +715,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -751,7 +751,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -787,7 +787,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -819,7 +819,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -851,7 +851,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -882,7 +882,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -915,7 +915,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -959,7 +959,7 @@
     },
     {
       "id": "VER-DAT-002-028",
-      "summary": "Every numeric bound in the DAT-002 schemas records its provenance in an adjacent x-authority, and every sourced or derived bound states the derivation by which the number follows from its source. The route is a walk over content/schemas/**/*.schema.json performed by the DAT-001 gate, which globs the directory, so a schema added by this package is covered the moment the file exists rather than when someone remembers to register it.",
+      "summary": "Every numeric bound in the DAT-002 schemas records its provenance in an adjacent x-authority, and every sourced or derived bound states the derivation by which the number follows from its source. The route is a walk over content/schemas/**/*.schema.json performed by the DAT-001 gate, which globs the directory, so a schema added by this package is covered the moment the file exists rather than when someone remembers to register it. The control is a DAT-002 schema bound stripped of its x-authority, and a sourced bound whose authority states no derivation; each must fail the walk.",
       "task": "TASK-DAT-002-001",
       "requirements": [
         "TR-DAT-005",
@@ -979,8 +979,7 @@
       ],
       "scenarios": [],
       "evidenceKinds": [
-        "test-output",
-        "negative-control"
+        "test-output"
       ],
       "platforms": [
         "linux-x64",
@@ -1011,8 +1010,7 @@
       ],
       "scenarios": [],
       "evidenceKinds": [
-        "test-output",
-        "negative-control"
+        "test-output"
       ],
       "platforms": [
         "linux-x64",
@@ -1046,7 +1044,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",

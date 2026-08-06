@@ -32,7 +32,7 @@
       },
       "fixtures": ["tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-comment.json"],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
@@ -52,7 +52,7 @@
       },
       "fixtures": ["tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-trailing-comma.json"],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
@@ -72,7 +72,7 @@
       },
       "fixtures": ["tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-duplicate-property.json"],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
@@ -95,7 +95,7 @@
         "tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-nonfinite-overflow.json"
       ],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
@@ -116,7 +116,7 @@
       },
       "fixtures": ["tests/MechaMiner.Content.Tests/Fixtures/invalid/structural-unknown-field.json"],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
@@ -139,7 +139,7 @@
         "tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-null-nested.json"
       ],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
@@ -166,7 +166,7 @@
         "tests/MechaMiner.Content.Tests/Fixtures/invalid/limit-document-bytes.json"
       ],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
@@ -253,7 +253,7 @@
       },
       "fixtures": [],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
@@ -319,7 +319,7 @@
       },
       "fixtures": ["tests/MechaMiner.Content.Tests/Fixtures/invalid/identity-bad-id-for-category.json"],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
@@ -340,7 +340,7 @@
       },
       "fixtures": ["tests/MechaMiner.Content.Tests/Fixtures/invalid/identity-retired-id-reused.json"],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
@@ -373,7 +373,7 @@
         "tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-camel-case-property.json"
       ],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
@@ -393,7 +393,7 @@
       },
       "fixtures": ["tests/MechaMiner.Content.Tests/Fixtures/invalid/structural-tag-outside-vocabulary.json"],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
@@ -418,7 +418,7 @@
         "tests/MechaMiner.Content.Tests/Fixtures/invalid/traceability-source-ref-path-line.json"
       ],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
@@ -439,7 +439,7 @@
       },
       "fixtures": ["tests/MechaMiner.Content.Tests/Fixtures/invalid/traceability-scope-unresolved.json"],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
@@ -464,7 +464,7 @@
         "tests/MechaMiner.Content.Tests/Fixtures/schema/malformed.schema.json"
       ],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
@@ -535,7 +535,7 @@
       },
       "fixtures": ["content/schemas/envelope.schema.json"],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
@@ -559,14 +559,14 @@
         "tests/MechaMiner.Content.Tests/Fixtures/invalid/structural-name-key-role-mismatch.json"
       ],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
     },
     {
       "id": "VER-DAT-001-025",
-      "summary": "Every bound keyword requires an adjacent x-authority, enforced by walking every node of every schema document under content/schemas/** and matching on the nine bound keyword names (minimum, maximum, exclusiveMinimum, exclusiveMaximum, minItems, maxItems, minLength, maxLength, multipleOf) with no exemption list. Every sourced or derived bound additionally states the derivation by which the number follows from its source.",
+      "summary": "Every bound keyword requires an adjacent x-authority, enforced by walking every node of every schema document under content/schemas/** and matching on the nine bound keyword names (minimum, maximum, exclusiveMinimum, exclusiveMaximum, minItems, maxItems, minLength, maxLength, multipleOf) with no exemption list. Every sourced or derived bound additionally states the derivation by which the number follows from its source. The control is a schema document carrying a bound keyword with no adjacent x-authority, which must be rejected with the malformed-schema diagnostic rather than loaded.",
       "task": "TASK-DAT-001-001",
       "requirements": ["TR-DAT-005", "TR-DAT-006"],
       "technicalSources": [
@@ -586,7 +586,7 @@
         "tests/MechaMiner.Content.Tests/Fixtures/schema/undelivered-derivation.schema.json"
       ],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
@@ -627,7 +627,7 @@
         "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-dependent-schemas.schema.json"
       ],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
@@ -651,7 +651,7 @@
         "tests/MechaMiner.Content.Tests/Fixtures/schema/no-bounds.schema.json"
       ],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
@@ -703,7 +703,7 @@
         "tests/MechaMiner.Content.Tests/Fixtures/schema/keyword-named-properties.schema.json"
       ],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
@@ -728,7 +728,7 @@
         "tests/MechaMiner.Content.Tests/Fixtures/schema/attributed-bound.schema.json"
       ],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
@@ -752,7 +752,7 @@
         "tests/MechaMiner.Content.Tests/Fixtures/schema/partly-attributed-bounds.schema.json"
       ],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
@@ -775,7 +775,7 @@
         "tests/MechaMiner.Content.Tests/Fixtures/schema/annotation-hiding-a-subschema.schema.json"
       ],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
@@ -798,7 +798,7 @@
         "content/schemas/envelope.schema.json"
       ],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
@@ -823,7 +823,7 @@
         "tests/MechaMiner.Content.Tests/Fixtures/schema/shared-description-two-structural-bounds.schema.json"
       ],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
@@ -846,7 +846,7 @@
         "content/schemas/envelope.schema.json"
       ],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
@@ -869,7 +869,7 @@
         "tests/MechaMiner.Content.Tests/Fixtures/schema/unresolvable-ref.schema.json"
       ],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
@@ -893,7 +893,7 @@
         "tests/verification/DAT-001.json"
       ],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
@@ -987,7 +987,7 @@
         "content/schemas/envelope.schema.json"
       ],
       "scenarios": [],
-      "evidenceKinds": ["test-output", "negative-control"],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"

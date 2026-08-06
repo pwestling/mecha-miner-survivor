@@ -40,7 +40,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -76,7 +76,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -88,7 +88,7 @@
     },
     {
       "id": "VER-DAT-003-003",
-      "summary": "Each weapon's recipe resources, in authored order, have canonical letters that concatenate to its W-xy ID suffix. The route resolves each recipe resource ID to its canonical_letter in the resources catalog and compares the concatenation to the two characters after 'W-', so W-AB must resolve to the resources lettered A and B. This is the compensation for a recipe that is no longer human-legible: without it a mis-assigned pair reads as valid.",
+      "summary": "Each weapon's recipe resources, in authored order, have canonical letters that concatenate to its W-xy ID suffix. The route resolves each recipe resource ID to its canonical_letter in the resources catalog and compares the concatenation to the two characters after 'W-', so W-AB must resolve to the resources lettered A and B. This is the compensation for a recipe that is no longer human-legible: without it a mis-assigned pair reads as valid. The control is content/weapons/catalog-recipe-letters-mismatch.json, individually valid and holding a pair whose letters do not spell its own ID, which the catalog pass must reject.",
       "task": "TASK-DAT-003-001",
       "requirements": [
         "TR-DAT-001",
@@ -113,7 +113,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -149,7 +149,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -186,7 +186,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -198,7 +198,7 @@
     },
     {
       "id": "VER-DAT-003-006",
-      "summary": "A stat track's unit is a token from a closed eight-token enum rather than a free string, matched by exact case-sensitive comparison. This is the one place in the tree where a unit is carried as a value rather than as a name suffix, because rank_zero and increment_per_rank are a generic pair whose unit varies per row; the enum is what keeps that from becoming a free-text field.",
+      "summary": "A stat track's unit is a token from a closed eight-token enum rather than a free string, matched by exact case-sensitive comparison. This is the one place in the tree where a unit is carried as a value rather than as a name suffix, because rank_zero and increment_per_rank are a generic pair whose unit varies per row; the enum is what keeps that from becoming a free-text field. The control is a stat track whose unit is a near-miss of a declared token, which the exact comparison must reject rather than treat as an unknown future unit.",
       "task": "TASK-DAT-003-001",
       "requirements": [
         "TR-DAT-001",
@@ -222,7 +222,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -258,7 +258,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -294,7 +294,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -329,7 +329,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -365,7 +365,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -401,7 +401,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -437,7 +437,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -474,7 +474,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -509,7 +509,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -546,7 +546,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -581,7 +581,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -617,7 +617,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -629,7 +629,7 @@
     },
     {
       "id": "VER-DAT-003-018",
-      "summary": "A relic carries a pool_availability token and, where the token is hyper-gold-unlock, an unlock_id; a fresh-profile relic carries no unlock_id. The route is a conditional requirement keyed on the token, which replaces the anti-correlated in_fresh_profile_pool boolean that stated the same fact a second time.",
+      "summary": "A relic carries a pool_availability token and, where the token is hyper-gold-unlock, an unlock_id; a fresh-profile relic carries no unlock_id. The route is a conditional requirement keyed on the token, which replaces the anti-correlated in_fresh_profile_pool boolean that stated the same fact a second time. The control is a fresh-profile relic carrying an unlock_id and a hyper-gold-unlock relic carrying none; both must be rejected by the conditional requirement.",
       "task": "TASK-DAT-003-001",
       "requirements": [
         "TR-DAT-002",
@@ -654,7 +654,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -690,7 +690,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -702,7 +702,7 @@
     },
     {
       "id": "VER-DAT-003-020",
-      "summary": "PowerUp rank prices sum to 9,450 Hyper Gold across the catalog. The route is an integer sum over every ranks[].price_hyper_gold in every definition in content/powerups/, so the total is recomputed from the parts rather than compared against an authored total; there is no authored total left to compare against, because it was derived and removed.",
+      "summary": "PowerUp rank prices sum to 9,450 Hyper Gold across the catalog. The route is an integer sum over every ranks[].price_hyper_gold in every definition in content/powerups/, so the total is recomputed from the parts rather than compared against an authored total; there is no authored total left to compare against, because it was derived and removed. The control is a catalog whose rank prices sum to anything other than 9,450, which must be reported as a catalog total mismatch rather than silently accepted.",
       "task": "TASK-DAT-003-001",
       "requirements": [
         "TR-DAT-001",
@@ -724,7 +724,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -760,7 +760,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -797,7 +797,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -831,7 +831,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -868,7 +868,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -901,7 +901,7 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-output",
-        "negative-control"
+        "expected-diagnostic-id"
       ],
       "platforms": [
         "linux-x64",
@@ -945,7 +945,7 @@
     },
     {
       "id": "VER-DAT-003-027",
-      "summary": "Every numeric bound in the DAT-003 schemas records its provenance in an adjacent x-authority with a derivation where the kind is sourced or derived, through the same directory-glob route as VER-DAT-002-028.",
+      "summary": "Every numeric bound in the DAT-003 schemas records its provenance in an adjacent x-authority with a derivation where the kind is sourced or derived, through the same directory-glob route as VER-DAT-002-028. The control is a DAT-003 schema bound stripped of its x-authority, and one whose authority kind is sourced with no derivation; each must fail the walk.",
       "task": "TASK-DAT-003-001",
       "requirements": [
         "TR-DAT-005",
@@ -965,8 +965,7 @@
       ],
       "scenarios": [],
       "evidenceKinds": [
-        "test-output",
-        "negative-control"
+        "test-output"
       ],
       "platforms": [
         "linux-x64",
@@ -978,7 +977,7 @@
     },
     {
       "id": "VER-DAT-003-028",
-      "summary": "Every diagnostic a document produces names the definition at fault whenever its id is readable, proved through the route that most easily loses it: a valid fixture is given one unknown root field and several unrelated envelope-stage faults, read through the real category reader, and every diagnostic's ContentId is compared against the ID the document declares.",
+      "summary": "Every diagnostic a document produces names the definition at fault whenever its id is readable, proved through the route that most easily loses it: a valid fixture is given one unknown root field and several unrelated envelope-stage faults, read through the real category reader, and every diagnostic's ContentId is compared against the ID the document declares. Route covered: every diagnostic a category read produces for a document whose id is a string matching its category's grammar. Route not covered: a document the strict codec cannot scan at all, where no id has been read and every diagnostic is a codec diagnostic.",
       "task": "TASK-DAT-003-001",
       "requirements": [
         "TR-DAT-006"
@@ -1042,7 +1041,7 @@
     },
     {
       "id": "VER-DAT-003-030",
-      "summary": "A root-level unknown field on a category document is reported exactly once and by the layer that names the kind, compared by counting the diagnostics at that one pointer after reading a valid fixture given one extra root property, and again with three, so the rule cannot be satisfied by a fix keyed to a single document's shape.",
+      "summary": "A root-level unknown field on a category document is reported exactly once and by the layer that names the kind, compared by counting the diagnostics at that one pointer after reading a valid fixture given one extra root property, and again with three, so the rule cannot be satisfied by a fix keyed to a single document's shape. Route covered: unknown properties at the document root, under a category field table. Route not covered: unknown properties at any nested depth, which only ever had one reporter and are held to the same single-report rule by the same fixture.",
       "task": "TASK-DAT-003-001",
       "requirements": [
         "TR-DAT-002",
@@ -1076,7 +1075,7 @@
     },
     {
       "id": "VER-DAT-003-031",
-      "summary": "The over-suppression control for VER-DAT-003-030: an envelope read with no category field table behind it must still reject an unknown root field, so the deduplication cannot be satisfied by deleting the envelope's check. The same document is read by both routes and the two constraint messages are compared, one naming the envelope and one naming the kind.",
+      "summary": "The over-suppression control for VER-DAT-003-030: an envelope read with no category field table behind it must still reject an unknown root field, so the deduplication cannot be satisfied by deleting the envelope's check. The same document is read by both routes and the two constraint messages are compared, one naming the envelope and one naming the kind. Route covered: an envelope read constructed without category field names. Route not covered: whether the two layers agree on which properties are unknown, which is the field tables' own business and is asserted by the schema-agreement suites.",
       "task": "TASK-DAT-003-001",
       "requirements": [
         "TR-DAT-002",
@@ -1108,7 +1107,7 @@
     },
     {
       "id": "VER-DAT-003-032",
-      "summary": "A dependent semantic check whose operand the field table has already reported stays silent, and the structural diagnostic at that operand's own pointer is still there. Twenty-one checks are each routed through the same valid fixture with the operand removed, and the diagnostics are matched by code and pointer so a suppression that swallowed both halves fails.",
+      "summary": "A dependent semantic check whose operand the field table has already reported stays silent, and the structural diagnostic at that operand's own pointer is still there. Twenty-one checks are each routed through the same valid fixture with the operand removed, and the diagnostics are matched by code and pointer so a suppression that swallowed both halves fails. Route covered: the twenty-one dependent checks the suppression names, each with the operands it reads written down beside it. Route not covered: a semantic check not in that table, which is unguarded by construction because nothing can infer the operands a check reads.",
       "task": "TASK-DAT-003-001",
       "requirements": [
         "TR-DAT-004",
@@ -1149,7 +1148,7 @@
     },
     {
       "id": "VER-DAT-003-033",
-      "summary": "The control that makes VER-DAT-003-032 a suppression rather than a weakening: each of the same twenty-one checks is routed through the same fixture a second time, with every operand present and the rule genuinely broken, and must still report. The variant is also compared against the structural codes to prove it left the operand readable.",
+      "summary": "The control that makes VER-DAT-003-032 a suppression rather than a weakening: each of the same twenty-one checks is routed through the same fixture a second time, with every operand present and the rule genuinely broken, and must still report. The variant is also compared against the structural codes to prove it left the operand readable. Route covered: the same twenty-one checks, one violating variant each. Route not covered: every other way each rule can be broken, which is the invalid fixture corpus's job and not this control's.",
       "task": "TASK-DAT-003-001",
       "requirements": [
         "TR-DAT-004",

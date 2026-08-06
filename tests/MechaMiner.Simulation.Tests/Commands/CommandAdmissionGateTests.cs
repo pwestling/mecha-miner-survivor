@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using MechaMiner.Simulation.Commands;
+using MechaMiner.Simulation.Events;
+using MechaMiner.Simulation.Runtime;
 using MechaMiner.Simulation.Time;
 using MechaMiner.Tests.Support;
 using NUnit.Framework;
@@ -541,5 +543,122 @@ internal sealed class CommandAdmissionGateTests
         // Reading past the set, or before it, is refused.
         Expect.Throws<ArgumentOutOfRangeException>(() => single.SequenceAt(1));
         Expect.Throws<ArgumentOutOfRangeException>(() => single.IntentAt(-1));
+    }
+
+    /// <summary>
+    /// Verification: supports <c>VER-SIM-004-006</c>.
+    ///
+    /// The five refusals a caller outside this assembly can actually reach are typed, say which rule they
+    /// enforce, and leave the gate's authoritative state byte-identical.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Each of these is a documented guard on a public member with no test of its own, which is a different
+    /// gap from an unreachable one: nothing about them is hard to reach, so nothing but the absence of a test
+    /// explains their absence from the evidence. They are asserted together because each is one call and one
+    /// refusal, and grouping them keeps the whole-state comparison around all five.
+    /// </para>
+    /// <para>
+    /// <see cref="CommandAdmissionGate.BeginTick(SimulationTick)"/>'s frozen-tick guard is the load-bearing
+    /// one: doc 10 § System phase ordering admits once per tick, in phase 1, and
+    /// <c>VER-SIM-004-006</c>'s "no later phase can alter or append to that tick's admitted set" rests on a
+    /// freeze that admission cannot reopen. Its still-open sibling is the other half of "once per tick".
+    /// </para>
+    /// </remarks>
+    [Test]
+    public void TheGatesReachableRefusalsAreTypedAndChangeNothing()
+    {
+        CommandFixture fixture = new();
+        CommandAdmissionGate gate = fixture.Gate;
+
+        gate.BeginTick(SimulationTick.Zero);
+        gate.TryAdmit(CommandFixture.Envelope(0, 0, 1.0, 0.0), out CommandRejection _);
+        gate.FreezeTick();
+
+        // The still-open refusal is asserted while a window is open, because it is the check that runs
+        // first; the frozen-tick refusal below is only reachable with the window closed, which is itself
+        // the ordering VER-SIM-004-006 depends on.
+        gate.BeginTick(new SimulationTick(1));
+        InvalidOperationException secondWindow = Expect.Throws<InvalidOperationException>(
+            () => gate.BeginTick(new SimulationTick(2)));
+        gate.FreezeTick();
+
+        string before = gate.RenderAuthoritative();
+
+        InvalidOperationException reopenedFrozenTick = Expect.Throws<InvalidOperationException>(
+            () => gate.BeginTick(SimulationTick.Zero));
+        InvalidOperationException nothingToFreeze = Expect.Throws<InvalidOperationException>(
+            () => gate.FreezeTick());
+        ArgumentException duplicateAction = Expect.Throws<ArgumentException>(
+            () => gate.RegisterTransactionAction(
+                CommandFixture.InstallActionId,
+                fixture.ItemInstalled,
+                requiresConfirmation: false,
+                domainValidator: _ => true));
+        ArgumentOutOfRangeException undefinedReason = Expect.Throws<ArgumentOutOfRangeException>(
+            () => gate.RejectionCount((CommandRejectionReason)(-1)));
+        ArgumentException defaultedRequest = Expect.Throws<ArgumentException>(
+            () => gate.Apply(
+                default,
+                PauseReasonSet.Of(PauseReason.GeneralPause),
+                fixture.StageReplacementState,
+                fixture.Publisher,
+                fixture.DomainEvents,
+                fixture.PresentationEvents,
+                PresentationCoalescingPolicy.Verbatim));
+
+        string after = gate.RenderAuthoritative();
+
+        CommandContractAssertions.NothingAuthoritativeChanged(
+            "five refused calls on the gate",
+            before,
+            after);
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                reopenedFrozenTick.Message,
+                Does.Contain("was already frozen"),
+                "a frozen tick's admitted set is final, so admission cannot reopen for it: this is what "
+                    + "makes the freeze final rather than conventional");
+            Assert.That(
+                secondWindow.Message,
+                Does.Contain("is still open"),
+                "and a second window while one is open would be a second phase 1 for the same tick");
+            Assert.That(
+                nothingToFreeze.Message,
+                Does.Contain("no admission window is open"),
+                "freezing without a window would produce an admitted set for a tick that had no phase 1");
+            Assert.That(
+                duplicateAction.ParamName,
+                Is.EqualTo("actionId"),
+                "one rule per action identity, or the applied outcome would depend on registration order");
+            Assert.That(
+                undefinedReason.ParamName,
+                Is.EqualTo("reason"),
+                "an undefined reason has no counter, and answering zero for it would report a refusal "
+                    + "category that does not exist");
+            Assert.That(
+                defaultedRequest.ParamName,
+                Is.EqualTo("request"),
+                "a defaulted request names no run and no action, so it is refused before the run fence is "
+                    + "even consulted");
+            Assert.That(
+                gate.IsAdmissionOpen,
+                Is.False,
+                "no window was opened by any of the refused calls");
+            Assert.That(
+                gate.LastFrozenTickIndex,
+                Is.EqualTo(1L),
+                "and the last frozen tick is still the one the run actually froze");
+            Assert.That(
+                gate.RegisteredTransactionActionCount,
+                Is.EqualTo(2),
+                "the refused registration added nothing");
+        });
+
+        // The contrast: a tick the run has not passed still opens, so the frozen-tick refusal was about the
+        // tick being frozen and not about the gate having stopped admitting.
+        Expect.DoesNotThrow(() => gate.BeginTick(new SimulationTick(2)));
     }
 }

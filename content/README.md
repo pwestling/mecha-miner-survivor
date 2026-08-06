@@ -174,13 +174,17 @@ rule:
   `"MCH-01"`, `"BOSS-02"`, `"UTL-C2"`, `"PU-S04"`, `"REL-07"`, `"UNL-03"`, `"WAV-01"`, `"MGC-01"`, and
   the resource letters `"A"`–`"F"` are transcribed verbatim. `docs/technical/40-content-data-and-validation.md:69`
   makes this explicit: "IDs are case-sensitive ASCII tokens ... and never localized."
-- **A value token this tree *mints* is lower-kebab-case.** Measured over `content/`, the minted value
-  tokens number 38 across five token spaces — `inventory_scope` (`run-local`, `cross-run`),
-  `pool_availability`, `site_class`, `value_kind`, and the two resource `id`s `common-ore` and
-  `hyper-gold`. Eight camelCase tokens were the only exceptions and are now converted
-  (`content/transcription-notes.md`, Ruling 39); the scan for a camelCase string leaf under
-  `content/` returns zero. This is a rule about **values**, not property names — the bullet above
-  governs a token *transcribed* from a document, which keeps its exact case whatever that case is.
+- **Most value tokens this tree mints are lower-kebab-case, and eight camelCase tokens are a known
+  unresolved exception.** Measured over every string leaf of every `*.json` under `content/`:
+  **37 kebab-case value tokens across five token spaces** — `inventory_scope` (`run-local`,
+  `cross-run`), `pool_availability`, `site_class`, `value_kind`, and the two resource `id`s
+  `common-ore` and `hyper-gold` — against **12 occurrences of 8 camelCase tokens across four spaces**
+  (`kind` on `UNL-01`…`UNL-06`, `snapshot_at_creation` on `EN-06`, `unchanged_stats` on `W-AB`,
+  `clone_inherits_current` on `W-AE`). **The camelCase eight are deliberately left as they are**
+  (`content/transcription-notes.md`, Ruling 39): whether they were transcribed from a document — in
+  which case the bullet above protects them — or minted here, has not been established, and the
+  schema stream has not yet fixed the token grammar a converted value would have to satisfy. This
+  bullet describes **values**, not property names.
 - **Units live in key-name suffixes**, per
   `docs/technical/40-content-data-and-validation.md:94` (`_m`, `_m_per_s`, `_seconds`, `_per_second`,
   `_hull`, `_degrees`, `_fraction`, `_count`): `movement_speed_m_per_s`,

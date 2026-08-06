@@ -141,8 +141,10 @@ one-group difference is two `EN-06` groups that share a target section and colla
 under a prefix that would then mis-attribute a third field, so they were kept separate.
 Six of the 65 — the `UNL-01`…`UNL-06` `rules[]` entries — were already correct on `master`,
 so **59 new scoped elements across 31 files** were added and no existing citation was
-deleted. Measured before and after: **10 of 248 → 248 of 248** covered by a citation naming
-a section that contains them.
+deleted. Measured before and after under §12's reading: **6 of 248 → 248 of 248** covered
+by a citation naming a section that contains them (247 `exact` plus one match under
+R7a-initial-case, an adopted rule). The 6 are the `UNL-0*` `rules[]` entries and agree with
+the artifact's stored `verdict_on_this_tree` on `master`.
 
 **Still open:** the 21 anchors to add for the `external_numerics[].quote` values (the scoped
 section was found for every one of the 21, and each then matched with zero normalization
@@ -438,7 +440,7 @@ field rather than to except it from a declaration.
 
 | # | Open item | Size | Owner |
 | --: | --- | --- | --- |
-| 1 | ~~**Re-point the 248 wrong-citation quotations.**~~ **Done** — 59 new scoped `source_refs` elements across 31 files (`content/transcription-notes.md`, Ruling 36); enumeration gave 65 groups across 37 files, of which 6 were already correct on `master`. Coverage went 10/248 → 248/248. Item 2 still blocks turning the check on as a hard failure | 31 files | content/integration |
+| 1 | ~~**Re-point the 248 wrong-citation quotations.**~~ **Done** — 59 new scoped `source_refs` elements across 31 files (`content/transcription-notes.md`, Ruling 36); enumeration gave 65 groups across 37 files, of which 6 were already correct on `master`. Coverage went 6/248 → 248/248. Item 2 still blocks turning the check on as a hard failure | 31 files | content/integration |
 | 2 | **Add the 21 missing anchors** on `external_numerics[].quote`, after which the highest-confidence quotation field in the tree becomes checkable | 21 refs | content/integration |
 | 3 | **Fix the 9 MIXED-USE field names**, and rename `behavior_kind` in one of its uses regardless (§10) | 9 names | schema |
 | 4 | **Rename `maximum_effect.text` on the 13 `PU-*` files** — bare numeric tokens under a name that promises prose | 13 files | schema |

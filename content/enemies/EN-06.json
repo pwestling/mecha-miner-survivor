@@ -104,8 +104,8 @@
         "speed",
         "damage",
         "lifetime",
-        "terrain-collision",
-        "no-homing"
+        "terrainCollision",
+        "noHoming"
       ]
     },
     "resonance_interactions": {

@@ -2168,13 +2168,21 @@ R3-markup, R7a-initial-case, R8-period, and nothing else. Among those, preferenc
 the file already cites, then to the deepest heading level, then to the smallest span. All 248 had at
 least one hit under the adopted rules; none needed a fifth rule.
 
-**Proof, measured rather than asserted.** Before this pass, 10 of the 248 were covered by a citation
-naming a section that contains them; after it, **248 of 248**. The test uses the audit's own reading
-from §12 — disjunctive over the *equally most specific* covering elements, where a file-level
+**Proof, measured rather than asserted.** Before this pass, **6 of the 248** were covered by a
+citation naming a section that contains them — the six `UNL-0*` `rules[]` entries — and after it,
+**248 of 248** (247 `exact`, and `EN-06 :: specialist_attack.hard_control_interaction` under
+R7a-initial-case, which is one of the four adopted rules, not a fifth). The test uses the audit's own
+reading from §12 — disjunctive over the *equally most specific* covering elements, where a file-level
 citation has specificity 0 and a scope prefix's specificity is its segment count. That qualifier is
 load-bearing and was pinned down by disagreement rather than assumed: checking every covering element
 instead makes the four `BOSS-0*` `persistence.reentry.behavior` records read as matches on the tree
 the artifact was measured against, and the artifact says they are not.
+
+**An earlier revision of this ruling said "10 of the 248", and that figure was wrong.** 10 is
+6 + those same four `BOSS-0*` records — i.e. it was measured under the all-covering-elements reading
+that this very paragraph rejects. Under the adopted reading, and per the artifact's own stored
+`verdict_on_this_tree` on `master` (`no-match` 371 / `exact` 7, of which 6 fall in the 248 and 1 —
+`REL-09 :: pause_behavior.rule` — falls in the 130 located nowhere), the before-figure is **6**.
 
 #### Ruling 37 — `verdict_on_this_tree` is re-derived by the checker, not stored prose
 
@@ -2230,32 +2238,47 @@ prose contradicted by the artifact.
 `FORMULA-01` does not match A12's weapons selector `^W-[A-F]{2}$`, so the file remains the weapons
 directory's one aggregate and the row still reads 15 items + 1 aggregate.
 
-#### Ruling 39 — eight camelCase value tokens become lower-kebab-case
+#### Ruling 39 — the eight camelCase value tokens are measured and left alone, pending a provenance answer
 
-Property names in this tree are `snake_case`; **value** tokens are lower-kebab-case. Measured over
-`content/`, kebab-case value tokens occur **38 times across five token spaces** — `id`
-(`common-ore`, `hyper-gold`), `inventory_scope`, `pool_availability`, `site_class`, `value_kind` —
-against camelCase's **12 occurrences of 8 distinct tokens across four spaces**. (The brief for this
-pass said "six token spaces … against camelCase twice"; the 38 reproduces, the space counts do not,
-and the measured figures are recorded here rather than the quoted ones.)
+An earlier revision of this pass converted eight camelCase **value** tokens to lower-kebab-case, 12
+occurrences across 9 files. **That conversion has been removed and the original camelCase strings
+restored.** The measurement it rested on stands and is recorded here; the change does not.
 
-The eight were found by scanning every string leaf under `content/` for the camelCase shape rather
-than by trusting a list, and the scan now returns zero:
+Measured over every string leaf of every `*.json` under `content/`, kebab-case value tokens occur
+**37 times across five token spaces** — `id` (`common-ore`, `hyper-gold`), `inventory_scope`,
+`pool_availability`, `site_class`, `value_kind` — against camelCase's **12 occurrences of 8 distinct
+tokens across four spaces**. (The brief for the earlier revision said "six token spaces … against
+camelCase twice"; neither figure reproduces. That revision's own prose said 38 kebab occurrences;
+enumerating them gives **37**, and the enumeration is in `content/README.md` under
+"Property names are `snake_case`; values keep their exact case".)
 
-| was | is | where |
-| --- | --- | --- |
-| `relicCachePoolEntry` | `relic-cache-pool-entry` | `UNL-02`…`UNL-06` `unlocks.kind` (5) |
-| `utilityBlueprints` | `utility-blueprints` | `UNL-01` `unlocks.kind` |
-| `terrainCollision` | `terrain-collision` | `EN-06` `specialist_attack.projectile.snapshot_at_creation[3]` |
-| `noHoming` | `no-homing` | `EN-06` `specialist_attack.projectile.snapshot_at_creation[4]` |
-| `beamWidth` | `beam-width` | `W-AB-unbounded-bore` `effects.unchanged_stats[1]` |
-| `projectileSpeed` | `projectile-speed` | `W-AB-unbounded-bore` `effects.unchanged_stats[4]` |
-| `attackRate` | `attack-rate` | `W-AE-replicator-swarm` `effects.clone_inherits_current[1]` |
-| `operationalRange` | `operational-range` | `W-AE-replicator-swarm` `effects.clone_inherits_current[2]` |
+The eight, found by scanning for the camelCase shape rather than by trusting a list:
 
-None of the eight is referenced from `docs/`, `src/` or elsewhere in `content/`, so the rename has no
-other call site. The resource IDs, `canonical_letter` and `recipe_pair` are deliberately untouched:
-an `RSC-01`–`08` migration is pending and must land as one pass.
+| token | occurrences | where |
+| --- | --: | --- |
+| `relicCachePoolEntry` | 5 | `UNL-02`…`UNL-06` `unlocks.kind` |
+| `utilityBlueprints` | 1 | `UNL-01` `unlocks.kind` |
+| `terrainCollision` | 1 | `EN-06` `specialist_attack.projectile.snapshot_at_creation[3]` |
+| `noHoming` | 1 | `EN-06` `specialist_attack.projectile.snapshot_at_creation[4]` |
+| `beamWidth` | 1 | `W-AB-unbounded-bore` `effects.unchanged_stats[1]` |
+| `projectileSpeed` | 1 | `W-AB-unbounded-bore` `effects.unchanged_stats[4]` |
+| `attackRate` | 1 | `W-AE-replicator-swarm` `effects.clone_inherits_current[1]` |
+| `operationalRange` | 1 | `W-AE-replicator-swarm` `effects.clone_inherits_current[2]` |
+
+**Why nothing is converted.** The argument for converting was that these are minted tokens that
+missed a convention, resting on the record above that a transcription pass re-cased property *names*
+to `snake_case` and left values alone. Read literally, that record says stable ID, enum and kind
+tokens **in values** keep their exact case — which protects these eight as readily as it marks them
+as residue. Nobody has established which they are: none of the eight appears in `docs/`, `src/`, or
+elsewhere in `content/`, so there is no call site to settle it either way, and the absence of a
+document occurrence is equally consistent with both stories. The one piece of evidence either way is
+suggestive rather than decisive — many per-definition notes below record "Field names are camelCase
+per the CAT-stream transcription convention", so the source these files came from was camelCase-native
+for *names*, which makes camelCase-native *values* plausible without establishing it. Meanwhile the schema stream has not
+fixed the token grammar a converted value would have to satisfy. Converting twice would be worse
+than converting once, late, so these wait on a provenance answer and a grammar. The resource IDs,
+`canonical_letter` and `recipe_pair` are untouched for the separate reason that an `RSC-01`–`08`
+migration is pending and must land as one pass.
 
 #### Ruling 40 — the repo-`path:line`-in-a-value item is already closed, and the count is recorded
 
@@ -2278,21 +2301,51 @@ fields of the measurement artifact, where a repository path is the subject rathe
 
 #### Value-preservation record — eighth pass
 
-**Range: `origin/master` (`4eda0c5`) → this pass's commit, `content/**/*.json` only, over all 41
-files touched.** Measured, not carried forward.
+**Two multisets, over two different value types, with their scopes named.** This pass changes
+**strings** and no numbers, so the numeric multiset — the one every earlier pass reported — is not
+the proof that covers this diff. Both were run; neither stands in for the other.
 
-- **Numeric leaves: 548 → 548.** Value multiset difference: **removed `{}`, added `{}`**. **No
-  gameplay number changed in this pass**, in either direction.
-- **String leaves: 1,605 → 1,666**, +61. Every one of the 61 is accounted for: 59 new
-  `source_refs` elements (Ruling 36), and `weapon.FORMULA-01.summary` plus the `summary_key` field
-  that points at it (Ruling 38).
-- **14 `(file, JSON path)` pairs changed value**: the 12 camelCase → kebab-case tokens (Ruling 39),
-  plus `stat-price-formula.json :: id` and `:: name_key` (Ruling 38). No other pair moved.
-- **1 pair removed, 62 added.** The removal is `en.json :: weapon.weapon-stat-price-formula.name`,
-  re-added at `weapon.FORMULA-01.name` with the string unchanged. The 62 are the 59 citations, the
-  two new localization entries, and the new `summary_key`.
+**Range for both: `origin/master` (`4eda0c5`) → this pass's commit.** Measured, not carried forward.
+Each was run at two scopes: the **33 touched `content/**/*.json` files**, and, so that nothing can
+hide outside the touched set, **all 139 `*.json` files under `content/`**. Both scopes give the same
+difference.
+
+- **Numeric multiset — unchanged. Scope: numeric leaves (`int`/`float`, `bool` excluded).**
+  508 → 508 over the 33 touched files, 2,303 → 2,303 over all 139. Value multiset difference:
+  **removed `{}`, added `{}`** at both scopes. **No gameplay number changed in this pass.** This
+  proof says nothing about the strings.
+- **String multiset — changed, and every difference was enumerated before it was measured. Scope:
+  string leaves.** 1,366 → 1,427 over the 33 touched files, 5,201 → 5,262 over all 139; both are
+  **+61 net = 63 added, 2 removed**, and the 63/2 sets are identical at both scopes. The expected
+  difference was written down first — from the frozen artifact, not from the diff — and the measured
+  set equals it exactly:
+  - **59 added:** one new scoped `source_refs` element per `(file, scope)` group. The 59 groups were
+    re-derived independently by grouping the 248 located-somewhere records of
+    `quote_mismatch_evidence.json` **as it stands on `master`** by `(file, pointer)` → 65 groups
+    across 37 files, less the 6 `UNL-0*` `rules` groups already stored `exact` → **59 groups across
+    31 files covering 242 records**. Measured: 59 new elements, one per group, `(file, scope)`
+    multiset equal to the derived one, each of the form `<scope>: <DOC-ID>#<anchor>` and each at a
+    `source_refs[...]` path. *Anchor* correctness is a separate proof, re-derived against `docs/` by
+    `check_quote_mismatch_evidence.py`.
+  - **4 added, 2 removed:** `FORMULA-01`, `weapon.FORMULA-01.name`, `weapon.FORMULA-01.summary` and
+    the summary string itself, against `weapon-stat-price-formula` and
+    `weapon.weapon-stat-price-formula.name` (Ruling 38).
+  - **Nothing else.** No other string was added, removed, or changed at either scope.
+- **2 `(file, JSON path)` pairs changed value**, both in `stat-price-formula.json`: `id` and
+  `name_key` (Ruling 38). No other pair moved. The earlier revision of this pass had 14, the extra 12
+  being the camelCase token conversion that Ruling 39 has since removed.
+- **1 pair removed, 62 added.** The single removal is `en.json ::
+  weapon.weapon-stat-price-formula.name`, re-added at `weapon.FORMULA-01.name` **with the string
+  value unchanged** — a key rename, which is why `Weapon common-ore stat upgrade price` appears in
+  neither direction of the string multiset and its absence there is asserted rather than assumed.
 - **`null` count: 0 → 0**, still with no declared exceptions.
 - **No citation was deleted.** Every `source_refs` element present on `master` is present here.
+- **Outside `content/`, reported not asserted.** `quote_mismatch_evidence.json` is a measurement
+  artifact, not a value store, and its string multiset does change: 242 `no-match` verdicts become
+  241 `exact` plus 1 `match-under-a-named-rule` (its string-leaf total is unchanged at 5,176, and its
+  numeric leaves go 6 → 7 as the verdict summary gains a third category). That is the recomputation
+  Ruling 37 exists to perform. The three Markdown files under `content/` are prose and are excluded
+  from both multisets.
 
 ### Per-definition notes, by catalog
 

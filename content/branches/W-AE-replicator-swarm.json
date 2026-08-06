@@ -34,8 +34,8 @@
     "clone_lifetime_seconds": 8.0,
     "clone_inherits_current": [
       "damage",
-      "attack-rate",
-      "operational-range"
+      "attackRate",
+      "operationalRange"
     ],
     "clones_can_create_clones": false,
     "maximum_temporary_drones": 6,

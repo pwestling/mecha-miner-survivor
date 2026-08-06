@@ -33,7 +33,7 @@
   "purchasable_during_run": false,
   "grants_account_access_only": true,
   "unlocks": {
-    "kind": "utility-blueprints",
+    "kind": "utilityBlueprints",
     "count": 6,
     "grants_blueprints_only": true,
     "utilities": [

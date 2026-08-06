@@ -33,7 +33,7 @@
   "purchasable_during_run": false,
   "grants_account_access_only": true,
   "unlocks": {
-    "kind": "relic-cache-pool-entry",
+    "kind": "relicCachePoolEntry",
     "count": 1,
     "relic": "Dead-Reckoning Array",
     "relic_id": "REL-03",

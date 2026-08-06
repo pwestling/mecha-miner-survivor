@@ -308,9 +308,9 @@ internal sealed class PackedEntityStoreTests
         int partitionOffset = PickupPartitionOffset();
 
         List<EntityOrderingCases.OrderedRecord> recycled =
-            EntityOrderingCases.RetainedRecycledSlot(RunSession, partitionOffset);
+            EntityOrderingCases.RetainedRecycledSlot(NewAllocator());
         List<EntityOrderingCases.OrderedRecord> tied =
-            EntityOrderingCases.RetainedTiedPriorityKeys(RunSession, partitionOffset);
+            EntityOrderingCases.RetainedTiedPriorityKeys(NewAllocator());
 
         AssertRetainedShape(
             "retained-recycled-slot",

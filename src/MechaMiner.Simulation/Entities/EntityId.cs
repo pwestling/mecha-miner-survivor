@@ -27,12 +27,22 @@ namespace MechaMiner.Simulation.Entities;
 /// value, which must differ per run for the fence to mean anything.
 /// </para>
 /// <para>
-/// This type is part of the public contract surface because
+/// This <em>type</em> is part of the public contract surface because
 /// <c>docs/technical/115-component-contract-and-schema-registry.md</c> § Cross-boundary
 /// contract registry names <c>CMP-PRE-001</c>, <c>CMP-UI-001</c>, and
 /// <c>CMP-AUD-001</c> as consumers of <c>CTR-SIM-003</c>, and those live in
 /// <c>game/</c>. A snapshot or event batch that carries entity identities cannot be
 /// consumed from another assembly if the identity type is internal.
+/// </para>
+/// <para>
+/// That argument reaches the type and its readable members, and stops there: those
+/// consumers read an identity, compare it, and map it to a presentation handle. None of
+/// them mints one, and none of them could, because minting is what the run's allocator
+/// does and only it knows which slots and generations are live. <see cref="Create"/> is
+/// therefore internal, as is <see cref="ReservedPlayerIn"/>. Keeping a factory public on
+/// the strength of a consumer that only reads would let another assembly manufacture an
+/// identity that resolves to nothing, which is the failure the run-session fence and the
+/// generation exist to prevent.
 /// </para>
 /// <para>
 /// This is not a content ID and is never persisted between runs (doc 20 § Entity
@@ -136,8 +146,14 @@ public readonly struct EntityId : IEquatable<EntityId>
     /// Validation is not defensive politeness: doc 20 § Entity identity requires
     /// invalid references to fail closed, and a constructor that accepts a zero
     /// generation would let a defaulted field masquerade as an identity.
+    ///
+    /// Internal: <see cref="EntityIdAllocator"/> is the only thing that may issue an
+    /// identity, because it is the only thing that knows which slots and generations are
+    /// live. A caller outside this assembly that could mint one could mint a well-formed
+    /// identity naming nothing, and doc 20 § Entity identity's uniqueness scope would
+    /// then rest on convention rather than on construction.
     /// </remarks>
-    public static EntityId Create(ulong runSession, int index, uint generation)
+    internal static EntityId Create(ulong runSession, int index, uint generation)
     {
         if (runSession == 0)
         {
@@ -176,8 +192,15 @@ public readonly struct EntityId : IEquatable<EntityId>
     /// <remarks>
     /// The reserved slot and generation are the same in every run; only the fence
     /// differs. doc 20 § Entity identity requires both facts at once.
+    ///
+    /// Internal, and currently uncalled. <see cref="EntityIdAllocator"/> allocates the
+    /// player through the ordinary path at construction and exposes the result as
+    /// <c>PlayerId</c>, so a second route to the same identity would let a caller name
+    /// the reserved slot without the allocator having reserved it. It survives rather than
+    /// being deleted because it is the constructive statement of what the reserved identity
+    /// is, of which <see cref="IsReservedPlayer"/> is the predicate half.
     /// </remarks>
-    public static EntityId ReservedPlayerIn(ulong runSession)
+    internal static EntityId ReservedPlayerIn(ulong runSession)
     {
         return Create(runSession, ReservedPlayerIndex, FirstGeneration);
     }

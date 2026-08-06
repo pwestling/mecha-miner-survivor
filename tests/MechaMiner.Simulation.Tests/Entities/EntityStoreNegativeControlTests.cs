@@ -88,7 +88,7 @@ internal sealed class EntityStoreNegativeControlTests
 
         AssertCaseDetection(
             "retained-recycled-slot",
-            EntityOrderingCases.RetainedRecycledSlot(RunSession, partitionOffset),
+            EntityOrderingCases.RetainedRecycledSlot(NewAllocator()),
             partitionOffset,
             expectedDetections:
             [
@@ -99,7 +99,7 @@ internal sealed class EntityStoreNegativeControlTests
 
         AssertCaseDetection(
             "retained-tied-priority-keys",
-            EntityOrderingCases.RetainedTiedPriorityKeys(RunSession, partitionOffset),
+            EntityOrderingCases.RetainedTiedPriorityKeys(NewAllocator()),
             partitionOffset,
             expectedDetections:
             [
@@ -214,8 +214,7 @@ internal sealed class EntityStoreNegativeControlTests
     private static void AssertGenerationIgnoringStoreFailsTheStaleReferenceGate()
     {
         GenerationIgnoringStore broken = new();
-        EntityId stale = EntityId.Create(RunSession, index: 4, generation: 1);
-        EntityId live = EntityId.Create(RunSession, index: 4, generation: 2);
+        IssueStaleAndLivePair(out EntityId stale, out EntityId live);
         broken.Place(live);
 
         MultipleAssertException failure = Expect.Throws<MultipleAssertException>(
@@ -239,8 +238,7 @@ internal sealed class EntityStoreNegativeControlTests
     private static void AssertUncountedResolutionFailsTheDiagnosticGate()
     {
         GenerationIgnoringStore broken = new(honourGenerations: true, countStaleReferences: false);
-        EntityId stale = EntityId.Create(RunSession, index: 4, generation: 1);
-        EntityId live = EntityId.Create(RunSession, index: 4, generation: 2);
+        IssueStaleAndLivePair(out EntityId stale, out EntityId live);
         broken.Place(live);
 
         MultipleAssertException failure = Expect.Throws<MultipleAssertException>(
@@ -329,6 +327,40 @@ internal sealed class EntityStoreNegativeControlTests
             recycled,
             id => store.TryGet(id, out long _),
             () => store.Diagnostics.StaleReferenceResolutions));
+    }
+
+    /// <summary>
+    /// Issues a stale identity and the live identity that recycled its slot, by admit, remove,
+    /// admit on a real store.
+    /// </summary>
+    /// <param name="stale">The identity whose slot was recycled underneath it.</param>
+    /// <param name="live">The identity that now occupies that slot.</param>
+    /// <remarks>
+    /// The pair comes from the allocator through the store, the same route
+    /// <see cref="AssertTheRealStorePassesBothGates"/> uses, rather than from a factory. That is not
+    /// a stylistic preference: the gate under test is about an identity a caller could genuinely be
+    /// holding after a slot was recycled, and a pair whose index and generation were chosen by hand
+    /// would demonstrate only that the assertion reads two fields. It is also why
+    /// <c>EntityId.Create</c> can be internal to the simulation assembly: nothing outside it needs
+    /// to mint an identity, so nothing outside it should be able to.
+    /// </remarks>
+    private static void IssueStaleAndLivePair(out EntityId stale, out EntityId live)
+    {
+        EntityIdAllocator allocator = NewAllocator();
+        PackedEntityStore<long> store = new(PopulationCategory.Pickup, allocator);
+
+        Assert.That(store.TryAdmit(0L, 1L, out stale), Is.True, "the store must admit the first record");
+        Assert.That(store.TryRemove(stale), Is.True, "the record must be removable");
+        Assert.That(store.TryAdmit(0L, 2L, out live), Is.True, "the freed slot must be reusable");
+
+        Assert.That(
+            live.Index,
+            Is.EqualTo(stale.Index),
+            "the pair must share a storage index, or the generation is not what distinguishes them");
+        Assert.That(
+            live.Generation,
+            Is.Not.EqualTo(stale.Generation),
+            "and it must differ in generation, or there is no stale reference to fail closed on");
     }
 
     private static EntityIdAllocator NewAllocator()

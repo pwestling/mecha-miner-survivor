@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using MechaMiner.Simulation.Entities;
+using NUnit.Framework;
 
 namespace MechaMiner.Simulation.Tests.Entities;
 
@@ -35,6 +37,15 @@ namespace MechaMiner.Simulation.Tests.Entities;
 /// <b>Run session is held constant everywhere.</b> doc 20 § Entity identity treats the run session as
 /// the scope within which IDs are unique - "IDs are unique only within one run session" - rather than
 /// as something to sort by, so no comparison in this file crosses sessions.
+/// </para>
+/// <para>
+/// <b>Every identity here is issued by a real allocator, through allocate and free.</b> "Not built on a
+/// store" above means the record <em>set</em> is not a snapshot of one live store, because such a
+/// snapshot cannot reach the generation key; it does not mean the identities are hand-built. They are
+/// obtained the way the retained records they model were obtained: allocate a slot, retain the identity,
+/// free the slot, allocate it again. That is what makes these fixtures evidence about identities the
+/// system can actually produce rather than about values that merely have the right shape, and it is why
+/// <c>EntityId.Create</c> is internal to the simulation assembly.
 /// </para>
 /// </remarks>
 internal static class EntityOrderingCases
@@ -92,21 +103,30 @@ internal static class EntityOrderingCases
     /// <summary>
     /// Case 2 - <c>retained-recycled-slot</c>. Generation is the sole discriminator.
     /// </summary>
-    /// <param name="runSession">The run session every record is scoped to.</param>
-    /// <param name="partitionOffset">The Pickup partition's first slot index.</param>
+    /// <param name="allocator">
+    /// An allocator dedicated to this case, whose Pickup partition has issued nothing yet.
+    /// </param>
     /// <remarks>
     /// Slot 4 carries three generations at one priority key, so generation is the only component that
     /// can order them. Slot 2 carries generation 7, higher than any of the three, and still sorts
     /// first: that is the direct proof that storage index precedes generation rather than the reverse.
+    /// Generation 7 is reached by recycling slot 2 six times, which is also the only honest way to hold
+    /// an identity at that generation.
     /// </remarks>
-    internal static List<OrderedRecord> RetainedRecycledSlot(ulong runSession, int partitionOffset)
+    internal static List<OrderedRecord> RetainedRecycledSlot(EntityIdAllocator allocator)
     {
+        List<EntityId> fresh = AllocateFreshPickups(allocator, count: 5);
+        EntityId slotFourFirst = fresh[4];
+        EntityId slotFourSecond = RecycleOnce(allocator, slotFourFirst);
+        EntityId slotFourThird = RecycleOnce(allocator, slotFourSecond);
+        EntityId slotTwo = AdvanceToGeneration(allocator, fresh[2], targetGeneration: 7);
+
         return
         [
-            new OrderedRecord(10L, EntityId.Create(runSession, partitionOffset + 4, 1)),
-            new OrderedRecord(10L, EntityId.Create(runSession, partitionOffset + 4, 3)),
-            new OrderedRecord(10L, EntityId.Create(runSession, partitionOffset + 4, 2)),
-            new OrderedRecord(10L, EntityId.Create(runSession, partitionOffset + 2, 7)),
+            new OrderedRecord(10L, slotFourFirst),
+            new OrderedRecord(10L, slotFourThird),
+            new OrderedRecord(10L, slotFourSecond),
+            new OrderedRecord(10L, slotTwo),
         ];
     }
 
@@ -114,21 +134,24 @@ internal static class EntityOrderingCases
     /// Case 3 - <c>retained-tied-priority-keys</c>. Storage index is the sole discriminator, and the
     /// priority key is shown to lead.
     /// </summary>
-    /// <param name="runSession">The run session every record is scoped to.</param>
-    /// <param name="partitionOffset">The Pickup partition's first slot index.</param>
+    /// <param name="allocator">
+    /// An allocator dedicated to this case, whose Pickup partition has issued nothing yet.
+    /// </param>
     /// <remarks>
     /// All three share generation 4, so generation can decide nothing. Two share priority key 5 and
     /// differ only in storage index. The third has priority key 42 and storage index 3, which falls
     /// between the other two, so it sorts last despite its middle index - which is what makes the
     /// priority key's precedence over the identity observable rather than assumed.
     /// </remarks>
-    internal static List<OrderedRecord> RetainedTiedPriorityKeys(ulong runSession, int partitionOffset)
+    internal static List<OrderedRecord> RetainedTiedPriorityKeys(EntityIdAllocator allocator)
     {
+        List<EntityId> fresh = AllocateFreshPickups(allocator, count: 10);
+
         return
         [
-            new OrderedRecord(5L, EntityId.Create(runSession, partitionOffset + 9, 4)),
-            new OrderedRecord(5L, EntityId.Create(runSession, partitionOffset + 2, 4)),
-            new OrderedRecord(42L, EntityId.Create(runSession, partitionOffset + 3, 4)),
+            new OrderedRecord(5L, AdvanceToGeneration(allocator, fresh[9], targetGeneration: 4)),
+            new OrderedRecord(5L, AdvanceToGeneration(allocator, fresh[2], targetGeneration: 4)),
+            new OrderedRecord(42L, AdvanceToGeneration(allocator, fresh[3], targetGeneration: 4)),
         ];
     }
 
@@ -221,6 +244,94 @@ internal static class EntityOrderingCases
 
         throw new InvalidOperationException(
             "PopulationCategory.Pickup is absent from the canonical category order");
+    }
+
+    /// <summary>
+    /// Allocates <paramref name="count"/> fresh Pickup slots and returns them in issue order, which is
+    /// partition-slot order.
+    /// </summary>
+    /// <param name="allocator">The case's dedicated allocator.</param>
+    /// <param name="count">How many fresh slots to take.</param>
+    /// <remarks>
+    /// The returned list is indexed by partition-relative slot, which is what the case builders name
+    /// their records by. That correspondence is asserted rather than assumed, because it is the one
+    /// thing that would silently move a record to a different slot if fresh allocation ever stopped
+    /// being sequential.
+    /// </remarks>
+    private static List<EntityId> AllocateFreshPickups(EntityIdAllocator allocator, int count)
+    {
+        ArgumentNullException.ThrowIfNull(allocator);
+
+        int partitionOffset = allocator.SlotOffsetFor(PopulationCategory.Pickup);
+        List<EntityId> issued = new(count);
+        for (int slot = 0; slot < count; slot++)
+        {
+            Assert.That(
+                allocator.TryAllocate(PopulationCategory.Pickup, out EntityId id),
+                Is.True,
+                "the Pickup partition must have capacity for slot "
+                    + slot.ToString(CultureInfo.InvariantCulture));
+            Assert.That(
+                id.Index,
+                Is.EqualTo(partitionOffset + slot),
+                "fresh Pickup allocation must be sequential from the partition base, or the case "
+                    + "builders name slots that are not the ones they got");
+            Assert.That(
+                id.Generation,
+                Is.EqualTo(EntityId.FirstGeneration),
+                "a fresh slot must carry the first generation");
+            issued.Add(id);
+        }
+
+        return issued;
+    }
+
+    /// <summary>Frees a slot and takes it again, returning the next generation's identity.</summary>
+    /// <param name="allocator">The case's dedicated allocator.</param>
+    /// <param name="held">The identity currently occupying the slot.</param>
+    /// <remarks>
+    /// The free list is taken last-in-first-out, so freeing exactly one slot and immediately allocating
+    /// returns that same slot. Both facts are asserted, because the whole point of building these
+    /// fixtures through the allocator is that the identities are ones the allocator really issued.
+    /// </remarks>
+    private static EntityId RecycleOnce(EntityIdAllocator allocator, EntityId held)
+    {
+        ArgumentNullException.ThrowIfNull(allocator);
+
+        Assert.That(allocator.TryFree(held), Is.True, "the held identity must name a live slot");
+        Assert.That(
+            allocator.TryAllocate(PopulationCategory.Pickup, out EntityId recycled),
+            Is.True,
+            "the just-freed slot must be reusable");
+        Assert.That(
+            recycled.Index,
+            Is.EqualTo(held.Index),
+            "the freed slot is the only one on the free list, so it must be the one handed back");
+        Assert.That(
+            recycled.Generation,
+            Is.EqualTo(held.Generation + 1),
+            "doc 20 § Entity identity: reusing a slot increments its generation");
+        return recycled;
+    }
+
+    /// <summary>Recycles one slot until it reaches a target generation.</summary>
+    /// <param name="allocator">The case's dedicated allocator.</param>
+    /// <param name="held">The identity currently occupying the slot.</param>
+    /// <param name="targetGeneration">The generation to reach. Must be at least the current one.</param>
+    private static EntityId AdvanceToGeneration(
+        EntityIdAllocator allocator,
+        EntityId held,
+        uint targetGeneration)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(targetGeneration, held.Generation);
+
+        EntityId current = held;
+        while (current.Generation < targetGeneration)
+        {
+            current = RecycleOnce(allocator, current);
+        }
+
+        return current;
     }
 
     private static int CompareDocumented(OrderedRecord left, OrderedRecord right)

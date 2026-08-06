@@ -2994,7 +2994,7 @@ def load_derived_expectation() -> dict:
             f"A29/A31: {rel(DERIVED_EXPECTATION)} is missing. It is the committed prediction of "
             f"exactly which derived values this tree no longer authors, and both rules read their "
             f"scopes and patterns from it. Regenerate it with "
-            f"derive_derived_value_expectations.py."
+            f"derive_derived_value_expectations.py --write."
         )
         return {}
     return json.loads(DERIVED_EXPECTATION.read_text())

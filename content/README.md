@@ -1,12 +1,36 @@
-# `content/` — source gameplay catalog JSON
+# `content/` — prepared gameplay catalog JSON, pending `DAT-006`
 
-This tree holds the initial JSON definitions transcribed from the accepted gameplay design documents
-in `docs/`, per work package **DAT-007** ("Import accepted gameplay catalogs into initial JSON
-definitions", `docs/technical/110-implementation-plan-for-ai-agents.md:216`).
+**This tree does not deliver `DAT-007`.** It holds JSON transcribed by hand from the accepted gameplay
+design documents in `docs/`, prepared *ahead of* work package `DAT-007` ("Import accepted gameplay
+catalogs into initial JSON definitions", `docs/technical/110-implementation-plan-for-ai-agents.md:216`).
+That same line makes `DAT-006` `DAT-007`'s prerequisite; `DAT-006` depends on `DAT-005`, which depends
+on `DAT-002`/`DAT-003`, which depend on `DAT-001` (`docs/technical/110-implementation-plan-for-ai-agents.md:210-215`);
+and `DAT-001` has no implementation in this repository — `src/` contains one stdlib-only Python
+verifier and no codec, schema, registry, or bundle-compiler code. `DAT-007` cannot be Done, so this
+tree cannot be its completion, and `docs/technical/114-autonomous-agent-execution-protocol.md:141`
+admits no data-versus-code exemption.
 
-**Nothing here has been schema-validated.** `content/schemas/` does not exist yet, so no definition in
-this tree has been checked against a structural schema, compiled into a bundle, or hashed. What has
-been checked is described under [What is actually verified today](#what-is-actually-verified-today).
+**The basis for preparing it now** is that same line, quoted verbatim:
+
+> Only Done dependencies satisfy downstream package prerequisites. A task may prepare read-only
+> analysis while waiting, but it must not commit consumer code against Draft or Active contracts.
+
+This tree is that read-only preparation, and nothing more: transcribed source data plus the notes that
+explain each transcription decision. No consumer code is committed here against a `DAT-001`–`DAT-006`
+contract, because none of those contracts exists yet.
+
+**Nothing here is validated, and no schema exists to validate it against.** `content/schemas/` does not
+exist, so no definition in this tree has been checked against a structural schema, compiled into a
+bundle, or hashed. Which domain fields exist, what they are called, and how they nest have never been
+machine-checked against anything. What *has* been checked is a set of local assertions this branch
+declared for itself, described under
+[What is actually verified today](#what-is-actually-verified-today); that is not schema validation and
+must not be reported as it.
+
+**Downstream work must not treat this content as validated until the compiler exists.** Until the
+`DAT-001`–`DAT-006` chain is Done and `generated/content.bundle.json` has been produced from these
+files, no consumer should assume any field name, nesting, or number here will survive. Expect renames,
+re-nesting, and outright rejection of fields at that point.
 
 ## Mandated directory layout
 
@@ -68,10 +92,15 @@ above.
 | `mining-sites/` (4 prose-derived site classes, `SITE-01`–`SITE-04`) | CAT | authored |
 | `encounters/` (1: `standard-encounter-schedule`, `WAV-01`) | CAT | authored |
 | `maps/` (1: `standard-map-generation-contract`, `MGC-01`) | CAT | authored |
-| `localization/` (`en.json`) | localization stream (`DAT-009`, `docs/technical/110-implementation-plan-for-ai-agents.md:218`) | authored |
+| `localization/` (`en.json`) | localization stream (`DAT-009`, `docs/technical/110-implementation-plan-for-ai-agents.md:218`) | authored here, **not** a `DAT-009` delivery |
 | `schemas/` | schema stream (`DAT-001`, `DAT-002`, `DAT-003`) | **not authored here** |
 | `presentation/` | presentation/audio definitions, `SCH-CNT-003` (`docs/technical/115-component-contract-and-schema-registry.md:91`) | **not authored here** |
 | `../generated/` | bundle compiler and report generators (`DAT-006`, `DAT-008`); "Generated files are changed through their generator" (`docs/technical/110-implementation-plan-for-ai-agents.md:92`) | **not authored here** |
+
+**"authored" in that table means the JSON exists and was transcribed by hand.** It does not mean
+validated, compiled, hashed, or delivered, and no row of the table records a completed work package.
+`DAT-007`, `DAT-008`, and `DAT-009` are all undelivered; the `DAT-*` IDs above name the stream that
+will *own* each directory, not work this branch closed.
 
 **138 definition files plus `content/localization/en.json`** — 139 `*.json` files under `content/` in
 total. The two numbers are different things and are stated separately on purpose: the definition count
@@ -177,7 +206,26 @@ rule:
 - **Per-rank values are rank-ordered arrays** (`ranks[0]` is rank 1), variable length: PowerUp rank
   arrays have 1, 3, 4, or 5 entries matching each entry's `maximum`, and `PU-S04` has exactly one rank.
 - **Values are transcribed, not derived.** No value is computed, rounded, or filled in. Where the docs
-  state no fact, the property is `null` and the reason is recorded in `content/transcription-notes.md`.
+  state no fact, the property is `null`. **The reason is recorded in `content/transcription-notes.md`
+  for most of those nulls, but not all of them.** A full inventory of the tree at this revision finds
+  275 null-valued properties in 101 of the 138 definition files (`content/localization/en.json` has
+  none), and 30 of the 275 have no transcription note recording them as a gap: the 20
+  `relics/REL-01`–`REL-10 :: rarity_and_weighting.{rarity_tier,
+  cache_selection_weight}` fields, which no design document and no field list in
+  `docs/technical/40-content-data-and-validation.md:132` supports at all, and ten fields standing for a
+  value the documents leave undecided — `BOSS-01 :: ability.lane_width_m`,
+  `BOSS-02 :: ability.ring_radius_m`, `BOSS-04 :: ability.marker_diameter_m`,
+  `BOSS-03 :: ability.projectile.lifetime_seconds`,
+  `EN-06 :: specialist_attack.projectile.lifetime_seconds`, `REL-06 :: effects.clustering_distance_m`,
+  `REL-08 :: effects.{positional_tolerance_m, heat_build_rate_per_second, heat_vent_rate_per_second}`,
+  and `UTL-R1 :: availability.coverage_role`. For those ten the `null` in the data is the only
+  machine-readable record that the value is undecided, so **omitting the key instead would delete the
+  record**. Five of the ten also survive as prose inside the definition — `BOSS-03` and `EN-06` each
+  carry a sibling `lifetime_description`, and `REL-08 :: rules[5]` ends "Exact positional tolerance and
+  heating and venting rates remain tuning" — and five survive nowhere else at all:
+  `BOSS-01 :: ability.lane_width_m`, `BOSS-02 :: ability.ring_radius_m`,
+  `BOSS-04 :: ability.marker_diameter_m`, `REL-06 :: effects.clustering_distance_m`, and
+  `UTL-R1 :: availability.coverage_role`.
 - **The authoritative source wins over its mirrors.** The Markdown design docs are authoritative; the
   CSVs under `docs/data/` are mirrors (`docs/data/README.md:5,10` — "when values disagree, update the
   data mirror to match the Markdown"). Where a mirror and a doc disagree, the doc value is transcribed
@@ -249,7 +297,9 @@ registers; `content/transcription-notes.md` records what this tree did and why.
 
 `content/schemas/` does not exist and `DAT-001`..`DAT-006` are unimplemented, so **nothing in this tree
 has been validated against a schema, compiled into a bundle, or hashed.** What exists is a standalone
-stdlib-only verifier:
+stdlib-only verifier. **A green run of it is not evidence toward `DAT-007`**: it checks this tree
+against assertions this branch wrote for itself, not against a contract any other package owns, and it
+cannot close a package whose prerequisite is not Done.
 
 ```sh
 python3 src/MechaMiner.Tools/ContentImport/verify_content.py
@@ -341,3 +391,8 @@ What to run once the schemas land, in this order:
 Two classes of blocker survive that sequence: the missing tag vocabulary (`40:86`), and every
 contradiction in section 1 of `content/transcription-notes.md`, which a document owner must decide
 before the numbers here can be called final.
+
+**Until step 5 has actually run, this tree stays prepared material and nothing more.** `DAT-007` is
+claimable only once `DAT-006` is Done and the bundle compiler has accepted these files; a reviewer
+looking for the completion evidence of `DAT-007` will not find it here, and should not accept this
+`README`, the verifier's output, or `content/transcription-notes.md` as a substitute for it.

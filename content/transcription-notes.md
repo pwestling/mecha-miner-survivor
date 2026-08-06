@@ -3,7 +3,14 @@
 **This file is not an `OQ-###` open-question register.** The two registers are
 `docs/open-questions.md` and `docs/technical/open-questions.md`. Nothing here carries or mints
 an OQ ID. This file is the reviewable record of the per-definition transcription notes that
-used to live in a `notes` array inside every JSON definition of the DAT-007 catalog import.
+used to live in a `notes` array inside every JSON definition of the catalog transcription under
+`content/`. **That transcription does not deliver `DAT-007`** — `DAT-007`'s prerequisite `DAT-006` is
+not Done and `DAT-001` has no code, so what is here is material prepared ahead of `DAT-007` under
+`docs/technical/114-autonomous-agent-execution-protocol.md:141` ("A task may prepare read-only
+analysis while waiting"), and it is neither validated nor validatable until `content/schemas/` exists.
+Where a note below says "the DAT-007 catalog" or "the DAT-007 field conventions", it is naming the
+package the work anticipates, not a package this branch closed; note text is reproduced verbatim and
+was not edited to say so.
 `notes` is extraction metadata, no schema will declare it, and unknown fields are errors
 (`docs/technical/40-content-data-and-validation.md:26`, `:90`), so the arrays were deleted from
 all 141 files and their contents moved here verbatim.
@@ -1385,7 +1392,8 @@ one.
 
 ### Integration-owner rulings applied — fifth pass
 
-An adversarial review of the DAT-007 pull request. Six items were raised; **three of the six were
+An adversarial review of the pull request preparing this content ahead of `DAT-007`. Six items were
+raised; **three of the six were
 defects in the *assertions*, not in the data** — a guard that read as covering something and did not.
 The pass is recorded as Rulings 23–27. No authored number changed. One review instruction was
 **declined on evidence** and is recorded as Ruling 23 so the refusal is auditable.

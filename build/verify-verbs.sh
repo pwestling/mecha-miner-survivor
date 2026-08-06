@@ -1,9 +1,21 @@
 #!/usr/bin/env bash
 #
 # Proves the wrapper contract: every one of doc 100's eighteen verbs is registered,
-# implemented verbs behave, unimplemented verbs return a typed nonzero status naming
-# their owning work package, invalid invocations exit 2 with usage, and a
-# deliberately broken environment exits 3.
+# unimplemented verbs return a typed nonzero status naming their owning work package,
+# invalid invocations exit 2 with usage, and a deliberately broken environment exits 3.
+#
+# It does NOT prove that the implemented verbs do their work. Of the eight implemented
+# verbs, only two are ever executed here: doctor (§ 5 via the matrix, and § 6, § 6a,
+# § 7, § 9, § 10) and build (§ 8, on its failure path only - nothing here asserts a
+# successful build). The other six - bootstrap, format, format-check, godot-import,
+# test-fast, test-main - are in SLOW_IMPLEMENTED below and are asserted for registration
+# and classification only. Where each is actually driven: format and format-check by
+# build/verify-format.sh, test-fast by build/verify-test-harness.sh, build's success path
+# by build/verify-configurations.sh § 3. Three verbs are driven by no gate script at all -
+# bootstrap, godot-import, and test-main - and their registry entries (VER-FND-002-005,
+# VER-FND-002-014, VER-FND-003-012) carry a bare command selector rather than a script.
+# Reading this script as the verb suite is the mistake worth naming here, because the
+# matrix lists all eighteen and looks like one.
 #
 # Exit class 3 has two halves, and both are asserted separately, because asserting
 # only one is how a misclassification survived. § 6 covers the *absent* half (a pinned

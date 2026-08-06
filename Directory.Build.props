@@ -127,9 +127,12 @@
   </PropertyGroup>
 
   <!--
-    C# project standards (doc 100 § C# project standards). Each of these is
-    proved by a deliberately invalid fixture under build/policy-fixtures/,
-    executed by build/verify-policies.sh.
+    C# project standards (doc 100 § C# project standards). Each PropertyGroup below
+    carries a deliberately invalid fixture under build/policy-fixtures/, executed by
+    build/verify-policies.sh - but not every property in them does. AnalysisLevel and
+    AnalysisMode are unfixtured: the analyzer fixture's CA2200 fires at every analysis
+    level, including none, so it proves EnableNETAnalyzers and cannot tell the levels
+    apart. Nothing would notice these two floating with the SDK.
   -->
 
   <PropertyGroup Label="Nullable reference checking (VER-FND-001-006)">

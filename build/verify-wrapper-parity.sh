@@ -8,7 +8,9 @@
 # Requirements: TR-BLD-005
 # Verification: VER-FND-002-008
 #
-# Parity is proved two ways, and both run every time:
+# Parity is proved two ways. Only check A runs every time; check B runs only where
+# pwsh is installed, and this repository does not pin pwsh, so on a clean checkout the
+# only parity assertion that executes is A:
 #
 #   A. Structural, and platform-independent. Neither wrapper may inspect or branch
 #      on the verb, and both must launch the same host project and forward every

@@ -132,7 +132,51 @@ internal static class BuildVerb
                 "the accepted project boundary or repository layout is violated; see the step log");
         }
 
-        context.Section("stage 4: emit the SCH-BLD-001 build manifest");
+        // Stage 4 exists because of what stage 3 could not tell anyone: for as long
+        // as this repository had nine gate scripts, six of them were invoked by
+        // nothing, and no gate said so. This one asserts the partition -- every gate
+        // script is invoked or explicitly exempted -- so the next unwired script is a
+        // failure rather than an omission. It is here rather than in a script of its
+        // own tier because it is a repository-consistency assertion, it costs about a
+        // second, and `build` is the verb CI reaches first.
+        context.Section("stage 4: assert every gate script is wired or explicitly exempt");
+        CommandResult wiring = context.RunRepositoryScript(
+            "verify-gate-wiring",
+            "build/verify-gate-wiring.sh",
+            scriptArguments: null,
+            timeout: TimeSpan.FromMinutes(5));
+        if (!wiring.Succeeded)
+        {
+            return VerbOutcome.Validation(
+                "a gate script is neither invoked nor explicitly exempted, so it runs only when "
+                + "someone remembers to type it; see the step log");
+        }
+
+        // Stage 5 is the wrapper's own contract. verify-wrapper-parity.sh runs both root
+        // wrappers with no verb, so it reads their usage tables and dispatches nothing:
+        // unlike every other gate that was exempted with it, there is no path from it
+        // back to this verb, and it costs about 13 seconds. It was exempted on the claim
+        // that the wrapper rebuilds the verb host the calling verb runs from; wired here,
+        // ./build.sh build exits 0.
+        context.Section("stage 5: assert both root wrappers expose the same verb table");
+        CommandResult parity = context.RunRepositoryScript(
+            "verify-wrapper-parity",
+            "build/verify-wrapper-parity.sh",
+            scriptArguments: null,
+            timeout: TimeSpan.FromMinutes(10));
+        if (!parity.Succeeded)
+        {
+            return VerbOutcome.Validation(
+                "./build.sh and ./build.ps1 no longer expose the same verb and argument table, "
+                + "or a wrapper has started branching on the verb; see the step log");
+        }
+
+        // Stage 6, not 4. FND-004 wrote this as stage 4 and FND-005 wrote a different stage 4
+        // on the base branch; both arrived here at merge and both are kept, because they do
+        // unrelated work. FND-005 keeps 4 and 5 because tests/verification/FND-005.json says
+        // in so many words that "build reaches it at stage 4", which makes that number a
+        // registry claim; this stage's number is cited nowhere, so it is the one that moves.
+        context.Section("stage 6: emit the SCH-BLD-001 build manifest");
         VerbOutcome? manifestFailure = EmitBuildManifest(context, out string manifestPath);
         if (manifestFailure is not null)
         {

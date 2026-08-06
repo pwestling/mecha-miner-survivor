@@ -129,8 +129,18 @@ done
 
 echo
 echo "=== 4. no committed lock file changed (restore stays configuration-independent)"
-changed="$(cd "${REPO_ROOT}" && git status --porcelain -- '*packages.lock.json' 2>/dev/null || true)"
-if [[ -z "${changed}" ]]; then
+#
+# The exit status is checked before the output is interpreted: a FAILED `git status`
+# returns nothing, and nothing is exactly what an unchanged tree returns. Suppressing it
+# with `2>/dev/null || true` made this assertion pass under a broken or absent git
+# without any lock file having been compared.
+changed=""
+changed_status=0
+changed="$(cd "${REPO_ROOT}" && git status --porcelain -- '*packages.lock.json' 2>&1)" \
+  || changed_status=$?
+if [[ "${changed_status}" -ne 0 ]]; then
+  fail "could not read git status for lock files (exit ${changed_status}), so drift is unproved rather than absent: ${changed}"
+elif [[ -z "${changed}" ]]; then
   pass "every packages.lock.json is unchanged after building all three configurations"
 else
   fail "building the three configurations rewrote lock file(s):"

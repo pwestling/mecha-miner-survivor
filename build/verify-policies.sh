@@ -11,9 +11,28 @@
 # Requirements: TR-BLD-001
 # Verification: VER-FND-001-006 through VER-FND-001-011
 #
-# Each fixture must FAIL with an `error <ID>` line. Asserting `error` rather than
-# `warning` is what proves Directory.Build.targets' TreatWarningsAsErrors is in
-# force, because CS8600, CA2200, and IDE1006 are warnings by default.
+# Each fixture must FAIL with an `error <ID>` line. What that `error` proves is NOT
+# the same for every fixture, and the distinction matters because a fixture credited
+# with proving a policy it does not exercise leaves that policy ungated:
+#
+#   - CS8600 (nullable) and CA2200 (analyzer) are warnings by default and carry no
+#     severity override in .editorconfig. For those two, `error` rather than `warning`
+#     is exactly what proves Directory.Build.targets' TreatWarningsAsErrors is in
+#     force. Rebuild either fixture with -p:TreatWarningsAsErrors=false and the
+#     diagnostic downgrades to `warning` and the build succeeds.
+#   - IDE1006 (naming) does NOT prove that. .editorconfig sets
+#     `dotnet_diagnostic.IDE1006.severity = error` explicitly, so it is an error on its
+#     own authority: rebuild the naming fixture with -p:TreatWarningsAsErrors=false and
+#     it still reports `error IDE1006`. What that fixture proves is the pair actually
+#     under test - the .editorconfig naming rules plus EnforceCodeStyleInBuild, without
+#     which an IDE-prefixed style rule is not evaluated during a command-line build at
+#     any severity. That is what VER-FND-001-008 is for, and it is a real policy.
+#   - CS9202 (langversion) and CS0227 (unsafe) are errors by default, so they prove the
+#     property they name and say nothing about severity escalation either.
+#
+# In short: TreatWarningsAsErrors is gated by VER-FND-001-006 and VER-FND-001-007 only.
+# Attributing it to the naming fixture as well overstated the coverage of a policy that
+# would otherwise have had no negative fixture at all.
 #
 # The fixtures are not part of MechaMiner.sln, so nothing here affects
 # `dotnet build` or `dotnet test` of the product.

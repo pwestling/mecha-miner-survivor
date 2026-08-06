@@ -108,8 +108,17 @@ fi
 
 echo
 echo "=== no tracked file may be mutated by import or launch"
-mutated="$(cd "${REPO_ROOT}" && git status --porcelain -- game 2>/dev/null || true)"
-if [[ -z "${mutated}" ]]; then
+#
+# The empty result of a FAILED `git status` is indistinguishable from the empty result of
+# a clean tree, so the exit status is checked before the output is interpreted. Suppressing
+# it with `2>/dev/null || true` meant that under a broken or absent git this assertion
+# passed without having compared anything.
+mutated=""
+mutated_status=0
+mutated="$(cd "${REPO_ROOT}" && git status --porcelain -- game 2>&1)" || mutated_status=$?
+if [[ "${mutated_status}" -ne 0 ]]; then
+  fail "could not read git status for game/ (exit ${mutated_status}), so mutation is unproved rather than absent: ${mutated}"
+elif [[ -z "${mutated}" ]]; then
   pass "game/ has no unexpected tracked-file change"
 else
   fail "import or launch mutated tracked files"

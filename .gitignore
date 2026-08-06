@@ -28,3 +28,7 @@ export_credentials.cfg
 # (VER-FND-004-005). Everything else under generated/ is committed reproducible
 # output per doc 100 § Repository structure.
 generated/build-manifest.json
+
+# Agent worktree scratch. Only worktrees/ is ignored, deliberately: the rest of
+# .claude/ (settings, skills) is shared project configuration and stays committable.
+.claude/worktrees/

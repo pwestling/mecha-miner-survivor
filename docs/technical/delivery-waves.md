@@ -114,6 +114,12 @@ not a requirement:**
 | 4 | Catalog breadth | widest | the wave 3 primitive it extends is Done |
 | 5 | M4 integration, then M5 breadth, then M6/M7 | integration owner, then breadth | wave 4 |
 
+The "Starts when" column states doc 110's formal gates verbatim and is not softened
+anywhere in this document. What a later section reports is whether the surface behind a
+gate is **landed and usable**, which is a different and weaker claim; § Two different
+claims: landed, and Done below defines both and says which one each status line is
+making. No package in this repository is Done yet.
+
 ---
 
 ## Wave 0 - foundation
@@ -122,16 +128,56 @@ not a requirement:**
 the whole shared surface listed above, so no consumer stream can run concurrently
 with it.
 
+### Two different claims: landed, and Done
+
+This document tracks two states that are easy to conflate. Conflating them is how it
+previously came to assert completion for which no evidence exists, so they are defined
+once here and used precisely below.
+
+- **Landed** is an engineering claim about this branch. The code and its gates exist,
+  they run from a clean checkout, and a consumer can build against them right now. It
+  says nothing about merge status and nothing about evidence.
+- **Done** is doc 114's formal work state, and it is stricter in two independent ways
+  that wave 0 does not currently satisfy.
+  1. Doc 114 § Work states gives Done the exit condition "integration base contains
+     the change". Every `FND-001`, `FND-002`, and `FND-003` commit is still on an
+     **open draft pull request**, so the integration base does not contain them.
+  2. AGENTS.md § Completion and doc 114 § Required evidence bundle require, per task,
+     "a validating `SCH-OBS-003` evidence bundle containing authority,
+     commands/results, seeds, artifacts, warnings, budget deltas, risks, and successor
+     work". `SCH-OBS-003` and its emitter/validator are `FND-010`'s deliverable, and
+     `FND-010` has not started. No `artifacts/evidence/` path exists anywhere in this
+     repository. So **no M0 task can be Done yet, however good its implementation
+     is** - not for want of work, but because the instrument that measures completion
+     has not been built.
+
+The honest reading of wave 0 is therefore: **landed pending merge; engineering-ready
+for consumers now; formally Done at `TASK-FND-005-002`**, the M0 close gate, once
+`FND-010` can emit the bundle that gate's "M0 evidence bundle with no unexplained
+warning or manual repair" refers to.
+
+Where a section below says a wave or a step is "open" or "Ready", it means the surface
+it consumes exists and is usable. That is an engineering-readiness judgement, which
+this explicitly non-normative document is allowed to record. It does **not** mean
+doc 110's completion gate has been passed, and it does not relax doc 114 § Work
+states, which still controls: "Only Done dependencies satisfy downstream package
+prerequisites." A stream that starts on readiness accepts that its base can still be
+revised, and `RSK-017`'s first response above - "freeze consumer work; land one
+owner/contract and rebase consumers" - is what covers that when it happens.
+
 ### Step 1
 
 | Package | Deliverable (doc 110) | Depends on | Completion gate | Owned file scope |
 | --- | --- | --- | --- | --- |
 | `FND-001` | Pin Godot/.NET versions, solution/project skeleton, repository layout, editor/analyzer settings | none | clean restore/build and version report | `MechaMiner.sln`, `global.json`, `Directory.Build.*`, `Directory.Packages.props`, `NuGet.config`, `.editorconfig`, `.gitignore`, every `*.csproj`, `game/project.godot`, `game/scenes/Boot.tscn`, `game/BootCompositionRoot.cs`, `build/bootstrap-linux.sh`, `build/verify-architecture.sh`, `build/verify-policies.sh`, `build/policy-fixtures/`, `tests/verification/FND-001.json` |
 
-**`FND-001` is landed and Done.** `TASK-FND-001-001`, `TASK-FND-001-002`, and
-`TASK-FND-001-003` are merged, with `tests/verification/FND-001.json` carrying thirteen
-implemented entries. That satisfies the hard dependency of `FND-002`, `FND-003`, and
-`FND-004`.
+**`FND-001` is landed, not Done.** `TASK-FND-001-001`, `TASK-FND-001-002`, and
+`TASK-FND-001-003` are committed on an open draft pull request, with
+`tests/verification/FND-001.json` carrying thirteen implemented entries. The pinned
+toolchain, solution skeleton, repository layout, and analyzer settings are what
+`FND-002`, `FND-003`, and `FND-004` actually consume from it, and all of that is
+present and usable, so those packages are unblocked on readiness. Their formal
+prerequisite closes with the rest of M0 at `TASK-FND-005-002`.
 
 ### Step 2
 
@@ -144,11 +190,21 @@ implemented entries. That satisfies the hard dependency of `FND-002`, `FND-003`,
 both are integration-owner scope because they touch the shared workflow entrypoint
 and every test project. `FND-003` is the gate that opens wave 1.
 
-**`FND-002` and `FND-003` are landed and Done**, in one PR of four task commits:
-`TASK-FND-002-001`, `TASK-FND-002-002`, `TASK-FND-003-001`, `TASK-FND-003-002`.
-`tests/verification/FND-002.json` carries fifteen implemented entries and
-`tests/verification/FND-003.json` twelve. **Wave 1 is therefore open**: `W1-DAT`
-(`DAT-001`) and `W1-SIM` (`SIM-001`, `SIM-003`, `SIM-005`) may start.
+**`FND-002` and `FND-003` are landed, not Done**, in one open draft pull request of
+four task commits: `TASK-FND-002-001`, `TASK-FND-002-002`, `TASK-FND-003-001`,
+`TASK-FND-003-002`. `tests/verification/FND-002.json` carries eighteen implemented
+entries and `tests/verification/FND-003.json` twelve. Three of `FND-002`'s eighteen
+(`VER-FND-002-016` through `018`) and the strengthened `VER-FND-001-005` exist because
+an independent review found gates that could not fail; see Decision 11.
+
+**Wave 1 is therefore open on engineering readiness.** The harness `W1-DAT` and
+`W1-SIM` consume exists, runs headlessly from a clean checkout, and its contracts are
+stable enough to build against, so `W1-DAT` (`DAT-001`) and `W1-SIM` (`SIM-001`,
+`SIM-003`, `SIM-005`) may start. It is open because the harness exists - not because
+`FND-003` passed its completion gate, which it has not. Read that sentence with
+§ Two different claims above: a wave 1 stream is starting against a landed base on the
+integration owner's judgement, and accepts a rebase if that base is revised before
+`TASK-FND-005-002` closes M0.
 
 What every stream now gets, and must use rather than reinvent:
 
@@ -191,9 +247,15 @@ Two things the harness deliberately does not provide, so nobody builds on a gues
 | `FND-008` | Profiler marker/metric registry and benchmark report format | `FND-004` | sample CPU/count/allocation report produced | diagnostics metric owner, `SCH-OBS-002` |
 | `FND-009` | Architecture dependency tests plus complete documentation/requirement/component/contract/schema/verification/work ID registry validator | `FND-001`, `FND-003` | forbidden project edges and missing/duplicate/dangling registry IDs/links fail fixtures | architecture tests, registry/document validation tooling, `SCH-QUA-001` validator |
 
-**Step 3 is landing in one PR of task commits.** `FND-004` depends only on `FND-001`, and
-`FND-009` depends on `FND-001` and `FND-003`, all Done. Doc 110 makes `FND-007` and
-`FND-008` depend on `FND-004`, so inside this step `FND-004` lands first.
+**Step 3 is landing in one PR of task commits, on the same readiness basis.** `FND-004`
+depends only on `FND-001`, and `FND-009` depends on `FND-001` and `FND-003`. All three are
+landed and usable, and none of them is formally Done; see § Two different claims. Doc 110
+makes `FND-007` and `FND-008` depend on `FND-004`, so inside this step `FND-004` lands
+first. `FND-004` had two consumers already recorded in code before it landed:
+`HarnessIdentity` in `tests/shared/`, which still says
+`build-identity=pending:TASK-FND-004-001` deliberately - see the table below for why that
+token cannot be replaced by `FND-004` alone - and `game/BootCompositionRoot.cs`, which now
+reads the real identity from `CMP-OBS-001`.
 `FND-009` replaces `build/verify-architecture.sh`'s reference-graph assertions with real
 architecture tests (`TASK-FND-009-001`) and takes over validating
 `tests/verification/*.json` (`TASK-FND-009-002`); the script stays, because CI and the
@@ -269,8 +331,11 @@ Consequences every stream should know:
 requires: `Windows Development x86-64`, `Windows Release x86-64`,
 `Linux/Steam Deck Development x86-64`, `Linux/Steam Deck Release x86-64`.
 
-**`FND-005` and `FND-006` are both unblocked**: `FND-005` needs `FND-002` and `FND-003`,
-`FND-006` needs `FND-001` and `FND-002`. Three things they inherit rather than invent:
+**`FND-005` and `FND-006` are both unblocked on readiness**: `FND-005` needs `FND-002`
+and `FND-003`, `FND-006` needs `FND-001` and `FND-002`, and all three are landed.
+`FND-005` also matters to the formal gate rather than only to CI: `FND-010` depends on
+it, and `FND-010` owns the `SCH-OBS-003` bundle without which no M0 task can reach
+Done. Three things they inherit rather than invent:
 
 - `FND-005`'s CI job calls `./build.sh` verbs, never a script directly. The fast
   pull-request path is `bootstrap`, `format-check`, `build`, `test-fast`; the main path
@@ -293,9 +358,13 @@ bundle with no unexplained warning or manual repair".
 
 ## Wave 1 - pure contracts
 
-**`FND-003` is Done, so this wave is open now.** Two streams, no file overlap. These are the
-contract-first packages that every later wave consumes, so nothing downstream may
-begin against them until each package is Done.
+**The `FND-003` harness is landed and usable, so this wave is open on engineering
+readiness now** - see § Two different claims; `FND-003` is not formally Done. Two
+streams, no file overlap. These are the contract-first packages that every later wave
+consumes, so nothing downstream may begin against them until each package is Done, and
+that rule is not weakened by the readiness judgement that opened this wave: a wave 1
+stream may start on a landed harness, but a wave 2 stream may not start on a wave 1
+contract that is still moving.
 
 ### `W1-DAT` - content contracts
 
@@ -728,7 +797,21 @@ scope, so the request goes through the integration owner.
   forward every argument verbatim - so there is one verb table and nothing that can
   drift. Behaviorally, when `pwsh` is present: run both wrappers and require
   byte-identical usage tables. When `pwsh` is absent the behavioral check reports
-  itself as **skipped**, by name, and never as passed.
+  itself as **skipped**, by name, it is counted, and the script's final summary line
+  says how many required checks did not run - so a run with a skip cannot be read, or
+  quoted elsewhere, as a run in which parity was proved by execution.
+- Two consequences of leaving `pwsh` unpinned, both recorded rather than glossed:
+  `VER-FND-002-008` lists **`linux-x64` only**, because the behavioral half executes
+  `build.ps1` on whichever host invokes it and no Windows or macOS host ever has;
+  behavioral parity on `windows-x64` and `osx-arm64` is **pending** and needs runners
+  on those platforms, which `FND-005` owns. Adding PowerShell to the pinned toolchain
+  instead was considered and rejected: it would invent a toolchain dependency in order
+  to make a coverage claim true, and doc 100 § Toolchain pinning would then require an
+  exact version and per-platform hashes for a tool that no repository verb needs on
+  Linux or macOS.
+- Both wrappers do share one behavior that is not merely structural, and it is
+  asserted on both: an absent `dotnet` and a `global.json` pinning an uninstalled SDK
+  version each exit class 3 with `MMT-3001`, never class 8. See Decision 10.
 
 ### Decision 9 - deliberately invalid fixtures are never committed inside a compiled project
 
@@ -746,6 +829,53 @@ scope, so the request goes through the integration owner.
 - The one fixture that is committed is the deliberately failing NUnit case
   (`SeedReproductionFixture`), which is marked `Explicit` so no ordinary run executes
   it, and whose contract is independently covered by always-on tests.
+
+### Decision 10 - exit class 3 has two halves, and a gate that proves one does not prove the other
+
+- Doc 100 § Standard command surface defines class 3 as a "missing **or mismatched**
+  pinned environment". Those are two different environment faults and they reach the
+  wrappers by two different routes.
+- The wrappers originally gated class 3 on `command -v dotnet` alone. A `global.json`
+  pinning an SDK version that is not installed therefore passed that check, failed
+  later inside the verb host's own `dotnet build`, and was reported as class 8
+  `MMT-8001` "unexpected tool-internal failure" - blaming the repository for an
+  operator's environment. Both wrappers now probe pin resolution explicitly and return
+  3 with `MMT-3001` for a mismatch, while a genuinely uncompilable verb host still
+  returns 8.
+- The gate gap that let it survive is the general lesson: `build/verify-verbs.sh` § 6
+  asserted only the *absent* half, and nothing asserted the *mismatched* half, so half
+  of a documented exit class had no gate at all. § 10 now asserts the other half.
+  **When a contract enumerates alternatives, each alternative needs its own
+  assertion**; a gate that covers one member of a documented set and is named after
+  the whole set is worse than no gate, because it reads as coverage.
+
+### Decision 11 - a gate never passes on an input set it did not successfully obtain
+
+- Several gates in this repository were found to succeed vacuously: they derived a
+  candidate set (files to check, paths to hash, projects to scan), the derivation
+  failed or returned nothing, and the "no violations found" branch then reported
+  success. A gate that cannot see anything must not conclude that everything is fine.
+- The rule, applied to every gate the integration owner owns:
+  1. **A failed subprocess is a gate failure.** Never `|| true`, never a discarded
+     exit status, never an empty result substituted for an error. If `git ls-files`
+     fails, the gate fails; it does not check zero files.
+  2. **An empty candidate set never satisfies a gate.** Zero matches is a distinct
+     outcome from zero violations. A gate whose set is legitimately empty says so
+     explicitly and names why; a gate whose set is unexpectedly empty fails.
+  3. **Verify the artifact you resolved, not the one you assumed.** A probe that
+     resolves a path and then validates a canonical path instead is not checking the
+     thing that will be used. Hash, version-check, and compare the resolved artifact.
+  4. **Every gate carries a negative control.** The fixture that must fail has to
+     actually fail, asserted in the same run, or the positive result proves nothing.
+- These are not new requirements. AGENTS.md § Task execution already forbids masking a
+  failure and loosening a threshold to pass, and doc 91 already requires a gate to have
+  observable meaning. Decision 11 records them as a checklist because of how widely the
+  same defect had spread: a review reported three instances, and auditing the
+  neighbouring gates for the same shape found five more, across eight sites in
+  `format`/`format-check`, `build`, `doctor`, `verify-architecture.sh`,
+  `verify-godot.sh`, and `verify-configurations.sh`. Every one of them reported success
+  on something it had not examined. Assume the shape is present until the negative
+  control proves otherwise.
 
 ---
 

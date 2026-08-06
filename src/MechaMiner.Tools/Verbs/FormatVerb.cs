@@ -74,16 +74,41 @@ internal static class FormatVerb
         }
 
         context.Section("gate 3: repository-wide owned-text rules from .editorconfig [*]");
-        List<TextViolation> violations = InspectOwnedText(context, write);
+        OwnedTextInspection inspection = InspectOwnedText(context, write);
+        List<TextViolation> violations = inspection.Violations;
         string violationReport = OwnedTextHygiene.RenderReport(violations);
         string reportPath = context.WriteArtifact("owned-text-violations.txt", violationReport);
         context.Console.Write(violationReport);
+
+        // The candidate set is asserted before its contents are judged. Without this
+        // the gate passed whenever the set came back empty, which included the case
+        // where `git ls-files` failed outright: zero files inspected produced zero
+        // violations, and zero violations read as compliance. Doc 100 requires format
+        // to "fail if the resulting tree still violates policy", and a gate that
+        // inspected nothing has not established anything about the tree.
+        context.Runner.RecordAssertion(
+            "owned-text-file-set",
+            inspection.SetIsUsable,
+            inspection.SetDetail);
+        if (!inspection.SetIsUsable)
+        {
+            failures.Add("owned-text file enumeration (" + inspection.SetDetail + ")");
+        }
+
+        bool ownedTextClean = inspection.SetIsUsable && violations.Count == 0;
         context.Runner.RecordAssertion(
             "owned-text-rules",
-            violations.Count == 0,
-            violations.Count == 0
-                ? "every owned text file satisfies end_of_line, insert_final_newline, and trim_trailing_whitespace"
-                : violations.Count.ToString(CultureInfo.InvariantCulture) + " violation(s); see " + reportPath);
+            ownedTextClean,
+            ownedTextClean
+                ? inspection.Files.Count.ToString(CultureInfo.InvariantCulture)
+                    + " owned text file(s) inspected; every one satisfies end_of_line,"
+                    + " insert_final_newline, and trim_trailing_whitespace"
+                : !inspection.SetIsUsable
+                    ? "not evaluated: the owned text file set was not obtained, so no"
+                        + " conclusion about the tree is available"
+                    : violations.Count.ToString(CultureInfo.InvariantCulture)
+                        + " violation(s) across " + inspection.Files.Count.ToString(CultureInfo.InvariantCulture)
+                        + " inspected file(s); see " + reportPath);
         if (violations.Count > 0)
         {
             failures.Add("owned-text rules");
@@ -120,7 +145,8 @@ internal static class FormatVerb
             BuildArguments("style", context.Layout.Solution, write: false, diagnostics: new[] { "IDE0055", "IDE0005" }),
             context.Layout.Root,
             TimeSpan.FromMinutes(10));
-        List<TextViolation> remaining = InspectOwnedText(context, write: false);
+        OwnedTextInspection recheck = InspectOwnedText(context, write: false);
+        List<TextViolation> remaining = recheck.Violations;
 
         List<string> unrepaired = new();
         if (!verifyWhitespace.Succeeded)
@@ -131,6 +157,18 @@ internal static class FormatVerb
         if (!verifyStyle.Succeeded)
         {
             unrepaired.Add("C# style diagnostics");
+        }
+
+        // Gate 4 is the "fail if the resulting tree still violates policy" re-verify, so
+        // it must not conclude "repaired" from a re-check that could not read the tree.
+        context.Runner.RecordAssertion(
+            "owned-text-file-set-recheck",
+            recheck.SetIsUsable,
+            recheck.SetDetail);
+        if (!recheck.SetIsUsable)
+        {
+            unrepaired.Add("the owned-text re-verify could not obtain its file set ("
+                + recheck.SetDetail + "), so the formatted tree is unverified");
         }
 
         if (remaining.Count > 0)
@@ -153,29 +191,34 @@ internal static class FormatVerb
             .WithArtifact(reportPath);
     }
 
-    private static List<TextViolation> InspectOwnedText(VerbContext context, bool write)
+    /// <summary>
+    /// The result of one owned-text pass, keeping "the set could not be obtained"
+    /// distinguishable from "the set was obtained and held no violations".
+    /// </summary>
+    /// <remarks>
+    /// Collapsing those two into an empty violation list is what made this gate pass
+    /// on a tree it had never read. A gate reports on the input set it actually got,
+    /// and says so when it got none.
+    /// </remarks>
+    private sealed class OwnedTextInspection
     {
-        List<TextViolation> violations = new();
-        foreach (string relative in EnumerateOwnedTextFiles(context))
-        {
-            string absolute = context.Layout.Absolute(relative);
-            if (!File.Exists(absolute))
-            {
-                continue;
-            }
+        /// <summary>Owned text files that were enumerated and inspected.</summary>
+        internal List<string> Files { get; init; } = new();
 
-            violations.AddRange(OwnedTextHygiene.Inspect(absolute, relative, write));
-        }
+        /// <summary>Rules the inspected files violated.</summary>
+        internal List<TextViolation> Violations { get; init; } = new();
 
-        return violations;
+        /// <summary>
+        /// Whether the candidate set is fit to draw a conclusion from: the enumeration
+        /// succeeded and returned at least one owned text file.
+        /// </summary>
+        internal bool SetIsUsable { get; init; }
+
+        /// <summary>Human-readable statement of what the set was, or why there is none.</summary>
+        internal string SetDetail { get; init; } = string.Empty;
     }
 
-    /// <summary>
-    /// Enumerates tracked and untracked-but-not-ignored owned text files in
-    /// lexical order, so the report is stable and a brand new file is covered
-    /// before it is committed.
-    /// </summary>
-    private static List<string> EnumerateOwnedTextFiles(VerbContext context)
+    private static OwnedTextInspection InspectOwnedText(VerbContext context, bool write)
     {
         CommandResult listed = context.Runner.Run(
             "list-owned-text-files",
@@ -184,12 +227,22 @@ internal static class FormatVerb
             context.Layout.Root,
             TimeSpan.FromMinutes(2));
 
-        List<string> files = new();
         if (!listed.Succeeded)
         {
-            return files;
+            // A failed enumeration is a gate failure, never an empty set. `git ls-files`
+            // fails on a broken or absent repository, a stale GIT_DIR, or a timeout, and
+            // in every one of those cases the tree is unexamined rather than clean.
+            return new OwnedTextInspection
+            {
+                SetIsUsable = false,
+                SetDetail = "git ls-files failed with exit "
+                    + listed.ExitCode.ToString(CultureInfo.InvariantCulture)
+                    + (listed.TimedOut ? " (timed out)" : string.Empty)
+                    + "; the owned text file set is unknown, so this gate cannot pass",
+            };
         }
 
+        List<string> files = new();
         foreach (string line in listed.Output.Split('\n'))
         {
             string path = line.Trim();
@@ -199,8 +252,64 @@ internal static class FormatVerb
             }
         }
 
+        // Lexical order keeps the report stable, and a brand new file is covered before
+        // it is committed because --others includes untracked, non-ignored paths.
         files.Sort(StringComparer.Ordinal);
-        return files;
+
+        if (files.Count == 0)
+        {
+            // An empty candidate set never satisfies a gate. This repository always
+            // contains owned text files - .editorconfig and this file among them - so
+            // zero matches means the enumeration or the ownership filter is broken, not
+            // that the tree is compliant.
+            return new OwnedTextInspection
+            {
+                SetIsUsable = false,
+                SetDetail = "git ls-files succeeded but matched zero owned text files, which"
+                    + " cannot be true of this repository; the enumeration or the"
+                    + " ownership filter is broken",
+            };
+        }
+
+        List<TextViolation> violations = new();
+        int inspected = 0;
+        List<string> unreadable = new();
+        foreach (string relative in files)
+        {
+            string absolute = context.Layout.Absolute(relative);
+            if (!File.Exists(absolute))
+            {
+                // git listed it and the filesystem does not have it. That is a real
+                // inconsistency, not a file to skip quietly.
+                unreadable.Add(relative);
+                continue;
+            }
+
+            inspected++;
+            violations.AddRange(OwnedTextHygiene.Inspect(absolute, relative, write));
+        }
+
+        if (unreadable.Count > 0)
+        {
+            return new OwnedTextInspection
+            {
+                Files = files,
+                Violations = violations,
+                SetIsUsable = false,
+                SetDetail = unreadable.Count.ToString(CultureInfo.InvariantCulture)
+                    + " path(s) that git listed are missing from the working tree, so the"
+                    + " set was inspected only in part; first: " + unreadable[0],
+            };
+        }
+
+        return new OwnedTextInspection
+        {
+            Files = files,
+            Violations = violations,
+            SetIsUsable = true,
+            SetDetail = inspected.ToString(CultureInfo.InvariantCulture)
+                + " owned text file(s) enumerated and inspected",
+        };
     }
 
     private static List<string> BuildArguments(

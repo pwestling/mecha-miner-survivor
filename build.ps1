@@ -23,8 +23,14 @@
 #                                 8 unexpected tool-internal failure
 #
 # The launcher itself can produce only two of those: 3 when the pinned .NET SDK is
-# not runnable at all, and 8 when the verb host does not build. Everything else is
-# the owning tool's class, returned unchanged.
+# not usable - absent from PATH, or present but pinned by global.json to a version no
+# installed SDK satisfies - and 8 when the verb host does not build. Everything else
+# is the owning tool's class, returned unchanged.
+#
+# Those two cases are deliberately separated below, identically to build.sh. "dotnet
+# is on PATH" is not the same claim as "the pinned SDK resolves", and doc 100 defines
+# class 3 as a "missing or mismatched pinned environment", so a mismatched pin is
+# class 3 and never class 8.
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -60,6 +66,51 @@ On Linux and macOS the repository ships an idempotent installer for the same pin
   [Console]::Error.WriteLine($instructions)
   exit $exitEnvironment
 }
+
+# MISMATCH-PROBE-BEGIN
+#
+# The exact counterpart of build.sh's probe, and the same classification. dotnet being
+# discoverable does not mean the pinned SDK is usable: global.json pins an exact
+# version, hostfxr resolves that pin from the repository root, and a pin no installed
+# SDK satisfies fails every SDK command including the verb host's own build. Reporting
+# that as class 8 would blame the repository for an operator's environment.
+#
+# `dotnet --version` is run from the repository root because that is the directory
+# whose global.json governs resolution. Its stderr is captured rather than allowed to
+# terminate: this script sets $ErrorActionPreference to 'Stop', and PowerShell 7.3+
+# can turn a native command's nonzero exit into a terminating error, which would skip
+# the classification below and surface an unclassified failure instead.
+$sdkResolution = ''
+$sdkResolutionExit = 0
+try {
+  Push-Location $repoRoot
+  $ErrorActionPreference = 'Continue'
+  $sdkResolution = (& dotnet --version 2>&1 | Out-String).TrimEnd()
+  $sdkResolutionExit = $LASTEXITCODE
+}
+finally {
+  $ErrorActionPreference = 'Stop'
+  Pop-Location
+}
+
+if ($sdkResolutionExit -ne 0) {
+  [Console]::Error.WriteLine('FAILED [MMT-3001] global.json pins a .NET SDK version that is not installed here.')
+  [Console]::Error.WriteLine('        Exit class 3 (missing or mismatched pinned environment).')
+  [Console]::Error.WriteLine('        dotnet is discoverable, so this is a version mismatch and not an absent SDK.')
+  [Console]::Error.WriteLine('        It is not a repository fault: nothing in src/ is broken.')
+  [Console]::Error.WriteLine('')
+  [Console]::Error.WriteLine('        Resolution attempt (dotnet --version, from the repository root):')
+  foreach ($line in ($sdkResolution -split "`r?`n")) {
+    [Console]::Error.WriteLine('          ' + $line)
+  }
+  [Console]::Error.WriteLine('')
+  [Console]::Error.WriteLine('        Install the version global.json pins, from https://dot.net, into the')
+  [Console]::Error.WriteLine('        default location, or correct the pin in global.json. Do not silently')
+  [Console]::Error.WriteLine('        widen rollForward to make an unpinned SDK resolve: doc 100')
+  [Console]::Error.WriteLine('        § Toolchain pinning requires the exact SDK to be pinned.')
+  exit $exitEnvironment
+}
+# MISMATCH-PROBE-END
 
 New-Item -ItemType Directory -Force -Path $launcherLogDir | Out-Null
 $hostBuildLog = Join-Path $launcherLogDir 'host-build.log'

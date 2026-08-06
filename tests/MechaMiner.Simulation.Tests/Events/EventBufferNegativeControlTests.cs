@@ -105,7 +105,7 @@ internal sealed class EventBufferNegativeControlTests
 
         Assert.That(
             failure.Message,
-            Does.Contain("system phase, then emission sequence, then the full entity ID"),
+            Does.Contain("tick, then system phase, then emission sequence, and by nothing further"),
             "the ordering gate must be the assertion that failed");
     }
 

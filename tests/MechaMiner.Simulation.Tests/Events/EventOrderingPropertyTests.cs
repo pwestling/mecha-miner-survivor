@@ -140,6 +140,11 @@ internal sealed class EventOrderingPropertyTests
     /// <summary>
     /// A deliberately simple comparison over the documented keys, independent of <c>EventOrdering</c>.
     /// </summary>
+    /// <remarks>
+    /// Three keys: tick, phase, sequence. The emission sequence is per-tick global, so no identity
+    /// tiebreak follows - see <c>EventProvenance.Compare</c> for why a fourth key would be
+    /// unreachable and harmful rather than merely redundant.
+    /// </remarks>
     private static int CompareByDocumentedKeys(DomainEvent left, DomainEvent right)
     {
         int byTick = left.Provenance.Tick.CompareTo(right.Provenance.Tick);
@@ -154,24 +159,6 @@ internal sealed class EventOrderingPropertyTests
             return byPhase;
         }
 
-        int bySequence = left.Provenance.Sequence.CompareTo(right.Provenance.Sequence);
-        if (bySequence != 0)
-        {
-            return bySequence;
-        }
-
-        int bySession = left.Provenance.EmittingEntityId.RunSession.CompareTo(
-            right.Provenance.EmittingEntityId.RunSession);
-        if (bySession != 0)
-        {
-            return bySession;
-        }
-
-        int byIndex = left.Provenance.EmittingEntityId.Index.CompareTo(
-            right.Provenance.EmittingEntityId.Index);
-        return byIndex != 0
-            ? byIndex
-            : left.Provenance.EmittingEntityId.Generation.CompareTo(
-                right.Provenance.EmittingEntityId.Generation);
+        return left.Provenance.Sequence.CompareTo(right.Provenance.Sequence);
     }
 }

@@ -134,8 +134,8 @@ internal static class EventContractAssertions
             Assert.That(
                 firstRendering,
                 Is.EqualTo(expectedRendering),
-                subject + ": the batch must be ordered by system phase, then emission sequence, then the "
-                    + "full entity ID");
+                subject + ": the batch must be ordered by tick, then system phase, then emission "
+                    + "sequence, and by nothing further");
         });
     }
 

@@ -217,41 +217,112 @@ internal sealed class EventProvenanceTests
     }
 
     /// <summary>
-    /// A batch containing two events with the same tick and sequence fails, because their relative order
-    /// would be decided by nothing.
+    /// A batch containing two events with the same tick and sequence fails, by every route a duplicate
+    /// can arrive through and not only the one that happens to land adjacent.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Checked over the resulting batch rather than at the append that caused it: a duplicate sequence is
-    /// invisible until two records land adjacent, and the batch is where the ambiguity would become
+    /// invisible until the batch is assembled, and the batch is where the ambiguity would become
     /// observable.
+    /// </para>
+    /// <para>
+    /// <b>Three routes, because this check used to intercept only one of them.</b> The comparison ends at
+    /// the emission sequence, so two records sharing a tick, a phase, and a sequence compare equal and the
+    /// adjacency scan sees them. Two other shapes do not land adjacent, and an earlier revision of this
+    /// test - one duplicate, same phase, same emitter - exercised neither:
+    /// </para>
+    /// <list type="number">
+    /// <item><description>
+    /// Same phase, <em>different emitters</em>. While the comparison still ended with the emitting entity
+    /// ID, this pair did not compare equal: the removed tiebreak gave the duplicate an order and the batch
+    /// passed. The old fixture only failed because both its records happened to share an emitter.
+    /// </description></item>
+    /// <item><description>
+    /// <em>Different phases</em>. The batch sorts by phase before sequence, so a sequence issued twice to
+    /// two phases lands in two separate blocks and no adjacency scan can reach it.
+    /// <c>EventOrdering.AssertSequenceUniqueWithinTick</c> merges the blocks by sequence for exactly this.
+    /// </description></item>
+    /// <item><description>Same phase, same emitter - the original case, kept.</description></item>
+    /// </list>
     /// </remarks>
     private static void AssertDuplicateSequencesFailTheBatch(EntityIdAllocator allocator, EntityId subject)
     {
+        Assert.That(allocator.TryAllocate(PopulationCategory.OrdinaryEnemy, out EntityId other), Is.True);
+
+        AssertDuplicateSequenceFailsThroughOneRoute(
+            "the same phase and two different emitters, which the removed entity-ID tiebreak used to "
+                + "give an order",
+            firstPhase: 10,
+            secondPhase: 10,
+            firstEmitter: allocator.PlayerId,
+            secondEmitter: other,
+            subject);
+
+        AssertDuplicateSequenceFailsThroughOneRoute(
+            "two different phases, which no adjacency scan over a phase-sorted batch can reach",
+            firstPhase: 3,
+            secondPhase: 11,
+            firstEmitter: allocator.PlayerId,
+            secondEmitter: allocator.PlayerId,
+            subject);
+
+        AssertDuplicateSequenceFailsThroughOneRoute(
+            "the same phase and the same emitter, where the records compare equal outright",
+            firstPhase: 10,
+            secondPhase: 10,
+            firstEmitter: allocator.PlayerId,
+            secondEmitter: allocator.PlayerId,
+            subject);
+    }
+
+    /// <summary>
+    /// Appends two records that share tick 0 and emission sequence 5 through one arrival shape, and
+    /// asserts the batch refuses them with a diagnosable message.
+    /// </summary>
+    private static void AssertDuplicateSequenceFailsThroughOneRoute(
+        string route,
+        int firstPhase,
+        int secondPhase,
+        EntityId firstEmitter,
+        EntityId secondEmitter,
+        EntityId subject)
+    {
         DomainEventBuffer buffer = new(initialCapacity: 4, hardMaximumCapacity: 16);
         buffer.BeginTick(0);
-        for (int index = 0; index < 2; index++)
-        {
-            buffer.Append(EventFixture.Domain(
-                EventFixture.EntityDefeated,
-                tick: 0,
-                systemPhase: 10,
-                sequence: 5,
-                emitter: allocator.PlayerId,
-                subject: subject,
-                quantity: index + 1));
-        }
+        buffer.Append(EventFixture.Domain(
+            EventFixture.EntityDefeated,
+            tick: 0,
+            systemPhase: firstPhase,
+            sequence: 5,
+            emitter: firstEmitter,
+            subject: subject,
+            quantity: 1));
+        buffer.Append(EventFixture.Domain(
+            EventFixture.EntityDefeated,
+            tick: 0,
+            systemPhase: secondPhase,
+            sequence: 5,
+            emitter: secondEmitter,
+            subject: subject,
+            quantity: 2));
 
         DomainEvent[] batch = new DomainEvent[buffer.Count];
         InvalidOperationException tie = Expect.Throws<InvalidOperationException>(
             () => buffer.CopyOrderedTo(batch));
 
-        Assert.That(
-            tie.Message,
-            Does.Contain("share tick 0 and emission sequence 5"),
-            "the failure must name the duplicated pair so the emitting system is findable");
-        Assert.That(
-            tie.Message,
-            Does.Contain("CMP-SIM-003 owns the sequence"),
-            "and must name who is responsible for issuing each sequence once");
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                tie.Message,
+                Does.Contain("share tick 0 and emission sequence 5"),
+                "a duplicate arriving through " + route
+                    + " must be refused, and the failure must name the duplicated pair so the emitting "
+                    + "system is findable");
+            Assert.That(
+                tie.Message,
+                Does.Contain("CMP-SIM-003 owns the sequence"),
+                "and must name who is responsible for issuing each sequence once");
+        });
     }
 }

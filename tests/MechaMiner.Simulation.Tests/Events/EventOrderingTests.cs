@@ -32,19 +32,51 @@ internal sealed class EventOrderingTests
         "# events-simultaneous-ordering\n"
         + "#\n"
         + "# Rule under test: doc 10 § System phase ordering - \"Simultaneous outcomes use\n"
-        + "# documented stable ordering rather than collection or thread timing\" - and doc 20\n"
-        + "# § Entity identity - \"Stable ordering uses the full entity ID after a system's\n"
-        + "# authored priority keys.\" For an event batch the keys are: tick, then emitting\n"
-        + "# system phase, then explicit emission sequence, then the full emitting entity ID.\n"
+        + "# documented stable ordering rather than collection or thread timing.\" For an\n"
+        + "# event batch the keys are: tick, then emitting system phase, then explicit\n"
+        + "# emission sequence. There is no fourth key.\n"
+        + "#\n"
+        + "# There is no fourth key because the emission sequence is per-tick global:\n"
+        + "# CMP-SIM-003 issues it monotonically across the whole tick regardless of phase\n"
+        + "# or emitter, so (tick, sequence) is already a total order. A duplicate sequence\n"
+        + "# within a tick is therefore an impossible input - a defect in the issuer, not a\n"
+        + "# tie - and a comparator that fell through to a further key on a duplicate would\n"
+        + "# silently order it and hide the bug that produced it. The former fourth key, the\n"
+        + "# full emitting entity ID, has been replaced by a live invariant: sequence is\n"
+        + "# unique within a tick, and a duplicate fails loudly. See\n"
+        + "# EventOrdering.AssertSequenceUniqueWithinTick.\n"
+        + "#\n"
+        + "# This scoping is events only. Doc 20 § Boundary and tie ordering defines a\n"
+        + "# separate five-key sort for damage instances - system phase, explicit attack\n"
+        + "# sequence, target ID, source ID, then insertion sequence - and that is untouched\n"
+        + "# by the rule above.\n"
         + "#\n"
         + "# Fixture: run session 0xE7E00001, tick 7, eight domain events emitted by four\n"
         + "# system phases (3, 8, 10, 11) with explicit emission sequences that deliberately\n"
-        + "# disagree with phase order, so sorting cannot be a no-op. The same eight events are\n"
-        + "# appended in two different orders - ascending and reversed - and both batches must\n"
-        + "# equal the text below.\n"
+        + "# disagree with phase order, so sorting cannot be a no-op. The same eight events\n"
+        + "# are appended in two different orders - ascending and reversed - and both batches\n"
+        + "# must equal the text below.\n"
         + "#\n"
-        + "# Derived by: the documented rule read off doc 10 and doc 20, cross-checked against\n"
-        + "# an independent list sort in EventOrderingTests, not by accepting whatever the\n"
+        + "# The stored phase numerals are correct by contract, not by coincidence: doc 10 §\n"
+        + "# System phase ordering numbers a fixed fourteen phases and those numerals are\n"
+        + "# stable normative identifiers. Renumbering is forbidden; a new phase takes the\n"
+        + "# next unused number and a subdivision keeps its parent's. So a fixture may store\n"
+        + "# 3, 8, 10, 11 and rely on their meaning.\n"
+        + "#\n"
+        + "# Every identity here - four emitters and the shared subject - is drawn from the\n"
+        + "# OrdinaryEnemy partition, which begins immediately after Player. Player's\n"
+        + "# capacity is the doc 20 § Scope and invariants invariant \"exactly one player\n"
+        + "# entity exists until terminal resolution\", so the OrdinaryEnemy offset is 1 by\n"
+        + "# simulation invariant and no doc 22 § Performance and capacity combat ceiling\n"
+        + "# precedes it. The fixture asserts that computed containment rather than assuming\n"
+        + "# it. The previous fixture drew its subject from Pickup, which sits after all\n"
+        + "# three doc 22 ceilings, which is why the literal 3830 was baked in here and\n"
+        + "# would have made this ordering golden fail when the enemy-projectile ceiling\n"
+        + "# moved.\n"
+        + "#\n"
+        + "# Derived by: the documented rule read off doc 10 and doc 20, computed in an\n"
+        + "# independent Python reference before any C# ran, and cross-checked against an\n"
+        + "# independent list sort in EventOrderingTests. Not by accepting whatever the\n"
         + "# buffer emitted.\n"
         + "#\n";
 
@@ -186,7 +218,13 @@ internal sealed class EventOrderingTests
                 Is.True);
         }
 
-        Assert.That(allocator.TryAllocate(PopulationCategory.Pickup, out EntityId subject), Is.True);
+        // The subject is a fifth ordinary enemy, not a pickup. See
+        // AssertEveryIdentityIsIndependentOfCombatCeilings for why that matters.
+        Assert.That(
+            allocator.TryAllocate(PopulationCategory.OrdinaryEnemy, out EntityId subject),
+            Is.True);
+
+        AssertEveryIdentityIsIndependentOfCombatCeilings(allocator, emitters, subject);
 
         int[] phases = [11, 3, 8, 10, 3, 11, 8, 10];
         List<DomainEvent> events = new(phases.Length);
@@ -203,6 +241,84 @@ internal sealed class EventOrderingTests
         }
 
         return events;
+    }
+
+    /// <summary>
+    /// Asserts that every absolute storage index this golden renders is computed from partitions no
+    /// <c>docs/technical/22-combat-and-weapon-runtime.md</c> ceiling can move.
+    /// </summary>
+    /// <param name="allocator">The fixture's allocator.</param>
+    /// <param name="emitters">The four emitting identities.</param>
+    /// <param name="subject">The shared subject identity.</param>
+    /// <remarks>
+    /// <para>
+    /// The golden renders absolute storage indices, because it renders through production
+    /// <c>DomainEvent.ToString()</c> and pinning that rendering is worth keeping. The cost of an
+    /// absolute index is that it moves whenever any partition above it moves, and doc 22 § Performance
+    /// and capacity explicitly reserves the right to move three of them: "Profiling and legal
+    /// maximum-output analysis must tighten or expand them before content complete."
+    /// </para>
+    /// <para>
+    /// So the independence is asserted rather than hoped for. Every identity here comes from the
+    /// OrdinaryEnemy partition, and every category the canonical order places above OrdinaryEnemy must
+    /// carry an authority other than <see cref="CapacityAuthority.CombatRuntimeCeiling"/>. If someone
+    /// later inserts a combat-ceilinged category above OrdinaryEnemy, this fails with a message about
+    /// partition offsets - which is the diagnosis - instead of the golden failing with a byte diff,
+    /// which is the symptom that gets a golden regenerated instead of investigated.
+    /// </para>
+    /// </remarks>
+    private static void AssertEveryIdentityIsIndependentOfCombatCeilings(
+        EntityIdAllocator allocator,
+        EntityId[] emitters,
+        EntityId subject)
+    {
+        int enemyOffset = allocator.SlotOffsetFor(PopulationCategory.OrdinaryEnemy);
+        int enemyEnd = enemyOffset + allocator.CapacityFor(PopulationCategory.OrdinaryEnemy).HardCapacity;
+
+        List<string> ceilingedAbove = new();
+        int computedOffset = 0;
+        foreach (PopulationCategory category in StoreCapacities.Categories)
+        {
+            if (category == PopulationCategory.OrdinaryEnemy)
+            {
+                break;
+            }
+
+            StoreCapacity capacity = allocator.CapacityFor(category);
+            if (capacity.Authority == CapacityAuthority.CombatRuntimeCeiling)
+            {
+                ceilingedAbove.Add(category.ToString());
+            }
+
+            computedOffset += capacity.HardCapacity;
+        }
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                ceilingedAbove,
+                Is.Empty,
+                "no doc 22 § Performance and capacity ceiling may sit above the OrdinaryEnemy "
+                    + "partition, or the absolute storage indices this golden renders move whenever "
+                    + "doc 22 moves and an ordering golden fails for a capacity reason: "
+                    + string.Join(", ", ceilingedAbove));
+            Assert.That(
+                enemyOffset,
+                Is.EqualTo(computedOffset),
+                "the partition offset must be the running sum of the capacity table above it, "
+                    + "computed here rather than written down as a literal");
+            Assert.That(
+                subject.Index,
+                Is.InRange(enemyOffset, enemyEnd - 1),
+                "the subject must live in the OrdinaryEnemy partition");
+            foreach (EntityId emitter in emitters)
+            {
+                Assert.That(
+                    emitter.Index,
+                    Is.InRange(enemyOffset, enemyEnd - 1),
+                    "every emitter must live in the OrdinaryEnemy partition");
+            }
+        });
     }
 
     private static List<DomainEvent> PublishOrdered(List<DomainEvent> appendOrder)
@@ -232,7 +348,11 @@ internal sealed class EventOrderingTests
     /// Sorts by the documented keys with a deliberately simple list sort, independently of
     /// <c>EventOrdering</c>.
     /// </summary>
-    /// <remarks>doc 91 § Reference models: agreement is then evidence about the rule, not about the implementation agreeing with itself.</remarks>
+    /// <remarks>
+    /// doc 91 § Reference models: agreement is then evidence about the rule, not about the
+    /// implementation agreeing with itself. Three keys, matching the rule: the emission sequence is
+    /// per-tick global, so no identity tiebreak follows it.
+    /// </remarks>
     private static List<DomainEvent> ReferenceSort(List<DomainEvent> events)
     {
         List<DomainEvent> sorted = new(events);
@@ -250,25 +370,7 @@ internal sealed class EventOrderingTests
                 return byPhase;
             }
 
-            int bySequence = left.Provenance.Sequence.CompareTo(right.Provenance.Sequence);
-            if (bySequence != 0)
-            {
-                return bySequence;
-            }
-
-            int bySession = left.Provenance.EmittingEntityId.RunSession.CompareTo(
-                right.Provenance.EmittingEntityId.RunSession);
-            if (bySession != 0)
-            {
-                return bySession;
-            }
-
-            int byIndex = left.Provenance.EmittingEntityId.Index.CompareTo(
-                right.Provenance.EmittingEntityId.Index);
-            return byIndex != 0
-                ? byIndex
-                : left.Provenance.EmittingEntityId.Generation.CompareTo(
-                    right.Provenance.EmittingEntityId.Generation);
+            return left.Provenance.Sequence.CompareTo(right.Provenance.Sequence);
         });
 
         return sorted;

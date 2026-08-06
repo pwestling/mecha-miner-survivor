@@ -807,21 +807,40 @@ imported_msbuild_files() {
     import_graph_failure="mktemp could not create a temporary file for MSBuild's -preprocess output"
     return 1
   fi
-  local captured_stderr
+  local captured_stderr captured_stdout
   if ! captured_stderr="$(mktemp)"; then
     rm -f "${preprocessed}"
     import_graph_failure="mktemp could not create a temporary file for MSBuild's stderr"
     return 1
   fi
-
-  dotnet msbuild "${REPO_ROOT}/${project}" -nologo \
-    "-preprocess:${preprocessed}" >/dev/null 2>"${captured_stderr}"
-  local msbuild_status=$?
-  if [[ "${msbuild_status}" -ne 0 ]]; then
-    import_graph_failure="dotnet msbuild -preprocess exited ${msbuild_status}; stderr: $(tr '\n' '|' <"${captured_stderr}" | cut -c 1-1500)"
+  # Captured rather than sent to /dev/null, which is where stdout used to go.
+  if ! captured_stdout="$(mktemp)"; then
     rm -f "${preprocessed}" "${captured_stderr}"
+    import_graph_failure="mktemp could not create a temporary file for MSBuild's stdout"
     return 1
   fi
+
+  dotnet msbuild "${REPO_ROOT}/${project}" -nologo \
+    "-preprocess:${preprocessed}" >"${captured_stdout}" 2>"${captured_stderr}"
+  local msbuild_status=$?
+  if [[ "${msbuild_status}" -ne 0 ]]; then
+    # -preprocess reports NOTHING when it fails. Forced with an unresolvable
+    # <Import>, `dotnet msbuild -preprocess` exits 1 with zero bytes on stdout AND
+    # zero on stderr, so the exit code is all that mode gives and it does not name
+    # the file MSBuild could not find. Both streams are still measured and reported
+    # in case another failure mode does say something - and then the SAME project is
+    # evaluated a second time without -preprocess, purely to obtain a message. That
+    # second call is on this path only, so it costs nothing in the normal case, and
+    # it is what turns "exited 1" into "error MSB4019: The imported project ... was
+    # not found".
+    local diagnosis
+    diagnosis="$(dotnet msbuild "${REPO_ROOT}/${project}" -nologo \
+      -getProperty:MSBuildProjectFile 2>&1 | tail -c 900 | tr '\n' '|')"
+    import_graph_failure="dotnet msbuild -preprocess exited ${msbuild_status} (that mode reports nothing on failure: stdout was $(wc -c <"${captured_stdout}") byte(s), stderr $(wc -c <"${captured_stderr}") byte(s) - $(tr '\n' '|' <"${captured_stderr}" | cut -c 1-400)). Evaluating the same project without -preprocess reports: ${diagnosis}"
+    rm -f "${preprocessed}" "${captured_stderr}" "${captured_stdout}"
+    return 1
+  fi
+  rm -f "${captured_stdout}"
 
   local parsed parse_status preprocessed_size
   parsed="$(python3 - "${preprocessed}" 2>"${captured_stderr}" <<'PY'

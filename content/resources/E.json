@@ -7,9 +7,11 @@
   "tags": [],
   "source_refs": [
     "GDD-SPECIALIZED-RESOURCE-IDENTITIES#accepted-identity-map",
+    "canonical_letter: TDD-CONTENT-DATA#resources",
     "resonance_behavior: GDD-MINING#geode-resonance-fields",
     "resonance_behavior.short_modifier: GDD-SPECIALIZED-RESOURCE-IDENTITIES#geode-resonance-behavior"
   ],
+  "canonical_letter": "E",
   "material_character": "Branching techno-organic conductive growth",
   "loose_association": "Coordination, autonomous systems, cycling, reserves",
   "primary_color": "Acid green",

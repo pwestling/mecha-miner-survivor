@@ -639,6 +639,47 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       of the compiler can catch a rename, which is precisely why it has to be
       caught here.                                                   FAILURE
 
+  A32 canonical_letter, five rows over content/resources/, each asserted and
+      reported separately because each is blind to a different edit:
+        1. EXACTLY the six letter definitions carry the key, and the carrier
+           set is NAMED (A.json..F.json), not counted. A count of 6 passes
+           when the key is deleted from D.json and added to common-ore.json
+           in the same edit; the named set does not.
+        2. In each of those six, canonical_letter == that file's own id.
+        3. The six values are six DISTINCT letters and cover exactly
+           {A,B,C,D,E,F}. Redundant while rows 1 and 2 both hold - it is
+           the row that survives if either is ever weakened.
+        4. common-ore.json and hyper-gold.json do not carry the KEY AT ALL.
+           A26 already forbids null repo-wide, so `"canonical_letter": null`
+           in a currency file is caught with or without this row. Absence is
+           nevertheless asserted here because A26 cannot see the defect this
+           row exists for: `"canonical_letter": ""` and
+           `"canonical_letter": "common-ore"` are both non-null, both pass
+           A26, and both assert the thing 40:106 does not say - that a
+           currency has a canonical letter. The omission is load-bearing
+           content, so it is asserted as omission rather than inferred from
+           the absence of a null.
+        5. content/resources/ holds exactly 8 definition files, because
+           rows 1-4 are all satisfied by a tree with a ninth resource in it.
+      WHY A VALUE MULTISET WOULD HAVE PROVEN NOTHING. The six added values
+      are the six ids, so they were already leaves of this tree before the
+      field existed: a multiset over content/'s leaf values is by
+      construction unchanged by this commit and would have reported "no
+      values gained or lost" having checked nothing about the only thing
+      that changed. Row 2 is the one that binds the new leaf to its
+      neighbour, and row 1 is the one that binds the population.
+      Negative controls, each injected alone, run, and reverted:
+      delete D.json's key -> row 1 FAILs naming the carrier set; swap
+      B.json's and C.json's values (multiset preserved) -> row 2 FAILs
+      naming both files; A.json "A" -> "B" -> row 3 FAILs on distinctness;
+      canonical_letter added to common-ore.json -> row 4 FAILs naming it;
+      a ninth resources/*.json -> row 5 FAILs on the count. A.json's value
+      set to null FAILs rows 2 and 3 here in addition to A26.
+      Mandate: docs/technical/40-content-data-and-validation.md:106, blob
+      4cded84 ("Resource definition fields include ID, canonical letter,
+      localization keys ..."). NOT the RSC- ID grammar, which is not on this
+      ref: no id value is asserted or changed by this row.       FAILURE
+
 Not asserted here: no structural JSON Schema validation happens, because
 content/schemas/ (40:36) does not exist yet. Domain field names outside the
 envelope are therefore unvalidated and will need one reconciliation pass when
@@ -2639,6 +2680,160 @@ def check_file_inventory(manifest_size: int | None) -> list[tuple]:
     return rows
 
 
+# --------------------------------------------------------------------------
+# A32 - canonical_letter on exactly the six letter resources.
+#
+# 40:106 (blob 4cded84) lists "canonical letter" among the resource definition
+# fields. It says that about the six-material set; it does not say it about
+# common ore or Hyper Gold, which are the ordinary-crafting and cross-run
+# currencies and have no letter to carry. Their omission is therefore authored
+# content, not an oversight, and row 4 asserts it as such.
+#
+# NOTHING HERE READS OR ASSERTS AN id VALUE except by comparing a file's
+# canonical_letter against its own id (row 2). The RSC- prefixed ID grammar is
+# not on this ref and no row of this check anticipates it: if the ids later
+# become RSC-A..RSC-F, row 2 is the row that will need re-stating, deliberately,
+# and rows 1/3/4/5 are unaffected.
+# --------------------------------------------------------------------------
+
+RESOURCES_DIR = CONTENT / "resources"
+CANONICAL_LETTER_KEY = "canonical_letter"
+CANONICAL_LETTERS = ("A", "B", "C", "D", "E", "F")
+CANONICAL_LETTER_CARRIERS = tuple(f"{letter}.json" for letter in CANONICAL_LETTERS)
+# The two currencies, which must NOT carry the key in any form.
+CANONICAL_LETTER_OMITTERS = ("common-ore.json", "hyper-gold.json")
+RESOURCE_DEFINITION_COUNT = 8
+
+
+def check_canonical_letters(docs: dict[Path, object]) -> list[tuple]:
+    """A32 - canonical_letter is on exactly A-F and equals each file's own id."""
+    paths = sorted(RESOURCES_DIR.glob("*.json")) if RESOURCES_DIR.is_dir() else []
+    carried: dict[str, object] = {}
+    ids: dict[str, object] = {}
+    for path in paths:
+        doc = docs.get(path)
+        if not isinstance(doc, dict):
+            continue
+        ids[path.name] = doc.get("id")
+        if CANONICAL_LETTER_KEY in doc:
+            carried[path.name] = doc[CANONICAL_LETTER_KEY]
+
+    # ---- row 1: the carrier set, NAMED. A count is blind to a correlated swap.
+    carriers = sorted(carried)
+    expected_carriers = sorted(CANONICAL_LETTER_CARRIERS)
+    row1_ok = carriers == expected_carriers
+
+    # ---- row 2: each of the six equals its OWN id.
+    mismatches: list[str] = []
+    for name in CANONICAL_LETTER_CARRIERS:
+        if name not in ids:
+            mismatches.append(f"{name}: not a parsed definition")
+        elif name not in carried:
+            mismatches.append(f"{name}: {CANONICAL_LETTER_KEY} is absent, id is {ids[name]!r}")
+        elif carried[name] != ids[name]:
+            mismatches.append(
+                f"{name}: {CANONICAL_LETTER_KEY} is {carried[name]!r}, id is {ids[name]!r}"
+            )
+
+    # ---- row 3: six distinct letters covering exactly {A..F}. repr() so a
+    # non-string value (null, a number, an object) cannot raise in sorted().
+    values = [carried[name] for name in CANONICAL_LETTER_CARRIERS if name in carried]
+    distinct = {repr(v) for v in values}
+    row3_ok = (
+        len(values) == len(CANONICAL_LETTERS)
+        and len(distinct) == len(CANONICAL_LETTERS)
+        and {v for v in values if isinstance(v, str)} == set(CANONICAL_LETTERS)
+    )
+
+    # ---- row 4: the currencies do not carry the KEY. Not "is not null" - see
+    # the block comment above and the A32 docstring entry for why A26 is not
+    # enough here.
+    offenders = [name for name in CANONICAL_LETTER_OMITTERS if name in carried]
+
+    # ---- row 5: the population itself, so rows 1-4 cannot pass on a tree that
+    # has grown a ninth resource.
+    row5_ok = len(paths) == RESOURCE_DEFINITION_COUNT
+
+    rows = [
+        (
+            "row 1: files carrying canonical_letter are exactly A-F (named, not counted)",
+            ", ".join(expected_carriers),
+            ", ".join(carriers) or "none",
+            "ok" if row1_ok else "FAIL",
+        ),
+        (
+            "row 2: canonical_letter == that file's own id, in each of the six",
+            "6 agree",
+            f"{len(CANONICAL_LETTER_CARRIERS) - len(mismatches)} agree, "
+            f"{len(mismatches)} disagree",
+            "ok" if not mismatches else "FAIL",
+        ),
+        (
+            "row 3: the six values are distinct and cover exactly {A,B,C,D,E,F}",
+            "6 distinct: " + ", ".join(CANONICAL_LETTERS),
+            f"{len(distinct)} distinct: " + (", ".join(sorted(distinct)) or "none"),
+            "ok" if row3_ok else "FAIL",
+        ),
+        (
+            "row 4: the two currencies do not carry the KEY AT ALL (absence, not null)",
+            "0 of " + ", ".join(CANONICAL_LETTER_OMITTERS),
+            f"{len(offenders)} carry it" + (f": {', '.join(offenders)}" if offenders else ""),
+            "ok" if not offenders else "FAIL",
+        ),
+        (
+            "row 5: content/resources/ holds exactly 8 definition files",
+            RESOURCE_DEFINITION_COUNT,
+            len(paths),
+            "ok" if row5_ok else "FAIL",
+        ),
+    ]
+
+    if not row1_ok:
+        fail(
+            f"A32 row 1: the files under content/resources/ carrying "
+            f"{CANONICAL_LETTER_KEY!r} are {carriers}, expected exactly {expected_carriers}. "
+            f"40:106 (blob 4cded84) gives the canonical letter to the six-material set and to "
+            f"nothing else. This row NAMES the carriers rather than counting them because a "
+            f"count of 6 also passes when the key is deleted from one letter file and added to "
+            f"a currency in the same edit."
+        )
+    if mismatches:
+        fail(
+            f"A32 row 2: {len(mismatches)} resource(s) whose {CANONICAL_LETTER_KEY} is not that "
+            f"file's own id: {mismatches}. The letter IS the identity of a specialized material, "
+            f"so the two must agree in the same file. This row is the only one that catches two "
+            f"letter files SWAPPING values: the set of values is unchanged by a swap, so rows 1 "
+            f"and 3 both still pass."
+        )
+    if not row3_ok:
+        fail(
+            f"A32 row 3: the {len(values)} {CANONICAL_LETTER_KEY} value(s) present are "
+            f"{sorted(distinct)}, expected 6 distinct letters covering exactly "
+            f"{list(CANONICAL_LETTERS)}. Two materials cannot share a letter and no letter of "
+            f"the accepted set may go unassigned (40:106, blob 4cded84)."
+        )
+    if offenders:
+        fail(
+            f"A32 row 4: {offenders} carry the key {CANONICAL_LETTER_KEY!r}. common ore and "
+            f"Hyper Gold are the ordinary-crafting and cross-run currencies; 40:106 gives the "
+            f"canonical letter to the six-material set only, so the right way to spell 'has no "
+            f"letter' is to OMIT the key (40:90 materializes the default for an absent optional "
+            f"field). A26 already rejects the null spelling repo-wide, but a non-null wrong "
+            f"value - \"\" or \"common-ore\" - passes A26 and still asserts that a currency has a "
+            f"canonical letter, which is what this row exists to catch."
+        )
+    if not row5_ok:
+        fail(
+            f"A32 row 5: content/resources/ holds {len(paths)} *.json file(s), expected "
+            f"{RESOURCE_DEFINITION_COUNT} (6 specialized + common ore + Hyper Gold, the same "
+            f"population the A12 resources row asserts). Rows 1-4 of A32 are all satisfied by a "
+            f"tree that has grown a ninth resource, so the population is asserted beside them. A "
+            f"new resource is added deliberately, with its A12 row, its A28 manifest line and a "
+            f"decision recorded about whether it carries a canonical letter."
+        )
+    return rows
+
+
 def check_derived_footprint_fields(docs: dict[Path, object]) -> list[tuple]:
     """A20 - no definition may carry a compiler-derived footprint value.
 
@@ -4514,6 +4709,7 @@ def main() -> int:
     bound_rows = check_bound_spelling(docs)
     manifest_rows, manifest_size = check_definition_manifest(docs)
     inventory_rows = check_file_inventory(manifest_size)
+    canonical_letter_rows = check_canonical_letters(docs)
     percent_rows = check_percentage_point_policy(docs)
     doc_path_rows = check_no_doc_paths_in_values(docs)
     polarity_rows = check_polarity_agreement(docs)
@@ -4625,6 +4821,19 @@ def main() -> int:
         manifest_rows,
     )
     table("A21 File inventory", ("check", "expected", "actual", "status"), inventory_rows)
+    table(
+        "A32 canonical_letter on exactly the six letter resources (40:106, blob 4cded84); "
+        "five rows, each blind to a different edit",
+        ("check", "expected", "actual", "status"),
+        canonical_letter_rows,
+        (
+            "A value multiset over content/ proves NOTHING about this field: the six added values "
+            "are the six ids, so they were already leaves of this tree and a leaf-value comparison "
+            "reports 'nothing gained or lost' having checked nothing that changed. Row 2 binds the "
+            "new leaf to its own id; row 1 binds the carrier population by NAME, which is the only "
+            "row that survives a correlated delete-here/add-there edit keeping the count at 6.",
+        ),
+    )
 
     print(f"\nA2-A9 envelope/naming: {stats['checked']} definition(s) checked, "
           f"{stats['source_refs']} source_refs resolved against docs/")

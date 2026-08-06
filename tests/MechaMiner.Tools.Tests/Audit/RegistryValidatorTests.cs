@@ -399,6 +399,113 @@ internal sealed class RegistryValidatorTests
     }
 
     /// <summary>
+    /// Each of the three values <c>status</c> may take is accepted.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The vocabulary is closed and the validator does enforce it — an injected
+    /// <c>"regsitered"</c> in a real registry file turns the suite red — but nothing kept
+    /// it enforced: deleting the <c>Statuses</c> comparison from <c>ValidateEntry</c> left
+    /// the suite 47/47 green, because the only assertion that could see it is the real-tree
+    /// one, and the real tree is correct. So the enum needs both halves of a control: every
+    /// legal value accepted, and a near-miss rejected.
+    /// </para>
+    /// <para>
+    /// The "accepted" half is not decoration. An enum control that only proves a bad value
+    /// is rejected would also pass against a comparison that had narrowed to accept one
+    /// value, or none, and every registry in the repository carries the same status today
+    /// (<c>implemented</c>, all 83 entries), so <c>registered</c> and <c>retired</c> have
+    /// no real-tree witness at all.
+    /// </para>
+    /// </remarks>
+    [TestCase("registered")]
+    [TestCase("implemented")]
+    public void EveryLegalEntryStatusIsAccepted(string status)
+    {
+        ImmutableArray<RegistryFinding> findings = ValidateComposedRegistry(
+            ComposedRegistry(FixtureEntry("VER-FIX-001-001", status: status)));
+
+        Assert.That(RegistryValidator.Render(findings), Is.Empty);
+    }
+
+    /// <summary>
+    /// The third legal status, <c>retired</c>, is accepted when it carries the successor
+    /// doc 91 requires.
+    /// </summary>
+    /// <remarks>
+    /// Separate from the two above because <c>retired</c> is the one status with a
+    /// companion obligation, so "accepted" for it means accepted *with* a successor.
+    /// </remarks>
+    [Test]
+    public void ARetiredEntryWithASuccessorIsAccepted()
+    {
+        ImmutableArray<RegistryFinding> findings = ValidateComposedRegistry(
+            ComposedRegistry(
+                FixtureEntry("VER-FIX-001-001", status: "retired", successor: "VER-FIX-001-002"),
+                FixtureEntry("VER-FIX-001-002")));
+
+        Assert.That(RegistryValidator.Render(findings), Is.Empty);
+    }
+
+    /// <summary>
+    /// A <c>status</c> outside the closed vocabulary is rejected, including a near-miss
+    /// misspelling and a word from a different vocabulary in the same specification.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <c>regsitered</c> is the case the field is most exposed to: a transposition that
+    /// reads correctly at a glance and, without this rule, would make an entry's status
+    /// mean nothing while looking like it meant <c>registered</c>.
+    /// </para>
+    /// <para>
+    /// <c>Done</c> and <c>Active</c> come from doc 114 § Work states and integration,
+    /// which defines Draft / Ready / Active / Evidence review / Done / Blocked. That is a
+    /// vocabulary for the state of a <em>task</em>, not for the state of a verification
+    /// entry, and it shares no word with this field's three. They are included as controls
+    /// precisely because they are the plausible wrong answer: a reader who knows one
+    /// vocabulary and not the other would write them.
+    /// </para>
+    /// </remarks>
+    [TestCase("regsitered", TestName = "a transposed registered")]
+    [TestCase("Registered", TestName = "the right word, wrong case")]
+    [TestCase("planned", TestName = "a word from no vocabulary in the specification")]
+    [TestCase("Done", TestName = "doc 114's task vocabulary, which is a different axis")]
+    [TestCase("Active", TestName = "doc 114's task vocabulary, which is a different axis")]
+    public void AnEntryStatusOutsideTheClosedVocabularyIsRejected(string status)
+    {
+        ImmutableArray<RegistryFinding> findings = ValidateComposedRegistry(
+            ComposedRegistry(FixtureEntry("VER-FIX-001-001", status: status)));
+
+        Assert.That(
+            Contains(findings, RegistryRule.InvalidVerificationValue),
+            Is.True,
+            "status '" + status + "' was accepted:\n" + RegistryValidator.Render(findings));
+    }
+
+    /// <summary>
+    /// A <c>retired</c> entry with no successor is rejected.
+    /// </summary>
+    /// <remarks>
+    /// Doc 91: "retired verification retains a tombstone and successor." This rule was in
+    /// the same state as the status enum — live and uncontrolled: deleting it left the
+    /// suite 47/47 green, because no registry in the repository carries a retired entry.
+    /// The violation is a coherent one: a complete, well-formed entry whose only defect is
+    /// that it was retired without naming what replaced it, which is the state retiring an
+    /// entry by editing one field leaves behind.
+    /// </remarks>
+    [Test]
+    public void ARetiredEntryWithoutASuccessorIsRejected()
+    {
+        ImmutableArray<RegistryFinding> findings = ValidateComposedRegistry(
+            ComposedRegistry(FixtureEntry("VER-FIX-001-001", status: "retired")));
+
+        Assert.That(
+            Contains(findings, RegistryRule.IncompleteVerificationEntry),
+            Is.True,
+            RegistryValidator.Render(findings));
+    }
+
+    /// <summary>
     /// Every <c>nunit</c> selector in every <c>tests/verification/*.json</c> names a test the
     /// NUnit harness actually discovers, and the harness discovered a nonzero number of them.
     /// </summary>
@@ -648,7 +755,11 @@ internal sealed class RegistryValidatorTests
     /// document by one field and a directory per field would make the difference the
     /// reader has to find rather than the thing the test states.
     /// </remarks>
-    private static string FixtureEntry(string id, string evidenceKinds = "\"test-counts\"")
+    private static string FixtureEntry(
+        string id,
+        string evidenceKinds = "\"test-counts\"",
+        string status = "implemented",
+        string? successor = null)
     {
         return "    {\n"
             + "      \"id\": \"" + id + "\",\n"
@@ -663,7 +774,8 @@ internal sealed class RegistryValidatorTests
             + "      \"evidenceKinds\": [" + evidenceKinds + "],\n"
             + "      \"platforms\": [\"linux-x64\"],\n"
             + "      \"tier\": \"fast\",\n"
-            + "      \"status\": \"implemented\"\n"
+            + "      \"status\": \"" + status + "\""
+            + (successor is null ? string.Empty : ",\n      \"successor\": \"" + successor + "\"") + "\n"
             + "    }";
     }
 

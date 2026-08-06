@@ -83,10 +83,28 @@ internal static class BootstrapVerb
             TimeSpan.FromMinutes(10));
         if (!restore.Succeeded)
         {
+            // Class 5, not 3, and deliberately the same class build returns for the
+            // same command. This used to be VerbOutcome.Environment, so one condition
+            // -- a committed lock file disagreeing with Directory.Packages.props --
+            // had two exit classes, and which one a caller saw depended only on
+            // whether bootstrap or build reached the locked restore first. Doc 100
+            // § Standard command surface calls the classes "stable process exit
+            // classes", which a per-verb answer is not.
+            //
+            // 5 is the correct one of the two. Doc 100's verb table assigns "locked
+            // restore" to `build`, so build owns this condition and its class governs;
+            // doc 100 also says wrappers "preserve the owning tool's class". Class 3
+            // is "missing or mismatched pinned environment", and doc 100 scopes the
+            // environment through `doctor`: "exact Godot/.NET/Blender/tool/template
+            // availability and hashes". A lock file that disagrees with the props file
+            // is not that. Both files are committed, the machine is correct, and the
+            // fix is a repository edit -- regenerate the lock files -- not an
+            // environment repair, which is the action a caller reading 3 would take.
             return ledger.Abandon(VerbOutcome
-                .Environment(
-                    "locked restore failed; the committed lock files and Directory.Packages.props disagree "
-                    + "with what restore would produce. See the step log.")
+                .Build(
+                    "locked restore failed. CI restores in locked mode and fails if lock files would change "
+                    + "(doc 100 § Dependency policy); update Directory.Packages.props and the lock files "
+                    + "together. See the step log.")
                 .WithWarnings(warnings));
         }
 

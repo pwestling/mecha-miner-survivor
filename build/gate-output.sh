@@ -4,13 +4,13 @@
 # and so mode 644 rather than 755: it is a library and not an entry point, and nothing
 # should be able to invoke it as a workflow step.
 #
-# NOTE FOR WHOEVER MERGES FND-005 INTO THIS BRANCH: this file is a new script under
-# build/, seen by both of verify-gate-wiring.sh's enumerators (it has a .sh extension and
-# a shebang), and that gate requires set equality between the enumerated scripts and its
-# INVENTORY. It therefore needs an INVENTORY entry, and none of that file's current
-# KNOWN_KINDS - gate, launcher, provisioning - describes a sourced library. Adding a
-# 'library' kind plus one entry is the merge fix; leaving it out fails that gate closed,
-# which is the gate working correctly.
+# This file is a script under build/, so both of build/verify-gate-wiring.sh's enumerators
+# see it (a .sh extension and a shebang), and that gate requires set equality between the
+# enumerated scripts and its INVENTORY. It is classified there as kind "library" - a kind
+# added for it, because gate/launcher/provisioning all describe something that runs, and
+# this only ever gets sourced. Only the "gate" kind must be reached-or-exempt, so a library
+# classifies without claiming a call site it does not have. If this file is renamed or
+# moved, that inventory entry moves with it or the gate goes red, which is the gate working.
 #
 # Authority: docs/technical/delivery-waves.md § Decision 11 (a gate never passes on an
 #              input set it did not successfully obtain; rule 4, every gate carries a
@@ -161,6 +161,17 @@ control_detail() {
     gate_controls_emitted=$((gate_controls_emitted + 1))
     printf '      %s %s\n' "${CONTROL_MARKER}" "${line}"
   done
+}
+
+# Absorbs a failure count a check computed and returned rather than emitted, so a gate
+# whose checks return counts (build/verify-gate-wiring.sh) still gets one summary and one
+# failing-section list. The check has already printed its own FAIL lines; this only makes
+# the total and the section attribution right.
+gate_add_failures() {
+  local count="$1"
+  [[ "${count}" -gt 0 ]] || return 0
+  gate_failures=$((gate_failures + count))
+  _gate_record_failing_section
 }
 
 # A required check that did not run. Recorded rather than merely printed, so no summary

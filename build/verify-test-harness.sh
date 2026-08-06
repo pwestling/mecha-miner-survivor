@@ -36,12 +36,19 @@ readonly EXIT_VALIDATION=4
 # for why control output is marked and why that marking is enforced rather than conventional.
 source "${REPO_ROOT}/build/gate-output.sh"
 
-section "1. the pure tier runs, discovers a nonzero test count, and launches no Godot"
+section "1. the pure tier runs, discovers a nonzero test count, and its tests launch no Godot"
 #
-# Removing the import cache first is what makes the "no Godot" assertion mean
-# something: if any part of the pure tier launched the engine, game/.godot would
-# reappear.
-rm -rf "${REPO_ROOT}/game/.godot"
+# This section used to remove game/.godot first and then assert that it was still
+# absent, as a corroborating signal for "the pure tier launched no Godot". That
+# assertion is now false for a legitimate reason and has been removed rather than
+# weakened: test-fast reaches build/verify-configurations.sh, which builds the Godot
+# project in all three configurations, and a Godot.NET.Sdk build writes game/.godot.
+# Observed on this tree - game/.godot exists after a green ./build.sh test-fast.
+#
+# The binding assertion was always the tripwire, and the tripwire's scope is the pure
+# NUnit test processes, not everything the verb does; see GodotTripwire's remarks in
+# src/MechaMiner.Tools/Verbs/TestVerb.cs. So this section requires the tripwire to have
+# been reported armed and untripped, and claims nothing about the gate scripts.
 output="$("${WRAPPER}" test-fast 2>&1)"
 status=$?
 printf '%s\n' "${output}" | sed 's/^/      /'
@@ -59,15 +66,8 @@ else
   fail "the pure tier reported no test count; 0 discovered tests is a harness failure"
 fi
 
-if [[ -d "${REPO_ROOT}/game/.godot" ]]; then
-  fail "game/.godot appeared during test-fast, so something launched Godot in the pure tier"
-else
-  pass "game/.godot is still absent, so the pure tier launched no Godot process"
-fi
-
-# The import cache is only a corroborating signal, and only because it was removed
-# above: a pure test that ran `godot --version` would leave no cache behind. The
-# binding assertion is the tripwire, so require the verb to have reported it.
+# The tripwire is the assertion, and it has to have been reported: a verb that dropped
+# the stage entirely would otherwise look identical to one that armed it and saw nothing.
 if grep -q 'ok    no-godot-launched: .*shim was first on PATH' <<<"${output}"; then
   pass "test-fast reported its no-godot-launched tripwire as armed and untripped"
 else
@@ -246,7 +246,8 @@ else
   control_fail "the tier exited ${violation_status}; a pure test that launches Godot must fail it with 4"
 fi
 
-if grep -q 'FAIL  no-godot-launched: the pure tier tried to launch Godot' <<<"${violation_output}"; then
+if grep -q 'FAIL  no-godot-launched: a pure NUnit test process tried to launch Godot' \
+    <<<"${violation_output}"; then
   control_pass "the tripwire named the violation and recorded the invocation"
 else
   control_fail "the tripwire did not report the launch it was armed to catch"

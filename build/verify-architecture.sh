@@ -43,6 +43,15 @@ readonly EXPECTED_PATHS=(
   # They exist from FND-002 onward and are the only workflow entrypoint.
   "build.sh"
   "build.ps1"
+  # doc 100 § Continuous integration requires a pull-request job; FND-005 is that
+  # job and this is the only file that is it. Deleting or renaming the workflow
+  # un-gates every gate at once, silently and with no red build anywhere, which is
+  # the one failure mode no gate inside the workflow can catch.
+  #
+  # Listing it here tests the path and nothing else, which is less than an earlier
+  # version of this comment claimed. § 8 is where the workflow's content is asserted;
+  # this entry only reports the name when the file is gone.
+  ".github/workflows/fast.yml"
   "game/project.godot"
   "game/MechaMiner.Game.csproj"
   "game/scenes"
@@ -278,21 +287,26 @@ gdscript_probe() {
   fi
 }
 
-# The verdict word and the detail are taken by parameter expansion, not by piping into
-# `head`. This script runs under `set -euo pipefail`, and `x="$(producer | head -1)"`
-# reports 141 as soon as the producer has more to write than head will read: head exits
-# after the first line, the producer takes SIGPIPE, pipefail surfaces 141, and `set -e`
-# then ABORTS THE WHOLE GATE mid-run - after § 1-6 have printed `ok` lines and before
-# § 7 or § 7a print anything, which reads as a truncated log rather than as a failure.
+# The first line of a probe's verdict, without a pipe. `probe | head -1` makes head exit
+# after one line, the probe take SIGPIPE, and `set -o pipefail` surface 141; `set -e` then
+# ABORTS THE WHOLE GATE mid-run - after § 1-6 have printed `ok` lines and before § 7 or
+# § 7a print anything, which reads as a truncated log rather than as a failure. It was
+# intermittent and it fired during § 8's negative controls.
+#
 # Measured over 300 trials on a probe emitting one path per offending file: 0 of 300 at
 # 428 bytes and at 4.1 KB, 136 of 300 at 70 KB, 300 of 300 at 326 KB. A tree with a few
-# hundred stray .gd files is exactly the tree this section exists to fail on, so the
-# abort was reachable precisely when the gate mattered.
+# hundred stray .gd files is exactly the tree this section exists to fail on, so the abort
+# was reachable precisely when the gate mattered. See delivery-waves § Decision 13.
 #
 # `tail -n +2` below is left as a pipeline on purpose: `tail` must read to EOF to know
 # where the end is, so it never closes the pipe early and there is no SIGPIPE to take.
+first_line() {
+  local text="$1"
+  printf '%s' "${text%%$'\n'*}"
+}
+
 gdscript_verdict="$(gdscript_probe)"
-gdscript_kind="${gdscript_verdict%%$'\n'*}"
+gdscript_kind="$(first_line "${gdscript_verdict}")"
 gdscript_detail="$(printf '%s\n' "${gdscript_verdict}" | tail -n +2)"
 
 if [[ "${gdscript_kind}" == "unreadable" ]]; then
@@ -324,8 +338,7 @@ else
 extends Node
 GDFIXTURE
 
-  control_verdict="$(gdscript_probe)"
-  control_kind="${control_verdict%%$'\n'*}"
+  control_kind="$(first_line "$(gdscript_probe)")"
   if [[ "${control_kind}" == "violation" ]]; then
     control_pass "an untracked .gd file is detected as a violation"
   else
@@ -334,8 +347,7 @@ GDFIXTURE
 
   # Control 2: the same fixture, with git unable to answer. The gate must report that
   # it could not tell, and must never report a clean tree.
-  control_verdict="$(GIT_DIR=/nonexistent/verify-architecture-broken.git gdscript_probe)"
-  control_kind="${control_verdict%%$'\n'*}"
+  control_kind="$(first_line "$(GIT_DIR=/nonexistent/verify-architecture-broken.git gdscript_probe)")"
   if [[ "${control_kind}" == "unreadable" ]]; then
     control_pass "a git failure is reported as unreadable, not as a clean tree"
   else
@@ -348,8 +360,7 @@ GDFIXTURE
   # The fixture must be gone. The comparison is against § 7's own verdict rather than
   # against "clean", so that a pre-existing .gd file in the tree - which § 7 already
   # failed on - is not reported a second time as a fixture-cleanup failure.
-  control_verdict="$(gdscript_probe)"
-  control_kind="${control_verdict%%$'\n'*}"
+  control_kind="$(first_line "$(gdscript_probe)")"
   if [[ "${control_kind}" == "${gdscript_kind}" ]]; then
     control_pass "the fixture was removed; the probe reports '${control_kind}' again, as it did in § 7"
   else
@@ -357,8 +368,100 @@ GDFIXTURE
   fi
 fi
 
-# This gate runs negative controls in band, so its log contains failure-shaped text on a
-# green run. Prove the marking that separates that text from genuine findings still holds.
+section "8. the CI workflow still gates the repository (VER-FND-005-009)"
+#
+# Section 1 lists the workflow among EXPECTED_PATHS, which is a test of the path and
+# nothing more. `[[ -e ]]` accepts a zero-byte fast.yml, and it accepts a workflow with
+# no jobs and no pull_request or push trigger. Either of those un-gates every gate in
+# this repository exactly as silently as deleting the file, and `./build.sh build` was
+# green for both. What follows asserts the content the suite depends on.
+#
+# The required verbs are a list of requirements, not a roster of what the file happens
+# to contain: delivery-waves § Step 4 says "The fast pull-request path is bootstrap,
+# format-check, build, test-fast, godot-import". Deriving them from the workflow would
+# assert only that the workflow agrees with itself.
+
+readonly CI_WORKFLOW=".github/workflows/fast.yml"
+readonly REQUIRED_TRIGGERS=("pull_request" "push")
+readonly REQUIRED_FAST_VERBS=("bootstrap" "format-check" "build" "test-fast" "godot-import")
+
+# The child keys of a top-level `key:` block, in either the block or the inline-list
+# form, so `on: [push, pull_request]` reads the same as the block this file uses.
+yaml_block_keys() {
+  awk -v want="$1" '
+    index($0, want ":") == 1 {
+      rest = substr($0, length(want) + 2)
+      sub(/^[[:space:]]*/, "", rest)
+      if (rest ~ /^\[/) {
+        gsub(/[][]/, "", rest)
+        n = split(rest, parts, /,/)
+        for (i = 1; i <= n; i++) {
+          gsub(/[[:space:]]/, "", parts[i])
+          if (parts[i] != "") { print parts[i] }
+        }
+      } else if (rest == "" || rest ~ /^#/) {
+        block = 1
+      }
+      next
+    }
+    block && /^[^[:space:]#]/ { block = 0 }
+    block && /^  [A-Za-z_][A-Za-z0-9_-]*:/ {
+      key = $0
+      sub(/:.*/, "", key)
+      gsub(/[[:space:]]/, "", key)
+      print key
+    }
+  ' "$2"
+}
+
+workflow_path="${REPO_ROOT}/${CI_WORKFLOW}"
+
+if [[ ! -f "${workflow_path}" ]]; then
+  fail "${CI_WORKFLOW} does not exist, so nothing in this repository is gated by anything"
+elif [[ ! -s "${workflow_path}" ]]; then
+  fail "${CI_WORKFLOW} exists but is empty, so it runs nothing; § 1's path test cannot tell those apart"
+else
+  pass "${CI_WORKFLOW} exists and is not empty"
+
+  # Here-strings rather than pipes into `grep -q`: grep exits on its first match and
+  # closes the pipe, printf takes SIGPIPE, and `set -o pipefail` then aborts the whole
+  # script with 141 instead of reporting an assertion. That happened, nondeterministically,
+  # on the control that deletes one step.
+  mapfile -t workflow_triggers < <(yaml_block_keys "on" "${workflow_path}")
+  workflow_trigger_list="$(printf '%s\n' "${workflow_triggers[@]-}")"
+  for trigger in "${REQUIRED_TRIGGERS[@]}"; do
+    if grep -qxF "${trigger}" <<<"${workflow_trigger_list}"; then
+      pass "${CI_WORKFLOW} triggers on ${trigger}"
+    else
+      fail "${CI_WORKFLOW} declares no ${trigger} trigger, so the suite never runs for that event"
+    fi
+  done
+
+  mapfile -t workflow_jobs < <(yaml_block_keys "jobs" "${workflow_path}")
+  if [[ "${#workflow_jobs[@]}" -eq 0 ]]; then
+    fail "${CI_WORKFLOW} declares no job, so nothing in it can run"
+  else
+    pass "${CI_WORKFLOW} declares ${#workflow_jobs[@]} job(s): ${workflow_jobs[*]}"
+    if grep -qE '^[[:space:]]+steps:[[:space:]]*$' "${workflow_path}"; then
+      pass "${CI_WORKFLOW} declares a steps: block"
+    else
+      fail "${CI_WORKFLOW} declares a job with no steps: block"
+    fi
+  fi
+
+  workflow_body="$(sed 's/#.*$//' "${workflow_path}")"
+  for verb in "${REQUIRED_FAST_VERBS[@]}"; do
+    if grep -qE "(^|[[:space:];&|])(\./)?build\.(sh|ps1)[[:space:]]+${verb}([[:space:]]|\$)" \
+        <<<"${workflow_body}"; then
+      pass "${CI_WORKFLOW} invokes ./build.sh ${verb}"
+    else
+      fail "${CI_WORKFLOW} never invokes ./build.sh ${verb}, which delivery-waves § Step 4 puts on the fast path"
+    fi
+  done
+fi
+
+# This gate runs negative controls in band (§ 7a), so its log contains failure-shaped text
+# on a green run. Prove the marking that separates that text from genuine findings holds.
 gate_assert_marking
 
 gate_summary "verify-architecture" "${EXIT_VALIDATION}"

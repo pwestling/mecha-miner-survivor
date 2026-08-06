@@ -290,10 +290,15 @@ it, and `FND-010` owns the `SCH-OBS-003` bundle without which no M0 task can rea
 Done. Three things they inherit rather than invent:
 
 - `FND-005`'s CI job calls `./build.sh` verbs, never a script directly. The fast
-  pull-request path is `bootstrap`, `format-check`, `build`, `test-fast`; the main path
-  adds `test-main`. The `content` verb belongs in the fast path as soon as `DAT-006`
-  lands, and until then it exits 2 naming `DAT-006`, which is a legible CI failure rather
-  than a silent gap.
+  pull-request path is `bootstrap`, `format-check`, `build`, `test-fast`, `godot-import`;
+  the main path adds `test-main`. This list previously omitted `godot-import`, which
+  contradicted doc 91 § Fast pull-request suite ("Godot headless import and focused
+  integration tests"); doc 91 is the authority and this document is non-normative
+  coordination, so the omission was a defect here and is corrected rather than being
+  read as narrowing the tier. The `content` verb belongs in the fast path as soon as
+  `DAT-006` lands, and until then it exits 2 naming `DAT-006`, which is a legible CI
+  failure rather than a silent gap. The focused integration tests doc 91 names alongside
+  the import are still main-path only, because `test-main` is the verb that runs them.
 - `FND-006` implements `export` and `run`, and inherits Decision 4's mapping: `development`
   builds `ExportDebug` and `release` builds `ExportRelease`. It also owns the export-preset
   exclusion for `game/tests/`, whose compile-time exclusion under `ExportRelease` already
@@ -1006,11 +1011,23 @@ scope, so the request goes through the integration owner.
   a cost worth paying and worth mitigating, not an argument against in-band controls.
 - **So control-manufactured output is marked.** `build/gate-output.sh` is the single shared
   emitter set for every gate script: `pass`/`fail` for findings about the subject under
-  test, `control_pass`/`control_fail` for anything produced while a control's fixture is in
-  place. Every control line carries one token, no genuine finding does, and `grep -v` on
-  that token leaves only findings about the repository. That file also records which
-  sections are marked and which deliberately are not, so the boundary is written down
-  rather than left to each author.
+  test, `control_pass`/`control_fail`/`control_detail` for anything produced while a
+  control's fixture is in place. Every control line carries one token, no genuine finding
+  does, and `grep -v` on that token leaves only findings about the repository. That file
+  also records which sections are marked and which deliberately are not, so the boundary is
+  written down rather than left to each author.
+- **The instance is measurable on `verify-gate-wiring.sh` § 5.** That section runs eight
+  in-band controls and quotes their manufactured `FAIL` lines. Before marking, a green run's
+  log answered `grep 'is never invoked and is not on the deliberately-unwired list'` with
+  **two hits**, both inside control fixtures. After marking, the same grep with
+  `grep -v '[control-fixture]'` applied answers **zero**, which is the true number. The
+  fixture-cleanup check is marked with the rest; the control-set **coverage** assertion
+  ("all 8 negative controls ran") is deliberately left unmarked, because "the control set
+  shrank" is exactly a finding a reader excluding control output still needs.
+- **A library is a fourth script kind.** `verify-gate-wiring.sh` requires every script under
+  the enumerators to be classified, and `gate`, `launcher` and `provisioning` all describe
+  something that runs. `gate-output.sh` is only ever sourced, so it is classified `library`,
+  and only the `gate` kind is required to be reached-or-exempt.
 - **It is enforced, not conventional.** `pass` and `fail` refuse a message that already
   carries the marker, and `gate_assert_marking` proves that refusal works on every
   invocation. Without that, the marking would decay the first time someone added a control

@@ -1,21 +1,77 @@
-# Authoritative random-number golden vectors
+# Simulation golden vectors
+
+This directory holds the canonical golden fixtures for
+`MechaMiner.Simulation`. Two work-package groups share it:
+
+| Group | Files | Work package |
+| --- | --- | --- |
+| Authoritative random-number contract | `random-*.txt` | SIM-005 |
+| Fixed-step time and runtime | `time-*.txt`, `runtime-*.txt` | SIM-001, SIM-002 |
+
+Every file here is canonical, ordered, reviewable text per doc 91 § Determinism
+and fixture policy: LF endings, no trailing whitespace, exactly one final
+newline, and a `#` header naming the authority and the derivation. No file here
+was produced by the C# implementation it checks, and § "A mismatch is
+investigated, never regenerated" at the end of this document governs all of
+them.
+
+## Files
+
+| File | Pins | Authority |
+| --- | --- | --- |
+| `random-seed-derivation.txt` | four-step derivation; `d0`, `d1`, `stateSeed`, `selector` for 9 triples including master seed 0, master seed all-ones, instance key 0, and nonzero instance keys | doc 20:53 |
+| `random-stream-initialization.txt` | increment and primed state plus the first 16 outputs for 5 streams; two of them differ only in instance key | doc 20:55 |
+| `random-bounded-conversion.txt` | results **and draws consumed** for 10 bounds including 1, non-powers-of-two, and `0xC0000000` which rejects one draw in four | doc 20:86 |
+| `random-unit-double-conversion.txt` | conversion, as mantissa, IEEE 754 bits, and decimal | doc 20:87 |
+| `random-stream-independence.txt` | first output of all 23 registered families in canonical family-key order | doc 20:57-81 |
+| `random-degenerate-selection.txt` | zero-draw rule with the stream state shown unchanged, plus multi-candidate controls that do advance | doc 20:89 |
+| `time-tick-index-derived-seconds.txt` | derived seconds for a spread of tick indices as IEEE 754 bit patterns, each obtained by dividing the tick index once by the exact rational rate 60/1 rather than by accumulating a per-tick delta; includes tick 126000, whose derived seconds must be exactly 2100 | doc 10 § Clock domains; doc 20 § Numeric and unit conventions |
+| `time-final-boundary-ordering.txt` | the 35:00 terminal boundary as tick 126000: 125999 is the last tick executed, 126000 never runs, and extraction is evaluated before any event scheduled at or after the boundary — an event at or after 126000 being refused at every point in the run, not only once the boundary has been reached | doc 20 § Boundary and tie ordering; doc 10 § System phase ordering, phase 2 |
+| `runtime-pause-boundary-tick-sequence.txt` | a pause consumes no gameplay time: two runs fed the same 24 frame deltas, one of them blocked by `GeneralPause` for 11/128 s part-way through, render one identical tick sequence, because blocked steps produce no batch at all and blocked wall time is never banked into a later step | doc 10 § Pause contract; doc 20 § Verification |
+
+## Fixed-step time and runtime vectors (SIM-001, SIM-002)
+
+`docs/technical/10-runtime-architecture.md` § Clock domains, § Pause contract,
+and § System phase ordering, together with
+`docs/technical/20-simulation-core.md` § Boundary and tie ordering and § Numeric
+and unit conventions, are the normative sources for these three files. Each
+file's own header quotes the sentences it depends on.
+
+They were derived from those sections by independent Python references — a
+fixed-step accumulator, and an exact rational tick-index-to-seconds division —
+rather than by the C# under test, for the same reason the random vectors were: a
+golden generated from the implementation proves only that the implementation
+agrees with itself.
+
+Two conventions in these files are worth knowing before reading them:
+
+- **Seconds are IEEE 754 binary64 bit patterns, not decimal renderings.** A bit
+  pattern has no formatting ambiguity, so a mismatch is always a disagreement
+  about the value and never about how it was printed.
+- **Frame deltas are exact binary fractions** (multiples of 1/128 s), so a tick
+  sequence is a property of the accumulator rather than of decimal rounding in
+  the fixture. The blocked interval in
+  `runtime-pause-boundary-tick-sequence.txt` is deliberately not a whole number
+  of ticks (11/128 s = 5.15625 ticks).
+
+## Authoritative random-number vectors (SIM-005)
 
 Work package SIM-005.
 
-## Authority
+### Authority
 
 `docs/technical/20-simulation-core.md` § Authoritative random-number contract
-(lines 49-91) is the normative source for every number in this directory.
-**Random schema version: 1** (doc 20:53).
+(lines 49-91) is the normative source for every number in the `random-*.txt`
+files. **Random schema version: 1** (doc 20:53).
 
 Doc 20:55 is explicit about the consequence of changing any of this: "Changing
 any operation increments the random schema version and invalidates incompatible
 recovery rather than silently changing a compatible run." These vectors are the
 recorded behaviour of schema version 1.
 
-## Why these vectors were not produced by the C# implementation
+### Why these vectors were not produced by the C# implementation
 
-The vectors in this directory were generated by an **independent pure-Python
+The random vectors were generated by an **independent pure-Python
 reference implementation of PCG-XSH-RR 64/32 and SplitMix64**, written directly
 from doc 20:51-91 and committed *before* the C# implementation existed.
 
@@ -34,7 +90,7 @@ reproducing numbers the implementation did not produce.
 **absent** it writes the file *and still fails the test*. A missing golden can
 therefore never be silently created by a green run.
 
-## External reference check
+### External reference check
 
 The doc's constants were checked against published primary sources rather than
 taken on trust, because a transcription error in the specification itself would
@@ -79,14 +135,14 @@ is the only check here anchored to a value published outside this repository, so
 it is the one that catches a shared misreading of the spec rather than a
 disagreement between our own two implementations.
 
-## Details fixed by decision
+### Details fixed by decision
 
 Doc 20:86-87 constrains these two points but does not fully determine them. They
 are settled here because four downstream streams depend on them, so the choice
 has to be written down rather than left implicit in whichever implementation
 landed first.
 
-### 1. `[0,1)` double bit layout
+#### 1. `[0,1)` double bit layout
 
 Doc 20:87 requires "53 random bits under one golden-tested conversion" without
 stating the layout. Fixed as: two 32-bit draws, **first draw as the high half**,
@@ -110,7 +166,7 @@ order. Each value consumes exactly two draws.
 IEEE 754 bit pattern, so the conversion is verified independently of any
 double-to-text formatting.
 
-### 2. Bounded-integer rejection threshold
+#### 2. Bounded-integer rejection threshold
 
 Doc 20:86 mandates rejection sampling "rather than modulo reduction" without
 stating the threshold. Fixed as the canonical PCG one:
@@ -130,44 +186,7 @@ reference implementation.
 **one draw is consumed**. The no-draw rule of doc 20:89 is a property of
 *selection*, not of this primitive — see the note on ambiguities below.
 
-## Files
-
-| File | Pins |
-| --- | --- |
-| `random-seed-derivation.txt` | doc 20:53 four-step derivation; `d0`, `d1`, `stateSeed`, `selector` for 9 triples including master seed 0, master seed all-ones, instance key 0, and nonzero instance keys |
-| `random-stream-initialization.txt` | doc 20:55 increment and primed state plus the first 16 outputs for 5 streams; two of them differ only in instance key |
-| `random-bounded-conversion.txt` | doc 20:86 results **and draws consumed** for 10 bounds including 1, non-powers-of-two, and `0xC0000000` which rejects one draw in four |
-| `random-unit-double-conversion.txt` | doc 20:87 conversion, as mantissa, IEEE 754 bits, and decimal |
-| `random-stream-independence.txt` | doc 20:57-81; first output of all 23 registered families in canonical family-key order |
-| `random-degenerate-selection.txt` | doc 20:89 zero-draw rule with the stream state shown unchanged, plus multi-candidate controls that do advance |
-
-Every file is canonical, ordered, reviewable text per doc 91 § Determinism and
-fixture policy: LF endings, no trailing whitespace, exactly one final newline,
-`#` header naming the authority and the derivation.
-
-## A mismatch is investigated, never regenerated
-
-If a test in this directory fails, the default assumption is that **the
-implementation is wrong**, not that the golden is stale. These numbers were
-derived from the authoritative document and independently cross-checked against
-published reference vectors; they are not a snapshot of observed behaviour.
-
-`GoldenText`'s update mode is deliberately not an escape hatch:
-`MECHAMINER_GOLDEN_UPDATE=1` rewrites the golden **and the test still fails**.
-Updating a golden can therefore never turn a run green by itself. Per doc 91,
-accepting a new golden requires an authority-aware review of the underlying
-behaviour change; per doc 114 § Failure and retry policy, editing a golden to
-make a gate pass is forbidden.
-
-Concretely, a mismatch here means one of:
-
-1. the C# implementation has a bug (overwhelmingly the most likely);
-2. the random schema version is being changed, which per doc 20:55 must be an
-   explicit version increment with recovery invalidation, not a golden edit; or
-3. doc 20:49-91 itself changed, in which case the Python reference is rewritten
-   from the new text and the vectors are regenerated as a reviewed act.
-
-## Ambiguities in doc 20:49-91 worth a second reading
+### Ambiguities in doc 20:49-91 worth a second reading
 
 - **Draw accounting during priming.** Doc 20:55 says to advance twice "before
   returning the first caller-visible value". The phrase "caller-visible" is read
@@ -193,3 +212,32 @@ Concretely, a mismatch here means one of:
   region ID" or similar (doc 20:62-80). `random-stream-independence.txt`
   deliberately uses instance key 0 for all 23 families so the family key is the
   only varying input; it does not assert anything about real instance-key values.
+
+## A mismatch is investigated, never regenerated
+
+If a test in this directory fails, the default assumption is that **the
+implementation is wrong**, not that the golden is stale. These numbers were
+derived from the authoritative documents — and, for the random vectors,
+independently cross-checked against published reference vectors; they are not a
+snapshot of observed behaviour.
+
+`GoldenText`'s update mode is deliberately not an escape hatch:
+`MECHAMINER_GOLDEN_UPDATE=1` rewrites the golden **and the test still fails**.
+Updating a golden can therefore never turn a run green by itself. Per doc 91,
+accepting a new golden requires an authority-aware review of the underlying
+behaviour change; per doc 114 § Failure and retry policy, editing a golden to
+make a gate pass is forbidden.
+
+Concretely, a mismatch in a `random-*.txt` file means one of:
+
+1. the C# implementation has a bug (overwhelmingly the most likely);
+2. the random schema version is being changed, which per doc 20:55 must be an
+   explicit version increment with recovery invalidation, not a golden edit; or
+3. doc 20:49-91 itself changed, in which case the Python reference is rewritten
+   from the new text and the vectors are regenerated as a reviewed act.
+
+A mismatch in a `time-*.txt` or `runtime-*.txt` file means either the first of
+those, or that the governing section of doc 10 or doc 20 changed — in which case
+the tick rate, boundary, or pause rule is restated from the new text and the
+vectors are regenerated as a reviewed act. Neither is a licence to edit the
+golden to match observed output.

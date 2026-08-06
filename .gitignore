@@ -20,3 +20,7 @@ export_credentials.cfg
 
 # Per-developer IDE and user state
 *.user
+
+# Agent worktree scratch. Only worktrees/ is ignored, deliberately: the rest of
+# .claude/ (settings, skills) is shared project configuration and stays committable.
+.claude/worktrees/

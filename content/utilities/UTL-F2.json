@@ -8,7 +8,10 @@
   "tags": [],
   "source_refs": [
     "GDD-UTILITY-CATALOG#utl-f2--field-expander",
-    "external_numerics[]: GDD-INITIAL-MECH-CATALOG"
+    "external_numerics[]: GDD-INITIAL-MECH-CATALOG",
+    "effect.stacking_classification: GDD-UTILITY-CATALOG#modifier-and-timing-rules",
+    "catalog_wide_rules.modifier_and_timing_rules[]: GDD-UTILITY-CATALOG#modifier-and-timing-rules",
+    "catalog_wide_rules.shared_acquisition_and_rank_rules[]: GDD-UTILITY-CATALOG#shared-acquisition-and-rank-rules"
   ],
   "material": "Flux Amber",
   "primary_role": "Weapon coverage",
@@ -18,7 +21,7 @@
       "Weapon area"
     ],
     "value_kind": "additive-percent",
-    "stacking_classification": "Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative. (docs/68-utility-catalog.md:253)"
+    "stacking_classification": "Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative."
   },
   "ranks": [
     {
@@ -69,7 +72,6 @@
   },
   "availability": {
     "fresh_profile": false,
-    "coverage_role": null,
     "unlock_id": "UNL-01",
     "unlock_name": "Advanced Utility Suite",
     "unlock_cost_hyper_gold": 600

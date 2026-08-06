@@ -1,9 +1,10 @@
 {
-  "id": "weapon-stat-price-formula",
+  "id": "FORMULA-01",
   "schema_version": 1,
   "content_version": 1,
   "status": "enabled",
-  "name_key": "weapon.weapon-stat-price-formula.name",
+  "name_key": "weapon.FORMULA-01.name",
+  "summary_key": "weapon.FORMULA-01.summary",
   "tags": [],
   "source_refs": [
     "GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
@@ -55,7 +56,6 @@
   "applies_to": "Every common-ore stat track of every base weapon; all three tracks of a weapon share one depth and therefore one next price.",
   "defining_prose": "For purchase number `n`, the shared next price is `5n(n + 1)` common ore. Because `n` is current depth plus one, a depth-`d` weapon pays `5(d + 1)(d + 2)`. The first ten prices are 10, 30, 60, 100, 150, 210, 280, 360, 450, and 550 ore. Cumulative cost reaches 100 after three purchases, 200 after four, 350 after five, and 2,200 after ten.",
   "price_curve_decision": {
-    "id": "DEC-085",
-    "note": "The shared common-ore price curve is fixed globally by DEC-085 (docs/weapons/README.md:48)."
+    "id": "DEC-085"
   }
 }

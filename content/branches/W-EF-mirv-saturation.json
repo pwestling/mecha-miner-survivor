@@ -54,7 +54,6 @@
       "percent": 135
     }
   },
-  "expected_effect": null,
   "rules": [
     {
       "text": "Each missile splits once into three micro-missiles at half of its remaining travel distance or 1.0 s before predicted impact, whichever comes first."

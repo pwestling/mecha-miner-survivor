@@ -46,10 +46,9 @@
     },
     "carrier_trails_can_ignite_further_carriers": false,
     "maximum_carrier_trails_per_enemy": 1,
-    "segment_overlap_cap_per_target": 2,
-    "overlap_cap_counts_mech_and_carrier_segments": true
+    "segment_overlap_maximum_per_target": 2,
+    "overlap_maximum_counts_mech_and_carrier_segments": true
   },
-  "expected_effect": null,
   "rules": [
     {
       "text": "An enemy damaged by the mech's wake leaves its own trail for 3.0 s as it moves."

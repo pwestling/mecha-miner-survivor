@@ -19,7 +19,6 @@
   "inventory_scope": "run-local",
   "persistence": "Run-local; unspent units are lost when the run ends",
   "shared_economy_tier": true,
-  "maximum_safe_count": null,
   "resonance_effect_name": "Vector Lock",
   "resonance_behavior": {
     "effect_name": "Vector Lock",

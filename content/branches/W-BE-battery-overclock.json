@@ -36,10 +36,10 @@
     "attack_rate_bonus_per_active_pod_beyond_the_first": {
       "percent": 25
     },
-    "attack_rate_bonus_cap": {
+    "attack_rate_bonus_maximum": {
       "percent": 50
     },
-    "active_pod_count_at_cap": 3,
+    "active_pod_count_at_maximum": 3,
     "bonus_applies_to": "all active pods",
     "bonus_update_timing": "immediately as pods deploy or expire",
     "pod_damage_changed": false

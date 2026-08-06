@@ -7,7 +7,11 @@
   "summary_key": "utility.UTL-E1.summary",
   "tags": [],
   "source_refs": [
-    "GDD-UTILITY-CATALOG#utl-e1--repair-swarm"
+    "GDD-UTILITY-CATALOG#utl-e1--repair-swarm",
+    "effect.stacking_classification: GDD-UTILITY-CATALOG#modifier-and-timing-rules",
+    "catalog_wide_rules.modifier_and_timing_rules[]: GDD-UTILITY-CATALOG#modifier-and-timing-rules",
+    "catalog_wide_rules.shared_acquisition_and_rank_rules[]: GDD-UTILITY-CATALOG#shared-acquisition-and-rank-rules",
+    "installed_to_rank_3: GDD-UTILITY-CATALOG#catalog-overview"
   ],
   "material": "Eidolon Coral",
   "primary_role": "Recovery",
@@ -17,7 +21,7 @@
       "Recovery"
     ],
     "value_kind": "additive-hull-per-second",
-    "stacking_classification": "Recovery sources add in Hull Integrity per second. (docs/68-utility-catalog.md:255)"
+    "stacking_classification": "Recovery sources add in Hull Integrity per second."
   },
   "ranks": [
     {
@@ -60,10 +64,7 @@
   },
   "availability": {
     "fresh_profile": true,
-    "coverage_role": "Recovery",
-    "unlock_id": null,
-    "unlock_name": null,
-    "unlock_cost_hyper_gold": null
+    "coverage_role": "Recovery"
   },
   "effect_rules": [
     "Adds to other Recovery sources and functions during movement, combat, and mining.",

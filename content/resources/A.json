@@ -19,7 +19,6 @@
   "inventory_scope": "run-local",
   "persistence": "Run-local; unspent units are lost when the run ends",
   "shared_economy_tier": true,
-  "maximum_safe_count": null,
   "resonance_effect_name": "Focused Assault",
   "resonance_behavior": {
     "effect_name": "Focused Assault",
@@ -28,7 +27,6 @@
       "percent": 20,
       "direction": "increase"
     },
-    "short_modifier": "Enemy outgoing damage +20%",
-    "edge_case_rule": null
+    "short_modifier": "Enemy outgoing damage +20%"
   }
 }

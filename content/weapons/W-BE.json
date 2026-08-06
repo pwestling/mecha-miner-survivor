@@ -38,7 +38,6 @@
       "Eidolon Coral"
     ]
   },
-  "signature_mech": null,
   "fabrication_cost": {
     "materials": [
       {
@@ -99,7 +98,7 @@
     "first_pod_deploys_immediately": true,
     "pod_life_seconds": 24,
     "maximum_active_pod_count": 3,
-    "oldest_pod_replaced_at_cap": true,
+    "oldest_pod_replaced_at_maximum": true,
     "pods_destructible": false,
     "raw": "One pod every 6 s, 24 s life, maximum three active; oldest replaced at cap"
   },

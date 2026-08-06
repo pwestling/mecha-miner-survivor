@@ -1,9 +1,9 @@
 {
-  "id": null,
+  "id": "SITE-04",
   "schema_version": 1,
   "content_version": 1,
   "status": "enabled",
-  "name_key": "mining_site.specialized-material-geodes.name",
+  "name_key": "mining_site.SITE-04.name",
   "tags": [],
   "source_refs": [
     "GDD-MINING#specialized-material-geodes",
@@ -22,12 +22,12 @@
   ],
   "material_units_per_geode": 1,
   "geodes_per_present_material": {
-    "min": 8,
-    "max": 10
+    "minimum": 8,
+    "maximum": 10
   },
   "geodes_per_standard_map": {
-    "min": 32,
-    "max": 40
+    "minimum": 32,
+    "maximum": 40
   },
   "abundance_states": [
     {
@@ -48,8 +48,8 @@
   ],
   "survey_disclosure": "The geological survey reports both the abundance label and detected geode count, but not their locations.",
   "common_ore_from_completion_jackpots_per_map": {
-    "min": 1600,
-    "max": 2000
+    "minimum": 1600,
+    "maximum": 2000
   },
   "extraction_duration_seconds": 20,
   "completion_only_reward": true,
@@ -65,16 +65,13 @@
     }
   ],
   "partial_payout": "none; no partial material or ore payout",
-  "extraction_zone_radius_m": null,
   "progress_decay": {
     "grace_seconds": 0.5,
     "decay_rate_multiplier_of_forward_rate": 4,
-    "secured_checkpoint": null,
     "rule": "The reward is withheld until the Complete transition, so an incomplete attempt pays nothing."
   },
   "resonance_field": {
     "shape": "circular",
-    "radius_m": null,
     "larger_than_extraction_zone": true,
     "modifier_magnitude": {
       "percent": 20
@@ -95,7 +92,6 @@
     "uses_progress_thresholds": false,
     "modifier_named_in_geode_label_or_contextual_hud": true
   },
-  "beacon_thresholds": null,
   "depleted_state": "non-interactive mapped landmark for the rest of the run; cannot be reactivated",
   "persistence": "run-local; the specialized material and 50 common ore are lost if unspent when the run ends"
 }

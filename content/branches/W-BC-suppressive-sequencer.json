@@ -44,7 +44,6 @@
     "damage_changed": false
   },
   "favorable_scene_effect": {
-    "magnitude": null,
     "qualitative": "converts repeated single-target fire into broad crowd suppression"
   },
   "rules": [

@@ -8,7 +8,7 @@
   "source_refs": [
     "GDD-WEAPON-NUMERIC-CATALOG#interdiction-payload--functional--2-asterite",
     "rules[]: GDD-WEAPON-NUMERIC-CATALOG#interdiction-payload--functional--2-asterite",
-    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "prerequisites: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
     "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches"
   ],
   "weapon_id": "W-AC",
@@ -37,7 +37,6 @@
     "boss_slow_form": "globally resisted",
     "fields_may_overlap_and_damage_independently": true
   },
-  "expected_effect": null,
   "rules": [
     {
       "text": "The primary explosion leaves a 3.0 s hazard field at its impact point."

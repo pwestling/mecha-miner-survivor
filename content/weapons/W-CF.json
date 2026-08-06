@@ -38,7 +38,6 @@
       "Flux Amber"
     ]
   },
-  "signature_mech": null,
   "fabrication_cost": {
     "materials": [
       {
@@ -96,7 +95,7 @@
   ],
   "fixed_properties": {
     "placement_interval_base_travel_seconds": 0.25,
-    "simultaneous_segment_overlap_cap_per_target": 2,
+    "simultaneous_segment_overlap_maximum_per_target": 2,
     "raw": "Segment every 0.25 base-travel seconds, two-segment overlap cap per target"
   },
   "damage_model": {

@@ -10,7 +10,10 @@
     "GDD-INITIAL-MECH-CATALOG#catalog-overview",
     "signature_weapon_id: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
     "trait_stacking: GDD-INITIAL-MECH-CATALOG#trait-comparison-and-stacking",
-    "initial_availability: GDD-INITIAL-MECH-CATALOG#initial-availability"
+    "initial_availability: GDD-INITIAL-MECH-CATALOG#initial-availability",
+    "player_facing_identity: GDD-INITIAL-MECH-CATALOG#player-facing-identity",
+    "top_down_silhouette[]: GDD-INITIAL-MECH-CATALOG#top-down-silhouette",
+    "trait_notes[]: GDD-INITIAL-MECH-CATALOG#signature-and-trait"
   ],
   "signature": "Pulse Repeater",
   "signature_weapon_id": "W-BC",

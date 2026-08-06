@@ -8,7 +8,7 @@
   "source_refs": [
     "GDD-WEAPON-NUMERIC-CATALOG#echo-well--amplification--2-asterite",
     "rules[]: GDD-WEAPON-NUMERIC-CATALOG#echo-well--amplification--2-asterite",
-    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "prerequisites: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
     "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches"
   ],
   "weapon_id": "W-AD",
@@ -41,7 +41,7 @@
     "new_original_field_may_coexist_with_older_echo": true
   },
   "expected_effect": {
-    "max_damage_increase_percent": 100,
+    "maximum_damage_increase_percent": 100,
     "condition": "player keeps enemies in the location",
     "materially_less_benefit_against_moving_boss": true
   },

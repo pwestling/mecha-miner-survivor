@@ -40,10 +40,10 @@
     "contact_damage_base_percent_of_current_damage": {
       "percent": 200
     },
-    "contact_damage_speed_bonus_percent_max": {
+    "maximum_speed_bonus_percent": {
       "percent": 200
     },
-    "contact_damage_percent_cap": {
+    "maximum_total_contact_damage_percent": {
       "percent": 400
     },
     "speed_scaling": "linear with blade world speed from stationary to one base mech full-speed",

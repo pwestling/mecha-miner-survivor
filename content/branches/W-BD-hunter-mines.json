@@ -36,7 +36,7 @@
     "acquisition_range_m": 6,
     "acquisition_target": "the nearest enemy",
     "pursuit_speed_m_per_s": 3,
-    "pursuit_duration_seconds_max": 6.0,
+    "maximum_pursuit_duration_seconds": 6.0,
     "damage_percent_of_current_damage": {
       "percent": 150
     },

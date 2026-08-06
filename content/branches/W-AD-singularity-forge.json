@@ -8,7 +8,7 @@
   "source_refs": [
     "GDD-WEAPON-NUMERIC-CATALOG#singularity-forge--conversion--2-barysteel",
     "rules[]: GDD-WEAPON-NUMERIC-CATALOG#singularity-forge--conversion--2-barysteel",
-    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "prerequisites: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
     "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches"
   ],
   "weapon_id": "W-AD",
@@ -39,7 +39,7 @@
     "mass_rounding_per_enemy": "up",
     "elite_minimum_mass_contribution": 2,
     "boss_mass_contribution": 4,
-    "mass_cap": 12,
+    "mass_maximum": 12,
     "contributions_per_enemy_per_collection_cycle": 1,
     "contribution_trigger": "the first time it enters the inner half",
     "contribution_uses_maximum_hull": true,

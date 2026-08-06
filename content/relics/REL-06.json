@@ -26,9 +26,10 @@
     "stacking_and_exclusivity: GDD-COMBAT-ECONOMY-BALANCE-FRAMEWORK#stacking-and-comparison-order",
     "behavior_registration: TDD-COMBAT-RUNTIME#relic-integration",
     "cross_document_rules[]: TDD-COMBAT-RUNTIME",
-    "discovery_sentence: GDD-INITIAL-RELIC-CATALOG#rel-06--event-horizon-coupler",
+    "summary_key: GDD-INITIAL-RELIC-CATALOG#rel-06--event-horizon-coupler",
     "trigger: GDD-INITIAL-RELIC-CATALOG#rel-06--event-horizon-coupler",
-    "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-06--event-horizon-coupler"
+    "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-06--event-horizon-coupler",
+    "core_tradeoff: GDD-INITIAL-RELIC-CATALOG#catalog-overview"
   ],
   "primary_transformation": "Pull and cluster amplification",
   "core_tradeoff": "Attacks compact the horde around their geometry",
@@ -43,19 +44,15 @@
     "clustered_enemy_weapon_damage_bonus": {
       "percent": 50
     },
-    "clustering_distance_m": null,
     "minimum_other_living_enemies_for_clustering": 1,
     "pull_resistance_scales_for_elites_and_bosses": true
   },
-  "pause_behavior": null,
-  "live_state_meter": null,
   "acquisition": {
     "method": "found in a relic cache through map exploration",
     "fabricable": false,
     "minable": false,
     "listed_in_geological_survey": false,
     "pool_availability": "fresh-profile",
-    "unlock": null,
     "caches_per_standard_map": 3,
     "cache_opening": "automatic on mech contact; freezes the complete gameplay simulation",
     "relics_drawn_per_run": 3,
@@ -67,11 +64,9 @@
     "sale_value_varies_by_identity_order_duration_or_progress": false
   },
   "rarity_and_weighting": {
-    "rarity_tier": null,
-    "cache_selection_weight": null,
     "selection_model": "three distinct relics drawn without replacement from the currently unlocked pool and assigned to the three caches during generation",
-    "fresh_profile_pool_size": 5,
-    "fully_unlocked_pool_size": 10,
+    "fresh_profile_pool_count": 5,
+    "fully_unlocked_pool_count": 10,
     "in_fresh_profile_pool": true,
     "guaranteed_to_appear": false
   },

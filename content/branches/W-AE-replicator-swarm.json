@@ -8,7 +8,7 @@
   "source_refs": [
     "GDD-WEAPON-NUMERIC-CATALOG#replicator-swarm--amplification--2-eidolon-coral",
     "rules[]: GDD-WEAPON-NUMERIC-CATALOG#replicator-swarm--amplification--2-eidolon-coral",
-    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "prerequisites: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
     "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches"
   ],
   "weapon_id": "W-AE",
@@ -38,12 +38,12 @@
       "operationalRange"
     ],
     "clones_can_create_clones": false,
-    "max_temporary_drones": 6,
+    "maximum_temporary_drones": 6,
     "overflow_rule": "creating a seventh replaces the temporary drone with the least remaining life"
   },
   "expected_effect": {
     "benefit_against_lone_durable_target": 0,
-    "max_total_squad_size_multiplier": 3,
+    "maximum_total_squad_size_multiplier": 3,
     "condition": "while kills arrive quickly"
   },
   "rules": [

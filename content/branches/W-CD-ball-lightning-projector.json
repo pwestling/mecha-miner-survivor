@@ -41,12 +41,12 @@
     "orb_speed_m_per_s": 3,
     "orb_lifetime_seconds": 4.0,
     "orb_emissions_per_second": 2,
-    "max_distinct_targets_per_emission": 3,
+    "maximum_distinct_targets_per_emission": 3,
     "emission_range": "current chain range",
     "emission_damage_percent_of_current_damage": {
       "percent": 100
     },
-    "max_hits_per_enemy_per_emission": 1,
+    "maximum_hits_per_enemy_per_emission": 1,
     "applies_to_bosses": true,
     "passes_through_enemies": true,
     "passes_through_terrain_that_does_not_block_player_projectiles": true,

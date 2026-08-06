@@ -56,7 +56,6 @@
     "affected_timing": "Volley or cone-wave activation rate",
     "unaffected_timing": "Projectile travel"
   },
-  "expected_effect": null,
   "rules": [
     {
       "text": "Replaces the five pellets with one continuous-looking cone wave per normal attack activation."

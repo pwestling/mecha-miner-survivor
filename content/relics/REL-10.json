@@ -30,10 +30,11 @@
     "stacking_and_exclusivity: GDD-MECH-RELICS#replacement-and-interaction-rules",
     "stacking_and_exclusivity: GDD-COMBAT-ECONOMY-BALANCE-FRAMEWORK#stacking-and-comparison-order",
     "behavior_registration: TDD-COMBAT-RUNTIME#relic-integration",
-    "discovery_sentence: GDD-INITIAL-RELIC-CATALOG#rel-10--sequential-reactor",
+    "summary_key: GDD-INITIAL-RELIC-CATALOG#rel-10--sequential-reactor",
     "trigger: GDD-INITIAL-RELIC-CATALOG#rel-10--sequential-reactor",
     "pause_behavior: GDD-INITIAL-RELIC-CATALOG#rel-10--sequential-reactor",
-    "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-10--sequential-reactor"
+    "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-10--sequential-reactor",
+    "core_tradeoff: GDD-INITIAL-RELIC-CATALOG#catalog-overview"
   ],
   "primary_transformation": "Extreme rotating weapon phases",
   "core_tradeoff": "Only one equipped weapon operates at a time",
@@ -84,11 +85,9 @@
     "sale_value_varies_by_identity_order_duration_or_progress": false
   },
   "rarity_and_weighting": {
-    "rarity_tier": null,
-    "cache_selection_weight": null,
     "selection_model": "three distinct relics drawn without replacement from the currently unlocked pool and assigned to the three caches during generation",
-    "fresh_profile_pool_size": 5,
-    "fully_unlocked_pool_size": 10,
+    "fresh_profile_pool_count": 5,
+    "fully_unlocked_pool_count": 10,
     "in_fresh_profile_pool": false,
     "guaranteed_to_appear": false
   },

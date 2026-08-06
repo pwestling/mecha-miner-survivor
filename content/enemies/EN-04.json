@@ -30,9 +30,7 @@
     "percent": 20
   },
   "earliest_minute": 5,
-  "variant_of": null,
   "behavior_kind": "pure contact pursuer",
-  "armor": 0,
   "contact_footprint": {
     "shape": "Circle",
     "reference_diameter_m": 0.8
@@ -73,10 +71,8 @@
     "repair_pickups": 0,
     "temporary_pickups": 0
   },
-  "specialist_attack": null,
   "first_playable_subset": {
-    "included": true,
-    "temporary_substitute": null
+    "included": true
   },
   "description": "A tall three-legged walker with a small central body and three long asymmetrical limbs. It is a middle-weight pursuer between Ripper speed and Shellback durability. Its rotating gait and open negative spaces provide a sixth production silhouette without a new attack behavior."
 }

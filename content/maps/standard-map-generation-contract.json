@@ -7,11 +7,9 @@
   "source_refs": [
     "GDD-MAP-GENERATION#standard-map-generation-contract",
     "destructible_rock_rules.destructible_rock: GDD-PLAYER-SURVIVABILITY-BASELINE#health-packs-and-destructible-rocks",
-    "destructible_rock_rules.health_pack: GDD-PLAYER-SURVIVABILITY-BASELINE#health-packs-and-destructible-rocks"
+    "destructible_rock_rules.health_pack: GDD-PLAYER-SURVIVABILITY-BASELINE#health-packs-and-destructible-rocks",
+    "destructible_rock_rules.health_pack.persistence: GDD-CORE-LOOP#combat-pressure"
   ],
-  "mode_id": null,
-  "map_id": null,
-  "generation_version": null,
   "mode": "standard",
   "distance_language": "Map distances are expressed as base-travel time: the time the shared unmodified mech would need to follow the shortest valid route between two points with no enemies or stops. Account PowerUps, mech traits, utilities, relics, and temporary effects do not change which distance band a location occupies during generation. These bands express route distance through traversable ground, not straight-line distance through obstacles.",
   "reference_mech_speed_m_per_s": 3.0,
@@ -19,57 +17,55 @@
     {
       "band": "Near",
       "base_travel_time_from_deployment": {
-        "min_seconds_exclusive": null,
-        "max_seconds_inclusive": 45
+        "maximum_seconds_inclusive": 45
       },
       "route_distance_m": {
-        "min_exclusive": null,
-        "max_inclusive": 135
+        "maximum_inclusive": 135
       },
       "source_text": "Up to 45 seconds | Up to 135M"
     },
     {
       "band": "Middle",
       "base_travel_time_from_deployment": {
-        "min_seconds_exclusive": 45,
-        "max_seconds_inclusive": 90
+        "minimum_seconds_exclusive": 45,
+        "maximum_seconds_inclusive": 90
       },
       "route_distance_m": {
-        "min_exclusive": 135,
-        "max_inclusive": 270
+        "minimum_exclusive": 135,
+        "maximum_inclusive": 270
       },
       "source_text": "More than 45 and up to 90 seconds | More than 135M and up to 270M"
     },
     {
       "band": "Far",
       "base_travel_time_from_deployment": {
-        "min_seconds_exclusive": 90,
-        "max_seconds_inclusive": 150
+        "minimum_seconds_exclusive": 90,
+        "maximum_seconds_inclusive": 150
       },
       "route_distance_m": {
-        "min_exclusive": 270,
-        "max_inclusive": 450
+        "minimum_exclusive": 270,
+        "maximum_inclusive": 450
       },
       "source_text": "More than 90 and up to 150 seconds | More than 270M and up to 450M"
     }
   ],
   "world_scale": {
     "major_region_count": {
-      "min": 6,
-      "max": 8,
+      "minimum": 6,
+      "maximum": 8,
       "initial_target": 7
     },
     "traversable_diameter_base_travel_seconds": {
-      "min": 240,
-      "max": 300,
+      "minimum": 240,
+      "maximum": 300,
       "target": 270
     },
     "traversable_diameter_m": {
-      "min": 720,
-      "max": 900,
+      "minimum": 720,
+      "maximum": 900,
       "target": 810
     },
-    "max_base_travel_from_deployment_to_important_location_seconds": 150,
+    "maximum_base_travel_from_deployment_to_important_location_seconds": 150,
     "deployment_placement": "an interior portion of a randomly selected major region",
     "region_size_rule": "Regions are large enough to support normal survivor-like circling, hundreds of pursuing enemies, and a complete mining circle without forcing the mech into a connector.",
     "region_boundary_rule": "Region boundaries may be visual, topographic, or loosely implied. They do not need to be rooms enclosed by walls.",
@@ -77,7 +73,7 @@
   },
   "topology": {
     "redundant_major_routes": {
-      "min_connected_major_regions_per_region": 2,
+      "minimum_connected_major_regions_per_region": 2,
       "single_connector_removal_cannot_isolate": true,
       "multiple_loops_required": true,
       "compulsory_narrow_bridge_allowed": false,
@@ -88,8 +84,8 @@
     },
     "open_combat_ground": {
       "solid_obstacle_coverage_per_major_region": {
-        "initial_target_percent_min": 8,
-        "initial_target_percent_max": 12,
+        "minimum_initial_target_percent": 8,
+        "maximum_initial_target_percent": 12,
         "maximum_percent": 15,
         "excludes": "the outer world boundary"
       },
@@ -100,14 +96,14 @@
     },
     "optional_pockets": {
       "count_per_map": {
-        "min": 0,
-        "max": 2
+        "minimum": 0,
+        "maximum": 2
       },
-      "max_one_way_depth_seconds": 20,
+      "maximum_one_way_depth_seconds": 20,
       "terminal_area_rule": "Its terminal area provides enough open ground for the complete mining zone plus an additional maneuvering band around it if a mining point can appear there.",
       "exit_readable_from_terminal_area": true,
-      "max_hyper_gold_sites_across_all_pockets": 1,
-      "max_relic_caches_across_all_pockets": 1,
+      "maximum_hyper_gold_sites_across_all_pockets": 1,
+      "maximum_relic_caches_across_all_pockets": 1,
       "near_band_guarantees_depend_on_pockets": false
     }
   },
@@ -117,8 +113,8 @@
     "not_against_world_boundary": true,
     "not_inside_narrow_connector": true,
     "obstacle_free_radius_in_mining_zone_diameters": 1,
-    "min_distinct_broad_departure_routes": 2,
-    "min_offscreen_enemy_entry_directions": 3,
+    "minimum_distinct_broad_departure_routes": 2,
+    "minimum_offscreen_enemy_entry_directions": 3,
     "excluded_from_initial_camera_view": [
       "Hyper Gold site",
       "material geode",
@@ -127,13 +123,13 @@
       "automatic-contact choice"
     ],
     "nearest_standard_ore_seam_base_travel_seconds": {
-      "min": 10,
-      "max": 20
+      "minimum": 10,
+      "maximum": 20
     },
     "near_band_guarantees": {
-      "standard_ore_seams_min": 2,
-      "rich_ore_seams_min": 1,
-      "geodes_per_present_material_min": 1
+      "standard_ore_seams_minimum": 2,
+      "rich_ore_seams_minimum": 1,
+      "geodes_per_present_material_minimum": 1
     },
     "directions_revealed_to_player": false
   },
@@ -147,21 +143,21 @@
     "Random dressing cannot reduce the validated clearance after important sites are placed."
   ],
   "visible_mining_opportunities_in_normal_view": {
-    "target_min": 1,
-    "target_max": 3,
-    "hard_max": 4
+    "target_minimum": 1,
+    "target_maximum": 3,
+    "hard_maximum": 4
   },
   "site_placement": {
     "specialized_material_geodes": {
       "geodes_per_present_material": {
-        "min": 8,
-        "max": 10
+        "minimum": 8,
+        "maximum": 10
       },
       "present_materials": 4,
-      "min_in_near_band_per_material": 1,
-      "min_major_regions_represented_per_material": 5,
-      "max_same_material_geodes_per_major_region": 2,
-      "max_share_of_all_geodes_per_major_region": {
+      "minimum_in_near_band_per_material": 1,
+      "minimum_major_regions_represented_per_material": 5,
+      "maximum_same_material_geodes_per_major_region": 2,
+      "maximum_share_of_all_geodes_per_major_region": {
         "percent": 30
       },
       "single_directional_cluster_allowed": false,
@@ -170,12 +166,12 @@
     "common_ore_seams": {
       "standard_seam_count": 20,
       "rich_seam_count": 8,
-      "min_standard_seams_per_major_region": 2,
-      "near_band_min_standard_seams": 2,
-      "near_band_min_rich_seams": 1,
-      "min_major_regions_with_rich_seams": 4,
-      "max_rich_seams_per_major_region": 2,
-      "max_share_of_all_ore_seams_per_major_region": {
+      "minimum_standard_seams_per_major_region": 2,
+      "near_band_minimum_standard_seams": 2,
+      "near_band_minimum_rich_seams": 1,
+      "minimum_major_regions_with_rich_seams": 4,
+      "maximum_rich_seams_per_major_region": 2,
+      "maximum_share_of_all_ore_seams_per_major_region": {
         "percent": 25
       },
       "dominant_cluster_allowed": false
@@ -183,21 +179,21 @@
     "hyper_gold_sites": {
       "count": 3,
       "distinct_major_regions": 3,
-      "min_separation_base_travel_seconds": 60,
-      "min_middle_band_sites": 1,
-      "min_far_band_sites": 1,
+      "minimum_separation_base_travel_seconds": 60,
+      "minimum_middle_band_sites": 1,
+      "minimum_far_band_sites": 1,
       "allowed_in_initial_camera_view": false,
-      "max_in_optional_spur_pocket": 1,
+      "maximum_in_optional_spur_pocket": 1,
       "total_site_based_hyper_gold": 300
     },
     "relic_caches": {
       "count": 3,
       "distinct_major_regions": 3,
-      "min_separation_base_travel_seconds": 45,
-      "min_middle_band_caches": 1,
-      "min_far_band_caches": 1,
+      "minimum_separation_base_travel_seconds": 45,
+      "minimum_middle_band_caches": 1,
+      "minimum_far_band_caches": 1,
       "allowed_in_initial_camera_view": false,
-      "max_in_optional_spur_pocket": 1,
+      "maximum_in_optional_spur_pocket": 1,
       "relic_assignment": "The run assigns three distinct relics without replacement from the unlocked pool after these cache locations are valid.",
       "dedicated_guard_package": false,
       "global_through_fog_bearing": false,
@@ -205,7 +201,7 @@
     }
   },
   "destructible_rock_rules": {
-    "active_cap": 16,
+    "active_maximum": 16,
     "initial_count": 16,
     "initial_placement": "valid offscreen positions around deployment",
     "replenishment_attempt_interval_seconds": 1,
@@ -214,10 +210,10 @@
     },
     "success_behavior": "A successful attempt fills an empty slot or replaces the farthest eligible offscreen rock at the cap. If no valid new position and eligible replacement exist, the attempt produces nothing and leaves current rocks unchanged.",
     "valid_position_distance_from_mech_m": {
-      "min": 18,
-      "max": 45
+      "minimum": 18,
+      "maximum": 45
     },
-    "min_meters_beyond_visible_camera_rectangle": 2,
+    "minimum_meters_beyond_visible_camera_rectangle": 2,
     "position_constraints": [
       "lies on valid traversable ground and never inside blocking terrain",
       "does not intersect a mining zone, resonance-field source, relic interaction area, boundary, required connector, landmark focal footprint, deployed pickup, or another important object",
@@ -225,7 +221,6 @@
       "favors nearby unexplored or recently entered space without becoming a persistent map marker or exploration-completion item"
     ],
     "destructible_rock": {
-      "id": null,
       "prop": "Destructible rock",
       "hull": 100,
       "armor": 0,
@@ -237,8 +232,8 @@
         "detail": "independently per destroyed rock"
       },
       "valid_spawn_distance_from_mech_m": {
-        "min": 18,
-        "max": 45
+        "minimum": 18,
+        "maximum": 45
       },
       "extra_visible_screen_margin_m": 2,
       "rules": [
@@ -248,16 +243,13 @@
         "A non-piercing projectile that directly hits a rock deals damage and ends normally; piercing attacks may continue according to their ordinary rule. \"Non-solid\" refers to movement, not immunity to weapon collision.",
         "Rocks never receive enemy damage, resonance modifiers, elite or boss multipliers, control, kill effects, or ordinary-enemy defeat credit.",
         "Damaging or destroying a rock never builds weapon focus, momentum, mass, charge, replication, exposure, or another enemy-hit or enemy-kill counter. It may still satisfy the basic requirement for an automatic weapon to launch an attack when no enemy is available."
-      ],
-      "presentation": null
+      ]
     },
     "health_pack": {
-      "id": null,
       "prop": "Health pack",
       "repair_hull": 25,
       "can_exceed_maximum_hull": false,
       "pickup_radius_m": 0.25,
-      "collection_center_distance_with_standard_mech_circle_m": 0.75,
       "movement_collision": "Non-solid",
       "persistence": "persists until collected or run end",
       "attraction": "none beyond contact",
@@ -267,15 +259,14 @@
         "A pack is consumed at full Hull and wastes all excess repair above maximum.",
         "Repair amount is unaffected by Armor, Recovery, maximum-Hull modifiers, PowerUps, utilities, relics, current health, elapsed time, or hidden difficulty adjustment."
       ],
-      "source": "destroyed destructible rock, 20% chance independently per rock",
-      "presentation": null
+      "source": "destroyed destructible rock, 20% chance independently per rock"
     }
   },
   "landmarks_and_repetition": {
     "biomes_per_seed": 1,
     "landmark_independent_of_rewards": true,
     "landmark_guarantees_adjacent_resource": false,
-    "max_appearances_of_one_authored_structure_per_map": 2,
+    "maximum_appearances_of_one_authored_structure_per_map": 2,
     "adjacent_region_repetition_allowed": false,
     "orientation_variation_allowed": true,
     "structure_recognition_reveals_global_position": false,
@@ -309,8 +300,7 @@
       "landmark and authored-structure repetition limits",
       "clear finite-boundary presentation"
     ],
-    "validation_distance_metric": "navigable route distance rather than straight-line proximity",
-    "retry_budgets": null
+    "validation_distance_metric": "navigable route distance rather than straight-line proximity"
   },
   "playtest_targets": [
     "At least 90% of blind first-run players who begin exploring should discover a mining opportunity within 45 seconds without radar guidance.",
@@ -331,6 +321,5 @@
     "per-region distribution caps and site-separation times",
     "the 16-rock active cap, offscreen spawn validity, one-second attempt interval, 10% spawn chance, and 20% health-pack chance",
     "expected exploration share and encounter cadence"
-  ],
-  "landmark_pools": null
+  ]
 }

@@ -8,7 +8,7 @@
   "source_refs": [
     "GDD-WEAPON-NUMERIC-CATALOG#containment-lattice--conversion--2-driftmetal",
     "rules[]: GDD-WEAPON-NUMERIC-CATALOG#containment-lattice--conversion--2-driftmetal",
-    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "prerequisites: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
     "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches"
   ],
   "weapon_id": "W-AE",
@@ -33,7 +33,7 @@
     "link_count": 3,
     "link_damage_per_second_percent_of_one_drone_shot_dps": 200,
     "link_damage_per_second_formula": "current shot Damage × current attack rate × 2",
-    "max_links_damaging_one_enemy_simultaneously": 2,
+    "maximum_links_damaging_one_enemy_simultaneously": 2,
     "link_length_and_formation_size_scale_with": "current operational range",
     "triangle_point_follows_mech_facing": true
   },

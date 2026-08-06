@@ -8,7 +8,7 @@
   "source_refs": [
     "GDD-WEAPON-NUMERIC-CATALOG#saturation-cascade--amplification--2-cinderglass",
     "rules[]: GDD-WEAPON-NUMERIC-CATALOG#saturation-cascade--amplification--2-cinderglass",
-    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "prerequisites: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
     "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches"
   ],
   "weapon_id": "W-AC",
@@ -34,13 +34,13 @@
     "secondary_blast_damage_percent_of_current_damage": 40,
     "secondary_blast_radius_percent_of_current_radius": 60,
     "secondary_blasts_seed_further_blasts": false,
-    "max_secondary_blast_hits_per_target_per_primary_shell": 2
+    "maximum_secondary_blast_hits_per_target_per_primary_shell": 2
   },
   "expected_effect": {
     "approximate": true,
     "horde_throughput_percent": {
-      "min": 40,
-      "max": 100
+      "minimum": 40,
+      "maximum": 100
     },
     "scales_with": "how well the primary impact catches a cluster"
   },

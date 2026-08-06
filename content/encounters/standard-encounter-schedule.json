@@ -8,7 +8,6 @@
     "GDD-STANDARD-WAVE-SCHEDULE#standard-wave-and-beacon-schedule",
     "minute_rows[33].formation_events[].timestamps_reconstructed: GDD-STANDARD-WAVE-SCHEDULE#complete-35-minute-schedule"
   ],
-  "mode_id": null,
   "mode": "standard",
   "duration_minutes": 35,
   "extraction_at": "35:00",
@@ -28,8 +27,8 @@
   },
   "boss_arrival_minute_rule": {
     "minimum_reduction_from_preceding_minute": {
-      "percent_min": 10,
-      "percent_max": 20
+      "minimum_percent": 10,
+      "maximum_percent": 20
     },
     "additional_scheduled_formation": false,
     "statement": "Boss-arrival minutes deliberately reduce the baseline minimum by roughly 10–20% from the preceding minute and contain no additional scheduled formation."
@@ -120,8 +119,6 @@
       },
       "authored_event_or_boundary": "Survey orientation; no formation",
       "debut_enemy_ids": [],
-      "boss_warning_at": null,
-      "boss_arrival": null,
       "scheduled_elites": [],
       "formation_events": []
     },
@@ -150,8 +147,6 @@
       },
       "authored_event_or_boundary": "Standard escalation begins",
       "debut_enemy_ids": [],
-      "boss_warning_at": null,
-      "boss_arrival": null,
       "scheduled_elites": [],
       "formation_events": []
     },
@@ -180,8 +175,6 @@
       },
       "authored_event_or_boundary": "None",
       "debut_enemy_ids": [],
-      "boss_warning_at": null,
-      "boss_arrival": null,
       "scheduled_elites": [],
       "formation_events": []
     },
@@ -210,8 +203,6 @@
       },
       "authored_event_or_boundary": "3:30 Skitterling stream from one side",
       "debut_enemy_ids": [],
-      "boss_warning_at": null,
-      "boss_arrival": null,
       "scheduled_elites": [],
       "formation_events": [
         {
@@ -263,8 +254,6 @@
       "debut_enemy_ids": [
         "EN-03"
       ],
-      "boss_warning_at": null,
-      "boss_arrival": null,
       "scheduled_elites": [],
       "formation_events": []
     },
@@ -302,8 +291,6 @@
       "debut_enemy_ids": [
         "EN-04"
       ],
-      "boss_warning_at": null,
-      "boss_arrival": null,
       "scheduled_elites": [],
       "formation_events": []
     },
@@ -340,7 +327,6 @@
       "authored_event_or_boundary": "6:30 loose encirclement; 6:45 boss warning",
       "debut_enemy_ids": [],
       "boss_warning_at": "6:45",
-      "boss_arrival": null,
       "scheduled_elites": [],
       "formation_events": [
         {
@@ -381,7 +367,6 @@
       },
       "authored_event_or_boundary": "7:00 Riftjaw arrives; no formation",
       "debut_enemy_ids": [],
-      "boss_warning_at": null,
       "boss_arrival": {
         "boss_id": "BOSS-01",
         "boss": "Riftjaw",
@@ -422,8 +407,6 @@
       },
       "authored_event_or_boundary": "None",
       "debut_enemy_ids": [],
-      "boss_warning_at": null,
-      "boss_arrival": null,
       "scheduled_elites": [],
       "formation_events": []
     },
@@ -459,8 +442,6 @@
       },
       "authored_event_or_boundary": "9:30 Lurker wall with central gap",
       "debut_enemy_ids": [],
-      "boss_warning_at": null,
-      "boss_arrival": null,
       "scheduled_elites": [],
       "formation_events": [
         {
@@ -512,8 +493,6 @@
       "debut_enemy_ids": [
         "EN-05"
       ],
-      "boss_warning_at": null,
-      "boss_arrival": null,
       "scheduled_elites": [],
       "formation_events": []
     },
@@ -549,8 +528,6 @@
       },
       "authored_event_or_boundary": "None",
       "debut_enemy_ids": [],
-      "boss_warning_at": null,
-      "boss_arrival": null,
       "scheduled_elites": [],
       "formation_events": []
     },
@@ -586,8 +563,6 @@
       },
       "authored_event_or_boundary": "12:30 Skitterling quadrant swarm",
       "debut_enemy_ids": [],
-      "boss_warning_at": null,
-      "boss_arrival": null,
       "scheduled_elites": [],
       "formation_events": [
         {
@@ -640,7 +615,6 @@
         "EN-07"
       ],
       "boss_warning_at": "13:45",
-      "boss_arrival": null,
       "scheduled_elites": [
         {
           "at": "13:30",
@@ -676,7 +650,6 @@
       },
       "authored_event_or_boundary": "14:00 Brood Titan arrives; no formation",
       "debut_enemy_ids": [],
-      "boss_warning_at": null,
       "boss_arrival": {
         "boss_id": "BOSS-02",
         "boss": "Brood Titan",
@@ -717,8 +690,6 @@
       },
       "authored_event_or_boundary": "None",
       "debut_enemy_ids": [],
-      "boss_warning_at": null,
-      "boss_arrival": null,
       "scheduled_elites": [],
       "formation_events": []
     },
@@ -756,8 +727,6 @@
       "debut_enemy_ids": [
         "EN-06"
       ],
-      "boss_warning_at": null,
-      "boss_arrival": null,
       "scheduled_elites": [],
       "formation_events": []
     },
@@ -793,8 +762,6 @@
       },
       "authored_event_or_boundary": "17:30 Razorling stream",
       "debut_enemy_ids": [],
-      "boss_warning_at": null,
-      "boss_arrival": null,
       "scheduled_elites": [],
       "formation_events": [
         {
@@ -846,8 +813,6 @@
       "debut_enemy_ids": [
         "EN-08"
       ],
-      "boss_warning_at": null,
-      "boss_arrival": null,
       "scheduled_elites": [],
       "formation_events": []
     },
@@ -883,8 +848,6 @@
       },
       "authored_event_or_boundary": "19:30 twin Gloomwing flanks",
       "debut_enemy_ids": [],
-      "boss_warning_at": null,
-      "boss_arrival": null,
       "scheduled_elites": [],
       "formation_events": [
         {
@@ -935,7 +898,6 @@
       "authored_event_or_boundary": "20:30 one elite Iron Ripper; 20:45 boss warning",
       "debut_enemy_ids": [],
       "boss_warning_at": "20:45",
-      "boss_arrival": null,
       "scheduled_elites": [
         {
           "at": "20:30",
@@ -971,7 +933,6 @@
       },
       "authored_event_or_boundary": "21:00 Prism Crown arrives; no formation",
       "debut_enemy_ids": [],
-      "boss_warning_at": null,
       "boss_arrival": {
         "boss_id": "BOSS-03",
         "boss": "Prism Crown",
@@ -1014,8 +975,6 @@
       "debut_enemy_ids": [
         "EN-09"
       ],
-      "boss_warning_at": null,
-      "boss_arrival": null,
       "scheduled_elites": [],
       "formation_events": []
     },
@@ -1051,8 +1010,6 @@
       },
       "authored_event_or_boundary": "23:30 Razorling wall with two gaps",
       "debut_enemy_ids": [],
-      "boss_warning_at": null,
-      "boss_arrival": null,
       "scheduled_elites": [],
       "formation_events": [
         {
@@ -1104,8 +1061,6 @@
       "debut_enemy_ids": [
         "EN-10"
       ],
-      "boss_warning_at": null,
-      "boss_arrival": null,
       "scheduled_elites": [],
       "formation_events": []
     },
@@ -1141,8 +1096,6 @@
       },
       "authored_event_or_boundary": "25:30 twin Razorling flanks",
       "debut_enemy_ids": [],
-      "boss_warning_at": null,
-      "boss_arrival": null,
       "scheduled_elites": [],
       "formation_events": [
         {
@@ -1192,8 +1145,6 @@
       },
       "authored_event_or_boundary": "None",
       "debut_enemy_ids": [],
-      "boss_warning_at": null,
-      "boss_arrival": null,
       "scheduled_elites": [],
       "formation_events": []
     },
@@ -1230,7 +1181,6 @@
       "authored_event_or_boundary": "27:20 one elite Dreadwing; 27:30 encirclement; 27:45 boss warning",
       "debut_enemy_ids": [],
       "boss_warning_at": "27:45",
-      "boss_arrival": null,
       "scheduled_elites": [
         {
           "at": "27:20",
@@ -1278,7 +1228,6 @@
       },
       "authored_event_or_boundary": "28:00 Skybreaker Apex arrives; no formation",
       "debut_enemy_ids": [],
-      "boss_warning_at": null,
       "boss_arrival": {
         "boss_id": "BOSS-04",
         "boss": "Skybreaker Apex",
@@ -1319,8 +1268,6 @@
       },
       "authored_event_or_boundary": "29:20 and 29:45 alternating walls",
       "debut_enemy_ids": [],
-      "boss_warning_at": null,
-      "boss_arrival": null,
       "scheduled_elites": [],
       "formation_events": [
         {
@@ -1369,8 +1316,6 @@
       },
       "authored_event_or_boundary": "30:30 Needler-backed loose encirclement",
       "debut_enemy_ids": [],
-      "boss_warning_at": null,
-      "boss_arrival": null,
       "scheduled_elites": [],
       "formation_events": [
         {
@@ -1420,8 +1365,6 @@
       },
       "authored_event_or_boundary": "31:30 four-sector convergence",
       "debut_enemy_ids": [],
-      "boss_warning_at": null,
-      "boss_arrival": null,
       "scheduled_elites": [],
       "formation_events": [
         {
@@ -1469,8 +1412,6 @@
       },
       "authored_event_or_boundary": "32:30 one elite Siegeback plus encirclement",
       "debut_enemy_ids": [],
-      "boss_warning_at": null,
-      "boss_arrival": null,
       "scheduled_elites": [
         {
           "at": "32:30",
@@ -1527,8 +1468,6 @@
       },
       "authored_event_or_boundary": "Streams rotate through four sectors at 33:15 intervals",
       "debut_enemy_ids": [],
-      "boss_warning_at": null,
-      "boss_arrival": null,
       "scheduled_elites": [],
       "formation_events": [
         {
@@ -1541,7 +1480,7 @@
           "timing_unresolved": false,
           "timestamps_reconstructed": true,
           "timestamp_provenance": "reconstructed",
-          "reconstruction_basis": "The source cell's timing token 'at 33:15 intervals' parses neither as a timestamp nor as a period; the column's contract is 'at the listed time' (GDD-STANDARD-WAVE-SCHEDULE#complete-35-minute-schedule) and every other repeat row enumerates its times explicitly, so the four quarter-minute times are a provisional reconstruction and are not authored values. See content/transcription-notes.md.",
+          "reconstruction_basis": "The source cell's timing token 'at 33:15 intervals' parses neither as a timestamp nor as a period; the column's contract is 'at the listed time' (GDD-STANDARD-WAVE-SCHEDULE#complete-35-minute-schedule) and every other repeat row enumerates its times explicitly, so the four quarter-minute times are a provisional reconstruction and are not authored values. The reconstruction is recorded in the transcription notes beside this catalog.",
           "formations": [
             "Stream"
           ],
@@ -1582,8 +1521,6 @@
       },
       "authored_event_or_boundary": "Rolling rings at 34:10 and 34:40; extraction warning begins",
       "debut_enemy_ids": [],
-      "boss_warning_at": null,
-      "boss_arrival": null,
       "scheduled_elites": [],
       "formation_events": [
         {
@@ -1608,7 +1545,6 @@
     "responses": [
       {
         "trigger": "Activation",
-        "trigger_extraction_progress": null,
         "response_size": {
           "floor_count": 12,
           "share_of_current_minute_minimum_count": {
@@ -1616,8 +1552,7 @@
           },
           "expression": "max(12, 15% of P)"
         },
-        "formation": "One concentrated stream from the site's outward side",
-        "elite_addition": null
+        "formation": "One concentrated stream from the site's outward side"
       },
       {
         "trigger": "25%",
@@ -1631,8 +1566,7 @@
           },
           "expression": "max(16, 20% of P)"
         },
-        "formation": "One dense quadrant swarm",
-        "elite_addition": null
+        "formation": "One dense quadrant swarm"
       },
       {
         "trigger": "50%",

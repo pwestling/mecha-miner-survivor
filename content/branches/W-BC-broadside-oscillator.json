@@ -46,11 +46,11 @@
       "percent": 100
     },
     "pulses_may_hit_separate_targets": true,
-    "max_pulse_hits_per_target_per_attack_event": 2
+    "maximum_pulse_hits_per_target_per_attack_event": 2
   },
   "favorable_scene_effect": {
     "magnitude": {
-      "raw_output_multiplier_max": 2
+      "raw_output_multiplier_maximum": 2
     },
     "qualitative": "demands continuous facing and lateral positioning"
   },

@@ -70,10 +70,10 @@
   "mech.MCH-05.summary": "A forgiving close-pressure platform with substantially more Hull Integrity.",
   "mech.MCH-06.name": "Razorback",
   "mech.MCH-06.summary": "A fast wedge-shaped breaker that rewards committed movement and aggressive routing.",
-  "mining_site.hyper-gold-sites.name": "Hyper Gold sites",
-  "mining_site.rich-ore-seams.name": "Rich ore seams",
-  "mining_site.specialized-material-geodes.name": "Specialized-material geodes",
-  "mining_site.standard-ore-seams.name": "Standard ore seams",
+  "mining_site.SITE-01.name": "Standard ore seams",
+  "mining_site.SITE-02.name": "Rich ore seams",
+  "mining_site.SITE-03.name": "Hyper Gold sites",
+  "mining_site.SITE-04.name": "Specialized-material geodes",
   "powerup.PU-C01.name": "Weapons Calibration",
   "powerup.PU-C02.name": "Cycle Optimizer",
   "powerup.PU-C03.name": "Field Geometry",
@@ -147,6 +147,8 @@
   "utility.UTL-F2.summary": "The expander increases scalable spatial dimensions of weapon attacks.",
   "utility.UTL-R1.name": "Resource radar",
   "utility.UTL-R1.summary": "The resource radar is a run-local utility blueprint intended to prevent a player from becoming completely stuck while searching for specialized ingredients needed by an intended build.",
+  "weapon.FORMULA-01.name": "Weapon common-ore stat upgrade price",
+  "weapon.FORMULA-01.summary": "Weapon common-ore stat upgrade price. FORMULA-01 is a definition - the carrier of a formula kind plus that kind's parameters - and is not a formula kind itself; formula kinds are the snake_case tokens the formula registry mints. This definition still holds its rule as the literal expression 5n(n + 1) rather than as a registered kind.",
   "weapon.W-AB.name": "Rail Lance",
   "weapon.W-AC.name": "Cluster Mortar",
   "weapon.W-AD.name": "Gravity Projector",
@@ -161,6 +163,5 @@
   "weapon.W-CF.name": "Wake Projector",
   "weapon.W-DE.name": "Scatter Array",
   "weapon.W-DF.name": "Ram Field",
-  "weapon.W-EF.name": "Missile Rack",
-  "weapon.weapon-stat-price-formula.name": "Weapon common-ore stat upgrade price"
+  "weapon.W-EF.name": "Missile Rack"
 }

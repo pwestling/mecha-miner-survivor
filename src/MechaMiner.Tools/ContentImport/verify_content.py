@@ -39,11 +39,15 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
 
   A5  id must be present and a non-empty string, EXCEPT on the definitions
       listed in ID_NULL_EXPECTED below, where no design document assigns a
-      stable ID and minting one would be inventing content.
+      stable ID and minting one would be inventing content. That list is now
+      EMPTY - every definition in this tree carries a minted stable ID - so
+      the exception has no members and A5 is unconditional.
       Mandate: docs/technical/40-content-data-and-validation.md:80     FAILURE
 
-  A6  An absent or null id is reported as a warning with its path, never as
-      a failure, so an unminted ID never reddens the build.            WARNING
+  A6  An absent or null id is a FAILURE, with its path, unless the definition
+      is listed in ID_NULL_EXPECTED. With that list empty, a missing or null
+      id always reddens the build; it used to be a warning only while IDs
+      were genuinely unminted.                                         FAILURE
 
   A19 Expected-set guards, so a change in either set is visible rather than
       silently absorbed into the warning list: the set of definitions with a
@@ -85,9 +89,28 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       Every row cites its own source doc:line.                        FAILURE
 
   A13 Aggregate row counts match the PROBES table (35 minute rows,
-      4 beacon responses, 7 formations, 1 map contract file, and both world
-      prop families folded into that contract).
-      Every row cites its own source doc:line.                        FAILURE
+      4 beacon responses, 7 formations, 1 map contract file), AND the six
+      authored world-prop VALUES folded into the map contract match the
+      document: destructible rock Hull 100 (docs/72:194), rock damage
+      footprint diameter 0.80 M (:196), health pack repair 25 Hull (:182),
+      health pack pickup radius 0.25 M (:185), rock active population cap
+      16 and rock initial count 16 (both docs/51:146, the active cap
+      corroborated at docs/72:203). Every row cites its own source
+      doc:line.
+      The two 16-rock rows were ADDED as a coverage gap: both values were
+      transcribed and NEITHER was asserted, and they sit between two values
+      that were - rock Hull at 72:194 and the footprint at 72:196 bracket
+      the population rules in the same section. A value whose neighbours
+      are asserted reads as covered. That is a gap that LOOKS FILLED, which
+      is a different failure from a gate that cannot fail.
+      Negative control, per value, each reverted after: active_maximum
+      16 -> 15 FAILs "A13 destructible rock active population cap must be
+      16"; initial_count 16 -> 12 FAILs "A13 destructible rock initial
+      count must be 16".
+      The world-prop check used to be a row COUNT over key-name patterns,
+      which counted patterns that matched at least once - so two names
+      existing satisfied it and no value was ever compared. A missing field
+      is now a failure rather than a silent pass.                     FAILURE
 
   A14 Doc-stated totals recompute from the JSON: PowerUp rank prices sum to
       9,450 Hyper Gold and the six option-unlock costs sum to 2,150.
@@ -104,12 +127,58 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       Mandate: docs/technical/40-content-data-and-validation.md:199
       (relational layer: "References, uniqueness, graph coverage")     FAILURE
 
-  A16 Percentage-point policy: a property carrying a percentage should be
-      named *_percent, with the normalized factor left to the compiler as a
-      derived field. Occurrences are grouped by key name.
-      Mandate: docs/technical/40-content-data-and-validation.md:95
-      Reported as a warning because content/schemas/ does not exist yet
-      and the normalized-factor pass has no owner in this tree.        WARNING
+  A16 Percentage-point policy, checked on NUMBERS and KEY NAMES:
+        1. every percent-named property resolves to at least one numeric
+           leaf, so a percentage may not live only as prose under a name
+           that promises a number;
+        2. no percent-named numeric value satisfies 0 < |v| < 1, which would
+           be the compiler's normalized factor stored where human-readable
+           percentage points belong. Container leaves (minimum, maximum,
+           percent, value, points) inherit percent-ness from the nearest
+           ancestor key that says percent;
+        3. the compiler's normalized factor is never authored: no property
+           name combines a percent token with factor/multiplier/fraction/
+           normalized, and no object holds both <stem>_percent and a
+           same-stem factor sibling;
+        4. no NUMBER sits under a relative-magnitude name - one whose
+           segments include bonus/bonuses, penalty/penalties, increase,
+           increased, decrease, reduction, boost, malus, discount,
+           surcharge or uplift - when that name says neither percent nor
+           any unit-or-kind token. Such a number is either percentage
+           points or a multiplicative scale and the name does not say
+           which; 40:95 permits percentage points only under a name that
+           says percent, and 40:94 requires an ambiguous numeric name to
+           carry a unit suffix.
+      A name "says _percent" wherever the token appears, not only at the
+      end - 40:95 constrains what the name says and 40:96's terminal-unit
+      rule is about unit suffixes, so the 52 mid-name spellings such as
+      percent_of_mech_base_speed are correct and are not flagged. Rule 4
+      excludes a unit-or-kind token wherever it appears too, for the
+      mirror-image reason: the tree's
+      single_target_ceiling_multiplier_at_full_bonus has `multiplier` as
+      its head noun and `bonus` as a mid-name qualifier, and Ruling 14
+      makes `_multiplier` the unit declaration for a multiplicative scale.
+      WHAT RULE 4 EXISTS FOR, and what it was verified to do. Rules 1-3 all
+      begin by asking whether the name says percent, so in the previous
+      revision every A16 rule was gated behind `if not says_percent: ...
+      continue` and a bare number under a non-percent name was never
+      examined. That revision's docstring nevertheless advertised the
+      rewrite as fixing exactly that case; it did not.
+      Rule 4 flags nothing in this tree as authored - it is a regression
+      guard, not a cleanup - so the claim above rests on its negative
+      control, not on a count. Two injections on content/enemies/EN-01.json
+      were each run and reverted individually:
+        sneaky_bonus: 25  -> FAIL, "1 numeric value(s) sit under a
+          relative-magnitude name ... ['content/enemies/EN-01.json.
+          sneaky_bonus = 25']", RESULT: FAIL (1 failure)
+        damage_bonus: 150 -> FAIL, the same message reporting
+          ['content/enemies/EN-01.json.damage_bonus = 150'],
+          RESULT: FAIL (1 failure)
+      Nothing beyond those two forms is claimed here.
+      A16 REPLACED a prose scan that matched a literal "%" glyph in string
+      values: it left a numeric 25 under a non-percent name unchecked while
+      emitting 21 warnings about English sentences. None of the four rules
+      needs content/schemas/, so all four are failures.              FAILURE
 
   A17 Formula policy: a player-facing formula must be a registered formula
       kind plus parameters, never a script string. String-valued formula
@@ -128,21 +197,186 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       A missing deployment field is only a warning, because the field name
       is unvalidated until content/schemas/ exists.                    WARNING
 
-  A20 No enemy definition carries a compiler-derived footprint value. An
-      enemy authors body_scale_multiplier; both the contact diameter
-      (scale x 0.80 M) and the centre distance that begins contact
-      (diameter / 2 + the player's 0.50 M collision radius) are products of
-      it and belong to the compiler. Checked on KEY NAMES across
-      content/enemies/, with reference_diameter_m allowlisted because
-      0.80 M is the Ripper's authored rank-zero diameter, not a per-enemy
-      derived value.
+  A20 No definition carries a compiler-derived footprint value. Two rules
+      with two different scopes, because bosses and enemies author different
+      halves of their footprint:
+        - the contact DIAMETER rule covers content/enemies/ only. An enemy
+          authors body_scale_multiplier and its diameter is scale x 0.80 M,
+          so storing the diameter puts a second writer on it.
+          reference_diameter_m is allowlisted: 0.80 M is the Ripper's
+          authored rank-zero diameter, not a per-enemy derived value. A BOSS
+          diameter is AUTHORED and must stay - the boss roster gives bosses
+          no body-scale column (docs/31:121-128, unlike docs/31:37-48) and
+          docs/72:105-110 states the four diameters flat.
+        - the CENTRE DISTANCE rule covers content/enemies/,
+          content/bosses/ AND content/maps/. It is the object's radius plus
+          the player's 0.50 M collision radius in all three, so storing it
+          hardcodes a player-baseline constant into a catalog that does not
+          own it. content/maps/ joined the rule because the health pack
+          stored 0.75 = its authored 0.25 M pickup radius + 0.50 M
+          (docs/72:185).
+      Checked on KEY NAMES in the covered directories, so a rename inside
+      one of them cannot slip past. It does NOT catch the value reappearing
+      under an unrelated name or in an uncovered directory - see the
+      per-rule scopes above and README.md.
       Mandate: docs/technical/40-content-data-and-validation.md:114
       ("Validation derives world speeds/footprints and compares them with
       the survivability report")                                      FAILURE
 
-  A21 content/ holds exactly EXPECTED_CONTENT_JSON_FILES (139) *.json
-      files, so a file in a directory no A12 row covers is still caught.
-      The two Markdown files under content/ are listed, not counted.   FAILURE
+  A21 content/ holds exactly EXPECTED_CONTENT_DEFINITION_JSON_FILES (138)
+      DEFINITION *.json files, so a definition in a directory no A12 row
+      covers is still caught, AND the non-JSON files under content/ are
+      exactly the three named in EXPECTED_CONTENT_NON_JSON (README.md,
+      quote-verification-audit.md, transcription-notes.md).
+      BOTH rows exclude every directory in NON_DEFINITION_DIRS, via
+      in_non_definition_dir(), which is the population load_definitions()
+      loads. The count row used to be a bare CONTENT.rglob("*.json") that
+      never consulted NON_DEFINITION_DIRS, so content/localization/en.json
+      was counted (139) and the first file under content/schemas/ - a
+      directory this script itself declares is not a catalog of definitions
+      - failed the row with "content/ holds 140 *.json file(s), expected
+      139" on a branch that had added no definition. The expectation is
+      rebased onto the definition population rather than raised to agree
+      with the polluted one.
+      The non-JSON row used to PRINT the file list next to a blank
+      expectation and a hardcoded "ok" - it could not fail, so a stray file
+      under content/ was reported and tolerated in the same breath. It now
+      asserts the exact list.
+      Negative control: an empty content/probe.txt -> FAIL, "content/ holds
+      non-JSON files [... 'content/probe.txt' ...], expected exactly
+      [...]". A file under content/schemas/ -> verdict UNCHANGED, which is
+      the control that distinguishes this row from the one it replaced; a
+      definition added under a real catalog directory still FAILS with the
+      count.                                                          FAILURE
+
+  A22 Every source_refs scope prefix resolves to a field that EXISTS in the
+      definition it annotates. The optional "<json.path>: " prefix attributes
+      one property to a document, so a prefix naming a field that no longer
+      exists - removed by a ruling, renamed, or never present - is a dangling
+      citation, the same defect class as an #anchor pointing at a missing
+      heading (A9). The path grammar is dot-separated snake_case segments,
+      each optionally suffixed with [] (every element), [N] (one element), or
+      [N..M] (a range of elements).
+      Mandate: docs/technical/40-content-data-and-validation.md:87
+      (source_refs carries "gameplay document IDs/anchors ... implemented"),
+      with 40:90 ("Unknown fields are errors") for why a prefix may not name
+      a field the definition does not have                            FAILURE
+
+  A24 Two rules over every string value under content/, each matching the
+      thing that is actually wrong rather than one spelling of a path:
+        a. no path-like token carries a `:<digits>` line number, in ANY
+           spelling - either slash separator, any case, extension optional
+           when a separator is present, and no `docs/` prefix required;
+        b. no repository path (docs, src, content, tools, assets followed by
+           a separator) appears at all, line number or not, because 40:87
+           names doc_id#anchor as the citation form and a path is not one.
+      A bare `#anchor` is OUT OF SCOPE by design: it is half of the
+      sanctioned citation form, A9 already resolves anchors against real
+      heading slugs, and it carries neither a path nor a line number.
+      REPLACED `docs/.*\.md`, which pinned three incidental spellings and
+      let six forms through. Each of seven forms was tested individually
+      against the new rules; the six defective ones are caught and the
+      anchor-only form is confirmed not matching.
+      The narrowness was not hypothetical: the new rules found TWO real
+      defects in this tree that the old pattern could not see - a
+      `content/transcription-notes.md` path in an encounter-schedule
+      reconstruction_basis, and a bare extensionless `docs/68` in a UTL-A1
+      statement. Both are the class Ruling 25 removed 13 of, and both were
+      rewritten in this pass.
+      Mandate: docs/technical/40-content-data-and-validation.md:87    FAILURE
+
+  A25 Polarity agreement. Where a structured polarity value (a "direction",
+      or any field whose value is drawn from the closed polarity vocabulary
+      higher/lower, increase/decrease, more/less, faster/slower,
+      longer/shorter, raise/reduce, gain/lose) sits beside prose encoding
+      the same fact, the two must agree in sign. Prose is taken from the
+      same object and from the enclosing one, because a direction commonly
+      sits inside a structured modifier while the prose stays outside it.
+      Fires on STRICT contradiction only: prose carrying both signs, as in
+      "20% faster without increasing movement speed", is not a
+      contradiction and is not reported.
+      This automates a check that had to be done by hand - Ruling 22 in
+      content/transcription-notes.md verified six geode resonance
+      directions against docs/40:104-109 by eye, and nothing in the tree
+      would have caught a seventh. Its value does not depend on catching
+      anything today.                                                 FAILURE
+
+  A23 One spelling for a bound. No property name abbreviates a bound as the
+      token `cap`, `max`, or `min`; the word is spelled out as `maximum` or
+      `minimum`, with the qualifier - not the noun - carrying the distinction
+      between two bounds on one quantity (`target_minimum` vs `target_maximum`
+      vs `hard_maximum`). A cap IS a maximum, so `_cap`, `_max` and `_maximum`
+      were three spellings of one concept, twice inside a single object. Where
+      a unit suffix must stay terminal (40:96) the bound word moves to the
+      front instead: `maximum_control_resistance_percent`, not
+      `control_resistance_maximum_percent`.
+      Checked on KEY NAMES at any depth, so the abbreviation cannot return
+      under a new stem. The only accepted members are the paths listed in
+      BOUND_SPELLING_ESCALATED, which is asserted for drift the way A19
+      asserts its two sets: an undeclared member is a failure, and a member
+      that no longer applies is a warning asking for the list to shrink.
+      Mandate: docs/technical/40-content-data-and-validation.md:26
+      (snake_case property names) with 40:96 (the unit-suffix rule that fixes
+      which end of the name the bound word may occupy)                FAILURE
+
+  A26 No `null` appears anywhere under content/, at any depth, in any file -
+      including content/localization/en.json, which the definition loader
+      skips. THERE IS NO EXCEPTION SET, and that is deliberate: an
+      exception set is a place for a null to hide. A null in a source
+      definition is never legal, because 40:90 materializes an explicit
+      default for every absent optional field ("Optional fields have
+      explicit defaults materialized into the canonical bundle so runtime
+      never guesses") - so an absent field gets its default and a
+      present-and-null field asks runtime to guess. Absence is spelled by
+      omitting the key.
+      275 nulls across 101 of 138 definition files were disposed of in the
+      pass that added this: 246 keys omitted, 20 relic rarity/weighting
+      fields and 4 boss armor fields REMOVED as fields no schema will
+      declare, 3 external_numerics[n].value keys removed as shape defects,
+      and 2 nested id keys removed because the objects holding them are not
+      independently addressable. The two nested ids were briefly planned as
+      declared exceptions; removing the key instead made the assertion
+      unconditional.
+      Negative control: `"probe_null": null` injected at the top level of
+      content/enemies/EN-01.json -> FAIL, "1 null(s) under content/ ...
+      ['content/enemies/EN-01.json.probe_null']".
+      Mandate: docs/technical/40-content-data-and-validation.md:90  FAILURE
+
+  A27 No sentence-internal abbreviation period appears anywhere under
+      docs/**/*.md. This asserts a property of the CORPUS on behalf of a
+      MATCHER, and it is the only assertion here that does.
+      content/quote-verification-audit.md adopts a quotation rule that
+      fires when a stored string begins at a sentence boundary, carries its
+      own terminator, and the source sentence continues past it. That rule
+      measured 2 hits with ZERO false positives across the audit's whole
+      matched set - 1,072 records, which is its 806 decidable matches plus
+      the 266 matches below its decidability gate (audit §2, §6) - but
+      only because `.`/`!`/`?` is an unambiguous sentence terminator in
+      THIS corpus. The moment a design document writes "e.g." the terminator
+      stops being unambiguous and the rule starts misfiring on innocent
+      quotations. Documenting that as an assumption would be a fail-open
+      with a footnote, so it is asserted instead.
+      The list is the abbreviations that carry a period INSIDE a sentence
+      and are plausible in this project's prose: e.g. i.e. etc. approx.
+      cf. vs. viz. resp. no. fig. eq. sec. p. pp. ca. al. esp. incl.
+      Chosen on one criterion - the period is not a sentence end - so
+      units ("0.80M", "1.5 s") and decimals are NOT in scope: a decimal
+      point is not followed by a sentence-initial capital and the audit
+      measured zero decimal misfires across all 1,072 records.
+      Matched case-insensitively at a word boundary, because unbounded
+      substring matching finds "st." inside 93 ordinary words ending a
+      sentence ("first.", "specialist.", "cost.", ... 21 forms) and "ver."
+      inside 5 ("forever.", "solver.", "hover."). None of those 98 is an
+      abbreviation. The bounded form finds zero today.
+      THE FAILURE MESSAGE POINTS AT THE MATCHER, NOT AT A QUOTATION. The
+      day someone writes "e.g." in a design document, nothing is wrong with
+      any content string; what is wrong is that the quotation rule's
+      premise no longer holds and the rule needs revisiting.
+      Negative control: docs/ must not be modified, so the check runs
+      against a scratch tree - a byte copy of docs/ with "e.g." inserted
+      into one sentence -> FAIL naming that file and token.
+      Mandate: content/quote-verification-audit.md (adopted rule and its
+      stated corpus dependency)                                     FAILURE
 
 Not asserted here: no structural JSON Schema validation happens, because
 content/schemas/ (40:36) does not exist yet. Domain field names outside the
@@ -165,14 +399,49 @@ LOCALIZATION = CONTENT / "localization" / "en.json"
 # Directories under content/ that are not catalogs of definitions.
 NON_DEFINITION_DIRS = ("localization", "schemas")
 
-# A21 - total *.json inventory under content/. This is the sum of the A12 rows
-# plus content/localization/en.json, and it is asserted separately so that a
-# file appearing in a directory A12 does not cover is still caught.
+# A21 - the DEFINITION *.json inventory under content/. This is the sum of the
+# A12 rows, and it is asserted separately so that a definition file appearing in
+# a directory A12 does not cover is still caught.
 #
-# content/ also holds two Markdown files - README.md and transcription-notes.md
-# - which are documentation, not content. So `find content -type f` reports 141
-# while this count is 139; that difference is correct and is not a discrepancy.
-EXPECTED_CONTENT_JSON_FILES = 139
+# The population is the same one load_definitions() loads: every *.json under
+# content/ EXCEPT those beneath a NON_DEFINITION_DIRS directory. It used to be a
+# bare CONTENT.rglob("*.json") that never consulted NON_DEFINITION_DIRS, so the
+# count was definitions + localization/en.json = 139 and a directory this script
+# already declares is not a catalog of definitions still counted toward the
+# definition total. The first file authored under content/schemas/ - the
+# directory DAT-006 owns, and the one the README notes "does not exist yet" -
+# therefore reddened this row as "content/ holds 140 *.json file(s), expected
+# 139" on a branch that had added no definition at all. That is a false failure
+# charged to the wrong stream, and bumping 139 to 140 would only have laundered
+# it by agreeing with the polluted population; the expectation is instead rebased
+# onto the population the name now describes.
+#
+# So 138 rather than 139: content/localization/en.json leaves this count with
+# content/schemas/, because NON_DEFINITION_DIRS names them both. en.json loses no
+# coverage by leaving - A10/A11 assert it parses, is flat, is lexically sorted,
+# is duplicate-free, resolves every referenced key and orphans none, which is
+# strictly more than membership in a total - and A26 still scans it for nulls,
+# because "no null anywhere under content/" is deliberately a whole-tree claim
+# rather than a definition-only one.
+#
+# content/ also holds three Markdown files - README.md, transcription-notes.md
+# and quote-verification-audit.md - which are documentation, not content. So
+# `find content -type f` reports 142 while this count is 138; that difference is
+# correct and is not a discrepancy.
+#
+# The non-JSON files are NAMED rather than counted, and the A21 row asserts the
+# exact list. It previously printed the list beside a blank expectation and a
+# hardcoded "ok", which reported a stray file under content/ and tolerated it in
+# the same breath. Adding a documentation file here is a deliberate act and
+# updating this tuple is the record of it. That row is scoped to definition
+# directories for the same reason the count is: a README beside a schema is the
+# schema directory's business, not a stray file under a catalog.
+EXPECTED_CONTENT_DEFINITION_JSON_FILES = 138
+EXPECTED_CONTENT_NON_JSON = (
+    "content/README.md",
+    "content/quote-verification-audit.md",
+    "content/transcription-notes.md",
+)
 
 # --------------------------------------------------------------------------
 # A2/A4/A5 - envelope
@@ -194,18 +463,28 @@ STATUS_VOCABULARY = ("development", "enabled", "disabled", "retired")
 #     now fields of the MGC-01 definition. A18 asserts both prop families still
 #     appear inside MGC-01.
 #
-# The members below are expected, for two different reasons:
-#   - The four mining-site classes have NO doc-assigned ID at all: they are
-#     prose-only (docs/40-mining-and-extraction.md:58-132) with no table to
-#     carry an ID, so minting one here would be inventing content.
-#   - shared-elite-modifiers.json is not a definition. The rulings pass settled
-#     that elite treatment is not its own entity: elite ELIGIBILITY is a
-#     validated field on each enemy, which is where the enemy schema puts it
-#     (40:114, "elite eligibility"), and the shared multipliers
-#     (docs/31-initial-alien-roster.md:104) are a constants block those enemies
-#     read. A constants block has nothing to be referenced BY, so it carries no
-#     stable ID and no name_key. It is deliberately not in EXPECTATIONS as an
-#     item either - it is the enemies directory's one aggregate file.
+# THIS LIST IS NOW EMPTY, and a missing or null id is therefore an
+# unconditional failure (A5/A6). The integration owner minted the last five
+# IDs, so nothing in this tree is waiting on one:
+#   - the four prose-only mining-site classes
+#     (docs/40-mining-and-extraction.md:58-132) are SITE-01..SITE-04, in
+#     document order: standard ore seams, rich ore seams, Hyper Gold sites,
+#     specialized-material geodes;
+#   - content/enemies/shared-elite-modifiers.json is ELT-01. It was previously
+#     ID-less on the reading that a constants block "has nothing to be
+#     referenced BY". That is superseded: the canonical bundle is ordered by
+#     category and stable ID, so a file with no ID has no slot in that
+#     ordering. It is now an ordinary addressable definition. It keeps NO
+#     name_key - name_key is conditional on a player-facing name (40:84, 40:90)
+#     and this block has none - so it stays in NAME_KEY_OMITTED below. Its
+#     FILENAME is deliberately unchanged: the bundle orders by the id field,
+#     not by the file stem. It is still not an EXPECTATIONS item; it is the
+#     enemies directory's one aggregate file, and its id does not match the
+#     ^EN-\d{2}$ item selector.
+#
+# The list is kept, rather than deleted, as the declared place to record a
+# future genuinely-unminted ID together with its reason. Adding a member is a
+# deliberate act; A19 makes an undeclared one a failure either way.
 #
 # Three files that used to be listed here are gone from this list:
 #   - enemies/elite-modifier-profile.json was DELETED, superseded by the
@@ -219,24 +498,22 @@ STATUS_VOCABULARY = ("development", "enabled", "disabled", "retired")
 #     (docs/50-maps-resources-and-navigation.md:106) and the rulings pass gave
 #     it the stable ID UTL-R1 and the player-facing name "Resource radar", so
 #     it is an ordinary item in the utilities count and belongs in neither list.
-ID_NULL_EXPECTED = frozenset(
-    {
-        "content/enemies/shared-elite-modifiers.json",
-        "content/mining-sites/hyper-gold-sites.json",
-        "content/mining-sites/rich-ore-seams.json",
-        "content/mining-sites/specialized-material-geodes.json",
-        "content/mining-sites/standard-ore-seams.json",
-    }
-)
+ID_NULL_EXPECTED: frozenset[str] = frozenset()
 
 # A3/A19 - definitions that legitimately omit name_key.
 #
 # name_key is required only where a definition has a genuinely player-facing
 # name. None of these three is player-facing: WAV-01 and MGC-01 are authoring
-# contracts, and shared-elite-modifiers is a constants block, not an entity the
-# UI ever names. Putting their titles in the localization catalog would imply a
-# UI surface that does not exist, so the compiler supplies the default instead
-# (40:90).
+# contracts, and shared-elite-modifiers (now ELT-01) is a constants block, not
+# an entity the UI ever names. Putting their titles in the localization catalog
+# would imply a UI surface that does not exist, so the compiler supplies the
+# default instead (40:90).
+#
+# Minting ELT-01 did not change this set. Having a stable ID and having a
+# player-facing name are independent: the ID makes the block addressable and
+# orderable in the canonical bundle, while name_key stays conditional on there
+# being a name to localize. ELT-01 is the same path that was already listed
+# here, so the set is unchanged at three members.
 #
 # The two files removed from this list are the same deletions and the same
 # rename described above ID_NULL_EXPECTED: elite-modifier-profile.json and
@@ -251,6 +528,44 @@ NAME_KEY_OMITTED = frozenset(
 )
 
 # --------------------------------------------------------------------------
+# A23 - one spelling for a bound
+#
+# A cap is a maximum. Before this pass the same upper bound was spelled `_cap`,
+# `_max` and `_maximum` - twice inside a single object in two files - and `_min`
+# sat beside `_minimum` the same way. The word is now always spelled out, and
+# the qualifier rather than the noun carries the distinction between two bounds
+# on one quantity: `{target_minimum, target_maximum, hard_maximum}`, not
+# `{target_min, target_max, hard_max}`.
+#
+# Where the name carries a unit suffix, the unit stays terminal (40:96) and the
+# bound word moves to the front: `maximum_control_resistance_percent`,
+# `maximum_pursuit_duration_seconds`, `minimum_percent`.
+BOUND_ABBREVIATIONS = frozenset({"cap", "max", "min"})
+
+# A23 - the accepted exceptions, as "<file>::<property name>".
+#
+# Both are in one object in one file, and they hold DIFFERENT values:
+# effects.contact_damage_speed_bonus_percent_max is {percent: 200} while
+# effects.contact_damage_percent_cap is {percent: 400}. That is either two real
+# bounds wearing two spellings or one bound duplicated with a wrong number, and
+# the two need opposite treatment - rename both, or delete one. Renaming them to
+# a single spelling before that is decided would leave two identical stems
+# holding different numbers, which reads as a duplicate with a typo and hides
+# the collision the audit found. They are therefore left exactly as authored,
+# escalated to the document owner, and declared here so the exception is visible
+# rather than absorbed.
+# Now EMPTY. The two W-BF-tethered-reaper members are resolved, not suppressed:
+# docs/71:346 reads "Its contact Damage is `200% + up to 200%` of current Damage,
+# scaling linearly with blade world speed ... and capped at 400%", so 200 bounds
+# the speed-bonus COMPONENT (the "up to 200%" addend) and 400 bounds the TOTAL
+# (200% base + 200% maximum bonus). They are two different bounds on two different
+# quantities, so both values stay and the qualifier carries the distinction:
+# maximum_speed_bonus_percent and maximum_total_contact_damage_percent. A stale
+# exception is worse than none, so the list is emptied rather than left carrying
+# a resolved escalation.
+BOUND_SPELLING_ESCALATED = frozenset()
+
+# --------------------------------------------------------------------------
 # A8 - stale extraction metadata that must not survive anywhere
 # --------------------------------------------------------------------------
 
@@ -258,6 +573,10 @@ FORBIDDEN_KEYS = (
     "_provenance",
     "_source",
     "notes",
+    # The singular "note" was missing while "notes" was blocked, so three keys
+    # survived - two on MCH-06 restating a movement speed docs/72:55,57 already
+    # state, which is the same category deleted from all ten enemies.
+    "note",
     "refs",
     "lines",
     "line",
@@ -438,15 +757,108 @@ PROBES = [
         pattern=r"contract",
         source="docs/51-standard-map-generation-contract.md:1",
     ),
-    dict(
-        dir="maps",
-        label="world prop families present as fields (destructible rock, health pack)",
-        expected=2,
-        kind="key_families",
-        patterns=(r"destructible_rock|rock", r"health_pack"),
-        source="docs/72-player-survivability-and-damage-baseline.md:180 (health pack) + :190 (rock)",
-    ),
 ]
+
+# --------------------------------------------------------------------------
+# A13 - the two world-prop families, asserted on their VALUES.
+#
+# WHAT THIS REPLACED. The world-prop probe used to be kind="key_families" with
+# expected=2, which counted PATTERNS THAT MATCHED AT LEAST ONCE. The existence of
+# one key containing "rock" and one containing "health_pack" satisfied it, so
+# emptying both objects and setting rock Hull to 1 and the footprint to 9.9 left
+# the probe green. It asserted that two names existed, not that any value was
+# right.
+#
+# The replacement names the four authored values and cites each one. The key is
+# LOCATED by regex, discovered from the data like the rest of A13, but the value
+# is compared - and a missing field is a failure, not a silent pass, which is the
+# specific hole the old probe had.
+# --------------------------------------------------------------------------
+
+WORLD_PROP_VALUES = (
+    (
+        "destructible rock Hull",
+        re.compile(r"(?i)destructible_rock(?:_rules)?"),
+        re.compile(r"(?i)^hull$"),
+        100,
+        "docs/72-player-survivability-and-damage-baseline.md:194",
+    ),
+    (
+        "destructible rock damage footprint diameter (M)",
+        re.compile(r"(?i)destructible_rock(?:_rules)?"),
+        re.compile(r"(?i)damage_footprint_diameter"),
+        0.80,
+        "docs/72-player-survivability-and-damage-baseline.md:196",
+    ),
+    (
+        "health pack repair (Hull)",
+        re.compile(r"(?i)health_pack"),
+        re.compile(r"(?i)repair.*hull|hull.*repair"),
+        25,
+        "docs/72-player-survivability-and-damage-baseline.md:182",
+    ),
+    (
+        "health pack pickup radius (M)",
+        re.compile(r"(?i)health_pack"),
+        re.compile(r"(?i)pickup_radius"),
+        0.25,
+        "docs/72-player-survivability-and-damage-baseline.md:185",
+    ),
+    # ADDED as a coverage gap, not as a new policy. The rock population cap was
+    # transcribed and never asserted, and the reason it was missed generalises:
+    # A VALUE WHOSE NEIGHBOURS ARE ASSERTED READS AS COVERED. rock Hull (72:194)
+    # and the footprint diameter (72:196) are both checked, and they bracket this
+    # value in the same document section, which is exactly the situation in which
+    # nobody looks. That is a distinct failure shape from a gate that cannot fail
+    # - it is a gap that looks filled.
+    (
+        "destructible rock active population cap",
+        re.compile(r"(?i)destructible_rock(?:_rules)?"),
+        re.compile(r"(?i)^active_maximum$"),
+        16,
+        "docs/51-standard-map-generation-contract.md:146",
+    ),
+    (
+        "destructible rock initial count",
+        re.compile(r"(?i)destructible_rock(?:_rules)?"),
+        re.compile(r"(?i)^initial_count$"),
+        16,
+        "docs/51-standard-map-generation-contract.md:146",
+    ),
+)
+
+def check_world_prop_values(docs: dict[Path, object]) -> list[tuple]:
+    """A13 - the four authored world-prop values, each against its own doc:line."""
+    rows = []
+    present = files_in("maps", docs)
+    for label, family_rx, key_rx, expected, source in WORLD_PROP_VALUES:
+        found: list[tuple[str, object]] = []
+        for path, doc in sorted(present.items()):
+            for jpath, key, value in walk(doc):
+                if not key or not key_rx.search(key):
+                    continue
+                if not family_rx.search(jpath):
+                    continue
+                if isinstance(value, bool) or not isinstance(value, (int, float)):
+                    continue
+                found.append((f"{rel(path)}{jpath[1:]}", value))
+        wrong = [f"{p} = {v}" for p, v in found if float(v) != float(expected)]
+        if not found:
+            status = "FAIL"
+            actual = "no field found"
+            fail(
+                f"A13 {label}: no numeric field matching /{key_rx.pattern}/ inside a "
+                f"/{family_rx.pattern}/ object exists in content/maps/, so the value "
+                f"{expected} at {source} is unasserted"
+            )
+        else:
+            status = "ok" if not wrong else "FAIL"
+            actual = ", ".join(f"{v}" for _, v in found)
+            if wrong:
+                fail(f"A13 {label} must be {expected} ({source}): {wrong}")
+        rows.append((f"{label} [{source.split(':')[-1]}]", expected, actual, status))
+    return rows
+
 
 # --------------------------------------------------------------------------
 # A14 - doc-stated grand totals the JSON must reproduce
@@ -459,8 +871,84 @@ UNLOCK_TOTAL_HYPER_GOLD = 2150  # docs/63-permanent-option-unlock-catalog.md:48
 # A16 / A17 - reconciliation heuristics
 # --------------------------------------------------------------------------
 
-PERCENT_LITERAL = re.compile(r"[-+]?\d+(?:[.,]\d+)?\s*%")
-PERCENT_COMPLIANT_KEY = re.compile(r"(?:^|_)percent(?:_points)?$")
+# A16 - the NUMERIC percentage-point policy of
+# docs/technical/40-content-data-and-validation.md:95:
+#
+#   "Percentages in authoring use human-readable percentage points only when the
+#    property name says `_percent`; the compiler writes normalized factors into
+#    the runtime bundle as a separate derived field."
+#
+# WHAT THIS USED TO BE, AND WHY IT WAS REPLACED. A16 previously matched a literal
+# "%" glyph in STRING values and warned when the key was not named *_percent.
+# That checks prose, not the rule: a numeric 25 under a non-percent name was not
+# even warned, while 131 English sentences containing a percent sign were. A
+# warning list a reader learns to ignore is worse than no list, so the prose scan
+# is gone and the FOUR rules below run on NUMBERS and KEY NAMES instead. None of
+# them needs content/schemas/, so all four are failures rather than warnings.
+#
+# A NAME "SAYS _percent" WHEREVER THE TOKEN APPEARS, not only at the end.
+# 40:95 constrains what the name says; 40:96's terminal-unit rule is about unit
+# suffixes. 52 names in this tree put the token mid-name
+# (percent_of_mech_base_speed, shockwave_damage_percent_of_current_damage, ...)
+# and every one of them is correct, so a rule demanding a TERMINAL _percent would
+# have forced 52 renames no document asks for.
+PERCENT_TOKEN_KEY = re.compile(r"(?i)(?:^|_)percent(?:age)?(?:_points?)?(?:$|_)")
+# Structural container keys: a numeric leaf under one of these inherits the
+# percent-ness of the nearest ancestor key that says percent, so {"percent": 20}
+# and {"minimum": 40, "maximum": 80} are checked as percentage points.
+PERCENT_CONTAINER_KEY = frozenset({"minimum", "maximum", "percent", "value", "points"})
+# A16 rule 4 - the OTHER half of 40:95, which the previous rewrite claimed to fix
+# and did not.
+#
+# 40:95 reads "Percentages in authoring use human-readable percentage points ONLY
+# WHEN the property name says `_percent`". Rules 1-3 all begin by asking whether
+# the name says percent, so every one of them is gated behind that question and a
+# bare number under a name that does NOT say percent was never examined at all.
+# `sneaky_bonus: 25` and `damage_bonus: 150` both passed with zero failures.
+#
+# What is decidable here. Whether an arbitrary number "is a percentage" is not
+# decidable from the number. But a name whose head noun is a RELATIVE magnitude -
+# a bonus, a penalty, an increase, a reduction - names a quantity that is
+# necessarily proportional to something else, so it is either percentage points or
+# a multiplicative scale, and both 40:95 (percentage points say `_percent`) and
+# 40:94 (ambiguous numeric names carry a unit suffix) require the name to say
+# which. A relative-magnitude name carrying neither is a number whose unit the
+# reader cannot recover: 25 could be 25 percentage points or a 25x scale.
+#
+# A name that already declares its quantity kind ANYWHERE in the name is excluded,
+# not just terminally. `single_target_ceiling_multiplier_at_full_bonus` is the
+# tree's one such name: its head noun is `multiplier`, the `bonus` token is a
+# mid-name qualifier, and Ruling 14 makes `_multiplier` the unit declaration for a
+# multiplicative scale. Requiring the token to be terminal would have flagged it.
+#
+# This rule flags NOTHING in the tree as authored. That is the point: it is a
+# regression guard over a CLOSED VOCABULARY of relative-magnitude segments -
+# exactly the tokens in RELATIVE_MAGNITUDE_TOKEN below - and its negative control,
+# the two injections named above, is what demonstrates it bites.
+#
+# It does NOT catch "a percentage arriving under a name that hides its unit" in
+# general. Whether an arbitrary number is a percentage is not decidable from the
+# number, and `sneaky_value: 25` sails past this rule exactly as it sails past
+# rules 1-3. Nothing beyond the two enumerated forms - a number under a
+# relative-magnitude name carrying neither a percent token nor a unit-or-kind
+# token - is claimed here.
+RELATIVE_MAGNITUDE_TOKEN = re.compile(
+    r"(?i)(?:^|_)(?:bonus|bonuses|penalty|penalties|increase|increased|decrease"
+    r"|reduction|boost|malus|discount|surcharge|uplift)(?:$|_)"
+)
+# Tokens that declare what kind of quantity the number is, so the name is not
+# ambiguous and 40:94 is satisfied. Matched as whole underscore-delimited segments
+# anywhere in the name.
+UNIT_OR_KIND_TOKEN = re.compile(
+    r"(?i)(?:^|_)(?:m|m_per_s|meters?|seconds?|milliseconds?|per_second|hull|armor"
+    r"|degrees|fraction|count|multiplier|scale|ore|hyper_gold|units?|ranks?|hits?"
+    r"|diameters?|tier|weight)(?:$|_)"
+)
+# The compiler-owned normalized factor. Authoring it puts a second writer on a
+# derived field, which is the second half of 40:95.
+NORMALIZED_FACTOR_TOKEN = re.compile(
+    r"(?i)(?:^|_)(?:factor|multiplier|fraction|normalized|normalised)(?:$|_)"
+)
 FORMULA_KEY = re.compile(r"(?:^|_)(?:formula|formulas|expression|equation)s?$")
 # A pure algebraic expression: operators present, no word longer than three
 # letters (so prose containing a formula is not flagged), short.
@@ -519,6 +1007,19 @@ def load_json(path: Path):
         return None
 
 
+def in_non_definition_dir(path: Path) -> bool:
+    """True when path sits beneath one of the NON_DEFINITION_DIRS.
+
+    The single place that decides whether a path under content/ belongs to the
+    definition population. It exists because that decision was previously made
+    inline here and NOT made at all in check_file_inventory(), which enumerated
+    content/ bare and so counted a non-definition directory toward the definition
+    total. Every enumeration that means "the definitions" goes through this.
+    """
+    parts = path.relative_to(CONTENT).parts
+    return bool(parts) and parts[0] in NON_DEFINITION_DIRS
+
+
 def load_definitions() -> dict[Path, object]:
     """All *.json under content/ except the non-definition directories."""
     docs: dict[Path, object] = {}
@@ -526,8 +1027,7 @@ def load_definitions() -> dict[Path, object]:
         fail(f"content/ directory not found at {CONTENT}")
         return docs
     for path in sorted(CONTENT.rglob("*.json")):
-        parts = path.relative_to(CONTENT).parts
-        if parts and parts[0] in NON_DEFINITION_DIRS:
+        if in_non_definition_dir(path):
             continue
         doc = load_json(path)
         if doc is not None:
@@ -550,6 +1050,36 @@ def walk(obj, path="$"):
         for index, value in enumerate(obj):
             yield f"{path}[{index}]", None, value
             yield from walk(value, f"{path}[{index}]")
+
+
+def walk_with_ancestry(obj, path="$", ancestors=()):
+    """Like walk(), plus the tuple of dict keys enclosing the node.
+
+    A16 needs it: a numeric leaf named "minimum" inside "favorable_horde_damage_percent"
+    is a percentage-point value, and only the ancestry says so.
+    """
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            yield f"{path}.{key}", key, value, ancestors
+            yield from walk_with_ancestry(value, f"{path}.{key}", ancestors + (key,))
+    elif isinstance(obj, list):
+        for index, value in enumerate(obj):
+            yield f"{path}[{index}]", None, value, ancestors
+            yield from walk_with_ancestry(value, f"{path}[{index}]", ancestors)
+
+
+def numeric_leaves(obj):
+    """Yield every int/float leaf in a subtree, booleans excluded."""
+    if isinstance(obj, bool):
+        return
+    if isinstance(obj, (int, float)):
+        yield obj
+    elif isinstance(obj, dict):
+        for value in obj.values():
+            yield from numeric_leaves(value)
+    elif isinstance(obj, list):
+        for value in obj:
+            yield from numeric_leaves(value)
 
 
 def files_in(directory: str, docs: dict[Path, object]) -> dict[Path, object]:
@@ -657,9 +1187,166 @@ def split_source_ref(ref: str) -> tuple[str, str | None]:
     return target, None
 
 
+def source_ref_scope_prefix(ref: str) -> str | None:
+    """'field.path: DOC-ID#anchor' -> 'field.path'; a bare ref -> None."""
+    if ": " not in ref:
+        return None
+    prefix = ref.split(": ", 1)[0].strip()
+    return prefix or None
+
+
+# --------------------------------------------------------------------------
+# A22 - a scope prefix must name a field that exists in the definition
+#
+# The prefix grammar is dot-separated snake_case segments, each optionally
+# suffixed with one or more selectors:
+#   name       a property
+#   name[]     every element of an array property
+#   name[3]    one element by index
+#   name[2..3] a range of elements by index
+# Descending through an array without a selector is also accepted, so
+# "unlocks.utilities[].utility_id" and "unlocks.utilities.utility_id" both
+# resolve: the segment then has to exist on at least one element.
+# --------------------------------------------------------------------------
+
+SCOPE_SEGMENT = re.compile(r"([a-z0-9_]+)((?:\[(?:\d+(?:\.\.\d+)?)?\])*)$")
+SCOPE_SELECTOR = re.compile(r"\[(\d+)?(?:\.\.(\d+))?\]")
+
+
+def split_scope_prefix(prefix: str) -> list[str]:
+    """Split on '.' separators only, so the '..' inside 'rules[2..3]' survives."""
+    segments: list[str] = [""]
+    depth = 0
+    for char in prefix:
+        if char == "[":
+            depth += 1
+        elif char == "]":
+            depth -= 1
+        if char == "." and depth == 0:
+            segments.append("")
+            continue
+        segments[-1] += char
+    return segments
+
+
+def resolve_scope_prefix(doc, prefix: str) -> tuple[bool, str]:
+    """Does `prefix` name a field present in `doc`? -> (ok, reason)."""
+    current = [doc]
+    for segment in split_scope_prefix(prefix):
+        match = SCOPE_SEGMENT.fullmatch(segment)
+        if not match:
+            return False, f"segment {segment!r} is not a snake_case path segment"
+        name, selectors = match.group(1), match.group(2)
+        holders = [n for n in current if isinstance(n, dict)]
+        # An unselected array is transparent: look for the name on its elements.
+        for node in current:
+            if isinstance(node, list):
+                holders.extend(e for e in node if isinstance(e, dict))
+        if not holders:
+            return False, f"nothing to hold {name!r} (reached a non-object)"
+        found = [h[name] for h in holders if name in h]
+        if not found:
+            return False, f"{name!r} is not a field of the definition"
+        for selector in SCOPE_SELECTOR.finditer(selectors):
+            arrays = [n for n in found if isinstance(n, list)]
+            if not arrays:
+                return False, f"{name}{selectors} indexes {name!r}, which is not an array"
+            start, end = selector.group(1), selector.group(2)
+            if start is None:
+                found = [e for a in arrays for e in a]
+                if not found:
+                    return False, f"{name}[] indexes an empty array"
+                continue
+            lo = int(start)
+            hi = int(end) if end is not None else lo
+            if hi < lo:
+                return False, f"{name}[{lo}..{hi}] is an inverted range"
+            picked = [a[i] for a in arrays for i in range(lo, hi + 1) if i < len(a)]
+            if len(picked) != len(arrays) * (hi - lo + 1):
+                return False, f"{name}[{lo}..{hi}] is out of range for {name!r}"
+            found = picked
+        current = found
+    return True, "ok"
+
+
+def check_scope_prefixes(docs: dict[Path, object]) -> list[tuple]:
+    """A22 - every source_refs scope prefix resolves in its own definition."""
+    prefixed = 0
+    dangling: list[str] = []
+    for path, doc in sorted(docs.items()):
+        if not isinstance(doc, dict) or not isinstance(doc.get("source_refs"), list):
+            continue
+        for ref in doc["source_refs"]:
+            if not isinstance(ref, str):
+                continue
+            prefix = source_ref_scope_prefix(ref)
+            if prefix is None:
+                continue
+            prefixed += 1
+            ok, reason = resolve_scope_prefix(doc, prefix)
+            if not ok:
+                dangling.append(f"{rel(path)}: {ref!r} - {reason}")
+                fail(
+                    f"{rel(path)}: source_refs {ref!r} has scope prefix {prefix!r}, which does "
+                    f"not resolve in this definition ({reason}). A citation must annotate a field "
+                    f"that exists: re-point it at the surviving field it documents, or drop the "
+                    f"prefix and keep it file-level - never delete a citation that is the only "
+                    f"support for a value still present (40:87, 40:90)"
+                )
+    return [
+        (
+            "source_refs scope prefixes resolve to an existing field",
+            prefixed,
+            f"{len(dangling)} dangling",
+            "ok" if not dangling else "FAIL",
+        )
+    ]
+
+
 # --------------------------------------------------------------------------
 # A2-A9 - per-definition checks
 # --------------------------------------------------------------------------
+
+
+def check_bound_spelling(docs: dict[Path, object]) -> list[tuple]:
+    """A23 - no property name abbreviates a bound as cap/max/min."""
+    seen: set[str] = set()
+    offenders: list[str] = []
+    for path, doc in sorted(docs.items()):
+        for jpath, key, _ in walk(doc):
+            if not key or not (set(key.split("_")) & BOUND_ABBREVIATIONS):
+                continue
+            marker = f"{rel(path)}::{key}"
+            seen.add(marker)
+            if marker not in BOUND_SPELLING_ESCALATED:
+                offenders.append(f"{rel(path)}{jpath[1:]}")
+    resolved = sorted(BOUND_SPELLING_ESCALATED - seen)
+    rows = [
+        (
+            "property names spell a bound out as maximum/minimum",
+            0,
+            f"{len(offenders)} abbreviated",
+            "ok" if not offenders else "FAIL",
+        ),
+        (
+            "declared BOUND_SPELLING_ESCALATED exceptions",
+            len(BOUND_SPELLING_ESCALATED),
+            f"{len(BOUND_SPELLING_ESCALATED) - len(resolved)} still present",
+            "ok" if not resolved else "WARN",
+        ),
+    ]
+    if offenders:
+        fail(
+            f"{len(offenders)} property name(s) abbreviate a bound as 'cap', 'max' or 'min'; a cap "
+            f"is a maximum and the word is spelled out, with the unit suffix kept terminal (40:26, "
+            f"40:96): {offenders[:15]}"
+        )
+    if resolved:
+        warn(
+            f"{len(resolved)} member(s) of BOUND_SPELLING_ESCALATED no longer exist, so the "
+            f"escalation is settled: {resolved}. Shrink BOUND_SPELLING_ESCALATED."
+        )
+    return rows
 
 
 def check_definitions(docs: dict[Path, object], doc_index: dict[str, dict]) -> dict:
@@ -670,7 +1357,6 @@ def check_definitions(docs: dict[Path, object], doc_index: dict[str, dict]) -> d
         no_id=set(),
         no_name_key=set(),
         source_refs=0,
-        percent_hits={},
         formula_hits={},
         key_refs=set(),
         envelope_key_refs=set(),
@@ -682,15 +1368,20 @@ def check_definitions(docs: dict[Path, object], doc_index: dict[str, dict]) -> d
             continue
         stats["checked"] += 1
 
-        # ---- A5/A6 id: absent or null is a warning, never a failure ----
-        if "id" not in doc:
-            stats["missing_id"].append(name)
+        # ---- A5/A6 id: absent or null fails unless declared in
+        #      ID_NULL_EXPECTED, which is now empty ----
+        if "id" not in doc or doc["id"] is None:
+            (stats["missing_id"] if "id" not in doc else stats["null_id"]).append(name)
             stats["no_id"].add(name)
-            warn(f"{name}: no top-level 'id' (no stable ID assigned by any document, 40:80)")
-        elif doc["id"] is None:
-            stats["null_id"].append(name)
-            stats["no_id"].add(name)
-            warn(f"{name}: top-level 'id' is null (no stable ID assigned by any document, 40:80)")
+            state = "no top-level 'id'" if "id" not in doc else "top-level 'id' is null"
+            if name in ID_NULL_EXPECTED:
+                warn(f"{name}: {state}; declared in ID_NULL_EXPECTED (40:80)")
+            else:
+                fail(
+                    f"{name}: {state}; every definition must carry a stable category-valid ID "
+                    f"(40:80). Add the minted ID, or list the file in ID_NULL_EXPECTED with the "
+                    f"reason no document assigns one"
+                )
         elif not isinstance(doc["id"], str) or not doc["id"].strip():
             fail(f"{name}: 'id' is {doc['id']!r}, expected a non-empty string (40:80)")
 
@@ -790,8 +1481,6 @@ def check_definitions(docs: dict[Path, object], doc_index: dict[str, dict]) -> d
                     if isinstance(element, str) and element.strip():
                         stats["key_refs"].add(element)
             if isinstance(value, str):
-                if PERCENT_LITERAL.search(value) and not PERCENT_COMPLIANT_KEY.search(key):
-                    stats["percent_hits"].setdefault(key, []).append(f"{name}{jpath[1:]}")
                 if looks_like_formula(key, value):
                     stats["formula_hits"].setdefault(key, []).append(f"{name}{jpath[1:]}")
     return stats
@@ -849,11 +1538,8 @@ def check_expected_sets(stats: dict) -> list[tuple]:
 
 
 def report_reconciliation(stats: dict) -> None:
-    for key, hits in sorted(stats["percent_hits"].items()):
-        warn(
-            f"40:95 percentage points on a property not named *_percent: '{key}' "
-            f"({len(hits)} occurrence(s)) e.g. {', '.join(hits[:2])}"
-        )
+    """A17 only. A16 is check_percentage_point_policy() - it asserts against
+    numbers and key names and reports failures, not a warning list."""
     for key, hits in sorted(stats["formula_hits"].items()):
         warn(
             f"40:99 formula held as a string rather than a registered formula kind plus "
@@ -1030,19 +1716,6 @@ def check_probes(docs: dict[Path, object]) -> list[tuple]:
             rx = re.compile(spec["pattern"])
             matched = [p for p in sorted(present) if rx.search(p.stem)]
             actual, found = len(matched), [rel(p) for p in matched]
-        elif spec["kind"] == "key_families":
-            found = []
-            for pattern in spec["patterns"]:
-                rx = re.compile(pattern)
-                hits = [
-                    f"{rel(path)}{jpath[1:]}"
-                    for path, doc in sorted(present.items())
-                    for jpath, key, _ in walk(doc)
-                    if key and rx.search(key)
-                ]
-                if hits:
-                    found.append(f"{pattern} -> {hits[0]}")
-            actual = len(found)
         else:
             actual, found = probe_array_at_path(present, spec["pattern"])
         status = "ok" if actual == spec["expected"] else "FAIL"
@@ -1165,35 +1838,61 @@ def check_totals(docs: dict[Path, object]) -> list[tuple]:
 # every 6 s". A generic derived-value detector is not possible without schemas.
 # --------------------------------------------------------------------------
 
-# A20 - the two compiler-derived enemy footprint values, which no enemy
-# definition may carry. Both are derived under
-# docs/technical/40-content-data-and-validation.md:114 ("Validation derives
-# world speeds/footprints and compares them with the survivability report"), so
-# storing either alongside the authored body scale puts a second writer on a
+# A20 - the compiler-derived footprint values, which no definition may carry.
+# Both are derived under docs/technical/40-content-data-and-validation.md:114
+# ("Validation derives world speeds/footprints and compares them with the
+# survivability report"), so storing either puts a second writer on a
 # compiler-owned value - exactly the 0.004 M disagreement that started this.
 #
-# What the enemy DOES author is body_scale_multiplier. Everything below is a
-# product of it:
+# The two rules have DIFFERENT scopes, because enemies and bosses author
+# different halves of their footprint.
+#
+# Enemies author body_scale_multiplier, and both of these are products of it:
 #   contact diameter  = body_scale_multiplier x 0.80 M   (docs/72:86)
 #   centre distance   = contact diameter / 2 + 0.50 M    (docs/72:86)
-# The 0.50 M in the second is the PLAYER's collision radius, so storing the
-# centre distance on an enemy encodes a player-baseline constant into the enemy
-# catalog - a worse coupling than the diameter was.
+#
+# BOSS DIAMETERS ARE AUTHORED, so the diameter rule must NOT cover
+# content/bosses/. The boss roster at docs/31:121-128 has no body-scale column
+# at all - unlike the ordinary roster overview at docs/31:37-48, which is where
+# the ten enemy scales come from - and the scales the four boss diameters would
+# imply (1.875, 2.5, 2.0, 2.375) appear nowhere in docs/. docs/72:105 states the
+# four diameters flat: Riftjaw 1.50M, Brood Titan 2.00M, Prism Crown 1.60M,
+# Skybreaker Apex 1.90M. There is nothing to derive them from, so they are the
+# authored quantity, exactly as body_scale_multiplier is for an enemy.
+#
+# THE CENTRE DISTANCE IS DERIVED FOR BOSSES TOO, so that rule covers
+# content/bosses/ as well as content/enemies/. docs/72:86 gives one derivation
+# for both: contact begins when the enemy circle and the mech's 0.50M-radius
+# collision circle overlap. It reproduces exactly for all four bosses -
+# 1.50/2+0.50=1.25, 2.00/2+0.50=1.50, 1.60/2+0.50=1.30, 1.90/2+0.50=1.45 - each
+# matching the value content/bosses/ used to store. The 0.50 M term is the
+# PLAYER's collision radius, so storing the sum in a boss or enemy catalog
+# hardcodes a player-baseline constant into it: change the mech's collision
+# radius and those files are silently wrong, with no validator to notice.
+#
+# THE CENTRE DISTANCE IS DERIVED IN content/maps/ TOO. The health pack authors
+# pickup_radius_m = 0.25 M and docs/72:185 gives the sum as a consequence of it:
+# "The pack has a 0.25M pickup radius. With the standard mech circle, collection
+# occurs when centers come within 0.75M." 0.25 + 0.50 = 0.75, and the 0.50 M is
+# again the PLAYER's collision radius - a third writer for one constant, after
+# the ten enemies and the four bosses.
 #
 # reference_diameter_m is allowlisted and must stay: 0.80 M is the Ripper's
 # authored rank-zero contact diameter (docs/72:86), the shared reference the
 # scale multiplies. It is an authored constant, not a per-enemy derived value.
-ENEMY_DERIVED_FIELD_ALLOWED = frozenset({"reference_diameter_m"})
-ENEMY_DERIVED_FIELDS = (
+DERIVED_FOOTPRINT_FIELD_ALLOWED = frozenset({"reference_diameter_m"})
+DERIVED_FOOTPRINT_RULES = (
     (
         "collision/contact diameter",
+        ("enemies",),
         re.compile(r"(?i)(?:diameter|radius)"),
         "body_scale_multiplier x 0.80 M",
     ),
     (
         "centre distance that begins contact",
+        ("enemies", "bosses", "maps"),
         re.compile(r"(?i)cent(?:er|re)_distance|distance_that_begins_contact"),
-        "contact diameter / 2 + the player's 0.50 M collision radius",
+        "the object's radius + the player's 0.50 M collision radius",
     ),
 )
 
@@ -1205,48 +1904,78 @@ DEPLOYMENT_INTERVAL_KEY = re.compile(r"(?i)deploy.*(?:interval|cadence|seconds|p
 
 
 def check_file_inventory() -> list[tuple]:
-    """A21 - the total *.json inventory under content/."""
-    json_files = sorted(CONTENT.rglob("*.json"))
-    other_files = sorted(p for p in CONTENT.rglob("*") if p.is_file() and p.suffix != ".json")
-    actual = len(json_files)
+    """A21 - the definition *.json inventory under content/.
+
+    Both rows are scoped to the definition population by in_non_definition_dir(),
+    the same rule load_definitions() uses. Neither may go back to enumerating
+    content/ bare: NON_DEFINITION_DIRS names directories this script has already
+    decided are not catalogs of definitions, and a count that ignores that
+    decision charges the next branch to author content/schemas/ with a definition
+    it never added.
+    """
+    definitions = sorted(p for p in CONTENT.rglob("*.json") if not in_non_definition_dir(p))
+    other_files = sorted(
+        p
+        for p in CONTENT.rglob("*")
+        if p.is_file() and p.suffix != ".json" and not in_non_definition_dir(p)
+    )
+    actual = len(definitions)
     rows = [
         (
-            "*.json files under content/",
-            EXPECTED_CONTENT_JSON_FILES,
+            "definition *.json files under content/ (excluding "
+            f"{', '.join(NON_DEFINITION_DIRS)})",
+            EXPECTED_CONTENT_DEFINITION_JSON_FILES,
             actual,
-            "ok" if actual == EXPECTED_CONTENT_JSON_FILES else "FAIL",
+            "ok" if actual == EXPECTED_CONTENT_DEFINITION_JSON_FILES else "FAIL",
         ),
         (
             "non-JSON files (documentation, not content)",
-            "",
+            f"{len(EXPECTED_CONTENT_NON_JSON)}: {', '.join(EXPECTED_CONTENT_NON_JSON)}",
             f"{len(other_files)}: {', '.join(rel(p) for p in other_files) or 'none'}",
-            "ok",
+            "ok" if [rel(p) for p in other_files] == list(EXPECTED_CONTENT_NON_JSON) else "FAIL",
         ),
     ]
-    if actual != EXPECTED_CONTENT_JSON_FILES:
+    if [rel(p) for p in other_files] != list(EXPECTED_CONTENT_NON_JSON):
         fail(
-            f"content/ holds {actual} *.json file(s), expected "
-            f"{EXPECTED_CONTENT_JSON_FILES}. Either a definition was added or removed without "
-            f"updating EXPECTED_CONTENT_JSON_FILES and the matching A12 row, or a file is in a "
-            f"directory no A12 row covers."
+            f"content/ holds non-JSON files {[rel(p) for p in other_files]}, expected exactly "
+            f"{list(EXPECTED_CONTENT_NON_JSON)}. This row used to LIST the non-JSON files with a "
+            f"blank expectation and a hardcoded 'ok', so it could never fail - a stray file under "
+            f"content/ was reported and tolerated in the same breath. It is now an expectation: a "
+            f"new documentation file is added here deliberately, and anything else is a finding."
+        )
+    if actual != EXPECTED_CONTENT_DEFINITION_JSON_FILES:
+        fail(
+            f"content/ holds {actual} definition *.json file(s), expected "
+            f"{EXPECTED_CONTENT_DEFINITION_JSON_FILES}. Either a definition was added or removed "
+            f"without updating EXPECTED_CONTENT_DEFINITION_JSON_FILES and the matching A12 row, or "
+            f"a file is in a directory no A12 row covers. Files under "
+            f"content/{{{','.join(NON_DEFINITION_DIRS)}}}/ are NOT in this count and cannot cause "
+            f"this failure."
         )
     return rows
 
 
-def check_enemy_derived_fields(docs: dict[Path, object]) -> list[tuple]:
-    """A20 - no enemy definition may carry a compiler-derived footprint value."""
+def check_derived_footprint_fields(docs: dict[Path, object]) -> list[tuple]:
+    """A20 - no definition may carry a compiler-derived footprint value.
+
+    The diameter rule is enemies-only, because boss diameters are authored; the
+    centre-distance rule covers enemies and bosses, because it is derived for
+    both. See DERIVED_FOOTPRINT_RULES for the citations.
+    """
     rows = []
-    for label, rx, derivation in ENEMY_DERIVED_FIELDS:
+    for label, directories, rx, derivation in DERIVED_FOOTPRINT_RULES:
         hits: list[str] = []
-        for path, doc in sorted(files_in("enemies", docs).items()):
-            for jpath, key, value in walk(doc):
-                if not key or key in ENEMY_DERIVED_FIELD_ALLOWED:
-                    continue
-                if rx.search(key):
-                    hits.append(f"{rel(path)}{jpath[1:]} = {value!r}")
+        for directory in directories:
+            for path, doc in sorted(files_in(directory, docs).items()):
+                for jpath, key, value in walk(doc):
+                    if not key or key in DERIVED_FOOTPRINT_FIELD_ALLOWED:
+                        continue
+                    if rx.search(key):
+                        hits.append(f"{rel(path)}{jpath[1:]} = {value!r}")
+        scope = " + ".join(f"content/{d}/" for d in directories)
         rows.append(
             (
-                f"no enemy carries a {label} field",
+                f"no {label} field in {scope}",
                 0,
                 len(hits),
                 "ok" if not hits else "FAIL",
@@ -1254,9 +1983,8 @@ def check_enemy_derived_fields(docs: dict[Path, object]) -> list[tuple]:
         )
         if hits:
             fail(
-                f"{len(hits)} enemy field(s) hold a {label}, which the compiler derives as "
-                f"{derivation} (40:114, 40:100); the enemy authors body_scale_multiplier only: "
-                f"{hits[:10]}"
+                f"{len(hits)} field(s) under {scope} hold a {label}, which the compiler derives "
+                f"as {derivation} (40:114, 40:100): {hits[:10]}"
             )
     return rows
 
@@ -1435,6 +2163,546 @@ def check_references(docs: dict[Path, object]) -> list[tuple]:
 
 
 # --------------------------------------------------------------------------
+# A16 - the numeric percentage-point policy (40:95). Four rules, all decidable
+# from key names and numbers, so all four are failures. See the constants above
+# for what this replaced and why.
+# --------------------------------------------------------------------------
+
+
+def check_percentage_point_policy(docs: dict[Path, object]) -> list[tuple]:
+    """A16 - percentage points are numbers, are not normalized factors, the
+    compiler's normalized factor is never authored beside them, and no number
+    sits under a relative-magnitude name that says neither percent nor a unit.
+
+    Four rules. The fourth covers what the first three cannot reach, because
+    each of them begins by asking whether the name says percent. It is a closed
+    vocabulary (RELATIVE_MAGNITUDE_TOKEN), and nothing beyond that vocabulary is
+    claimed.
+    """
+    no_number: list[str] = []
+    factor_valued: list[str] = []
+    hybrid_names: list[str] = []
+    twins: list[str] = []
+    unnamed_magnitude: list[str] = []
+    checked = 0
+
+    def check_twins(where: str, obj: dict) -> None:
+        """Rule 3 - percentage points and a same-stem normalized factor in one object."""
+        for sibling in obj:
+            if not PERCENT_TOKEN_KEY.search(sibling):
+                continue
+            stem = re.sub(r"(?i)_?percent(?:age)?(?:_points?)?$", "", sibling)
+            if not stem:
+                continue
+            for other in obj:
+                if other != sibling and NORMALIZED_FACTOR_TOKEN.search(other) and stem in other:
+                    twins.append(f"{where}: {sibling!r} + {other!r}")
+
+    for path, doc in sorted(docs.items()):
+        name = rel(path)
+        # The document's own top level is an object too, and walk() never yields it.
+        if isinstance(doc, dict):
+            check_twins(name, doc)
+        for jpath, key, value, ancestors in walk_with_ancestry(doc):
+            if key is None:
+                continue
+
+            says_percent = bool(PERCENT_TOKEN_KEY.search(key))
+
+            # Rule 3 - the compiler owns the normalized factor (40:95, 40:100).
+            if says_percent and NORMALIZED_FACTOR_TOKEN.search(key):
+                hybrid_names.append(f"{name}{jpath[1:]}")
+            if isinstance(value, dict):
+                check_twins(f"{name}{jpath[1:]}", value)
+
+            if not says_percent:
+                inherits_percent = any(PERCENT_TOKEN_KEY.search(a) for a in ancestors)
+                is_number = not isinstance(value, bool) and isinstance(value, (int, float))
+                # Rule 2 reaches container leaves through the ancestry.
+                if key in PERCENT_CONTAINER_KEY and is_number and inherits_percent:
+                    checked += 1
+                    if value != 0 and abs(value) < 1:
+                        factor_valued.append(f"{name}{jpath[1:]} = {value}")
+                # Rule 4 - a NUMBER under a name that does not say percent. This is
+                # the case rules 1-3 never reach, because all three ask "does the
+                # name say percent?" first. A relative-magnitude name that declares
+                # no unit and no kind cannot state whether its number is percentage
+                # points or a scale, and 40:95 permits percentage points only under
+                # a name that says percent.
+                elif (
+                    is_number
+                    and not inherits_percent
+                    and RELATIVE_MAGNITUDE_TOKEN.search(key)
+                    and not UNIT_OR_KIND_TOKEN.search(key)
+                ):
+                    unnamed_magnitude.append(f"{name}{jpath[1:]} = {value}")
+                continue
+
+            # Rule 1 - a percent-named property must resolve to a number.
+            leaves = list(numeric_leaves(value))
+            if not leaves:
+                no_number.append(f"{name}{jpath[1:]} = {value!r}")
+                continue
+            checked += len(leaves)
+            # Rule 2 - percentage points, never a normalized factor.
+            for leaf in leaves:
+                if leaf != 0 and abs(leaf) < 1:
+                    factor_valued.append(f"{name}{jpath[1:]} = {leaf}")
+
+    rows = [
+        (
+            "percent-named properties resolve to a number",
+            0,
+            f"{len(no_number)} prose-only",
+            "ok" if not no_number else "FAIL",
+        ),
+        (
+            f"percentage-point magnitudes, not normalized factors ({checked} numeric leaf/leaves)",
+            0,
+            f"{len(factor_valued)} with 0 < |v| < 1",
+            "ok" if not factor_valued else "FAIL",
+        ),
+        (
+            "compiler's normalized factor not authored",
+            0,
+            f"{len(hybrid_names)} hybrid name(s), {len(twins)} twin(s)",
+            "ok" if not (hybrid_names or twins) else "FAIL",
+        ),
+        (
+            "relative magnitude under a name that declares no unit",
+            0,
+            f"{len(unnamed_magnitude)} bare number(s)",
+            "ok" if not unnamed_magnitude else "FAIL",
+        ),
+    ]
+    if no_number:
+        fail(
+            f"{len(no_number)} property name(s) say percent but hold no numeric value, so the "
+            f"percentage exists only as prose (40:95): {no_number[:10]}"
+        )
+    if factor_valued:
+        fail(
+            f"{len(factor_valued)} percent-named numeric value(s) satisfy 0 < |v| < 1, which is a "
+            f"normalized factor rather than human-readable percentage points (40:95): "
+            f"{factor_valued[:10]}"
+        )
+    if hybrid_names:
+        fail(
+            f"{len(hybrid_names)} property name(s) combine a percent token with a normalized-factor "
+            f"token; the compiler writes the normalized factor as a separate derived field (40:95): "
+            f"{hybrid_names[:10]}"
+        )
+    if twins:
+        fail(
+            f"{len(twins)} object(s) author both percentage points and a same-stem normalized factor; "
+            f"the factor is compiler-derived (40:95, 40:100): {twins[:10]}"
+        )
+    if unnamed_magnitude:
+        fail(
+            f"{len(unnamed_magnitude)} numeric value(s) sit under a relative-magnitude name (bonus, "
+            f"penalty, increase, reduction, ...) that says neither percent nor a unit, so the number "
+            f"could be percentage points or a multiplicative scale and the name does not say which. "
+            f"40:95 allows human-readable percentage points only under a name that says percent, and "
+            f"40:94 requires an ambiguous numeric name to carry a unit suffix: rename to "
+            f"<stem>_percent, or to <stem>_multiplier if it is a scale, or add the unit suffix: "
+            f"{unnamed_magnitude[:10]}"
+        )
+    return rows
+
+
+# --------------------------------------------------------------------------
+# A24 - no repo path, and no line number, may hide in a domain value.
+#
+# source_refs was cleaned in an earlier pass, but the citations had moved next
+# door: eleven effect.stacking_classification strings carried a parenthetical
+# "(docs/68-utility-catalog.md:253)", a weapons note carried one, and
+# hyper-gold-sites.json held a repo path in a field named beacon_response_source.
+# A line number is unstable wherever it hides, and the doc_id#anchor form
+# (40:87) is the only citation form the envelope names, so the rule is scoped to
+# the value, not to one field.
+#
+# WHAT THIS USED TO BE, AND WHY IT WAS REPLACED. The pattern was `docs/.*\.md`,
+# which pins three incidental spellings of one path - the literal directory name,
+# a forward slash, and a lowercase `.md` - and matches on none of them being the
+# unstable thing. Six citation forms walked straight through it: no extension
+# (`docs/40-mining-and-extraction`), a backslash separator, no `docs/` prefix
+# (`40-mining-and-extraction.md:104`), uppercase (`DOCS/...MD:104`), and the
+# `.markdown` extension. It also missed two defects PRESENT IN THIS TREE, which is
+# how the narrowness was confirmed rather than assumed: a `content/`-prefixed repo
+# path in an encounter-schedule value, and a bare extensionless `docs/68` in a
+# UTL-A1 statement. Both are the class Ruling 25 removed 13 of; the old pattern
+# simply could not see them.
+#
+# The replacement is two rules, each matching what is actually wrong:
+#
+#   A24a THE LINE NUMBER. Any path-like token followed by `:<digits>`, in any
+#        spelling: either slash separator, any case, extension optional when a
+#        separator is present, and no directory name required. A line number is
+#        the unstable thing - it moves whenever the cited document is edited - so
+#        this rule keys on it rather than on how the path in front of it is spelled.
+#
+#   A24b THE REPO PATH. A repository directory (docs, src, content, tools, assets)
+#        followed by a separator and a path character, in any case and with either
+#        separator. A repo path is a defect even with no line number on it, because
+#        40:87 names doc_id#anchor as the citation form and a path is not one.
+#
+# A BARE `#anchor` IS DELIBERATELY OUT OF SCOPE, and the test below records it as
+# not matching. `#hyper-gold-sites` is not a defective citation form: it is HALF OF
+# THE SANCTIONED ONE. 40:87 names doc_id#anchor, A9 already resolves every anchor
+# that appears in source_refs against the real heading slugs of the cited document,
+# and a bare `#slug` carries neither a path nor a line number, so nothing about it
+# is unstable in the way this assertion is about. Flagging it would fire on the
+# very spelling the envelope endorses.
+# --------------------------------------------------------------------------
+
+# A24a - a path-like token carrying a line number, in any spelling.
+LINE_NUMBER_IN_VALUE = re.compile(
+    r"""(?ix)
+    (?:
+        [\w.\-]+ (?: [/\\] [\w.\-]+ )+          # any path with >=1 separator, extension optional
+      | [\w\-]+ \. (?: md | markdown | mdown | rst | txt | json | ya?ml | cs | py )
+                                                # or a bare filename with a document extension
+    )
+    \s* : \s* \d+
+    """
+)
+# A24b - a repository path in a domain value, line number or not.
+REPO_PATH_IN_VALUE = re.compile(
+    r"(?i)(?:^|[^\w/\\])(?:docs|src|content|tools|assets)[/\\][\w.\-]"
+)
+
+A24_RULES = (
+    (
+        "no line-number citation in any string value",
+        LINE_NUMBER_IN_VALUE,
+        "a line number moves whenever the cited document is edited, so it is unstable wherever "
+        "it hides; source_refs carries doc_id#anchor instead",
+    ),
+    (
+        "no repository path in any string value",
+        REPO_PATH_IN_VALUE,
+        "a repo path is not a citation form - 40:87 names doc_id#anchor - and it is a defect with "
+        "or without a line number attached",
+    ),
+)
+
+
+def check_no_doc_paths_in_values(docs: dict[Path, object]) -> list[tuple]:
+    """A24 - no line-number citation and no repository path in any string value.
+
+    Matched on the unstable thing rather than on one spelling of a path: either
+    slash separator, any case, extension optional. A bare `#anchor` is out of
+    scope by design - see the comment above.
+    """
+    rows = []
+    for label, rx, why in A24_RULES:
+        hits: list[str] = []
+        for path, doc in sorted(docs.items()):
+            for jpath, _, value in walk(doc):
+                if isinstance(value, str) and rx.search(value):
+                    hits.append(f"{rel(path)}{jpath[1:]} = {value!r}")
+        rows.append((label, 0, len(hits), "ok" if not hits else "FAIL"))
+        if hits:
+            fail(
+                f"{len(hits)} string value(s) under content/ violate A24 ({label}): {why} "
+                f"(40:87): {hits[:10]}"
+            )
+    return rows
+
+
+# --------------------------------------------------------------------------
+# A26 - no `null` anywhere under content/, with NO declared exceptions.
+#
+# THE RULING. A null in a source definition is never legal. content/README.md
+# used to define a null as "the document states no value", which made absence
+# expressible two ways - an omitted key and a nulled key - for one meaning. 40:90
+# settles it: "Optional fields have explicit defaults materialized into the
+# canonical bundle so runtime never guesses." An absent optional field gets its
+# default; a present-and-null one asks runtime to guess, which is what that line
+# forbids. So absence is spelled by omitting the key.
+#
+# 275 nulls across 101 of the 138 definition files were disposed of in one pass:
+# 246 keys omitted, 20 relic rarity/weighting fields removed as fields no schema
+# will declare, 4 boss armor fields removed for the same reason, 3
+# external_numerics[n].value keys removed as shape defects, and 2 nested id keys
+# removed because the objects they sat on are not independently addressable.
+#
+# THERE IS NO EXCEPTION SET, deliberately. An earlier plan declared the two nested
+# `id` nulls in content/maps/standard-map-generation-contract.json as tolerated
+# exceptions pending minted IDs. That is superseded: destructible_rock and
+# health_pack are nested objects inside MGC-01, which already carries an ID, and
+# neither is reachable except through MGC-01 plus a JSON pointer - nothing
+# references either by ID. They are parameters of the map contract, not
+# definitions, so the `id` key was removed rather than minted or tolerated. With
+# it gone the assertion is unconditional, which is stronger than one carrying two
+# permanent exemptions: an exception set is a place for a null to hide.
+#
+# This scans EVERY *.json under content/, including content/localization/en.json,
+# which load_definitions() skips. A24-style value rules only see definition files;
+# a null is illegal in the localization catalog too.
+# --------------------------------------------------------------------------
+
+
+def null_paths(obj, path="$"):
+    """Yield the JSON path of every null in a document."""
+    if obj is None:
+        yield path
+    elif isinstance(obj, dict):
+        for key, value in obj.items():
+            yield from null_paths(value, f"{path}.{key}")
+    elif isinstance(obj, list):
+        for index, value in enumerate(obj):
+            yield from null_paths(value, f"{path}[{index}]")
+
+
+def check_no_nulls() -> list[tuple]:
+    """A26 - no null anywhere under content/, with no declared exceptions.
+
+    This rglob is deliberately NOT filtered by in_non_definition_dir(). "No null
+    anywhere under content/" is a whole-tree claim, and localization/en.json - which
+    the definition loader skips - is named in the README as covered here on purpose.
+    Do not "fix" it to match A21: A21 counts a population, A26 scans a directory.
+
+    Known consequence for DAT-006, recorded rather than pre-solved: JSON Schema
+    authors nulls legally, so the first content/schemas/*.json carrying
+    "default": null or null inside an enum will fail this assertion. Measured, not
+    predicted - a probe file with {"properties":{"presentation_id":{"default":null}}}
+    fails as `...probe.schema.json.properties.presentation_id.default`. The mandate
+    behind A26 (40:90) is about absent optional fields in DEFINITIONS, so the
+    resolution is a scope decision that belongs to whoever lands the schemas; it is
+    not this assertion silently acquiring an exception set, which is the one thing
+    A26's docstring rules out.
+    """
+    hits: list[str] = []
+    scanned = 0
+    for path in sorted(CONTENT.rglob("*.json")):
+        doc = load_json(path)
+        if doc is None:
+            continue
+        scanned += 1
+        hits.extend(f"{rel(path)}{p[1:] or ' (whole document)'}" for p in null_paths(doc))
+    rows = [
+        (
+            f"no null anywhere under content/ ({scanned} file(s) scanned, 0 exceptions declared)",
+            0,
+            len(hits),
+            "ok" if not hits else "FAIL",
+        )
+    ]
+    if hits:
+        fail(
+            f"{len(hits)} null(s) under content/. A null in a source definition is never legal: "
+            f"40:90 materializes an explicit default for every absent optional field, so absence is "
+            f"spelled by OMITTING the key and a present-and-null field asks runtime to guess. Omit "
+            f"the key; if the field should not exist at all, remove it and record the removal. There "
+            f"is no exception set to add it to: {sorted(hits)[:15]}"
+        )
+    return rows
+
+
+# --------------------------------------------------------------------------
+# A27 - the quotation matcher's corpus premise, asserted rather than documented.
+#
+# WHY THIS ASSERTION LOOKS BACKWARDS. Every other check here asserts something
+# about content/ against docs/. This one asserts something about docs/ on behalf
+# of a matcher described in content/quote-verification-audit.md. That matcher's
+# adopted rule - fail when a stored string begins at a sentence boundary, carries
+# its own trailing terminator, and the source sentence continues past it - was
+# measured at 2 hits with zero false positives across the audit's whole matched set.
+# That set is 1,072 records: the 806 decidable matches of the audit's §2 tree-state
+# table (782 exact + 24 matching under a named rule) plus the 266 matches that sit
+# below its decidability gate. Every number in this comment derives from that table;
+# none of them is quoted from prose. The measurement
+# is only valid while `.` reliably means "end of sentence" in docs/. It does today.
+# Nothing keeps it true tomorrow, and "it can stop being true silently" is exactly
+# the property a documented assumption cannot address: a documented assumption is
+# a fail-open with a footnote.
+#
+# WHAT IS IN THE LIST AND WHY. One criterion: the period is not a sentence end.
+# That admits ordinary prose abbreviations and excludes decimals and unit
+# suffixes ("0.80M", "1.5 s", "45.6"), which are not sentence-terminator
+# candidates in the first place - a decimal point is not followed by a
+# sentence-initial capital, and the audit measured zero decimal-point misfires
+# across all 1,072 records in both directions.
+#
+# WORD-BOUNDARY MATCHING IS LOAD-BEARING, not tidiness. Unbounded case-insensitive
+# substring matching for "st." hits 93 places in this corpus across 21 distinct word
+# forms - "first." 24, "specialist." 15, "cost." 10, "test." 9, "manifest." 6,
+# "burst." 4, and fifteen more - and "ver." hits 5, being "forever.", "solver." and
+# "hover.". Every one of them is a sentence end, not an abbreviation, and the word
+# boundary below removes all 98. A check that fires on those would be turned off
+# within a day, which would leave no check.
+#
+# THE MESSAGE IS THE POINT. When this fails, no content string is wrong. What is
+# wrong is that the quotation rule's premise has lapsed. The message must send the
+# reader to the matcher, because a message that blames a quotation sends them to
+# innocent data and teaches them the check is noise.
+# --------------------------------------------------------------------------
+
+SENTENCE_INTERNAL_ABBREVIATIONS = (
+    "e.g.", "i.e.", "etc.", "approx.", "cf.", "vs.", "viz.", "resp.",
+    "no.", "fig.", "eq.", "sec.", "p.", "pp.", "ca.", "al.", "esp.", "incl.",
+)
+
+ABBREVIATION_RX = tuple(
+    (abbr, re.compile(r"(?<![A-Za-z0-9])" + re.escape(abbr), re.IGNORECASE))
+    for abbr in SENTENCE_INTERNAL_ABBREVIATIONS
+)
+
+
+def check_no_abbreviation_periods(docs_root: Path = DOCS) -> list[tuple]:
+    """A27 - docs/ carries no sentence-internal abbreviation period."""
+    hits: list[str] = []
+    scanned = 0
+    for path in sorted(docs_root.rglob("*.md")):
+        scanned += 1
+        text = path.read_text(encoding="utf-8")
+        for lineno, line in enumerate(text.splitlines(), 1):
+            for abbr, rx in ABBREVIATION_RX:
+                for m in rx.finditer(line):
+                    hits.append(f"{rel(path)}:{lineno} '{m.group(0)}' (matched '{abbr}')")
+    rows = [
+        (
+            f"sentence-internal abbreviation periods under docs/ "
+            f"({scanned} file(s), {len(SENTENCE_INTERNAL_ABBREVIATIONS)} token(s) searched)",
+            0,
+            len(hits),
+            "ok" if not hits else "FAIL",
+        )
+    ]
+    if hits:
+        fail(
+            f"THE QUOTATION MATCHER'S ASSUMPTIONS NO LONGER HOLD - the matcher needs "
+            f"revisiting, and no content string is implicated by this failure. "
+            f"content/quote-verification-audit.md adopts a quotation rule that treats "
+            f"'.' as an unambiguous sentence terminator in docs/. It was measured safe "
+            f"(2 hits, zero false positives, across that document's whole matched set of "
+            f"1,072 records = its 806 decidable matches plus the 266 matches below its "
+            f"decidability gate; both figures are in the tree-state table in its §2) "
+            f"against a corpus containing no abbreviation periods. docs/ now contains "
+            f"{len(hits)}, so the rule can misfire on complete, honest quotations that "
+            f"happen to end just before one. Re-measure the rule against the corpus and "
+            f"either teach it this abbreviation or narrow it; do NOT edit the quotation "
+            f"that the rule flags: {sorted(hits)[:15]}"
+        )
+    return rows
+
+
+# --------------------------------------------------------------------------
+# A25 - polarity agreement between a structured direction and its sibling prose.
+#
+# This automates a check that had to be done by hand. Ruling 22 in
+# content/transcription-notes.md verified all six
+# resonance_behavior.modifier.direction values against docs/40:104-109 by eye
+# after one was reported wrong; nothing in the tree would have caught a seventh.
+#
+# The vocabulary is a CLOSED set of opposed pairs and +1 means "more of the
+# quantity": higher/lower, increase/decrease, more/less, faster/slower,
+# longer/shorter, raise/reduce, gain/lose.
+#
+# It fires on STRICT contradiction only - every polarity word in the prose has
+# the opposite sign to the structured value. Prose carrying both signs, as in
+# "enemy attack cadence is 20% faster without increasing movement speed", is not
+# a contradiction and is not reported; a heuristic that guessed which clause
+# governed would produce exactly the kind of confident wrong answer the
+# pre-clear audit appendix warns about.
+# --------------------------------------------------------------------------
+
+POLARITY_WORDS = {
+    "higher": 1, "lower": -1,
+    "increase": 1, "decrease": -1,
+    "more": 1, "less": -1,
+    "faster": 1, "slower": -1,
+    "longer": 1, "shorter": -1,
+    "raise": 1, "reduce": -1,
+    "gain": 1, "lose": -1,
+}
+# Inflections of the verbs above, so "increases"/"increasing"/"reduced" count.
+POLARITY_INFLECTIONS = ("", "s", "d", "es", "ed", "ing")
+POLARITY_LOOKUP: dict[str, int] = {}
+for _stem, _sign in POLARITY_WORDS.items():
+    for _suffix in POLARITY_INFLECTIONS:
+        _base = _stem[:-1] if _suffix in ("ing", "ed", "es") and _stem.endswith("e") else _stem
+        POLARITY_LOOKUP.setdefault(_base + _suffix, _sign)
+        POLARITY_LOOKUP.setdefault(_stem + _suffix, _sign)
+WORD = re.compile(r"[A-Za-z]+")
+
+
+def polarity_of(text: str) -> set[int]:
+    """The set of polarity signs the words of `text` carry."""
+    return {POLARITY_LOOKUP[w] for w in (m.group(0).lower() for m in WORD.finditer(text))
+            if w in POLARITY_LOOKUP}
+
+
+def prose_siblings(obj: dict, skip_key: str):
+    """String values of `obj` that are prose, not another structured token."""
+    for key, value in obj.items():
+        if key == skip_key or not isinstance(value, str):
+            continue
+        # A bare vocabulary word is a second structured value, not prose about one.
+        if value.strip().lower().rstrip(".") in POLARITY_LOOKUP:
+            continue
+        yield key, value
+
+
+def check_polarity_agreement(docs: dict[Path, object]) -> list[tuple]:
+    """A25 - a structured polarity value may not contradict its sibling prose."""
+    contradictions: list[str] = []
+    pairs = 0
+
+    def visit(node, jpath: str, name: str, parent: dict | None, parent_key: str | None) -> None:
+        if isinstance(node, list):
+            for index, element in enumerate(node):
+                visit(element, f"{jpath}[{index}]", name, parent, parent_key)
+            return
+        if not isinstance(node, dict):
+            return
+        for field, structured in node.items():
+            if not isinstance(structured, str):
+                continue
+            sign = POLARITY_LOOKUP.get(structured.strip().lower().rstrip("."))
+            if sign is None:
+                continue
+            candidates = [(key, value) for key, value in prose_siblings(node, field)]
+            if parent is not None and parent_key is not None:
+                # A "direction" commonly sits one level in, inside a structured
+                # modifier, while the prose stating the same fact stays outside it.
+                candidates += [
+                    (f"../{key}", value) for key, value in prose_siblings(parent, parent_key)
+                ]
+            for prose_key, prose in candidates:
+                signs = polarity_of(prose)
+                if not signs:
+                    continue
+                nonlocal pairs
+                pairs += 1
+                if sign not in signs:
+                    contradictions.append(
+                        f"{name}{jpath[1:]}.{field} = {structured!r} contradicts "
+                        f"{prose_key} = {prose!r}"
+                    )
+        for key, value in node.items():
+            visit(value, f"{jpath}.{key}", name, node, key)
+
+    for path, doc in sorted(docs.items()):
+        visit(doc, "$", rel(path), None, None)
+    rows = [
+        (
+            f"structured polarity agrees with sibling prose ({pairs} pair(s) compared)",
+            0,
+            len(contradictions),
+            "ok" if not contradictions else "FAIL",
+        )
+    ]
+    if contradictions:
+        fail(
+            f"{len(contradictions)} structured polarity value(s) contradict the prose beside them; "
+            f"a sign inversion is invisible to every other assertion here: {contradictions[:10]}"
+        )
+    return rows
+
+
+# --------------------------------------------------------------------------
 # reporting
 # --------------------------------------------------------------------------
 
@@ -1469,11 +2737,19 @@ def main() -> int:
     report_reconciliation(stats)
     count_rows = check_counts(docs)
     probe_rows = check_probes(docs)
+    world_prop_rows = check_world_prop_values(docs)
     total_rows = check_totals(docs)
     ref_rows = check_references(docs)
     derived_rows = check_derived_values(docs)
-    enemy_derived_rows = check_enemy_derived_fields(docs)
+    footprint_rows = check_derived_footprint_fields(docs)
+    prefix_rows = check_scope_prefixes(docs)
+    bound_rows = check_bound_spelling(docs)
     inventory_rows = check_file_inventory()
+    percent_rows = check_percentage_point_policy(docs)
+    doc_path_rows = check_no_doc_paths_in_values(docs)
+    polarity_rows = check_polarity_agreement(docs)
+    null_rows = check_no_nulls()
+    abbreviation_rows = check_no_abbreviation_periods()
     loc_rows = check_localization(stats)
 
     table(
@@ -1482,13 +2758,53 @@ def main() -> int:
         count_rows,
     )
     table("A13 Aggregate row probes", ("directory", "rows", "expected", "actual", "status"), probe_rows)
+    table(
+        "A13 World-prop values (asserted individually, each with its own citation)",
+        ("value [doc line]", "expected", "actual", "status"),
+        world_prop_rows,
+    )
+    table(
+        "A16 Percentage-point policy (numbers and key names, 40:95)",
+        ("check", "expected", "actual", "status"),
+        percent_rows,
+    )
     table("A14 Doc-stated totals (Hyper Gold)", ("total", "expected", "actual", "status"), total_rows)
     table("A15 Referential integrity", ("check", "refs", "dangling", "status"), ref_rows)
     table("A18 Derived-vs-authored guard", ("check", "expected", "actual", "status"), derived_rows)
     table(
-        "A20 Enemy footprint fields the compiler owns",
+        "A20 Footprint fields the compiler owns",
         ("check", "expected", "actual", "status"),
-        enemy_derived_rows,
+        footprint_rows,
+    )
+    table(
+        "A24 No line-number citation and no repository path in any string value",
+        ("check", "expected", "actual", "status"),
+        doc_path_rows,
+    )
+    table(
+        "A26 No null anywhere under content/ (no declared exceptions)",
+        ("check", "expected", "actual", "status"),
+        null_rows,
+    )
+    table(
+        "A27 Quotation-matcher corpus premise (no abbreviation periods in docs/)",
+        ("check", "expected", "actual", "status"),
+        abbreviation_rows,
+    )
+    table(
+        "A25 Polarity agreement (structured direction vs sibling prose)",
+        ("check", "expected", "actual", "status"),
+        polarity_rows,
+    )
+    table(
+        "A22 source_refs scope prefixes",
+        ("check", "prefixed refs", "dangling", "status"),
+        prefix_rows,
+    )
+    table(
+        "A23 One spelling for a bound (maximum/minimum, spelled out)",
+        ("check", "expected", "actual", "status"),
+        bound_rows,
     )
     table("A10/A11 Localization", ("check", "expected", "actual", "status"), loc_rows)
     table("A19 Expected exception sets", ("set", "expected", "actual", "status"), set_rows)

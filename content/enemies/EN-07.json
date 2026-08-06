@@ -32,7 +32,6 @@
   "earliest_minute": 13,
   "variant_of": "EN-01",
   "behavior_kind": "pure contact pursuer",
-  "armor": 0,
   "contact_footprint": {
     "shape": "Circle",
     "reference_diameter_m": 0.8
@@ -73,10 +72,8 @@
     "repair_pickups": 0,
     "temporary_pickups": 0
   },
-  "specialist_attack": null,
   "first_playable_subset": {
-    "included": true,
-    "temporary_substitute": null
+    "included": true
   },
   "description": "The Razorling uses the Skitterling rig and broad six-legged grammar but adds long forward leg blades, a raised abdomen, a larger footprint, a sharper gait, and a distinct two-tone value pattern. It is the fastest ordinary identity and converts familiar fodder into late-run gap-closing pressure."
 }

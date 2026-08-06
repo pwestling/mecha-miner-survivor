@@ -30,9 +30,7 @@
     "percent": 0
   },
   "earliest_minute": 0,
-  "variant_of": null,
   "behavior_kind": "pure contact pursuer",
-  "armor": 0,
   "contact_footprint": {
     "shape": "Circle",
     "reference_diameter_m": 0.8
@@ -73,10 +71,8 @@
     "repair_pickups": 0,
     "temporary_pickups": 0
   },
-  "specialist_attack": null,
   "first_playable_subset": {
-    "included": true,
-    "temporary_substitute": null
+    "included": true
   },
   "description": "A low, tiny six-legged scavenger with a triangular head and wide-spread legs. Skitterlings are fragile orientation enemies and later provide dense chain-reaction or piercing fuel. Their broad leg stance keeps a crowd readable as many separate bodies rather than one texture-colored mass."
 }

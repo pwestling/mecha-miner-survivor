@@ -16,9 +16,6 @@
   "persistence": "Banked at timed mission extraction; forfeited on death beforehand",
   "resource_class": "cross-run progression resource",
   "inventory_scope": "cross-run",
-  "maximum_safe_count": null,
-  "icon_and_silhouette_cue": null,
-  "audio_character": null,
   "sources": [
     {
       "source": "Hyper Gold site",

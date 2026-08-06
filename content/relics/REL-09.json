@@ -29,10 +29,11 @@
     "cross_document_rules[]: TDD-ENCOUNTERS",
     "cross_document_rules[]: GDD-PERMANENT-POWERUP-CATALOG",
     "cross_document_rules[]: TDD-MINING-PROGRESSION",
-    "discovery_sentence: GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core",
+    "summary_key: GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core",
     "trigger: GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core",
     "pause_behavior: GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core",
-    "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core"
+    "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core",
+    "core_tradeoff: GDD-INITIAL-RELIC-CATALOG#catalog-overview"
   ],
   "primary_transformation": "Double extraction speed",
   "core_tradeoff": "Enemies move 50% faster during mining",
@@ -49,7 +50,7 @@
       "Hyper Gold sites"
     ],
     "applies_after_ordinary_extraction_modifiers": true,
-    "mining_decay_multiple_of_current_forward_extraction_rate": 4,
+    "decay_rate_multiplier_of_forward_rate": 4,
     "enemy_movement_speed_increase_while_mining": {
       "percent": 50
     },
@@ -65,16 +66,14 @@
     "changes_installments_or_payouts": false
   },
   "pause_behavior": {
-    "rule": "The enemy speed increase ends immediately when mining stops because the mech leaves, the point completes, or the simulation pauses."
+    "rule": "The increase begins with forward progress and ends immediately when mining stops because the mech leaves, the point completes, or the simulation pauses."
   },
-  "live_state_meter": null,
   "acquisition": {
     "method": "found in a relic cache through map exploration",
     "fabricable": false,
     "minable": false,
     "listed_in_geological_survey": false,
     "pool_availability": "fresh-profile",
-    "unlock": null,
     "caches_per_standard_map": 3,
     "cache_opening": "automatic on mech contact; freezes the complete gameplay simulation",
     "relics_drawn_per_run": 3,
@@ -86,11 +85,9 @@
     "sale_value_varies_by_identity_order_duration_or_progress": false
   },
   "rarity_and_weighting": {
-    "rarity_tier": null,
-    "cache_selection_weight": null,
     "selection_model": "three distinct relics drawn without replacement from the currently unlocked pool and assigned to the three caches during generation",
-    "fresh_profile_pool_size": 5,
-    "fully_unlocked_pool_size": 10,
+    "fresh_profile_pool_count": 5,
+    "fully_unlocked_pool_count": 10,
     "in_fresh_profile_pool": true,
     "guaranteed_to_appear": false
   },
@@ -141,8 +138,6 @@
   "cross_document_rules": [
     {
       "rule": "Flux Amber resonance then multiplies current enemy movement by 1.20; Claim-Jumper Core multiplies it by 1.50 only while mining progress advances. Those distinct sources multiply because they describe different conditional transformations rather than additions to one displayed player stat.",
-      "enemy_movement_multiplier": 1.5,
-      "multiplies_with_elite_movement_multiplier": 1.1,
       "multiplies_with_flux_amber_resonance_multiplier": 1.2
     },
     {

@@ -28,7 +28,7 @@
     "stacking_and_exclusivity: GDD-MECH-RELICS#replacement-and-interaction-rules",
     "stacking_and_exclusivity: GDD-COMBAT-ECONOMY-BALANCE-FRAMEWORK#stacking-and-comparison-order",
     "behavior_registration: TDD-COMBAT-RUNTIME#relic-integration",
-    "discovery_sentence: GDD-INITIAL-RELIC-CATALOG#rel-05--war-drum-oscillator",
+    "summary_key: GDD-INITIAL-RELIC-CATALOG#rel-05--war-drum-oscillator",
     "trigger: GDD-INITIAL-RELIC-CATALOG#rel-05--war-drum-oscillator",
     "pause_behavior: GDD-INITIAL-RELIC-CATALOG#rel-05--war-drum-oscillator",
     "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-05--war-drum-oscillator"
@@ -42,7 +42,7 @@
   },
   "effects": {
     "beat_interval_seconds": 3,
-    "max_stored_output_beats": 2,
+    "maximum_stored_output_beats": 2,
     "released_output_bonus": {
       "percent": 35
     },
@@ -52,7 +52,6 @@
   "pause_behavior": {
     "rule": "Fabrication and other full-simulation pauses freeze the beat and stored-output state."
   },
-  "live_state_meter": null,
   "acquisition": {
     "method": "found in a relic cache through map exploration",
     "fabricable": false,
@@ -79,11 +78,9 @@
     "sale_value_varies_by_identity_order_duration_or_progress": false
   },
   "rarity_and_weighting": {
-    "rarity_tier": null,
-    "cache_selection_weight": null,
     "selection_model": "three distinct relics drawn without replacement from the currently unlocked pool and assigned to the three caches during generation",
-    "fresh_profile_pool_size": 5,
-    "fully_unlocked_pool_size": 10,
+    "fresh_profile_pool_count": 5,
+    "fully_unlocked_pool_count": 10,
     "in_fresh_profile_pool": false,
     "guaranteed_to_appear": false
   },

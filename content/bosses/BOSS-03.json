@@ -21,7 +21,9 @@
     "persistence: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
     "resonance: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
     "defeat_reward: GDD-RUN-STRUCTURE#boss-defeat-reward",
-    "description: GDD-INITIAL-ALIEN-ROSTER#boss-03--prism-crown"
+    "description: GDD-INITIAL-ALIEN-ROSTER#boss-03--prism-crown",
+    "persistence.reentry.behavior: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
+    "persistence.reentry.trigger: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward"
   ],
   "arrival": {
     "timecode": "21:00",
@@ -40,11 +42,9 @@
     "percent": 92
   },
   "defining_behavior": "Fires a radial needle burst",
-  "armor": null,
   "behavior_kind": "persistent giant pursuer with exactly one additional behavior",
   "contact_footprint": {
     "contact_and_weapon_hurt_diameter_m": 1.6,
-    "center_distance_that_begins_contact_m": 1.3,
     "shape": "Circle",
     "appendages_outside_footprint": "may pass over the mech harmlessly",
     "attack_geometry_uses_separate_display": "charge lanes, projectile shapes, and landing circles use their separately displayed attack geometry rather than the boss contact circle"
@@ -62,17 +62,17 @@
     "assumptions": "100 Hull, zero Armor, no healing, no resonance, uninterrupted overlap with one attacker"
   },
   "target_time_to_kill_seconds": {
-    "min": 75,
-    "max": 105
+    "minimum": 75,
+    "maximum": 105
   },
   "required_realized_build_dps": {
-    "min": 286,
-    "max": 400
+    "minimum": 286,
+    "maximum": 400
   },
   "milestone_reach_target_probability": {
     "percent": {
-      "min": 55,
-      "max": 75
+      "minimum": 55,
+      "maximum": 75
     },
     "cohort": "players who understand movement and fabrication but have no permanent PowerUps"
   },
@@ -92,7 +92,6 @@
         "world_speed_m_per_s": 2.25
       },
       "homing": false,
-      "lifetime_seconds": null,
       "lifetime_description": "disappears after crossing slightly more than one screen width or hitting solid terrain"
     },
     "resonance_interactions": {
@@ -112,7 +111,7 @@
   "persistence": {
     "never_despawns": true,
     "counts_toward_ordinary_population": false,
-    "max_simultaneous_bosses": 4,
+    "maximum_simultaneous_bosses": 4,
     "persists_until_killed": true,
     "later_bosses_may_overlap": true,
     "required_for_extraction": false,

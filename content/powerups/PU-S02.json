@@ -7,10 +7,10 @@
   "tags": [],
   "source_refs": [
     "GDD-PERMANENT-POWERUP-CATALOG#pu-s02--ablative-armor",
-    "catalog_overview_row: GDD-PERMANENT-POWERUP-CATALOG#catalog-overview",
+    "GDD-PERMANENT-POWERUP-CATALOG#catalog-overview",
     "currency: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
     "ui_grouping: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
-    "prerequisite: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
     "fresh_profile_purchasable: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
     "ranks_must_be_bought_sequentially: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
     "prices_fixed: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
@@ -27,7 +27,7 @@
     "statistic": "Armor",
     "armor": 1
   },
-  "cap": 3,
+  "maximum": 3,
   "maximum_effect": {
     "text": "+3",
     "statistic": "Armor",
@@ -36,7 +36,6 @@
   "total_cost_hyper_gold": 700,
   "currency": "Hyper Gold",
   "ui_grouping": "Survivability",
-  "prerequisite": null,
   "fresh_profile_purchasable": true,
   "ranks_must_be_bought_sequentially": true,
   "prices_fixed": true,

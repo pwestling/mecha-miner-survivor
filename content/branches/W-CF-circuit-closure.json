@@ -44,7 +44,6 @@
     "loop_segments_consumed": true,
     "per_path_closure_cooldown_seconds": 1.0
   },
-  "expected_effect": null,
   "rules": [
     {
       "text": "When the current wake intersects a segment from the same continuous path and encloses at least 4M², the loop closes and all enclosed enemies take an eruption hit equal to six seconds of current segment Damage."

@@ -38,7 +38,7 @@
   "effects": {
     "charge_name": "Critical Mass",
     "charges_granted_per_enemy_hit_by_pulse": 1,
-    "charge_cap": 20,
+    "charge_maximum": 20,
     "charges_apply_to_next_pulse_only": true,
     "per_charge_damage_bonus": {
       "percent": 2
@@ -52,10 +52,9 @@
     "maximum_radius_bonus": {
       "percent": 20
     },
-    "charge_consumption": "Charges are consumed by the next pulse and replaced by the count that pulse hits.",
+    "charge_consumption": "Charges are consumed by the next pulse and replaced by the count that pulse hits",
     "charges_from_lone_boss": 1
   },
-  "expected_effect": null,
   "rules": [
     {
       "text": "Every enemy hit by a pulse gives one Critical Mass charge for the next pulse, capped at 20 charges."

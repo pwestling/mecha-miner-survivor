@@ -32,10 +32,11 @@
     "behavior_registration: TDD-COMBAT-RUNTIME#relic-integration",
     "cross_document_rules[]: GDD-PERMANENT-POWERUP-CATALOG",
     "cross_document_rules[]: TDD-COMBAT-RUNTIME",
-    "discovery_sentence: GDD-INITIAL-RELIC-CATALOG#rel-08--redline-crucible",
+    "summary_key: GDD-INITIAL-RELIC-CATALOG#rel-08--redline-crucible",
     "trigger: GDD-INITIAL-RELIC-CATALOG#rel-08--redline-crucible",
     "pause_behavior: GDD-INITIAL-RELIC-CATALOG#rel-08--redline-crucible",
-    "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-08--redline-crucible"
+    "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-08--redline-crucible",
+    "core_tradeoff: GDD-INITIAL-RELIC-CATALOG#catalog-overview"
   ],
   "primary_transformation": "Stationary heat overclock",
   "core_tradeoff": "Redline heat burns Hull until vented through movement",
@@ -45,16 +46,13 @@
   },
   "effects": {
     "adds_visible_heat_meter": true,
-    "positional_tolerance_m": null,
-    "heat_build_rate_per_second": null,
-    "heat_vent_rate_per_second": null,
-    "max_heat_weapon_damage_bonus": {
+    "maximum_heat_weapon_damage_bonus": {
       "percent": 100
     },
-    "max_heat_attack_rate_bonus": {
+    "maximum_heat_attack_rate_bonus": {
       "percent": 50
     },
-    "max_heat_weapon_area_bonus": {
+    "maximum_heat_weapon_area_bonus": {
       "percent": 50
     },
     "redline_hull_integrity_loss_per_active_second": 3,
@@ -97,11 +95,9 @@
     "sale_value_varies_by_identity_order_duration_or_progress": false
   },
   "rarity_and_weighting": {
-    "rarity_tier": null,
-    "cache_selection_weight": null,
     "selection_model": "three distinct relics drawn without replacement from the currently unlocked pool and assigned to the three caches during generation",
-    "fresh_profile_pool_size": 5,
-    "fully_unlocked_pool_size": 10,
+    "fresh_profile_pool_count": 5,
+    "fully_unlocked_pool_count": 10,
     "in_fresh_profile_pool": false,
     "guaranteed_to_appear": false
   },

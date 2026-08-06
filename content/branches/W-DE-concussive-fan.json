@@ -43,7 +43,6 @@
     "control_applications_per_target_per_attack": 1,
     "boss_and_elite_handling": "Bosses and elites receive globally resisted control."
   },
-  "expected_effect": null,
   "rules": [
     {
       "text": "Pellets retain normal damage and add 1.2M knockback plus 0.35 s stagger."

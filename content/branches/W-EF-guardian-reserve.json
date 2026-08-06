@@ -54,7 +54,6 @@
     "affected_timing": "Salvo production rate",
     "unaffected_timing": "Missile movement, reserve life, and targeting"
   },
-  "expected_effect": null,
   "rules": [
     {
       "text": "Missiles enter an orbiting reserve around the mech instead of immediately choosing distant targets, up to eight stored missiles."

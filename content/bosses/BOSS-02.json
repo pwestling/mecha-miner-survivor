@@ -20,7 +20,9 @@
     "persistence: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
     "resonance: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
     "defeat_reward: GDD-RUN-STRUCTURE#boss-defeat-reward",
-    "description: GDD-INITIAL-ALIEN-ROSTER#boss-02--brood-titan"
+    "description: GDD-INITIAL-ALIEN-ROSTER#boss-02--brood-titan",
+    "persistence.reentry.behavior: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
+    "persistence.reentry.trigger: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward"
   ],
   "arrival": {
     "timecode": "14:00",
@@ -39,11 +41,9 @@
     "percent": 90
   },
   "defining_behavior": "Periodically sheds a Skitterling ring",
-  "armor": null,
   "behavior_kind": "persistent giant pursuer with exactly one additional behavior",
   "contact_footprint": {
     "contact_and_weapon_hurt_diameter_m": 2.0,
-    "center_distance_that_begins_contact_m": 1.5,
     "shape": "Circle",
     "appendages_outside_footprint": "may pass over the mech harmlessly",
     "attack_geometry_uses_separate_display": "charge lanes, projectile shapes, and landing circles use their separately displayed attack geometry rather than the boss contact circle"
@@ -61,17 +61,17 @@
     "assumptions": "100 Hull, zero Armor, no healing, no resonance, uninterrupted overlap with one attacker"
   },
   "target_time_to_kill_seconds": {
-    "min": 60,
-    "max": 90
+    "minimum": 60,
+    "maximum": 90
   },
   "required_realized_build_dps": {
-    "min": 156,
-    "max": 233
+    "minimum": 156,
+    "maximum": 233
   },
   "milestone_reach_target_probability": {
     "percent": {
-      "min": 70,
-      "max": 85
+      "minimum": 70,
+      "maximum": 85
     },
     "cohort": "players who understand movement and fabrication but have no permanent PowerUps"
   },
@@ -82,7 +82,6 @@
     "spawn_count": 16,
     "spawn_enemy_id": "EN-01",
     "spawn_placement": "an incomplete ring just outside its body",
-    "ring_radius_m": null,
     "ring_opening_degrees": 90,
     "ring_opening_orientation": "oriented generally away from the boss's direction of approach",
     "spawn_population_class": "event overflow",
@@ -97,7 +96,7 @@
   "persistence": {
     "never_despawns": true,
     "counts_toward_ordinary_population": false,
-    "max_simultaneous_bosses": 4,
+    "maximum_simultaneous_bosses": 4,
     "persists_until_killed": true,
     "later_bosses_may_overlap": true,
     "required_for_extraction": false,

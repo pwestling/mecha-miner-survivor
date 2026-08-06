@@ -8,7 +8,7 @@
   "source_refs": [
     "GDD-WEAPON-NUMERIC-CATALOG#unbounded-bore--amplification--2-asterite",
     "rules[]: GDD-WEAPON-NUMERIC-CATALOG#unbounded-bore--amplification--2-asterite",
-    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "prerequisites: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
     "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches"
   ],
   "weapon_id": "W-AB",
@@ -44,8 +44,8 @@
   "expected_effect": {
     "approximate": true,
     "horde_throughput_percent": {
-      "min": 35,
-      "max": 70
+      "minimum": 35,
+      "maximum": 70
     },
     "scene": "dense aligned stream",
     "direct_single_target_increase": false

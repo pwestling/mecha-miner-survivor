@@ -37,7 +37,7 @@
     "trigger_immediately_on_elite_or_boss": true,
     "damage_multiplier_formula": "1 + 0.15 × (ordinary-equivalent count − 1)",
     "damage_multiplier_per_additional_ordinary_equivalent": 0.15,
-    "damage_multiplier_cap": 2,
+    "damage_multiplier_maximum": 2,
     "ordinary_equivalent_weights": {
       "boss": 3,
       "elite": 4
@@ -48,7 +48,7 @@
   },
   "favorable_scene_effect": {
     "magnitude": {
-      "damage_multiplier_max": 2
+      "damage_multiplier_maximum": 2
     },
     "qualitative": "improves payload efficiency but can leave holes against scattered weak enemies"
   },

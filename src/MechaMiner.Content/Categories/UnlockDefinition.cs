@@ -202,7 +202,7 @@ public static class UnlockReader
                     + "a purchase with no effect"));
         }
 
-        ContentCategory granted_category = string.Equals(
+        ContentCategory grantedCategory = string.Equals(
             dto.UnlockKind, "utility-blueprints", StringComparison.Ordinal)
             ? ContentCategory.Utility
             : ContentCategory.Relic;
@@ -215,7 +215,7 @@ public static class UnlockReader
             }
 
             SemanticCheck.ReferenceGrammar(
-                granted[index], granted_category, pointer.AppendIndex(index), context, id, bag);
+                granted[index], grantedCategory, pointer.AppendIndex(index), context, id, bag);
         }
 
         SemanticCheck.Distinct(granted, pointer, context, id, bag, "an unlock's granted IDs");

@@ -49,7 +49,7 @@ public sealed class LocalizationKey
     private const string Prefix = "^" + CategoryPart + "\\." + StableIdPart + "\\.";
 
     /// <summary>The pattern for a key in any role.</summary>
-    public const string Pattern = Prefix + "(name|summary)$";
+    public const string Pattern = Prefix + "(name|summary|transformation|tradeoff)$";
 
     /// <summary>
     /// The pattern for a <c>name_key</c>, mirrored verbatim in
@@ -67,6 +67,12 @@ public sealed class LocalizationKey
     /// <summary>The pattern for a <c>summary_key</c>, mirrored verbatim in the schema.</summary>
     public const string SummaryPattern = Prefix + "summary$";
 
+    /// <summary>The pattern for a relic's <c>transformation_key</c>.</summary>
+    public const string TransformationPattern = Prefix + "transformation$";
+
+    /// <summary>The pattern for a relic's <c>tradeoff_key</c>.</summary>
+    public const string TradeoffPattern = Prefix + "tradeoff$";
+
     /// <summary>The pattern a key in <paramref name="role"/> must match.</summary>
     public static string PatternFor(LocalizationRole role)
     {
@@ -74,6 +80,8 @@ public sealed class LocalizationKey
         {
             LocalizationRole.Name => NamePattern,
             LocalizationRole.Summary => SummaryPattern,
+            LocalizationRole.Transformation => TransformationPattern,
+            LocalizationRole.Tradeoff => TradeoffPattern,
             _ => throw new ArgumentOutOfRangeException(nameof(role), role, "unknown role"),
         };
     }
@@ -119,12 +127,14 @@ public sealed class LocalizationKey
         string stableId = value[(firstDot + 1)..lastDot];
         string roleToken = value[(lastDot + 1)..];
 
-        // The pattern already restricted the role to one of two tokens, so this switch
-        // is total and its default is unreachable rather than tolerant.
+        // The pattern already restricted the role to one of the accepted tokens, so
+        // this switch is total and its default is unreachable rather than tolerant.
         LocalizationRole role = roleToken switch
         {
             "name" => LocalizationRole.Name,
             "summary" => LocalizationRole.Summary,
+            "transformation" => LocalizationRole.Transformation,
+            "tradeoff" => LocalizationRole.Tradeoff,
             _ => throw new InvalidOperationException(
                 "role token '" + roleToken + "' matched the key pattern but has no role"),
         };
@@ -154,6 +164,8 @@ public sealed class LocalizationKey
         {
             LocalizationRole.Name => "name",
             LocalizationRole.Summary => "summary",
+            LocalizationRole.Transformation => "transformation",
+            LocalizationRole.Tradeoff => "tradeoff",
             _ => throw new ArgumentOutOfRangeException(nameof(role), role, "unknown role"),
         };
     }

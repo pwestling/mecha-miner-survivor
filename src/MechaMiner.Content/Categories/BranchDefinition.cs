@@ -281,7 +281,7 @@ public static class BranchReader
         }
 
         bag.Add(ContentDiagnostic.CreateError(
-            ContentDiagnosticCodes.ReferenceGrammarMismatch,
+            ContentDiagnosticCodes.CrossReferenceContradictsOwnId,
             context.SourcePath,
             pointer,
             id,
@@ -342,7 +342,7 @@ public static class BranchReader
             }
 
             bag.Add(ContentDiagnostic.CreateError(
-                ContentDiagnosticCodes.ReferenceGrammarMismatch,
+                ContentDiagnosticCodes.CrossReferenceContradictsOwnId,
                 context.SourcePath,
                 element,
                 id,

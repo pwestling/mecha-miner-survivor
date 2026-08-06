@@ -294,8 +294,10 @@ public static class RelicReader
             "sale_value_common_ore is a nonnegative amount of common ore; the economy report sums "
                 + "the column across the catalog, so a relic that sells for nothing records zero");
 
-        ValidateKey(dto.TransformationKey, "transformation_key", context, id, bag);
-        ValidateKey(dto.TradeoffKey, "tradeoff_key", context, id, bag);
+        ValidateKey(
+            dto.TransformationKey, "transformation_key", LocalizationRole.Transformation,
+            context, id, bag);
+        ValidateKey(dto.TradeoffKey, "tradeoff_key", LocalizationRole.Tradeoff, context, id, bag);
         ValidateUnlock(dto, context, id, bag);
         ValidateOverrides(dto, context, id, bag);
     }
@@ -303,11 +305,17 @@ public static class RelicReader
     private static void ValidateKey(
         string? value,
         string field,
+        LocalizationRole role,
         CategoryReadContext context,
         string? id,
         DiagnosticBag bag)
     {
-        if (value is null || LocalizationKey.TryParse(value, out _))
+        if (value is null)
+        {
+            return;
+        }
+
+        if (LocalizationKey.TryParse(value, out LocalizationKey? key) && key!.Role == role)
         {
             return;
         }
@@ -317,10 +325,10 @@ public static class RelicReader
             context.SourcePath,
             JsonPointer.Root.AppendProperty(field),
             id,
-            "'" + field + "' is a localization key of the form <category>.<stable_id>.<role>, "
-                + "never the sentence itself. Doc 40 § Relics requires the tradeoff to be "
-                + "explicit, which the required field satisfies; doc 40 § Localization contract "
-                + "keeps the words out of the definition"));
+            "'" + field + "' is a localization key of the form <category>.<stable_id>."
+                + LocalizationKey.ToToken(role) + ", never the sentence itself. Doc 40 § Relics "
+                + "requires the tradeoff to be explicit, which the required field satisfies; "
+                + "doc 40 § Localization contract keeps the words out of the definition"));
     }
 
     private static void ValidateUnlock(

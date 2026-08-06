@@ -159,6 +159,14 @@ public static class ContentDiagnosticCodes
     public const string SchemaMalformed = "MMC-5003";
 
     // --- Semantic, band 6xxx ------------------------------------------------
+    //
+    // MMC-6013 is deliberately absent. It was drafted for "a named statistic does not
+    // resolve to a stat track the owning definition declares" and withdrawn before any
+    // validator emitted it: a branch's effects are a registry-owned parameter map, so
+    // nothing in this package can read the stat names inside one, and a declared code
+    // no test can provoke is exactly what ContentDiagnosticCodesTests forbids. The
+    // number is left unused rather than reassigned, because a reader who finds
+    // MMC-6013 in an old note should find nothing rather than something else.
 
     /// <summary>A token-valued field carries a token its closed vocabulary does not contain.</summary>
     public const string TokenOutsideVocabulary = "MMC-6001";
@@ -196,11 +204,13 @@ public static class ContentDiagnosticCodes
     /// <summary>A cross-reference does not match the ID grammar of the category it names.</summary>
     public const string ReferenceGrammarMismatch = "MMC-6012";
 
-    /// <summary>A named statistic does not resolve to a track the definition declares.</summary>
-    public const string StatTrackNotDeclared = "MMC-6013";
-
     /// <summary>A parameter belongs to a different arm of a discriminated union.</summary>
     public const string DiscriminatorArmMismatch = "MMC-6014";
+
+    /// <summary>
+    /// A cross-reference is well formed but contradicts the definition's own stable ID.
+    /// </summary>
+    public const string CrossReferenceContradictsOwnId = "MMC-6015";
 
     // --- Relational, band 7xxx ----------------------------------------------
 
@@ -339,10 +349,12 @@ public static class ContentDiagnosticCodes
         Describe(ReferenceGrammarMismatch, nameof(ReferenceGrammarMismatch), ContentValidationStage.Semantic,
             "a cross-reference does not match the ID grammar of the category it names; this checks grammar only, "
                 + "and never that the referenced definition exists, which is a relational check"),
-        Describe(StatTrackNotDeclared, nameof(StatTrackNotDeclared), ContentValidationStage.Semantic,
-            "a named statistic does not resolve to a stat track the owning definition declares"),
         Describe(DiscriminatorArmMismatch, nameof(DiscriminatorArmMismatch), ContentValidationStage.Semantic,
             "a parameter belongs to a different arm of a discriminated union than the one the discriminator selects"),
+        Describe(CrossReferenceContradictsOwnId, nameof(CrossReferenceContradictsOwnId), ContentValidationStage.Semantic,
+            "a cross-reference is well formed and contradicts the definition's own stable ID; separate from a grammar "
+                + "mismatch because a schema can express an ID's grammar and cannot express its agreement with a "
+                + "sibling value, so the two rejections are excluded from the schema comparison differently"),
 
         Describe(CatalogCardinalityWrong, nameof(CatalogCardinalityWrong), ContentValidationStage.Relational,
             "a catalog holds a different number of distinct definitions than it accepts; the count is of distinct "

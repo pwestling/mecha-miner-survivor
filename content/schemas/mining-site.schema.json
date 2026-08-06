@@ -1,0 +1,650 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mechaminer.local/schemas/mining-site.schema.json",
+  "title": "SCH-CNT-002 mining-site class definition",
+  "description": "A mining-site class definition. The project-owned typed validator in src/MechaMiner.Content/Categories/ remains authoritative; this schema is the draft 2020-12 mirror kept for editor and tool interoperability, and a fixture corpus proves the two reach the same accept/reject verdict on every structural case. See content/schemas/README.md. Every payout total is derived and none is authored: a seam's per-seam total is its installment payout times its installment count, and the rich seam's three 'twice the standard seam' multipliers are derived from another definition entirely.",
+  "type": "object",
+  "additionalProperties": false,
+  "propertyNames": {
+    "$ref": "#/$defs/snake_case_field"
+  },
+  "required": [
+    "id",
+    "schema_version",
+    "content_version",
+    "status",
+    "tags",
+    "source_refs",
+    "site_class",
+    "count_per_standard_map",
+    "placement",
+    "extraction_zone_radius_m",
+    "extraction_duration_seconds",
+    "completion_only_reward",
+    "progress_decay",
+    "depleted_state_kind",
+    "reactivatable",
+    "persistence_class",
+    "rules"
+  ],
+  "properties": {
+    "id": {
+      "title": "A stable, case-sensitive ASCII content ID",
+      "type": "string",
+      "pattern": "^SITE-[0-9]{2}$"
+    },
+    "schema_version": {
+      "$ref": "#/$defs/version"
+    },
+    "content_version": {
+      "$ref": "#/$defs/version"
+    },
+    "status": {
+      "$ref": "#/$defs/status"
+    },
+    "name_key": {
+      "$ref": "#/$defs/name_key"
+    },
+    "summary_key": {
+      "$ref": "#/$defs/summary_key"
+    },
+    "tags": {
+      "$ref": "#/$defs/tags"
+    },
+    "source_refs": {
+      "$ref": "#/$defs/source_refs"
+    },
+    "presentation_id": {
+      "$ref": "#/$defs/presentation_id"
+    },
+    "site_class": {
+      "type": "string",
+      "description": "Which of the four accepted classes this site is. The token decides whether a resonance field and beacon thresholds are required or forbidden.",
+      "enum": [
+        "standard-ore-seam",
+        "rich-ore-seam",
+        "specialized-material-geode",
+        "hyper-gold-site"
+      ]
+    },
+    "count_per_standard_map": {
+      "type": "integer",
+      "description": "How many of this class a standard map holds.",
+      "minimum": 1,
+      "x-authority": {
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+        }
+      }
+    },
+    "placement": {
+      "type": "string",
+      "description": "How instances are placed."
+    },
+    "extraction_zone_radius_m": {
+      "type": "number",
+      "description": "The base extraction circle, in mech collision diameters. The left operand of both cross-definition relations this package declares.",
+      "exclusiveMinimum": 0,
+      "x-authority": {
+        "exclusiveMinimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+        }
+      }
+    },
+    "extraction_duration_seconds": {
+      "type": "number",
+      "description": "Uninterrupted seconds to complete one extraction.",
+      "exclusiveMinimum": 0,
+      "x-authority": {
+        "exclusiveMinimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+        }
+      }
+    },
+    "installment_count": {
+      "type": "integer",
+      "description": "How many installments the extraction pays in.",
+      "minimum": 1,
+      "x-authority": {
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+        }
+      }
+    },
+    "installment_duration_seconds": {
+      "type": "number",
+      "description": "How long one installment takes. The compiler multiplies it by the installment count to derive the total depletion time.",
+      "exclusiveMinimum": 0,
+      "x-authority": {
+        "exclusiveMinimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+        }
+      }
+    },
+    "completion_only_reward": {
+      "type": "boolean",
+      "description": "Whether the payout comes only on completion."
+    },
+    "payout_per_installment": {
+      "title": "A payout",
+      "description": "An amount of one resource.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "type": "integer",
+          "description": "How many units the payout yields.",
+          "minimum": 1,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+            }
+          }
+        },
+        "resource_id": {
+          "type": "string",
+          "pattern": "^RSC-[0-9]{2}$",
+          "description": "The resource paid out."
+        },
+        "detail": {
+          "type": "string",
+          "description": "What the payout is, where the amount alone does not say."
+        }
+      },
+      "required": [
+        "amount",
+        "resource_id"
+      ]
+    },
+    "completion_payout": {
+      "type": "array",
+      "description": "What completing the extraction pays. Always an array: a completion can pay more than one resource, and one site class does.",
+      "items": {
+        "$ref": "#/$defs/payout"
+      }
+    },
+    "partial_payout": {
+      "type": "string",
+      "description": "What partial progress yields, where anything."
+    },
+    "progress_decay": {
+      "title": "How extraction progress decays",
+      "description": "Decay rate and grace.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "decay_rate_multiplier_of_forward_rate": {
+          "type": "number",
+          "description": "How fast progress decays, as a multiple of the site's own forward rate.",
+          "exclusiveMinimum": 0,
+          "x-authority": {
+            "exclusiveMinimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+            }
+          }
+        },
+        "grace_seconds": {
+          "type": "number",
+          "description": "How long before decay begins.",
+          "minimum": 0,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section states that durations are nonnegative and that rates cannot be negative, so the floor of every duration and rate is zero and there is no upper bound the section supplies"
+            }
+          }
+        },
+        "secured_checkpoint": {
+          "type": "string",
+          "description": "What progress is secured against decay."
+        }
+      },
+      "required": [
+        "decay_rate_multiplier_of_forward_rate",
+        "grace_seconds"
+      ]
+    },
+    "resonance_field": {
+      "title": "A geode's resonance field",
+      "description": "There is no larger_than_extraction_zone boolean: it asserted a relation between two numbers, and a boolean cannot be wrong in the way the relation can. There is no modifier magnitude either - the magnitude is the material's, stated once on the material's own resonance behavior.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "radius_m": {
+          "type": "number",
+          "description": "The field's radius, in mech collision diameters. That it exceeds the maximum expanded extraction zone is RC-01, a relation across definitions, and is not asserted from this file: this bound and that relation are different claims and only one can be checked from one document.",
+          "exclusiveMinimum": 0,
+          "x-authority": {
+            "exclusiveMinimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+            }
+          }
+        },
+        "shape": {
+          "type": "string",
+          "description": "The field's shape."
+        },
+        "active_while_unopened": {
+          "type": "boolean",
+          "description": "Whether the field is active before opening."
+        },
+        "active_during_interruptions": {
+          "type": "boolean",
+          "description": "Whether the field stays active while extraction is interrupted."
+        },
+        "collapses_on_open": {
+          "type": "boolean",
+          "description": "Whether opening the geode collapses the field."
+        },
+        "retained_after_leaving_field": {
+          "type": "boolean",
+          "description": "Whether the modifier persists after leaving the field."
+        },
+        "summons_enemies": {
+          "type": "boolean",
+          "description": "Whether the field summons enemies."
+        },
+        "uses_progress_thresholds": {
+          "type": "boolean",
+          "description": "Whether the field fires at progress thresholds."
+        },
+        "fields_overlap_on_standard_maps": {
+          "type": "boolean",
+          "description": "Whether two fields may overlap on a standard map."
+        },
+        "modifier_named_in_geode_label_or_contextual_hud": {
+          "type": "boolean",
+          "description": "Whether the modifier is named to the player."
+        },
+        "applies_to": {
+          "type": "array",
+          "description": "Who the field's modifier applies to.",
+          "items": {
+            "type": "string",
+            "description": null,
+            "enum": [
+              "ordinary-enemies",
+              "elites",
+              "bosses"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "generation_constraint": {
+          "type": "string",
+          "description": "What map generation must guarantee."
+        }
+      },
+      "required": [
+        "radius_m",
+        "shape",
+        "active_while_unopened",
+        "active_during_interruptions",
+        "collapses_on_open",
+        "retained_after_leaving_field",
+        "summons_enemies",
+        "uses_progress_thresholds",
+        "fields_overlap_on_standard_maps",
+        "modifier_named_in_geode_label_or_contextual_hud",
+        "applies_to",
+        "generation_constraint"
+      ]
+    },
+    "beacon_thresholds": {
+      "type": "array",
+      "description": "The progress crossings at which the site's threat beacon fires.",
+      "items": {
+        "$ref": "#/$defs/beacon_threshold"
+      }
+    },
+    "beacon_rules": {
+      "type": "array",
+      "description": "Site-specific beacon rules.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "depleted_state_kind": {
+      "type": "string",
+      "description": "What a depleted site becomes.",
+      "enum": [
+        "non-interactive-landmark"
+      ]
+    },
+    "reactivatable": {
+      "type": "boolean",
+      "description": "Whether a depleted site can be reactivated."
+    },
+    "persistence_class": {
+      "type": "string",
+      "description": "The persistence class, drawn from the same vocabulary a resource uses, because a site's persistence and its resource's are the same fact.",
+      "enum": [
+        "run-local-consumable",
+        "run-local-currency",
+        "banked-at-extraction"
+      ]
+    },
+    "spawn_exclusions": {
+      "type": "array",
+      "description": "Where this site class may not be placed.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "map_marker_id": {
+      "type": "string",
+      "minLength": 1,
+      "x-authority": {
+        "minLength": {
+          "kind": "structural",
+          "rationale": "not a capacity bound: the empty string is what the compiler materializes for an omitted field, so an authored empty string would name no marker while looking like a marker name. 1 is the smallest length that excludes it, and no document states a ceiling for a marker identifier"
+        }
+      },
+      "description": "The map marker this site shows."
+    },
+    "eligible_material_ids": {
+      "type": "array",
+      "description": "The materials this site can yield.",
+      "items": {
+        "type": "string",
+        "pattern": "^RSC-[0-9]{2}$"
+      },
+      "uniqueItems": true
+    },
+    "present_materials_per_run": {
+      "type": "integer",
+      "description": "How many materials a run's geological profile holds.",
+      "minimum": 1,
+      "x-authority": {
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+        }
+      }
+    },
+    "material_units_per_geode": {
+      "type": "integer",
+      "description": "How many units one instance yields.",
+      "minimum": 1,
+      "x-authority": {
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+        }
+      }
+    },
+    "geodes_per_present_material": {
+      "title": "An integer range",
+      "description": "Both bounds inclusive.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "min": {
+          "type": "integer",
+          "description": "The floor.",
+          "minimum": 0,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+            }
+          }
+        },
+        "max": {
+          "type": "integer",
+          "description": "The ceiling.",
+          "minimum": 0,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+            }
+          }
+        }
+      },
+      "required": [
+        "min",
+        "max"
+      ]
+    },
+    "abundance_states": {
+      "type": "array",
+      "description": "The abundance states a survey can report.",
+      "items": {
+        "$ref": "#/$defs/abundance_state"
+      }
+    },
+    "survey_disclosure": {
+      "type": "string",
+      "description": "What the geological survey discloses."
+    },
+    "rarity": {
+      "type": "string",
+      "description": "How common this class is relative to others."
+    },
+    "rules": {
+      "type": "array",
+      "description": "Rule clarifications with no structured twin.",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "$defs": {
+    "snake_case_field": {
+      "title": "A schema-declared field name",
+      "description": "Property names use snake_case.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "version": {
+      "title": "A positive integer version",
+      "description": "The initial schema_version and content_version of every first-authored definition is 1.",
+      "type": "integer",
+      "minimum": 1,
+      "x-authority": {
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Initial versions",
+          "kind": "sourced",
+          "derivation": "the initial value of every first-authored definition is 1 and both versions only ever increment, so no valid version is below 1; there is no upper bound because a definition may be revised without limit"
+        }
+      }
+    },
+    "status": {
+      "title": "Lifecycle state",
+      "type": "string",
+      "enum": [
+        "development",
+        "enabled",
+        "disabled",
+        "retired"
+      ]
+    },
+    "name_key": {
+      "title": "Localization key for the player-facing name",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*\\.[A-Za-z0-9][A-Za-z0-9_-]*\\.name$"
+    },
+    "summary_key": {
+      "title": "Localization key for the concise player-facing summary",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*\\.[A-Za-z0-9][A-Za-z0-9_-]*\\.summary$"
+    },
+    "tags": {
+      "title": "Closed query and tooling vocabulary",
+      "description": "The vocabulary starts empty, so [] is the only accepted value.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": []
+      }
+    },
+    "source_refs": {
+      "title": "The sources this definition implements",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(?:[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*|\\[\\]|\\[[0-9]+\\]|\\[[0-9]+\\.\\.[0-9]+\\])*: )?(?:(?:GDD|TDD)-[A-Z0-9-]+|DEC-[0-9]{3}|TDR-[0-9]{3}|TR-[A-Z]+-[0-9]{3})(?:#[a-z0-9-]+)?$"
+      }
+    },
+    "presentation_id": {
+      "title": "Logical presentation entry",
+      "description": "Omitted when a definition never appears in-world. No accepted document mints a grammar for a presentation ID, and inventing one for a category with zero members would be structure ahead of need, so the only constraint is that an authored value is not the empty string.",
+      "type": "string",
+      "minLength": 1,
+      "x-authority": {
+        "minLength": {
+          "kind": "structural",
+          "rationale": "not a capacity bound: the empty string is what the compiler materializes for an omitted field, so an authored empty string would be a second way to say 'absent'. 1 is the smallest length that excludes it"
+        }
+      }
+    },
+    "payout": {
+      "title": "A payout",
+      "description": "An amount of one resource.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "type": "integer",
+          "description": "How many units the payout yields.",
+          "minimum": 1,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+            }
+          }
+        },
+        "resource_id": {
+          "type": "string",
+          "pattern": "^RSC-[0-9]{2}$",
+          "description": "The resource paid out."
+        },
+        "detail": {
+          "type": "string",
+          "description": "What the payout is, where the amount alone does not say."
+        }
+      },
+      "required": [
+        "amount",
+        "resource_id"
+      ]
+    },
+    "beacon_threshold": {
+      "title": "A beacon threshold",
+      "description": "A kind token plus an optional percentage replaces a string that held either 'Activation' or a percentage and duplicated a sibling on three rows of four.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "trigger_kind": {
+          "type": "string",
+          "description": "What starts the response package.",
+          "enum": [
+            "activation",
+            "progress-threshold"
+          ]
+        },
+        "trigger_progress_percent": {
+          "type": "integer",
+          "description": "The crossing this row fires at. Present on a progress threshold and forbidden on the activation row, which fires at the first progress of any amount.",
+          "minimum": 1,
+          "maximum": 99,
+          "x-authority": {
+            "minimum": {
+              "source": "GDD-MINING",
+              "section": "Hyper Gold sites",
+              "kind": "sourced",
+              "derivation": "a crossing strictly inside the extraction; zero is the activation trigger, which has its own kind, so the floor is the first whole point after it"
+            },
+            "maximum": {
+              "source": "GDD-MINING",
+              "section": "Hyper Gold sites",
+              "kind": "sourced",
+              "derivation": "a crossing strictly inside the extraction; one hundred is completion, which is not a crossing, so the ceiling is the last whole point before it"
+            }
+          }
+        },
+        "detail": {
+          "type": "string",
+          "description": "What this row's response is, in prose."
+        }
+      },
+      "required": [
+        "trigger_kind"
+      ]
+    },
+    "abundance_state": {
+      "title": "A survey abundance state",
+      "description": "One row of the survey's abundance table.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "survey_state": {
+          "type": "string",
+          "description": "The label the survey reports."
+        },
+        "geodes_on_map": {
+          "type": "integer",
+          "description": "How many instances that label means.",
+          "minimum": 0,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+            }
+          }
+        },
+        "meaning": {
+          "type": "string",
+          "description": "What the label means to a player."
+        }
+      },
+      "required": [
+        "survey_state",
+        "geodes_on_map",
+        "meaning"
+      ]
+    }
+  }
+}

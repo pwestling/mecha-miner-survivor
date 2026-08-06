@@ -26,10 +26,9 @@ fixture through both and fails if the two verdicts differ.
 | File | Contents |
 | --- | --- |
 | `envelope.schema.json` | `SCH-CNT-001`, the nine-field common definition envelope |
+| the other sixteen `*.schema.json` | `SCH-CNT-002`, one per definition kind — see [The per-category schemas](#the-per-category-schemas) |
 
-Per-category schemas (`SCH-CNT-002`) and presentation schemas (`SCH-CNT-003`)
-land with `DAT-002`, `DAT-003`, and their owning packages. Each one composes
-the envelope with `"$ref": "envelope.schema.json"` rather than restating it.
+Presentation schemas (`SCH-CNT-003`) land with their owning packages.
 
 ## Versioning
 
@@ -295,3 +294,55 @@ place a genuinely sourced length — a localization key length, an ID length tak
 from a document — could otherwise sit unattributed. An exemption list is where a
 fail-open hides, and the argument for adding one is always that the cases are
 obviously structural.
+
+## The per-category schemas
+
+`envelope.schema.json` describes the nine fields every definition carries.
+`DAT-002` and `DAT-003` add one schema per definition *kind* — sixteen of them,
+listed in `src/MechaMiner.Content/Categories/CategorySchemas.cs` and each paired
+with a typed field table in the same directory.
+
+**Each category schema restates the envelope's own nine fields rather than
+referring to them.** That is a deliberate duplication forced by
+`additionalProperties: false`: the keyword does not see through `$ref` or
+`allOf`, so a schema that referenced the envelope and closed its own field set
+would reject every envelope field as unknown. Two things keep the copies from
+drifting — the envelope's field names and patterns are the ones
+`EnvelopeSchema` and `LocalizationKey` declare, and `CategoryFieldOrderTests`
+compares each schema's *domain* property order and required set against the
+typed table element by element.
+
+**A conditional field set is a `oneOf` over discriminator arms.** Three
+categories have one: a resource's `resource_class` decides whether
+`canonical_letter` and `resonance_behavior` are required or forbidden, a
+utility's `ore_only_exception` gates nine fields, and a relic's
+`pool_availability` decides whether `unlock_id` is present. Each is expressed as
+a two-arm `oneOf` under a root `allOf` that constrains presence only and never
+introduces a property, so the root `properties` block stays the single closed
+field list. The alternative — one nullable field per case — is the encoding doc
+40 removes by banning `null`.
+
+**Where the schema cannot follow the typed validator**, the disagreement is
+recorded in `CategorySchemaAgreementTests.NotExpressibleInJsonSchema` with a
+written reason, and the excluded case is separately proven still to be rejected
+by the typed validator. An exclusion no fixture exercises fails the suite, so
+the list cannot rot into strings that exclude nothing.
+
+**A property named after a bound keyword is a property, not a bound.** A
+`properties` block may declare a field called `maximum`, and one of these schemas
+does: a map generation contract's coverage range is `{"minimum": …, "maximum": …}`
+in the authored data. That used to be forbidden here and the field was spelled
+`hard_maximum`, because the corpus walk read every object key as a possible
+keyword and a property name was enough to invent a bound out of nothing. Both
+walkers now know that `properties`, `$defs`, `patternProperties`, and
+`dependentSchemas` hold maps keyed by names the author chose —
+`SchemaBoundWalkStructureTests` pairs every recognised keyword with every one of
+those four and asserts the walk's findings do not move — so the constraint is
+gone and the field carries the name the domain gives it. A property *value* is
+still a subschema and every bound inside one still needs its `x-authority`.
+
+`visible_mining_opportunities_in_normal_view` keeps `target_maximum` and
+`hard_maximum`, and that is not a leftover: it states two real ceilings on one
+quantity, so each needs the qualifier that says which it is. The test of whether
+a qualifier belongs is whether it would still be there if the walker had never
+been confused.

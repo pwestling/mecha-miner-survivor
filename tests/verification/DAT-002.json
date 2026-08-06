@@ -105,7 +105,7 @@
       },
       "fixtures": [
         "tests/MechaMiner.Content.Tests/Fixtures/categories/resources/valid-specialized-material.json",
-        "tests/MechaMiner.Content.Tests/Fixtures/categories/resources/invalid-canonical-letter-duplicate.json"
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/resources/catalog-duplicate-canonical-letter.json"
       ],
       "scenarios": [],
       "evidenceKinds": [
@@ -210,7 +210,7 @@
       },
       "fixtures": [
         "tests/MechaMiner.Content.Tests/Fixtures/categories/mechs/valid-mech.json",
-        "tests/MechaMiner.Content.Tests/Fixtures/categories/mechs/invalid-selection-order-duplicate.json"
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/mechs/catalog-duplicate-selection-order.json"
       ],
       "scenarios": [],
       "evidenceKinds": [
@@ -334,7 +334,7 @@
     },
     {
       "id": "VER-DAT-002-010",
-      "summary": "An enemy authors movement_speed_percent_of_mech_base; re-authoring the world speed in M per second is a build error through the same derived-field register. Verified for the reverse direction too: the valid fixture carries the percentage and no world speed and produces zero diagnostics.",
+      "summary": "An enemy authors movement_speed_percent_of_mech_base; re-authoring the world speed in M per second is a build error through the same derived-field register, matched on the field's JSON pointer. Verified in both directions: the valid fixture carries the percentage and no world speed and produces zero diagnostics. What the route misses is a derived value smuggled in under a different field name, which nothing short of recomputing the number would catch.",
       "task": "TASK-DAT-002-001",
       "requirements": [
         "TR-DAT-001",
@@ -440,7 +440,7 @@
     },
     {
       "id": "VER-DAT-002-013",
-      "summary": "A boss definition does not declare armor, on the same reading of doc 40's field list as VER-DAT-002-008, and the same unknown-field route proves it.",
+      "summary": "A boss definition does not declare armor, on the same reading of doc 40's field list as VER-DAT-002-008: the enemy-and-boss list omits Armor while the mech list includes it. The route is the same unknown-field one, and it is the route a typo would take too, so the gate proves the field is undeclared rather than merely unused. Four boss files carried armor as a null, which is a field with nothing to hold rather than a statement that a boss has no armour.",
       "task": "TASK-DAT-002-001",
       "requirements": [
         "TR-DAT-001",
@@ -565,7 +565,7 @@
         "tests/MechaMiner.Content.Tests/Fixtures/categories/mining-sites/valid-standard-ore-seam.json",
         "tests/MechaMiner.Content.Tests/Fixtures/categories/mining-sites/valid-geode.json",
         "tests/MechaMiner.Content.Tests/Fixtures/categories/mining-sites/invalid-site-class-token.json",
-        "tests/MechaMiner.Content.Tests/Fixtures/categories/mining-sites/invalid-site-class-duplicate.json"
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/mining-sites/catalog-duplicate-site-class.json"
       ],
       "scenarios": [],
       "evidenceKinds": [
@@ -829,7 +829,7 @@
     },
     {
       "id": "VER-DAT-002-024",
-      "summary": "RC-02 is declared as a relation: the deployment obstacle-free radius must be at least the largest mining-point cleared radius over every site class. Greater-than-or-equal, not strictly greater, because the constraint is that deployment is not tighter than an ordinary mining point and equality satisfies that. The comparison is against the maximum over all site classes rather than against one named site, so a future class with a larger extraction zone is caught.",
+      "summary": "RC-02 is declared as a relation: the deployment obstacle-free radius must be at least the largest mining-point cleared radius over every site class. Greater-than-or-equal, not strictly greater, because the constraint is that deployment is not tighter than an ordinary mining point and equality satisfies that. The route resolves the authored clearance from mining-zone diameters into mech collision diameters and is compared against the maximum over all site classes rather than against one named site, so a future class with a larger extraction zone is caught.",
       "task": "TASK-DAT-002-001",
       "requirements": [
         "TR-DAT-002"
@@ -892,7 +892,7 @@
     },
     {
       "id": "VER-DAT-002-026",
-      "summary": "For every DAT-002 category the draft 2020-12 schema and the authoritative typed validator reach the same accept/reject verdict on every structural fixture. Rules the JSON Schema data model cannot express are excluded by diagnostic code with a written reason a reviewer can act on, and each exclusion is separately proven still to be rejected by the typed validator, so an exclusion never becomes an amnesty.",
+      "summary": "For every DAT-002 category the draft 2020-12 schema and the authoritative typed validator reach the same accept/reject verdict on every structural fixture. Each fixture is compared twice - once through the typed reader and once through the schema evaluator - and the two verdicts are matched against each other and against the corpus's declaration. The comparison is on the verdict and not the diagnostic, because the two legitimately report one rejection differently. Rules the JSON Schema data model cannot express are excluded by diagnostic code with a written reason a reviewer can act on; each exclusion is separately proven still to be rejected by the typed validator, and an exclusion no fixture exercises fails the suite so the list cannot rot into stale strings.",
       "task": "TASK-DAT-002-001",
       "requirements": [
         "TR-DAT-001",
@@ -925,7 +925,7 @@
     },
     {
       "id": "VER-DAT-002-027",
-      "summary": "Every valid DAT-002 fixture produces zero diagnostics. This is the over-strictness control: without it the invalid corpus above would be satisfied by a validator that rejects everything, and the per-category field tables could quietly require a field no document asks for.",
+      "summary": "Every valid DAT-002 fixture produces zero diagnostics. The route is the same reader the invalid corpus uses, so cleanliness is matched on the identical code path rather than on a laxer one. This is the over-strictness control: without it the invalid corpus would be satisfied by a validator that rejects everything, and a per-category field table could quietly require a field no document asks for. Two further checks close the corpus - every fixture on disk is named by a test, and every definition kind has at least one valid fixture.",
       "task": "TASK-DAT-002-001",
       "requirements": [
         "TR-DAT-001",
@@ -941,7 +941,7 @@
         "value": "MechaMiner.Content.Tests.Categories.CategoryFixtureCorpusTests"
       },
       "fixtures": [
-        "tests/MechaMiner.Content.Tests/Fixtures/categories/categories"
+        "tests/MechaMiner.Content.Tests/Fixtures/categories"
       ],
       "scenarios": [],
       "evidenceKinds": [

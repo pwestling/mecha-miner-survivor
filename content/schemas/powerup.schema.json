@@ -1,0 +1,367 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mechaminer.local/schemas/powerup.schema.json",
+  "title": "SCH-CNT-002 permanent PowerUp definition",
+  "description": "A permanent PowerUp definition. The project-owned typed validator in src/MechaMiner.Content/Categories/ remains authoritative; this schema is the draft 2020-12 mirror kept for editor and tool interoperability, and a fixture corpus proves the two reach the same accept/reject verdict on every structural case. See content/schemas/README.md. A PowerUp is a kind, a per-rank value, a cap, and a price array; the authored shape had twenty-five fields of which the maximum effect, every rank's running total, and every cumulative cost were arithmetic over those four. The shared purchase-rule flags are not declared: nine fields identical across all thirteen definitions are a catalog rule.",
+  "type": "object",
+  "additionalProperties": false,
+  "propertyNames": {
+    "$ref": "#/$defs/snake_case_field"
+  },
+  "required": [
+    "id",
+    "schema_version",
+    "content_version",
+    "status",
+    "tags",
+    "source_refs",
+    "ui_grouping",
+    "affected_statistic",
+    "effect_kind",
+    "per_rank_value",
+    "cap",
+    "ranks",
+    "active_rank_policy",
+    "rules"
+  ],
+  "properties": {
+    "id": {
+      "title": "A stable, case-sensitive ASCII content ID",
+      "type": "string",
+      "pattern": "^PU-[A-Z][0-9]{2}$"
+    },
+    "schema_version": {
+      "$ref": "#/$defs/version"
+    },
+    "content_version": {
+      "$ref": "#/$defs/version"
+    },
+    "status": {
+      "$ref": "#/$defs/status"
+    },
+    "name_key": {
+      "$ref": "#/$defs/name_key"
+    },
+    "summary_key": {
+      "$ref": "#/$defs/summary_key"
+    },
+    "tags": {
+      "$ref": "#/$defs/tags"
+    },
+    "source_refs": {
+      "$ref": "#/$defs/source_refs"
+    },
+    "presentation_id": {
+      "$ref": "#/$defs/presentation_id"
+    },
+    "ui_grouping": {
+      "type": "string",
+      "description": "Which shop group this PowerUp appears under.",
+      "enum": [
+        "combat",
+        "survivability",
+        "mobility",
+        "mining-economy"
+      ]
+    },
+    "affected_statistic": {
+      "type": "string",
+      "description": "A statistic from the shared vocabulary every trait, utility, PowerUp and relic modifies.",
+      "enum": [
+        "weapon-damage",
+        "weapon-attack-rate",
+        "weapon-area",
+        "weapon-duration",
+        "weapon-damage-to-elites-and-bosses",
+        "maximum-hull-integrity",
+        "armor",
+        "recovery",
+        "revival-charges",
+        "movement-speed",
+        "discovery-radius",
+        "forward-extraction-rate",
+        "extraction-zone-radius",
+        "mined-common-ore",
+        "recharge-time",
+        "stored-charges",
+        "control-resistance"
+      ]
+    },
+    "effect_kind": {
+      "type": "string",
+      "description": "How the per-rank value contributes. A closed five-way union replacing five parallel optional value keys of which exactly one was ever present; the unit is carried by the token, which is why there is one value and not five.",
+      "enum": [
+        "additive-percent",
+        "additive-hull",
+        "additive-armor",
+        "additive-hull-per-second",
+        "revival-charge"
+      ]
+    },
+    "per_rank_value": {
+      "type": "number",
+      "description": "What one rank adds. A permanent PowerUp is an always-on improvement, so a rank that took something away would be a different concept.",
+      "exclusiveMinimum": 0,
+      "x-authority": {
+        "exclusiveMinimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+        }
+      }
+    },
+    "cap": {
+      "type": "integer",
+      "description": "The highest purchasable rank. The rank array's length is checked against this rather than both against a constant.",
+      "minimum": 1,
+      "x-authority": {
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+        }
+      }
+    },
+    "ranks": {
+      "type": "array",
+      "description": "One row per purchasable rank, from one to the cap.",
+      "items": {
+        "title": "A PowerUp rank",
+        "description": "One purchasable rank.",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "rank": {
+            "type": "integer",
+            "description": "The one-based rank.",
+            "minimum": 1,
+            "x-authority": {
+              "minimum": {
+                "source": "TDD-CONTENT-DATA",
+                "section": "Unit and numeric policy",
+                "kind": "sourced",
+                "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+              }
+            }
+          },
+          "price_hyper_gold": {
+            "type": "integer",
+            "description": "What this rank costs. Prices are not required to increase with rank: no accepted document says they must, and asserting it would reject a flat ladder a designer is free to author.",
+            "minimum": 1,
+            "x-authority": {
+              "minimum": {
+                "source": "TDD-CONTENT-DATA",
+                "section": "Unit and numeric policy",
+                "kind": "sourced",
+                "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+              }
+            }
+          }
+        },
+        "required": [
+          "rank",
+          "price_hyper_gold"
+        ]
+      }
+    },
+    "revival": {
+      "title": "The revival parameters",
+      "description": "The parameters of the revival-charge effect kind, not a special-case field.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "automatic": {
+          "type": "boolean",
+          "description": "Whether revival fires without input."
+        },
+        "displacement": {
+          "type": "string",
+          "description": "Where the mech reappears."
+        },
+        "hull_restored_fraction_of_current_maximum": {
+          "type": "number",
+          "description": "What share of current maximum Hull is restored.",
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "x-authority": {
+            "exclusiveMinimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section names _fraction as a normalized unit; a revival restoring nothing is not a revival, so zero is excluded rather than admitted"
+            },
+            "maximum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section names _fraction as a normalized unit, so the whole of a current maximum is 1 and a fraction cannot exceed what it is a fraction of"
+            }
+          }
+        },
+        "invulnerability_active_simulation_seconds": {
+          "type": "number",
+          "description": "How long invulnerability lasts after revival.",
+          "minimum": 0,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section states that durations are nonnegative and that rates cannot be negative, so the floor of every duration and rate is zero and there is no upper bound the section supplies"
+            }
+          }
+        },
+        "pauses_timer_or_simulation": {
+          "type": "boolean",
+          "description": "Whether revival pauses the run."
+        },
+        "rechargeable_during_run": {
+          "type": "boolean",
+          "description": "Whether a charge can be regained mid-run."
+        }
+      },
+      "required": [
+        "automatic",
+        "displacement",
+        "hull_restored_fraction_of_current_maximum",
+        "invulnerability_active_simulation_seconds",
+        "pauses_timer_or_simulation",
+        "rechargeable_during_run"
+      ]
+    },
+    "active_rank_policy": {
+      "title": "The active-rank policy",
+      "description": "What the player may set and what it costs.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "minimum_active_rank": {
+          "type": "integer",
+          "description": "The lowest rank the player may set active. Zero means the PowerUp may be switched off entirely.",
+          "minimum": 0,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+            }
+          }
+        },
+        "maximum_active_rank_equals_purchased_rank": {
+          "type": "boolean",
+          "description": "Whether the active rank is capped at the purchased one."
+        },
+        "changeable_between_runs": {
+          "type": "boolean",
+          "description": "Whether the active rank changes between runs."
+        },
+        "changeable_during_run": {
+          "type": "boolean",
+          "description": "Whether the active rank changes during a run."
+        },
+        "change_cost_hyper_gold": {
+          "type": "integer",
+          "description": "What changing the active rank costs. Free is zero and is authored rather than omitted, because the economy report has a column for it.",
+          "minimum": 0,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+            }
+          }
+        }
+      },
+      "required": [
+        "minimum_active_rank",
+        "maximum_active_rank_equals_purchased_rank",
+        "changeable_between_runs",
+        "changeable_during_run",
+        "change_cost_hyper_gold"
+      ]
+    },
+    "rules": {
+      "type": "array",
+      "description": "The accepted rule sentences for this PowerUp.",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "$defs": {
+    "snake_case_field": {
+      "title": "A schema-declared field name",
+      "description": "Property names use snake_case.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "version": {
+      "title": "A positive integer version",
+      "description": "The initial schema_version and content_version of every first-authored definition is 1.",
+      "type": "integer",
+      "minimum": 1,
+      "x-authority": {
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Initial versions",
+          "kind": "sourced",
+          "derivation": "the initial value of every first-authored definition is 1 and both versions only ever increment, so no valid version is below 1; there is no upper bound because a definition may be revised without limit"
+        }
+      }
+    },
+    "status": {
+      "title": "Lifecycle state",
+      "type": "string",
+      "enum": [
+        "development",
+        "enabled",
+        "disabled",
+        "retired"
+      ]
+    },
+    "name_key": {
+      "title": "Localization key for the player-facing name",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*\\.[A-Za-z0-9][A-Za-z0-9_-]*\\.name$"
+    },
+    "summary_key": {
+      "title": "Localization key for the concise player-facing summary",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*\\.[A-Za-z0-9][A-Za-z0-9_-]*\\.summary$"
+    },
+    "tags": {
+      "title": "Closed query and tooling vocabulary",
+      "description": "The vocabulary starts empty, so [] is the only accepted value.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": []
+      }
+    },
+    "source_refs": {
+      "title": "The sources this definition implements",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(?:[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*|\\[\\]|\\[[0-9]+\\]|\\[[0-9]+\\.\\.[0-9]+\\])*: )?(?:(?:GDD|TDD)-[A-Z0-9-]+|DEC-[0-9]{3}|TDR-[0-9]{3}|TR-[A-Z]+-[0-9]{3})(?:#[a-z0-9-]+)?$"
+      }
+    },
+    "presentation_id": {
+      "title": "Logical presentation entry",
+      "description": "Omitted when a definition never appears in-world. No accepted document mints a grammar for a presentation ID, and inventing one for a category with zero members would be structure ahead of need, so the only constraint is that an authored value is not the empty string.",
+      "type": "string",
+      "minLength": 1,
+      "x-authority": {
+        "minLength": {
+          "kind": "structural",
+          "rationale": "not a capacity bound: the empty string is what the compiler materializes for an omitted field, so an authored empty string would be a second way to say 'absent'. 1 is the smallest length that excludes it"
+        }
+      }
+    }
+  }
+}

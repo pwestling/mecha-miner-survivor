@@ -126,7 +126,7 @@ internal sealed class ContentDiagnosticCodesTests
     }
 
     /// <summary>
-    /// The set of codes the DAT-001 suite actually provokes equals the declared set.
+    /// The set of codes the suite actually provokes equals the declared set.
     /// </summary>
     /// <remarks>
     /// Both directions matter. An undeclared code that a validator can emit is
@@ -153,6 +153,13 @@ internal sealed class ContentDiagnosticCodesTests
             provoked.Add(code);
         }
 
+        // The semantic and relational bands are provoked by the category corpus and by
+        // the catalog and relational checks, which no envelope fixture can reach.
+        foreach (string code in Categories.CategoryDiagnosticProbe.Provoked())
+        {
+            provoked.Add(code);
+        }
+
         List<string> declared = new();
         foreach (ContentDiagnosticDescriptor descriptor in ContentDiagnosticCodes.All)
         {
@@ -162,8 +169,9 @@ internal sealed class ContentDiagnosticCodesTests
         Assert.That(
             provoked,
             Is.EquivalentTo(declared),
-            "every declared code must be provoked by the DAT-001 suite, and the suite must "
-                + "provoke nothing undeclared");
+            "every declared code must be provoked by the suite - the DAT-001 envelope corpus, "
+                + "the DAT-002 and DAT-003 category corpus, and the catalog and relational "
+                + "checks between them - and the suite must provoke nothing undeclared");
     }
 
     /// <summary>

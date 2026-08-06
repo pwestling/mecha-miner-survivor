@@ -1,0 +1,308 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mechaminer.local/schemas/relic.schema.json",
+  "title": "SCH-CNT-002 mech relic definition",
+  "description": "A mech relic definition. The project-owned typed validator in src/MechaMiner.Content/Categories/ remains authoritative; this schema is the draft 2020-12 mirror kept for editor and tool interoperability, and a fixture corpus proves the two reach the same accept/reject verdict on every structural case. See content/schemas/README.md. The catalog-wide acquisition, rarity, stacking and registration blocks are not declared here: thirty-three of their keys were identical across all ten relics, and only the five that vary remain.",
+  "type": "object",
+  "additionalProperties": false,
+  "propertyNames": {
+    "$ref": "#/$defs/snake_case_field"
+  },
+  "required": [
+    "id",
+    "schema_version",
+    "content_version",
+    "status",
+    "tags",
+    "source_refs",
+    "transformation_key",
+    "tradeoff_key",
+    "affected_scope",
+    "behavior_kind",
+    "trigger_condition",
+    "effects",
+    "pool_availability",
+    "overrides_or_replaces",
+    "sale_value_common_ore",
+    "rules",
+    "cross_document_rules"
+  ],
+  "properties": {
+    "id": {
+      "title": "A stable, case-sensitive ASCII content ID",
+      "type": "string",
+      "pattern": "^REL-[0-9]{2}$"
+    },
+    "schema_version": {
+      "$ref": "#/$defs/version"
+    },
+    "content_version": {
+      "$ref": "#/$defs/version"
+    },
+    "status": {
+      "$ref": "#/$defs/status"
+    },
+    "name_key": {
+      "$ref": "#/$defs/name_key"
+    },
+    "summary_key": {
+      "$ref": "#/$defs/summary_key"
+    },
+    "tags": {
+      "$ref": "#/$defs/tags"
+    },
+    "source_refs": {
+      "$ref": "#/$defs/source_refs"
+    },
+    "presentation_id": {
+      "$ref": "#/$defs/presentation_id"
+    },
+    "transformation_key": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*\\.[A-Za-z0-9][A-Za-z0-9_-]*\\.[a-z][a-z0-9_]*$",
+      "description": "The localization key of the one-phrase transformation summary."
+    },
+    "tradeoff_key": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*\\.[A-Za-z0-9][A-Za-z0-9_-]*\\.[a-z][a-z0-9_]*$",
+      "description": "The localization key of the explicit tradeoff. Doc 40 requires the tradeoff to be explicit, so the field is required; the sentence itself is player-facing text, so the field holds a key rather than the words."
+    },
+    "affected_scope": {
+      "type": "array",
+      "description": "What the transformation applies to. At least one: a transformation that applies to nothing is not one, and doc 40 requires compatibility results computed against a scope.",
+      "items": {
+        "type": "string",
+        "description": null,
+        "enum": [
+          "all-equipped-weapons",
+          "mining-extraction-rate",
+          "enemy-movement-speed"
+        ]
+      },
+      "uniqueItems": true,
+      "minItems": 1,
+      "x-authority": {
+        "minItems": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Relics",
+          "kind": "sourced",
+          "derivation": "the section requires compatibility results for all weapons, which is a computation over the relic's scope; a relic with an empty scope has nothing to compute against, so the floor is one and there is no ceiling below the vocabulary's own size"
+        }
+      }
+    },
+    "behavior_kind": {
+      "type": "string",
+      "description": "The registered behavior. Formerly a prose hook description; the ten sentences each named a distinct hook point and none overlapped, which is unusually good raw material for the registry. A lower-kebab-case token. Whether it resolves to exactly one registered behavior descriptor is the behavior registry's check and is deliberately not asserted here.",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "trigger_condition": {
+      "type": "string",
+      "description": "What causes the relic's effect to fire."
+    },
+    "effects": {
+      "title": "A registry-owned parameter map",
+      "description": "The relic's parameters, keyed by its behavior kind. The strongest case in the tree for an open map: seventy-four keys across ten relics with none shared between any two, so there is literally no common structure to factor. The key vocabulary belongs to the registered behavior descriptor rather than to this schema, so keys are not enumerated here; the strict codec still rejects a null, a duplicate key, and a non-snake_case key inside one.",
+      "type": "object",
+      "propertyNames": {
+        "$ref": "#/$defs/snake_case_field"
+      }
+    },
+    "pool_availability": {
+      "type": "string",
+      "description": "Which pool this relic is drawn from.",
+      "enum": [
+        "fresh-profile",
+        "hyper-gold-unlock"
+      ]
+    },
+    "unlock_id": {
+      "type": "string",
+      "pattern": "^UNL-[0-9]{2}$",
+      "description": "The unlock that adds it to the cache pool. Present exactly when the pool token says the relic is behind one; the anti-correlated boolean that used to state the same fact a second time is gone."
+    },
+    "overrides_or_replaces": {
+      "type": "array",
+      "description": "The relics this one overrides.",
+      "items": {
+        "type": "string",
+        "pattern": "^REL-[0-9]{2}$"
+      },
+      "uniqueItems": true
+    },
+    "sale_value_common_ore": {
+      "type": "integer",
+      "description": "What selling a displaced copy yields.",
+      "minimum": 0,
+      "x-authority": {
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+        }
+      }
+    },
+    "live_state_meter": {
+      "title": "A relic's live-state meter",
+      "description": "Present where the relic has live state.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "meter": {
+          "type": "string",
+          "description": "What the meter measures."
+        },
+        "hud_treatment": {
+          "type": "string",
+          "description": "How the meter is shown."
+        }
+      },
+      "required": [
+        "meter",
+        "hud_treatment"
+      ]
+    },
+    "rules": {
+      "type": "array",
+      "description": "The accepted rule sentences for this relic.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "cross_document_rules": {
+      "type": "array",
+      "description": "Rules whose sentence travels with typed parameters. The one rule array in the tree that stays object-shaped, because unwrapping it would lose the numbers.",
+      "items": {
+        "title": "A cross-document rule",
+        "description": "One rule with its parameters.",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The rule sentence."
+          },
+          "parameters": {
+            "title": "A registry-owned parameter map",
+            "description": "The rule's typed parameters. The key vocabulary belongs to the registered behavior descriptor rather than to this schema, so keys are not enumerated here; the strict codec still rejects a null, a duplicate key, and a non-snake_case key inside one.",
+            "type": "object",
+            "propertyNames": {
+              "$ref": "#/$defs/snake_case_field"
+            }
+          }
+        },
+        "required": [
+          "text"
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "snake_case_field": {
+      "title": "A schema-declared field name",
+      "description": "Property names use snake_case.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "version": {
+      "title": "A positive integer version",
+      "description": "The initial schema_version and content_version of every first-authored definition is 1.",
+      "type": "integer",
+      "minimum": 1,
+      "x-authority": {
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Initial versions",
+          "kind": "sourced",
+          "derivation": "the initial value of every first-authored definition is 1 and both versions only ever increment, so no valid version is below 1; there is no upper bound because a definition may be revised without limit"
+        }
+      }
+    },
+    "status": {
+      "title": "Lifecycle state",
+      "type": "string",
+      "enum": [
+        "development",
+        "enabled",
+        "disabled",
+        "retired"
+      ]
+    },
+    "name_key": {
+      "title": "Localization key for the player-facing name",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*\\.[A-Za-z0-9][A-Za-z0-9_-]*\\.name$"
+    },
+    "summary_key": {
+      "title": "Localization key for the concise player-facing summary",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*\\.[A-Za-z0-9][A-Za-z0-9_-]*\\.summary$"
+    },
+    "tags": {
+      "title": "Closed query and tooling vocabulary",
+      "description": "The vocabulary starts empty, so [] is the only accepted value.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": []
+      }
+    },
+    "source_refs": {
+      "title": "The sources this definition implements",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(?:[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*|\\[\\]|\\[[0-9]+\\]|\\[[0-9]+\\.\\.[0-9]+\\])*: )?(?:(?:GDD|TDD)-[A-Z0-9-]+|DEC-[0-9]{3}|TDR-[0-9]{3}|TR-[A-Z]+-[0-9]{3})(?:#[a-z0-9-]+)?$"
+      }
+    },
+    "presentation_id": {
+      "title": "Logical presentation entry",
+      "description": "Omitted when a definition never appears in-world. No accepted document mints a grammar for a presentation ID, and inventing one for a category with zero members would be structure ahead of need, so the only constraint is that an authored value is not the empty string.",
+      "type": "string",
+      "minLength": 1,
+      "x-authority": {
+        "minLength": {
+          "kind": "structural",
+          "rationale": "not a capacity bound: the empty string is what the compiler materializes for an omitted field, so an authored empty string would be a second way to say 'absent'. 1 is the smallest length that excludes it"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "title": "an unlock reference follows the pool token",
+      "description": "The anti-correlated boolean that used to state the same fact a second time is gone, so the token is the only thing that decides this.",
+      "oneOf": [
+        {
+          "title": "the unlocked arm",
+          "properties": {
+            "pool_availability": {
+              "const": "hyper-gold-unlock"
+            }
+          },
+          "required": [
+            "pool_availability",
+            "unlock_id"
+          ]
+        },
+        {
+          "title": "the fresh-profile arm",
+          "properties": {
+            "pool_availability": {
+              "const": "fresh-profile"
+            }
+          },
+          "required": [
+            "pool_availability"
+          ],
+          "not": {
+            "required": [
+              "unlock_id"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "id": "SITE-04",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "mining_site.SITE-04.name",
+  "summary_key": "mining_site.SITE-04.summary",
+  "tags": [],
+  "source_refs": [
+    "TR-DAT-002"
+  ],
+  "site_class": "specialized-material-geode",
+  "count_per_standard_map": 36,
+  "placement": "randomized locations",
+  "extraction_zone_radius_m": 3.0,
+  "extraction_duration_seconds": 20,
+  "completion_only_reward": true,
+  "completion_payout": [
+    {
+      "amount": 1,
+      "resource_id": "RSC-01",
+      "detail": "exactly one unit of the geode's own material"
+    },
+    {
+      "amount": 50,
+      "resource_id": "RSC-07"
+    }
+  ],
+  "partial_payout": "none; no partial material or ore payout",
+  "progress_decay": {
+    "decay_rate_multiplier_of_forward_rate": 4,
+    "grace_seconds": 0.5
+  },
+  "resonance_field": {
+    "shape": "circular",
+    "active_while_unopened": true,
+    "active_during_interruptions": true,
+    "collapses_on_open": true,
+    "retained_after_leaving_field": false,
+    "summons_enemies": false,
+    "uses_progress_thresholds": false,
+    "fields_overlap_on_standard_maps": false,
+    "modifier_named_in_geode_label_or_contextual_hud": true,
+    "applies_to": [
+      "ordinary-enemies",
+      "elites",
+      "bosses"
+    ],
+    "generation_constraint": "Standard map generation separates unopened geodes far enough that their resonance fields do not overlap."
+  },
+  "depleted_state_kind": "non-interactive-landmark",
+  "reactivatable": false,
+  "persistence_class": "run-local-consumable",
+  "eligible_material_ids": [
+    "RSC-01",
+    "RSC-02",
+    "RSC-03",
+    "RSC-04",
+    "RSC-05",
+    "RSC-06"
+  ],
+  "present_materials_per_run": 4,
+  "material_units_per_geode": 1,
+  "geodes_per_present_material": {
+    "min": 8,
+    "max": 10
+  },
+  "abundance_states": [
+    {
+      "survey_state": "Scarce",
+      "geodes_on_map": 8,
+      "meaning": "Lowest accepted supply; still broadly plentiful"
+    },
+    {
+      "survey_state": "Rich",
+      "geodes_on_map": 10,
+      "meaning": "Highest standard supply"
+    }
+  ],
+  "survey_disclosure": "The geological survey reports the abundance label and detected count, not locations.",
+  "rules": [
+    "An unopened geode registers one active resonance circle."
+  ]
+}

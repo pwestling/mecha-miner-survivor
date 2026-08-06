@@ -1,0 +1,40 @@
+{
+  "id": "W-AB-unbounded-bore",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-AB-unbounded-bore.name",
+  "summary_key": "branch.W-AB-unbounded-bore.summary",
+  "tags": [],
+  "source_refs": [
+    "TR-DAT-003"
+  ],
+  "weapon_id": "W-AB",
+  "branch_class": "amplification",
+  "cost_material_id": "RSC-01",
+  "cost_units": 2,
+  "behavior_kind": "remove-pierce-cap",
+  "effects": {
+    "pierce_target_cap_removed": true,
+    "unchanged_stats": [
+      "Beam width",
+      "Cycle rate"
+    ]
+  },
+  "exclusivity": {
+    "irreversible_within_run": true,
+    "mutually_exclusive_with": [
+      "W-AB-fracture-lance",
+      "W-AB-kinetic-capacitor"
+    ]
+  },
+  "expected_effect": {
+    "magnitude": {
+      "favorable_horde_damage_percent_min": 40,
+      "favorable_horde_damage_percent_max": 80
+    }
+  },
+  "rules": [
+    "The beam no longer stops after its pierce cap is reached."
+  ]
+}

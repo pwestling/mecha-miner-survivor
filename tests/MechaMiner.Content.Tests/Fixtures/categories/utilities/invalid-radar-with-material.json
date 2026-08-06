@@ -1,0 +1,53 @@
+{
+  "id": "UTL-R1",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "utility.UTL-R1.name",
+  "summary_key": "utility.UTL-R1.summary",
+  "tags": [],
+  "source_refs": [
+    "TR-DAT-003"
+  ],
+  "ore_only_exception": true,
+  "behavior_kind": "directional-resource-radar",
+  "effect_kind": "directional-bearings",
+  "affected_stat_names": [
+    "discovery-radius"
+  ],
+  "acquisition": {
+    "rank_count": 0,
+    "common_ore_cost": 300,
+    "utility_slots_filled": 1,
+    "unique_in_loadout": true,
+    "dismantlable": false,
+    "replaceable": false,
+    "sellable": false,
+    "refundable_during_run": false,
+    "requires_manual_activation": false,
+    "has_alternative_recipes": false,
+    "has_branches": false
+  },
+  "availability": {
+    "pool_availability": "always-available",
+    "always_present_in_fixed_fabrication_catalog": true
+  },
+  "tracking": {
+    "provides_direction_only": true,
+    "provides_exact_distance": false,
+    "provides_map_marker": false,
+    "tracks_relic_caches": false,
+    "maximum_simultaneous_bearings": 6,
+    "bearing_fan_threshold_degrees": 12,
+    "bearing_cluster_collapse_above_count": 4,
+    "tracked_categories": [
+      "unopened geode",
+      "ore seam",
+      "Hyper Gold site"
+    ]
+  },
+  "effect_rules": [
+    "Bearings collapse into a cluster above the declared count."
+  ],
+  "material_id": "RSC-04"
+}

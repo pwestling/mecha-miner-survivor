@@ -335,7 +335,7 @@ public static class WeaponReader
             }
 
             bag.Add(ContentDiagnostic.CreateError(
-                ContentDiagnosticCodes.ReferenceGrammarMismatch,
+                ContentDiagnosticCodes.CrossReferenceContradictsOwnId,
                 context.SourcePath,
                 element,
                 id,

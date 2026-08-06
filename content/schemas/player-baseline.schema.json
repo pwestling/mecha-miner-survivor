@@ -1,0 +1,276 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mechaminer.local/schemas/player-baseline.schema.json",
+  "title": "SCH-CNT-002 player baseline",
+  "description": "The player baseline. The project-owned typed validator in src/MechaMiner.Content/Categories/ remains authoritative; this schema is the draft 2020-12 mirror kept for editor and tool interoperability, and a fixture corpus proves the two reach the same accept/reject verdict on every structural case. See content/schemas/README.md. There is no post-hit invulnerability field: the survivability document states it as 'None' with no duration, and authoring zero would claim a zero-second window, which is a different claim from there being no such mechanic.",
+  "type": "object",
+  "additionalProperties": false,
+  "propertyNames": {
+    "$ref": "#/$defs/snake_case_field"
+  },
+  "required": [
+    "id",
+    "schema_version",
+    "content_version",
+    "status",
+    "tags",
+    "source_refs",
+    "maximum_hull_integrity",
+    "armor",
+    "recovery_hull_per_second",
+    "revival_charges",
+    "movement_speed_m_per_s",
+    "collision_diameter_m",
+    "collision_shape",
+    "mining_extraction_rate_percent",
+    "weapon_damage_percent",
+    "weapon_attack_rate_percent",
+    "weapon_area_percent",
+    "starting_hull_is_current_maximum",
+    "same_enemy_contact_repeat_interval_seconds",
+    "global_contact_grace_after_resolved_contact_seconds",
+    "enemy_body_scale_reference_diameter_m"
+  ],
+  "properties": {
+    "id": {
+      "title": "A stable, case-sensitive ASCII content ID",
+      "type": "string",
+      "pattern": "^PLAYER-[0-9]{2}$"
+    },
+    "schema_version": {
+      "$ref": "#/$defs/version"
+    },
+    "content_version": {
+      "$ref": "#/$defs/version"
+    },
+    "status": {
+      "$ref": "#/$defs/status"
+    },
+    "tags": {
+      "$ref": "#/$defs/tags"
+    },
+    "source_refs": {
+      "$ref": "#/$defs/source_refs"
+    },
+    "maximum_hull_integrity": {
+      "type": "integer",
+      "description": "Maximum Hull before any trait or PowerUp. The denominator of every derived hits-to-defeat figure.",
+      "exclusiveMinimum": 0,
+      "x-authority": {
+        "exclusiveMinimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+        }
+      }
+    },
+    "armor": {
+      "type": "integer",
+      "description": "Armor before any trait or PowerUp. Zero is authored rather than omitted, because the survivability report has an armour column.",
+      "minimum": 0,
+      "x-authority": {
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+        }
+      }
+    },
+    "recovery_hull_per_second": {
+      "type": "number",
+      "description": "Passive Hull recovery.",
+      "minimum": 0,
+      "x-authority": {
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section states that durations are nonnegative and that rates cannot be negative, so the floor of every duration and rate is zero and there is no upper bound the section supplies"
+        }
+      }
+    },
+    "revival_charges": {
+      "type": "integer",
+      "description": "Revival charges per run before any PowerUp.",
+      "minimum": 0,
+      "x-authority": {
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+        }
+      }
+    },
+    "movement_speed_m_per_s": {
+      "type": "number",
+      "description": "Base movement speed. Every enemy and boss world speed is this multiplied by their own percentage.",
+      "exclusiveMinimum": 0,
+      "x-authority": {
+        "exclusiveMinimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+        }
+      }
+    },
+    "collision_diameter_m": {
+      "type": "number",
+      "description": "The mech's collision circle. This is the unit M itself, and half of it is a term in every derived contact-begin centre distance.",
+      "exclusiveMinimum": 0,
+      "x-authority": {
+        "exclusiveMinimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+        }
+      }
+    },
+    "collision_shape": {
+      "type": "string",
+      "description": "The footprint's shape.",
+      "enum": [
+        "circle"
+      ]
+    },
+    "mining_extraction_rate_percent": {
+      "type": "integer",
+      "description": "The reference point every mining modifier is relative to. Pinned rather than bounded: it is the definition of the denominator, and changing it would rescale every modifier in the tree without any of them changing.",
+      "const": 100
+    },
+    "weapon_damage_percent": {
+      "type": "integer",
+      "description": "The reference point every weapon-damage modifier is relative to.",
+      "const": 100
+    },
+    "weapon_attack_rate_percent": {
+      "type": "integer",
+      "description": "The reference point every attack-rate modifier is relative to.",
+      "const": 100
+    },
+    "weapon_area_percent": {
+      "type": "integer",
+      "description": "The reference point every weapon-area modifier is relative to.",
+      "const": 100
+    },
+    "starting_hull_is_current_maximum": {
+      "type": "boolean",
+      "description": "Whether a run begins at full current maximum Hull."
+    },
+    "same_enemy_contact_repeat_interval_seconds": {
+      "type": "number",
+      "description": "How long before the same enemy can deal contact damage again. Fourteen combat files carried a copy of this before it lived here.",
+      "minimum": 0,
+      "x-authority": {
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section states that durations are nonnegative and that rates cannot be negative, so the floor of every duration and rate is zero and there is no upper bound the section supplies"
+        }
+      }
+    },
+    "global_contact_grace_after_resolved_contact_seconds": {
+      "type": "number",
+      "description": "The global grace after any contact resolves.",
+      "minimum": 0,
+      "x-authority": {
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section states that durations are nonnegative and that rates cannot be negative, so the floor of every duration and rate is zero and there is no upper bound the section supplies"
+        }
+      }
+    },
+    "enemy_body_scale_reference_diameter_m": {
+      "type": "number",
+      "description": "The diameter an enemy's body scale multiplies. An alien dimension on the player baseline, and the one field here arguably in the wrong home; the alternative is a new enemies-catalog aggregate, which needs an ID grant.",
+      "exclusiveMinimum": 0,
+      "x-authority": {
+        "exclusiveMinimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "snake_case_field": {
+      "title": "A schema-declared field name",
+      "description": "Property names use snake_case.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "version": {
+      "title": "A positive integer version",
+      "description": "The initial schema_version and content_version of every first-authored definition is 1.",
+      "type": "integer",
+      "minimum": 1,
+      "x-authority": {
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Initial versions",
+          "kind": "sourced",
+          "derivation": "the initial value of every first-authored definition is 1 and both versions only ever increment, so no valid version is below 1; there is no upper bound because a definition may be revised without limit"
+        }
+      }
+    },
+    "status": {
+      "title": "Lifecycle state",
+      "type": "string",
+      "enum": [
+        "development",
+        "enabled",
+        "disabled",
+        "retired"
+      ]
+    },
+    "name_key": {
+      "title": "Localization key for the player-facing name",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*\\.[A-Za-z0-9][A-Za-z0-9_-]*\\.name$"
+    },
+    "summary_key": {
+      "title": "Localization key for the concise player-facing summary",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*\\.[A-Za-z0-9][A-Za-z0-9_-]*\\.summary$"
+    },
+    "tags": {
+      "title": "Closed query and tooling vocabulary",
+      "description": "The vocabulary starts empty, so [] is the only accepted value.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": []
+      }
+    },
+    "source_refs": {
+      "title": "The sources this definition implements",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(?:[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*|\\[\\]|\\[[0-9]+\\]|\\[[0-9]+\\.\\.[0-9]+\\])*: )?(?:(?:GDD|TDD)-[A-Z0-9-]+|DEC-[0-9]{3}|TDR-[0-9]{3}|TR-[A-Z]+-[0-9]{3})(?:#[a-z0-9-]+)?$"
+      }
+    },
+    "presentation_id": {
+      "title": "Logical presentation entry",
+      "description": "Omitted when a definition never appears in-world. No accepted document mints a grammar for a presentation ID, and inventing one for a category with zero members would be structure ahead of need, so the only constraint is that an authored value is not the empty string.",
+      "type": "string",
+      "minLength": 1,
+      "x-authority": {
+        "minLength": {
+          "kind": "structural",
+          "rationale": "not a capacity bound: the empty string is what the compiler materializes for an omitted field, so an authored empty string would be a second way to say 'absent'. 1 is the smallest length that excludes it"
+        }
+      }
+    }
+  }
+}

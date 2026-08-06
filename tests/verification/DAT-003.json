@@ -69,7 +69,7 @@
       },
       "fixtures": [
         "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/valid-weapon.json",
-        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/invalid-recipe-duplicate-pair.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/catalog-duplicate-recipe-pair.json",
         "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/invalid-recipe-count.json"
       ],
       "scenarios": [],
@@ -107,7 +107,7 @@
       },
       "fixtures": [
         "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/valid-weapon.json",
-        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/invalid-recipe-letters-mismatch.json"
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/catalog-recipe-letters-mismatch.json"
       ],
       "scenarios": [],
       "evidenceKinds": [
@@ -359,7 +359,7 @@
       },
       "fixtures": [
         "tests/MechaMiner.Content.Tests/Fixtures/categories/branches/valid-branch.json",
-        "tests/MechaMiner.Content.Tests/Fixtures/categories/branches/invalid-branch-class-distribution.json"
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/branches/catalog-duplicate-branch-class.json"
       ],
       "scenarios": [],
       "evidenceKinds": [
@@ -376,7 +376,7 @@
     },
     {
       "id": "VER-DAT-003-011",
-      "summary": "A branch adds no fourth stat. The route is the branch's declared adds_stat_track field being absent from the schema entirely, plus a check that every stat name a branch's effects reference resolves to one of the parent weapon's three declared stat names. The second half matches on stat-name strings, so a branch that affects a new quantity without naming it as a stat is not caught here; the schema's closed effects contract is what bounds that.",
+      "summary": "A branch adds no fourth stat track. The route is structural and not a rule: the branch field table declares no field by which a branch could add one, so a document carrying adds_stat_track or ore_upgradeable_stats is rejected as an unknown field at the root. What the route does not cover is a branch whose effects parameters change a quantity that is not one of the parent weapon's three tracks without naming it as a track; effects is a registry-owned parameter map, so its keys are the behavior descriptor's to constrain and not this schema's.",
       "task": "TASK-DAT-003-001",
       "requirements": [
         "TR-DAT-001",
@@ -391,7 +391,7 @@
       ],
       "selector": {
         "kind": "nunit",
-        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+        "value": "MechaMiner.Content.Tests.Categories.CategoryFixtureCorpusTests"
       },
       "fixtures": [
         "tests/MechaMiner.Content.Tests/Fixtures/categories/branches/valid-branch.json",
@@ -503,7 +503,7 @@
       },
       "fixtures": [
         "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/valid-utility.json",
-        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/invalid-duplicate-installed-identity.json"
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/catalog-duplicate-installed-identity.json"
       ],
       "scenarios": [],
       "evidenceKinds": [
@@ -575,7 +575,7 @@
       },
       "fixtures": [
         "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/valid-utility.json",
-        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/invalid-fresh-unlocked-distribution.json"
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/catalog-shifted-pool-availability.json"
       ],
       "scenarios": [],
       "evidenceKinds": [
@@ -718,8 +718,7 @@
         "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
       },
       "fixtures": [
-        "tests/MechaMiner.Content.Tests/Fixtures/categories/powerups/valid-powerup.json",
-        "tests/MechaMiner.Content.Tests/Fixtures/categories/powerups/invalid-catalog-total.json"
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/powerups/valid-powerup.json"
       ],
       "scenarios": [],
       "evidenceKinds": [
@@ -826,8 +825,7 @@
         "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
       },
       "fixtures": [
-        "tests/MechaMiner.Content.Tests/Fixtures/categories/unlocks/valid-unlock.json",
-        "tests/MechaMiner.Content.Tests/Fixtures/categories/unlocks/invalid-catalog-total.json"
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/unlocks/valid-unlock.json"
       ],
       "scenarios": [],
       "evidenceKinds": [
@@ -881,7 +879,7 @@
     },
     {
       "id": "VER-DAT-003-025",
-      "summary": "For every DAT-003 category the draft 2020-12 schema and the authoritative typed validator reach the same accept/reject verdict on every structural fixture, under the same exclusion discipline as VER-DAT-002-026: each excluded diagnostic code carries a written reason and is separately proven still to be rejected by the typed validator.",
+      "summary": "For every DAT-003 category the draft 2020-12 schema and the authoritative typed validator reach the same accept/reject verdict on every structural fixture, under the exclusion discipline VER-DAT-002-026 describes: each excluded diagnostic code carries a written reason, is separately proven still to be rejected by the typed validator, and must be exercised by at least one fixture. The comparison is on the verdict, matched per fixture against the corpus's declaration.",
       "task": "TASK-DAT-003-001",
       "requirements": [
         "TR-DAT-001",
@@ -914,7 +912,7 @@
     },
     {
       "id": "VER-DAT-003-026",
-      "summary": "Every valid DAT-003 fixture produces zero diagnostics, the over-strictness control for this package's field tables and semantic rules.",
+      "summary": "Every valid DAT-003 fixture produces zero diagnostics, read through the same reader the invalid corpus uses so that cleanliness is matched on the identical code path. The over-strictness control for this package's field tables and semantic rules: without it a field table could require a field no document asks for and the invalid corpus would still pass. Catalog-only fixtures are asserted clean here too, which is what proves the per-file and catalog stages are separate rather than one pass that happens to catch both.",
       "task": "TASK-DAT-003-001",
       "requirements": [
         "TR-DAT-001",
@@ -930,7 +928,7 @@
         "value": "MechaMiner.Content.Tests.Categories.CategoryFixtureCorpusTests"
       },
       "fixtures": [
-        "tests/MechaMiner.Content.Tests/Fixtures/categories/categories"
+        "tests/MechaMiner.Content.Tests/Fixtures/categories"
       ],
       "scenarios": [],
       "evidenceKinds": [

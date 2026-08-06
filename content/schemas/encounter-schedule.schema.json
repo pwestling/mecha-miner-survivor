@@ -1,0 +1,797 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mechaminer.local/schemas/encounter-schedule.schema.json",
+  "title": "SCH-CNT-002 standard encounter schedule",
+  "description": "The standard encounter schedule. The project-owned typed validator in src/MechaMiner.Content/Categories/ remains authoritative; this schema is the draft 2020-12 mirror kept for editor and tool interoperability, and a fixture corpus proves the two reach the same accept/reject verdict on every structural case. See content/schemas/README.md. An aggregate: players never read its name and it is not embodied in the world, so it omits name_key and presentation_id.",
+  "type": "object",
+  "additionalProperties": false,
+  "propertyNames": {
+    "$ref": "#/$defs/snake_case_field"
+  },
+  "required": [
+    "id",
+    "schema_version",
+    "content_version",
+    "status",
+    "tags",
+    "source_refs",
+    "mode",
+    "duration_minutes",
+    "extraction_at",
+    "extraction_rule",
+    "boss_arrival_warning_seconds",
+    "population_ceilings",
+    "boss_arrival_minute_rule",
+    "spawn_formations",
+    "formation_constraints",
+    "phase_pressure_curve",
+    "minute_rows",
+    "hyper_gold_beacon_response"
+  ],
+  "properties": {
+    "id": {
+      "title": "A stable, case-sensitive ASCII content ID",
+      "type": "string",
+      "pattern": "^WAV-[0-9]{2}$"
+    },
+    "schema_version": {
+      "$ref": "#/$defs/version"
+    },
+    "content_version": {
+      "$ref": "#/$defs/version"
+    },
+    "status": {
+      "$ref": "#/$defs/status"
+    },
+    "tags": {
+      "$ref": "#/$defs/tags"
+    },
+    "source_refs": {
+      "$ref": "#/$defs/source_refs"
+    },
+    "mode": {
+      "type": "string",
+      "description": "The run mode this schedule governs.",
+      "enum": [
+        "standard"
+      ]
+    },
+    "duration_minutes": {
+      "type": "integer",
+      "description": "How many minutes the run lasts. The minute-row array's length is checked against this rather than against a constant, so raising one without the other fails.",
+      "minimum": 1,
+      "x-authority": {
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+        }
+      }
+    },
+    "extraction_at": {
+      "type": "string",
+      "pattern": "^[0-9]{1,2}:[0-5][0-9]$",
+      "description": "When extraction opens."
+    },
+    "extraction_rule": {
+      "type": "string",
+      "description": "What extraction requires."
+    },
+    "boss_arrival_warning_seconds": {
+      "type": "integer",
+      "description": "How long before a boss arrives the warning fires. The schedule owns arrival timing, so this value lives here once instead of in four places.",
+      "minimum": 0,
+      "x-authority": {
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section states that durations are nonnegative and that rates cannot be negative, so the floor of every duration and rate is zero and there is no upper bound the section supplies"
+        }
+      }
+    },
+    "population_ceilings": {
+      "title": "The population ceilings",
+      "description": "Three ceilings and the rule for exceeding them.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "baseline_ordinary_count": {
+          "type": "integer",
+          "description": "The ordinary population ceiling.",
+          "minimum": 0,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+            }
+          }
+        },
+        "persistent_beacon_tagged_count": {
+          "type": "integer",
+          "description": "The beacon-tagged ceiling.",
+          "minimum": 0,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+            }
+          }
+        },
+        "scheduled_event_overflow_count": {
+          "type": "integer",
+          "description": "The scheduled-event overflow ceiling.",
+          "minimum": 0,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+            }
+          }
+        },
+        "bosses_count_toward_ceilings": {
+          "type": "boolean",
+          "description": "Whether bosses count against the ceilings."
+        },
+        "overflow_rule": {
+          "type": "string",
+          "description": "What happens when a ceiling is reached."
+        }
+      },
+      "required": [
+        "baseline_ordinary_count",
+        "persistent_beacon_tagged_count",
+        "scheduled_event_overflow_count",
+        "bosses_count_toward_ceilings",
+        "overflow_rule"
+      ]
+    },
+    "boss_arrival_minute_rule": {
+      "title": "How a boss arrival changes its minute",
+      "description": "The boss-minute rule.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "additional_scheduled_formation": {
+          "type": "boolean",
+          "description": "Whether a boss minute also runs its scheduled formation."
+        },
+        "minimum_reduction_from_preceding_minute_percent": {
+          "title": "The reduction band",
+          "description": "How much a boss minute reduces the ordinary minimum.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "min": {
+              "type": "integer",
+              "description": "The floor of the reduction band.",
+              "minimum": 0,
+              "maximum": 100,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section scopes _percent to human-readable percentage points; the floor of a share of a whole is zero of them, which is the share that is none of it"
+                },
+                "maximum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section scopes _percent to human-readable percentage points; the ceiling of a share of a whole is one hundred of them, which is the whole, and a larger value is not a share of anything"
+                }
+              }
+            },
+            "max": {
+              "type": "integer",
+              "description": "The ceiling of the reduction band.",
+              "minimum": 0,
+              "maximum": 100,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section scopes _percent to human-readable percentage points; the floor of a share of a whole is zero of them, which is the share that is none of it"
+                },
+                "maximum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section scopes _percent to human-readable percentage points; the ceiling of a share of a whole is one hundred of them, which is the whole, and a larger value is not a share of anything"
+                }
+              }
+            }
+          },
+          "required": [
+            "min",
+            "max"
+          ]
+        },
+        "statement": {
+          "type": "string",
+          "description": "The rule in prose."
+        }
+      },
+      "required": [
+        "additional_scheduled_formation",
+        "minimum_reduction_from_preceding_minute_percent",
+        "statement"
+      ]
+    },
+    "spawn_formations": {
+      "type": "array",
+      "description": "Every formation the schedule defines. Each appears exactly once, so a minute row can never name a formation the schedule has not defined.",
+      "items": {
+        "title": "A formation definition",
+        "description": "One formation.",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "formation": {
+            "type": "string",
+            "description": "One of the seven accepted spawn formations.",
+            "enum": [
+              "stream",
+              "wall",
+              "swarm",
+              "twin-flanks",
+              "encirclement",
+              "convergence",
+              "rolling-ring"
+            ]
+          },
+          "definition": {
+            "type": "string",
+            "description": "What the formation places."
+          }
+        },
+        "required": [
+          "formation",
+          "definition"
+        ]
+      },
+      "minItems": 7,
+      "maxItems": 7,
+      "x-authority": {
+        "minItems": {
+          "source": "GDD-WAVE-SCHEDULE",
+          "section": "Formation grammar",
+          "kind": "sourced",
+          "derivation": "the grammar names seven formations and this block defines each of them once, so the floor is the vocabulary's size; a shorter array would leave a formation the grammar names undefined"
+        },
+        "maxItems": {
+          "source": "GDD-WAVE-SCHEDULE",
+          "section": "Formation grammar",
+          "kind": "sourced",
+          "derivation": "the same vocabulary size as the floor; a longer array would either define a formation the grammar does not name or define one of them twice"
+        }
+      }
+    },
+    "formation_constraints": {
+      "type": "array",
+      "description": "Constraints every formation obeys.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "phase_pressure_curve": {
+      "type": "array",
+      "description": "The authored intent the minute rows implement.",
+      "items": {
+        "title": "A pressure-curve phase",
+        "description": "One phase.",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "start_at": {
+            "type": "string",
+            "pattern": "^[0-9]{1,2}:[0-5][0-9]$",
+            "description": "When the phase begins."
+          },
+          "end_at": {
+            "type": "string",
+            "pattern": "^[0-9]{1,2}:[0-5][0-9]$",
+            "description": "When the phase ends."
+          },
+          "purpose": {
+            "type": "string",
+            "description": "What the phase is for."
+          },
+          "reference_style_pressure_translation": {
+            "type": "string",
+            "description": "How the pressure reads."
+          }
+        },
+        "required": [
+          "start_at",
+          "end_at",
+          "purpose",
+          "reference_style_pressure_translation"
+        ]
+      }
+    },
+    "minute_rows": {
+      "type": "array",
+      "description": "One row per minute of the run, in minute order.",
+      "items": {
+        "$ref": "#/$defs/minute_row"
+      }
+    },
+    "hyper_gold_beacon_response": {
+      "title": "The Hyper Gold beacon response table",
+      "description": "The schedule is the single writer on what each response is; the site keeps only the progress thresholds at which its beacon fires.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "trigger_rule": {
+          "type": "string",
+          "description": "What triggers the four response packages."
+        },
+        "warning_seconds": {
+          "type": "integer",
+          "description": "How long the warning lasts.",
+          "minimum": 0,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section states that durations are nonnegative and that rates cannot be negative, so the floor of every duration and rate is zero and there is no upper bound the section supplies"
+            }
+          }
+        },
+        "population_symbol": {
+          "type": "string",
+          "description": "What the population symbol in the table means."
+        },
+        "elite_exclusion_enemy_id": {
+          "type": "string",
+          "pattern": "^EN-[0-9]{2}$",
+          "description": "The enemy excluded from beacon elites."
+        },
+        "responses": {
+          "type": "array",
+          "description": "The four response packages.",
+          "items": {
+            "$ref": "#/$defs/beacon_response"
+          }
+        },
+        "rules": {
+          "type": "array",
+          "description": "Rules governing the response.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "trigger_rule",
+        "warning_seconds",
+        "population_symbol",
+        "elite_exclusion_enemy_id",
+        "responses",
+        "rules"
+      ]
+    }
+  },
+  "$defs": {
+    "snake_case_field": {
+      "title": "A schema-declared field name",
+      "description": "Property names use snake_case.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "version": {
+      "title": "A positive integer version",
+      "description": "The initial schema_version and content_version of every first-authored definition is 1.",
+      "type": "integer",
+      "minimum": 1,
+      "x-authority": {
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Initial versions",
+          "kind": "sourced",
+          "derivation": "the initial value of every first-authored definition is 1 and both versions only ever increment, so no valid version is below 1; there is no upper bound because a definition may be revised without limit"
+        }
+      }
+    },
+    "status": {
+      "title": "Lifecycle state",
+      "type": "string",
+      "enum": [
+        "development",
+        "enabled",
+        "disabled",
+        "retired"
+      ]
+    },
+    "name_key": {
+      "title": "Localization key for the player-facing name",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*\\.[A-Za-z0-9][A-Za-z0-9_-]*\\.name$"
+    },
+    "summary_key": {
+      "title": "Localization key for the concise player-facing summary",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*\\.[A-Za-z0-9][A-Za-z0-9_-]*\\.summary$"
+    },
+    "tags": {
+      "title": "Closed query and tooling vocabulary",
+      "description": "The vocabulary starts empty, so [] is the only accepted value.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": []
+      }
+    },
+    "source_refs": {
+      "title": "The sources this definition implements",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(?:[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*|\\[\\]|\\[[0-9]+\\]|\\[[0-9]+\\.\\.[0-9]+\\])*: )?(?:(?:GDD|TDD)-[A-Z0-9-]+|DEC-[0-9]{3}|TDR-[0-9]{3}|TR-[A-Z]+-[0-9]{3})(?:#[a-z0-9-]+)?$"
+      }
+    },
+    "presentation_id": {
+      "title": "Logical presentation entry",
+      "description": "Omitted when a definition never appears in-world. No accepted document mints a grammar for a presentation ID, and inventing one for a category with zero members would be structure ahead of need, so the only constraint is that an authored value is not the empty string.",
+      "type": "string",
+      "minLength": 1,
+      "x-authority": {
+        "minLength": {
+          "kind": "structural",
+          "rationale": "not a capacity bound: the empty string is what the compiler materializes for an omitted field, so an authored empty string would be a second way to say 'absent'. 1 is the smallest length that excludes it"
+        }
+      }
+    },
+    "minute_row": {
+      "title": "A minute row",
+      "description": "One minute of the standard schedule.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "minute": {
+          "type": "integer",
+          "description": "The minute this row governs. Compared against the row's array index, so a gap, a repeat, and a reordering all fail.",
+          "minimum": 0,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+            }
+          }
+        },
+        "authored_event_or_boundary": {
+          "type": "string",
+          "description": "The authored cell for this minute."
+        },
+        "minimum_count": {
+          "type": "integer",
+          "description": "The desired live ordinary population.",
+          "minimum": 0,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+            }
+          }
+        },
+        "pulse": {
+          "title": "A replenishment pulse",
+          "description": "One pulse.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "batch_count": {
+              "type": "integer",
+              "description": "How many enemies one pulse places.",
+              "minimum": 1,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+                }
+              }
+            },
+            "interval_seconds": {
+              "type": "number",
+              "description": "The interval between pulses. Strictly positive: a zero interval is a single instantaneous placement of the whole minute's population rather than a pulse rate.",
+              "exclusiveMinimum": 0,
+              "x-authority": {
+                "exclusiveMinimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+                }
+              }
+            }
+          },
+          "required": [
+            "batch_count",
+            "interval_seconds"
+          ]
+        },
+        "composition": {
+          "type": "array",
+          "description": "The weighted identities selected for baseline replenishment. The shares of one row sum to one hundred; the sum is over the row and not the schedule.",
+          "items": {
+            "title": "A composition entry",
+            "description": "One share.",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "enemy_id": {
+                "type": "string",
+                "pattern": "^EN-[0-9]{2}$",
+                "description": "The enemy."
+              },
+              "share_percent": {
+                "type": "integer",
+                "description": "This enemy's share of the row's replenishment.",
+                "minimum": 1,
+                "maximum": 100,
+                "x-authority": {
+                  "minimum": {
+                    "source": "TDD-CONTENT-DATA",
+                    "section": "Unit and numeric policy",
+                    "kind": "sourced",
+                    "derivation": "a share expressed in percentage points; zero would be the absence of the entry rather than a value of it, so the floor is the smallest share that is not that, which is one point"
+                  },
+                  "maximum": {
+                    "source": "TDD-CONTENT-DATA",
+                    "section": "Unit and numeric policy",
+                    "kind": "sourced",
+                    "derivation": "a share expressed in percentage points; one hundred of them is the whole, and a share cannot exceed the thing it is a share of"
+                  }
+                }
+              }
+            },
+            "required": [
+              "enemy_id",
+              "share_percent"
+            ]
+          }
+        },
+        "debut_enemy_ids": {
+          "type": "array",
+          "description": "The enemies that first appear this minute.",
+          "items": {
+            "type": "string",
+            "pattern": "^EN-[0-9]{2}$"
+          },
+          "uniqueItems": true
+        },
+        "formation_events": {
+          "type": "array",
+          "description": "The authored formations layered over replenishment this minute.",
+          "items": {
+            "title": "A formation event",
+            "description": "One authored event.",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "authored_cell_text": {
+                "type": "string",
+                "description": "The schedule table cell, kept because one row's timestamps were reconstructed and the original token has to stay legible."
+              },
+              "at": {
+                "type": "array",
+                "description": "When each event fires.",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[0-9]{1,2}:[0-5][0-9]$"
+                }
+              },
+              "enemy_ids": {
+                "type": "array",
+                "description": "Which enemies the event places.",
+                "items": {
+                  "type": "string",
+                  "pattern": "^EN-[0-9]{2}$"
+                }
+              },
+              "formations": {
+                "type": "array",
+                "description": "Which formations the event uses.",
+                "items": {
+                  "type": "string",
+                  "description": "One of the seven accepted spawn formations.",
+                  "enum": [
+                    "stream",
+                    "wall",
+                    "swarm",
+                    "twin-flanks",
+                    "encirclement",
+                    "convergence",
+                    "rolling-ring"
+                  ]
+                }
+              },
+              "timestamp_provenance": {
+                "type": "string",
+                "description": "Whether these timestamps are authored or reconstructed. A consumer that trusts them without reading this is reading provisional numbers as accepted ones.",
+                "enum": [
+                  "authored",
+                  "reconstructed"
+                ]
+              },
+              "reconstruction_basis": {
+                "type": "string",
+                "description": "How reconstructed timestamps were derived."
+              }
+            },
+            "required": [
+              "authored_cell_text",
+              "at",
+              "enemy_ids",
+              "formations"
+            ]
+          }
+        },
+        "scheduled_elites": {
+          "type": "array",
+          "description": "The elites scheduled this minute.",
+          "items": {
+            "title": "A scheduled elite",
+            "description": "One elite entry.",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "at": {
+                "type": "string",
+                "pattern": "^[0-9]{1,2}:[0-5][0-9]$",
+                "description": "When the elite arrives."
+              },
+              "enemy_id": {
+                "type": "string",
+                "pattern": "^EN-[0-9]{2}$",
+                "description": "The base enemy."
+              },
+              "count": {
+                "type": "integer",
+                "description": "How many.",
+                "minimum": 1,
+                "x-authority": {
+                  "minimum": {
+                    "source": "TDD-CONTENT-DATA",
+                    "section": "Unit and numeric policy",
+                    "kind": "sourced",
+                    "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+                  }
+                }
+              }
+            },
+            "required": [
+              "at",
+              "enemy_id",
+              "count"
+            ]
+          }
+        },
+        "boss_arrival_boss_id": {
+          "type": "string",
+          "pattern": "^BOSS-[0-9]{2}$",
+          "description": "The boss arriving this minute. The timecode is the boss definition's; the warning timecode is derived from boss_arrival_warning_seconds."
+        }
+      },
+      "required": [
+        "minute",
+        "authored_event_or_boundary",
+        "minimum_count",
+        "pulse",
+        "composition",
+        "debut_enemy_ids",
+        "formation_events",
+        "scheduled_elites"
+      ]
+    },
+    "beacon_response": {
+      "title": "A beacon response package",
+      "description": "One row of the response table.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "trigger_kind": {
+          "type": "string",
+          "description": "What starts this package.",
+          "enum": [
+            "activation",
+            "progress-threshold"
+          ]
+        },
+        "trigger_progress_percent": {
+          "type": "integer",
+          "description": "The crossing this package fires at.",
+          "minimum": 1,
+          "maximum": 99,
+          "x-authority": {
+            "minimum": {
+              "source": "GDD-MINING",
+              "section": "Hyper Gold sites",
+              "kind": "sourced",
+              "derivation": "a crossing strictly inside the extraction; zero is the activation trigger rather than a crossing, so the floor is the first whole point after it"
+            },
+            "maximum": {
+              "source": "GDD-MINING",
+              "section": "Hyper Gold sites",
+              "kind": "sourced",
+              "derivation": "a crossing strictly inside the extraction; one hundred is completion rather than a crossing, so the ceiling is the last whole point before it"
+            }
+          }
+        },
+        "formation": {
+          "type": "string",
+          "description": "One of the seven accepted spawn formations.",
+          "enum": [
+            "stream",
+            "wall",
+            "swarm",
+            "twin-flanks",
+            "encirclement",
+            "convergence",
+            "rolling-ring"
+          ]
+        },
+        "floor_count": {
+          "type": "integer",
+          "description": "The minimum response size. This and share_percent are the two operands of the response size, which is the larger of them; they replace an authored expression string that restated both.",
+          "minimum": 1,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+            }
+          }
+        },
+        "share_percent": {
+          "type": "integer",
+          "description": "The share of the current minute's desired minimum population.",
+          "minimum": 1,
+          "maximum": 100,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "a share expressed in percentage points; zero would be the absence of the entry rather than a value of it, so the floor is the smallest share that is not that, which is one point"
+            },
+            "maximum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "a share expressed in percentage points; one hundred of them is the whole, and a share cannot exceed the thing it is a share of"
+            }
+          }
+        },
+        "elite_addition": {
+          "type": "string",
+          "description": "What elites the package adds, in prose."
+        }
+      },
+      "required": [
+        "trigger_kind",
+        "formation",
+        "floor_count",
+        "share_percent"
+      ]
+    }
+  }
+}

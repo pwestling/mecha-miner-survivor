@@ -126,6 +126,7 @@ public sealed class GameplayWorld : ISimulationWorld
     private long _projectilesFired;
     private long _installmentsPaid;
     private long _enemiesRemovedInPhaseTwelve;
+    private EntityId _acquiredTarget;
     private double _publishedExtractionFraction;
 
     /// <summary>
@@ -362,6 +363,27 @@ public sealed class GameplayWorld : ISimulationWorld
     /// </para>
     /// </remarks>
     public long EnemiesRemovedInPhaseTwelve => _enemiesRemovedInPhaseTwelve;
+
+    /// <summary>
+    /// The enemy phase 7 selected as the weapon's target on the most recent tick, or
+    /// <c>EntityId.Unset</c> when there was none in range.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Exists for the same reason <see cref="EnemiesRemovedInPhaseTwelve"/> does: the choice was
+    /// unobservable, so nothing could assert it. A negative control that inverted the comparison in phase
+    /// 7 - selecting the FARTHEST enemy in range instead of the nearest - ran GREEN against every
+    /// assertion about the weapon, because a farthest-target weapon still fires, still hits, and still
+    /// kills at the same rate. doc 66:94's "selects the nearest enemy within targeting range" was
+    /// therefore implemented and unchecked.
+    /// </para>
+    /// <para>
+    /// Recorded even when no activation is spent, so a test can also assert the other half of the rule:
+    /// that a tick with a target but no ready schedule spends nothing, and that a tick with no target in
+    /// range selects nothing.
+    /// </para>
+    /// </remarks>
+    public EntityId AcquiredTarget => _acquiredTarget;
 
     /// <summary>
     /// The tick the mech last received a contact instance on, or
@@ -736,6 +758,7 @@ public sealed class GameplayWorld : ISimulationWorld
     private void AcquireTargetAndAdvanceSchedule()
     {
         _pendingProjectileCount = 0;
+        _acquiredTarget = EntityId.Unset;
         _weapon = _weapon.Advanced();
 
         _orderedEnemyCount = _enemies.CopyOrderedTo(_orderedEnemies);
@@ -744,6 +767,7 @@ public sealed class GameplayWorld : ISimulationWorld
             * PulseRepeaterBaseline.TargetingRangeMeters;
         bool haveTarget = false;
         PlanarVector targetPosition = PlanarVector.Zero;
+        EntityId targetId = EntityId.Unset;
 
         for (int index = 0; index < _orderedEnemyCount; index++)
         {
@@ -765,8 +789,11 @@ public sealed class GameplayWorld : ISimulationWorld
 
             bestDistanceSquared = distanceSquared;
             targetPosition = state.Position;
+            targetId = _orderedEnemies[index];
             haveTarget = true;
         }
+
+        _acquiredTarget = targetId;
 
         if (!haveTarget || !_weapon.IsReady)
         {

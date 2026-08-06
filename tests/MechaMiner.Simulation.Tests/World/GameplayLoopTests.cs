@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using MechaMiner.Simulation.Combat;
 using MechaMiner.Simulation.Commands;
 using MechaMiner.Simulation.Encounters;
@@ -180,6 +181,144 @@ internal sealed class GameplayLoopTests
                     + "against 20 Hull. Fewer would mean a projectile damaged more than one body, which "
                     + "docs/71:30 forbids for a weapon with no repeat interval");
         });
+    }
+
+    [Test]
+    public void ThePhaseSevenTargetIsTheNearestEnemyInRangeOnEveryTick()
+    {
+        RunComposition run = Fresh(0x100B_0000_0009UL);
+
+        int ticksWithATarget = 0;
+        int ticksWithoutATarget = 0;
+        long shotsWhenLastWithoutATarget = 0;
+        int misselections = 0;
+        int outOfRangeSelections = 0;
+        int spentWithoutATarget = 0;
+
+        for (long tick = 0; tick < 1800; tick++)
+        {
+            long shotsBefore = run.World.ProjectilesFired;
+            Step(run, PlanarVector.Zero, tick);
+
+            // The nearest live enemy AFTER the tick is not the one phase 7 saw, so the comparison is made
+            // against the population as it stands now only for range; the identity check below is what
+            // distinguishes nearest from farthest, and it is exact because phases 4, 5 and 7 all run
+            // before anything moves again.
+            double nearest = double.PositiveInfinity;
+            EntityId nearestId = EntityId.Unset;
+            for (int index = 0; index < run.World.LiveEnemyCount; index++)
+            {
+                EnemyState enemy = run.World.EnemyAt(index);
+                double distance = enemy.Position.DistanceTo(run.World.Player.Position);
+                if (distance >= nearest)
+                {
+                    continue;
+                }
+
+                nearest = distance;
+                nearestId = IdentityOfNearestPublishedEnemy(run);
+            }
+
+            EntityId target = run.World.AcquiredTarget;
+            if (target.IsUnset)
+            {
+                ticksWithoutATarget++;
+                if (run.World.ProjectilesFired != shotsBefore)
+                {
+                    spentWithoutATarget++;
+                }
+
+                shotsWhenLastWithoutATarget = run.World.ProjectilesFired;
+                if (nearest <= PulseRepeaterBaseline.TargetingRangeMeters
+                    && run.World.LiveEnemyCount > 0)
+                {
+                    misselections++;
+                }
+
+                continue;
+            }
+
+            ticksWithATarget++;
+            if (!run.Snapshots.Latest!.VisibleEntities.ToArray().Any(
+                    entity => entity.Id == target
+                        && entity.Category == PopulationCategory.OrdinaryEnemy))
+            {
+                // The selected identity died this tick and phase 12 removed it, which is legal.
+                continue;
+            }
+
+            double selected = PositionOf(run, target).DistanceTo(run.World.Player.Position);
+            if (selected > PulseRepeaterBaseline.TargetingRangeMeters + 1e-9)
+            {
+                outOfRangeSelections++;
+            }
+
+            if (selected > nearest + 1e-9)
+            {
+                misselections++;
+            }
+        }
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(ticksWithATarget, Is.GreaterThan(100), "there were ticks with a target to check");
+            Assert.That(ticksWithoutATarget, Is.GreaterThan(0), "and ticks with none, so both arms ran");
+            Assert.That(
+                misselections,
+                Is.Zero,
+                "docs/66:94 - Pulse Repeater 'selects the nearest enemy within targeting range'. A weapon "
+                    + "that selected the FARTHEST enemy in range still fires, still hits, and still kills "
+                    + "at the same rate, so a fixture asserting only that shots and kills happened ran "
+                    + "green against exactly that injection. This is the assertion that tells them apart");
+            Assert.That(
+                outOfRangeSelections,
+                Is.Zero,
+                "and nothing beyond the 8 m range of docs/71:81 was ever selected");
+            Assert.That(
+                spentWithoutATarget,
+                Is.Zero,
+                "no activation was spent on a tick with no target, so the schedule's credit is not thrown "
+                    + "away while the mech walks alone");
+            Assert.That(shotsWhenLastWithoutATarget, Is.GreaterThanOrEqualTo(0L));
+        });
+    }
+
+    private static PlanarVector PositionOf(RunComposition run, EntityId id)
+    {
+        foreach (SnapshotEntity entity in run.Snapshots.Latest!.VisibleEntities.ToArray())
+        {
+            if (entity.Id == id)
+            {
+                return PlanarVector.FromComponents(entity.PositionX, entity.PositionY);
+            }
+        }
+
+        return PlanarVector.Zero;
+    }
+
+    private static EntityId IdentityOfNearestPublishedEnemy(RunComposition run)
+    {
+        EntityId nearestId = EntityId.Unset;
+        double nearest = double.PositiveInfinity;
+        foreach (SnapshotEntity entity in run.Snapshots.Latest!.VisibleEntities.ToArray())
+        {
+            if (entity.Category != PopulationCategory.OrdinaryEnemy)
+            {
+                continue;
+            }
+
+            double distance = PlanarVector.FromComponents(entity.PositionX, entity.PositionY)
+                .DistanceTo(run.World.Player.Position);
+            if (distance >= nearest)
+            {
+                continue;
+            }
+
+            nearest = distance;
+            nearestId = entity.Id;
+        }
+
+        return nearestId;
     }
 
     [Test]

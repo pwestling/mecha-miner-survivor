@@ -30,6 +30,20 @@
       stay equal to the repository pin.
     -->
     <TargetFramework>net8.0</TargetFramework>
+    <!--
+      Reflection-based System.Text.Json is off, matching every test host under
+      tests/. This project emits a runtimeconfig.json despite being loaded as a
+      library, because EnableDynamicLoading above is true; the property lands in
+      its configProperties (verified against the emitted file).
+
+      Godot loads this assembly into its own AssemblyLoadContext inside the
+      Godot process, so at play time the switch that actually binds is the one in
+      the hosting process's runtimeconfig. Declaring it here is what makes the
+      constraint uniform across everything the repository builds and is what an
+      exported, self-hosted build reads; it is not a claim about the editor's
+      process.
+    -->
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
   </PropertyGroup>
 
   <ItemGroup>

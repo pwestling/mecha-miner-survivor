@@ -10,6 +10,26 @@
     harness.
   -->
 
+  <!--
+    Reflection-based System.Text.Json is off in this test host, matching the
+    constraint the shipping hosts run under.
+
+    This is a runtimeconfig.json feature switch, so it is only honoured by the
+    project that produces the entry-point runtimeconfig.json - the HOST. It does
+    NOT propagate from a referenced library: a plain library emits no
+    runtimeconfig.json at all, and setting the property on
+    MechaMiner.Content.csproj leaves this host's configProperties untouched
+    (measured, not assumed). It therefore has to be repeated in every test host
+    rather than declared once next to the code it constrains.
+
+    Without this, a reflection-based JsonSerializer call in a src/ library passes
+    under `dotnet test` and throws only in the real host - the exact defect class
+    the suite exists to catch.
+  -->
+  <PropertyGroup>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="../../src/MechaMiner.Content/MechaMiner.Content.csproj" />
   </ItemGroup>

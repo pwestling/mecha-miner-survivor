@@ -72,7 +72,7 @@ public static class PlayerBaseline
     /// <remarks>
     /// <para>
     /// docs/72-player-survivability-and-damage-baseline.md:39
-    /// "| Base movement speed | 3.0M/s |", where the same file at line 44 defines "<c>M</c> is
+    /// "| Base movement speed | 3.0M/s |", where the same file at line 47 defines "<c>M</c> is
     /// one unmodified mech collision diameter" and states "One base-travel second therefore
     /// equals 3.0M of shortest-path travel". Since <see cref="CollisionDiameterMeters"/> is
     /// exactly 1.0 m, 3.0 M/s is 3.0 m/s and the two units coincide numerically.
@@ -91,7 +91,7 @@ public static class PlayerBaseline
     /// <remarks>
     /// docs/72-player-survivability-and-damage-baseline.md:40
     /// "| Mech collision diameter | 1.0M |" and :41 "| Mech collision shape | Circle |".
-    /// The same file at line 48 confines what may change it: "Decorative limbs, weapons,
+    /// The same file at line 49 confines what may change it: "Decorative limbs, weapons,
     /// shadows, antennae, and effects never enlarge it."
     /// </remarks>
     public const double CollisionDiameterMeters = 1.0;

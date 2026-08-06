@@ -140,7 +140,7 @@ internal sealed class PlayerMovementTests
             Assert.That(
                 diagonal.Position.Magnitude,
                 Is.EqualTo(east.Position.Magnitude).Within(1e-15),
-                "docs/30:64 gives digital input \"eight normalized directions\", so a diagonal is not "
+                "docs/30:68 gives digital input \"eight normalized directions\", so a diagonal is not "
                     + "faster than a cardinal");
             Assert.That(
                 diagonal.Position.X,
@@ -167,7 +167,7 @@ internal sealed class PlayerMovementTests
             Assert.That(
                 released.Position,
                 Is.EqualTo(moving.Position),
-                "docs/30:64 \"Releasing input stops the mech immediately\" - immediately means this tick, "
+                "docs/30:68 \"Releasing input stops the mech immediately\" - immediately means this tick, "
                     + "with no residual displacement. Any momentum at all would show up here");
             Assert.That(stillReleased.Position, Is.EqualTo(moving.Position), "and it stays stopped");
         });
@@ -188,7 +188,7 @@ internal sealed class PlayerMovementTests
             Assert.That(
                 next.Position.X - state.Position.X,
                 Is.EqualTo(Step).Within(1e-15),
-                "tick " + tick + " covered a different distance from its predecessor; docs/30:64 forbids "
+                "tick " + tick + " covered a different distance from its predecessor; docs/30:68 forbids "
                     + "acceleration, braking lag, momentum, and turn radius");
             state = next;
         }
@@ -213,7 +213,7 @@ internal sealed class PlayerMovementTests
             Assert.That(
                 state.Position.X,
                 Is.EqualTo(PlayerBaseline.BaseMovementSpeedMetersPerSecond).Within(1e-12),
-                "60 ticks at 0.05 m is 3.0 m, which is docs/72:44's \"One base-travel second therefore "
+                "60 ticks at 0.05 m is 3.0 m, which is docs/72:47's \"One base-travel second therefore "
                     + "equals 3.0M of shortest-path travel\"");
             Assert.That(state.Position.Y, Is.EqualTo(0.0));
         });

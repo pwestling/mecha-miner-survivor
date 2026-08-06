@@ -7,8 +7,10 @@
 ;
 ; Development scaffolding: game/MechaMiner.Game.csproj removes game/tests/ from compilation
 ; under ExportRelease. It instantiates res://scenes/Run.tscn exactly as shipped and adds no
-; seam to production code; it presses physical keys at it through Input.ParseInputEvent so
-; the whole real route from keycode to pixels is exercised.
+; seam to production code. It asserts the physical-keycode bindings as an InputMap lookup and
+; exits 4 without capturing if any is missing, then drives the bound actions through
+; Input.ActionPress; RunSliceCaptureHarness.ApplyHeldKeys documents why a synthesized key
+; event cannot be used for a held control.
 
 [ext_resource type="Script" path="res://tests/RunSliceCaptureHarness.cs" id="1_capture"]
 

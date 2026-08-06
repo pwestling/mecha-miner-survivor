@@ -132,7 +132,7 @@ public partial class RunSliceEvidenceHarness : Node
         Check(
             "projection-is-orthographic",
             camera.Projection == Camera3D.ProjectionType.Orthogonal,
-            "doc 30:53 \"The default is true orthographic\"");
+            "docs/technical/30:61 \"The default is true orthographic\"");
         Check(
             "vertical-extent-is-24-metres",
             camera.KeepAspect == Camera3D.KeepAspectEnum.Height
@@ -161,13 +161,17 @@ public partial class RunSliceEvidenceHarness : Node
             Math.Abs(camera.Rotation.Y) < 1e-6f && Math.Abs(camera.Rotation.Z) < 1e-6f,
             "doc 30:53 \"non-rotating\": there is no yaw term for anything to rotate");
 
-        // Horizontal extent at 16:9, which doc 30:53 states as approximately 42.7 m.
-        double horizontal = 24.0 * 16.0 / 9.0;
+        // Horizontal extent at 16:9, which doc 30:53 states as approximately 42.7 m. Derived from
+        // camera.Size - the extent the configured camera actually carries - and NOT from a local
+        // literal 24.0. A literal would read nothing from the code under test, so no state of the
+        // camera could falsify it and it would pass with the extent set to anything at all.
+        double horizontal = camera.Size * 16.0 / 9.0;
         Line("horizontal_extent_at_16_9_m\t" + Invariant(horizontal));
         Check(
             "horizontal-extent-matches-the-documented-figure",
             Math.Abs(horizontal - 42.7) < 0.05,
-            "doc 30:53 \"At 16:9 this yields approximately 42.7 meters horizontally\"");
+            "doc 30:53 \"At 16:9 this yields approximately 42.7 meters horizontally\", computed from "
+                + "the configured camera's own vertical extent, so a wrong extent fails here too");
 
         camera.Free();
         Line(string.Empty);
@@ -357,6 +361,21 @@ public partial class RunSliceEvidenceHarness : Node
         Line("# authoritative pair from the published snapshot; world_x/world_y/world_z are the");
         Line("# rendered transform of the PlayerBody pivot. TDR-005 requires world_x == sim_x,");
         Line("# world_z == -sim_y, and world_y == 0 for the ground-plane pivot.");
+
+        // The two constants the distance assertion below is written against, pinned to their
+        // documented values first. Without these the distance check has nothing to stand on: it
+        // compares against the literal 1.5, so it is only a claim about base speed if base speed is
+        // still 3.0 m/s and the per-tick displacement is still 0.05 m.
+        Check(
+            "base-speed-is-3.0-metres-per-second",
+            Math.Abs(PlayerBaseline.BaseMovementSpeedMetersPerSecond - 3.0) < Tolerance,
+            "docs/72:39 \"| Base movement speed | 3.0M/s |\", and docs/72:47 makes M one unmodified "
+                + "collision diameter, which PlayerBaseline.CollisionDiameterMeters holds at 1.0 m");
+        Check(
+            "displacement-per-tick-is-0.05-metres",
+            Math.Abs(PlayerMovement.BaseDisplacementPerTickMeters - 0.05) < Tolerance,
+            "3.0 m/s at TickRate.TicksPerSecond of 60 is 0.05 m per tick");
+
         Line("phase\ttick\tsim_x\tsim_y\tfacing_rad\tworld_x\tworld_y\tworld_z");
 
         RunComposition run = RunComposition.CreateGraybox(0x0A0DE_0000_0003UL);
@@ -419,14 +438,18 @@ public partial class RunSliceEvidenceHarness : Node
                 Check(
                     "releasing-input-stops-the-mech",
                     travelled < Tolerance,
-                    "docs/30:64 \"Releasing input stops the mech immediately\"");
+                    "docs/30:68 \"Releasing input stops the mech immediately\"");
             }
             else
             {
                 Check(
                     "holding-" + name + "-moves-the-mech-at-base-speed",
-                    Math.Abs(travelled - (30.0 * PlayerMovement.BaseDisplacementPerTickMeters)) < 1e-9,
-                    "30 ticks at 0.05 m is 1.5 m, which is half a second at the 3.0 m/s base speed");
+                    Math.Abs(travelled - 1.5) < 1e-9,
+                    "30 ticks at 0.05 m is 1.5 m, which is half a second at the 3.0 m/s base speed "
+                        + "docs/72:39 fixes. The 1.5 is a LITERAL and not 30 * "
+                        + "PlayerMovement.BaseDisplacementPerTickMeters: that constant derives from "
+                        + "the speed under test, so comparing against it made both sides move "
+                        + "together and a motionless mech passed this line with the speed set to 0");
             }
         }
 

@@ -23,7 +23,7 @@ namespace MechaMiner.Simulation.Player;
 /// </para>
 /// <para>
 /// The motion model is deliberately trivial and the documents are emphatic that it must stay
-/// so. docs/30-combat-weapons-movement-camera.md:64: "Standard movement has no acceleration,
+/// so. docs/30-combat-weapons-movement-camera.md:68: "Standard movement has no acceleration,
 /// braking lag, momentum, turn radius, sprint, dash, dodge, stamina, reverse penalty, or
 /// strafing penalty." So there is no velocity carried between ticks and no state to hold one
 /// in: the displacement of a tick is a function of that tick's steering alone, which is why
@@ -72,7 +72,7 @@ public static class PlayerMovement
 
         if (steering.IsStop)
         {
-            // docs/30:64 "Releasing input stops the mech immediately." Immediately means this
+            // docs/30:68 "Releasing input stops the mech immediately." Immediately means this
             // tick and with no residual displacement, so there is nothing to integrate.
             return state.WithPlacement(state.Position, steering.FacingRadians);
         }

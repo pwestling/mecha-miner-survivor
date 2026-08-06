@@ -104,7 +104,7 @@ internal sealed class MovementCommandPathTests
             Assert.That(
                 published.PlayerPositionY,
                 Is.EqualTo(PlayerBaseline.BaseMovementSpeedMetersPerSecond).Within(1e-12),
-                "docs/72:44 \"One base-travel second therefore equals 3.0M of shortest-path travel\"");
+                "docs/72:47 \"One base-travel second therefore equals 3.0M of shortest-path travel\"");
             Assert.That(published.PlayerPositionX, Is.EqualTo(0.0).Within(1e-15));
             Assert.That(
                 published.PlayerFacingRadians,

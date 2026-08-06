@@ -89,7 +89,7 @@ internal sealed class PlayerBaselineTests
         Assert.That(
             PlayerBaseline.BaseMovementSpeedMetersPerSecond,
             Is.EqualTo(3.0 * PlayerBaseline.CollisionDiameterMeters),
-            "docs/72:44 defines M as one unmodified collision diameter and states \"One base-travel "
+            "docs/72:47 defines M as one unmodified collision diameter and states \"One base-travel "
                 + "second therefore equals 3.0M of shortest-path travel\". The speed constant is "
                 + "already in meters per second and must not be multiplied by the diameter again");
     }

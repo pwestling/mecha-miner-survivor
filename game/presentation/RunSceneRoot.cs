@@ -192,7 +192,7 @@ public partial class RunSceneRoot : Node3D
     private void SubmitSampledInput(RunComposition run)
     {
         // A sample below the deadzone reports false and yields (0, 0), and it is submitted anyway.
-        // That is deliberate: an explicit zero is a stop, and doc 30:64 requires releasing input to
+        // That is deliberate: an explicit zero is a stop, and doc 30:68 requires releasing input to
         // stop the mech immediately. Submitting nothing would instead leave the previous intent held,
         // which is what a dropped frame means and not what a released control means.
         _input.Sample(out double rawX, out double rawY);

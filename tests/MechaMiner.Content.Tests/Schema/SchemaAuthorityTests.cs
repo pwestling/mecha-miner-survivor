@@ -84,6 +84,57 @@ internal sealed class SchemaAuthorityTests
         });
     }
 
+    /// <summary>
+    /// The same control for an exclusive bound, which asserts the same number as its
+    /// inclusive spelling and so needs the same provenance.
+    /// </summary>
+    [Test]
+    public void TheGateFailsOnABareExclusiveBound()
+    {
+        string path = Path.Combine(
+            FixtureCorpus.Root, "schema", "unattributed-exclusive-bound.schema.json");
+        byte[] bytes = File.ReadAllBytes(path);
+
+        IReadOnlyList<string> unattributed = FindUnattributedBounds(bytes);
+        JsonSchemaLoadResult load = JsonSchemaLoader.Load(
+            bytes, "tests/fixtures/schema/unattributed-exclusive-bound.schema.json");
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(unattributed, Is.Not.Empty, "the gate must catch a bare exclusive bound");
+            Assert.That(unattributed[0], Does.Contain("exclusiveMinimum"));
+            Assert.That(load.IsValid, Is.False);
+            Assert.That(load.Diagnostics[0].Code, Is.EqualTo(ContentDiagnosticCodes.SchemaMalformed));
+            Assert.That(load.Diagnostics[0].ExpectedConstraint, Does.Contain(SchemaAuthority.Keyword));
+        });
+    }
+
+    /// <summary>
+    /// The same control for a length bound. Nearly every <c>minLength</c> is structural,
+    /// and an exemption for the obvious cases is what would let the one sourced length
+    /// through unattributed.
+    /// </summary>
+    [Test]
+    public void TheGateFailsOnABareLengthBound()
+    {
+        string path = Path.Combine(
+            FixtureCorpus.Root, "schema", "unattributed-length-bound.schema.json");
+        byte[] bytes = File.ReadAllBytes(path);
+
+        IReadOnlyList<string> unattributed = FindUnattributedBounds(bytes);
+        JsonSchemaLoadResult load = JsonSchemaLoader.Load(
+            bytes, "tests/fixtures/schema/unattributed-length-bound.schema.json");
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(unattributed, Is.Not.Empty, "the gate must catch a bare length bound");
+            Assert.That(unattributed[0], Does.Contain("minLength"));
+            Assert.That(load.IsValid, Is.False);
+            Assert.That(load.Diagnostics[0].Code, Is.EqualTo(ContentDiagnosticCodes.SchemaMalformed));
+            Assert.That(load.Diagnostics[0].ExpectedConstraint, Does.Contain(SchemaAuthority.Keyword));
+        });
+    }
+
     [Test]
     public void TheDerivationGateFailsOnASourcedBoundWithNoDerivation()
     {
@@ -183,15 +234,51 @@ internal sealed class SchemaAuthorityTests
     }
 
     /// <summary>
-    /// Attributing a bound outside the mandatory set must be permitted. Requiring
-    /// attribution and allowing it are different questions.
+    /// The negative control, parameterised over the whole keyword list rather than
+    /// written out per keyword.
     /// </summary>
-    [Test]
-    public void ABoundOutsideTheMandatorySetMayStillBeAttributed()
+    /// <remarks>
+    /// Written this way so that a keyword added to <see cref="SchemaAuthority.BoundKeywords"/>
+    /// arrives with its control already in place. The per-keyword form drifts: the list
+    /// grows, the controls do not, and the newest keyword is the one with nothing proving
+    /// its gate can fail — which is exactly the keyword a reviewer would most want proven.
+    /// </remarks>
+    [TestCaseSource(typeof(SchemaAuthority), nameof(SchemaAuthority.BoundKeywords))]
+    public void TheGateFailsOnABareBoundOfEveryMandatoryKeyword(string keyword)
+    {
+        // 1 is a legal value for all nine: a number where a number is wanted, and a
+        // non-negative integer where a count or a length is.
+        byte[] bare = Encoding.UTF8.GetBytes("{\"" + keyword + "\":1}");
+
+        IReadOnlyList<string> unattributed = FindUnattributedBounds(bare);
+        JsonSchemaLoadResult load = JsonSchemaLoader.Load(bare, "inline.schema.json");
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(unattributed, Is.Not.Empty, () => "the walk must catch a bare " + keyword);
+            Assert.That(unattributed[0], Does.Contain(keyword));
+            Assert.That(load.IsValid, Is.False, () => "the loader must reject a bare " + keyword);
+            Assert.That(
+                load.Diagnostics[0].Code,
+                Is.EqualTo(ContentDiagnosticCodes.SchemaMalformed),
+                () => "a bare " + keyword + " must fail for the stated reason, not merely fail");
+            Assert.That(
+                load.Diagnostics[0].ExpectedConstraint,
+                Does.Contain(SchemaAuthority.Keyword));
+        });
+    }
+
+    /// <summary>
+    /// The control in the other direction: each mandatory keyword is satisfiable, so the
+    /// gate above is a demand for attribution rather than a ban on the keyword.
+    /// </summary>
+    [TestCaseSource(typeof(SchemaAuthority), nameof(SchemaAuthority.BoundKeywords))]
+    public void EveryMandatoryKeywordLoadsOnceAttributed(string keyword)
     {
         JsonSchemaLoadResult load = JsonSchemaLoader.Load(
             Encoding.UTF8.GetBytes(
-                "{\"minLength\":1,\"description\":\"why\",\"x-authority\":{\"kind\":\"structural\"}}"),
+                "{\"" + keyword + "\":1,\"description\":\"why\","
+                    + "\"x-authority\":{\"kind\":\"structural\"}}"),
             "inline.schema.json");
 
         Assert.That(load.IsValid, Is.True, () => string.Join("; ", load.Diagnostics));
@@ -237,7 +324,7 @@ internal sealed class SchemaAuthorityTests
 
                 if (!stated)
                 {
-                    foreach (string keyword in SchemaAuthority.AttributableKeywords())
+                    foreach (string keyword in SchemaAuthority.BoundKeywords())
                     {
                         if (element.TryGetProperty(keyword, out _))
                         {

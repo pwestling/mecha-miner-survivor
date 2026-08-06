@@ -148,11 +148,27 @@ derivation someone can re-check.
 `source_refs` rejects a `path:line` pair: a heading survives an edit.
 
 **The gate.** `SchemaAuthorityTests` asserts that every `minimum`, `maximum`,
-`minItems`, `maxItems`, `maxLength`, and `multipleOf` under `content/schemas/**`
-has an adjacent `x-authority`, and that every sourced or derived one states a
-derivation. Two negative-control fixtures — a bare bound and a bound with a
-source but no derivation — prove the gate can fail. The schema loader enforces
-the same rules, so the gate holds from both directions.
+`exclusiveMinimum`, `exclusiveMaximum`, `minItems`, `maxItems`, `minLength`,
+`maxLength`, and `multipleOf` under `content/schemas/**` has an adjacent
+`x-authority`, and that every sourced or derived one states a derivation. Four
+negative-control fixtures — a bare bound, a bare exclusive bound, a bare length
+bound, and a bound with a source but no derivation — prove the gate can fail,
+and the loader half of the control is parameterised over the keyword list so a
+tenth keyword arrives with its control already written. The schema loader
+enforces the same rules, so the gate holds from both directions.
 
-`minLength`, `exclusiveMinimum`, and `exclusiveMaximum` may be attributed but are
-not currently *required* to be; see the DAT-001 handover notes.
+**No exemption list.** The nine are one list: every bound that may be attributed
+must be. Two earlier candidates for exemption are worth recording, because both
+arguments will be made again.
+
+The exclusive bounds are gated because there is no principled line between "at
+most 2048" and "strictly less than 2049" — the same number is being asserted,
+and a rule that demanded provenance for one spelling would be asking about
+syntax when the question is about the number.
+
+`minLength` is gated for the case the obvious argument misses. It is nearly
+always `structural`, and saying so costs one line; the line it buys is the one
+place a genuinely sourced length — a localization key length, an ID length taken
+from a document — could otherwise sit unattributed. An exemption list is where a
+fail-open hides, and the argument for adding one is always that the cases are
+obviously structural.

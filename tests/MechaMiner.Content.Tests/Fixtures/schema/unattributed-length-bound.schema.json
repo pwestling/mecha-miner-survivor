@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Negative control for the x-authority gate: a length bound",
+  "description": "A bare minLength with no adjacent x-authority. A minLength is nearly always structural, which is the argument for exempting it and the reason not to: the exemption would also cover the sourced length — a localization key length, an ID length taken from a document — that most needs attributing. This file proves the gate can fail. It is never loaded as a real schema.",
+  "type": "object",
+  "properties": {
+    "presentation_id": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

@@ -54,32 +54,44 @@ public sealed class SchemaAuthority
     /// </remarks>
     public string? Derivation { get; }
 
-    /// <summary>The keywords that <b>require</b> an adjacent authority.</summary>
+    /// <summary>
+    /// The keywords that <b>require</b> an adjacent authority, and equally the only
+    /// keywords one <b>may</b> annotate.
+    /// </summary>
     /// <remarks>
+    /// <para>
     /// These are the numeric bounds an authority can go stale against. Presence keywords
     /// such as <c>required</c> and shape keywords such as <c>type</c> carry no number, so
     /// there is nothing about them to re-derive.
+    /// </para>
+    /// <para>
+    /// The exclusive bounds are here because there is no principled line between "at most
+    /// 2048" and "strictly less than 2049". The same number is being asserted either way,
+    /// and a set that demanded provenance for one spelling and not the other would be
+    /// asking about syntax when the question is about the number.
+    /// </para>
+    /// <para>
+    /// <c>minLength</c> is here for the case the obvious argument misses. It will nearly
+    /// always be <c>structural</c>, and saying so costs one line; the line it buys is the
+    /// one place a genuinely sourced length — a localization key length, an ID length
+    /// taken from a document — could otherwise sit unattributed. An exemption list is
+    /// where a fail-open hides, and the argument for adding one is always that the cases
+    /// are obviously structural.
+    /// </para>
+    /// <para>
+    /// Required and permitted are one list rather than two. They were briefly separate,
+    /// on the reasoning that attributing a bound outside the mandatory set must not be an
+    /// error — but that reasoning only bites while some bound is outside the set, and
+    /// none now is. Two lists that must stay equal are a drift risk with nothing on the
+    /// other side of the ledger.
+    /// </para>
     /// </remarks>
     public static string[] BoundKeywords()
     {
-        return new[] { "minimum", "maximum", "minItems", "maxItems", "maxLength", "multipleOf" };
-    }
-
-    /// <summary>The keywords an authority <b>may</b> annotate.</summary>
-    /// <remarks>
-    /// A superset of <see cref="BoundKeywords"/>. The three extras are numeric bounds
-    /// too, and attributing one must not be an error just because the mandatory set does
-    /// not name it; requiring attribution and permitting it are different questions, and
-    /// conflating them would make good practice fail the build. Whether the mandatory set
-    /// should grow to include them is an integration-owner decision, not one to take by
-    /// widening a constant.
-    /// </remarks>
-    public static string[] AttributableKeywords()
-    {
         return new[]
         {
-            "minimum", "maximum", "minItems", "maxItems", "maxLength", "multipleOf",
-            "minLength", "exclusiveMinimum", "exclusiveMaximum",
+            "minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum",
+            "minItems", "maxItems", "minLength", "maxLength", "multipleOf",
         };
     }
 

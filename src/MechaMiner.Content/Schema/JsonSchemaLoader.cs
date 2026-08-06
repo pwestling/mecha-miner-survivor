@@ -203,24 +203,14 @@ public static class JsonSchemaLoader
             return;
         }
 
-        bool declaresAttributable = false;
-        foreach (string keyword in SchemaAuthority.AttributableKeywords())
-        {
-            if (element.TryGetProperty(keyword, out _))
-            {
-                declaresAttributable = true;
-                break;
-            }
-        }
-
-        if (!declaresAttributable)
+        if (!declaresBound)
         {
             bag.Add(Malformed(
                 sourcePath,
                 pointer.AppendProperty(SchemaAuthority.Keyword),
                 "'" + SchemaAuthority.Keyword + "' annotates a numeric bound, so it belongs "
                     + "next to one of "
-                    + string.Join(", ", SchemaAuthority.AttributableKeywords())));
+                    + string.Join(", ", SchemaAuthority.BoundKeywords())));
             return;
         }
 

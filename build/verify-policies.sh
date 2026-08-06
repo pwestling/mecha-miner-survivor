@@ -24,7 +24,7 @@
 # `dotnet build` or `dotnet test` of the product.
 #
 # Fixtures alone cannot prove a policy is on, because a fixture only measures the
-# directory it sits in. The three policy-inheritance guards below close that gap;
+# directory it sits in. The four policy-inheritance guards below close that gap;
 # see the comment above them.
 #
 # Exit classes follow doc 100 § Standard command surface: 0 success,
@@ -60,14 +60,15 @@ clean_fixture() {
   rm -rf "${FIXTURE_ROOT}/$1/obj" "${FIXTURE_ROOT}/$1/bin"
 }
 
-# --- Policy inheritance: Directory.Build.* shadowing -------------------------
+# --- Policy inheritance: Directory.Build.* and .editorconfig shadowing -------
 #
 # MSBuild stops at the NEAREST Directory.Build.props / Directory.Build.targets
 # found walking up from a project directory, and does NOT chain to the parent
 # unless that file imports it explicitly. A project-local file therefore shadows
-# the repository-root pair entirely rather than adding to it.
+# the repository-root pair entirely rather than adding to it. Roslyn walks
+# .editorconfig the same way and stops at the first one declaring `root = true`.
 #
-# That defeats every policy this script otherwise proves. Two concrete failures
+# That defeats every policy this script otherwise proves. Four concrete failures
 # motivate the checks below:
 #   * A project-local Directory.Build.targets makes the evaluated
 #     TreatWarningsAsErrors 'false', so CS8600 and CS8602 compile as warnings and
@@ -77,9 +78,22 @@ clean_fixture() {
 #     unsafe fixture failing with CS0227 even when the real root policy has been
 #     flipped to AllowUnsafeBlocks=true. The fixture then certifies a policy that
 #     is switched off for the product, which is worse than having no fixture.
+#   * A `root = true` .editorconfig copied into build/policy-fixtures/naming/
+#     decouples the naming fixture from the root file's
+#     dotnet_diagnostic.IDE1006.severity. Flipping that severity to `none` then
+#     compiled a real IDE1006 violation clean while this gate printed PASS.
+#   * ROOT Directory.Build.props RunAnalyzers=false plus
+#     build/policy-fixtures/Directory.Build.props RunAnalyzers=true - two edits to
+#     two tracked files, the second in the file guard 1 permits to exist. A CA2200
+#     rethrow and an IDE1006 field name in src/ then built at 0 warnings while
+#     VER-FND-001-007 and -008 both reported ok off fixtures that were measuring a
+#     private copy of the policy. Root WarningLevel=0 with WarningLevel=9999 in the
+#     same intermediate file does the same to CS8600, CS8602 and CA2200.
 #
-# Three independent guards, because no one of them is sufficient:
-#   Guard 1 is structural - no file may shadow the root pair.
+# Four guards, because no one of them is sufficient:
+#   Guard 1 is structural - no file may shadow the root policy files.
+#   Guard 1b restricts what the files guard 1 PERMITS to exist may say, because a
+#   permitted file is the one place an override can legally sit.
 #   Guard 2 asserts, per project, that MSBuild actually imported the root pair,
 #   read out of MSBuild's own evaluated import graph.
 #   Guard 3 measures the evaluated property value per project, so a policy that
@@ -97,28 +111,90 @@ clean_fixture() {
 #   * The real import inside an XML comment - grep does not parse XML.
 # With either in place plus a local copy of the property values Guard 3 checks,
 # the whole gate printed PASS while the fixtures measured a private copy of the
-# policy rather than the policy the product builds under. Guard 2 therefore asks
-# MSBuild what it imported instead of reading what a file says.
+# policy rather than the policy the product builds under. Guard 2 reads MSBuild's
+# evaluated import graph, which neither of those two files appears in, so it
+# catches both. It is NOT immune to a forged claim, though: see the caveat above
+# guard 2 itself.
+#
+# Why guard 1b rather than a longer EVALUATED_POLICIES list. The suppression
+# switches that decouple a fixture from the root policy cannot be enumerated -
+# per-category AnalysisMode<Category>, per-rule severities, RunAnalyzers,
+# RunAnalyzersDuringBuild, WarningLevel, CodeAnalysisTreatWarningsAsErrors, and
+# whatever the next SDK adds. Adding names to guard 3's list leaves the next
+# switch live. But the negative fixtures are already a detector for the whole
+# family: a root RunAnalyzers=false with NO local override silences the CA2200 and
+# IDE1006 fixtures, their expected diagnostics stop appearing, and this gate goes
+# red without knowing that RunAnalyzers exists. What defeats the fixtures is only
+# the SECOND edit, the local override. So guard 1b closes the override rather than
+# enumerating the switches: the files below build/policy-fixtures/ that MSBuild
+# reads may declare nothing outside a small allowlist of properties that provably
+# cannot affect which diagnostics appear. Every future switch is then caught by
+# the fixtures instead of by a list that has to predict it.
 
 readonly ROOT_MSBUILD_FILES=(
   "Directory.Build.props"
   "Directory.Build.targets"
 )
 
-# Non-root Directory.Build.* files permitted to exist. Listing a file here only
-# says it may exist; it grants no exemption from anything. Guard 2 still requires
-# MSBuild to have imported the root pair when evaluating every project below it,
-# so an entry here cannot be used to decouple a subtree from the root policy.
-# Adding an entry must be a deliberate decision, not a side effect.
+# The repository-root policy files guard 1 scans for. .editorconfig is here
+# because half of VER-FND-001-008 lives in it, but it is NOT in
+# ROOT_MSBUILD_FILES: it is not an MSBuild file, so guard 2 cannot assert it was
+# imported and guard 3 cannot read its contents as a property.
+readonly ROOT_POLICY_FILES=(
+  "Directory.Build.props"
+  "Directory.Build.targets"
+  ".editorconfig"
+)
+
+# Non-root policy files permitted to exist. Listing a file here says it may exist
+# and nothing more. Guard 1b bounds what it is allowed to say, and guard 2 still
+# requires MSBuild to have imported the root pair when evaluating every project
+# below it, so an entry here cannot be used to decouple a subtree from the root
+# policy. Adding an entry must be a deliberate decision, not a side effect.
+#
+# There is no .editorconfig entry: this repository has exactly one .editorconfig,
+# the root one, so the allowlist for that filename is empty.
 readonly ALLOWED_INTERMEDIATE_MSBUILD_FILES=(
   "build/policy-fixtures/Directory.Build.props"
 )
 
-# "<property>|<required evaluated value>" - every property a fixture below relies
-# on, because a fixture proves only that the policy holds where the fixture sits.
-# The list is derived by asking, per fixture, "which evaluated properties must
-# hold for this diagnostic to appear at all", not by picking the properties that
-# felt important:
+# Guard 1b's allowlist: "<file>|<required Sdk attribute>|<properties it may
+# declare>". Every MSBuild file under build/policy-fixtures/ that MSBuild reads
+# while evaluating a fixture appears here - the permitted intermediate file, and
+# each enumerated fixture project, which is the other place a local override can
+# sit. Anything not listed is a failure, including <ItemGroup>, <Target> and an
+# <Import> of anything other than the root policy, because an item group can
+# remove an analyzer just as effectively as a property can switch one off.
+#
+# Only two properties are allowed, and only in the intermediate file:
+#   RestorePackagesWithLockFile  Consumed by NuGet restore to decide whether to
+#                                WRITE packages.lock.json. It is load-bearing here:
+#                                the root sets it true, so without this the gate
+#                                leaves an untracked packages.lock.json in every
+#                                fixture directory on every run. It reaches no
+#                                compiler switch and no analyzer.
+#   IsPackable                   Consumed only by the Pack target, which nothing
+#                                here runs. It cannot reach a compiler switch.
+#
+# The fixture projects allow NONE. They declare no property today, and a fixture
+# that needs one is a deliberate decision that belongs in this list with its own
+# argument for why it cannot affect a diagnostic.
+readonly INTERMEDIATE_ALLOWED_PROPERTIES="RestorePackagesWithLockFile,IsPackable"
+readonly FIXTURE_PROJECT_ALLOWED_PROPERTIES=""
+
+# "<property>|<required evaluated value>".
+#
+# WHAT THIS LIST IS: the properties whose evaluated value is asserted per project.
+# It is a list of KNOWN suppression and policy switches, not a complete one. It
+# does not and cannot enumerate every property that can stop a diagnostic from
+# appearing - per-category AnalysisMode<Category>, per-rule
+# dotnet_diagnostic.<ID>.severity, and whatever switch the next SDK ships are all
+# outside it. Nothing here should be read as "these are all the properties that
+# matter". Completeness for that family is guard 1b's job, not this list's; see
+# the argument above ALLOWED_INTERMEDIATE_MSBUILD_FILES.
+#
+# Each entry is here because a specific escape was observed or is directly
+# implied. The first group is what the fixtures below depend on:
 #
 #   nullable      CS8600 as error   Nullable, TreatWarningsAsErrors
 #   analyzer      CA2200 as error   EnableNETAnalyzers, AnalysisLevel,
@@ -142,13 +218,29 @@ readonly ALLOWED_INTERMEDIATE_MSBUILD_FILES=(
 # NoWarn covering CS8600/CA2200/IDE1006 is invisible to a fixture that has a local
 # empty NoWarn.
 #
-# KNOWN GAP, not closed here: the naming fixture also depends on the root
+# The last three are DEFENCE IN DEPTH for switches that were used to escape this
+# gate, added on top of guard 1b rather than instead of it. Guard 1b is what makes
+# the family closed; these three only make three specific members of it fail twice:
+#   RunAnalyzers / RunAnalyzersDuringBuild  Empty is the value under which the
+#     analyzers run - neither is set anywhere in this repository, and the required
+#     value is that absence rather than "true" so that setting either one at all is
+#     a deliberate act this gate reports.
+#   WarningLevel  8 is what the pinned SDK evaluates for the pinned net8.0 /
+#     LangVersion 12.0 pair; 0 turns CS8600, CS8602 and CA2200 off wholesale. This
+#     is pinned to an observed value rather than declared in
+#     Directory.Build.props, because declaring it there would cap the level and
+#     silence warnings a later SDK adds. An SDK bump that changes the default will
+#     fail here loudly; that is a review, not a number to adjust.
+#
+# KNOWN GAP, only partly closed: the naming fixture also depends on the root
 # .editorconfig's `dotnet_diagnostic.IDE1006.severity = error`. That is not an
 # MSBuild property and is not reachable through an evaluated item either - the
 # EditorConfigFiles item holds only the SDK-generated file, because Roslyn, not
-# MSBuild, walks the .editorconfig chain and applies `root = true`. A project-local
-# `.editorconfig` with `root = true` therefore still decouples that half of
-# VER-FND-001-008. Closing it needs an .editorconfig shadowing guard of its own.
+# MSBuild, walks the .editorconfig chain and applies `root = true`. Guard 1 now
+# fails on any non-root .editorconfig, which converts the committed case from
+# invisible to loud, but it does not see an untracked one and it cannot see
+# `root = true` being removed from, or a severity being changed in, the root file
+# itself. VER-FND-001-008 in tests/verification/FND-001.json records this.
 readonly EVALUATED_POLICIES=(
   "TreatWarningsAsErrors|true"
   "WarningsNotAsErrors|"
@@ -161,10 +253,28 @@ readonly EVALUATED_POLICIES=(
   "AnalysisMode|Default"
   "EnforceCodeStyleInBuild|true"
   "Deterministic|true"
+  "RunAnalyzers|"
+  "RunAnalyzersDuringBuild|"
+  "WarningLevel|8"
+  # These three are the forgery-resistant half of guard 2; see the caveat above
+  # guard 2 for why guard 2 needs one. They are MSBuild's own answers about where
+  # its upward search for the root policy landed and whether it was told to skip
+  # the import, so no comment in any file can affect them. ImportDirectoryBuildProps
+  # =false is the switch that suppresses the import without leaving a shadow file
+  # for guard 1 to find.
+  #
+  # There is deliberately no DirectoryBuildPropsPath entry: it is the only one of
+  # the four that is not uniform across projects, because the fixtures legitimately
+  # resolve it to the guard-1-permitted build/policy-fixtures/Directory.Build.props.
+  # The .targets path IS uniform - nothing is permitted to shadow it - so it is
+  # asserted here.
+  "ImportDirectoryBuildProps|true"
+  "ImportDirectoryBuildTargets|true"
+  "DirectoryBuildTargetsPath|${REPO_ROOT}/Directory.Build.targets"
 )
 
 echo "=== policy inheritance: repository-root policy files exist"
-for file in "${ROOT_MSBUILD_FILES[@]}"; do
+for file in "${ROOT_POLICY_FILES[@]}"; do
   if [[ -f "${REPO_ROOT}/${file}" ]]; then
     pass "root policy file present: ${file}"
   else
@@ -183,11 +293,51 @@ echo "=== policy scope: the projects every policy below must cover"
 # evaluated here - and the enumeration is asserted to be a partition below, so an
 # unenumerated fixture is a failure rather than an exemption.
 
+# MSBuild intermediate output has to be skipped, but `-not -path '*/obj/*'` skips
+# ANY directory named obj or bin anywhere in the path, which turns the scan back
+# into a floor: build/policy-fixtures/obj/hidden/hidden.csproj made the partition
+# assertion below print "every one of the 6 project(s) ... is an enumerated
+# fixture" and exit 0 while seven projects existed.
+#
+# A directory named obj or bin is an MSBuild intermediate only when the directory
+# ABOVE it is itself a project directory. That prunes each project's own obj/ and
+# bin/ and nothing else, so a project parked under a directory named obj is still
+# counted. The rule is not circular: it asks whether the parent holds a project
+# file, which is a fact on disk rather than a result of this scan.
+prune_project_intermediates() {
+  # Reads repository-relative project paths on stdin, writes the kept ones to
+  # stdout. The script is passed with -c, not a heredoc, because a heredoc would
+  # take over stdin and this filter needs it.
+  python3 -c '
+import fnmatch, os, sys
+
+repo_root = sys.argv[1]
+
+def is_project_directory(relative):
+    directory = os.path.join(repo_root, relative) if relative else repo_root
+    try:
+        names = os.listdir(directory)
+    except OSError:
+        return False
+    return any(fnmatch.fnmatch(name, "*.*proj") for name in names)
+
+for line in sys.stdin:
+    path = line.strip()
+    if not path:
+        continue
+    parts = path.split("/")
+    if not any(
+            part in ("obj", "bin") and is_project_directory("/".join(parts[:index]))
+            for index, part in enumerate(parts[:-1])):
+        sys.stdout.write(path + "\n")
+' "${REPO_ROOT}"
+}
+
 product_projects=()
 while IFS= read -r project; do
   product_projects+=("${project}")
-done < <(cd "${REPO_ROOT}" && find src tests game -name '*.csproj' \
-  -not -path '*/obj/*' -not -path '*/bin/*' -print 2>/dev/null | sort)
+done < <(cd "${REPO_ROOT}" && find src tests game -name '*.csproj' -print 2>/dev/null \
+  | prune_project_intermediates | sort)
 
 fixture_projects=()
 for entry in "${NEGATIVE_FIXTURES[@]}"; do
@@ -216,8 +366,8 @@ policy_projects=("${product_projects[@]}" "${fixture_projects[@]}")
 found_fixture_projects=()
 while IFS= read -r project; do
   found_fixture_projects+=("${project}")
-done < <(cd "${REPO_ROOT}" && find build/policy-fixtures -name '*.*proj' \
-  -not -path '*/obj/*' -not -path '*/bin/*' -print 2>/dev/null | sort)
+done < <(cd "${REPO_ROOT}" && find build/policy-fixtures -name '*.*proj' -print 2>/dev/null \
+  | prune_project_intermediates | sort)
 
 if [[ "${#found_fixture_projects[@]}" -eq 0 ]]; then
   fail "the fixture scan found no project under build/policy-fixtures/; it cannot see even the enumerated fixtures, so it proves nothing"
@@ -250,38 +400,59 @@ else
 fi
 
 echo
-echo "=== policy inheritance guard 1: no Directory.Build.* file shadows the root pair"
+echo "=== policy inheritance guard 1: no Directory.Build.* or .editorconfig file shadows the root policy"
 #
-# Scoped to this working tree's own files. A `git worktree` checkout nested inside
-# the tree - which this repository creates under .claude/worktrees/, and which the
-# .gitignore entry exists to accommodate - contains a complete second checkout,
-# root Directory.Build.props and all. Those are that checkout's files: MSBuild
-# cannot reach them from any project in this working tree, so they shadow nothing
-# here. One session worktree made this guard exit 4 with three false failures
-# (.claude/worktrees/<name>/Directory.Build.props, its .targets, and its
-# build/policy-fixtures/Directory.Build.props), which turned the gate hostile to
-# the very workflow the .gitignore change was made for.
+# Scoped to this working tree's own files. A `git worktree` checkout of THIS
+# repository nested inside the tree - which this repository creates under
+# .claude/worktrees/, and which the .gitignore entry exists to accommodate -
+# contains a complete second checkout, root Directory.Build.props and all. Those
+# are that checkout's files: MSBuild cannot reach them from any project in this
+# working tree, so they shadow nothing here. One session worktree made this guard
+# exit 4 with three false failures (.claude/worktrees/<name>/Directory.Build.props,
+# its .targets, and its build/policy-fixtures/Directory.Build.props), which turned
+# the gate hostile to the very workflow the .gitignore change was made for.
 #
-# The distinguishing fact is asked of git rather than inferred from the path, and
-# it takes two conditions, so this cannot become a hiding place:
-#   * the directory must be the top level of a checkout of its own, which is what
-#     `git -C <dir> rev-parse --show-toplevel` returning <dir> itself means; a
-#     stray or invalid .git file does not satisfy it, and
+# The exclusion admits exactly that case and nothing wider. It used to require only
+# that the directory be its own git toplevel with the file untracked here, and a
+# previous comment claimed that "cannot become a hiding place". It could: a plain
+# `git init` in src/MechaMiner.Simulation/, and a real `git submodule add` under
+# src/, each satisfy both facts, and each gave verify-policies: PASS with a
+# shadowing Directory.Build.props sitting in the excluded directory. Neither can be
+# delivered through a commit, so that was a working-tree-only hole, but the
+# exclusion is now narrowed to the case it was written for:
+#   * the directory must appear as a worktree of THIS repository in
+#     `git worktree list --porcelain` run from the outer repository. A `git init`
+#     tree is not in that list, and neither is a submodule, because neither is a
+#     worktree of this repository, and
 #   * the file must not be tracked by THIS repository. A tracked file is this
 #     repository's file whatever sits above it, and is always checked.
+repo_worktree_roots=()
+while IFS= read -r line; do
+  [[ "${line}" == "worktree "* ]] || continue
+  worktree_path="${line#worktree }"
+  worktree_real="$(cd "${worktree_path}" 2>/dev/null && pwd -P)" || continue
+  repo_worktree_roots+=("${worktree_real}")
+done < <(git -C "${REPO_ROOT}" worktree list --porcelain 2>/dev/null)
+
 nested_checkout_roots=()
 while IFS= read -r gitlink; do
   candidate="${gitlink%/.git}"
   [[ -n "${candidate}" && "${candidate}" != "${gitlink}" ]] || continue
   candidate_real="$(cd "${REPO_ROOT}/${candidate}" 2>/dev/null && pwd -P)" || continue
-  toplevel="$(git -C "${REPO_ROOT}/${candidate}" rev-parse --show-toplevel 2>/dev/null)" || continue
-  if [[ -n "${toplevel}" && "${toplevel}" == "${candidate_real}" ]]; then
+  is_worktree_of_this_repo=0
+  for worktree_real in ${repo_worktree_roots[@]+"${repo_worktree_roots[@]}"}; do
+    if [[ "${candidate_real}" == "${worktree_real}" ]]; then
+      is_worktree_of_this_repo=1
+      break
+    fi
+  done
+  if [[ "${is_worktree_of_this_repo}" -eq 1 ]]; then
     nested_checkout_roots+=("${candidate}")
   fi
 done < <(cd "${REPO_ROOT}" && find . -mindepth 2 -name '.git' -printf '%P\n' 2>/dev/null | sort)
 
 nested_checkout_owner() {
-  # $1 repository-relative path. Prints the nested checkout that owns it and
+  # $1 repository-relative path. Prints the nested worktree that owns it and
   # returns 0; returns nonzero when this working tree owns it.
   local file="$1" root
   for root in ${nested_checkout_roots[@]+"${nested_checkout_roots[@]}"}; do
@@ -296,27 +467,28 @@ nested_checkout_owner() {
   return 1
 }
 
-found_msbuild_files=()
+found_policy_files=()
 while IFS= read -r file; do
   if owner="$(nested_checkout_owner "${file}")"; then
-    pass "not this working tree's file, it belongs to the nested checkout ${owner}/: ${file}"
+    pass "not this working tree's file, it belongs to the nested worktree ${owner}/: ${file}"
     continue
   fi
-  found_msbuild_files+=("${file}")
+  found_policy_files+=("${file}")
 done < <(cd "${REPO_ROOT}" && find . \
-  \( -name 'Directory.Build.props' -o -name 'Directory.Build.targets' \) \
+  \( -name 'Directory.Build.props' -o -name 'Directory.Build.targets' \
+     -o -name '.editorconfig' \) \
   -printf '%P\n' 2>/dev/null | sort)
 
 # An empty result would mean the scan found nothing at all, including the root
-# pair, so it must not be reported as compliance. Counted AFTER the nested-checkout
-# exclusion, so an exclusion that swallowed the root pair fails here.
-if [[ "${#found_msbuild_files[@]}" -lt "${#ROOT_MSBUILD_FILES[@]}" ]]; then
-  fail "the Directory.Build.* scan retained ${#found_msbuild_files[@]} file(s) of this working tree; it cannot see even the root pair, so it proves nothing"
+# files, so it must not be reported as compliance. Counted AFTER the nested-worktree
+# exclusion, so an exclusion that swallowed a root file fails here.
+if [[ "${#found_policy_files[@]}" -lt "${#ROOT_POLICY_FILES[@]}" ]]; then
+  fail "the policy-file scan retained ${#found_policy_files[@]} file(s) of this working tree, fewer than the ${#ROOT_POLICY_FILES[@]} root file(s); it cannot see even the root policy, so it proves nothing"
 fi
 
-for file in ${found_msbuild_files[@]+"${found_msbuild_files[@]}"}; do
+for file in ${found_policy_files[@]+"${found_policy_files[@]}"}; do
   is_root=0
-  for root_file in "${ROOT_MSBUILD_FILES[@]}"; do
+  for root_file in "${ROOT_POLICY_FILES[@]}"; do
     if [[ "${file}" == "${root_file}" ]]; then
       is_root=1
       break
@@ -335,12 +507,138 @@ for file in ${found_msbuild_files[@]+"${found_msbuild_files[@]}"}; do
   done
 
   if [[ "${is_allowed}" -eq 0 ]]; then
-    fail "shadowing MSBuild file ${file}: it replaces the repository-root policy for every project at or below $(dirname "${file}")/"
+    fail "shadowing policy file ${file}: it replaces the repository-root policy for every project at or below $(dirname "${file}")/"
   else
-    # Deliberately NOT verified by reading this file. Whether the root policy
-    # survives it is asserted by guard 2, from MSBuild's evaluated import graph
-    # for the projects below it.
-    pass "permitted intermediate file, root policy in effect below it asserted by guard 2: ${file}"
+    # What this file is allowed to SAY is guard 1b, below. Whether the root policy
+    # survives it is asserted by guard 2, from MSBuild's evaluated import graph for
+    # the projects below it.
+    pass "permitted intermediate file, contents bounded by guard 1b and root policy asserted by guard 2: ${file}"
+  fi
+done
+
+echo
+echo "=== policy inheritance guard 1b: the permitted files below build/policy-fixtures/ override nothing"
+#
+# Guard 1 permits build/policy-fixtures/Directory.Build.props to exist, because the
+# root sets RestorePackagesWithLockFile=true and the fixtures must not leave an
+# untracked packages.lock.json behind on every run. That permission was the whole
+# escape: root RunAnalyzers=false plus RunAnalyzers=true here, or root
+# WarningLevel=0 plus WarningLevel=9999 here, and the fixtures keep failing with
+# their expected diagnostics while the product compiles violations at 0 warnings.
+# A fixture .csproj is the same lever one directory deeper, so it is checked too.
+#
+# The check is a whitelist of what these files may CONTAIN, not a blacklist of
+# switches, because the switch family is open-ended and a blacklist would always be
+# one SDK behind. <ItemGroup> is rejected along with unlisted properties: removing
+# an Analyzer item switches an analyzer off just as effectively as a property does.
+policy_fixture_file_violations() {
+  # $1 repository-relative file. $2 the Sdk attribute <Project> must carry, empty
+  # for none. $3 comma-separated property names the file may declare, empty for
+  # none. Prints one violation per line; prints nothing when the file is compliant.
+  python3 - "${REPO_ROOT}" "$1" "$2" "$3" <<'PY'
+import os, sys
+import xml.etree.ElementTree as ET
+
+repo_root, relative, required_sdk, allowed_csv = sys.argv[1:5]
+allowed = {name for name in allowed_csv.split(',') if name}
+allowed_text = ', '.join(sorted(allowed)) or 'none'
+absolute = os.path.join(repo_root, relative)
+root_policy = {
+    os.path.join(repo_root, name)
+    for name in ('Directory.Build.props', 'Directory.Build.targets')
+}
+
+def local(tag):
+    return tag.split('}', 1)[1] if '}' in tag else tag
+
+def report(message):
+    print('%s %s' % (relative, message))
+
+try:
+    project = ET.parse(absolute).getroot()
+except (ET.ParseError, OSError) as error:
+    report('could not be parsed as XML (%s); a file this gate cannot read is a '
+           'file it cannot vouch for' % error)
+    raise SystemExit(0)
+
+if local(project.tag) != 'Project':
+    report('has root element <%s>, not <Project>' % local(project.tag))
+    raise SystemExit(0)
+
+for name, value in sorted(project.attrib.items()):
+    if name == 'Sdk':
+        if value != required_sdk:
+            report('declares Sdk="%s" on <Project>; this gate proves policies under '
+                   'Sdk="%s" and nothing else' % (value, required_sdk))
+    else:
+        report('declares the attribute %s="%s" on <Project>; only Sdk may appear '
+               'there, because attributes such as TreatAsLocalProperty change how '
+               'the root policy is evaluated' % (name, value))
+if required_sdk and 'Sdk' not in project.attrib:
+    report('does not declare Sdk="%s" on <Project>' % required_sdk)
+
+def check_attributes(node, permitted, where):
+    for name, value in sorted(node.attrib.items()):
+        if name not in permitted:
+            report('sets %s="%s" on %s; only %s may appear there'
+                   % (name, value, where, ' and '.join(sorted(permitted))))
+
+for child in project:
+    if child.tag is ET.Comment or child.tag is ET.PI:
+        continue
+    name = local(child.tag)
+    if name == 'PropertyGroup':
+        check_attributes(child, {'Condition', 'Label'}, '<PropertyGroup>')
+        for prop in child:
+            if prop.tag is ET.Comment or prop.tag is ET.PI:
+                continue
+            declared = local(prop.tag)
+            check_attributes(prop, {'Condition'}, '<%s>' % declared)
+            if declared not in allowed:
+                report('declares <%s>, which is not among the properties this file '
+                       'may declare (%s). A property set here overrides the '
+                       'repository-root policy for every project below it, and the '
+                       'negative fixtures cannot detect a suppression switch that '
+                       'has been switched back on locally.' % (declared, allowed_text))
+    elif name == 'Import':
+        check_attributes(child, {'Project', 'Condition'}, '<Import>')
+        target = child.get('Project') or ''
+        resolved = os.path.normpath(
+            os.path.join(os.path.dirname(absolute), target))
+        if resolved not in root_policy:
+            report('imports "%s", which is not a repository-root policy file; only '
+                   'the root Directory.Build.props or Directory.Build.targets may '
+                   'be imported here' % target)
+    else:
+        report('contains <%s>; only <PropertyGroup> with allowlisted properties and '
+               'an <Import> of the root policy may appear in this file, because an '
+               'item group or a target can switch an analyzer off just as '
+               'effectively as a property can' % name)
+PY
+}
+
+# "<file>|<required Sdk>|<properties it may declare>"
+policy_fixture_files=()
+for allowed_file in "${ALLOWED_INTERMEDIATE_MSBUILD_FILES[@]}"; do
+  policy_fixture_files+=("${allowed_file}||${INTERMEDIATE_ALLOWED_PROPERTIES}")
+done
+for project in "${fixture_projects[@]}"; do
+  policy_fixture_files+=("${project}|Microsoft.NET.Sdk|${FIXTURE_PROJECT_ALLOWED_PROPERTIES}")
+done
+
+for entry in "${policy_fixture_files[@]}"; do
+  IFS='|' read -r file required_sdk allowed_properties <<<"${entry}"
+  if [[ ! -f "${REPO_ROOT}/${file}" ]]; then
+    fail "guard 1b: no file at ${file}, so what it declares is unknown"
+    continue
+  fi
+  violations="$(policy_fixture_file_violations "${file}" "${required_sdk}" "${allowed_properties}")"
+  if [[ -z "${violations}" ]]; then
+    pass "${file} declares nothing that can change which diagnostics appear"
+  else
+    while IFS= read -r violation; do
+      [[ -n "${violation}" ]] && fail "guard 1b: ${violation}"
+    done <<<"${violations}"
   fi
 done
 
@@ -351,24 +649,77 @@ echo "=== policy inheritance guard 2: MSBuild actually imports the root policy p
 # graph and stamps each inlined file with a banner comment carrying its absolute
 # path. An <Import> whose Condition is false, whose Project resolves to nothing,
 # or that sits inside an XML comment produces no banner, because it contributed
-# nothing to the evaluation. This is why the check is "what did MSBuild import",
-# not "what does this file say".
+# nothing to the evaluation. That is what defeats the two files described above
+# guard 1: both claim an import in text that MSBuild never acts on, and neither
+# appears here.
+#
+# CAVEAT, and the reason this guard is not read as proof on its own. MSBuild copies
+# the comments of a source file into its preprocess output verbatim, and this guard
+# recognises a banner by its shape. A comment shaped like a banner, placed in a
+# project file, is therefore indistinguishable here from a banner MSBuild emitted:
+# adding one to all six fixture projects removed every guard-2 failure while no
+# fixture imported anything. Three things bound that:
+#   * the forgery must hard-code the absolute path of the checkout it runs in,
+#     because the banner carries an absolute path and this guard compares against
+#     ${REPO_ROOT}. A forged file is therefore machine-specific and breaks in CI, in
+#     a clone, and in a worktree.
+#   * guard 3 is the backstop. It reads evaluated property values, which no comment
+#     can affect, so the eleven policy properties still have to hold even when this
+#     guard has been lied to.
+#   * guard 3 also asserts ImportDirectoryBuildProps, ImportDirectoryBuildTargets
+#     and DirectoryBuildTargetsPath, which are MSBuild's own answers about where its
+#     upward search landed and whether it was told to skip the import. Those cover
+#     the specific fact this guard exists for - "was the root pair imported at all" -
+#     without going through any comment.
+# What is NOT bounded is a switch outside guard 3's list, in a project whose forged
+# banner is written for the machine the gate runs on. Closing that needs a source of
+# import truth that is not the preprocess text - a binary log, or MSBuild's
+# ProjectImportedEventArgs - and it is recorded rather than closed here.
+
+# Set by imported_msbuild_files when it returns nonzero: why the import graph could
+# not be read. Always an INFRASTRUCTURE reason - "MSBuild could not tell us" - never
+# "MSBuild told us the root policy was not imported", which is the caller's finding
+# and has its own message. The two used to share one exit code and one message, and
+# a single non-reproducing failure in roughly 600 evaluations could not be
+# attributed to either. Fail-closed either way; no retry.
+import_graph_failure=""
 
 imported_msbuild_files() {
   # $1 project (repository-relative). Prints the absolute path of every file
-  # MSBuild imported while evaluating it, one per line. Returns nonzero when the
-  # project cannot be preprocessed or the output contains no import banner at
-  # all, so an empty graph is never read as compliance: every SDK-style project
-  # imports at least Microsoft.Common.props.
+  # MSBuild imported while evaluating it, one per line.
+  #
+  # Returns 0 when a graph was read, and 1 when it could not be - MSBuild failed,
+  # its output would not parse, or it contained no import banner at all, which is
+  # equally an infrastructure failure because every SDK-style project imports at
+  # least Microsoft.Common.props. An empty graph is never read as compliance.
+  # On 1, import_graph_failure carries the reason, with MSBuild's exit code and
+  # captured stderr when MSBuild is what failed.
   local project="$1"
+  import_graph_failure=""
+
   local preprocessed
-  preprocessed="$(mktemp)" || return 1
-  if ! dotnet msbuild "${REPO_ROOT}/${project}" -nologo \
-      "-preprocess:${preprocessed}" >/dev/null 2>&1; then
-    rm -f "${preprocessed}"
+  if ! preprocessed="$(mktemp)"; then
+    import_graph_failure="mktemp could not create a temporary file for MSBuild's -preprocess output"
     return 1
   fi
-  python3 - "${preprocessed}" <<'PY'
+  local captured_stderr
+  if ! captured_stderr="$(mktemp)"; then
+    rm -f "${preprocessed}"
+    import_graph_failure="mktemp could not create a temporary file for MSBuild's stderr"
+    return 1
+  fi
+
+  dotnet msbuild "${REPO_ROOT}/${project}" -nologo \
+    "-preprocess:${preprocessed}" >/dev/null 2>"${captured_stderr}"
+  local msbuild_status=$?
+  if [[ "${msbuild_status}" -ne 0 ]]; then
+    import_graph_failure="dotnet msbuild -preprocess exited ${msbuild_status}; stderr: $(tr '\n' '|' <"${captured_stderr}" | cut -c 1-1500)"
+    rm -f "${preprocessed}" "${captured_stderr}"
+    return 1
+  fi
+
+  local parsed parse_status preprocessed_size
+  parsed="$(python3 - "${preprocessed}" 2>"${captured_stderr}" <<'PY'
 import re, sys
 import xml.etree.ElementTree as ET
 
@@ -387,8 +738,9 @@ BANNER = re.compile(
 try:
     tree = ET.parse(
         sys.argv[1], ET.XMLParser(target=ET.TreeBuilder(insert_comments=True)))
-except (ET.ParseError, OSError):
-    raise SystemExit(1)
+except (ET.ParseError, OSError) as error:
+    sys.stderr.write("the -preprocess output is not readable XML: %s\n" % error)
+    raise SystemExit(2)
 
 found = 0
 for node in tree.iter():
@@ -398,11 +750,24 @@ for node in tree.iter():
     if match:
         found += 1
         sys.stdout.write(match.group("path").strip() + "\n")
-raise SystemExit(0 if found else 1)
+if not found:
+    sys.stderr.write(
+        "the -preprocess output parsed but carries no import banner at all, "
+        "which cannot happen for an SDK-style project\n")
+    raise SystemExit(3)
+raise SystemExit(0)
 PY
-  local status=$?
-  rm -f "${preprocessed}"
-  return "${status}"
+)"
+  parse_status=$?
+  preprocessed_size="$(wc -c <"${preprocessed}" 2>/dev/null)"
+  if [[ "${parse_status}" -ne 0 ]]; then
+    import_graph_failure="dotnet msbuild -preprocess exited 0 but its output could not be read as an import graph (reader exit ${parse_status}: $(tr '\n' '|' <"${captured_stderr}" | cut -c 1-1500)); the output file was ${preprocessed_size:-unmeasurable} byte(s)"
+    rm -f "${preprocessed}" "${captured_stderr}"
+    return 1
+  fi
+  rm -f "${preprocessed}" "${captured_stderr}"
+  printf '%s\n' "${parsed}"
+  return 0
 }
 
 for project in "${policy_projects[@]}"; do
@@ -411,10 +776,11 @@ for project in "${policy_projects[@]}"; do
     continue
   fi
   if ! imported="$(imported_msbuild_files "${project}")"; then
-    fail "${project}: MSBuild's import graph could not be read, so it is unproven that the root policy applies to it"
+    fail "${project}: INFRASTRUCTURE - MSBuild's import graph could not be read at all, so whether the root policy applies to this project is unproven rather than disproven: ${import_graph_failure}"
     continue
   fi
 
+  imported_count="$(printf '%s\n' "${imported}" | grep -c .)"
   missing=()
   for root_file in "${ROOT_MSBUILD_FILES[@]}"; do
     if ! printf '%s\n' "${imported}" | grep -qxF "${REPO_ROOT}/${root_file}"; then
@@ -425,7 +791,7 @@ for project in "${policy_projects[@]}"; do
   if [[ "${#missing[@]}" -eq 0 ]]; then
     pass "$(basename "${project}" .csproj) imports the root policy pair"
   else
-    fail "${project}: MSBuild never imported $(printf '%s ' "${missing[@]}")- the policy this gate proves is not the policy this project builds under"
+    fail "${project}: MSBuild's import graph was READ (${imported_count} imported file(s)) and does not contain $(printf '%s ' "${missing[@]}")- the policy this gate proves is not the policy this project builds under"
   fi
 done
 
@@ -437,10 +803,12 @@ echo "=== policy inheritance guard 3: evaluated compiler policy per project (VER
 # shift as reading the resolved reference set instead of PackageReference: check
 # the evaluated state, not the declaration believed to produce it.
 #
-# Scope: every product project (so a newly added one is covered automatically)
-# plus the six policy fixtures by name. The fixtures are named rather than
-# globbed so that fixture trees owned by other work packages, which may
-# deliberately declare unrestorable references, are not evaluated here.
+# Scope: the enumerated policy_projects set - every product project (so a newly
+# added one is covered automatically) plus the six policy fixtures by name. The
+# fixtures are named rather than globbed so that fixture trees owned by other work
+# packages, which may deliberately declare unrestorable references, are not
+# evaluated here; the naming is asserted to be a partition of build/policy-fixtures/
+# above, so it cannot rot into an exemption.
 
 evaluated_policies() {
   # $1 project. Prints "<property>=<value>" per line for EVALUATED_POLICIES.

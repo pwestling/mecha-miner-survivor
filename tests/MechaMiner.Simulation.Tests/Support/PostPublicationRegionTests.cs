@@ -181,6 +181,7 @@ internal sealed class PostPublicationRegionTests
     /// than discovered.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// The walk reaches every <c>call</c>, <c>callvirt</c>, and <c>newobj</c> in the region, resolves each to
     /// its declaring type, and reads a <c>constrained.</c> prefix so that a virtual call on a simulation
     /// value type is reported under that type rather than as <c>Object.ToString</c>. It does not reach: a
@@ -189,6 +190,24 @@ internal sealed class PostPublicationRegionTests
     /// statement, such as a stack overflow or an out-of-memory failure, neither of which any arrangement of
     /// statements can exclude. The last of those is the honest boundary of the whole property: the region is
     /// free of throws a statement can cause, not of every conceivable failure.
+    /// </para>
+    /// <para>
+    /// A fifth limit is not about what the walk reaches but about what a green run proves. The committed
+    /// allowed-call lists in the two gates above, the two members in
+    /// <see cref="NothingAfterThePageFlipInAPublicationCanThrow"/> and the seven in
+    /// <see cref="NothingAfterThePublicationInATransactionCommitCanThrow"/>, are a two-place edit tax rather
+    /// than evidence. Each list is a transcription of what its region already calls, so someone who adds a
+    /// call to the region and also adds it to the list gets a green run, and nothing in either gate
+    /// establishes that the added member cannot throw. What the tax buys is that an <em>accidental</em>
+    /// addition is loud, which <see cref="TheScanDetectsAThrowAConstructionAndAnExtraCallAfterTheAnchor"/>
+    /// proves and which is worth having on its own terms; why each listed member is throw-free is argued in
+    /// that gate's remarks and is not demonstrated by this walk, so
+    /// <c>docs/technical/91-verification-strategy.md</c> § Acceptance evidence is satisfied about the gate's
+    /// ability to fail and not about the property the list appears to certify. This is the house position on
+    /// a committed inventory rather than a criticism of the design, and the same ruling was made about the
+    /// verification registry's census ceiling and the architecture gate's forbidden-edge count: a pinned
+    /// inventory makes drift loud, and it is never a proof of the property the inventory is about.
+    /// </para>
     /// </remarks>
     [Test]
     public void TheScanIsHonestAboutWhatItCannotSee()

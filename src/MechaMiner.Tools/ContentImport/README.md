@@ -108,7 +108,10 @@ checks:
 - referential integrity for branch → weapon, encounter → enemy, and mech → signature weapon, with the
   reference property names discovered from the data rather than hardcoded;
 - one derived-value regression guard: the Sentry Pod deployment interval is the authored 6.0 s, and the
-  derived 12 s must not appear as an authored deployment or ramp value in `content/weapons/`; and
+  derived 12 s must not appear as an authored deployment or ramp value in `content/weapons/`. The banned
+  figure is **computed from `W-BE`'s two authored operands** — `deployment_cadence_seconds × (
+  maximum_active_pod_count − 1)` — and asserted equal to the declared `12`, so retuning the pod cap fails
+  loudly instead of leaving the ban policing a stale number while the live derived value walks in; and
 - the footprint second-writer guard, which is two rules with two different scopes. No definition under
   `content/enemies/` may carry a contact **diameter** — an enemy authors `body_scale_multiplier` and the
   diameter is `scale × 0.80 M` — and no definition under `content/enemies/`, `content/bosses/` **or**
@@ -120,7 +123,12 @@ checks:
   (`docs/31:121-128` has no `Body` column, and `docs/72:86` scopes the derivation to "every **ordinary**
   body scale") and the survivability baseline states the four boss diameters flat (`docs/72:105-110`).
   `reference_diameter_m` is allowlisted, being the Ripper's authored rank-zero diameter rather than a
-  per-enemy derived value.
+  per-enemy derived value — and A30 now **reads** it out of the ten enemy files instead of hardcoding
+  `0.80`, because a hardcoded operand made that derivation agree with itself: setting the field to `1.0`
+  in all ten left the suite green, 10 of 10 escaped, while the sibling operand `body_scale_multiplier`
+  went red. The player's `0.50 M` collision radius stays a literal in the checker, and that asymmetry is
+  deliberate: it has **no authored mirror anywhere in `content/`** — these very rules keep it out — so
+  there is nothing to read, and the constant is cited to `docs/72:86` where it is stated.
 
 **What the footprint guard does not do.** Both rules match specific key-name patterns in specific
 directories. A derived value reintroduced under a name neither pattern matches, or in a directory
@@ -206,7 +214,13 @@ looked at one copy. **Grep for the claim, not for the file.** The differences:
   `measure_search_radii()` counts, under one definition on the pinned `sweep_ref`, how many
   `(removed value, numeric leaf)` pairs each candidate radius would flag, and writes the three numbers
   into `search_radius_measurement` in the expectation file, which is where the figures printed on a
-  green run come from. The ratio is **1 : 40 : 668** for site, file and scope radius — almost all of the
+  green run come from. Those printed figures are now **asserted by the tool that prints them**
+  (`SEARCH_RADIUS_DECLARED` in `verify_content.py`, plus a row tying the conclusion sentence's own
+  arithmetic to the same three numbers and a row requiring the pair definition to be present — which
+  A31 now prints beside the figures, so a reader meeting `1 : 40 : 668` can see what was counted).
+  Before that, editing `file_radius_pairs` back to `55` made a green run print `1 : 55 : 668` at
+  **exit 0**; only `derive --check` objected, and that is a different tool nobody has to run.
+  The ratio is **1 : 40 : 668** for site, file and scope radius — almost all of the
   widening is magnitude coincidences between unrelated quantities (a `1.5` m/s world speed against a
   `1.5` s control-immunity window; a hit count of `4` against `maximum_simultaneous_bosses`). An
   exception list of 39 or 667 entries could not be justified entry by entry, so the radius is narrow
@@ -259,7 +273,12 @@ with the evidence on each side recorded in `CSV_MIRROR_ROUNDED`, including which
 *non-discriminating* and why. The argument with actual force points the other way from the earlier text: every
 other ordinary body scale is a multiple of `0.05` and **neither `0.62` nor `0.625` is**, so the Razorling
 breaks the pattern either way — but under `0.625` the break is *motivated* (back-computed from a clean
-`0.50 M` diameter, `0.50 / 0.80 = 0.625`) and under `0.62` it is not.
+`0.50 M` diameter, `0.50 / 0.80 = 0.625`) and under `0.62` it is not. So the evidence **leans toward
+`0.625`** — that is the strongest single argument and it points there — and it is **not decisive** against
+the literal `0.62×` of `docs/31` plus the operand-home argument, so the question stays open and the current
+state is held **on cost grounds rather than on evidence**. An earlier revision called the evidence
+"balanced" ten lines after calling one argument better than another; leaning-but-undecided is what it is,
+and it has no tension in it.
 
 **The framing "`content/` follows the source it cites" is wrong for this field**, and it was used here before.
 `EN-07`'s own `source_refs` scopes `contact_footprint` to
@@ -450,7 +469,22 @@ what a citation pass is expected to change: the `(file, scope)` pairs, and the e
 multiset deltas with multiplicity kept. The derivation and its committed output go in a commit that
 touches **zero files under `content/`**, so `git show <that commit> --stat` is itself the ordering
 proof; the change lands in a second commit and `--verify` fails unless the measured delta equals the
-committed expectation element by element. `content/transcription-notes.md`, Ruling 43 records why this
+committed expectation element by element.
+
+`--verify` measures **the pass's own pinned range** (`sweep_ref → PASS_REF`), not `sweep_ref → HEAD`, and
+that is a fix rather than a detail: every row it checks is a **one-shot claim about one pass** — these 13
+`(file, scope)` pairs, these 13 string leaves, **zero** numbers moved — so pointed at a later `HEAD` it
+silently becomes "nothing has changed since". It was therefore **red at baseline** on this branch, exit 1
+with `numeric multiset moved`, because the next pull request's derived-value pass removes 115 numeric
+leaves by design (unmoved at `3b0a55a`, `fefb7a3` and `fcde187`; moves first at `19dcf42`). This is the
+same defect that deleted A29's rows 2 and 3 — a one-shot property of one commit range wired into a
+standing check — left standing here in a tool one pull request older. Pinning keeps the claim checkable
+instead of deleting it, two **standing** assertions remain (the range must be a range, and the pass must
+still be in `HEAD`'s history), and `--after-ref` can still point it anywhere, where its failure text now
+explains this rather than reading as a defect in the tree. There is deliberately **no `--check` verb**:
+`build` reads `previous_pass_ref` as the moving `origin/master` and the evidence artifact from the
+worktree, both of which have moved, so the file cannot regenerate byte-identically and the prediction's
+integrity rests on git history instead — which `--verify` now says on every run. `content/transcription-notes.md`, Ruling 43 records why this
 replaced a narrated "enumerated before it was measured" claim that no commit supported.
 
 It also carries the live sweep that found the 16 mis-citations of audit §13 — the ones a frozen

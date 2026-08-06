@@ -9,7 +9,8 @@
     "GDD-SPECIALIZED-RESOURCE-IDENTITIES#accepted-identity-map",
     "canonical_letter: TDD-CONTENT-DATA#resources",
     "resonance_behavior: GDD-MINING#geode-resonance-fields",
-    "resonance_behavior.short_modifier: GDD-SPECIALIZED-RESOURCE-IDENTITIES#geode-resonance-behavior"
+    "resonance_behavior.short_modifier: GDD-SPECIALIZED-RESOURCE-IDENTITIES#geode-resonance-behavior",
+    "resource_class: TDD-CONTENT-DATA#minted-value-vocabularies"
   ],
   "canonical_letter": "A",
   "material_character": "Clean, faceted field-aligning crystal",
@@ -17,7 +18,7 @@
   "primary_color": "Saturated cyan",
   "icon_and_silhouette_cue": "Three-point prism",
   "audio_character": "Clear rising chime",
-  "resource_class": "specialized ordinary resource",
+  "resource_class": "specialized-material",
   "inventory_scope": "run-local",
   "persistence": "Run-local; unspent units are lost when the run ends",
   "shared_economy_tier": true,

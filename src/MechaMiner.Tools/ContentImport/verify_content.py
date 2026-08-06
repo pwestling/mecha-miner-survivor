@@ -367,14 +367,34 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       substring matching finds "st." inside 93 ordinary words ending a
       sentence ("first.", "specialist.", "cost.", ... 21 forms) and "ver."
       inside 5 ("forever.", "solver.", "hover."). None of those 98 is an
-      abbreviation. The bounded form finds zero today.
+      abbreviation. Those figures were measured at an earlier tree and the
+      corpus has grown since; re-measured at b71371e (tree c4422a2a, 201
+      files) the same two searches find 104 and 7. The conclusion is
+      unchanged and stronger: the word boundary is load-bearing.
+      The bounded form is NOT free of false positives, and the claim that
+      it "finds zero today" was true only while `no.` had no occurrence.
+      `no.` is the only one of these eighteen tokens that is also an
+      ordinary English word, so it is the only one whose period can BE the
+      sentence end this list is defined to exclude. At b71371e the bounded
+      form reports exactly 1 hit, docs/technical/delivery-waves.md:598
+      "than a yes or no. Its numbers are 300 trials", which is that word
+      ending a sentence and not an abbreviation at all. So the abbreviation
+      sense is required to introduce a numeral ("No. 5"), which it always
+      does; with that suffix the bounded form reports 0. The narrowing is
+      specific to `no.` and does not generalise: none of the other
+      seventeen is a word, so a bounded match on them cannot land on a
+      sentence end.
       THE FAILURE MESSAGE POINTS AT THE MATCHER, NOT AT A QUOTATION. The
       day someone writes "e.g." in a design document, nothing is wrong with
       any content string; what is wrong is that the quotation rule's
       premise no longer holds and the rule needs revisiting.
       Negative control: docs/ must not be modified, so the check runs
-      against a scratch tree - a byte copy of docs/ with "e.g." inserted
-      into one sentence -> FAIL naming that file and token.
+      against a scratch tree - a byte copy of docs/ with the token
+      inserted. One control per surviving sense, both measured at b71371e:
+      "e.g." mid-sentence -> FAIL naming that file and token, exit 1; and
+      a genuine "No. 5" mid-sentence -> FAIL naming that file and token,
+      exit 1, which is what proves the numeral suffix narrowed the rule
+      rather than disabled it.
       Mandate: content/quote-verification-audit.md (adopted rule and its
       stated corpus dependency)                                     FAILURE
 
@@ -2531,7 +2551,20 @@ def check_no_nulls() -> list[tuple]:
 # "burst." 4, and fifteen more - and "ver." hits 5, being "forever.", "solver." and
 # "hover.". Every one of them is a sentence end, not an abbreviation, and the word
 # boundary below removes all 98. A check that fires on those would be turned off
-# within a day, which would leave no check.
+# within a day, which would leave no check. (Those counts are from an earlier tree;
+# at b71371e the same two searches find 104 and 7. The argument is unaffected.)
+#
+# THE WORD BOUNDARY IS NECESSARY BUT NOT SUFFICIENT, which is the correction this
+# block owed. It removes every word that merely ENDS with a listed token; it cannot
+# remove a word that IS one. `no.` is the only token here that is also an ordinary
+# English word, so it is the only one whose period can be the sentence end the
+# selection criterion above excludes by definition - and at b71371e the bounded form
+# fired on exactly that, docs/technical/delivery-waves.md:598 "than a yes or no. Its
+# numbers are 300 trials", where the sentence does not continue past the period and
+# no quotation is at risk. The abbreviation sense of "no." always introduces a
+# numeral, so ABBREVIATION_SUFFIX below requires one. That distinguishes the two
+# senses instead of dropping the token, which would have left the "No. 5" form
+# unchecked. The other seventeen take no suffix because none of them is a word.
 #
 # THE MESSAGE IS THE POINT. When this fails, no content string is wrong. What is
 # wrong is that the quotation rule's premise has lapsed. The message must send the
@@ -2544,8 +2577,18 @@ SENTENCE_INTERNAL_ABBREVIATIONS = (
     "no.", "fig.", "eq.", "sec.", "p.", "pp.", "ca.", "al.", "esp.", "incl.",
 )
 
+# A lookahead required AFTER a token, for the one token whose two senses the word
+# boundary cannot separate. Keyed by token so the other seventeen are untouched.
+ABBREVIATION_SUFFIX = {"no.": r"(?=\s*\d)"}
+
 ABBREVIATION_RX = tuple(
-    (abbr, re.compile(r"(?<![A-Za-z0-9])" + re.escape(abbr), re.IGNORECASE))
+    (
+        abbr,
+        re.compile(
+            r"(?<![A-Za-z0-9])" + re.escape(abbr) + ABBREVIATION_SUFFIX.get(abbr, ""),
+            re.IGNORECASE,
+        ),
+    )
     for abbr in SENTENCE_INTERNAL_ABBREVIATIONS
 )
 

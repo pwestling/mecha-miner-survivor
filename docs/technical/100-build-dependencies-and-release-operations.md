@@ -98,11 +98,17 @@ Package versions are exact locked. CI restores in locked mode and fails if lock 
 
 ## Build configurations
 
-| Configuration | Optimization | Diagnostics | Intended use |
-| --- | --- | --- | --- |
-| Debug | low | assertions, full logs, debug overlays/actions, symbols | local correctness development |
-| Development | optimized | metrics, profiler markers, debug tools, symbols | internal demo, balance, performance diagnosis |
-| Release | optimized | bounded sanitized logs, crash/recovery, no debug actions | external shipping candidate |
+| Configuration | MSBuild identity | Optimization | Diagnostics | Intended use |
+| --- | --- | --- | --- | --- |
+| Debug | `Debug` | low | assertions, full logs, debug overlays/actions, symbols | local correctness development |
+| Development | `ExportDebug` | optimized | metrics, profiler markers, debug tools, symbols | internal demo, balance, performance diagnosis |
+| Release | `ExportRelease` | optimized | bounded sanitized logs, crash/recovery, no debug actions | external shipping candidate |
+
+There are exactly three configurations, and the two columns name the same three things at two layers. The workflow name is the vocabulary of this document and of the wrapper's `configuration` argument. The MSBuild identity is the configuration name the compiler and the engine use, and it is not free choice: `Godot.NET.Sdk` declares `Debug;ExportDebug;ExportRelease` in its own SDK properties, and Godot's tooling only ever asks for those three — the editor builds `Debug`, and an export preset's export-with-debug flag selects `ExportDebug` or `ExportRelease`. A fourth MSBuild configuration named `Development` would therefore be one that no Godot export could produce, so `Development` maps onto `ExportDebug`, whose intent — an optimized build that still carries diagnostics and symbols — is exactly the `Development` row.
+
+Every project in the solution declares the same three MSBuild configurations, including the pure libraries, because a project reference built from the Godot project inherits its configuration. `Microsoft.NET.Sdk` understands only `Debug` and `Release`, so optimization and the diagnostic symbol are set explicitly per configuration rather than inherited from the SDK's defaults. Project code selects behavior through the per-configuration diagnostic symbol, not through the engine's own `DEBUG` symbol, which `Godot.NET.Sdk` also defines for `ExportDebug`.
+
+Restore is configuration-independent and produces one committed lock file per project. `Godot.NET.Sdk` references its editor assembly only under `Debug`, so restoring under `ExportRelease` would rewrite that project's lock file and break every later locked restore; a single restore at the default configuration produces the superset dependency graph that all three configurations build against.
 
 All configurations consume the same gameplay content bundle unless an explicitly labeled test bundle is selected outside standard flow. `Development` must be representative enough for performance after accounting for known instrumentation overhead.
 
@@ -133,7 +139,9 @@ The root wrappers `./build.sh` and `./build.ps1` expose identical verbs and argu
 
 Every verb is noninteractive, returns nonzero on failure, writes structured evidence beneath `artifacts/`, and prints a concise final result plus artifact paths. Unknown verbs/arguments fail with usage. CI calls these same wrappers instead of recreating workflows. Publishing, Steam upload, signing, and credential use remain separate explicitly authorized operations and are never side effects of `release-validate`.
 
-Stable process exit classes are: `0` success, `2` invalid verb/arguments, `3` missing or mismatched pinned environment, `4` validation/test failure, `5` build/import/export/package failure, `6` performance/budget failure, `7` authorization/credential/external-state action required, and `8` unexpected tool-internal failure. More detailed stable diagnostic codes live in structured output; wrappers preserve the owning tool's class rather than returning success after partial work.
+Stable process exit classes are: `0` success, `2` invalid verb/arguments, `3` missing or mismatched pinned environment, `4` validation/test failure, `5` build/import/export/package failure, `6` performance/budget failure, `7` authorization/credential/external-state action required, and `8` unexpected tool-internal failure. There is deliberately no `1`: a wrapper that returns it has leaked an unclassified failure from an underlying tool. More detailed stable diagnostic codes live in structured output; wrappers preserve the owning tool's class rather than returning success after partial work.
+
+Every verb in the table above is registered from the moment the command surface exists, with its final argument names, even when the work package that owns its behavior has not landed. Invoking such a verb validates its arguments and then returns class `2` with a distinct stable diagnostic code and the owning work-package ID, so it is nonzero, typed, and distinguishable in structured output from an unknown verb. This class is closed at eight members and none of them denotes "not implemented yet"; the diagnostic code carries that distinction, which is what this section already assigns structured output to do.
 
 ## Godot import and export
 

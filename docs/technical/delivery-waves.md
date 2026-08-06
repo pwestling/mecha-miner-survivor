@@ -55,7 +55,10 @@ the consumer rebases.
 | generated registries and any generated artifact under `generated/` | doc 110: "Generated files are changed through their generator" |
 | `tests/verification/*.json` for a package a stream does not own | `VER-*` IDs are never renumbered or reused |
 | `docs/technical/**` normative documents | doc 114 § Specification maintenance autonomy still applies for a genuine contract correction, but a shared-contract edit is coordinated, "never an incidental edit hidden in a consumer task" (doc 110) |
-| `build/` scripts shared across streams (`bootstrap-*`, `verify-*`, and, once it exists, `build.sh` / `build.ps1`) | one workflow entrypoint; AGENTS.md: "Do not create competing workflow entrypoints" |
+| `build.sh`, `build.ps1`, `build/` scripts (`toolchain.json`, `bootstrap-*`, `verify-*`) | one workflow entrypoint; AGENTS.md: "Do not create competing workflow entrypoints" |
+| `src/MechaMiner.Tools/Cli/`, `src/MechaMiner.Tools/Verbs/`, `src/MechaMiner.Tools/Toolchain/` | the verb table, exit classes, and diagnostic codes are the workflow contract every stream and every CI job reads. A stream adds its own tool code elsewhere under `src/MechaMiner.Tools/` and requests the verb registration |
+| `tests/shared/` | the deterministic fixture utilities every test project links. Changing an observable behaviour here changes every stream's tests at once |
+| `game/tests/` and the `MMG-RUNNER-REPORT` schema | the engine tier's runner and report contract. `W2-SHELL` owns `tests/MechaMiner.Game.Tests/` from wave 2, but the runner scene and the report shape stay coordinated |
 
 Adding a top-level ownership directory is always an integration-owner change:
 doc 100 § Repository structure requires the registry and the architecture tests to
@@ -125,18 +128,59 @@ with it.
 | --- | --- | --- | --- | --- |
 | `FND-001` | Pin Godot/.NET versions, solution/project skeleton, repository layout, editor/analyzer settings | none | clean restore/build and version report | `MechaMiner.sln`, `global.json`, `Directory.Build.*`, `Directory.Packages.props`, `NuGet.config`, `.editorconfig`, `.gitignore`, every `*.csproj`, `game/project.godot`, `game/scenes/Boot.tscn`, `game/BootCompositionRoot.cs`, `build/bootstrap-linux.sh`, `build/verify-architecture.sh`, `build/verify-policies.sh`, `build/policy-fixtures/`, `tests/verification/FND-001.json` |
 
-Done in this PR (`TASK-FND-001-001`, `TASK-FND-001-002`, `TASK-FND-001-003`).
+**`FND-001` is landed and Done.** `TASK-FND-001-001`, `TASK-FND-001-002`, and
+`TASK-FND-001-003` are merged, with `tests/verification/FND-001.json` carrying thirteen
+implemented entries. That satisfies the hard dependency of `FND-002`, `FND-003`, and
+`FND-004`.
 
 ### Step 2
 
 | Package | Deliverable | Depends on | Completion gate | Owned file scope |
 | --- | --- | --- | --- | --- |
-| `FND-002` | Root wrapper/typed command host, doctor/bootstrap/format/build base verbs, and stable registration surface for later content/import/run/export owners | `FND-001` | implemented verbs run noninteractively and unavailable owner verbs return a typed nonzero status until their package lands | `build.sh`, `build.ps1`, `src/MechaMiner.Tools/` command host, `build/` |
-| `FND-003` | Pure NUnit test projects and Godot integration-test harness | `FND-001` | sample pure and engine tests pass headlessly | `tests/MechaMiner.*.Tests/` shared fixture support, `tests/MechaMiner.Game.Tests/`, engine test scenes under `game/` |
+| `FND-002` | Root wrapper/typed command host, doctor/bootstrap/format/build base verbs, and stable registration surface for later content/import/run/export owners | `FND-001` | implemented verbs run noninteractively and unavailable owner verbs return a typed nonzero status until their package lands | `build.sh`, `build.ps1`, `build/toolchain.json`, `build/verify-verbs.sh`, `build/verify-wrapper-parity.sh`, `build/verify-format.sh`, `build/verify-configurations.sh`, `src/MechaMiner.Tools/` command host, `Directory.Build.props` and `MechaMiner.sln` configuration sections, `tests/verification/FND-002.json` |
+| `FND-003` | Pure NUnit test projects and Godot integration-test harness | `FND-001` | sample pure and engine tests pass headlessly | `tests/shared/`, the `Support/` and `Goldens/` subtrees of each pure test project, `tests/MechaMiner.Game.Tests/`, `game/tests/`, `build/verify-test-harness.sh`, `build/verify-godot-runner.sh`, `tests/verification/FND-003.json` |
 
 `FND-002` and `FND-003` are independent of each other and may be two sessions, but
 both are integration-owner scope because they touch the shared workflow entrypoint
 and every test project. `FND-003` is the gate that opens wave 1.
+
+**`FND-002` and `FND-003` are landed and Done**, in one PR of four task commits:
+`TASK-FND-002-001`, `TASK-FND-002-002`, `TASK-FND-003-001`, `TASK-FND-003-002`.
+`tests/verification/FND-002.json` carries fifteen implemented entries and
+`tests/verification/FND-003.json` twelve. **Wave 1 is therefore open**: `W1-DAT`
+(`DAT-001`) and `W1-SIM` (`SIM-001`, `SIM-003`, `SIM-005`) may start.
+
+What every stream now gets, and must use rather than reinvent:
+
+| Surface | Where | Notes for consumers |
+| --- | --- | --- |
+| the eighteen verbs | `./build.sh`, `./build.ps1` | one entrypoint; neither wrapper branches on the verb, so parity is structural |
+| the verb table | `src/MechaMiner.Tools/Cli/VerbRegistry.cs` | integration-owner scope. A stream that needs a verb implemented requests it; ten verbs are registered and return a typed nonzero status naming their owner |
+| exit classes and diagnostic codes | `src/MechaMiner.Tools/Cli/ExitClass.cs`, `DiagnosticCodes.cs` | doc 100's eight classes, no `1`. New codes are appended, never renumbered |
+| structured verb evidence | `artifacts/verbs/<verb>/<invocation>/result.json` | `MMT-VERB-RESULT`. `TASK-FND-010-002` maps this onto `SCH-OBS-003` |
+| deterministic fixture utilities | `tests/shared/` | linked into all four test projects. Seed and identity logging, named tolerances, shrinking, goldens. See `tests/shared/README.md` |
+| the engine tier | `game/tests/`, `tests/MechaMiner.Game.Tests/` | one runner scene, a JSON report contract. `W2-SHELL` owns `tests/MechaMiner.Game.Tests/` from wave 2; the runner and its report schema stay integration-owner scope |
+| toolchain pins | `build/toolchain.json` | read by `doctor` and `bootstrap`. Adding a tool needs doc 100's dependency request |
+
+Two conventions every stream must follow because the harness enforces them:
+
+1. **Name every float tolerance.** `NumericAssert` has no overload that takes a bare
+   epsilon, and `Tolerance.Named` rejects a blank name, a blank rationale, and a
+   nonpositive magnitude. Doc 91: "'Approximately equal' without a named tolerance is
+   not an acceptable test." `GEO-001` and `COM-003` own the central world-scale
+   tolerance catalogue; until then each test names and justifies its own.
+2. **A golden is never accepted to make a run green.** `GoldenText`'s update switch
+   rewrites the golden and still fails. Review the diff against its authoritative
+   source, commit the new golden deliberately, then rerun without the switch.
+
+Two things the harness deliberately does not provide, so nobody builds on a guess:
+
+- **Authoritative randomness.** `DeterministicCase` and `PropertyCase` seed
+  `System.Random`. That is test-harness randomness. The exact PCG32 and SplitMix64
+  stream contract is `SIM-005`'s, and its scripted test sources are what a gameplay
+  test uses.
+- **Build identity.** `HarnessIdentity` reports the harness identity and says
+  `build-identity=pending:TASK-FND-004-001`. `FND-004` replaces it.
 
 ### Step 3
 
@@ -147,9 +191,13 @@ and every test project. `FND-003` is the gate that opens wave 1.
 | `FND-008` | Profiler marker/metric registry and benchmark report format | `FND-004` | sample CPU/count/allocation report produced | diagnostics metric owner, `SCH-OBS-002` |
 | `FND-009` | Architecture dependency tests plus complete documentation/requirement/component/contract/schema/verification/work ID registry validator | `FND-001`, `FND-003` | forbidden project edges and missing/duplicate/dangling registry IDs/links fail fixtures | architecture tests, registry/document validation tooling, `SCH-QUA-001` validator |
 
-Doc 110 makes `FND-007` and `FND-008` depend on `FND-004`, so inside this step
-`FND-004` lands first and then `FND-007`/`FND-008` can run in parallel with
-`FND-009`. `FND-009` replaces `build/verify-architecture.sh`'s reference-graph
+**Step 3 is now Ready.** `FND-004` depends only on `FND-001`, and `FND-009` depends on
+`FND-001` and `FND-003`, both of which are Done. Doc 110 makes `FND-007` and `FND-008`
+depend on `FND-004`, so inside this step `FND-004` lands first and then
+`FND-007`/`FND-008` can run in parallel with `FND-009`. `FND-004` also has two waiting
+consumers already recorded in code: `HarnessIdentity` in `tests/shared/` says
+`build-identity=pending:TASK-FND-004-001`, and `game/BootCompositionRoot.cs` names
+`FND-004` as its first successor. `FND-009` replaces `build/verify-architecture.sh`'s reference-graph
 assertions with real architecture tests (`TASK-FND-009-001`) and takes over
 validating `tests/verification/*.json` (`TASK-FND-009-002`).
 
@@ -165,6 +213,21 @@ validating `tests/verification/*.json` (`TASK-FND-009-002`).
 requires: `Windows Development x86-64`, `Windows Release x86-64`,
 `Linux/Steam Deck Development x86-64`, `Linux/Steam Deck Release x86-64`.
 
+**`FND-005` and `FND-006` are both unblocked**: `FND-005` needs `FND-002` and `FND-003`,
+`FND-006` needs `FND-001` and `FND-002`. Three things they inherit rather than invent:
+
+- `FND-005`'s CI job calls `./build.sh` verbs, never a script directly. The fast
+  pull-request path is `bootstrap`, `format-check`, `build`, `test-fast`; the main path
+  adds `test-main`. The `content` verb belongs in the fast path as soon as `DAT-006`
+  lands, and until then it exits 2 naming `DAT-006`, which is a legible CI failure rather
+  than a silent gap.
+- `FND-006` implements `export` and `run`, and inherits Decision 4's mapping: `development`
+  builds `ExportDebug` and `release` builds `ExportRelease`. It also owns the export-preset
+  exclusion for `game/tests/`, whose compile-time exclusion under `ExportRelease` already
+  exists.
+- `FND-006` records the Godot export-template hash in `build/toolchain.json` and moves it
+  out of `deferred`, per Decision 7.
+
 Then the M0 close gate, `TASK-FND-005-002`: "run and close the complete M0
 clean-checkout/import/launch/export gate", hard dependency "all prior M0 tasks",
 owned scope "integration configuration/evidence only", close evidence "M0 evidence
@@ -174,7 +237,7 @@ bundle with no unexplained warning or manual repair".
 
 ## Wave 1 - pure contracts
 
-**Starts when `FND-003` is Done.** Two streams, no file overlap. These are the
+**`FND-003` is Done, so this wave is open now.** Two streams, no file overlap. These are the
 contract-first packages that every later wave consumes, so nothing downstream may
 begin against them until each package is Done.
 
@@ -499,6 +562,134 @@ FND-001 container, not recalled.
   the tagged source rather than restored from nuget.org - doc 114 § Specification
   maintenance autonomy both permits and requires this, because it is the case where
   "the documented contract cannot be implemented as written".
+
+### Decision 4 - doc 100's three configurations map onto Godot's three, and doc 100 was corrected
+
+- **The conflict was real.** Doc 100 § Build configurations prescribed
+  `Debug` / `Development` / `Release`. `Godot.NET.Sdk/4.7.1` sets
+  `<Configurations>Debug;ExportDebug;ExportRelease</Configurations>` unconditionally in
+  its own `Sdk.props`, before `Directory.Build.props` is even evaluated, and Godot's
+  tooling only ever asks for those three names: the editor builds `Debug`, and an export
+  preset's export-with-debug flag selects `ExportDebug` or `ExportRelease`.
+- **Why a fourth configuration is not the answer.** An MSBuild configuration named
+  `Development` builds, but nothing can ever produce it as a Godot export, so
+  `export <platform> development` would still have to emit an `ExportDebug` build. The
+  configuration would exist only as a name.
+- **What was implemented.** A 1:1 mapping. `Debug` -> `Debug`,
+  `Development` -> `ExportDebug`, `Release` -> `ExportRelease`. Nothing dropped, nothing
+  invented. The workflow vocabulary stays doc 100's three names; the wrapper's
+  `configuration` argument accepts exactly `debug`, `development`, `release` and
+  translates. Every project declares the same three MSBuild configurations, because a
+  project reference built from `MechaMiner.Game` under `ExportRelease` inherits that
+  configuration and `Microsoft.NET.Sdk` knows only `Debug` and `Release`; optimization,
+  symbols, and one `MECHAMINER_*` diagnostic symbol per configuration are therefore set
+  explicitly in `Directory.Build.props`. `MechaMiner.sln` carries exactly these three
+  solution configurations on `Any CPU`.
+- **Project code gates on `MECHAMINER_DEBUG`, `MECHAMINER_DEVELOPMENT`, or
+  `MECHAMINER_RELEASE`**, never on `DEBUG`, which `Godot.NET.Sdk` also defines for
+  `ExportDebug`. `build/verify-configurations.sh` asserts that exactly one
+  `MECHAMINER_*` symbol is defined per configuration across five projects.
+- **A second defect the resolution had to absorb.** `Godot.NET.Sdk` references
+  `GodotSharpEditor` only under `Debug`, so restoring under `ExportRelease` rewrites
+  `game/packages.lock.json` and every later `--locked-mode` restore fails. Restore is
+  therefore configuration-independent: the `build` verb restores once at the default
+  configuration, which yields the superset graph all three configurations build against,
+  and then builds the requested configuration with `--no-restore`. The gate asserts that
+  no lock file changes after building all three.
+- **Doc 100 was corrected in the same PR**, per doc 114 § Specification maintenance
+  autonomy, which requires it when "the documented contract cannot be implemented as
+  written". § Build configurations now carries an `MSBuild identity` column, the reason
+  the identity is not free choice, the per-project declaration rule, and the restore
+  rule. The next reader of doc 100 sees the mapping rather than an apparent
+  contradiction.
+- **Successor.** `FND-006` creates the four export presets and is the package that
+  proves the mapping end to end by producing a `development` and a `release` package per
+  platform.
+
+### Decision 5 - a registered verb whose owner has not landed returns exit class 2 with a distinct diagnostic code
+
+- **The gap was real.** Doc 110's `FND-002` completion gate requires that "unavailable
+  owner verbs return a typed nonzero status until their package lands". Doc 100 fixes
+  exactly eight exit classes and **none of them means "not implemented yet"**.
+- **What was implemented.** Exit class `2` (invalid verb or arguments) with the stable
+  diagnostic code `MMT-2002`, the owning work-package ID, and the verb's required effect,
+  in both the printed final result and the structured result document. An unknown verb is
+  `MMT-2001` and an invalid argument is `MMT-2003`, so the three cases are
+  distinguishable in structured output while sharing one class.
+- **Why not a ninth class.** Doc 100's own sentence assigns finer distinctions to
+  structured output: "More detailed stable diagnostic codes live in structured output".
+  Adding a class would change a contract every later tool and CI job reads, to express
+  something the existing mechanism already expresses.
+- **Doc 100 § Standard command surface now states this**, plus the fact that there is
+  deliberately no class `1`.
+- **Consequence for CI.** `FND-005` can invoke any verb and get a loud, classified
+  failure with the package to chase. `./build.sh content` before `DAT-006` lands exits 2
+  naming `DAT-006`.
+
+### Decision 6 - the ten unimplemented verbs and their owning packages
+
+Recorded so no stream re-derives the routing. These are registration decisions, not new
+scope: each names the package doc 110 already makes responsible for the behavior.
+
+| Verb | Owner | Why that package |
+| --- | --- | --- |
+| `test-nightly` | `OPS-001` | doc 110: "main/nightly/release CI suites" |
+| `content` | `DAT-006` | canonical bundle compiler, hash, and reports |
+| `run` | `FND-006` | owns the local launch and platform adapter path |
+| `scenario <id>` | `SIM-009` | headless simulation runner, step/advance/script/checksum/report |
+| `map --seed <seed>` | `MAP-009` | map audit CLI, images/layers/reports |
+| `map-batch <partition>` | `MAP-010` | the nightly profile/signature seed matrix defines the partitions |
+| `benchmark <id>` | `QUA-005` | the `PERF-01`-`PERF-08` runner; `QUA-001` supplies the `WB-*` scenarios and `FND-008` the report format |
+| `export <platform> <configuration>` | `FND-006` | named Windows/Linux export presets |
+| `package-demo` | `OPS-002` | release packaging, checksums, SBOM |
+| `release-validate` | `OPS-002` | release gates and manifest generation |
+
+The implementing package flips its own row from `AwaitingOwner` to `Implemented` in
+`src/MechaMiner.Tools/Cli/VerbRegistry.cs` and updates
+`build/verify-verbs.sh`'s matrix in the same change. That file is integration-owner
+scope, so the request goes through the integration owner.
+
+### Decision 7 - doctor reports a tool whose owning package has not landed as deferred, not missing
+
+- Doc 100 § Toolchain pinning lists Blender and the export templates among the pinned
+  tools. The derivation scripts that need Blender are `AST-002`'s, and the export
+  presets that need the 1.2 GB templates are `FND-006`'s.
+- Failing `doctor` on their absence would make the verb unusable in every environment
+  until those packages land, which defeats the gate rather than strengthening it. So
+  `build/toolchain.json` records each tool with the package that will require it, and
+  `doctor` prints it as `deferred` with that package named. `doctor` fails, with exit
+  class 3, only on a tool that is required now.
+- The owning package moves its tool from `optional_tools` to required, and pins its exact
+  version, in the same change that first needs it.
+
+### Decision 8 - PowerShell is not a pinned requirement on Linux or macOS
+
+- `build.ps1` is the Windows wrapper. `pwsh` is listed under `optional_tools` in
+  `build/toolchain.json`.
+- `build/verify-wrapper-parity.sh` therefore proves parity two ways. Structurally, and
+  on every platform: neither wrapper contains a `case`, a `switch`, a `$1`, a `shift`,
+  or an indexed read of the argument vector, and both build the same host project and
+  forward every argument verbatim - so there is one verb table and nothing that can
+  drift. Behaviorally, when `pwsh` is present: run both wrappers and require
+  byte-identical usage tables. When `pwsh` is absent the behavioral check reports
+  itself as **skipped**, by name, and never as passed.
+
+### Decision 9 - deliberately invalid fixtures are never committed inside a compiled project
+
+- `FND-001` established the pattern: invalid fixtures live under
+  `build/policy-fixtures/`, outside `MechaMiner.sln`, and a gate script drives them in
+  isolation.
+- Three `FND-002`/`FND-003` gates need a bad fixture that the verb under test can
+  actually see, and the verbs under test operate on `MechaMiner.sln`, so a project the
+  solution excludes would be invisible to them. Those fixtures are therefore
+  **transient**: `build/verify-format.sh` and `build/verify-verbs.sh` write them, run
+  the gate, and remove them on every exit path including failure. Nothing is committed,
+  and they are written into a test project rather than a shipping assembly, so no
+  committed file inside `MechaMiner.Tools` can fight `format`, `format-check`, or
+  warnings-as-errors.
+- The one fixture that is committed is the deliberately failing NUnit case
+  (`SeedReproductionFixture`), which is marked `Explicit` so no ordinary run executes
+  it, and whose contract is independently covered by always-on tests.
 
 ---
 

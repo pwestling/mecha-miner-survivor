@@ -76,11 +76,26 @@ public sealed class CommandAdmissionGate
     /// The system phase a paused transaction's domain event is stamped with.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Phase 1 of doc 10 § System phase ordering - "Admit and normalize commands for the tick" - because a
     /// paused transaction is the between-ticks form of exactly that act and <c>CMP-SIM-002</c> is the phase-1
     /// owner. <c>EventProvenance</c> requires a phase in 1..14, so a transaction cannot be stamped "no
     /// phase"; naming the admitting phase is truer than borrowing phase 11, which belongs to the run-local
     /// transactions "caused by gameplay".
+    /// </para>
+    /// <para>
+    /// <b>The phase is provenance now, not an ordering key, so this choice is cheap to revisit.</b>
+    /// <c>EventOrdering</c> sorts an event batch by tick and emission sequence and by nothing further: the
+    /// sequence is per-tick global, so the phase cannot discriminate any pair and is not consulted by the
+    /// comparison at all. Choosing 1 over 11 therefore changes what the event <em>says about itself</em> and
+    /// changes no observable order, which is worth stating because the argument above reads like an ordering
+    /// argument and is not one. The one thing the phase does have to satisfy is
+    /// <c>EventOrdering.AssertPhaseAgreesWithSequenceWithinTick</c>: within a tick the phase must not
+    /// decrease as the sequence rises. A transaction opens its own publication, so its emission sequence
+    /// starts at zero and its event is the only record in the batch that check runs over, which any single
+    /// phase value satisfies. Revisiting the choice costs a reading of the event's provenance, not a
+    /// regression in ordering.
+    /// </para>
     /// </remarks>
     public const int TransactionCommitSystemPhase = 1;
 
@@ -174,11 +189,28 @@ public sealed class CommandAdmissionGate
 
     /// <summary>The authoritative state version paused transactions are validated against.</summary>
     /// <remarks>
-    /// Owned here rather than by a domain component because doc 115 § Component registry gives
-    /// <c>CMP-SIM-002</c> the timing "atomically between ticks": whoever advances the version has to do so
-    /// inside the same indivisible step that applies the transaction, and this is that step. The domain
+    /// <para>
+    /// Owned by <c>CMP-SIM-002</c> rather than by a domain component because doc 115 § Component registry
+    /// gives <c>CMP-SIM-002</c> the timing "atomically between ticks": whoever advances the version has to do
+    /// so inside the same indivisible step that applies the transaction, and this is that step. The general
+    /// form of the rule is that whatever makes a step indivisible must own the counter that marks the step
+    /// happened, because a counter advanced by anything outside that step can disagree with it. The domain
     /// components own the state's <em>content</em>; a second version counter beside this one would be the
     /// two-writer arrangement doc 115 forbids.
+    /// </para>
+    /// <para>
+    /// <b>This is not <c>CMP-PRG-001</c>'s "loadout versions", and the two must not be merged.</b> That is
+    /// the nearest-looking counter in doc 115 § Component registry and the place a progression owner would
+    /// naturally reach when a paused install needs a version, so the ruling is recorded here rather than left
+    /// to be rediscovered. They count different things. This counter marks that one indivisible
+    /// between-ticks step occurred, whatever the step touched, which is why an optimistic-concurrency check
+    /// against it is meaningful: a caller that captured a view at version <c>N</c> and submits against
+    /// <c>N</c> is asserting that nothing at all has been committed since. <c>CMP-PRG-001</c>'s loadout
+    /// versions version the loadout's <em>content</em>, and a loadout can be reshaped by things that are not
+    /// paused transactions at all. A progression component that needs this counter reads it here; it does not
+    /// mint its own and does not repurpose its loadout version to stand in for it, because either would give
+    /// the indivisibility marker a second writer.
+    /// </para>
     /// </remarks>
     public long TransactionStateVersion => _transactionStateVersion;
 
@@ -290,7 +322,8 @@ public sealed class CommandAdmissionGate
     /// <description>
     /// Then the tick window: a target tick already frozen or passed is
     /// <see cref="CommandRejectionReason.Stale"/>; any other tick than the open one is
-    /// <see cref="CommandRejectionReason.AdmissionClosed"/>.
+    /// <see cref="CommandRejectionReason.AdmissionClosed"/>, whose detail distinguishes the three
+    /// distinct mistakes that reach it (see <see cref="BuildAdmissionClosedDetail"/>).
     /// </description>
     /// </item>
     /// <item>
@@ -378,13 +411,7 @@ public sealed class CommandAdmissionGate
             return Reject(
                 CommandRejectionReason.AdmissionClosed,
                 envelope,
-                _isAdmissionOpen
-                    ? "the open admission window is for tick "
-                        + _openTick.ToString()
-                        + ", not tick "
-                        + envelope.TargetTick.ToString()
-                    : "no admission window is open; doc 10 § System phase ordering admits in phase 1 of a "
-                        + "tick",
+                BuildAdmissionClosedDetail(envelope),
                 out rejection);
         }
 
@@ -835,6 +862,54 @@ public sealed class CommandAdmissionGate
         List<long> sorted = new(keys);
         sorted.Sort();
         return sorted;
+    }
+
+    /// <summary>
+    /// Builds the detail for an <see cref="CommandRejectionReason.AdmissionClosed"/> refusal, saying which
+    /// of the three ways the window was missed.
+    /// </summary>
+    /// <param name="envelope">The refused envelope.</param>
+    /// <remarks>
+    /// <para>
+    /// One reason code, three messages. The outcome is the same and the reason code stays one value, because
+    /// a caller branching on the code is deciding whether to resubmit and the answer is the same in all
+    /// three. But the <em>mistakes</em> are different, and the detail is what a human reads when working out
+    /// why a command vanished, so collapsing them into "the window is for tick X, not tick Y" would throw
+    /// away the only part of the refusal that distinguishes them.
+    /// </para>
+    /// <para>
+    /// Ahead of the window is a caller running early: it built a command for a tick the run has not reached,
+    /// so a window for that tick will open later and the same envelope will be admissible then. Behind the
+    /// window is a different fault: doc 10 § System phase ordering opens a window in phase 1 of every tick,
+    /// and a tick before the open one was either never opened or was closed without freezing, so no window
+    /// for it will ever exist and the envelope has to be rebuilt against a reachable tick. The stale check
+    /// above already claimed the frozen ticks, so this branch is specifically the unfrozen past, which is
+    /// the shape a gap in the tick sequence produces.
+    /// </para>
+    /// </remarks>
+    private string BuildAdmissionClosedDetail(in CommandEnvelope envelope)
+    {
+        if (!_isAdmissionOpen)
+        {
+            return "no admission window is open; doc 10 § System phase ordering admits in phase 1 of a tick";
+        }
+
+        if (envelope.TargetTick.Index > _openTick.Index)
+        {
+            return "tick "
+                + envelope.TargetTick.ToString()
+                + " is ahead of the open admission window at tick "
+                + _openTick.ToString()
+                + "; a window opens in phase 1 of the tick it admits for, so this envelope is early rather "
+                + "than wrong and the same identity is admissible once that tick opens";
+        }
+
+        return "tick "
+            + envelope.TargetTick.ToString()
+            + " is behind the open admission window at tick "
+            + _openTick.ToString()
+            + " and was never frozen, so no window for it was ever opened and none ever will be; the "
+            + "envelope has to be rebuilt against a tick the run has not passed";
     }
 
     private bool Reject(

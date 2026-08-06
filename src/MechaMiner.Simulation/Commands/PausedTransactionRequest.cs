@@ -82,6 +82,10 @@ public readonly struct PausedTransactionRequest : IEquatable<PausedTransactionRe
     /// relevant authoritative state", and an "Invalid or stale" transaction "change[s] nothing". This is the
     /// version of that view, so the gate can tell a request raised against the state it still has from one
     /// raised against a state that has since moved.
+    ///
+    /// The counter itself belongs to <c>CMP-SIM-002</c>, and <c>CommandAdmissionGate.TransactionStateVersion</c>
+    /// records why, including why it is not <c>CMP-PRG-001</c>'s "loadout versions". A caller fills this field
+    /// from that property and never from a version of its own.
     /// </remarks>
     public long ExpectedStateVersion => _expectedStateVersion;
 

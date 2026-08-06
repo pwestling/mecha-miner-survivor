@@ -184,6 +184,83 @@ internal sealed class CommandAdmissionGateTests
     }
 
     /// <summary>
+    /// Verification: supports <c>VER-SIM-004-002</c>.
+    ///
+    /// The three ways of missing the admission window carry three different details under one reason code: a
+    /// tick ahead of the open window, a tick behind it that was never frozen, and no open window at all.
+    /// </summary>
+    /// <remarks>
+    /// The reason code is deliberately one value, because a caller branching on it is deciding whether to
+    /// resubmit and the answer is the same in all three. The detail is what a human reads, and these are three
+    /// different mistakes: a caller running early, a caller aimed at a tick the run skipped, and a caller
+    /// submitting outside phase 1. Asserting that the three strings differ is what keeps a later
+    /// simplification from collapsing them back into one sentence.
+    /// </remarks>
+    [Test]
+    public void TheThreeWaysOfMissingTheAdmissionWindowReadDifferently()
+    {
+        CommandFixture fixture = new();
+        CommandAdmissionGate gate = fixture.Gate;
+
+        gate.BeginTick(SimulationTick.Zero);
+        Assert.That(gate.TryAdmit(CommandFixture.Envelope(0, 0, 1.0, 0.0), out CommandRejection _), Is.True);
+        gate.FreezeTick();
+
+        // Tick 5 opens without tick 3 having been opened or frozen, which is what makes a tick behind the
+        // window but ahead of the frozen high-water mark reachable at all.
+        gate.BeginTick(new SimulationTick(5));
+        string ahead = AdmissionClosedDetail(gate, CommandFixture.Envelope(9, 1, 1.0, 0.0));
+        string behind = AdmissionClosedDetail(gate, CommandFixture.Envelope(3, 2, 1.0, 0.0));
+
+        gate.FreezeTick();
+        string noWindow = AdmissionClosedDetail(gate, CommandFixture.Envelope(6, 3, 1.0, 0.0));
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                ahead,
+                Does.Contain("is ahead of the open admission window"),
+                "a caller running early must be told that its envelope is early rather than wrong");
+            Assert.That(
+                behind,
+                Does.Contain("is behind the open admission window"),
+                "a caller aimed at a tick the run skipped must be told no window for it will ever open");
+            Assert.That(
+                noWindow,
+                Does.Contain("no admission window is open"),
+                "and a caller submitting outside phase 1 must be told that");
+            Assert.That(
+                new[] { ahead, behind, noWindow },
+                Is.Unique,
+                "three different mistakes must read differently, or the detail carries no more information "
+                    + "than the reason code already did");
+            Assert.That(
+                gate.RejectionCount(CommandRejectionReason.AdmissionClosed),
+                Is.EqualTo(3L),
+                "all three are the same reason code, which is what a caller branches on");
+        });
+    }
+
+    /// <summary>
+    /// Submits an envelope expected to be refused as <see cref="CommandRejectionReason.AdmissionClosed"/> and
+    /// returns the refusal's detail.
+    /// </summary>
+    /// <param name="gate">The gate to submit to.</param>
+    /// <param name="envelope">The envelope to submit.</param>
+    private static string AdmissionClosedDetail(CommandAdmissionGate gate, in CommandEnvelope envelope)
+    {
+        Assert.That(
+            gate.TryAdmit(envelope, out CommandRejection rejection),
+            Is.False,
+            "the envelope must be refused, or there is no detail to read");
+        Assert.That(
+            rejection.Reason,
+            Is.EqualTo(CommandRejectionReason.AdmissionClosed),
+            "the refusal must be the admission-window one and not some earlier check");
+        return rejection.Detail;
+    }
+
+    /// <summary>
     /// Verification: <c>VER-SIM-004-003</c>.
     ///
     /// A sequence at or below the highest already-admitted sequence is refused, a gap is admitted without

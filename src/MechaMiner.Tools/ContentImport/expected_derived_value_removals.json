@@ -605,7 +605,7 @@
       "pointer_parent_rule": null,
       "pointer_segment_rule": "(?i)cumulative|running_total|to_date|so_far",
       "allowlisted_segments": {},
-      "note": "total_cost_hyper_gold is RETAINED and the rule deliberately does not match it: it carries its own `total_cost_hyper_gold: DEC-120#decision` citation and is the operand of A14's second row, which sums the 13 per-entry totals to the doc-stated 9,450.",
+      "note": "total_cost_hyper_gold is RETAINED and the rule deliberately does not match it: it carries its own `total_cost_hyper_gold: DEC-120#decision` citation and is the operand of A14's second row, which sums the 13 per-entry totals to the doc-stated 9,450. This is the ONE family whose rule cannot use the total/sum/aggregate word class the four aggregate-total families use, because in content/powerups/ `total_` is authored twice over - total_cost_hyper_gold and every rank's total_effect - so the class would flag 71 surviving fields. Same reason A20 gives two rules two scopes, applied to patterns.",
       "count": 58,
       "records": [
         {
@@ -1139,7 +1139,7 @@
         "content/utilities/"
       ],
       "pointer_parent_rule": null,
-      "pointer_segment_rule": "(?i)total|sum|aggregate",
+      "pointer_segment_rule": "(?i)total|sum|aggregate|combined|overall|grand",
       "allowlisted_segments": {},
       "note": "13 of 13, including UTL-R1's 0, which is the sum of its empty rank_ore_costs list. The per-rank rank_ore_costs arrays are the operands and stay.",
       "count": 13,
@@ -1416,7 +1416,7 @@
         "content/resources/"
       ],
       "pointer_parent_rule": null,
-      "pointer_segment_rule": "(?i)total|ceiling",
+      "pointer_segment_rule": "(?i)total|sum|aggregate|combined|overall|grand|ceiling",
       "allowlisted_segments": {},
       "note": "sources[].depletion_seconds is NOT removed - a depletion duration is not a resource total; see reproduces_but_not_assigned_by_docs.",
       "count": 13,
@@ -1564,7 +1564,7 @@
         "content/mining-sites/"
       ],
       "pointer_parent_rule": null,
-      "pointer_segment_rule": "(?i)total|jackpot|geodes_per_standard_map",
+      "pointer_segment_rule": "(?i)total|sum|aggregate|combined|overall|grand|jackpot|geodes_per_standard_map",
       "allowlisted_segments": {
         "total_seam_payout_multiplier": "a comparison of the rich seam against the standard seam, whose operands live in another file and whose sibling exposure_per_secured_payout_multiplier has no stated derivation at all. Left authored, so allowlisted rather than removed."
       },
@@ -1716,7 +1716,7 @@
         "content/maps/"
       ],
       "pointer_parent_rule": null,
-      "pointer_segment_rule": "(?i)total",
+      "pointer_segment_rule": "(?i)total|sum|aggregate|combined|overall|grand",
       "allowlisted_segments": {},
       "note": "reference_mech_speed_m_per_s in the same file is RETAINED: it is the operand of all 17 world speeds. The A13 world-prop values in this file do not match the rule.",
       "count": 1,

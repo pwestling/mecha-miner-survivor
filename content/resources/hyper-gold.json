@@ -22,18 +22,15 @@
       "sites_per_map": 3,
       "extraction_seconds": 45,
       "award_per_completion": 100,
-      "partial_payout": false,
-      "total_per_map": 300
+      "partial_payout": false
     },
     {
       "source": "interval boss drop",
       "award_per_boss": 25,
       "boss_count": 4,
-      "total_per_run": 100,
       "requires_mining_progress": false
     }
   ],
-  "run_ceiling": 400,
   "secured_only_by_mission_extraction": true,
   "increased_by_power_ups": false
 }

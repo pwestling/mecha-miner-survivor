@@ -365,6 +365,56 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       Mandate: content/quote-verification-audit.md (adopted rule and its
       stated corpus dependency)                                     FAILURE
 
+  A28 No definition carries a compiler-derived value from any of the nine
+      families removed by the derived-value pass. NINE RULES WITH NINE
+      DIFFERENT SCOPES, for the same reason A20 is two rules with two
+      scopes: three of these patterns flag legitimately AUTHORED fields in
+      a directory they do not cover. An absolute metres-per-second value is
+      always derived in content/enemies/ and content/bosses/, where a speed
+      is authored as a percentage of the mech baseline - and always
+      authored in content/weapons/, where projectile_speed_m_per_s is the
+      real number. So the world-speed rule covers the first two and not the
+      third.
+      Matched on pointer SEGMENT NAMES, never on values, so a rename cannot
+      reintroduce the field under a new spelling. Segments, not just the
+      leaf key, because three families store the number under a generic
+      leaf (`amount`, `minimum`, `maximum`) inside a specifically named
+      parent - a leaf-key-only rule would miss
+      total_payout_per_map.amount entirely.
+      Two segment names are ALLOWLISTED, in the shape A20 allowlists
+      reference_diameter_m: `purchases` (the authored checkpoint index the
+      removed cumulative cost derives FROM, which matches only by
+      inheriting its parent's name) and total_seam_payout_multiplier (left
+      authored; its sibling exposure_per_secured_payout_multiplier has no
+      stated derivation at all).
+      The rules, scopes and allowlists are READ FROM
+      expected_derived_value_removals.json rather than duplicated here, so
+      the assertion and the prediction cannot drift apart.
+      Mandate: per family, the docs/ line recorded in that file -
+      40:114 (world speeds; the survivability report), 40:136 ("Validators
+      recompute total catalog costs"), 40:140 ("their totals"), 40:203
+      ("Recalculate ... price curves, total costs ... resource totals")
+                                                                    FAILURE
+
+  A29 The numeric multiset the tree LOST equals the committed expectation,
+      as SET EQUALITY over all 166 elements - each (file, pointer, value)
+      present in one side and the other - not as two totals that happen to
+      agree. 166 == 166 would also hold if one value were removed by
+      mistake and a different one kept by mistake; element-wise equality
+      would not.
+      Measured, not asserted: the sweep-ref tree is read out of git at the
+      SHA the expectation file names, its numeric leaves are enumerated,
+      and the worktree's are subtracted. The expectation file was committed
+      BEFORE any content/ file changed (see that commit's --stat), so this
+      check compares a prediction against a measurement rather than a diff
+      against itself.
+      It also asserts the ADDED side is empty. A removal pass that quietly
+      introduced a number would otherwise pass every other rule here.
+      Mandate: docs/technical/40-content-data-and-validation.md:100
+      ("Derived values include source operands and calculation version in
+      reports"), which is what makes a stored operand-plus-result pair the
+      compiler's to emit and not content's to author         FAILURE
+
 Not asserted here: no structural JSON Schema validation happens, because
 content/schemas/ (40:36) does not exist yet. Domain field names outside the
 envelope are therefore unvalidated and will need one reconciliation pass when
@@ -375,6 +425,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -1926,6 +1977,220 @@ def check_derived_footprint_fields(docs: dict[Path, object]) -> list[tuple]:
     return rows
 
 
+# --------------------------------------------------------------------------
+# A28 / A29 - the nine derived-value families the compiler owns.
+#
+# The rules live in expected_derived_value_removals.json, which was committed in
+# its own commit BEFORE any content/ file changed. Reading them from there rather
+# than restating them here is deliberate: a rule restated in two places can drift,
+# and the whole point of the prediction-first ordering is that the assertion and
+# the prediction are the same artifact.
+# --------------------------------------------------------------------------
+
+DERIVED_EXPECTATION = Path(__file__).resolve().parent / "expected_derived_value_removals.json"
+
+
+def load_derived_expectation() -> dict:
+    if not DERIVED_EXPECTATION.exists():
+        fail(
+            f"A28/A29: {rel(DERIVED_EXPECTATION)} is missing. It is the committed prediction of "
+            f"exactly which derived values this tree no longer authors, and both rules read their "
+            f"scopes and patterns from it. Regenerate it with "
+            f"derive_derived_value_expectations.py."
+        )
+        return {}
+    return json.loads(DERIVED_EXPECTATION.read_text())
+
+
+def pointer_segments(pointer: str) -> list[str]:
+    return [s for s in re.split(r"\.|\[\d+\]", pointer) if s]
+
+
+def derived_rule_matches(family: dict, pointer: str) -> bool:
+    """A28's matcher: a family's rule against a pointer's SEGMENT NAMES.
+
+    The allowlist is consulted on the LEAF segment, which is A20's semantics
+    (`if key in DERIVED_FOOTPRINT_FIELD_ALLOWED: continue`) - an allowlisted leaf
+    is exempt even when an ANCESTOR name matches, which is the only case that
+    arises: `purchases` matches nothing itself, it inherits the match from
+    `cumulative_cost_checkpoints` above it.
+    """
+    segments = pointer_segments(pointer)
+    if not segments:
+        return False
+    allow = family.get("allowlisted_segments") or {}
+    if segments[-1] in allow:
+        return False
+    child_rx = re.compile(family["pointer_segment_rule"])
+    parent = family.get("pointer_parent_rule")
+    if parent:
+        parent_rx = re.compile(parent)
+        for index, seg in enumerate(segments):
+            if parent_rx.search(seg) and any(child_rx.search(s) for s in segments[index + 1 :]):
+                return True
+        return False
+    return any(child_rx.search(seg) for seg in segments)
+
+
+def numeric_pointer_leaves(obj, prefix: str = ""):
+    """Yield (pointer, value) for every numeric leaf. Bools are not numbers."""
+    if isinstance(obj, dict):
+        items = obj.items()
+    elif isinstance(obj, list):
+        items = ((f"[{i}]", v) for i, v in enumerate(obj))
+    else:
+        return
+    for key, value in items:
+        child = key if (isinstance(obj, dict) and not prefix) else (
+            f"{prefix}.{key}" if isinstance(obj, dict) else f"{prefix}{key}"
+        )
+        if isinstance(value, bool):
+            continue
+        if isinstance(value, (int, float)):
+            yield child, value
+        else:
+            yield from numeric_pointer_leaves(value, child)
+
+
+def check_derived_family_absence(docs: dict[Path, object]) -> list[tuple]:
+    """A28 - none of the nine removed families may reappear, matched on names."""
+    expectation = load_derived_expectation()
+    rows = []
+    for family in expectation.get("families", []):
+        hits: list[str] = []
+        for scope in family["scopes"]:
+            directory = scope.strip("/").split("/", 1)[1]
+            for path, doc in sorted(files_in(directory, docs).items()):
+                for pointer, value in numeric_pointer_leaves(doc):
+                    if derived_rule_matches(family, pointer):
+                        hits.append(f"{rel(path)}.{pointer} = {value!r}")
+        rows.append(
+            (
+                f"no {family['name']} value in {' + '.join(family['scopes'])}",
+                0,
+                len(hits),
+                "ok" if not hits else "FAIL",
+            )
+        )
+        if hits:
+            fail(
+                f"A28 {len(hits)} field(s) under {' + '.join(family['scopes'])} hold a "
+                f"'{family['name']}' value, which the compiler owns per "
+                f"{family['doc_assignment'].split(' - ')[0]}. Matched on pointer segment names "
+                f"/{family['pointer_segment_rule']}/"
+                + (f" under /{family['pointer_parent_rule']}/" if family.get("pointer_parent_rule")
+                   else "")
+                + f", so a rename does not evade it: {hits[:10]}"
+            )
+    return rows
+
+
+def _numeric_multiset_at_ref(ref: str, paths: list[str]) -> dict[tuple[str, str], object]:
+    out: dict[tuple[str, str], object] = {}
+    for path in paths:
+        blob = subprocess.run(
+            ["git", "-C", str(REPO_ROOT), "show", f"{ref}:{path}"],
+            capture_output=True,
+            text=True,
+        )
+        if blob.returncode != 0:
+            continue
+        for pointer, value in numeric_pointer_leaves(json.loads(blob.stdout)):
+            out[(path, pointer)] = value
+    return out
+
+
+def check_derived_removal_delta() -> list[tuple]:
+    """A29 - the measured numeric delta IS the committed expectation, per element."""
+    expectation = load_derived_expectation()
+    if not expectation:
+        return []
+    ref = expectation["sweep_ref"]
+
+    listing = subprocess.run(
+        ["git", "-C", str(REPO_ROOT), "ls-tree", "-r", "--name-only", ref, "content/"],
+        capture_output=True,
+        text=True,
+    )
+    if listing.returncode != 0:
+        fail(
+            f"A29 could not read the sweep ref {ref[:12]} out of git, so the removal delta is "
+            f"unmeasured. This rule is not allowed to pass by being unable to run: "
+            f"{listing.stderr.strip()}"
+        )
+        return [("sweep ref readable", ref[:12], "unreadable", "FAIL")]
+    sweep_paths = sorted(p for p in listing.stdout.splitlines() if p.endswith(".json"))
+
+    before = _numeric_multiset_at_ref(ref, sweep_paths)
+    after: dict[tuple[str, str], object] = {}
+    for path in sorted(CONTENT.rglob("*.json")):
+        for pointer, value in numeric_pointer_leaves(json.loads(path.read_text())):
+            after[(rel(path), pointer)] = value
+
+    measured_removed = {key: value for key, value in before.items() if key not in after}
+    measured_added = {key: value for key, value in after.items() if key not in before}
+    measured_changed = {
+        key: (before[key], after[key])
+        for key in before.keys() & after.keys()
+        if before[key] != after[key]
+    }
+
+    predicted = {(f, p): v for f, p, v in expectation["removed_numeric_multiset"]}
+    n = len(predicted)
+
+    missing = sorted(key for key in predicted if key not in measured_removed)
+    unexpected = sorted(key for key in measured_removed if key not in predicted)
+    wrong_value = sorted(
+        f"{f}.{p}: predicted {predicted[(f, p)]!r}, tree had {measured_removed[(f, p)]!r}"
+        for (f, p) in predicted.keys() & measured_removed.keys()
+        if predicted[(f, p)] != measured_removed[(f, p)]
+    )
+
+    equal = not missing and not unexpected and not wrong_value
+    rows = [
+        (
+            f"set equality over {n} element(s): predicted removals == measured removals",
+            f"{n} of {n}",
+            f"{n - len(missing)} matched, {len(unexpected)} unpredicted, "
+            f"{len(wrong_value)} value mismatch(es)",
+            "ok" if equal else "FAIL",
+        ),
+        (
+            "numeric leaves ADDED by this pass",
+            0,
+            len(measured_added),
+            "ok" if not measured_added else "FAIL",
+        ),
+        (
+            "surviving numeric leaves whose value changed",
+            0,
+            len(measured_changed),
+            "ok" if not measured_changed else "FAIL",
+        ),
+    ]
+    if not equal:
+        fail(
+            f"A29 the removal set measured against {ref[:12]} is NOT the committed expectation. "
+            f"This is set equality over {n} elements, not a total: "
+            f"{len(missing)} predicted-but-still-present {missing[:6]}, "
+            f"{len(unexpected)} removed-but-unpredicted {unexpected[:6]}, "
+            f"{len(wrong_value)} predicted with the wrong value {wrong_value[:6]}"
+        )
+    if measured_added:
+        fail(
+            f"A29 this pass ADDED {len(measured_added)} numeric leaf/leaves under content/. A "
+            f"derived-value removal introduces no numbers: "
+            f"{sorted(f'{f}.{p} = {v!r}' for (f, p), v in measured_added.items())[:10]}"
+        )
+    if measured_changed:
+        fail(
+            f"A29 {len(measured_changed)} surviving numeric leaf/leaves CHANGED value. Removing a "
+            f"derived value must not retune an operand: "
+            f"{sorted(f'{f}.{p}: {b!r} -> {a!r}' for (f, p), (b, a) in measured_changed.items())[:10]}"
+        )
+    return rows
+
+
 def check_derived_values(docs: dict[Path, object]) -> list[tuple]:
     rows = []
     banned_hits: list[str] = []
@@ -2663,6 +2928,8 @@ def main() -> int:
     ref_rows = check_references(docs)
     derived_rows = check_derived_values(docs)
     footprint_rows = check_derived_footprint_fields(docs)
+    derived_family_rows = check_derived_family_absence(docs)
+    removal_delta_rows = check_derived_removal_delta()
     prefix_rows = check_scope_prefixes(docs)
     bound_rows = check_bound_spelling(docs)
     inventory_rows = check_file_inventory()
@@ -2696,6 +2963,16 @@ def main() -> int:
         "A20 Footprint fields the compiler owns",
         ("check", "expected", "actual", "status"),
         footprint_rows,
+    )
+    table(
+        "A28 Derived-value families the compiler owns (nine rules, nine scopes)",
+        ("check", "expected", "actual", "status"),
+        derived_family_rows,
+    )
+    table(
+        "A29 Removal delta == the expectation committed before the removals",
+        ("check", "expected", "actual", "status"),
+        removal_delta_rows,
     )
     table(
         "A24 No line-number citation and no repository path in any string value",

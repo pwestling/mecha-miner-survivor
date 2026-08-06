@@ -128,6 +128,42 @@ neither rule covers, passes — the guard raises the cost of the mistake, it doe
 It is checked on key names rather than values so that a *rename* inside a covered directory cannot slip
 past, which is a narrower claim than "fails the build if the field reappears under any name".
 
+**A28 — the nine derived-value families, nine rules, nine scopes.** A20 generalised: 166 stored numbers
+across nine families were removed because the compiler owns them, and A28 asserts each family cannot
+return. It has the same shape as A20 and the same limits, with three differences:
+
+- rules are matched against every **name segment** of a pointer, not only the leaf key, because three
+  families store their number under a generic leaf (`amount`, `minimum`, `maximum`) inside a
+  specifically named parent — `total_payout_per_map.amount` is invisible to a leaf-key-only rule;
+- each family's pattern is a **word class**, not a name. `total|sum|aggregate|combined|overall|grand`
+  covers the four aggregate-total families, so renaming `total_payout_per_map` to
+  `aggregate_payout_per_map` still fails. That widening came out of the negative control: the first
+  draft used `total|jackpot` and the renamed injection passed;
+- the scopes differ per rule for the same reason A20's two do. An absolute metres-per-second value is
+  *always* derived under `content/enemies/` and `content/bosses/`, where a speed is authored as a
+  percentage of the mech baseline, and *always* authored under `content/weapons/`, where
+  `projectile_speed_m_per_s` is the real number — so the world-speed rule covers the first two only.
+  `content/powerups/` is the one family that cannot use the aggregate word class at all: `total_` is
+  authored twice over there (`total_cost_hyper_gold`, and every rank's `total_effect`), so the class
+  would flag 71 surviving fields. Its rule is `cumulative|running_total|to_date|so_far` instead.
+
+Two segment names are allowlisted, exactly as `reference_diameter_m` is: `purchases` (the authored
+checkpoint index the removed cumulative cost derives *from*, which matches only by inheriting its
+parent's name) and `total_seam_payout_multiplier` (left authored, because its sibling
+`exposure_per_secured_payout_multiplier` has no stated derivation at all).
+
+The rules, scopes and allowlists are **read from `expected_derived_value_removals.json`** rather than
+restated in `verify_content.py`, so the assertion and the prediction cannot drift apart.
+
+**A29 — the removal delta is the committed prediction, as set equality.** `166 == 166` would also hold
+if one value were removed by mistake and a different one kept by mistake. A29 therefore reads the
+sweep-ref tree out of git at the SHA the expectation file names, enumerates its numeric leaves,
+subtracts the worktree's, and compares **element by element**: every `(file, pointer, value)` predicted
+must be missing, and nothing else may be. It additionally asserts that the added side is empty and that
+no surviving numeric leaf changed value — a removal pass introduces no numbers and retunes no operand.
+If the sweep ref cannot be read out of git the rule **fails**; it is not allowed to pass by being unable
+to run.
+
 One reconciliation heuristic still reports as a warning rather than a failure, because no schema exists
 to settle it: formulas held as strings rather than a registered formula kind plus parameters (`40:99`).
 It is grouped by property name so the list stays actionable. The percentage heuristic that used to sit
@@ -242,3 +278,34 @@ replaced a narrated "enumerated before it was measured" claim that no commit sup
 
 It also carries the live sweep that found the 16 mis-citations of audit §13 — the ones a frozen
 394-record list structurally cannot see. Audit §14 records that limitation as the next design step.
+
+## `derive_derived_value_expectations.py` and `expected_derived_value_removals.json`
+
+```sh
+python3 src/MechaMiner.Tools/ContentImport/derive_derived_value_expectations.py          # derive
+python3 src/MechaMiner.Tools/ContentImport/derive_derived_value_expectations.py --check  # regenerates?
+```
+
+Enumerates, from a pinned commit SHA rather than `HEAD`, the stored numbers `content/` no longer authors
+because the compiler derives them, and records for each one its operands, its arithmetic, and the
+`docs/` line that assigns the derivation. Its output is the input to A28 and A29 — the rules are not
+restated in `verify_content.py`, so the assertion and the prediction are one artifact.
+
+A candidate qualifies only if it reproduces **exactly** in `fractions.Fraction`, never in binary float;
+every operand survives the removal; a document assigns the derivation; and no `source_refs` scope prefix
+is left dangling. A stored value that disagrees with its operands is a defect, not a redundancy: the
+script names both numbers and exits non-zero rather than removing it. It also refuses to write unless
+each family's A28 rule matches that family's removal set **and nothing else** in its scope at the sweep
+ref — a rule that also flagged a surviving authored field would be unlandable, and one that flagged
+fewer would let part of the family return.
+
+Six things reproduce exactly and are still retained, listed with their arithmetic in the file, because
+no `docs/` line assigns them: the beacon threshold times, `sources[].depletion_seconds`,
+`resonant_damage`, `ordinary_contact_damage_replaced_during_charge`, the three
+`relative_to_standard_seam` multipliers, and the 45 weapon DPS estimates. The DPS family is the
+interesting one — `40:203` *does* assign "DPS estimates" to the compiler, so it passes the document test
+and fails the arithmetic one: the burst and horde rules vary with each weapon's behaviour kind and no
+single rule reproduces all 45. It is out of scope, not cleared.
+
+Six further values are derived **and** operands; the file records why each stays, including
+`total_cost_hyper_gold`, which is the operand A14's second row sums to the doc-stated 9,450.

@@ -2564,6 +2564,104 @@ expectation (which touches no `content/` file) to the commit making the change. 
   changes, which is the opposite of what it is for. The three Markdown files under `content/` are
   prose and are excluded from both multisets.
 
+#### Ruling 45 — 166 authored derived values removed, and what the reported figures actually were
+
+`docs/technical/40-content-data-and-validation.md` assigns these to the compiler, so a stored copy puts a
+second writer on each one: `40:114` derives world speeds and compares them with the survivability report,
+`40:136` has validators "recompute total catalog costs", `40:140` validates the four mining-site classes
+"and their totals", and `40:203` recalculates "price curves, total costs ... resource totals". Two earlier
+instances of exactly this are already gone (Ruling 30's boss centre distances, and the health pack's
+collection distance). **Every one of the 166 reproduced exactly** from operands that survive the removal,
+computed in exact rational arithmetic rather than binary float, so this pass found **no new value defect** —
+unlike the two that were found this way before.
+
+**The reconciliation's figures were reported as ~154 across ~12 families. The measured set is 166 across 9,
+and three of the three named sub-counts needed correcting:**
+
+- **17 world speeds, not 14.** The reconciliation counted the ten enemy and four boss `movement_speed`
+  entries. Three more are built identically from `percent_of_mech_base_speed` and the `3.0 M/s` reference
+  speed: `EN-06 :: specialist_attack.projectile.speed` (75% → 2.25), `BOSS-01 :: ability.charge_speed`
+  (180% → 5.4), and `BOSS-03 :: ability.projectile.speed` (75% → 2.25).
+- **32 numbers in the 14 `damage_pressure` blocks, not 14.** "All 14 `damage_pressure` blocks" counts
+  blocks, not values. Each of the ten enemies stores two (`ceil(100 / contact_damage)`, and
+  `(hits − 1) × 0.75 s`); each of the four bosses stores three, because it additionally restates its own
+  top-level `contact_damage` inside the derived block.
+- **58 PowerUp cumulative costs — correct as reported.**
+
+**Nothing whose derivation a document does not assign was removed, even where the arithmetic works.** Six
+such things reproduce exactly and stay, each recorded with its arithmetic in
+`expected_derived_value_removals.json`: the Hyper Gold beacon threshold times (`40:140` lists beacon
+thresholds among a site's *authored* fields and gives the compiler only "their totals"),
+`sources[].depletion_seconds` in `content/resources/` (a duration is not a resource total — while the
+identically-derived `total_depletion_seconds` under `content/mining-sites/` *is* removed, because `40:140`
+names those totals), `resonant_damage` (reproduces as `ceil(base × 1.20)` for all five, but no document
+states that rounding and `40:203` tolerates divergence only "beyond documented rounding"),
+`BOSS-01 :: ability.ordinary_contact_damage_replaced_during_charge`, and the three
+`relative_to_standard_seam` multipliers.
+
+**The largest exclusion is the 45 weapon DPS estimates, and it fails the arithmetic test rather than the
+document test.** `40:203` *does* assign "DPS estimates" to the compiler, and `W-AB` reproduces cleanly
+(`96 / 3.0 = 32.0` sustained, `ceil(10 / 3.0) × 96 / 10 = 38.4` burst, `32.0 × 4` pierce `= 128` horde). But
+the burst and horde rules vary with each weapon's behaviour kind, and this pass could not state one rule
+reproducing all 45 exactly. Removing a number whose recomputation cannot be stated is worse than leaving it,
+so the family is **out of scope, not cleared**. It needs its own pass.
+
+**Six values are derived AND operands, so they stay, and the operand role wins.** Chief among them
+`total_cost_hyper_gold`, which carries its own `DEC-120#decision` citation and is the operand A14's second
+row sums to the doc-stated 9,450; and `resonant_damage`, which the removed
+`fresh_mech_hits_to_defeat_at_resonant_value` derives from.
+
+**A14 needed no rewrite, and this was checked rather than assumed.** Its PowerUp rows sum
+`ranks[].price_hyper_gold` (58 rank rows) and the per-entry `total_cost_hyper_gold` (13 entries); neither is
+in the removal set, so both still recompute 9,450, and the option-unlock 2,150 row never touched the
+PowerUps at all. Negative control: `PU-C01 :: ranks[0].price_hyper_gold` 50 → 60 → **FAIL**, "PowerUp rank
+prices sum to 9460 Hyper Gold across 58 rank rows, expected 9450".
+
+**A28 is nine rules with nine scopes, for A20's reason, and its word classes came out of a failed control.**
+The first draft of the mining-site rule was `total|jackpot`; the negative control renamed
+`total_payout_per_map` to `aggregate_payout_per_map` and **passed**. The four aggregate-total families now
+match the word class `total|sum|aggregate|combined|overall|grand`. `content/powerups/` deliberately does not
+use that class — `total_` is authored twice over there, as `total_cost_hyper_gold` and as every rank's
+`total_effect`, so the class would flag 71 surviving fields — and uses
+`cumulative|running_total|to_date|so_far` instead. All nine controls were then run and reverted
+**individually**, each reintroducing its field under a *different* name; all nine failed.
+
+#### Value-preservation record — tenth pass
+
+**Two multisets, over two different value types, with their scopes named.** This pass changes **numbers and
+no strings**, which is the mirror image of the ninth pass, so the string multiset is not the proof that
+covers this diff. Both were run; neither stands in for the other.
+
+**Range for both: `fefb7a3` (the merge of PR #8, and the expectation file's own pinned `sweep_ref`) → this
+pass's commit.** Scope: **all 139 `*.json` files under `content/`**, so nothing can hide outside the 49
+touched files. The file count is unchanged at 139, so A21 is unaffected.
+
+- **Numeric multiset — changed, and the expected difference was committed one commit earlier, in a commit
+  containing no `content/` file at all.** Scope: numeric leaves (`int`/`float`, `bool` excluded).
+  **2,303 → 2,137, −166 net = 0 added, 166 removed**, and the measured multiset equals the committed
+  expectation as **set equality over 166 elements** — every `(file, pointer, value)` predicted is missing,
+  nothing unpredicted is missing, and no predicted element had a different value in the tree than the
+  expectation recorded. `166 == 166` would also hold if one value were removed by mistake and a different
+  one kept by mistake; element-wise equality would not.
+- **String multiset — unchanged. Scope: string leaves. 5,275 → 5,275, difference added `{}`, removed `{}`.**
+  **No prose, citation or quotation changed in this pass**, which is what keeps
+  `check_quote_mismatch_evidence.py` at 394/394 with zero cases moving. This proof says nothing about the
+  numbers.
+- **0 surviving `(file, JSON path)` pairs changed value.** Asserted, not just measured: removing a derived
+  value must not retune an operand, and A29 fails if any surviving numeric leaf moved.
+- **0 numeric leaves added.** Also asserted. A removal pass that quietly introduced a number would
+  otherwise satisfy every other rule here.
+- **`null` count: 0 → 0**, still with no declared exceptions.
+- **One list was emptied and therefore dropped: `stat-price-formula.json :: first_ten_prices`.** All ten of
+  its elements are in the removal set, and an empty array carries no information. Lists that were *already*
+  empty at the sweep ref — five utility `external_numerics`, and `UTL-R1`'s `effect.stat_names` and
+  `acquisition.rank_ore_costs` — were left exactly as they were; a first draft of the removal pruned those
+  too, which would have deleted `rank_ore_costs`, **an operand**.
+- **No `source_refs` scope prefix was left dangling (A22 still 0).** Every removal takes leaves out of an
+  object that survives: `damage_pressure` keeps its `assumptions` string, `movement_speed` keeps
+  `percent_of_mech_base_speed`, and `total_cost_hyper_gold` — the one prefixed field in the PowerUp
+  catalog — was never a candidate.
+
 ### Per-definition notes, by catalog
 
 #### Weapons (`content/weapons/`)

@@ -880,7 +880,11 @@ FAMILIES = [
         allow={},
         note="total_cost_hyper_gold is RETAINED and the rule deliberately does not match it: it "
         "carries its own `total_cost_hyper_gold: DEC-120#decision` citation and is the operand of "
-        "A14's second row, which sums the 13 per-entry totals to the doc-stated 9,450.",
+        "A14's second row, which sums the 13 per-entry totals to the doc-stated 9,450. This is the "
+        "ONE family whose rule cannot use the total/sum/aggregate word class the four "
+        "aggregate-total families use, because in content/powerups/ `total_` is authored twice "
+        "over - total_cost_hyper_gold and every rank's total_effect - so the class would flag 71 "
+        "surviving fields. Same reason A20 gives two rules two scopes, applied to patterns.",
     ),
     dict(
         name="utility total rank ore cost",
@@ -889,7 +893,7 @@ FAMILIES = [
         "total costs'",
         scopes=["utilities"],
         parent=None,
-        segment=r"(?i)total|sum|aggregate",
+        segment=r"(?i)total|sum|aggregate|combined|overall|grand",
         allow={},
         note="13 of 13, including UTL-R1's 0, which is the sum of its empty rank_ore_costs list. "
         "The per-rank rank_ore_costs arrays are the operands and stay.",
@@ -917,7 +921,7 @@ FAMILIES = [
         "totals'",
         scopes=["resources"],
         parent=None,
-        segment=r"(?i)total|ceiling",
+        segment=r"(?i)total|sum|aggregate|combined|overall|grand|ceiling",
         allow={},
         note="sources[].depletion_seconds is NOT removed - a depletion duration is not a resource "
         "total; see reproduces_but_not_assigned_by_docs.",
@@ -929,7 +933,7 @@ FAMILIES = [
         "exactly four accepted classes and their totals'; with 40:203",
         scopes=["mining-sites"],
         parent=None,
-        segment=r"(?i)total|jackpot|geodes_per_standard_map",
+        segment=r"(?i)total|sum|aggregate|combined|overall|grand|jackpot|geodes_per_standard_map",
         allow={
             "total_seam_payout_multiplier": "a comparison of the rich seam against the standard "
             "seam, whose operands live in another file and whose sibling "
@@ -946,7 +950,7 @@ FAMILIES = [
         "totals'",
         scopes=["maps"],
         parent=None,
-        segment=r"(?i)total",
+        segment=r"(?i)total|sum|aggregate|combined|overall|grand",
         allow={},
         note="reference_mech_speed_m_per_s in the same file is RETAINED: it is the operand of all "
         "17 world speeds. The A13 world-prop values in this file do not match the rule.",

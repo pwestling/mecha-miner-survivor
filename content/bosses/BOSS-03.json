@@ -34,8 +34,7 @@
   "movement_speed": {
     "percent_of_mech_base_speed": {
       "percent": 45
-    },
-    "world_speed_m_per_s": 1.35
+    }
   },
   "contact_damage": 30,
   "control_resistance": {
@@ -56,9 +55,6 @@
     "added_attack_defines_own_damage_event": true
   },
   "damage_pressure": {
-    "contact_damage": 30,
-    "hits_to_defeat_100_hull": 4,
-    "continuous_overlap_time_to_defeat_seconds": 2.25,
     "assumptions": "100 Hull, zero Armor, no healing, no resonance, uninterrupted overlap with one attacker"
   },
   "target_time_to_kill_seconds": {
@@ -88,8 +84,7 @@
       "speed": {
         "percent_of_mech_base_speed": {
           "percent": 75
-        },
-        "world_speed_m_per_s": 2.25
+        }
       },
       "homing": false,
       "lifetime_description": "disappears after crossing slightly more than one screen width or hitting solid terrain"
@@ -101,8 +96,7 @@
     "resonant_damage_reference": {
       "base_damage": 18,
       "resonant_damage": 22,
-      "resonance_source": "Cinderglass",
-      "fresh_mech_hits_to_defeat_at_resonant_value": 5
+      "resonance_source": "Cinderglass"
     },
     "design_role": "one radial-burst behavior, not twelve independently targeted attacks"
   },

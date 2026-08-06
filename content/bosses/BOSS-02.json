@@ -33,8 +33,7 @@
   "movement_speed": {
     "percent_of_mech_base_speed": {
       "percent": 38
-    },
-    "world_speed_m_per_s": 1.14
+    }
   },
   "contact_damage": 24,
   "control_resistance": {
@@ -55,9 +54,6 @@
     "added_attack_defines_own_damage_event": true
   },
   "damage_pressure": {
-    "contact_damage": 24,
-    "hits_to_defeat_100_hull": 5,
-    "continuous_overlap_time_to_defeat_seconds": 3.0,
     "assumptions": "100 Hull, zero Armor, no healing, no resonance, uninterrupted overlap with one attacker"
   },
   "target_time_to_kill_seconds": {

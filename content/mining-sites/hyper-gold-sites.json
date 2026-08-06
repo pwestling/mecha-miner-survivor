@@ -6,7 +6,8 @@
   "name_key": "mining_site.SITE-03.name",
   "tags": [],
   "source_refs": [
-    "GDD-MINING#hyper-gold-sites"
+    "GDD-MINING#hyper-gold-sites",
+    "beacon_response_source: GDD-STANDARD-WAVE-SCHEDULE#hyper-gold-threat-beacon-response"
   ],
   "site_class": "hyper-gold-site",
   "count_per_standard_map": 3,
@@ -69,7 +70,7 @@
     "Returning resumes extraction and permits any not-yet-triggered thresholds to fire.",
     "Completion stops all new beacon-generated responses; surviving summoned enemies remain."
   ],
-  "beacon_response_source": "docs/32-standard-wave-and-beacon-schedule.md#hyper-gold-threat-beacon-response",
+  "beacon_response_source": "GDD-STANDARD-WAVE-SCHEDULE#hyper-gold-threat-beacon-response",
   "depleted_state": "non-interactive mapped landmark for the rest of the run",
   "persistence": "Completing the site places its resource in an unsecured state for the remainder of the level; it is kept permanently only by surviving until the time limit and completing mission extraction. Dying before the time limit forfeits it."
 }

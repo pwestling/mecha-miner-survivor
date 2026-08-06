@@ -7,7 +7,8 @@
   "summary_key": "utility.UTL-D2.summary",
   "tags": [],
   "source_refs": [
-    "GDD-UTILITY-CATALOG#utl-d2--extraction-tether"
+    "GDD-UTILITY-CATALOG#utl-d2--extraction-tether",
+    "effect.stacking_classification: GDD-UTILITY-CATALOG#modifier-and-timing-rules"
   ],
   "material": "Driftmetal",
   "primary_role": "Mining space",
@@ -17,7 +18,7 @@
       "Extraction-zone radius"
     ],
     "value_kind": "additive-percent",
-    "stacking_classification": "Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative. (docs/68-utility-catalog.md:253)"
+    "stacking_classification": "Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative."
   },
   "ranks": [
     {

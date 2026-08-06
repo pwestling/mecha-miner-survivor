@@ -89,9 +89,16 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       Every row cites its own source doc:line.                        FAILURE
 
   A13 Aggregate row counts match the PROBES table (35 minute rows,
-      4 beacon responses, 7 formations, 1 map contract file, and both world
-      prop families folded into that contract).
-      Every row cites its own source doc:line.                        FAILURE
+      4 beacon responses, 7 formations, 1 map contract file), AND the four
+      authored world-prop VALUES folded into the map contract match the
+      document: destructible rock Hull 100 (docs/72:194), rock damage
+      footprint diameter 0.80 M (:196), health pack repair 25 Hull (:182),
+      health pack pickup radius 0.25 M (:185). Every row cites its own
+      source doc:line.
+      The world-prop check used to be a row COUNT over key-name patterns,
+      which counted patterns that matched at least once - so two names
+      existing satisfied it and no value was ever compared. A missing field
+      is now a failure rather than a silent pass.                     FAILURE
 
   A14 Doc-stated totals recompute from the JSON: PowerUp rank prices sum to
       9,450 Hyper Gold and the six option-unlock costs sum to 2,150.
@@ -108,12 +115,27 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       Mandate: docs/technical/40-content-data-and-validation.md:199
       (relational layer: "References, uniqueness, graph coverage")     FAILURE
 
-  A16 Percentage-point policy: a property carrying a percentage should be
-      named *_percent, with the normalized factor left to the compiler as a
-      derived field. Occurrences are grouped by key name.
-      Mandate: docs/technical/40-content-data-and-validation.md:95
-      Reported as a warning because content/schemas/ does not exist yet
-      and the normalized-factor pass has no owner in this tree.        WARNING
+  A16 Percentage-point policy, checked on NUMBERS and KEY NAMES:
+        1. every percent-named property resolves to at least one numeric
+           leaf, so a percentage may not live only as prose under a name
+           that promises a number;
+        2. no percent-named numeric value satisfies 0 < |v| < 1, which would
+           be the compiler's normalized factor stored where human-readable
+           percentage points belong. Container leaves (minimum, maximum,
+           percent, value, points) inherit percent-ness from the nearest
+           ancestor key that says percent;
+        3. the compiler's normalized factor is never authored: no property
+           name combines a percent token with factor/multiplier/fraction/
+           normalized, and no object holds both <stem>_percent and a
+           same-stem factor sibling.
+      A name "says _percent" wherever the token appears, not only at the
+      end - 40:95 constrains what the name says and 40:96's terminal-unit
+      rule is about unit suffixes, so the 52 mid-name spellings such as
+      percent_of_mech_base_speed are correct and are not flagged.
+      This REPLACES a prose scan that matched a literal "%" glyph in string
+      values: it left a numeric 25 under a non-percent name unchecked while
+      emitting 21 warnings about English sentences. None of the three rules
+      needs content/schemas/, so all three are failures.              FAILURE
 
   A17 Formula policy: a player-facing formula must be a registered formula
       kind plus parameters, never a script string. String-valued formula
@@ -143,11 +165,17 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
           diameter is AUTHORED and must stay - the boss roster gives bosses
           no body-scale column (docs/31:121-128, unlike docs/31:37-48) and
           docs/72:105-110 states the four diameters flat.
-        - the CENTRE DISTANCE rule covers content/enemies/ AND
-          content/bosses/. It is diameter / 2 + the player's 0.50 M
-          collision radius for both, so storing it hardcodes a player
-          baseline constant into an enemy or boss catalog.
-      Checked on KEY NAMES so a rename cannot slip past it.
+        - the CENTRE DISTANCE rule covers content/enemies/,
+          content/bosses/ AND content/maps/. It is the object's radius plus
+          the player's 0.50 M collision radius in all three, so storing it
+          hardcodes a player-baseline constant into a catalog that does not
+          own it. content/maps/ joined the rule because the health pack
+          stored 0.75 = its authored 0.25 M pickup radius + 0.50 M
+          (docs/72:185).
+      Checked on KEY NAMES in the covered directories, so a rename inside
+      one of them cannot slip past. It does NOT catch the value reappearing
+      under an unrelated name or in an uncovered directory - see the
+      per-rule scopes above and README.md.
       Mandate: docs/technical/40-content-data-and-validation.md:114
       ("Validation derives world speeds/footprints and compares them with
       the survivability report")                                      FAILURE
@@ -168,6 +196,31 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       (source_refs carries "gameplay document IDs/anchors ... implemented"),
       with 40:90 ("Unknown fields are errors") for why a prefix may not name
       a field the definition does not have                            FAILURE
+
+  A24 No string value anywhere under content/ matches docs/.*\.md. A line
+      number is unstable wherever it hides, and source_refs (40:87) names
+      doc_id#anchor as the only citation form. source_refs itself was
+      cleaned in an earlier pass, but 13 citations had moved next door into
+      domain fields, where no assertion looked: eleven
+      effect.stacking_classification strings, one note, and one field
+      literally named beacon_response_source holding a repo path.
+      Mandate: docs/technical/40-content-data-and-validation.md:87    FAILURE
+
+  A25 Polarity agreement. Where a structured polarity value (a "direction",
+      or any field whose value is drawn from the closed polarity vocabulary
+      higher/lower, increase/decrease, more/less, faster/slower,
+      longer/shorter, raise/reduce, gain/lose) sits beside prose encoding
+      the same fact, the two must agree in sign. Prose is taken from the
+      same object and from the enclosing one, because a direction commonly
+      sits inside a structured modifier while the prose stays outside it.
+      Fires on STRICT contradiction only: prose carrying both signs, as in
+      "20% faster without increasing movement speed", is not a
+      contradiction and is not reported.
+      This automates a check that had to be done by hand - Ruling 22 in
+      content/transcription-notes.md verified six geode resonance
+      directions against docs/40:104-109 by eye, and nothing in the tree
+      would have caught a seventh. Its value does not depend on catching
+      anything today.                                                 FAILURE
 
   A23 One spelling for a bound. No property name abbreviates a bound as the
       token `cap`, `max`, or `min`; the word is spelled out as `maximum` or
@@ -328,12 +381,16 @@ BOUND_ABBREVIATIONS = frozenset({"cap", "max", "min"})
 # the collision the audit found. They are therefore left exactly as authored,
 # escalated to the document owner, and declared here so the exception is visible
 # rather than absorbed.
-BOUND_SPELLING_ESCALATED = frozenset(
-    {
-        "content/branches/W-BF-tethered-reaper.json::contact_damage_percent_cap",
-        "content/branches/W-BF-tethered-reaper.json::contact_damage_speed_bonus_percent_max",
-    }
-)
+# Now EMPTY. The two W-BF-tethered-reaper members are resolved, not suppressed:
+# docs/71:346 reads "Its contact Damage is `200% + up to 200%` of current Damage,
+# scaling linearly with blade world speed ... and capped at 400%", so 200 bounds
+# the speed-bonus COMPONENT (the "up to 200%" addend) and 400 bounds the TOTAL
+# (200% base + 200% maximum bonus). They are two different bounds on two different
+# quantities, so both values stay and the qualifier carries the distinction:
+# maximum_speed_bonus_percent and maximum_total_contact_damage_percent. A stale
+# exception is worse than none, so the list is emptied rather than left carrying
+# a resolved escalation.
+BOUND_SPELLING_ESCALATED = frozenset()
 
 # --------------------------------------------------------------------------
 # A8 - stale extraction metadata that must not survive anywhere
@@ -343,6 +400,10 @@ FORBIDDEN_KEYS = (
     "_provenance",
     "_source",
     "notes",
+    # The singular "note" was missing while "notes" was blocked, so three keys
+    # survived - two on MCH-06 restating a movement speed docs/72:55,57 already
+    # state, which is the same category deleted from all ten enemies.
+    "note",
     "refs",
     "lines",
     "line",
@@ -523,15 +584,87 @@ PROBES = [
         pattern=r"contract",
         source="docs/51-standard-map-generation-contract.md:1",
     ),
-    dict(
-        dir="maps",
-        label="world prop families present as fields (destructible rock, health pack)",
-        expected=2,
-        kind="key_families",
-        patterns=(r"destructible_rock|rock", r"health_pack"),
-        source="docs/72-player-survivability-and-damage-baseline.md:180 (health pack) + :190 (rock)",
-    ),
 ]
+
+# --------------------------------------------------------------------------
+# A13 - the two world-prop families, asserted on their VALUES.
+#
+# WHAT THIS REPLACED. The world-prop probe used to be kind="key_families" with
+# expected=2, which counted PATTERNS THAT MATCHED AT LEAST ONCE. The existence of
+# one key containing "rock" and one containing "health_pack" satisfied it, so
+# emptying both objects and setting rock Hull to 1 and the footprint to 9.9 left
+# the probe green. It asserted that two names existed, not that any value was
+# right.
+#
+# The replacement names the four authored values and cites each one. The key is
+# LOCATED by regex, discovered from the data like the rest of A13, but the value
+# is compared - and a missing field is a failure, not a silent pass, which is the
+# specific hole the old probe had.
+# --------------------------------------------------------------------------
+
+WORLD_PROP_VALUES = (
+    (
+        "destructible rock Hull",
+        re.compile(r"(?i)destructible_rock(?:_rules)?"),
+        re.compile(r"(?i)^hull$"),
+        100,
+        "docs/72-player-survivability-and-damage-baseline.md:194",
+    ),
+    (
+        "destructible rock damage footprint diameter (M)",
+        re.compile(r"(?i)destructible_rock(?:_rules)?"),
+        re.compile(r"(?i)damage_footprint_diameter"),
+        0.80,
+        "docs/72-player-survivability-and-damage-baseline.md:196",
+    ),
+    (
+        "health pack repair (Hull)",
+        re.compile(r"(?i)health_pack"),
+        re.compile(r"(?i)repair.*hull|hull.*repair"),
+        25,
+        "docs/72-player-survivability-and-damage-baseline.md:182",
+    ),
+    (
+        "health pack pickup radius (M)",
+        re.compile(r"(?i)health_pack"),
+        re.compile(r"(?i)pickup_radius"),
+        0.25,
+        "docs/72-player-survivability-and-damage-baseline.md:185",
+    ),
+)
+
+def check_world_prop_values(docs: dict[Path, object]) -> list[tuple]:
+    """A13 - the four authored world-prop values, each against its own doc:line."""
+    rows = []
+    present = files_in("maps", docs)
+    for label, family_rx, key_rx, expected, source in WORLD_PROP_VALUES:
+        found: list[tuple[str, object]] = []
+        for path, doc in sorted(present.items()):
+            for jpath, key, value in walk(doc):
+                if not key or not key_rx.search(key):
+                    continue
+                if not family_rx.search(jpath):
+                    continue
+                if isinstance(value, bool) or not isinstance(value, (int, float)):
+                    continue
+                found.append((f"{rel(path)}{jpath[1:]}", value))
+        wrong = [f"{p} = {v}" for p, v in found if float(v) != float(expected)]
+        if not found:
+            status = "FAIL"
+            actual = "no field found"
+            fail(
+                f"A13 {label}: no numeric field matching /{key_rx.pattern}/ inside a "
+                f"/{family_rx.pattern}/ object exists in content/maps/, so the value "
+                f"{expected} at {source} is unasserted"
+            )
+        else:
+            status = "ok" if not wrong else "FAIL"
+            actual = ", ".join(f"{v}" for _, v in found)
+            if wrong:
+                fail(f"A13 {label} must be {expected} ({source}): {wrong}")
+        rows.append((f"{label} [{source.split(':')[-1]}]", expected, actual, status))
+    return rows
+
 
 # --------------------------------------------------------------------------
 # A14 - doc-stated grand totals the JSON must reproduce
@@ -544,8 +677,37 @@ UNLOCK_TOTAL_HYPER_GOLD = 2150  # docs/63-permanent-option-unlock-catalog.md:48
 # A16 / A17 - reconciliation heuristics
 # --------------------------------------------------------------------------
 
-PERCENT_LITERAL = re.compile(r"[-+]?\d+(?:[.,]\d+)?\s*%")
-PERCENT_COMPLIANT_KEY = re.compile(r"(?:^|_)percent(?:_points)?$")
+# A16 - the NUMERIC percentage-point policy of
+# docs/technical/40-content-data-and-validation.md:95:
+#
+#   "Percentages in authoring use human-readable percentage points only when the
+#    property name says `_percent`; the compiler writes normalized factors into
+#    the runtime bundle as a separate derived field."
+#
+# WHAT THIS USED TO BE, AND WHY IT WAS REPLACED. A16 previously matched a literal
+# "%" glyph in STRING values and warned when the key was not named *_percent.
+# That checks prose, not the rule: a numeric 25 under a non-percent name was not
+# even warned, while 131 English sentences containing a percent sign were. A
+# warning list a reader learns to ignore is worse than no list, so the prose scan
+# is gone and the three rules below run on NUMBERS and KEY NAMES instead. None of
+# them needs content/schemas/, so all three are failures rather than warnings.
+#
+# A NAME "SAYS _percent" WHEREVER THE TOKEN APPEARS, not only at the end.
+# 40:95 constrains what the name says; 40:96's terminal-unit rule is about unit
+# suffixes. 52 names in this tree put the token mid-name
+# (percent_of_mech_base_speed, shockwave_damage_percent_of_current_damage, ...)
+# and every one of them is correct, so a rule demanding a TERMINAL _percent would
+# have forced 52 renames no document asks for.
+PERCENT_TOKEN_KEY = re.compile(r"(?i)(?:^|_)percent(?:age)?(?:_points?)?(?:$|_)")
+# Structural container keys: a numeric leaf under one of these inherits the
+# percent-ness of the nearest ancestor key that says percent, so {"percent": 20}
+# and {"minimum": 40, "maximum": 80} are checked as percentage points.
+PERCENT_CONTAINER_KEY = frozenset({"minimum", "maximum", "percent", "value", "points"})
+# The compiler-owned normalized factor. Authoring it puts a second writer on a
+# derived field, which is the second half of 40:95.
+NORMALIZED_FACTOR_TOKEN = re.compile(
+    r"(?i)(?:^|_)(?:factor|multiplier|fraction|normalized|normalised)(?:$|_)"
+)
 FORMULA_KEY = re.compile(r"(?:^|_)(?:formula|formulas|expression|equation)s?$")
 # A pure algebraic expression: operators present, no word longer than three
 # letters (so prose containing a formula is not flagged), short.
@@ -635,6 +797,36 @@ def walk(obj, path="$"):
         for index, value in enumerate(obj):
             yield f"{path}[{index}]", None, value
             yield from walk(value, f"{path}[{index}]")
+
+
+def walk_with_ancestry(obj, path="$", ancestors=()):
+    """Like walk(), plus the tuple of dict keys enclosing the node.
+
+    A16 needs it: a numeric leaf named "minimum" inside "favorable_horde_damage_percent"
+    is a percentage-point value, and only the ancestry says so.
+    """
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            yield f"{path}.{key}", key, value, ancestors
+            yield from walk_with_ancestry(value, f"{path}.{key}", ancestors + (key,))
+    elif isinstance(obj, list):
+        for index, value in enumerate(obj):
+            yield f"{path}[{index}]", None, value, ancestors
+            yield from walk_with_ancestry(value, f"{path}[{index}]", ancestors)
+
+
+def numeric_leaves(obj):
+    """Yield every int/float leaf in a subtree, booleans excluded."""
+    if isinstance(obj, bool):
+        return
+    if isinstance(obj, (int, float)):
+        yield obj
+    elif isinstance(obj, dict):
+        for value in obj.values():
+            yield from numeric_leaves(value)
+    elif isinstance(obj, list):
+        for value in obj:
+            yield from numeric_leaves(value)
 
 
 def files_in(directory: str, docs: dict[Path, object]) -> dict[Path, object]:
@@ -912,7 +1104,6 @@ def check_definitions(docs: dict[Path, object], doc_index: dict[str, dict]) -> d
         no_id=set(),
         no_name_key=set(),
         source_refs=0,
-        percent_hits={},
         formula_hits={},
         key_refs=set(),
         envelope_key_refs=set(),
@@ -1037,8 +1228,6 @@ def check_definitions(docs: dict[Path, object], doc_index: dict[str, dict]) -> d
                     if isinstance(element, str) and element.strip():
                         stats["key_refs"].add(element)
             if isinstance(value, str):
-                if PERCENT_LITERAL.search(value) and not PERCENT_COMPLIANT_KEY.search(key):
-                    stats["percent_hits"].setdefault(key, []).append(f"{name}{jpath[1:]}")
                 if looks_like_formula(key, value):
                     stats["formula_hits"].setdefault(key, []).append(f"{name}{jpath[1:]}")
     return stats
@@ -1096,11 +1285,8 @@ def check_expected_sets(stats: dict) -> list[tuple]:
 
 
 def report_reconciliation(stats: dict) -> None:
-    for key, hits in sorted(stats["percent_hits"].items()):
-        warn(
-            f"40:95 percentage points on a property not named *_percent: '{key}' "
-            f"({len(hits)} occurrence(s)) e.g. {', '.join(hits[:2])}"
-        )
+    """A17 only. A16 is check_percentage_point_policy() - it asserts against
+    numbers and key names and reports failures, not a warning list."""
     for key, hits in sorted(stats["formula_hits"].items()):
         warn(
             f"40:99 formula held as a string rather than a registered formula kind plus "
@@ -1277,19 +1463,6 @@ def check_probes(docs: dict[Path, object]) -> list[tuple]:
             rx = re.compile(spec["pattern"])
             matched = [p for p in sorted(present) if rx.search(p.stem)]
             actual, found = len(matched), [rel(p) for p in matched]
-        elif spec["kind"] == "key_families":
-            found = []
-            for pattern in spec["patterns"]:
-                rx = re.compile(pattern)
-                hits = [
-                    f"{rel(path)}{jpath[1:]}"
-                    for path, doc in sorted(present.items())
-                    for jpath, key, _ in walk(doc)
-                    if key and rx.search(key)
-                ]
-                if hits:
-                    found.append(f"{pattern} -> {hits[0]}")
-            actual = len(found)
         else:
             actual, found = probe_array_at_path(present, spec["pattern"])
         status = "ok" if actual == spec["expected"] else "FAIL"
@@ -1444,6 +1617,13 @@ def check_totals(docs: dict[Path, object]) -> list[tuple]:
 # hardcodes a player-baseline constant into it: change the mech's collision
 # radius and those files are silently wrong, with no validator to notice.
 #
+# THE CENTRE DISTANCE IS DERIVED IN content/maps/ TOO. The health pack authors
+# pickup_radius_m = 0.25 M and docs/72:185 gives the sum as a consequence of it:
+# "The pack has a 0.25M pickup radius. With the standard mech circle, collection
+# occurs when centers come within 0.75M." 0.25 + 0.50 = 0.75, and the 0.50 M is
+# again the PLAYER's collision radius - a third writer for one constant, after
+# the ten enemies and the four bosses.
+#
 # reference_diameter_m is allowlisted and must stay: 0.80 M is the Ripper's
 # authored rank-zero contact diameter (docs/72:86), the shared reference the
 # scale multiplies. It is an authored constant, not a per-enemy derived value.
@@ -1457,9 +1637,9 @@ DERIVED_FOOTPRINT_RULES = (
     ),
     (
         "centre distance that begins contact",
-        ("enemies", "bosses"),
+        ("enemies", "bosses", "maps"),
         re.compile(r"(?i)cent(?:er|re)_distance|distance_that_begins_contact"),
-        "contact diameter / 2 + the player's 0.50 M collision radius",
+        "the object's radius + the player's 0.50 M collision radius",
     ),
 )
 
@@ -1707,6 +1887,273 @@ def check_references(docs: dict[Path, object]) -> list[tuple]:
 
 
 # --------------------------------------------------------------------------
+# A16 - the numeric percentage-point policy (40:95). Three rules, all decidable
+# from key names and numbers, so all three are failures. See the constants above
+# for what this replaced and why.
+# --------------------------------------------------------------------------
+
+
+def check_percentage_point_policy(docs: dict[Path, object]) -> list[tuple]:
+    """A16 - percentage points are numbers, are not normalized factors, and the
+    compiler's normalized factor is never authored beside them."""
+    no_number: list[str] = []
+    factor_valued: list[str] = []
+    hybrid_names: list[str] = []
+    twins: list[str] = []
+    checked = 0
+
+    def check_twins(where: str, obj: dict) -> None:
+        """Rule 3 - percentage points and a same-stem normalized factor in one object."""
+        for sibling in obj:
+            if not PERCENT_TOKEN_KEY.search(sibling):
+                continue
+            stem = re.sub(r"(?i)_?percent(?:age)?(?:_points?)?$", "", sibling)
+            if not stem:
+                continue
+            for other in obj:
+                if other != sibling and NORMALIZED_FACTOR_TOKEN.search(other) and stem in other:
+                    twins.append(f"{where}: {sibling!r} + {other!r}")
+
+    for path, doc in sorted(docs.items()):
+        name = rel(path)
+        # The document's own top level is an object too, and walk() never yields it.
+        if isinstance(doc, dict):
+            check_twins(name, doc)
+        for jpath, key, value, ancestors in walk_with_ancestry(doc):
+            if key is None:
+                continue
+
+            says_percent = bool(PERCENT_TOKEN_KEY.search(key))
+
+            # Rule 3 - the compiler owns the normalized factor (40:95, 40:100).
+            if says_percent and NORMALIZED_FACTOR_TOKEN.search(key):
+                hybrid_names.append(f"{name}{jpath[1:]}")
+            if isinstance(value, dict):
+                check_twins(f"{name}{jpath[1:]}", value)
+
+            if not says_percent:
+                # Rule 2 reaches container leaves through the ancestry.
+                if (
+                    key in PERCENT_CONTAINER_KEY
+                    and not isinstance(value, bool)
+                    and isinstance(value, (int, float))
+                    and any(PERCENT_TOKEN_KEY.search(a) for a in ancestors)
+                ):
+                    checked += 1
+                    if value != 0 and abs(value) < 1:
+                        factor_valued.append(f"{name}{jpath[1:]} = {value}")
+                continue
+
+            # Rule 1 - a percent-named property must resolve to a number.
+            leaves = list(numeric_leaves(value))
+            if not leaves:
+                no_number.append(f"{name}{jpath[1:]} = {value!r}")
+                continue
+            checked += len(leaves)
+            # Rule 2 - percentage points, never a normalized factor.
+            for leaf in leaves:
+                if leaf != 0 and abs(leaf) < 1:
+                    factor_valued.append(f"{name}{jpath[1:]} = {leaf}")
+
+    rows = [
+        (
+            "percent-named properties resolve to a number",
+            0,
+            f"{len(no_number)} prose-only",
+            "ok" if not no_number else "FAIL",
+        ),
+        (
+            f"percentage-point magnitudes, not normalized factors ({checked} numeric leaf/leaves)",
+            0,
+            f"{len(factor_valued)} with 0 < |v| < 1",
+            "ok" if not factor_valued else "FAIL",
+        ),
+        (
+            "compiler's normalized factor not authored",
+            0,
+            f"{len(hybrid_names)} hybrid name(s), {len(twins)} twin(s)",
+            "ok" if not (hybrid_names or twins) else "FAIL",
+        ),
+    ]
+    if no_number:
+        fail(
+            f"{len(no_number)} property name(s) say percent but hold no numeric value, so the "
+            f"percentage exists only as prose (40:95): {no_number[:10]}"
+        )
+    if factor_valued:
+        fail(
+            f"{len(factor_valued)} percent-named numeric value(s) satisfy 0 < |v| < 1, which is a "
+            f"normalized factor rather than human-readable percentage points (40:95): "
+            f"{factor_valued[:10]}"
+        )
+    if hybrid_names:
+        fail(
+            f"{len(hybrid_names)} property name(s) combine a percent token with a normalized-factor "
+            f"token; the compiler writes the normalized factor as a separate derived field (40:95): "
+            f"{hybrid_names[:10]}"
+        )
+    if twins:
+        fail(
+            f"{len(twins)} object(s) author both percentage points and a same-stem normalized factor; "
+            f"the factor is compiler-derived (40:95, 40:100): {twins[:10]}"
+        )
+    return rows
+
+
+# --------------------------------------------------------------------------
+# A24 - no repo path with a line number may hide in a domain value.
+#
+# source_refs was cleaned in an earlier pass, but the citations had moved next
+# door: eleven effect.stacking_classification strings carried a parenthetical
+# "(docs/68-utility-catalog.md:253)", a weapons note carried one, and
+# hyper-gold-sites.json held a repo path in a field named beacon_response_source.
+# A line number is unstable wherever it hides, and the doc_id#anchor form
+# (40:87) is the only citation form the envelope names, so the rule is scoped to
+# the value, not to one field.
+# --------------------------------------------------------------------------
+
+DOC_PATH_IN_VALUE = re.compile(r"docs/.*\.md")
+
+
+def check_no_doc_paths_in_values(docs: dict[Path, object]) -> list[tuple]:
+    """A24 - no string value anywhere under content/ matches docs/.*\\.md."""
+    hits: list[str] = []
+    for path, doc in sorted(docs.items()):
+        for jpath, _, value in walk(doc):
+            if isinstance(value, str) and DOC_PATH_IN_VALUE.search(value):
+                hits.append(f"{rel(path)}{jpath[1:]} = {value!r}")
+    rows = [
+        (
+            "no string value matches docs/.*\\.md",
+            0,
+            len(hits),
+            "ok" if not hits else "FAIL",
+        )
+    ]
+    if hits:
+        fail(
+            f"{len(hits)} string value(s) under content/ embed a docs/ path; citations use the "
+            f"doc_id#anchor form in source_refs, and a path with a line number is unstable "
+            f"wherever it hides (40:87): {hits[:10]}"
+        )
+    return rows
+
+
+# --------------------------------------------------------------------------
+# A25 - polarity agreement between a structured direction and its sibling prose.
+#
+# This automates a check that had to be done by hand. Ruling 22 in
+# content/transcription-notes.md verified all six
+# resonance_behavior.modifier.direction values against docs/40:104-109 by eye
+# after one was reported wrong; nothing in the tree would have caught a seventh.
+#
+# The vocabulary is a CLOSED set of opposed pairs and +1 means "more of the
+# quantity": higher/lower, increase/decrease, more/less, faster/slower,
+# longer/shorter, raise/reduce, gain/lose.
+#
+# It fires on STRICT contradiction only - every polarity word in the prose has
+# the opposite sign to the structured value. Prose carrying both signs, as in
+# "enemy attack cadence is 20% faster without increasing movement speed", is not
+# a contradiction and is not reported; a heuristic that guessed which clause
+# governed would produce exactly the kind of confident wrong answer the
+# pre-clear audit appendix warns about.
+# --------------------------------------------------------------------------
+
+POLARITY_WORDS = {
+    "higher": 1, "lower": -1,
+    "increase": 1, "decrease": -1,
+    "more": 1, "less": -1,
+    "faster": 1, "slower": -1,
+    "longer": 1, "shorter": -1,
+    "raise": 1, "reduce": -1,
+    "gain": 1, "lose": -1,
+}
+# Inflections of the verbs above, so "increases"/"increasing"/"reduced" count.
+POLARITY_INFLECTIONS = ("", "s", "d", "es", "ed", "ing")
+POLARITY_LOOKUP: dict[str, int] = {}
+for _stem, _sign in POLARITY_WORDS.items():
+    for _suffix in POLARITY_INFLECTIONS:
+        _base = _stem[:-1] if _suffix in ("ing", "ed", "es") and _stem.endswith("e") else _stem
+        POLARITY_LOOKUP.setdefault(_base + _suffix, _sign)
+        POLARITY_LOOKUP.setdefault(_stem + _suffix, _sign)
+WORD = re.compile(r"[A-Za-z]+")
+
+
+def polarity_of(text: str) -> set[int]:
+    """The set of polarity signs the words of `text` carry."""
+    return {POLARITY_LOOKUP[w] for w in (m.group(0).lower() for m in WORD.finditer(text))
+            if w in POLARITY_LOOKUP}
+
+
+def prose_siblings(obj: dict, skip_key: str):
+    """String values of `obj` that are prose, not another structured token."""
+    for key, value in obj.items():
+        if key == skip_key or not isinstance(value, str):
+            continue
+        # A bare vocabulary word is a second structured value, not prose about one.
+        if value.strip().lower().rstrip(".") in POLARITY_LOOKUP:
+            continue
+        yield key, value
+
+
+def check_polarity_agreement(docs: dict[Path, object]) -> list[tuple]:
+    """A25 - a structured polarity value may not contradict its sibling prose."""
+    contradictions: list[str] = []
+    pairs = 0
+
+    def visit(node, jpath: str, name: str, parent: dict | None, parent_key: str | None) -> None:
+        if isinstance(node, list):
+            for index, element in enumerate(node):
+                visit(element, f"{jpath}[{index}]", name, parent, parent_key)
+            return
+        if not isinstance(node, dict):
+            return
+        for field, structured in node.items():
+            if not isinstance(structured, str):
+                continue
+            sign = POLARITY_LOOKUP.get(structured.strip().lower().rstrip("."))
+            if sign is None:
+                continue
+            candidates = [(key, value) for key, value in prose_siblings(node, field)]
+            if parent is not None and parent_key is not None:
+                # A "direction" commonly sits one level in, inside a structured
+                # modifier, while the prose stating the same fact stays outside it.
+                candidates += [
+                    (f"../{key}", value) for key, value in prose_siblings(parent, parent_key)
+                ]
+            for prose_key, prose in candidates:
+                signs = polarity_of(prose)
+                if not signs:
+                    continue
+                nonlocal pairs
+                pairs += 1
+                if sign not in signs:
+                    contradictions.append(
+                        f"{name}{jpath[1:]}.{field} = {structured!r} contradicts "
+                        f"{prose_key} = {prose!r}"
+                    )
+        for key, value in node.items():
+            visit(value, f"{jpath}.{key}", name, node, key)
+
+    for path, doc in sorted(docs.items()):
+        visit(doc, "$", rel(path), None, None)
+    rows = [
+        (
+            f"structured polarity agrees with sibling prose ({pairs} pair(s) compared)",
+            0,
+            len(contradictions),
+            "ok" if not contradictions else "FAIL",
+        )
+    ]
+    if contradictions:
+        fail(
+            f"{len(contradictions)} structured polarity value(s) contradict the prose beside them; "
+            f"a sign inversion is invisible to every other assertion here: {contradictions[:10]}"
+        )
+    return rows
+
+
+# --------------------------------------------------------------------------
 # reporting
 # --------------------------------------------------------------------------
 
@@ -1741,6 +2188,7 @@ def main() -> int:
     report_reconciliation(stats)
     count_rows = check_counts(docs)
     probe_rows = check_probes(docs)
+    world_prop_rows = check_world_prop_values(docs)
     total_rows = check_totals(docs)
     ref_rows = check_references(docs)
     derived_rows = check_derived_values(docs)
@@ -1748,6 +2196,9 @@ def main() -> int:
     prefix_rows = check_scope_prefixes(docs)
     bound_rows = check_bound_spelling(docs)
     inventory_rows = check_file_inventory()
+    percent_rows = check_percentage_point_policy(docs)
+    doc_path_rows = check_no_doc_paths_in_values(docs)
+    polarity_rows = check_polarity_agreement(docs)
     loc_rows = check_localization(stats)
 
     table(
@@ -1756,6 +2207,16 @@ def main() -> int:
         count_rows,
     )
     table("A13 Aggregate row probes", ("directory", "rows", "expected", "actual", "status"), probe_rows)
+    table(
+        "A13 World-prop values (asserted individually, each with its own citation)",
+        ("value [doc line]", "expected", "actual", "status"),
+        world_prop_rows,
+    )
+    table(
+        "A16 Percentage-point policy (numbers and key names, 40:95)",
+        ("check", "expected", "actual", "status"),
+        percent_rows,
+    )
     table("A14 Doc-stated totals (Hyper Gold)", ("total", "expected", "actual", "status"), total_rows)
     table("A15 Referential integrity", ("check", "refs", "dangling", "status"), ref_rows)
     table("A18 Derived-vs-authored guard", ("check", "expected", "actual", "status"), derived_rows)
@@ -1763,6 +2224,16 @@ def main() -> int:
         "A20 Footprint fields the compiler owns",
         ("check", "expected", "actual", "status"),
         footprint_rows,
+    )
+    table(
+        "A24 No docs/*.md path in any string value",
+        ("check", "expected", "actual", "status"),
+        doc_path_rows,
+    )
+    table(
+        "A25 Polarity agreement (structured direction vs sibling prose)",
+        ("check", "expected", "actual", "status"),
+        polarity_rows,
     )
     table(
         "A22 source_refs scope prefixes",

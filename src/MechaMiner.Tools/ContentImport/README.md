@@ -37,10 +37,31 @@ checks:
   spelled out and the qualifier rather than the noun distinguishes two bounds on one quantity
   (`{target_minimum, target_maximum, hard_maximum}`). Where the name carries a unit suffix the unit stays
   terminal and the bound word moves to the front (`maximum_control_resistance_percent`). The exception
-  list `BOUND_SPELLING_ESCALATED` has two members — one object holding *different* values under two
-  spellings, escalated rather than renamed — and it is asserted for drift like `ID_NULL_EXPECTED`;
-- that no stale extraction metadata key (`_provenance`, `_source`, `notes`, `refs`, `lines`, `line`,
-  `shared_rule_refs`) survives anywhere at any depth;
+  list `BOUND_SPELLING_ESCALATED` is now **empty** — its two `W-BF-tethered-reaper` members were resolved
+  rather than suppressed, since `docs/71:346` shows 200 bounds the speed-bonus component and 400 the
+  total — and it is still asserted for drift like `ID_NULL_EXPECTED`, because a resolved escalation left
+  in an exception list is worse than no list;
+- that no stale extraction metadata key (`_provenance`, `_source`, `notes`, `note`, `refs`, `lines`,
+  `line`, `shared_rule_refs`) survives anywhere at any depth. The singular `note` was added after three
+  keys survived a blocklist that carried only the plural;
+- that no string value anywhere under `content/` matches `docs/.*\.md`. `source_refs` was cleaned in an
+  earlier pass, but the citations had moved next door into domain fields, where nothing looked: eleven
+  `effect.stacking_classification` strings carried a parenthetical `(docs/68-…:253)`, and one field
+  literally named `beacon_response_source` held a repo path. A line number is unstable wherever it
+  hides, and `doc_id#anchor` in `source_refs` is the only citation form the envelope names;
+- **polarity agreement**: where a structured polarity value (a `direction`, or any field valued from the
+  closed vocabulary higher/lower, increase/decrease, more/less, faster/slower, longer/shorter,
+  raise/reduce, gain/lose) sits beside prose stating the same fact, the two must agree in sign. Prose is
+  read from the same object and from the enclosing one. It fires on strict contradiction only, so
+  "20% faster without increasing movement speed" is not reported. This automates a check that had to be
+  done by hand: six geode resonance directions were verified against `docs/40:104-109` by eye, and
+  nothing would have caught a seventh;
+- the **percentage-point policy** (`40:95`) on numbers and key names, not prose: every percent-named
+  property resolves to at least one numeric leaf; no percent-named numeric value satisfies
+  `0 < |v| < 1`, which would be the compiler's normalized factor stored where percentage points belong;
+  and no name or object authors the normalized factor beside the points. A name "says `_percent`"
+  wherever the token appears, so the 52 mid-name spellings such as `percent_of_mech_base_speed` are
+  correct and are not flagged;
 - that every `source_refs` element resolves — the document ID against `doc_id` front matter under
   `docs/`, and any `#anchor` against a real heading slug in that document;
 - that every `source_refs` **scope prefix** resolves to a field that exists in the definition it
@@ -50,6 +71,11 @@ checks:
   localization key present, and no orphaned string;
 - per-catalog entry counts and aggregate row counts, from the `EXPECTATIONS` and `PROBES` tables where
   every row cites its own source doc and line;
+- the four authored world-prop **values** folded into the map contract, each against its own citation:
+  destructible rock Hull 100 (`docs/72:194`), rock damage footprint diameter 0.80 M (`:196`), health
+  pack repair 25 Hull (`:182`), health pack pickup radius 0.25 M (`:185`). This replaced a row *count*
+  over key-name patterns, which counted patterns that matched at least once — so two names existing
+  satisfied it and no value was ever compared. A missing field is now a failure, not a silent pass;
 - the two doc-stated grand totals recomputed from the JSON — PowerUp rank prices must sum to 9,450
   Hyper Gold and the six option-unlock costs to 2,150, with actual vs expected always printed;
 - referential integrity for branch → weapon, encounter → enemy, and mech → signature weapon, with the
@@ -58,17 +84,29 @@ checks:
   derived 12 s must not appear as an authored deployment or ramp value in `content/weapons/`; and
 - the footprint second-writer guard, which is two rules with two different scopes. No definition under
   `content/enemies/` may carry a contact **diameter** — an enemy authors `body_scale_multiplier` and the
-  diameter is `scale × 0.80 M` — and no definition under `content/enemies/` **or** `content/bosses/` may
-  carry the **centre distance that begins contact**, which is `diameter ÷ 2 + the player's 0.50 M
-  collision radius` for both. The diameter rule stops at enemies on purpose: a boss diameter is
-  authored, because the boss roster gives bosses no body scale to derive one from and the survivability
-  baseline states the four boss diameters flat. `reference_diameter_m` is allowlisted, being the
-  Ripper's authored rank-zero diameter rather than a per-enemy derived value.
+  diameter is `scale × 0.80 M` — and no definition under `content/enemies/`, `content/bosses/` **or**
+  `content/maps/` may carry the **centre distance that begins contact**, which is the object's radius
+  plus the player's `0.50 M` collision radius in all three. `content/maps/` joined the rule because the
+  health pack stored `0.75` = its authored `0.25 M` pickup radius + `0.50 M` (`docs/72:185`), a third
+  writer for one player-baseline constant. The diameter rule stops at enemies on purpose: a boss
+  diameter is authored, because the boss roster gives bosses no body scale to derive one from
+  (`docs/31:121-128` has no `Body` column, and `docs/72:86` scopes the derivation to "every **ordinary**
+  body scale") and the survivability baseline states the four boss diameters flat (`docs/72:105-110`).
+  `reference_diameter_m` is allowlisted, being the Ripper's authored rank-zero diameter rather than a
+  per-enemy derived value.
 
-Two reconciliation heuristics report as warnings rather than failures, because no schema exists to
-settle them: percentages carried on a property not named `*_percent` (`40:95`), and formulas held as
-strings rather than a registered formula kind plus parameters (`40:99`). Both are grouped by property
-name so the list stays actionable.
+**What the footprint guard does not do.** Both rules match specific key-name patterns in specific
+directories. A derived value reintroduced under a name neither pattern matches, or in a directory
+neither rule covers, passes — the guard raises the cost of the mistake, it does not make it impossible.
+It is checked on key names rather than values so that a *rename* inside a covered directory cannot slip
+past, which is a narrower claim than "fails the build if the field reappears under any name".
+
+One reconciliation heuristic still reports as a warning rather than a failure, because no schema exists
+to settle it: formulas held as strings rather than a registered formula kind plus parameters (`40:99`).
+It is grouped by property name so the list stays actionable. The percentage heuristic that used to sit
+beside it is gone: it matched a `%` glyph in prose, so it emitted 21 warnings about English sentences
+while leaving the numeric rule it cited unchecked. A warning list a reader learns to ignore is worse
+than no list.
 
 A definition whose `id` is absent or `null` is a **failure**: no definition in `content/` is waiting on
 an ID any more. The integration owner minted the last five — the four prose-only mining-site classes

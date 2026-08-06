@@ -9,7 +9,8 @@
   "source_refs": [
     "GDD-UTILITY-CATALOG#utl-b1--reinforced-bulkhead",
     "external_numerics[]: GDD-INITIAL-MECH-CATALOG",
-    "external_numerics[]: GDD-PERMANENT-POWERUP-CATALOG"
+    "external_numerics[]: GDD-PERMANENT-POWERUP-CATALOG",
+    "effect.stacking_classification: GDD-UTILITY-CATALOG#modifier-and-timing-rules"
   ],
   "material": "Barysteel",
   "primary_role": "Survivability",
@@ -19,7 +20,7 @@
       "Maximum Hull Integrity"
     ],
     "value_kind": "flat-additive-hull",
-    "stacking_classification": "Flat statistic changes apply before percentage modifiers. (docs/68-utility-catalog.md:253)"
+    "stacking_classification": "Flat statistic changes apply before percentage modifiers."
   },
   "ranks": [
     {

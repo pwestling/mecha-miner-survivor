@@ -7,7 +7,8 @@
   "summary_key": "utility.UTL-F1.summary",
   "tags": [],
   "source_refs": [
-    "GDD-UTILITY-CATALOG#utl-f1--ore-catalyzer"
+    "GDD-UTILITY-CATALOG#utl-f1--ore-catalyzer",
+    "effect.stacking_classification: GDD-UTILITY-CATALOG#modifier-and-timing-rules"
   ],
   "material": "Flux Amber",
   "primary_role": "Economy",
@@ -17,7 +18,7 @@
       "Mined common ore"
     ],
     "value_kind": "additive-percent",
-    "stacking_classification": "Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative. (docs/68-utility-catalog.md:253)"
+    "stacking_classification": "Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative."
   },
   "ranks": [
     {

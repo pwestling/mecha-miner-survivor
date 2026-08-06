@@ -9,7 +9,8 @@
   "source_refs": [
     "GDD-UTILITY-CATALOG#utl-a1--harmonic-calibrator",
     "external_numerics[]: GDD-INITIAL-MECH-CATALOG",
-    "external_numerics[]: GDD-WEAPON-NUMERIC-CATALOG"
+    "external_numerics[]: GDD-WEAPON-NUMERIC-CATALOG",
+    "effect.stacking_classification: GDD-UTILITY-CATALOG#modifier-and-timing-rules"
   ],
   "material": "Asterite",
   "primary_role": "Weapon power",
@@ -19,7 +20,7 @@
       "Weapon damage"
     ],
     "value_kind": "additive-percent",
-    "stacking_classification": "Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative. (docs/68-utility-catalog.md:253)"
+    "stacking_classification": "Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative."
   },
   "ranks": [
     {

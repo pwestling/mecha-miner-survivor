@@ -271,8 +271,10 @@ file, and `src/MechaMiner.Tools/ContentImport/README.md`):
   (`40:26`);
 - that no property name abbreviates a bound as `cap`, `max` or `min` at any depth, so the spelled-out
   `maximum`/`minimum` cannot drift back into three spellings. The only accepted exceptions are the two
-  fields declared in the verifier's `BOUND_SPELLING_ESCALATED`, which hold *different* values under two
-  spellings in one object and are escalated rather than renamed;
+  fields declared in the verifier's `BOUND_SPELLING_ESCALATED`, which is now **empty**: its two
+  `W-BF-tethered-reaper` members are resolved rather than suppressed, since `docs/71:346` shows 200
+  bounds the speed-bonus component and 400 bounds the total, so both values stay as
+  `maximum_speed_bonus_percent` and `maximum_total_contact_damage_percent`;
 - no stale extraction metadata keys survive anywhere at any depth, including the retired
   `shared_rule_refs`, whose content now lives in `source_refs`;
 - every `source_refs` document ID and `#anchor` resolves against `docs/` front matter (`40:87`), and

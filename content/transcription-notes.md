@@ -1211,6 +1211,10 @@ objects, and restating an effect value inside `favorable_scene_effect.magnitude`
 file uses (compare `W-BC-broadside-oscillator.json` and `W-BF-tethered-reaper.json`). So both were spelled
 `damage_multiplier_maximum` and both stayed; unifying the spelling was the whole defect.
 
+**Superseded by [Ruling 28](#ruling-28--the-two-w-bf-tethered-reaper-bounds-are-two-bounds-both-stay-both-are-renamed):
+the document owner confirmed these are two different bounds, both values stay, and both fields are now
+renamed. The escalation below is kept verbatim as the record of why the rename waited.**
+
 **`content/branches/W-BF-tethered-reaper.json` STOPS, and is escalated.** One object holds
 `effects.contact_damage_speed_bonus_percent_max = {percent: 200}` and
 `effects.contact_damage_percent_cap = {percent: 400}` — two spellings holding **different** values. That is
@@ -1378,6 +1382,190 @@ One was reported and investigated this pass, and **it is not a defect**. The rep
 `"decrease"` values in that file were Barysteel's and Driftmetal's, both correct. **No value was changed,
 and no value-level defect exists in the six resonance directions.** The heading is kept for the next real
 one.
+
+### Integration-owner rulings applied — fifth pass
+
+An adversarial review of the DAT-007 pull request. Six items were raised; **three of the six were
+defects in the *assertions*, not in the data** — a guard that read as covering something and did not.
+The pass is recorded as Rulings 23–27. No authored number changed. One review instruction was
+**declined on evidence** and is recorded as Ruling 23 so the refusal is auditable.
+
+#### Ruling 23 — the four boss contact diameters are AUTHORED and were not deleted
+
+**The instruction.** Delete eight "derived footprint" fields from `content/bosses/` — the four
+`contact_footprint.center_distance_that_begins_contact_m` values *and* the four
+`contact_footprint.contact_and_weapon_hurt_diameter_m` values — on the ground that both are
+`diameter ÷ 2 + 0.50`.
+
+**Finding 1: four of the eight no longer exist.** The four centre distances were removed in commit
+`4e12659`, and the A20 centre-distance rule was widened to `content/bosses/` in the same commit. The
+review ran against a tree at or before `21f1734`. Nothing to do.
+
+**Finding 2: the other four are not derived, and the arithmetic in the instruction cannot apply to
+them.** `diameter ÷ 2 + 0.50` is the *centre distance*; a diameter cannot equal a function of itself.
+A third independent attempt to refute the authored finding also failed:
+
+| Refutation attempt | Result |
+| --- | --- |
+| Is there a boss body-scale column? | No. `docs/31:121-128` carries ID, Boss, Arrival, Initial Hull, Move, Contact, Control resistance, Defining behavior. The ordinary roster at `docs/31:37-48` *does* carry a `Body` column, which is where the ten enemy scales come from |
+| Does the derivation sentence cover bosses? | No. `docs/72:86` reads "Every **ordinary** body scale in the alien roster multiplies that diameter" — the qualifier is in the source |
+| Do the implied scales (1.875, 2.5, 2.0, 2.375) appear anywhere in `docs/`? | No. `grep` over all of `docs/` returns nothing for any of the four |
+| Is the elite `1.25×` body scale (`docs/31:109`) an operand? | No. It scales "an enhanced instance of one of the nine pure pursuers"; bosses are explicitly separate |
+| Are the diameters stated flat? | Yes. `docs/72:105-110` states Riftjaw 1.50M, Brood Titan 2.00M, Prism Crown 1.60M, Skybreaker Apex 1.90M |
+
+**Ruling.** The boss diameter is the authored quantity, exactly as `body_scale_multiplier` is for an
+ordinary enemy. It stays. Deleting it would destroy the only statement of a boss footprint in the tree
+in order to satisfy a review instruction. **No boss file was modified this pass.**
+
+#### Ruling 24 — the health pack's collection centre distance is removed (the same defect, third writer)
+
+**Change.** `destructible_rock_rules.health_pack.collection_center_distance_with_standard_mech_circle_m`
+is **removed** from `content/maps/standard-map-generation-contract.json`.
+
+**Why.** It held `0.75`, and `docs/72:185` gives it as a consequence, not an operand: "The pack has a
+0.25M pickup radius. With the standard mech circle, collection occurs when centers come within 0.75M."
+`0.25 + 0.50 = 0.75`, where `0.50` is the *player's* collision radius (`docs/72:86`). The authored
+operand `pickup_radius_m = 0.25` stays. This is the third writer for the same player-baseline constant,
+after the ten enemies (Ruling 12's precursor) and the four bosses (`4e12659`): change the mech's
+collision radius and this file is silently wrong with no validator to notice. A20's centre-distance rule
+now covers `content/maps/` as well as `content/enemies/` and `content/bosses/`.
+
+#### Ruling 25 — a `path:line` citation is not a domain value (13 occurrences)
+
+`source_refs` was cleaned in an earlier pass, but the unstable citations had moved next door into
+domain fields, where no assertion looked. Line numbers are unstable wherever they hide.
+
+| Where | Before | After |
+| --- | --- | --- |
+| 11 × `content/utilities/UTL-*.json :: effect.stacking_classification` | `"… authoritative. (docs/68-utility-catalog.md:253)"` | `"… authoritative."`, with `effect.stacking_classification: GDD-UTILITY-CATALOG#modifier-and-timing-rules` added to that file's `source_refs` |
+| `content/mining-sites/hyper-gold-sites.json :: beacon_response_source` | `"docs/32-standard-wave-and-beacon-schedule.md#hyper-gold-threat-beacon-response"` | `"GDD-STANDARD-WAVE-SCHEDULE#hyper-gold-threat-beacon-response"`, with the same reference added under a `beacon_response_source:` scope prefix |
+| `content/weapons/stat-price-formula.json :: price_curve_decision.note` | `"The shared common-ore price curve is fixed globally by DEC-085 (docs/weapons/README.md:48)."` | key removed under Ruling 26; the surviving `price_curve_decision.id = "DEC-085"` is the whole of the fact |
+
+Two corrections to the review's own framing, both verified before writing:
+
+- The claim that `hyper-gold-sites.json` "already uses the stable form correctly in its own
+  `source_refs`" was **false** — that array held only `GDD-MINING#hyper-gold-sites`. The stable form is
+  nonetheless correct and was verified independently: `docs/32` declares
+  `doc_id: GDD-STANDARD-WAVE-SCHEDULE` and carries `## Hyper Gold threat-beacon response` at `:94`,
+  whose slug is `hyper-gold-threat-beacon-response`. A9 and A22 now both resolve it.
+- `docs/68:253` and `:255` both sit under `## Modifier and timing rules` (`docs/68:251`), so all eleven
+  utilities cite one anchor.
+
+**New assertion (A24).** No string value anywhere under `content/` may match `docs/.*\.md`.
+
+#### Ruling 26 — the singular `note` was not on the blocklist
+
+The A8 blocklist forbade `notes` and missed `note`. Three singular keys survived, two of them spelling
+out a derived movement speed in prose — the same category deleted from all ten enemies in an earlier
+pass. The keys are removed and `note` is added to `FORBIDDEN_KEYS`. Text is reproduced verbatim:
+
+| Former path | Note text |
+| --- | --- |
+| `content/mechs/MCH-06.json :: cross_doc_notes[0].note` | "Razorback with its +10% trait moves at 3.30M/s." |
+| `content/mechs/MCH-06.json :: cross_doc_notes[1].note` | "Razorback with both maximum Servo Overdrive and Rank-3 Vector Thrusters moves at 4.05M/s: `3.0 × (1 + 0.10 + 0.10 + 0.15)`." |
+| `content/weapons/stat-price-formula.json :: price_curve_decision.note` | "The shared common-ore price curve is fixed globally by DEC-085 (docs/weapons/README.md:48)." |
+
+The two `movement_speed_m_per_s` values **stay**: `docs/72:55` states 3.30M/s and `docs/72:57` states
+4.05M/s flat, so they are transcribed, not derived here. Only the prose restating them is gone, and
+`cross_doc_notes[]: GDD-PLAYER-SURVIVABILITY-BASELINE#movement-and-speed-modifiers` still carries the
+citation. The third note's `docs/weapons/README.md:48` pointer is worth recording as unresolvable —
+there is no `docs/weapons/` directory in this repo — which is precisely why a `path:line` string in a
+domain field is a defect rather than a convenience.
+
+#### Ruling 27 — three assertions were rewritten because they did not check what they cited
+
+This is the pass's most important output. In each case the guard was green, and green meant nothing.
+
+**A16 — checked prose, not the numeric rule it cited.** A16 cited `40:95` ("Percentages in authoring
+use human-readable percentage points only when the property name says `_percent`; the compiler writes
+normalized factors into the runtime bundle as a separate derived field") but ran only on *string* values
+and matched a literal `%` glyph. A numeric `25` under a non-`_percent` name was not even warned, while
+131 English sentences containing a percent sign were. A warning list a reader learns to ignore is worse
+than none. A16 is now three rules on **numbers and key names**, and a FAILURE rather than a warning
+(none of the three needs `content/schemas/`):
+
+1. a percent-named property resolves to at least one numeric leaf, so a percentage may not live only in
+   prose under a name that promises a number;
+2. a percentage-point magnitude is never a normalized factor — no percent-named numeric leaf (including
+   its `minimum`/`maximum`/`percent` container leaves) may satisfy `0 < |v| < 1`;
+3. the compiler's normalized factor is never authored — no property name combines a percent token with a
+   `factor`/`multiplier`/`fraction`/`normalized` token, and no object holds both `<stem>_percent` and a
+   same-stem factor sibling.
+
+**The 52 names that are *not* violations.** `percent_of_mech_base_speed`,
+`shockwave_damage_percent_of_current_damage` and 50 others put the percent token mid-name. `40:95`
+requires that the name *says* `_percent`, not that it *ends* in it, and `40:96`'s terminal-unit rule is
+about unit suffixes. A rule demanding a terminal `_percent` would have condemned all 52 and forced a
+rename that no document asks for — the same trap Checks 2 and 3 of the pre-clear audit describe.
+
+**A13's world-prop probe — vacuous.** It counted *patterns that matched at least once*, so
+`expected = 2` was satisfied by the existence of one key containing `rock` and one containing
+`health_pack`. Emptying both objects and setting Hull to `1` and the footprint to `9.9` left it green.
+It is replaced by four value assertions, each carrying its own citation:
+
+| Assertion | Value | Citation |
+| --- | --- | --- |
+| destructible rock Hull | `100` | `docs/72:194` |
+| destructible rock damage footprint diameter | `0.80` M | `docs/72:196` |
+| health pack repair | `25` Hull | `docs/72:182` |
+| health pack pickup radius | `0.25` M | `docs/72:185` |
+
+All four verified against the document before the assertion was written, and all four reproduce.
+
+**A25 (new) — polarity agreement, the automation of a hand check.** Ruling 22's Flux Amber
+investigation had to verify six `resonance_behavior.modifier.direction` values by reading
+`docs/40:104-109` by eye. Nothing stopped a seventh from being wrong. A25 draws a closed polarity
+vocabulary of opposed pairs — higher/lower, increase/decrease, more/less, faster/slower,
+shorter/longer, raise/reduce, gain/lose — and fails when a structured polarity value contradicts the
+polarity words in the prose beside it. It fires on strict contradiction only: prose carrying words of
+both signs ("20% faster without increasing movement speed") is not a contradiction. Its value does not
+depend on catching anything today; it catches the *next* one.
+
+**Also corrected in the pull-request body, not the tree:** the body claimed A20 "fails the build if
+either field reappears under any name". It does not — A20 matches specific key-name patterns in
+specific directories, and a value injected under an unmatched name passes. The body now says what A20
+does. `src/MechaMiner.Tools/ContentImport/README.md` already described it accurately.
+
+#### Ruling 28 — the two `W-BF-tethered-reaper` bounds are two bounds; both stay, both are renamed
+
+**The escalation is resolved, not suppressed.** Ruling 16 stopped on
+`content/branches/W-BF-tethered-reaper.json` because one object held
+`effects.contact_damage_speed_bonus_percent_max = {percent: 200}` and
+`effects.contact_damage_percent_cap = {percent: 400}` — two spellings of a bound holding *different*
+values, which could have been two bounds or one bound plus a transcription mistake. Renaming without
+knowing which would have destroyed a value. The document owner has now answered, and the sentence was
+re-read here before writing anything. `docs/71-initial-weapon-numeric-catalog.md:346`:
+
+> The four cutters combine into one blade with 200% current cutter radius. Its contact Damage is
+> `200% + up to 200%` of current Damage, scaling linearly with blade world speed from stationary to one
+> base mech full-speed and **capped at 400%**.
+
+So `200` bounds the speed-bonus **component** — the "up to 200%" addend — and `400` bounds the
+**total**, which is the 200% base plus the 200% maximum bonus. Two different bounds on two different
+quantities. Nothing is redundant and no value changed.
+
+**Changes.** Both are renamed under Ruling 16's spelling, with the qualifier rather than the noun
+carrying the distinction:
+
+| Before | After |
+| --- | --- |
+| `effects.contact_damage_speed_bonus_percent_max` | `effects.maximum_speed_bonus_percent` |
+| `effects.contact_damage_percent_cap` | `effects.maximum_total_contact_damage_percent` |
+
+`BOUND_SPELLING_ESCALATED` is now **empty**, and it is still asserted for drift. A resolved escalation
+left in an exception list is worse than no list, which is the same failure mode as the 21 percent-sign
+warnings Ruling 27 removed. Zero `_cap`, `_max` or `_min` bound suffixes remain anywhere under
+`content/`.
+
+**A prose over-claim, recorded rather than rewritten.** Commit `75310ed`'s message describes this exact
+object — "an upper bound as `_cap`, `_max` or `_maximum`, twice within a single object" — as part of what
+that commit normalized. `git show 75310ed -- content/branches/W-BF-tethered-reaper.json` is empty: the
+file was deliberately skipped and escalated, which was the right call, and the message described it as
+done anyway. The commit is pushed and history is not being rewritten; the over-claim is recorded here and
+in this pass's commit message instead. Together with the A20 over-claim in the pull-request body, that is
+**twice on this branch that prose asserted work the code did not do**, both in the same direction: the
+claim was written from the intent rather than from the diff. Every claim in a commit message or body on
+this branch is now checked against the actual diff before it is written.
 
 ### Per-definition notes, by catalog
 
@@ -2821,7 +3009,7 @@ files), `scales_with_attack_rate_ranks_and_global_modifiers`, `scales_with`,
 | C | Elite movement factor, value `1.1`, under `shared-elite-modifiers :: movement_speed_multiplier` and `REL-09 :: cross_document_rules[0].multiplies_with_elite_movement_multiplier`; the second reads as a boolean predicate while holding a number | **fixed** — Ruling 19, pair 2 (and the audit's "internal to REL-09" framing corrected there: the pair is cross-file) |
 | D | Damage-multiplier ceiling, value `2`, as `_cap` and `_max` in one file (`W-BD-selective-detonators`) | **fixed** — Ruling 16, spelling unified in both objects, neither removed |
 | E | Focus-multiplier ceiling, value `2`, as `W-AF :: fixed_properties.focus_multiplier_maximum` and `W-AF-coherence-memory :: effects.focus_cap_multiplier` — the same ceiling with the two words transposed, plus `changes_focus_cap_multiplier = false`, a boolean carrying `_multiplier` | **partly fixed, partly open** — Ruling 16 spelled the branch fields `focus_maximum_multiplier` / `changes_focus_maximum_multiplier`, but the weapon and its branch still name one ceiling two ways (`focus_multiplier_maximum` vs `focus_maximum_multiplier`) and the boolean still carries `_multiplier`. **Open: no ruling picked a winner across the two files.** |
-| F | Upper-bound suffix inconsistent repo-wide across `_cap`, `_max` and `_maximum`, with `W-BF-tethered-reaper` carrying two spellings in one object | **fixed, with one escalation** — Ruling 16; `W-BF-tethered-reaper`'s two fields hold *different* values (200 and 400) and are left as authored, declared in `BOUND_SPELLING_ESCALATED`. **Open for a document owner.** |
+| F | Upper-bound suffix inconsistent repo-wide across `_cap`, `_max` and `_maximum`, with `W-BF-tethered-reaper` carrying two spellings in one object | **fixed** — Ruling 16, and the one escalation is now closed by Ruling 28: the document owner confirmed 200 bounds the speed-bonus component and 400 bounds the total, so both values stay and both fields are renamed. `BOUND_SPELLING_ESCALATED` is empty. |
 | G | Factor and its complementary percentage stored side by side, on `REL-04`, `REL-07` and `REL-09` | **audited, nothing removed** — Ruling 21. All three pairs agree arithmetically, and each factor is stated as a multiplier by a document the definition already cites, so removing one would drop a doc-stated value. **Open: collides with the compiler's derived field when `DAT-006` lands.** |
 
 **Multiplicative values whose property name does not say so.**
@@ -2933,7 +3121,6 @@ a rename, which is why every ruling above quotes the line it relied on.
 
 | Finding | Owner needed |
 | --- | --- |
-| `W-BF-tethered-reaper` — `contact_damage_speed_bonus_percent_max = {percent: 200}` and `contact_damage_percent_cap = {percent: 400}`: two bounds, or one bound and a mistake? | document owner |
 | `obstacle_free_radius_in_mining_zone_diameters` — radius or diameter? Factor of two. | document owner (`docs/51`) |
 | `REL-07 :: effects.explosion_area_multiplier` is still `null` from the same sentence whose sibling was omitted | integration owner |
 | One focus ceiling under two names across `W-AF.json` and `W-AF-coherence-memory.json`, plus a boolean named `changes_focus_maximum_multiplier` | schema stream |

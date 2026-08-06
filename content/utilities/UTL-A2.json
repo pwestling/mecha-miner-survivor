@@ -7,7 +7,8 @@
   "summary_key": "utility.UTL-A2.summary",
   "tags": [],
   "source_refs": [
-    "GDD-UTILITY-CATALOG#utl-a2--survey-aperture"
+    "GDD-UTILITY-CATALOG#utl-a2--survey-aperture",
+    "effect.stacking_classification: GDD-UTILITY-CATALOG#modifier-and-timing-rules"
   ],
   "material": "Asterite",
   "primary_role": "Exploration",
@@ -17,7 +18,7 @@
       "Discovery radius"
     ],
     "value_kind": "additive-percent",
-    "stacking_classification": "Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative. (docs/68-utility-catalog.md:253)"
+    "stacking_classification": "Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative."
   },
   "ranks": [
     {

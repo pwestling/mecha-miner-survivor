@@ -55,11 +55,9 @@
   },
   "cross_doc_notes": [
     {
-      "note": "Razorback with its +10% trait moves at 3.30M/s.",
       "movement_speed_m_per_s": 3.3
     },
     {
-      "note": "Razorback with both maximum Servo Overdrive and Rank-3 Vector Thrusters moves at 4.05M/s: `3.0 × (1 + 0.10 + 0.10 + 0.15)`.",
       "movement_speed_m_per_s": 4.05
     }
   ]

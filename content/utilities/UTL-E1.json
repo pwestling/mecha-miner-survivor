@@ -7,7 +7,8 @@
   "summary_key": "utility.UTL-E1.summary",
   "tags": [],
   "source_refs": [
-    "GDD-UTILITY-CATALOG#utl-e1--repair-swarm"
+    "GDD-UTILITY-CATALOG#utl-e1--repair-swarm",
+    "effect.stacking_classification: GDD-UTILITY-CATALOG#modifier-and-timing-rules"
   ],
   "material": "Eidolon Coral",
   "primary_role": "Recovery",
@@ -17,7 +18,7 @@
       "Recovery"
     ],
     "value_kind": "additive-hull-per-second",
-    "stacking_classification": "Recovery sources add in Hull Integrity per second. (docs/68-utility-catalog.md:255)"
+    "stacking_classification": "Recovery sources add in Hull Integrity per second."
   },
   "ranks": [
     {

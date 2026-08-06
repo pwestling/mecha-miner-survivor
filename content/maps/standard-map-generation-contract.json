@@ -257,7 +257,6 @@
       "repair_hull": 25,
       "can_exceed_maximum_hull": false,
       "pickup_radius_m": 0.25,
-      "collection_center_distance_with_standard_mech_circle_m": 0.75,
       "movement_collision": "Non-solid",
       "persistence": "persists until collected or run end",
       "attraction": "none beyond contact",

@@ -9,7 +9,8 @@
   "source_refs": [
     "GDD-UTILITY-CATALOG#utl-d1--vector-thrusters",
     "external_numerics[]: GDD-INITIAL-MECH-CATALOG",
-    "external_numerics[]: GDD-PLAYER-SURVIVABILITY-BASELINE"
+    "external_numerics[]: GDD-PLAYER-SURVIVABILITY-BASELINE",
+    "effect.stacking_classification: GDD-UTILITY-CATALOG#modifier-and-timing-rules"
   ],
   "material": "Driftmetal",
   "primary_role": "Mobility",
@@ -19,7 +20,7 @@
       "Movement speed"
     ],
     "value_kind": "additive-percent",
-    "stacking_classification": "Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative. (docs/68-utility-catalog.md:253)"
+    "stacking_classification": "Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative."
   },
   "ranks": [
     {

@@ -4734,12 +4734,39 @@ IDs follow and the reason `stem == id` was rejected in favour of a recorded pair
 shipped. Two rules under one label is a defect that compounds with every new reference, so it was fixed at
 the merge instead of deferred.
 
-**`A31`, and one label rather than two.** `A31` is the next unused number: the labels in use are `A1`–`A30`
-(plus `A24a`/`A24b` as internal sub-parts of `A24`), verified by enumeration across the whole repository, not
-assumed. The rule's two layers — NAME and VALUE — stay under the single label they already shared, because
-they share one expectation file, one mandate set and one summary heading, and because `A24a`/`A24b` is this
-file's precedent for naming the internal parts of one row rather than promoting them to rows. Splitting them
-would also make the mapping from the review's `A28` ambiguous.
+**`A31`, and one label rather than two.** `A31` is the next unused number, verified by enumeration rather than
+assumed — see the follow-up item for the measured starting state and the refs it covers. The rule's two
+layers — NAME and VALUE — stay under the single label they already shared, and **the reason that carries the
+decision is the mapping: two numbers would make "the rule the review calls `A28`" ambiguous**, which is
+exactly what the mapping above exists to prevent. A reader arriving from an un-editable comment must land on
+one row, not choose between two. That the layers also share one expectation file, one mandate set and one
+summary heading is consistent with keeping them together, but it is the weaker reason and not the one to
+lean on.
+
+**A retracted argument, recorded because someone will otherwise re-derive it.** An earlier draft of this
+section cited `A24a`/`A24b` as this file's precedent for naming a rule's internal parts rather than promoting
+them to rows. **That citation points the wrong way and is withdrawn.** `A24a`/`A24b` are two labels covering
+one rule's two halves — it is precedent for *splitting*, so citing it in support of keeping two layers under
+one label argues the opposite of what it shows, and a later reader would have been able to cite our own note
+as precedent for splitting `A31`. The decision is unchanged; only this support for it is gone.
+
+**THE CAVEAT ON EVERY LABEL MEASUREMENT, INCLUDING THIS ONE: an enumeration over a clone measures the refs
+that clone has fetched, not the repository.** `git grep`, `git log --all` and `for-each-ref` are all bounded by
+the local ref set, and they report cleanly and confidently on whatever subset that happens to be — there is no
+warning at the boundary. Two sessions on this project disagreed today about whether a given commit existed and
+**both were reporting honestly**, because each was answering from a differently-populated clone. So "the label
+is free" is only ever as wide as the refs consulted, and the refs must be named for the claim to be checkable.
+
+**What this pass actually covered, in two stages.** The first enumeration ran over the worktree at `b7aea04`
+plus three git objects (`fefb7a3`, `5d1b8f3`, `f3159a6`) — that is **2 fetched refs**, while
+`git ls-remote --heads origin` reports **16**. The gap was not visible from inside the clone: `refs/heads/master`
+here sits at `739bf29`, an ancestor of `origin/master` from before `verify_content.py` existed, so even the
+local branch of that name was not the trunk. The measurement was then widened: all 16 heads fetched and the
+assertion-table rows enumerated per ref, with the per-ref result recorded in the follow-up item below.
+**`A31` is unused on every remote head**, so the choice stands on a repository-wide measurement rather than a
+two-ref one. Even that is bounded — by `git ls-remote` at one moment, which is why the follow-up says the
+minted table's starting state must be re-measured across every remote head at the time it is minted rather
+than copied from here.
 
 **A live review comment on PR #10 still says `A28` and cannot be edited.** That is why the mapping is
 recorded in three places a reader can reach from that comment — here, in the `A31` row of
@@ -4777,7 +4804,7 @@ Both edits were reverted and the file is byte-identical to `b7aea04`; the suite 
 | **A31's value layer has an EMPTY guard for 13 of the 115 removed values** — their container was left with no numeric leaves at all, so the layer searches nothing for them and only a leaf reappearing inside that same object could fail it. Asserted and printed (`EMPTY_SITE_GUARD_RECORDS`) rather than fixed: fixing it means widening the radius for exactly those records, which is the same unsolved problem as the row above. | validator stream |
 | **The `docs/72` versus `docs/31` Razorling diameter question** — `0.50 M`, or `0.62 × 0.80 = 0.496 M`? Evidence recorded in `CSV_MIRROR_ROUNDED`, including which arguments are non-discriminating and why. A30 fails in both directions while it is open, so holding is safe. | design owner (`docs/31`, `docs/72`) |
 | A20 still has **no value layer** — it is key-name patterns only, so the limitation Ruling 27 records for it still stands in full. **The design to copy is A31's value layer *after it has been attacked and reviewed*, not merely after it shipped.** It is new machinery with no review pass behind it; replicating an unreviewed design into a second checker doubles the surface of any mistake in it, which is why A20's value layer was deliberately kept out of this pass rather than forgotten. Whoever picks this up should copy something that has been tested, not something that passed. | validator stream, after A31 layer 2 review |
-| **Assertion labels have no minted-label table, which is the cause of the `A28` collision and will cause the next one.** A label is allocated by whoever adds an assertion, on their own branch, from whatever number looks free *there* — so two branches adding rules in parallel both pick the same next number, and nothing detects it until they meet. `A28` → `A31` only got caught because it arrived through a merge that put the two blocks in one file; a collision between two branches that touch different regions, or one landing before the other is written, produces two rules under one label with no banner and no reader noticing. **The project already solved exactly this for content IDs**: `docs/technical/40` carries a minted-prefix table and a check reads it, so a prefix is *granted* rather than guessed. The analogue is a **minted assertion-label table** — one place where a label is granted, with the rule that a new assertion takes the next *unallocated* label from the table rather than the next number that looks free on the branch you happen to be on, and a check that fails when the table and the assertions disagree (a label in the table with no assertion, an assertion with no table row, or one label on two rules). Deliberately **not built in the PR that hit the collision**: minting a table is a convention change that needs the document owner's agreement on where the table lives and what the check reads, and doing it inside a rename pass would ship an unreviewed convention alongside a mechanical fix. | validator stream + document owner (`docs/technical/40`) |
+| **Assertion labels have no minted-label table, which is the cause of the `A28` collision and will cause the next one.** A label is allocated by whoever adds an assertion, on their own branch, from whatever number looks free *there* — so two branches adding rules in parallel both pick the same next number, and nothing detects it until they meet. `A28` → `A31` only got caught because it arrived through a merge that put the two blocks in one file; a collision between two branches that touch different regions, or one landing before the other is written, produces two rules under one label with no banner and no reader noticing. **The project already solved exactly this for content IDs**: `docs/technical/40` carries a minted-prefix table and a check reads it, so a prefix is *granted* rather than guessed. The analogue is a **minted assertion-label table** — one place where a label is granted, with the rule that a new assertion takes the next *unallocated* label from the table rather than the next number that looks free on the branch you happen to be on, and a check that fails when the table and the assertions disagree (a label in the table with no assertion, an assertion with no table row, or one label on two rules). Deliberately **not built in the PR that hit the collision**: minting a table is a convention change that needs the document owner's agreement on where the table lives and what the check reads, and doing it inside a rename pass would ship an unreviewed convention alongside a mechanical fix. **Starting state, measured so it is not re-measured later — but re-measure it across every remote head before minting, and see the caveat below: `A1`–`A30` are in use on `origin/master` + this branch, `A24a`/`A24b` are `A24`'s two halves, `A31` is this branch's and everything above it is free. Per-ref, over all 16 `origin` heads: `origin/master` and `origin/claude/verify-content-manifest` hold `A1`–`A28`; `origin/claude/hearth-thread-2vmaro-content-gate` and `origin/claude/hearth-thread-hrufl9` hold `A1`–`A27`; `origin/claude/hearth-thread-lmz5z8` (this branch) holds `A1`–`A31` less nothing; the remaining 11 heads have no `verify_content.py` at all. So the highest label anywhere is `A31` and no unfetched branch was sitting on it.** | validator stream + document owner (`docs/technical/40`) |
 | `DAT-004` behavior-registry migration is **14 sites**, all `behavior_kind` on the ten enemies and four bosses, each holding prose where a token will go. Blocked on the registry being re-keyed by field space *and* token, because a flat namespace collides in this tree (`UTL-E1`'s duplicated string; `"damage"` at 36 sites under 7 leaf names). 65 prose sites across all six `CTR-CNT-002` spaces is the upper bound. | schema stream / registry owner |
 | `obstacle_free_radius_in_mining_zone_diameters` — radius or diameter? Factor of two. | document owner (`docs/51`) |
 | `REL-07 :: effects.explosion_area_multiplier` is still `null` from the same sentence whose sibling was omitted | integration owner |

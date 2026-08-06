@@ -410,12 +410,17 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       below is master's and keeps its number. Two rules under one label is a
       defect that compounds with every new reference, so it was fixed at the
       merge rather than deferred.
-      ONE LABEL, NOT TWO, for the two layers below: the layers share one
-      expectation file, one mandate set and one summary heading, and the
-      file's own precedent for a rule with named internal parts is A24a/A24b
-      - sub-parts of one row, not rows of their own. Splitting them into two
-      table numbers would also make the mapping from the review's "A28"
-      ambiguous, which is the thing this note exists to prevent.
+      ONE LABEL, NOT TWO, for the two layers below, and THE MAPPING IS THE
+      REASON: two table numbers would make "the rule the review calls A28"
+      ambiguous, which is the thing this note exists to prevent - a reader
+      arriving from an un-editable comment must land on one row rather than
+      choose between two. The layers also share one expectation file, one
+      mandate set and one summary heading, which is consistent with keeping
+      them together but is the weaker reason.
+      (An earlier draft cited A24a/A24b here as precedent for naming a rule's
+      internal parts. WITHDRAWN - that pair is two labels over one rule's two
+      halves, so it is precedent for SPLITTING and argued the opposite of what
+      it was cited for. See content/transcription-notes.md.)
       THE CAUSE IS NOT FIXED HERE. Labels are still allocated by whoever adds
       one, on their own branch, so the next two parallel additions collide the
       same way - see the minted-assertion-label-table open item in

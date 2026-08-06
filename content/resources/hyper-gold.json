@@ -1,65 +1,42 @@
 {
-  "_provenance": {
-    "doc": "docs/60-resources-crafting-progression.md",
-    "section": "Progression layers",
-    "lines": "14-23",
-    "extractedFor": "DAT-007",
-    "notes": [
-      "Hyper Gold has no RES-* or other stable ID in any design doc. `id` is a kebab-case slug of the player-facing name because no doc identifier exists to copy verbatim, and RES-001..RES-006 are already taken by docs/research/.",
-      "scope / availability / primaryPurpose / persistence are the four columns of the docs/60-resources-crafting-progression.md:18-21 table (Hyper Gold row, line 21).",
-      "docs/technical/40-content-data-and-validation.md:106 expects a `maximum safe count`; no gameplay doc states one, so maximumSafeCount is null.",
-      "The Hyper Gold site's threat-beacon mechanics (first-progress activation and the 25% / 50% / 75% escalation thresholds at 11.25 / 22.5 / 33.75 seconds, docs/40-mining-and-extraction.md:123) are the mining-site class definition and belong to content/mining-sites/, not to this resource entry.",
-      "docs/61-specialized-resource-identities.md:126 records that Hyper Gold's appearance and audio identity are explicitly undecided, so no icon or audio identity is authored here.",
-      "Localization keys are not authored here; content/localization/ is owned by a separate stream."
-    ]
-  },
   "id": "hyper-gold",
-  "playerFacingName": "Hyper Gold",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "resource.hyper-gold.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-PROGRESSION#progression-layers",
+    "sources[]: GDD-MINING#hyper-gold-sites",
+    "GDD-PROGRESSION#cross-run-progression-loop"
+  ],
   "scope": "Hyper Gold",
   "availability": "100 from each of three completion-only 45-second threat-beacon sites",
-  "primaryPurpose": "Buy permanent numerical power and permanent content or option unlocks",
+  "primary_purpose": "Buy permanent numerical power and permanent content or option unlocks",
   "persistence": "Banked at timed mission extraction; forfeited on death beforehand",
-  "resourceClass": "cross-run progression resource",
-  "inventoryScope": "cross-run",
-  "maximumSafeCount": null,
-  "iconAndSilhouetteCue": null,
-  "audioCharacter": null,
+  "resource_class": "cross-run progression resource",
+  "inventory_scope": "cross-run",
+  "maximum_safe_count": null,
+  "icon_and_silhouette_cue": null,
+  "audio_character": null,
   "sources": [
     {
       "source": "Hyper Gold site",
-      "sitesPerMap": 3,
-      "extractionSeconds": 45,
-      "awardPerCompletion": 100,
-      "partialPayout": false,
-      "totalPerMap": 300,
-      "_source": {
-        "doc": "docs/40-mining-and-extraction.md",
-        "section": "Hyper Gold sites",
-        "lines": "117-127"
-      }
+      "sites_per_map": 3,
+      "extraction_seconds": 45,
+      "award_per_completion": 100,
+      "partial_payout": false,
+      "total_per_map": 300
     },
     {
       "source": "interval boss drop",
-      "awardPerBoss": 25,
-      "bossCount": 4,
-      "totalPerRun": 100,
-      "requiresMiningProgress": false,
-      "_source": {
-        "doc": "docs/40-mining-and-extraction.md",
-        "section": "Hyper Gold sites",
-        "lines": "121"
-      }
+      "award_per_boss": 25,
+      "boss_count": 4,
+      "total_per_run": 100,
+      "requires_mining_progress": false
     }
   ],
-  "runCeiling": 400,
-  "securedOnlyByMissionExtraction": true,
-  "increasedByPowerUps": false,
-  "_secondarySource": {
-    "doc": "docs/60-resources-crafting-progression.md",
-    "section": "Cross-run progression loop",
-    "lines": "53-86",
-    "notes": [
-      "runCeiling 400 and increasedByPowerUps=false are from docs/60-resources-crafting-progression.md:80."
-    ]
-  }
+  "run_ceiling": 400,
+  "secured_only_by_mission_extraction": true,
+  "increased_by_power_ups": false
 }

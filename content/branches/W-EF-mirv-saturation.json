@@ -1,22 +1,19 @@
 {
-  "_provenance": {
-    "doc": "docs/71-initial-weapon-numeric-catalog.md",
-    "section": "MIRV Saturation — Amplification — 2 Flux Amber",
-    "lines": "477-482",
-    "extractedFor": "DAT-008",
-    "notes": [
-      "Branch sections in this document carry no standalone branch ID token; the heading supplies only name, class, and cost. The id and filename are composed as <weaponId>-<branch-name-kebab-case>.",
-      "weaponId and weaponName come from the enclosing '## W-EF — Missile Rack' heading (line 473).",
-      "`rules` holds every bullet of this section verbatim with its source line; `effects` is a structured restatement of those same bullets and introduces no value that is not written in them.",
-      "Section prose states no prerequisite. prerequisites is empty per docs/65-weapon-stat-and-branch-upgrades.md:50,66 (\"Branches have no stat-rank prerequisites\"; no rank, level, time, or boss prerequisite).",
-      "Exclusivity and irreversibility are not restated in this section; they come from docs/65-weapon-stat-and-branch-upgrades.md:56,68 and apply to all 45 branches.",
-      "expectedEffect is null: no bullet in this section is phrased as an 'Expected effect' estimate, unlike some earlier branch sections in this document. The section's own numeric outcomes are transcribed in `effects` and every bullet is preserved verbatim in `rules`, so nothing is lost."
-    ]
-  },
   "id": "W-EF-mirv-saturation",
-  "weaponId": "W-EF",
-  "weaponName": "Missile Rack",
-  "branchName": "MIRV Saturation",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-EF-mirv-saturation.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#mirv-saturation--amplification--2-flux-amber",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#mirv-saturation--amplification--2-flux-amber"
+  ],
+  "weapon_id": "W-EF",
+  "weapon_name": "Missile Rack",
   "class": "Amplification",
   "cost": {
     "resource": "Flux Amber",
@@ -25,62 +22,50 @@
   "prerequisites": [],
   "exclusivity": {
     "scope": "weapon",
-    "mutuallyExclusiveWith": [
+    "mutually_exclusive_with": [
       "W-EF-guardian-reserve",
       "W-EF-spiral-barrage"
     ],
-    "irreversibleWithinRun": true,
-    "existingCommonOreStatTracksStillApply": true,
-    "addsNewStatTrack": false,
-    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run.",
-    "refs": [
-      "docs/65-weapon-stat-and-branch-upgrades.md:56",
-      "docs/65-weapon-stat-and-branch-upgrades.md:68"
-    ]
+    "irreversible_within_run": true,
+    "existing_common_ore_stat_tracks_still_apply": true,
+    "adds_new_stat_track": false,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run."
   },
   "availability": {
     "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite.",
-    "purchase": "Installing one is a single deterministic purchase costing exactly two units of its assigned specialized material.",
-    "refs": [
-      "docs/65-weapon-stat-and-branch-upgrades.md:50",
-      "docs/65-weapon-stat-and-branch-upgrades.md:66"
-    ]
+    "purchase": "Installing one is a single deterministic purchase costing exactly two units of its assigned specialized material."
   },
   "effects": {
-    "splitsPerMissile": 1,
-    "microMissilesPerSplit": 3,
-    "splitTrigger": "at half of its remaining travel distance or 1.0 s before predicted impact, whichever comes first",
-    "splitAtRemainingTravelDistanceFraction": 0.5,
-    "splitLeadTimeBeforePredictedImpactSeconds": 1.0,
-    "microMissileDamageOfCurrentDamage": {
+    "splits_per_missile": 1,
+    "micro_missiles_per_split": 3,
+    "split_trigger": "at half of its remaining travel distance or 1.0 s before predicted impact, whichever comes first",
+    "split_at_remaining_travel_distance_fraction": 0.5,
+    "split_lead_time_before_predicted_impact_seconds": 1.0,
+    "micro_missile_damage_of_current_damage": {
       "percent": 45
     },
-    "microMissileBlastRadiusOfCurrentBlastRadius": {
+    "micro_missile_blast_radius_of_current_blast_radius": {
       "percent": 50
     },
-    "microMissileTargeting": "They select distinct nearby targets before assigning extras, so all three may hit one durable target only when no alternatives are available.",
-    "microMissilesInheritCurrentSpeedAndTurnRate": true,
-    "microMissilesCanSplitAgain": false,
-    "totalDirectPayloadPerOriginalMissileOfCurrentDamage": {
+    "micro_missile_targeting": "They select distinct nearby targets before assigning extras, so all three may hit one durable target only when no alternatives are available.",
+    "micro_missiles_inherit_current_speed_and_turn_rate": true,
+    "micro_missiles_can_split_again": false,
+    "total_direct_payload_per_original_missile_of_current_damage": {
       "percent": 135
     }
   },
-  "expectedEffect": null,
+  "expected_effect": null,
   "rules": [
     {
-      "line": 479,
       "text": "Each missile splits once into three micro-missiles at half of its remaining travel distance or 1.0 s before predicted impact, whichever comes first."
     },
     {
-      "line": 480,
       "text": "Each micro-missile deals 45% current Damage and has 50% current blast radius. They select distinct nearby targets before assigning extras, so all three may hit one durable target only when no alternatives are available."
     },
     {
-      "line": 481,
       "text": "Micro-missiles inherit current speed and turn rate and cannot split again."
     },
     {
-      "line": 482,
       "text": "Total direct payload per original missile is 135% current Damage, with more target distribution and less area per impact."
     }
   ]

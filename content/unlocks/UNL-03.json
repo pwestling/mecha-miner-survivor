@@ -1,99 +1,51 @@
 {
-  "_provenance": {
-    "doc": "docs/63-permanent-option-unlock-catalog.md",
-    "section": "UNL-03 — Dead-Reckoning Array",
-    "lines": "91-93",
-    "extractedFor": "DAT-008",
-    "notes": [
-      "id, unlock, category, effect and costHyperGold come from the 'Catalog overview' table row at docs/63-permanent-option-unlock-catalog.md:52; field order follows that table's column order (ID | Unlock | Category | Effect | Cost).",
-      "relicId is not present in docs/63; it is resolved by relic name against the 'Catalog overview' table of docs/69-initial-relic-catalog.md and carries its own _source.",
-      "prerequisite is null: line 38 states there is no prerequisite tree, challenge prerequisite, account-level gate, random shop, or purchase-order requirement.",
-      "No localization key, presentation identifier, icon, or sort order exists for option unlocks anywhere in docs/; those fields are absent rather than guessed."
-    ]
-  },
   "id": "UNL-03",
-  "unlock": "Dead-Reckoning Array",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "unlock.UNL-03.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-PERMANENT-OPTION-UNLOCK-CATALOG#unl-03--dead-reckoning-array",
+    "catalog_overview_row: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#catalog-overview",
+    "currency: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
+    "prerequisite: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
+    "fresh_profile_purchasable: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
+    "prices_fixed: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
+    "permanent: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
+    "refundable: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
+    "disableable: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
+    "purchasable_during_run: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
+    "grants_account_access_only: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
+    "unlocks.relic_id: GDD-INITIAL-RELIC-CATALOG#catalog-overview",
+    "cost_hyper_gold: GDD-INITIAL-RELIC-CATALOG#fresh-profile-and-unlocked-availability",
+    "rules[2..3]: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#relic-pool-behavior"
+  ],
   "category": "Relic",
   "effect": "Adds Dead-Reckoning Array to relic caches",
-  "costHyperGold": 250,
+  "cost_hyper_gold": 250,
   "currency": "Hyper Gold",
   "prerequisite": null,
-  "freshProfilePurchasable": true,
-  "pricesFixed": true,
+  "fresh_profile_purchasable": true,
+  "prices_fixed": true,
   "permanent": true,
   "refundable": false,
   "disableable": false,
-  "purchasableDuringRun": false,
-  "grantsAccountAccessOnly": true,
+  "purchasable_during_run": false,
+  "grants_account_access_only": true,
   "unlocks": {
     "kind": "relicCachePoolEntry",
     "count": 1,
     "relic": "Dead-Reckoning Array",
-    "relicId": "REL-03",
-    "addsToRandomRelicCachePool": true,
-    "guaranteesDiscovery": false,
-    "grantsStartingRelic": false
+    "relic_id": "REL-03",
+    "adds_to_random_relic_cache_pool": true,
+    "guarantees_discovery": false,
+    "grants_starting_relic": false
   },
   "rules": [
     "Permanently adds **Dead-Reckoning Array** to the random relic-cache selection pool. Finding it remains unguaranteed, and installing or selling it uses the ordinary relic discovery rules.",
     "Unlocking a relic permanently adds it to the random relic-cache selection pool.",
     "Each purchased relic unlock permanently joins that pool; the player cannot disable an owned relic to narrow future random results.",
     "An unlocked relic retains its full normal run-local rules: it must be found, its blocking choice must be resolved immediately, it occupies the single mech relic slot when installed, it may be sold for 150 common ore, and replacing an installed relic sells the displaced relic for 150. Ownership does not grant a starting relic."
-  ],
-  "_source": {
-    "_catalogOverviewRow": {
-      "doc": "docs/63-permanent-option-unlock-catalog.md",
-      "section": "Catalog overview",
-      "lines": "52",
-      "notes": [
-        "Source of id, unlock, category, effect and costHyperGold."
-      ]
-    },
-    "_sharedPurchaseRules": {
-      "doc": "docs/63-permanent-option-unlock-catalog.md",
-      "section": "Shared purchase rules",
-      "lines": "35-44",
-      "fields": [
-        "currency",
-        "prerequisite",
-        "freshProfilePurchasable",
-        "pricesFixed",
-        "permanent",
-        "refundable",
-        "disableable",
-        "purchasableDuringRun",
-        "grantsAccountAccessOnly"
-      ],
-      "notes": [
-        "These fields are the catalog-wide shared purchase rules and are identical on every unlock file.",
-        "prerequisite is null because line 38 states there is no prerequisite tree, challenge prerequisite, account-level gate, random shop, or purchase-order requirement.",
-        "grantsAccountAccessOnly comes from the 'Purpose' section, line 18: an option unlock grants account access only.",
-        "docs/technical/40-content-data-and-validation.md:136 requires unlocks to carry exact Hyper Gold cost, nonrefundable flag, owned content additions, and whether ownership may be disabled."
-      ]
-    },
-    "unlocks.relicId": {
-      "doc": "docs/69-initial-relic-catalog.md",
-      "section": "Catalog overview",
-      "lines": "26-38",
-      "notes": [
-        "Only the ID-to-relic-name mapping is taken from docs/69."
-      ]
-    },
-    "costHyperGold": {
-      "doc": "docs/69-initial-relic-catalog.md",
-      "section": "Fresh-profile and unlocked availability",
-      "lines": "51-57",
-      "notes": [
-        "docs/69's 'Relic | Unlock cost' table independently states 250 for Dead-Reckoning Array, matching docs/63. DEC-121 lines 19-26 also restate it."
-      ]
-    },
-    "rules[2..3]": {
-      "doc": "docs/63-permanent-option-unlock-catalog.md",
-      "section": "Relic-pool behavior",
-      "lines": "107-111",
-      "notes": [
-        "Verbatim pool-behavior and run-local retention rules that apply to every relic unlock."
-      ]
-    }
-  }
+  ]
 }

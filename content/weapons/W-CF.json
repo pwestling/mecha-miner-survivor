@@ -1,239 +1,142 @@
 {
-  "_provenance": {
-    "doc": "docs/71-initial-weapon-numeric-catalog.md",
-    "section": "Rank-Zero Values and Ore-Stat Increments",
-    "lines": "70-90",
-    "extractedFor": "DAT-007",
-    "notes": [
-      "`M` is one unmodified mech collision diameter, a relative spatial unit, not a metric distance (docs/71-initial-weapon-numeric-catalog.md:24); numeric keys therefore carry an `M` suffix rather than `Meters`.",
-      "Ore-stat units differ per stat, so each entry in `oreUpgradeableStats` carries an explicit `unit` field instead of encoding the unit in the key name.",
-      "`signatureMech` comes from docs/36-initial-mech-catalog.md:45, which is authoritative for the assignment. The `Signature mech` column of docs/66-weapon-catalog-and-resource-graph.md:39 still reads \"Initial signature; mech TBD\" and docs/weapons/README.md:20 only records Yes/No; both agree on signature membership but neither names the mech.",
-      "The `Status at DEC-075` column of docs/66-weapon-catalog-and-resource-graph.md:39 is deliberately not transcribed: docs/66-weapon-catalog-and-resource-graph.md:37 states DEC-125 moved every row to a different status, so the column is stale.",
-      "`favorableHordeDps` is an analytic scene estimate, not a cap; docs/71-initial-weapon-numeric-catalog.md:68 states the assumed simultaneous-victim counts and that benchmark captures supersede it.",
-      "The content envelope required by docs/technical/40-content-data-and-validation.md:76-89 (`schema_version`, `content_version`, `status`, `name_key`, `summary_key`, `tags`, `source_refs`, `presentation_id`) is not populated: no design document supplies values for those fields, and this transcription follows the DAT-007 field conventions.",
-      "A `base-travel second` is the distance an unmodified mech covers in one second at full speed (docs/71-initial-weapon-numeric-catalog.md:25), so `placementIntervalBaseTravelSeconds` is a distance, not a time."
-    ]
-  },
   "id": "W-CF",
-  "name": "Wake Projector",
-  "recipePair": {
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "weapon.W-CF.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#rank-zero-values-and-ore-stat-increments",
+    "recipe_pair: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "fabrication_cost: GDD-PROGRESSION#base-weapon-availability",
+    "base_automatic_attack: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "base_behavior: GDD-WEAPON-NUMERIC-CATALOG#w-cf--wake-projector",
+    "ore_upgradeable_stat_labels: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "damage_model: GDD-WEAPON-NUMERIC-CATALOG#base-weapon-summary",
+    "global_attack_rate_mapping: GDD-WEAPON-NUMERIC-CATALOG#global-weapon-attack-rate-mapping",
+    "branches.amplification.cost: GDD-WEAPON-NUMERIC-CATALOG#runaway-wake--amplification--2-cinderglass",
+    "branches.amplification.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.amplification: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.amplification: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.functional.cost: GDD-WEAPON-NUMERIC-CATALOG#carrier-ignition--functional--2-flux-amber",
+    "branches.functional.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.functional: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.functional: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.conversion.cost: GDD-WEAPON-NUMERIC-CATALOG#circuit-closure--conversion--2-driftmetal",
+    "branches.conversion.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.conversion: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.conversion: GDD-WEAPON-INDEX#catalog-lookup"
+  ],
+  "recipe_pair": {
     "notation": "C + F",
-    "materialCodes": [
+    "material_codes": [
       "C",
       "F"
     ],
-    "materialNames": [
+    "material_names": [
       "Cinderglass",
       "Flux Amber"
-    ],
-    "_source": {
-      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-      "section": "Accepted base catalog assignment",
-      "lines": "35-55"
-    }
+    ]
   },
-  "signatureMech": null,
-  "fabricationCost": {
+  "signature_mech": null,
+  "fabrication_cost": {
     "materials": [
       {
-        "materialCode": "C",
+        "material_code": "C",
         "material": "Cinderglass",
         "units": 1
       },
       {
-        "materialCode": "F",
+        "material_code": "F",
         "material": "Flux Amber",
         "units": 1
       }
     ],
-    "signatureWeaponBeginsEquippedWithoutPayingCost": true,
-    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost.",
-    "_source": {
-      "doc": "docs/60-resources-crafting-progression.md",
-      "section": "Base-weapon availability",
-      "lines": "104-110"
-    }
+    "signature_weapon_begins_equipped_without_paying_cost": true,
+    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost."
   },
-  "baseAutomaticAttack": {
-    "text": "Leaves temporary damaging trail segments behind movement",
-    "_source": {
-      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-      "section": "Accepted base catalog assignment",
-      "lines": "35-55"
-    }
+  "base_automatic_attack": {
+    "text": "Leaves temporary damaging trail segments behind movement"
   },
-  "baseBehavior": {
-    "text": "movement leaves damaging trail segments. An enemy may take damage from at most two segments simultaneously, preventing stationary turns from creating unbounded overlap.",
-    "_source": {
-      "doc": "docs/71-initial-weapon-numeric-catalog.md",
-      "section": "W-CF — Wake Projector",
-      "lines": "398-400"
-    }
+  "base_behavior": {
+    "text": "movement leaves damaging trail segments. An enemy may take damage from at most two segments simultaneously, preventing stationary turns from creating unbounded overlap."
   },
-  "oreUpgradeableStatLabels": {
+  "ore_upgradeable_stat_labels": {
     "labels": [
       "Damage",
       "trail width",
       "trail duration"
-    ],
-    "_source": {
-      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-      "section": "Accepted base catalog assignment",
-      "lines": "35-55"
-    }
+    ]
   },
-  "oreUpgradeableStats": [
+  "ore_upgradeable_stats": [
     {
       "slot": 1,
       "name": "Segment damage",
-      "rankZero": 18,
-      "incrementPerRank": 1.8,
+      "rank_zero": 18,
+      "increment_per_rank": 1.8,
       "unit": "damage per second",
       "discrete": false
     },
     {
       "slot": 2,
       "name": "Wake width",
-      "rankZero": 1.2,
-      "incrementPerRank": 0.1,
+      "rank_zero": 1.2,
+      "increment_per_rank": 0.1,
       "unit": "M",
       "discrete": false
     },
     {
       "slot": 3,
       "name": "Segment duration",
-      "rankZero": 5.0,
-      "incrementPerRank": 0.5,
+      "rank_zero": 5.0,
+      "increment_per_rank": 0.5,
       "unit": "seconds",
       "discrete": false
     }
   ],
-  "fixedProperties": {
-    "placementIntervalBaseTravelSeconds": 0.25,
-    "simultaneousSegmentOverlapCapPerTarget": 2,
+  "fixed_properties": {
+    "placement_interval_base_travel_seconds": 0.25,
+    "simultaneous_segment_overlap_cap_per_target": 2,
     "raw": "Segment every 0.25 base-travel seconds, two-segment overlap cap per target"
   },
-  "damageModel": {
-    "rankZeroDamageModel": "18/s per segment, two-segment target overlap cap",
-    "burst10Dps": 34.2,
-    "sustained30Dps": 36.0,
-    "favorableHordeDps": 144,
-    "primaryLimitation": "Requires movement and useful trail geometry",
-    "_source": {
-      "doc": "docs/71-initial-weapon-numeric-catalog.md",
-      "section": "Base Weapon Summary",
-      "lines": "46-68"
-    }
+  "damage_model": {
+    "rank_zero_damage_model": "18/s per segment, two-segment target overlap cap",
+    "burst_10_dps": 34.2,
+    "sustained_30_dps": 36.0,
+    "favorable_horde_dps": 144,
+    "primary_limitation": "Requires movement and useful trail geometry"
   },
-  "globalAttackRateMapping": {
-    "affectedTiming": "None",
-    "unaffectedTiming": "Distance-based placement, damage ticks, and segment life",
-    "_source": {
-      "doc": "docs/71-initial-weapon-numeric-catalog.md",
-      "section": "Global weapon Attack Rate mapping",
-      "lines": "102-124"
-    }
+  "global_attack_rate_mapping": {
+    "affected_timing": "None",
+    "unaffected_timing": "Distance-based placement, damage ticks, and segment life"
   },
   "branches": {
     "amplification": {
       "name": "Runaway Wake",
-      "fundingMaterialCode": "C",
-      "fundingMaterial": "Cinderglass",
+      "funding_material_code": "C",
+      "funding_material": "Cinderglass",
       "cost": {
         "material": "Cinderglass",
-        "units": 2,
-        "_source": [
-          {
-            "doc": "docs/71-initial-weapon-numeric-catalog.md",
-            "section": "Runaway Wake — Amplification — 2 Cinderglass",
-            "lines": "402"
-          },
-          {
-            "doc": "docs/60-resources-crafting-progression.md",
-            "section": "Weapon stat and branch upgrading",
-            "lines": "160-170"
-          }
-        ]
-      },
-      "_source": [
-        {
-          "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-          "section": "Accepted base catalog assignment",
-          "lines": "35-55"
-        },
-        {
-          "doc": "docs/weapons/README.md",
-          "section": "Catalog lookup",
-          "lines": "18-36"
-        }
-      ]
+        "units": 2
+      }
     },
     "functional": {
       "name": "Carrier Ignition",
-      "fundingMaterialCode": "F",
-      "fundingMaterial": "Flux Amber",
+      "funding_material_code": "F",
+      "funding_material": "Flux Amber",
       "cost": {
         "material": "Flux Amber",
-        "units": 2,
-        "_source": [
-          {
-            "doc": "docs/71-initial-weapon-numeric-catalog.md",
-            "section": "Carrier Ignition — Functional — 2 Flux Amber",
-            "lines": "409"
-          },
-          {
-            "doc": "docs/60-resources-crafting-progression.md",
-            "section": "Weapon stat and branch upgrading",
-            "lines": "160-170"
-          }
-        ]
-      },
-      "_source": [
-        {
-          "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-          "section": "Accepted base catalog assignment",
-          "lines": "35-55"
-        },
-        {
-          "doc": "docs/weapons/README.md",
-          "section": "Catalog lookup",
-          "lines": "18-36"
-        }
-      ]
+        "units": 2
+      }
     },
     "conversion": {
       "name": "Circuit Closure",
-      "fundingMaterialCode": "D",
-      "fundingMaterial": "Driftmetal",
+      "funding_material_code": "D",
+      "funding_material": "Driftmetal",
       "cost": {
         "material": "Driftmetal",
-        "units": 2,
-        "_source": [
-          {
-            "doc": "docs/71-initial-weapon-numeric-catalog.md",
-            "section": "Circuit Closure — Conversion — 2 Driftmetal",
-            "lines": "416"
-          },
-          {
-            "doc": "docs/60-resources-crafting-progression.md",
-            "section": "Weapon stat and branch upgrading",
-            "lines": "160-170"
-          }
-        ]
-      },
-      "_source": [
-        {
-          "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-          "section": "Accepted base catalog assignment",
-          "lines": "35-55"
-        },
-        {
-          "doc": "docs/weapons/README.md",
-          "section": "Catalog lookup",
-          "lines": "18-36"
-        }
-      ]
-    },
-    "_note": "Branch mechanics are transcribed separately into content/branches/; only the branch identity, transformation class, funding material, and specialized-material price are recorded here."
+        "units": 2
+      }
+    }
   }
 }

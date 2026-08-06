@@ -1,93 +1,62 @@
 {
-  "_provenance": {
-    "doc": "docs/36-initial-mech-catalog.md",
-    "section": "Catalog overview",
-    "lines": "43-52",
-    "extractedFor": "DAT-007",
-    "notes": [
-      "Row fields id/mech/signature/inherentTrait/selectionRole come from the Catalog overview table (line 51); field order follows that table's column order.",
-      "signatureWeaponId is not present in docs/36; it is resolved by weapon name against the Accepted base catalog assignment table in docs/66-weapon-catalog-and-resource-graph.md and carries its own _source.",
-      "This is the only mech whose trait is a flat rather than percentage modifier, so inherentTrait.modifier uses flatHull instead of percent.",
-      "resolvedBaseline records the doc's own explicit deployment values (line 162, '125 / 125 before account PowerUps').",
-      "traitNotes are the verbatim bullets of '### Signature and trait' minus the two bullets already captured as signature and inherentTrait.effect, and minus the 125/125 bullet captured as resolvedBaseline.",
-      "crossDocNotes is present on every mech for a uniform shape and is empty when docs outside 36 add no numeric fact about this mech."
-    ]
-  },
   "id": "MCH-05",
-  "mech": "Bastion",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "mech.MCH-05.name",
+  "summary_key": "mech.MCH-05.summary",
+  "tags": [],
+  "source_refs": [
+    "GDD-INITIAL-MECH-CATALOG#catalog-overview",
+    "signature_weapon_id: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "resolved_baseline: GDD-INITIAL-MECH-CATALOG#mch-05--bastion",
+    "trait_stacking: GDD-INITIAL-MECH-CATALOG#trait-comparison-and-stacking",
+    "initial_availability: GDD-INITIAL-MECH-CATALOG#initial-availability"
+  ],
   "signature": "Reactor Pulse",
-  "signatureWeaponId": "W-CE",
-  "_source": {
-    "signatureWeaponId": {
-      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-      "section": "Accepted base catalog assignment",
-      "lines": "51",
-      "notes": [
-        "Only the ID-to-weapon-name mapping is taken from docs/66. Its 'Signature mech' column reads 'Initial signature; mech TBD' and is stale; docs/36 is authoritative for the assignment."
-      ]
-    }
-  },
-  "inherentTrait": {
+  "signature_weapon_id": "W-CE",
+  "inherent_trait": {
     "name": "Reinforced Chassis",
     "effect": "+25 maximum Hull Integrity",
-    "affectedStatistic": "maximum Hull Integrity",
+    "affected_statistic": "maximum Hull Integrity",
     "modifier": {
-      "flatHull": 25
+      "flat_hull": 25
     }
   },
-  "selectionRole": "Durable close-pressure platform",
-  "playerFacingIdentity": "Bastion is the durable close-pressure chassis. Reactor Pulse damages enemies around the mech, and extra Hull Integrity gives the player more room to survive positioning errors without providing Armor or passive Recovery.",
-  "resolvedBaseline": {
+  "selection_role": "Durable close-pressure platform",
+  "player_facing_identity": "Bastion is the durable close-pressure chassis. Reactor Pulse damages enemies around the mech, and extra Hull Integrity gives the player more room to survive positioning errors without providing Armor or passive Recovery.",
+  "resolved_baseline": {
     "text": "Bastion deploys at full current Hull Integrity, normally `125 / 125` before account PowerUps.",
-    "currentHullIntegrity": 125,
-    "maximumHullIntegrity": 125,
-    "beforeAccountPowerUps": true,
-    "_source": {
-      "doc": "docs/36-initial-mech-catalog.md",
-      "section": "MCH-05 — Bastion",
-      "lines": "162"
-    }
+    "current_hull_integrity": 125,
+    "maximum_hull_integrity": 125,
+    "before_account_power_ups": true
   },
-  "traitNotes": [
+  "trait_notes": [
     "The flat mech bonus applies after the shared account baseline. The selection screen displays the final current and maximum values.",
     "The trait does not reduce individual hits, repair automatically, improve health packs, or change contact-damage cadence."
   ],
-  "topDownSilhouette": [
+  "top_down_silhouette": [
     "Broad square torso, heavy shoulder blocks, and a large visible circular reactor core.",
     "Short thick limbs keep its footprint visually dense without changing the shared collision rules.",
     "Four corner armor masses distinguish it from Lodestar's open radial vanes.",
     "Reactor Pulse originates from the central core and expands beyond the chassis outline."
   ],
-  "selectionSummary": "A forgiving close-pressure platform with substantially more Hull Integrity.",
-  "traitStacking": {
-    "changedBaseline": {
+  "trait_stacking": {
+    "changed_baseline": {
       "text": "125 maximum Hull",
       "statistic": "maximum Hull Integrity",
       "value": 125
     },
-    "withMatchingUtilityRank3BeforePowerUps": {
+    "with_matching_utility_rank_3_before_power_ups": {
       "text": "170 with Reinforced Bulkhead",
       "utility": "Reinforced Bulkhead",
       "value": 170
-    },
-    "_source": {
-      "doc": "docs/36-initial-mech-catalog.md",
-      "section": "Trait comparison and stacking",
-      "lines": "202-210",
-      "notes": [
-        "Bastion's stacking row is expressed in absolute Hull points, not percentages, so this row uses 'value' where the other five mechs use 'percent'."
-      ]
     }
   },
-  "initialAvailability": {
+  "initial_availability": {
     "text": "Available",
     "available": true,
-    "recommendedDefault": false,
-    "_source": {
-      "doc": "docs/36-initial-mech-catalog.md",
-      "section": "Initial availability",
-      "lines": "215-225"
-    }
+    "recommended_default": false
   },
-  "crossDocNotes": []
+  "cross_doc_notes": []
 }

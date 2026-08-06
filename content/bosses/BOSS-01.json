@@ -1,213 +1,144 @@
 {
-  "_provenance": {
-    "doc": "docs/31-initial-alien-roster.md",
-    "section": "Interval boss overview",
-    "lines": "117-128",
-    "extractedFor": "DAT-007",
-    "notes": [
-      "Field names are camelCase per the CAT-stream transcription convention. docs/technical/40-content-data-and-validation.md:92-100 instead mandates snake_case property names with _m/_m_per_s/_seconds/_hull/_percent suffixes and the common definition envelope at lines 76-89 (id, schema_version, content_version, status, name_key, summary_key, tags, source_refs, presentation_id). Only `id` is emitted here; the remaining envelope fields have no authored values in docs/ and are left to the schema stream (DAT-001..003).",
-      "`M` is one unmodified mech collision diameter (1.0 M), per docs/72-player-survivability-and-damage-baseline.md:47. Keys suffixed `M` or `MPerSecond` use that unit, not metres.",
-      "Percentages are transcribed as {\"percent\": N} objects; ranges as {\"min\": X, \"max\": Y}.",
-      "docs/data/contact-damage-pressure.csv and docs/data/survivability-baseline.csv are non-authoritative mirrors (docs/data/README.md:5,10) and were used only to cross-check. Every overlapping value agrees with the Markdown.",
-      "`arrival.activeSecondsIntoRun` is the doc's 7:00 timecode converted to active simulation seconds; the timecode is preserved verbatim.",
-      "No document states a boss Armor value; ordinary enemies are explicitly 0 Armor (docs/31-...md:25) but bosses are not covered, so `armor` is null.",
-      "Boss Hull values are initial anchors validated against the no-relic progression in docs/71-initial-weapon-numeric-catalog.md, not a substitute for time-to-kill validation (docs/31-...md:128).",
-      "No presentation entry ID exists anywhere in docs/, so the presentation reference required by docs/technical/40-content-data-and-validation.md:114 is omitted."
-    ]
-  },
   "id": "BOSS-01",
-  "boss": "Riftjaw",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "boss.BOSS-01.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-INITIAL-ALIEN-ROSTER#interval-boss-overview",
+    "arrival: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
+    "movement_speed: GDD-PLAYER-SURVIVABILITY-BASELINE#movement-and-speed-modifiers",
+    "contact_footprint: GDD-PLAYER-SURVIVABILITY-BASELINE#collision-and-contact-footprints",
+    "contact_cadence: GDD-INITIAL-ALIEN-ROSTER#interval-boss-overview",
+    "damage_pressure: GDD-PLAYER-SURVIVABILITY-BASELINE#damage-pressure-reference",
+    "required_realized_build_dps: GDD-COMBAT-ECONOMY-BALANCE-FRAMEWORK#build-milestone-boss-dps-budgets",
+    "milestone_reach_target_probability: GDD-PLAYER-SURVIVABILITY-BASELINE#run-level-margins",
+    "ability.resonant_damage_reference: GDD-PLAYER-SURVIVABILITY-BASELINE#damage-pressure-reference",
+    "ability: GDD-INITIAL-ALIEN-ROSTER#boss-01--riftjaw",
+    "ability: TDD-ENCOUNTERS#boss-behavior-state-machines",
+    "persistence.reentry: TDD-ENCOUNTERS#boss-re-entry",
+    "persistence: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
+    "resonance: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
+    "defeat_reward: GDD-RUN-STRUCTURE#boss-defeat-reward",
+    "description: GDD-INITIAL-ALIEN-ROSTER#boss-01--riftjaw"
+  ],
   "arrival": {
     "timecode": "7:00",
-    "activeSecondsIntoRun": 420,
-    "warningLeadSeconds": 15,
-    "_source": {
-      "doc": "docs/31-initial-alien-roster.md",
-      "section": "Boss arrival, persistence, and reward",
-      "lines": "167-170"
-    }
+    "active_seconds_into_run": 420,
+    "warning_lead_seconds": 15
   },
-  "initialHull": 6000,
-  "movementSpeed": {
-    "percentOfMechBaseSpeed": {
+  "initial_hull": 6000,
+  "movement_speed": {
+    "percent_of_mech_base_speed": {
       "percent": 42
     },
-    "worldSpeedMPerSecond": 1.26,
-    "_source": {
-      "doc": "docs/72-player-survivability-and-damage-baseline.md",
-      "section": "Movement and Speed Modifiers",
-      "lines": "75-75"
-    }
+    "world_speed_m_per_s": 1.26
   },
-  "contactDamage": 18,
-  "controlResistance": {
+  "contact_damage": 18,
+  "control_resistance": {
     "percent": 85
   },
-  "definingBehavior": "Telegraphs and performs a straight charge",
+  "defining_behavior": "Telegraphs and performs a straight charge",
   "armor": null,
-  "behaviorKind": "persistent giant pursuer with exactly one additional behavior",
-  "contactFootprint": {
-    "contactAndWeaponHurtDiameterM": 1.5,
-    "centerDistanceThatBeginsContactM": 1.25,
+  "behavior_kind": "persistent giant pursuer with exactly one additional behavior",
+  "contact_footprint": {
+    "contact_and_weapon_hurt_diameter_m": 1.5,
+    "center_distance_that_begins_contact_m": 1.25,
     "shape": "Circle",
-    "appendagesOutsideFootprint": "may pass over the mech harmlessly",
-    "attackGeometryUsesSeparateDisplay": "charge lanes, projectile shapes, and landing circles use their separately displayed attack geometry rather than the boss contact circle",
-    "_source": {
-      "doc": "docs/72-player-survivability-and-damage-baseline.md",
-      "section": "Collision and Contact Footprints",
-      "lines": "103-112"
-    }
+    "appendages_outside_footprint": "may pass over the mech harmlessly",
+    "attack_geometry_uses_separate_display": "charge lanes, projectile shapes, and landing circles use their separately displayed attack geometry rather than the boss contact circle"
   },
-  "contactCadence": {
-    "matchesSharedOrdinaryCadence": true,
-    "sameEnemyRepeatIntervalSeconds": 0.75,
-    "globalContactGraceAfterResolvedContactSeconds": 0.2,
-    "addedAttackDefinesOwnDamageEvent": true,
-    "_source": {
-      "doc": "docs/31-initial-alien-roster.md",
-      "section": "Interval boss overview",
-      "lines": "119-119"
-    }
+  "contact_cadence": {
+    "matches_shared_ordinary_cadence": true,
+    "same_enemy_repeat_interval_seconds": 0.75,
+    "global_contact_grace_after_resolved_contact_seconds": 0.2,
+    "added_attack_defines_own_damage_event": true
   },
-  "damagePressure": {
-    "contactDamage": 18,
-    "hitsToDefeat100Hull": 6,
-    "continuousOverlapTimeToDefeatSeconds": 3.75,
-    "assumptions": "100 Hull, zero Armor, no healing, no resonance, uninterrupted overlap with one attacker",
-    "_source": {
-      "doc": "docs/72-player-survivability-and-damage-baseline.md",
-      "section": "Damage Pressure Reference",
-      "lines": "160-160"
-    }
+  "damage_pressure": {
+    "contact_damage": 18,
+    "hits_to_defeat_100_hull": 6,
+    "continuous_overlap_time_to_defeat_seconds": 3.75,
+    "assumptions": "100 Hull, zero Armor, no healing, no resonance, uninterrupted overlap with one attacker"
   },
-  "targetTimeToKillSeconds": {
+  "target_time_to_kill_seconds": {
     "min": 45,
     "max": 75
   },
-  "requiredRealizedBuildDps": {
+  "required_realized_build_dps": {
     "min": 80,
-    "max": 133,
-    "_source": {
-      "doc": "docs/70-combat-and-economy-balance-framework.md",
-      "section": "Build milestone boss-DPS budgets",
-      "lines": "174-182"
-    }
+    "max": 133
   },
-  "milestoneReachTargetProbability": {
+  "milestone_reach_target_probability": {
     "percent": {
       "min": 85,
       "max": 95
     },
-    "cohort": "players who understand movement and fabrication but have no permanent PowerUps",
-    "_source": {
-      "doc": "docs/72-player-survivability-and-damage-baseline.md",
-      "section": "Run-level margins",
-      "lines": "268-268"
-    }
+    "cohort": "players who understand movement and fabrication but have no permanent PowerUps"
   },
   "ability": {
     "kind": "straight charge",
-    "cadenceSeconds": 8,
-    "stopAndTelegraphDurationSeconds": 1,
-    "chargeDurationSeconds": 1.5,
-    "chargeSpeed": {
-      "percentOfMechBaseSpeed": {
+    "cadence_seconds": 8,
+    "stop_and_telegraph_duration_seconds": 1,
+    "charge_duration_seconds": 1.5,
+    "charge_speed": {
+      "percent_of_mech_base_speed": {
         "percent": 180
       },
-      "worldSpeedMPerSecond": 5.4
+      "world_speed_m_per_s": 5.4
     },
-    "chargeContactDamage": 27,
-    "ordinaryContactDamageReplacedDuringCharge": 18,
-    "turnsDuringCharge": false,
+    "charge_contact_damage": 27,
+    "ordinary_contact_damage_replaced_during_charge": 18,
+    "turns_during_charge": false,
     "targeting": "displays a wide straight charge lane toward the mech's sampled position",
-    "laneWidthM": null,
-    "laneValidation": "the lane never knowingly selects a route that immediately collides with terrain before covering one body length",
-    "terrainInteraction": "terrain stops the charge without stunning or damaging the boss",
-    "missConsequence": "missing carries Riftjaw past the player and creates a brief damage opportunity before pursuit resumes",
-    "hitRule": "a dedicated per-ability hit rule rather than the ordinary 18 contact",
-    "resonantDamageReference": {
-      "baseDamage": 27,
-      "resonantDamage": 33,
-      "resonanceSource": "Asterite",
-      "freshMechHitsToDefeatAtResonantValue": 4,
-      "_source": {
-        "doc": "docs/72-player-survivability-and-damage-baseline.md",
-        "section": "Damage Pressure Reference",
-        "lines": "167-170"
-      }
+    "lane_width_m": null,
+    "lane_validation": "the lane never knowingly selects a route that immediately collides with terrain before covering one body length",
+    "terrain_interaction": "terrain stops the charge without stunning or damaging the boss",
+    "miss_consequence": "missing carries Riftjaw past the player and creates a brief damage opportunity before pursuit resumes",
+    "hit_rule": "a dedicated per-ability hit rule rather than the ordinary 18 contact",
+    "resonant_damage_reference": {
+      "base_damage": 27,
+      "resonant_damage": 33,
+      "resonance_source": "Asterite",
+      "fresh_mech_hits_to_defeat_at_resonant_value": 4
     },
-    "designRole": "checks movement, facing awareness, and early single-target damage without adding projectiles or summons",
-    "_source": {
-      "doc": "docs/31-initial-alien-roster.md",
-      "section": "BOSS-01 — Riftjaw",
-      "lines": "130-137"
-    },
-    "_additionalSource": {
-      "doc": "docs/technical/23-encounter-director-and-enemy-runtime.md",
-      "section": "Boss behavior state machines",
-      "lines": "171-177"
-    }
+    "design_role": "checks movement, facing awareness, and early single-target damage without adding projectiles or summons"
   },
-  "postHardControlImmunitySeconds": 1.5,
-  "abilityTimelineCancellableByPlayerControl": false,
+  "post_hard_control_immunity_seconds": 1.5,
+  "ability_timeline_cancellable_by_player_control": false,
   "persistence": {
-    "neverDespawns": true,
-    "countsTowardOrdinaryPopulation": false,
-    "maxSimultaneousBosses": 4,
-    "persistsUntilKilled": true,
-    "laterBossesMayOverlap": true,
-    "requiredForExtraction": false,
-    "disposedWithoutRewardIfRunExtractsWhileAlive": true,
-    "spawnRule": "enters from valid navigable ground outside the camera; never on the mech, inside an active mining zone, or in an unavoidable collision path",
+    "never_despawns": true,
+    "counts_toward_ordinary_population": false,
+    "max_simultaneous_bosses": 4,
+    "persists_until_killed": true,
+    "later_bosses_may_overlap": true,
+    "required_for_extraction": false,
+    "disposed_without_reward_if_run_extracts_while_alive": true,
+    "spawn_rule": "enters from valid navigable ground outside the camera; never on the mech, inside an active mining zone, or in an unavoidable collision path",
     "reentry": {
       "trigger": "remains far outside the combat area",
       "behavior": "re-enters from a telegraphed valid off-screen approach",
-      "abilityCooldownRestartsAfterReentry": true,
-      "nonDamagingWhilePending": true,
-      "_source": {
-        "doc": "docs/technical/23-encounter-director-and-enemy-runtime.md",
-        "section": "Boss re-entry",
-        "lines": "157-167"
-      }
-    },
-    "_source": {
-      "doc": "docs/31-initial-alien-roster.md",
-      "section": "Boss arrival, persistence, and reward",
-      "lines": "167-175"
+      "ability_cooldown_restarts_after_reentry": true,
+      "non_damaging_while_pending": true
     }
   },
-  "arrivalWarningPresentation": [
+  "arrival_warning_presentation": [
     "15-second HUD warning",
     "directional boss icon",
     "distinctive distant cry",
     "edge treatment"
   ],
   "resonance": {
-    "receivesSameGeodeResonanceModifiersAsOrdinaryEnemies": true,
-    "controlResistanceCombinesWithDriftmetal": "without reaching complete immunity unless a later rule says so",
-    "_source": {
-      "doc": "docs/31-initial-alien-roster.md",
-      "section": "Boss arrival, persistence, and reward",
-      "lines": "173-173"
-    }
+    "receives_same_geode_resonance_modifiers_as_ordinary_enemies": true,
+    "control_resistance_combines_with_driftmetal": "without reaching complete immunity unless a later rule says so"
   },
-  "defeatReward": {
-    "commonOre": 300,
-    "unsecuredHyperGold": 25,
-    "specializedMaterialUnits": 1,
-    "materialSelection": "each unit independently selects one of the four materials present in the geological profile, with duplicates allowed and absent materials excluded",
+  "defeat_reward": {
+    "common_ore": 300,
+    "unsecured_hyper_gold": 25,
+    "specialized_material_units": 1,
+    "material_selection": "each unit independently selects one of the four materials present in the geological profile, with duplicates allowed and absent materials excluded",
     "delivery": "non-modal physical loot burst scattered onto valid nearby ground, contact-collected, persisting until collected or run end, with an immediate minimap marker",
-    "pausesTimerOrOpensUi": false,
-    "_source": {
-      "doc": "docs/20-run-structure-and-timing.md",
-      "section": "Boss-defeat reward",
-      "lines": "99-103"
-    }
+    "pauses_timer_or_opens_ui": false
   },
-  "description": "Riftjaw is a long burrowing predator with an armored wedge head and a segmented body that remains fully visible above ground during ordinary pursuit.",
-  "_descriptionSource": {
-    "doc": "docs/31-initial-alien-roster.md",
-    "section": "BOSS-01 — Riftjaw",
-    "lines": "130-137"
-  }
+  "description": "Riftjaw is a long burrowing predator with an armored wedge head and a segmented body that remains fully visible above ground during ordinary pursuit."
 }

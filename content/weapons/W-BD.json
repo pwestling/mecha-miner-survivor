@@ -1,241 +1,144 @@
 {
-  "_provenance": {
-    "doc": "docs/71-initial-weapon-numeric-catalog.md",
-    "section": "Rank-Zero Values and Ore-Stat Increments",
-    "lines": "70-90",
-    "extractedFor": "DAT-007",
-    "notes": [
-      "`M` is one unmodified mech collision diameter, a relative spatial unit, not a metric distance (docs/71-initial-weapon-numeric-catalog.md:24); numeric keys therefore carry an `M` suffix rather than `Meters`.",
-      "Ore-stat units differ per stat, so each entry in `oreUpgradeableStats` carries an explicit `unit` field instead of encoding the unit in the key name.",
-      "`signatureMech` comes from docs/36-initial-mech-catalog.md:45, which is authoritative for the assignment. The `Signature mech` column of docs/66-weapon-catalog-and-resource-graph.md:39 still reads \"Initial signature; mech TBD\" and docs/weapons/README.md:20 only records Yes/No; both agree on signature membership but neither names the mech.",
-      "The `Status at DEC-075` column of docs/66-weapon-catalog-and-resource-graph.md:39 is deliberately not transcribed: docs/66-weapon-catalog-and-resource-graph.md:37 states DEC-125 moved every row to a different status, so the column is stale.",
-      "`favorableHordeDps` is an analytic scene estimate, not a cap; docs/71-initial-weapon-numeric-catalog.md:68 states the assumed simultaneous-victim counts and that benchmark captures supersede it.",
-      "The content envelope required by docs/technical/40-content-data-and-validation.md:76-89 (`schema_version`, `content_version`, `status`, `name_key`, `summary_key`, `tags`, `source_refs`, `presentation_id`) is not populated: no design document supplies values for those fields, and this transcription follows the DAT-007 field conventions.",
-      "A `base-travel second` is the distance an unmodified mech covers in one second at full speed (docs/71-initial-weapon-numeric-catalog.md:25), so `placementIntervalBaseTravelSeconds` is a distance, not a time."
-    ]
-  },
   "id": "W-BD",
-  "name": "Mine Layer",
-  "recipePair": {
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "weapon.W-BD.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#rank-zero-values-and-ore-stat-increments",
+    "recipe_pair: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "fabrication_cost: GDD-PROGRESSION#base-weapon-availability",
+    "base_automatic_attack: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "base_behavior: GDD-WEAPON-NUMERIC-CATALOG#w-bd--mine-layer",
+    "ore_upgradeable_stat_labels: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "damage_model: GDD-WEAPON-NUMERIC-CATALOG#base-weapon-summary",
+    "global_attack_rate_mapping: GDD-WEAPON-NUMERIC-CATALOG#global-weapon-attack-rate-mapping",
+    "branches.amplification.cost: GDD-WEAPON-NUMERIC-CATALOG#seed-charges--amplification--2-barysteel",
+    "branches.amplification.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.amplification: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.amplification: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.functional.cost: GDD-WEAPON-NUMERIC-CATALOG#selective-detonators--functional--2-driftmetal",
+    "branches.functional.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.functional: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.functional: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.conversion.cost: GDD-WEAPON-NUMERIC-CATALOG#hunter-mines--conversion--2-flux-amber",
+    "branches.conversion.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.conversion: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.conversion: GDD-WEAPON-INDEX#catalog-lookup"
+  ],
+  "recipe_pair": {
     "notation": "B + D",
-    "materialCodes": [
+    "material_codes": [
       "B",
       "D"
     ],
-    "materialNames": [
+    "material_names": [
       "Barysteel",
       "Driftmetal"
-    ],
-    "_source": {
-      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-      "section": "Accepted base catalog assignment",
-      "lines": "35-55"
-    }
+    ]
   },
-  "signatureMech": null,
-  "fabricationCost": {
+  "signature_mech": null,
+  "fabrication_cost": {
     "materials": [
       {
-        "materialCode": "B",
+        "material_code": "B",
         "material": "Barysteel",
         "units": 1
       },
       {
-        "materialCode": "D",
+        "material_code": "D",
         "material": "Driftmetal",
         "units": 1
       }
     ],
-    "signatureWeaponBeginsEquippedWithoutPayingCost": true,
-    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost.",
-    "_source": {
-      "doc": "docs/60-resources-crafting-progression.md",
-      "section": "Base-weapon availability",
-      "lines": "104-110"
-    }
+    "signature_weapon_begins_equipped_without_paying_cost": true,
+    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost."
   },
-  "baseAutomaticAttack": {
-    "text": "Places mines at distance intervals along the mech's route",
-    "_source": {
-      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-      "section": "Accepted base catalog assignment",
-      "lines": "35-55"
-    }
+  "base_automatic_attack": {
+    "text": "Places mines at distance intervals along the mech's route"
   },
-  "baseBehavior": {
-    "text": "while the mech moves, it places a mine after each base-travel-second of distance. Mines arm after 0.5 s, trigger on the first valid enemy entering their radius, and expire after 18 s. Placing above current parent capacity removes the oldest parent mine without detonating it.",
-    "_source": {
-      "doc": "docs/71-initial-weapon-numeric-catalog.md",
-      "section": "W-BD — Mine Layer",
-      "lines": "278-280"
-    }
+  "base_behavior": {
+    "text": "while the mech moves, it places a mine after each base-travel-second of distance. Mines arm after 0.5 s, trigger on the first valid enemy entering their radius, and expire after 18 s. Placing above current parent capacity removes the oldest parent mine without detonating it."
   },
-  "oreUpgradeableStatLabels": {
+  "ore_upgradeable_stat_labels": {
     "labels": [
       "Damage",
       "blast radius",
       "active-mine capacity"
-    ],
-    "_source": {
-      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-      "section": "Accepted base catalog assignment",
-      "lines": "35-55"
-    }
+    ]
   },
-  "oreUpgradeableStats": [
+  "ore_upgradeable_stats": [
     {
       "slot": 1,
       "name": "Damage",
-      "rankZero": 27,
-      "incrementPerRank": 2.7,
+      "rank_zero": 27,
+      "increment_per_rank": 2.7,
       "unit": "damage",
       "discrete": false
     },
     {
       "slot": 2,
       "name": "Blast radius",
-      "rankZero": 1.8,
-      "incrementPerRank": 0.15,
+      "rank_zero": 1.8,
+      "increment_per_rank": 0.15,
       "unit": "M",
       "discrete": false
     },
     {
       "slot": 3,
       "name": "Parent capacity",
-      "rankZero": 6,
-      "incrementPerRank": 1,
+      "rank_zero": 6,
+      "increment_per_rank": 1,
       "unit": "count",
       "discrete": true
     }
   ],
-  "fixedProperties": {
-    "placementIntervalBaseTravelSeconds": 1,
-    "armSeconds": 0.5,
-    "mineLifeSeconds": 18,
-    "overCapacityRemovesOldestWithoutDetonation": true,
+  "fixed_properties": {
+    "placement_interval_base_travel_seconds": 1,
+    "arm_seconds": 0.5,
+    "mine_life_seconds": 18,
+    "over_capacity_removes_oldest_without_detonation": true,
     "raw": "Places one mine per base-travel second, 0.5 s arm, 18 s life"
   },
-  "damageModel": {
-    "rankZeroDamageModel": "27 per mine, at most one mine per base-travel second",
-    "burst10Dps": 24.3,
-    "sustained30Dps": 27.0,
-    "favorableHordeDps": 135,
-    "primaryLimitation": "Requires movement, arming, and enemies crossing the trail",
-    "_source": {
-      "doc": "docs/71-initial-weapon-numeric-catalog.md",
-      "section": "Base Weapon Summary",
-      "lines": "46-68"
-    }
+  "damage_model": {
+    "rank_zero_damage_model": "27 per mine, at most one mine per base-travel second",
+    "burst_10_dps": 24.3,
+    "sustained_30_dps": 27.0,
+    "favorable_horde_dps": 135,
+    "primary_limitation": "Requires movement, arming, and enemies crossing the trail"
   },
-  "globalAttackRateMapping": {
-    "affectedTiming": "None",
-    "unaffectedTiming": "Distance-based placement, arm time, pursuit speed, and mine life",
-    "_source": {
-      "doc": "docs/71-initial-weapon-numeric-catalog.md",
-      "section": "Global weapon Attack Rate mapping",
-      "lines": "102-124"
-    }
+  "global_attack_rate_mapping": {
+    "affected_timing": "None",
+    "unaffected_timing": "Distance-based placement, arm time, pursuit speed, and mine life"
   },
   "branches": {
     "amplification": {
       "name": "Seed Charges",
-      "fundingMaterialCode": "B",
-      "fundingMaterial": "Barysteel",
+      "funding_material_code": "B",
+      "funding_material": "Barysteel",
       "cost": {
         "material": "Barysteel",
-        "units": 2,
-        "_source": [
-          {
-            "doc": "docs/71-initial-weapon-numeric-catalog.md",
-            "section": "Seed Charges — Amplification — 2 Barysteel",
-            "lines": "282"
-          },
-          {
-            "doc": "docs/60-resources-crafting-progression.md",
-            "section": "Weapon stat and branch upgrading",
-            "lines": "160-170"
-          }
-        ]
-      },
-      "_source": [
-        {
-          "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-          "section": "Accepted base catalog assignment",
-          "lines": "35-55"
-        },
-        {
-          "doc": "docs/weapons/README.md",
-          "section": "Catalog lookup",
-          "lines": "18-36"
-        }
-      ]
+        "units": 2
+      }
     },
     "functional": {
       "name": "Selective Detonators",
-      "fundingMaterialCode": "D",
-      "fundingMaterial": "Driftmetal",
+      "funding_material_code": "D",
+      "funding_material": "Driftmetal",
       "cost": {
         "material": "Driftmetal",
-        "units": 2,
-        "_source": [
-          {
-            "doc": "docs/71-initial-weapon-numeric-catalog.md",
-            "section": "Selective Detonators — Functional — 2 Driftmetal",
-            "lines": "289"
-          },
-          {
-            "doc": "docs/60-resources-crafting-progression.md",
-            "section": "Weapon stat and branch upgrading",
-            "lines": "160-170"
-          }
-        ]
-      },
-      "_source": [
-        {
-          "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-          "section": "Accepted base catalog assignment",
-          "lines": "35-55"
-        },
-        {
-          "doc": "docs/weapons/README.md",
-          "section": "Catalog lookup",
-          "lines": "18-36"
-        }
-      ]
+        "units": 2
+      }
     },
     "conversion": {
       "name": "Hunter Mines",
-      "fundingMaterialCode": "F",
-      "fundingMaterial": "Flux Amber",
+      "funding_material_code": "F",
+      "funding_material": "Flux Amber",
       "cost": {
         "material": "Flux Amber",
-        "units": 2,
-        "_source": [
-          {
-            "doc": "docs/71-initial-weapon-numeric-catalog.md",
-            "section": "Hunter Mines — Conversion — 2 Flux Amber",
-            "lines": "296"
-          },
-          {
-            "doc": "docs/60-resources-crafting-progression.md",
-            "section": "Weapon stat and branch upgrading",
-            "lines": "160-170"
-          }
-        ]
-      },
-      "_source": [
-        {
-          "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-          "section": "Accepted base catalog assignment",
-          "lines": "35-55"
-        },
-        {
-          "doc": "docs/weapons/README.md",
-          "section": "Catalog lookup",
-          "lines": "18-36"
-        }
-      ]
-    },
-    "_note": "Branch mechanics are transcribed separately into content/branches/; only the branch identity, transformation class, funding material, and specialized-material price are recorded here."
+        "units": 2
+      }
+    }
   }
 }

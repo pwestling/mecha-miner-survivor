@@ -1,22 +1,19 @@
 {
-  "_provenance": {
-    "doc": "docs/71-initial-weapon-numeric-catalog.md",
-    "section": "Concussive Fan — Functional — 2 Eidolon Coral",
-    "lines": "434-439",
-    "extractedFor": "DAT-008",
-    "notes": [
-      "Branch sections in this document carry no standalone branch ID token; the heading supplies only name, class, and cost. The id and filename are composed as <weaponId>-<branch-name-kebab-case>.",
-      "weaponId and weaponName come from the enclosing '## W-DE — Scatter Array' heading (line 423).",
-      "`rules` holds every bullet of this section verbatim with its source line; `effects` is a structured restatement of those same bullets and introduces no value that is not written in them.",
-      "Section prose states no prerequisite. prerequisites is empty per docs/65-weapon-stat-and-branch-upgrades.md:50,66 (\"Branches have no stat-rank prerequisites\"; no rank, level, time, or boss prerequisite).",
-      "Exclusivity and irreversibility are not restated in this section; they come from docs/65-weapon-stat-and-branch-upgrades.md:56,68 and apply to all 45 branches.",
-      "expectedEffect is null: no bullet in this section is phrased as an 'Expected effect' estimate, unlike some earlier branch sections in this document. The section's own numeric outcomes are transcribed in `effects` and every bullet is preserved verbatim in `rules`, so nothing is lost."
-    ]
-  },
   "id": "W-DE-concussive-fan",
-  "weaponId": "W-DE",
-  "weaponName": "Scatter Array",
-  "branchName": "Concussive Fan",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-DE-concussive-fan.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#concussive-fan--functional--2-eidolon-coral",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#concussive-fan--functional--2-eidolon-coral"
+  ],
+  "weapon_id": "W-DE",
+  "weapon_name": "Scatter Array",
   "class": "Functional",
   "cost": {
     "resource": "Eidolon Coral",
@@ -25,51 +22,39 @@
   "prerequisites": [],
   "exclusivity": {
     "scope": "weapon",
-    "mutuallyExclusiveWith": [
+    "mutually_exclusive_with": [
       "W-DE-saturation-choke",
       "W-DE-focal-array"
     ],
-    "irreversibleWithinRun": true,
-    "existingCommonOreStatTracksStillApply": true,
-    "addsNewStatTrack": false,
-    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run.",
-    "refs": [
-      "docs/65-weapon-stat-and-branch-upgrades.md:56",
-      "docs/65-weapon-stat-and-branch-upgrades.md:68"
-    ]
+    "irreversible_within_run": true,
+    "existing_common_ore_stat_tracks_still_apply": true,
+    "adds_new_stat_track": false,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run."
   },
   "availability": {
     "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite.",
-    "purchase": "Installing one is a single deterministic purchase costing exactly two units of its assigned specialized material.",
-    "refs": [
-      "docs/65-weapon-stat-and-branch-upgrades.md:50",
-      "docs/65-weapon-stat-and-branch-upgrades.md:66"
-    ]
+    "purchase": "Installing one is a single deterministic purchase costing exactly two units of its assigned specialized material."
   },
   "effects": {
-    "pelletDamageUnchanged": true,
-    "knockbackM": 1.2,
-    "staggerSeconds": 0.35,
-    "damageCombinesAcrossPelletsOfSameAttack": true,
-    "controlApplicationsPerTargetPerAttack": 1,
-    "bossAndEliteHandling": "Bosses and elites receive globally resisted control."
+    "pellet_damage_unchanged": true,
+    "knockback_m": 1.2,
+    "stagger_seconds": 0.35,
+    "damage_combines_across_pellets_of_same_attack": true,
+    "control_applications_per_target_per_attack": 1,
+    "boss_and_elite_handling": "Bosses and elites receive globally resisted control."
   },
-  "expectedEffect": null,
+  "expected_effect": null,
   "rules": [
     {
-      "line": 436,
       "text": "Pellets retain normal damage and add 1.2M knockback plus 0.35 s stagger."
     },
     {
-      "line": 437,
       "text": "Multiple pellets from the same attack combine damage normally but apply control only once to a target."
     },
     {
-      "line": 438,
       "text": "Bosses and elites receive globally resisted control."
     },
     {
-      "line": 439,
       "text": "The branch makes close-range volleys create obvious space instead of merely killing faster."
     }
   ]

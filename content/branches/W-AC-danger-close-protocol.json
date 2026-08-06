@@ -1,20 +1,19 @@
 {
-  "_provenance": {
-    "doc": "docs/71-initial-weapon-numeric-catalog.md",
-    "section": "Danger-Close Protocol — Conversion — 2 Flux Amber",
-    "lines": "169-174",
-    "extractedFor": "DAT-008",
-    "notes": [
-      "No document in the repository assigns a stable branch ID; `id` and the filename are minted as <weaponId>-<branch-name-kebab-case> per the transcription convention.",
-      "Prerequisites, exclusivity, and the two-unit cost model are stated in docs/65-weapon-stat-and-branch-upgrades.md lines 66 and 68; the cost resource and amount for this branch come from this section's heading.",
-      "`rules` holds every bullet of the section verbatim with its source line; `effects` is the structured transcription of those same bullets."
-    ]
-  },
   "id": "W-AC-danger-close-protocol",
-  "weaponId": "W-AC",
-  "weaponName": "Cluster Mortar",
-  "branchName": "Danger-Close Protocol",
-  "branchClass": "Conversion",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-AC-danger-close-protocol.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#danger-close-protocol--conversion--2-flux-amber",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#danger-close-protocol--conversion--2-flux-amber",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches"
+  ],
+  "weapon_id": "W-AC",
+  "weapon_name": "Cluster Mortar",
+  "branch_class": "Conversion",
   "cost": {
     "resource": "Flux Amber",
     "amount": 2
@@ -22,44 +21,36 @@
   "prerequisites": [],
   "exclusivity": {
     "scope": "weapon",
-    "mutuallyExclusiveWith": [
+    "mutually_exclusive_with": [
       "W-AC-saturation-cascade",
       "W-AC-interdiction-payload"
     ],
     "irreversible": true
   },
-  "sharedRuleRefs": [
-    "docs/65-weapon-stat-and-branch-upgrades.md:66",
-    "docs/65-weapon-stat-and-branch-upgrades.md:68"
-  ],
   "effects": {
-    "removesMortarTargeting": true,
-    "impactPoint": "mech position sampled at the instant of firing",
-    "shellDamagePercentOfCurrentDamage": 180,
-    "shellBlastRadiusPercentOfCurrentRadius": 160,
-    "attackRate": "normal",
-    "warningMarkerVisibleDuringDelay": true,
-    "impactDelaySeconds": 1.2,
-    "mechImmuneToOwnMortar": true
+    "removes_mortar_targeting": true,
+    "impact_point": "mech position sampled at the instant of firing",
+    "shell_damage_percent_of_current_damage": 180,
+    "shell_blast_radius_percent_of_current_radius": 160,
+    "attack_rate": "normal",
+    "warning_marker_visible_during_delay": true,
+    "impact_delay_seconds": 1.2,
+    "mech_immune_to_own_mortar": true
   },
-  "expectedEffect": {
+  "expected_effect": {
     "narrative": "trades remote safety for an obvious close-range damage and coverage increase"
   },
   "rules": [
     {
-      "line": 171,
       "text": "Mortar targeting is removed. Every shell lands centered on the mech's position sampled at the instant of firing."
     },
     {
-      "line": 172,
       "text": "The shell deals 180% current Damage and has 160% current blast radius at the normal attack rate."
     },
     {
-      "line": 173,
       "text": "The warning marker remains visible during the 1.2 s delay, allowing the player to drag a pursuing horde into the strike zone."
     },
     {
-      "line": 174,
       "text": "The mech is immune to its own mortar. The conversion trades remote safety for an obvious close-range damage and coverage increase."
     }
   ]

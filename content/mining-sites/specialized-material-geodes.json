@@ -1,25 +1,16 @@
 {
-  "_provenance": {
-    "doc": "docs/40-mining-and-extraction.md",
-    "section": "### Specialized-material geodes",
-    "lines": "76-115",
-    "extractedFor": "DAT-008",
-    "notes": [
-      "id is null: this mining-site class has no ID and no table of its own anywhere in docs/. A stable-ID decision is required before docs/technical/40-content-data-and-validation.md:67 (\"Reuse accepted gameplay IDs exactly\") can be satisfied; minting one is a boundary decision, not a transcription choice.",
-      "Field names other than the survey-state table (docs/40-mining-and-extraction.md:82-86) are derived from prose.",
-      "extractionZoneRadiusMeters is null: docs/40-mining-and-extraction.md:48 states \"Exact radius and any resource-specific size variation remain open.\"",
-      "resonanceField.radiusMeters is null: docs/40-mining-and-extraction.md:100 states only that the field is \"larger than its extraction zone\"; no dimension is given.",
-      "The per-material resonance effect names and texts live in the resource catalog (docs/40-mining-and-extraction.md:102-109 duplicated at docs/61-specialized-resource-identities.md:94) and are not duplicated here.",
-      "Arithmetic check: 4 present materials x 8-10 geodes = 32-40 geodes per map, matching the stated \"A standard map therefore contains 32–40 material geodes\" (docs/40-mining-and-extraction.md:88).",
-      "commonOreFromCompletionJackpotsPerMap 1600-2000 is stated at docs/50-maps-resources-and-navigation.md:22 and docs/60-resources-crafting-progression.md:49 and equals 32-40 geodes x 50 ore.",
-      "presentation, map marker, and spawn exclusions (required by docs/technical/40-content-data-and-validation.md:140) are not specified for this class in the gameplay docs; placement guarantees are transcribed in content/maps/standard-map-generation-contract.json."
-    ]
-  },
   "id": null,
-  "siteClass": "specialized-material-geode",
-  "className": "Specialized-material geodes",
-  "presentMaterialsPerRun": 4,
-  "eligibleMaterials": [
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "mining_site.specialized-material-geodes.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-MINING#specialized-material-geodes"
+  ],
+  "site_class": "specialized-material-geode",
+  "present_materials_per_run": 4,
+  "eligible_materials": [
     "Asterite",
     "Barysteel",
     "Cinderglass",
@@ -27,40 +18,40 @@
     "Eidolon Coral",
     "Flux Amber"
   ],
-  "materialUnitsPerGeode": 1,
-  "geodesPerPresentMaterial": {
+  "material_units_per_geode": 1,
+  "geodes_per_present_material": {
     "min": 8,
     "max": 10
   },
-  "geodesPerStandardMap": {
+  "geodes_per_standard_map": {
     "min": 32,
     "max": 40
   },
-  "abundanceStates": [
+  "abundance_states": [
     {
-      "surveyState": "Scarce",
-      "geodesOnMap": 8,
+      "survey_state": "Scarce",
+      "geodes_on_map": 8,
       "meaning": "Lowest accepted supply; still broadly plentiful"
     },
     {
-      "surveyState": "Moderate",
-      "geodesOnMap": 9,
+      "survey_state": "Moderate",
+      "geodes_on_map": 9,
       "meaning": "Middle supply"
     },
     {
-      "surveyState": "Rich",
-      "geodesOnMap": 10,
+      "survey_state": "Rich",
+      "geodes_on_map": 10,
       "meaning": "Highest standard supply"
     }
   ],
-  "surveyDisclosure": "The geological survey reports both the abundance label and detected geode count, but not their locations.",
-  "commonOreFromCompletionJackpotsPerMap": {
+  "survey_disclosure": "The geological survey reports both the abundance label and detected geode count, but not their locations.",
+  "common_ore_from_completion_jackpots_per_map": {
     "min": 1600,
     "max": 2000
   },
-  "extractionDurationSeconds": 20,
-  "completionOnlyReward": true,
-  "completionPayout": [
+  "extraction_duration_seconds": 20,
+  "completion_only_reward": true,
+  "completion_payout": [
     {
       "resource": "specialized material",
       "amount": 1,
@@ -71,35 +62,35 @@
       "amount": 50
     }
   ],
-  "partialPayout": "none; no partial material or ore payout",
-  "extractionZoneRadiusMeters": null,
-  "progressDecay": {
-    "graceSeconds": 0.5,
-    "decayRateMultiplierOfForwardRate": 4,
-    "securedCheckpoint": null,
+  "partial_payout": "none; no partial material or ore payout",
+  "extraction_zone_radius_m": null,
+  "progress_decay": {
+    "grace_seconds": 0.5,
+    "decay_rate_multiplier_of_forward_rate": 4,
+    "secured_checkpoint": null,
     "rule": "The reward is withheld until the Complete transition, so an incomplete attempt pays nothing."
   },
-  "resonanceField": {
+  "resonance_field": {
     "shape": "circular",
-    "radiusMeters": null,
-    "largerThanExtractionZone": true,
-    "modifierMagnitude": {
+    "radius_m": null,
+    "larger_than_extraction_zone": true,
+    "modifier_magnitude": {
       "percent": 20
     },
-    "activeWhileUnopened": true,
-    "activeDuringInterruptions": true,
-    "collapsesOnOpen": true,
-    "appliesTo": [
+    "active_while_unopened": true,
+    "active_during_interruptions": true,
+    "collapses_on_open": true,
+    "applies_to": [
       "ordinary enemies",
       "elites",
       "bosses"
     ],
-    "retainedAfterLeavingField": false,
-    "generationConstraint": "Standard map generation separates unopened geodes far enough that their resonance fields do not overlap.",
-    "summonsEnemies": false,
-    "usesProgressThresholds": false
+    "retained_after_leaving_field": false,
+    "generation_constraint": "Standard map generation separates unopened geodes far enough that their resonance fields do not overlap.",
+    "summons_enemies": false,
+    "uses_progress_thresholds": false
   },
-  "beaconThresholds": null,
-  "depletedState": "non-interactive mapped landmark for the rest of the run; cannot be reactivated",
+  "beacon_thresholds": null,
+  "depleted_state": "non-interactive mapped landmark for the rest of the run; cannot be reactivated",
   "persistence": "run-local; the specialized material and 50 common ore are lost if unspent when the run ends"
 }

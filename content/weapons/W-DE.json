@@ -1,240 +1,144 @@
 {
-  "_provenance": {
-    "doc": "docs/71-initial-weapon-numeric-catalog.md",
-    "section": "Rank-Zero Values and Ore-Stat Increments",
-    "lines": "70-90",
-    "extractedFor": "DAT-007",
-    "notes": [
-      "`M` is one unmodified mech collision diameter, a relative spatial unit, not a metric distance (docs/71-initial-weapon-numeric-catalog.md:24); numeric keys therefore carry an `M` suffix rather than `Meters`.",
-      "Ore-stat units differ per stat, so each entry in `oreUpgradeableStats` carries an explicit `unit` field instead of encoding the unit in the key name.",
-      "`signatureMech` comes from docs/36-initial-mech-catalog.md:45, which is authoritative for the assignment. The `Signature mech` column of docs/66-weapon-catalog-and-resource-graph.md:39 still reads \"Initial signature; mech TBD\" and docs/weapons/README.md:20 only records Yes/No; both agree on signature membership but neither names the mech.",
-      "The `Status at DEC-075` column of docs/66-weapon-catalog-and-resource-graph.md:39 is deliberately not transcribed: docs/66-weapon-catalog-and-resource-graph.md:37 states DEC-125 moved every row to a different status, so the column is stale.",
-      "`favorableHordeDps` is an analytic scene estimate, not a cap; docs/71-initial-weapon-numeric-catalog.md:68 states the assumed simultaneous-victim counts and that benchmark captures supersede it.",
-      "The content envelope required by docs/technical/40-content-data-and-validation.md:76-89 (`schema_version`, `content_version`, `status`, `name_key`, `summary_key`, `tags`, `source_refs`, `presentation_id`) is not populated: no design document supplies values for those fields, and this transcription follows the DAT-007 field conventions."
-    ]
-  },
   "id": "W-DE",
-  "name": "Scatter Array",
-  "recipePair": {
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "weapon.W-DE.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#rank-zero-values-and-ore-stat-increments",
+    "recipe_pair: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "fabrication_cost: GDD-PROGRESSION#base-weapon-availability",
+    "base_automatic_attack: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "base_behavior: GDD-WEAPON-NUMERIC-CATALOG#w-de--scatter-array",
+    "ore_upgradeable_stat_labels: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "damage_model: GDD-WEAPON-NUMERIC-CATALOG#base-weapon-summary",
+    "global_attack_rate_mapping: GDD-WEAPON-NUMERIC-CATALOG#global-weapon-attack-rate-mapping",
+    "branches.amplification.cost: GDD-WEAPON-NUMERIC-CATALOG#saturation-choke--amplification--2-driftmetal",
+    "branches.amplification.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.amplification: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.amplification: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.functional.cost: GDD-WEAPON-NUMERIC-CATALOG#concussive-fan--functional--2-eidolon-coral",
+    "branches.functional.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.functional: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.functional: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.conversion.cost: GDD-WEAPON-NUMERIC-CATALOG#focal-array--conversion--2-cinderglass",
+    "branches.conversion.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.conversion: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.conversion: GDD-WEAPON-INDEX#catalog-lookup"
+  ],
+  "recipe_pair": {
     "notation": "D + E",
-    "materialCodes": [
+    "material_codes": [
       "D",
       "E"
     ],
-    "materialNames": [
+    "material_names": [
       "Driftmetal",
       "Eidolon Coral"
-    ],
-    "_source": {
-      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-      "section": "Accepted base catalog assignment",
-      "lines": "35-55"
-    }
+    ]
   },
-  "signatureMech": null,
-  "fabricationCost": {
+  "signature_mech": null,
+  "fabrication_cost": {
     "materials": [
       {
-        "materialCode": "D",
+        "material_code": "D",
         "material": "Driftmetal",
         "units": 1
       },
       {
-        "materialCode": "E",
+        "material_code": "E",
         "material": "Eidolon Coral",
         "units": 1
       }
     ],
-    "signatureWeaponBeginsEquippedWithoutPayingCost": true,
-    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost.",
-    "_source": {
-      "doc": "docs/60-resources-crafting-progression.md",
-      "section": "Base-weapon availability",
-      "lines": "104-110"
-    }
+    "signature_weapon_begins_equipped_without_paying_cost": true,
+    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost."
   },
-  "baseAutomaticAttack": {
-    "text": "Fires a fixed short-range projectile cone along persistent facing",
-    "_source": {
-      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-      "section": "Accepted base catalog assignment",
-      "lines": "35-55"
-    }
+  "base_automatic_attack": {
+    "text": "Fires a fixed short-range projectile cone along persistent facing"
   },
-  "baseBehavior": {
-    "text": "fires five pellets across a 60° facing cone. Each pellet ends on its first target, so all five hit one enemy only at close range or when the target is large enough to cover the spread.",
-    "_source": {
-      "doc": "docs/71-initial-weapon-numeric-catalog.md",
-      "section": "W-DE — Scatter Array",
-      "lines": "423-425"
-    }
+  "base_behavior": {
+    "text": "fires five pellets across a 60° facing cone. Each pellet ends on its first target, so all five hit one enemy only at close range or when the target is large enough to cover the spread."
   },
-  "oreUpgradeableStatLabels": {
+  "ore_upgradeable_stat_labels": {
     "labels": [
       "Damage",
       "attack rate",
       "range"
-    ],
-    "_source": {
-      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-      "section": "Accepted base catalog assignment",
-      "lines": "35-55"
-    }
+    ]
   },
-  "oreUpgradeableStats": [
+  "ore_upgradeable_stats": [
     {
       "slot": 1,
       "name": "Pellet damage",
-      "rankZero": 9,
-      "incrementPerRank": 0.9,
+      "rank_zero": 9,
+      "increment_per_rank": 0.9,
       "unit": "damage",
       "discrete": false
     },
     {
       "slot": 2,
       "name": "Attack rate",
-      "rankZero": 1.0,
-      "incrementPerRank": 0.1,
+      "rank_zero": 1.0,
+      "increment_per_rank": 0.1,
       "unit": "activations per second",
       "discrete": false
     },
     {
       "slot": 3,
       "name": "Range",
-      "rankZero": 5,
-      "incrementPerRank": 0.5,
+      "rank_zero": 5,
+      "increment_per_rank": 0.5,
       "unit": "M",
       "discrete": false
     }
   ],
-  "fixedProperties": {
-    "pelletCount": 5,
-    "coneAngleDegrees": 60,
-    "projectileSpeedMPerSecond": 18,
-    "pelletPierces": false,
+  "fixed_properties": {
+    "pellet_count": 5,
+    "cone_angle_degrees": 60,
+    "projectile_speed_m_per_s": 18,
+    "pellet_pierces": false,
     "raw": "Five pellets, 60° cone, 18M/s projectile"
   },
-  "damageModel": {
-    "rankZeroDamageModel": "5 × 9 every 1.0 s",
-    "burst10Dps": 45.0,
-    "sustained30Dps": 45.0,
-    "favorableHordeDps": 45,
-    "primaryLimitation": "All pellets land only at close range or on large targets",
-    "_source": {
-      "doc": "docs/71-initial-weapon-numeric-catalog.md",
-      "section": "Base Weapon Summary",
-      "lines": "46-68"
-    }
+  "damage_model": {
+    "rank_zero_damage_model": "5 × 9 every 1.0 s",
+    "burst_10_dps": 45.0,
+    "sustained_30_dps": 45.0,
+    "favorable_horde_dps": 45,
+    "primary_limitation": "All pellets land only at close range or on large targets"
   },
-  "globalAttackRateMapping": {
-    "affectedTiming": "Volley or cone-wave activation rate",
-    "unaffectedTiming": "Projectile travel",
-    "_source": {
-      "doc": "docs/71-initial-weapon-numeric-catalog.md",
-      "section": "Global weapon Attack Rate mapping",
-      "lines": "102-124"
-    }
+  "global_attack_rate_mapping": {
+    "affected_timing": "Volley or cone-wave activation rate",
+    "unaffected_timing": "Projectile travel"
   },
   "branches": {
     "amplification": {
       "name": "Saturation Choke",
-      "fundingMaterialCode": "D",
-      "fundingMaterial": "Driftmetal",
+      "funding_material_code": "D",
+      "funding_material": "Driftmetal",
       "cost": {
         "material": "Driftmetal",
-        "units": 2,
-        "_source": [
-          {
-            "doc": "docs/71-initial-weapon-numeric-catalog.md",
-            "section": "Saturation Choke — Amplification — 2 Driftmetal",
-            "lines": "427"
-          },
-          {
-            "doc": "docs/60-resources-crafting-progression.md",
-            "section": "Weapon stat and branch upgrading",
-            "lines": "160-170"
-          }
-        ]
-      },
-      "_source": [
-        {
-          "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-          "section": "Accepted base catalog assignment",
-          "lines": "35-55"
-        },
-        {
-          "doc": "docs/weapons/README.md",
-          "section": "Catalog lookup",
-          "lines": "18-36"
-        }
-      ]
+        "units": 2
+      }
     },
     "functional": {
       "name": "Concussive Fan",
-      "fundingMaterialCode": "E",
-      "fundingMaterial": "Eidolon Coral",
+      "funding_material_code": "E",
+      "funding_material": "Eidolon Coral",
       "cost": {
         "material": "Eidolon Coral",
-        "units": 2,
-        "_source": [
-          {
-            "doc": "docs/71-initial-weapon-numeric-catalog.md",
-            "section": "Concussive Fan — Functional — 2 Eidolon Coral",
-            "lines": "434"
-          },
-          {
-            "doc": "docs/60-resources-crafting-progression.md",
-            "section": "Weapon stat and branch upgrading",
-            "lines": "160-170"
-          }
-        ]
-      },
-      "_source": [
-        {
-          "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-          "section": "Accepted base catalog assignment",
-          "lines": "35-55"
-        },
-        {
-          "doc": "docs/weapons/README.md",
-          "section": "Catalog lookup",
-          "lines": "18-36"
-        }
-      ]
+        "units": 2
+      }
     },
     "conversion": {
       "name": "Focal Array",
-      "fundingMaterialCode": "C",
-      "fundingMaterial": "Cinderglass",
+      "funding_material_code": "C",
+      "funding_material": "Cinderglass",
       "cost": {
         "material": "Cinderglass",
-        "units": 2,
-        "_source": [
-          {
-            "doc": "docs/71-initial-weapon-numeric-catalog.md",
-            "section": "Focal Array — Conversion — 2 Cinderglass",
-            "lines": "441"
-          },
-          {
-            "doc": "docs/60-resources-crafting-progression.md",
-            "section": "Weapon stat and branch upgrading",
-            "lines": "160-170"
-          }
-        ]
-      },
-      "_source": [
-        {
-          "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-          "section": "Accepted base catalog assignment",
-          "lines": "35-55"
-        },
-        {
-          "doc": "docs/weapons/README.md",
-          "section": "Catalog lookup",
-          "lines": "18-36"
-        }
-      ]
-    },
-    "_note": "Branch mechanics are transcribed separately into content/branches/; only the branch identity, transformation class, funding material, and specialized-material price are recorded here."
+        "units": 2
+      }
+    }
   }
 }

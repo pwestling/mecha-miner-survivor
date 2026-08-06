@@ -1,19 +1,19 @@
 {
-  "_provenance": {
-    "doc": "docs/71-initial-weapon-numeric-catalog.md",
-    "section": "Selective Detonators — Functional — 2 Driftmetal",
-    "lines": "289-294",
-    "extractedFor": "DAT-008",
-    "notes": [
-      "Branch sections in this document carry no standalone branch ID token; the heading supplies only name, class, and cost. The id is composed as <weaponId>-<branch-name-kebab-case>.",
-      "Section prose states no prerequisite. prerequisites is empty per docs/65-weapon-stat-and-branch-upgrades.md:50,66 (\"Branches have no stat-rank prerequisites\"; no rank, level, time, or boss prerequisite).",
-      "Exclusivity and irreversibility are not restated in this section; they come from docs/65-weapon-stat-and-branch-upgrades.md:56,68 and apply to all 45 branches."
-    ]
-  },
   "id": "W-BD-selective-detonators",
-  "weaponId": "W-BD",
-  "weaponName": "Mine Layer",
-  "branchName": "Selective Detonators",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-BD-selective-detonators.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#selective-detonators--functional--2-driftmetal",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#selective-detonators--functional--2-driftmetal"
+  ],
+  "weapon_id": "W-BD",
+  "weapon_name": "Mine Layer",
   "class": "Functional",
   "cost": {
     "resource": "Driftmetal",
@@ -22,59 +22,47 @@
   "prerequisites": [],
   "exclusivity": {
     "scope": "weapon",
-    "mutuallyExclusiveWith": [
+    "mutually_exclusive_with": [
       "W-BD-seed-charges",
       "W-BD-hunter-mines"
     ],
-    "irreversibleWithinRun": true,
-    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run.",
-    "refs": [
-      "docs/65-weapon-stat-and-branch-upgrades.md:56",
-      "docs/65-weapon-stat-and-branch-upgrades.md:68"
-    ]
+    "irreversible_within_run": true,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run."
   },
   "availability": {
-    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite.",
-    "refs": [
-      "docs/65-weapon-stat-and-branch-upgrades.md:50",
-      "docs/65-weapon-stat-and-branch-upgrades.md:66"
-    ]
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite."
   },
   "effects": {
-    "triggerOrdinaryEquivalentThreshold": 3,
-    "triggerImmediatelyOnEliteOrBoss": true,
-    "damageMultiplierFormula": "1 + 0.15 × (ordinary-equivalent count − 1)",
-    "damageMultiplierPerAdditionalOrdinaryEquivalent": 0.15,
-    "damageMultiplierCap": 2,
-    "ordinaryEquivalentWeights": {
+    "trigger_ordinary_equivalent_threshold": 3,
+    "trigger_immediately_on_elite_or_boss": true,
+    "damage_multiplier_formula": "1 + 0.15 × (ordinary-equivalent count − 1)",
+    "damage_multiplier_per_additional_ordinary_equivalent": 0.15,
+    "damage_multiplier_cap": 2,
+    "ordinary_equivalent_weights": {
       "boss": 3,
       "elite": 4
     },
-    "expiryDetonationMinimumMultiplier": 1.3,
-    "expiryWithEnemyInRadius": "detonates",
-    "expiryWithNoEnemyInRadius": "disappears harmlessly"
+    "expiry_detonation_minimum_multiplier": 1.3,
+    "expiry_with_enemy_in_radius": "detonates",
+    "expiry_with_no_enemy_in_radius": "disappears harmlessly"
   },
-  "favorableSceneEffect": {
+  "favorable_scene_effect": {
     "magnitude": {
-      "damageMultiplierMax": 2
+      "damage_multiplier_max": 2
     },
     "qualitative": "improves payload efficiency but can leave holes against scattered weak enemies"
   },
   "rules": [
     {
-      "line": 291,
       "text": "A mine waits until at least three ordinary-equivalent enemies are in radius, or until an elite or boss enters."
     },
     {
-      "line": 292,
       "text": "Its damage multiplier is `1 + 0.15 × (ordinary-equivalent count − 1)`, capped at 2×. A boss counts as three and an elite as four for this calculation."
     },
     {
-      "line": 293,
       "text": "An expiring mine detonates with a minimum 1.30× multiplier if any enemy is in radius; otherwise it disappears harmlessly."
     },
     {
-      "line": 294,
       "text": "This improves payload efficiency but can leave holes against scattered weak enemies."
     }
   ]

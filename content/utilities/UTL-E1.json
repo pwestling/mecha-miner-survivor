@@ -1,71 +1,78 @@
 {
   "id": "UTL-E1",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "utility.UTL-E1.name",
+  "summary_key": "utility.UTL-E1.summary",
+  "tags": [],
+  "source_refs": [
+    "GDD-UTILITY-CATALOG#utl-e1--repair-swarm"
+  ],
   "material": "Eidolon Coral",
-  "utility": "Repair Swarm",
-  "primaryRole": "Recovery",
-  "installedToRank3": "+0.10 → +0.25 Hull Integrity per second",
-  "description": "The swarm supplies continuous passive Recovery.",
+  "primary_role": "Recovery",
+  "installed_to_rank_3": "+0.10 → +0.25 Hull Integrity per second",
   "effect": {
-    "statNames": [
+    "stat_names": [
       "Recovery"
     ],
-    "valueKind": "additive-hull-per-second",
-    "stackingClassification": "Recovery sources add in Hull Integrity per second. (docs/68-utility-catalog.md:255)"
+    "value_kind": "additive-hull-per-second",
+    "stacking_classification": "Recovery sources add in Hull Integrity per second. (docs/68-utility-catalog.md:255)"
   },
   "ranks": [
     {
       "state": "Installed",
-      "recoveryHullPerSecond": 0.1
+      "recovery_hull_per_second": 0.1
     },
     {
       "state": "Rank 1",
-      "recoveryHullPerSecond": 0.15
+      "recovery_hull_per_second": 0.15
     },
     {
       "state": "Rank 2",
-      "recoveryHullPerSecond": 0.2
+      "recovery_hull_per_second": 0.2
     },
     {
       "state": "Rank 3",
-      "recoveryHullPerSecond": 0.25
+      "recovery_hull_per_second": 0.25
     }
   ],
   "acquisition": {
-    "materialUnitCost": 1,
-    "utilitySlotsFilled": 1,
-    "rankCount": 3,
-    "rankOreCosts": [
+    "material_unit_cost": 1,
+    "utility_slots_filled": 1,
+    "rank_count": 3,
+    "rank_ore_costs": [
       50,
       100,
       150
     ],
-    "totalRankOreCost": 300,
-    "rankValuesAreTotalsNotCumulativeAdditions": true,
-    "uniqueInLoadout": true,
-    "hasBranches": false,
-    "hasAlternativeRecipes": false,
+    "total_rank_ore_cost": 300,
+    "rank_values_are_totals_not_cumulative_additions": true,
+    "unique_in_loadout": true,
+    "has_branches": false,
+    "has_alternative_recipes": false,
     "replaceable": false,
     "dismantlable": false,
     "sellable": false,
-    "refundableDuringRun": false,
-    "requiresManualActivation": false,
-    "previewsAllFourEffectTiers": true
+    "refundable_during_run": false,
+    "requires_manual_activation": false,
+    "previews_all_four_effect_tiers": true
   },
   "availability": {
-    "freshProfile": true,
-    "coverageRole": "Recovery",
-    "unlockId": null,
-    "unlockName": null,
-    "unlockCostHyperGold": null
+    "fresh_profile": true,
+    "coverage_role": "Recovery",
+    "unlock_id": null,
+    "unlock_name": null,
+    "unlock_cost_hyper_gold": null
   },
-  "effectRules": [
+  "effect_rules": [
     "Adds to other Recovery sources and functions during movement, combat, and mining.",
     "Cannot raise current Hull Integrity above its maximum.",
     "Recovery and its timers freeze whenever the complete gameplay simulation is paused.",
     "The active HUD reports Recovery without requiring a constant large healing effect; periodic repair ticks receive a restrained visible and audible cue."
   ],
-  "catalogWideRules": {
-    "sharedAcquisitionAndRankRules": [
+  "catalog_wide_rules": {
+    "shared_acquisition_and_rank_rules": [
       "Every non-radar utility costs one unit of its assigned specialized material and permanently fills one of three utility slots.",
       "Each begins at its listed Installed effect and has three common-ore ranks costing 50, 100, and 150 ore.",
       "The four values shown for a utility are its Installed, Rank 1, Rank 2, and Rank 3 totals—not cumulative additions.",
@@ -74,7 +81,7 @@
       "Fabrication previews all four effect tiers, the current build's affected systems, and any equipped weapon that receives no benefit from a weapon-support utility.",
       "The resource radar remains outside the material table: it costs 300 common ore, has no ranks, and retains its accepted seven-category directional behavior."
     ],
-    "modifierAndTimingRules": [
+    "modifier_and_timing_rules": [
       "Flat statistic changes apply before percentage modifiers. Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative.",
       "Attack rate is represented as attacks per second or equivalent frequency; a +20% attack-rate total produces 1.2 times the unmodified activation frequency.",
       "Recovery sources add in Hull Integrity per second.",
@@ -84,19 +91,5 @@
       "If a later relic explicitly replaces a statistic or rule, its description must state whether it overrides or combines with these utilities. Silent exceptions are not allowed."
     ]
   },
-  "externalNumerics": [],
-  "_provenance": {
-    "doc": "docs/68-utility-catalog.md",
-    "section": "UTL-E1 — Repair Swarm",
-    "lines": "186-200",
-    "extractedFor": "DAT-008",
-    "notes": [
-      "Overview-table row and per-utility rank table are both from docs/68-utility-catalog.md; the rank table is authoritative for the four tier values and the overview cell restates Installed and Rank 3.",
-      "acquisition mirrors the catalog-wide '## Shared acquisition and rank rules' at docs/68-utility-catalog.md:25-31; the 300-ore rank total is restated at docs/60-resources-crafting-progression.md:158.",
-      "catalogWideRules duplicates the two catalog-wide rule lists verbatim in every utility file because the mandated content layout (docs/technical/40-content-data-and-validation.md:34-63) provides no shared-rules file inside content/utilities/.",
-      "Markdown emphasis, code markers, and link syntax were removed from transcribed prose; wording is otherwise verbatim.",
-      "effect.stackingClassification is derived from the catalog-wide modifier rules at docs/68-utility-catalog.md:253-255, not from a dedicated doc field.",
-      "availability.coverageRole comes from the '## Fresh-profile and unlocked availability' table (docs/68-utility-catalog.md:265-272), which lists only the six fresh-profile utilities."
-    ]
-  }
+  "external_numerics": []
 }

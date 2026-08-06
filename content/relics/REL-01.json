@@ -1,214 +1,128 @@
 {
-  "_provenance": {
-    "doc": "docs/69-initial-relic-catalog.md",
-    "section": "REL-01 — Retrograde Engine",
-    "lines": "61-71",
-    "extractedFor": "DAT-008",
-    "notes": [
-      "Field order follows the doc 69 `## Catalog overview` column order (ID, Relic, Primary transformation, Core tradeoff), then the per-relic prose fields.",
-      "Catalog-overview table row for this relic is docs/69-initial-relic-catalog.md:28; the fresh/unlocked availability rules are docs/69-initial-relic-catalog.md:39-59.",
-      "`rules` holds the relic's prose bullets verbatim with their source line numbers; numbers stated in that prose are also structured under `effects`.",
-      "`_source` marks every value or rule folded in from a document other than docs/69-initial-relic-catalog.md."
-    ]
-  },
   "id": "REL-01",
-  "name": "Retrograde Engine",
-  "primaryTransformation": "Triple weapon tempo",
-  "coreTradeoff": "Directional and targeted attacks operate oppositely",
-  "discoverySentence": {
-    "text": "All weapons attack three times as fast, but directional and targeted attacks operate on the opposite side of the mech.",
-    "lines": "63"
-  },
-  "affectedScope": "all equipped weapons",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "relic.REL-01.name",
+  "summary_key": "relic.REL-01.summary",
+  "tags": [],
+  "source_refs": [
+    "GDD-INITIAL-RELIC-CATALOG#rel-01--retrograde-engine",
+    "acquisition: GDD-INITIAL-RELIC-CATALOG#fresh-profile-and-unlocked-availability",
+    "acquisition: GDD-INITIAL-RELIC-CATALOG",
+    "acquisition: GDD-MECH-RELICS#acquisition",
+    "acquisition: GDD-MECH-RELICS#install-or-sell-choice",
+    "acquisition: GDD-MAP-GENERATION#relic-caches",
+    "acquisition: GDD-MAPS#relics-as-exploration-rewards",
+    "acquisition: GDD-PROGRESSION#relic-sale",
+    "acquisition: GDD-INTERFACE-FLOW#relic-cache-discovery-and-resolution",
+    "acquisition: TDD-MINING-PROGRESSION#relic-cache-transaction",
+    "rarity_and_weighting: GDD-INITIAL-RELIC-CATALOG#fresh-profile-and-unlocked-availability",
+    "rarity_and_weighting: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#relic-pool-behavior",
+    "rarity_and_weighting: GDD-INTERFACE-FLOW#cache-selection-and-signaling",
+    "stacking_and_exclusivity: GDD-INITIAL-RELIC-CATALOG#shared-interaction-and-preview-rules",
+    "stacking_and_exclusivity: GDD-INITIAL-RELIC-CATALOG#catalog-principles",
+    "stacking_and_exclusivity: GDD-MECH-RELICS#replacement-and-interaction-rules",
+    "stacking_and_exclusivity: GDD-COMBAT-ECONOMY-BALANCE-FRAMEWORK#stacking-and-comparison-order",
+    "behavior_registration: TDD-COMBAT-RUNTIME#relic-integration",
+    "discovery_sentence: GDD-INITIAL-RELIC-CATALOG#rel-01--retrograde-engine",
+    "trigger: GDD-INITIAL-RELIC-CATALOG#rel-01--retrograde-engine",
+    "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-01--retrograde-engine"
+  ],
+  "primary_transformation": "Triple weapon tempo",
+  "core_tradeoff": "Directional and targeted attacks operate oppositely",
+  "affected_scope": "all equipped weapons",
   "trigger": {
-    "condition": "continuous while installed",
-    "lines": "65-71"
+    "condition": "continuous while installed"
   },
   "effects": {
-    "primaryActivationFrequencyMultiplier": 3,
-    "appliesAfterOrdinaryAttackRateModifiers": true,
-    "includesFixedCadenceWeapons": true,
-    "distanceTriggeredTravelIntervalMultiplier": {
+    "primary_activation_frequency_multiplier": 3,
+    "applies_after_ordinary_attack_rate_modifiers": true,
+    "includes_fixed_cadence_weapons": true,
+    "distance_triggered_travel_interval_multiplier": {
       "numerator": 1,
       "denominator": 3
     },
-    "mirrorsDirectionalAndTargetedGeometry": true,
-    "acceleratesDelayedEchoesProjectilesDurationsArmingDelaysAndDamageTicks": false
+    "mirrors_directional_and_targeted_geometry": true,
+    "accelerates_delayed_echoes_projectiles_durations_arming_delays_and_damage_ticks": false
   },
-  "pauseBehavior": null,
-  "liveStateMeter": null,
+  "pause_behavior": null,
+  "live_state_meter": null,
   "acquisition": {
     "method": "found in a relic cache through map exploration",
     "fabricable": false,
     "minable": false,
-    "listedInGeologicalSurvey": false,
-    "poolAvailability": "fresh-profile",
+    "listed_in_geological_survey": false,
+    "pool_availability": "fresh-profile",
     "unlock": null,
-    "cachesPerStandardMap": 3,
-    "cacheOpening": "automatic on mech contact; freezes the complete gameplay simulation",
-    "relicsDrawnPerRun": 3,
-    "drawWithoutReplacement": true,
-    "duplicatesWithinOneRun": false,
+    "caches_per_standard_map": 3,
+    "cache_opening": "automatic on mech contact; freezes the complete gameplay simulation",
+    "relics_drawn_per_run": 3,
+    "draw_without_replacement": true,
+    "duplicates_within_one_run": false,
     "resolution": "immediate install-or-sell; no relic inventory or deferred decision",
-    "saleValueCommonOre": 150,
-    "displacedRelicAutoSaleCommonOre": 150,
-    "saleValueVariesByIdentityOrderDurationOrProgress": false,
-    "_source": [
-      {
-        "doc": "docs/69-initial-relic-catalog.md",
-        "section": "Fresh-profile and unlocked availability",
-        "lines": "39-59"
-      },
-      {
-        "doc": "docs/69-initial-relic-catalog.md",
-        "lines": "183"
-      },
-      {
-        "doc": "docs/67-mech-relics.md",
-        "section": "Acquisition",
-        "lines": "28-34"
-      },
-      {
-        "doc": "docs/67-mech-relics.md",
-        "section": "Install-or-sell choice",
-        "lines": "36-49"
-      },
-      {
-        "doc": "docs/51-standard-map-generation-contract.md",
-        "section": "Relic caches",
-        "lines": "130-142"
-      },
-      {
-        "doc": "docs/50-maps-resources-and-navigation.md",
-        "section": "Relics as exploration rewards",
-        "lines": "96-100"
-      },
-      {
-        "doc": "docs/60-resources-crafting-progression.md",
-        "section": "Relic sale",
-        "lines": "174-178"
-      },
-      {
-        "doc": "docs/73-interface-screen-flow-and-information-architecture.md",
-        "section": "Relic Cache Discovery and Resolution",
-        "lines": "353-384"
-      },
-      {
-        "doc": "docs/technical/24-mining-fabrication-and-progression-runtime.md",
-        "section": "Relic cache transaction",
-        "lines": "135-143"
-      }
-    ]
+    "sale_value_common_ore": 150,
+    "displaced_relic_auto_sale_common_ore": 150,
+    "sale_value_varies_by_identity_order_duration_or_progress": false
   },
-  "rarityAndWeighting": {
-    "rarityTier": null,
-    "cacheSelectionWeight": null,
-    "selectionModel": "three distinct relics drawn without replacement from the currently unlocked pool and assigned to the three caches during generation",
-    "freshProfilePoolSize": 5,
-    "fullyUnlockedPoolSize": 10,
-    "inFreshProfilePool": true,
-    "guaranteedToAppear": false,
-    "_source": [
-      {
-        "doc": "docs/69-initial-relic-catalog.md",
-        "section": "Fresh-profile and unlocked availability",
-        "lines": "41-59"
-      },
-      {
-        "doc": "docs/63-permanent-option-unlock-catalog.md",
-        "section": "Relic-pool behavior",
-        "lines": "107-111"
-      },
-      {
-        "doc": "docs/73-interface-screen-flow-and-information-architecture.md",
-        "section": "Cache selection and signaling",
-        "lines": "355-361"
-      }
-    ]
+  "rarity_and_weighting": {
+    "rarity_tier": null,
+    "cache_selection_weight": null,
+    "selection_model": "three distinct relics drawn without replacement from the currently unlocked pool and assigned to the three caches during generation",
+    "fresh_profile_pool_size": 5,
+    "fully_unlocked_pool_size": 10,
+    "in_fresh_profile_pool": true,
+    "guaranteed_to_appear": false
   },
-  "stackingAndExclusivity": {
-    "relicSlots": 1,
-    "simultaneouslyActiveRelics": 1,
-    "stacksWithOtherRelics": false,
-    "installReplacesActiveRelic": true,
-    "runLocal": true,
-    "persistsAfterRun": false,
-    "combinesWith": [
+  "stacking_and_exclusivity": {
+    "relic_slots": 1,
+    "simultaneously_active_relics": 1,
+    "stacks_with_other_relics": false,
+    "install_replaces_active_relic": true,
+    "run_local": true,
+    "persists_after_run": false,
+    "combines_with": [
       "weapon branches",
       "weapon stat ranks",
       "utilities",
       "mech traits",
       "PowerUps"
     ],
-    "modifierOrder": "Relic-specific multipliers apply after the additive percentage modifiers supplied by mech traits, utilities, and PowerUps unless the relic explicitly replaces targeting or cadence.",
-    "appliesToEveryDamagingComponentDerivedFromAnEquippedWeapon": true,
-    "alreadyCreatedFiniteInstancesRetainCreationTimeRelicState": true,
-    "overridesOrReplaces": [
+    "modifier_order": "Relic-specific multipliers apply after the additive percentage modifiers supplied by mech traits, utilities, and PowerUps unless the relic explicitly replaces targeting or cadence.",
+    "applies_to_every_damaging_component_derived_from_an_equipped_weapon": true,
+    "already_created_finite_instances_retain_creation_time_relic_state": true,
+    "overrides_or_replaces": [
       "primary activation frequency (tempo)",
       "directional and targeted attack geometry"
-    ],
-    "_source": [
-      {
-        "doc": "docs/69-initial-relic-catalog.md",
-        "section": "Shared interaction and preview rules",
-        "lines": "168-175"
-      },
-      {
-        "doc": "docs/69-initial-relic-catalog.md",
-        "section": "Catalog principles",
-        "lines": "22"
-      },
-      {
-        "doc": "docs/67-mech-relics.md",
-        "section": "Replacement and interaction rules",
-        "lines": "63-71"
-      },
-      {
-        "doc": "docs/70-combat-and-economy-balance-framework.md",
-        "section": "Stacking and comparison order",
-        "lines": "264"
-      }
     ]
   },
-  "behaviorRegistration": {
+  "behavior_registration": {
     "hook": "activation-rate transformation and opposite geometry",
-    "registrationModel": "Relics are cross-cutting policies registered by stable relic ID. They modify well-defined hook points rather than scattering ID checks through every weapon.",
-    "perWeaponCompatibilityManifest": "produced from tests; states fully affected, partially affected with disclosed reason, or invalid. The initial design expects no invalid pairing.",
-    "_source": {
-      "doc": "docs/technical/22-combat-and-weapon-runtime.md",
-      "section": "Relic integration",
-      "lines": "148-166"
-    }
+    "registration_model": "Relics are cross-cutting policies registered by stable relic ID. They modify well-defined hook points rather than scattering ID checks through every weapon.",
+    "per_weapon_compatibility_manifest": "produced from tests; states fully affected, partially affected with disclosed reason, or invalid. The initial design expects no invalid pairing."
   },
   "rules": [
     {
-      "text": "Multiplies each weapon's primary activation frequency by three after ordinary Attack Rate modifiers. This includes fixed-cadence weapons that do not normally expose Attack Rate as an ore statistic.",
-      "lines": "65"
+      "text": "Multiplies each weapon's primary activation frequency by three after ordinary Attack Rate modifiers. This includes fixed-cadence weapons that do not normally expose Attack Rate as an ore statistic."
     },
     {
-      "text": "Targeted shots and ground deployments first select normally, then mirror the chosen direction or target point through the mech at equal distance.",
-      "lines": "66"
+      "text": "Targeted shots and ground deployments first select normally, then mirror the chosen direction or target point through the mech at equal distance."
     },
     {
-      "text": "Persistent-facing attacks fire backward. Forward Ram Field geometry moves behind the mech, movement-laid Wake geometry appears ahead of the moving mech, and orbital travel reverses direction.",
-      "lines": "67"
+      "text": "Persistent-facing attacks fire backward. Forward Ram Field geometry moves behind the mech, movement-laid Wake geometry appears ahead of the moving mech, and orbital travel reverses direction."
     },
     {
-      "text": "Autonomous weapons retain their ordinary target-selection priorities but approach or attack through the opposite side or orientation defined by their weapon-specific geometry.",
-      "lines": "68"
+      "text": "Autonomous weapons retain their ordinary target-selection priorities but approach or attack through the opposite side or orientation defined by their weapon-specific geometry."
     },
     {
-      "text": "Mech-centered, radial, and otherwise directionless attacks remain centered and receive the tempo increase without inventing a meaningless opposite position.",
-      "lines": "69"
+      "text": "Mech-centered, radial, and otherwise directionless attacks remain centered and receive the tempo increase without inventing a meaningless opposite position."
     },
     {
-      "text": "Distance-triggered attacks such as mines and wake segments use one-third their ordinary travel interval so the relic increases their production tempo rather than silently excluding them.",
-      "lines": "70"
+      "text": "Distance-triggered attacks such as mines and wake segments use one-third their ordinary travel interval so the relic increases their production tempo rather than silently excluding them."
     },
     {
-      "text": "Delayed echoes, projectile travel, finite effect durations, arming delays, and damage ticks do not accelerate unless they are explicitly the weapon's primary activation schedule.",
-      "lines": "71"
+      "text": "Delayed echoes, projectile travel, finite effect durations, arming delays, and damage ticks do not accelerate unless they are explicitly the weapon's primary activation schedule."
     }
   ],
-  "crossDocumentRules": []
+  "cross_document_rules": []
 }

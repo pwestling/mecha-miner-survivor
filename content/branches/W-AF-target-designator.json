@@ -1,21 +1,19 @@
 {
-  "_provenance": {
-    "doc": "docs/71-initial-weapon-numeric-catalog.md",
-    "section": "Target Designator — Functional — 2 Flux Amber",
-    "lines": "240-245",
-    "extractedFor": "DAT-008",
-    "notes": [
-      "No document in the repository assigns a stable branch ID; `id` and the filename are minted as <weaponId>-<branch-name-kebab-case> per the transcription convention.",
-      "Prerequisites, exclusivity, and the two-unit cost model are stated in docs/65-weapon-stat-and-branch-upgrades.md lines 66 and 68; the cost resource and amount for this branch come from this section's heading.",
-      "`rules` holds every bullet of the section verbatim with its source line; `effects` is the structured transcription of those same bullets.",
-      "The section states no explicit expected-effect estimate, so `expectedEffect` is null."
-    ]
-  },
   "id": "W-AF-target-designator",
-  "weaponId": "W-AF",
-  "weaponName": "Tracking Laser",
-  "branchName": "Target Designator",
-  "branchClass": "Functional",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-AF-target-designator.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#target-designator--functional--2-flux-amber",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#target-designator--functional--2-flux-amber",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches"
+  ],
+  "weapon_id": "W-AF",
+  "weapon_name": "Tracking Laser",
+  "branch_class": "Functional",
   "cost": {
     "resource": "Flux Amber",
     "amount": 2
@@ -23,43 +21,35 @@
   "prerequisites": [],
   "exclusivity": {
     "scope": "weapon",
-    "mutuallyExclusiveWith": [
+    "mutually_exclusive_with": [
       "W-AF-coherence-memory",
       "W-AF-cutting-vector"
     ],
     "irreversible": true
   },
-  "sharedRuleRefs": [
-    "docs/65-weapon-stat-and-branch-upgrades.md:66",
-    "docs/65-weapon-stat-and-branch-upgrades.md:68"
-  ],
   "effects": {
-    "exposedFocusThresholdPercent": 75,
-    "exposedDamageTakenIncreasePercent": 25,
-    "exposedAppliesTo": "every player weapon, including Tracking Laser",
-    "exposedDurationSeconds": 4.0,
-    "durationRefreshesWhileAtOrAboveThreshold": true,
-    "maxExposedTargetsFromThisWeapon": 1,
-    "oldExposureOnTargetChange": "expires normally",
-    "stacksWithSecondCopy": false,
-    "modifierKind": "weapon-specific damage-taken multiplier"
+    "exposed_focus_threshold_percent": 75,
+    "exposed_damage_taken_increase_percent": 25,
+    "exposed_applies_to": "every player weapon, including Tracking Laser",
+    "exposed_duration_seconds": 4.0,
+    "duration_refreshes_while_at_or_above_threshold": true,
+    "max_exposed_targets_from_this_weapon": 1,
+    "old_exposure_on_target_change": "expires normally",
+    "stacks_with_second_copy": false,
+    "modifier_kind": "weapon-specific damage-taken multiplier"
   },
-  "expectedEffect": null,
+  "expected_effect": null,
   "rules": [
     {
-      "line": 242,
       "text": "At 75% focus or higher, the locked target becomes Exposed."
     },
     {
-      "line": 243,
       "text": "An Exposed target takes +25% damage from every player weapon, including Tracking Laser, for 4.0 s. The duration refreshes while focus remains at or above the threshold."
     },
     {
-      "line": 244,
       "text": "Only one target may be Exposed by this weapon at once; changing targets lets the old exposure expire normally."
     },
     {
-      "line": 245,
       "text": "Exposure is a weapon-specific damage-taken multiplier and does not stack with a second copy, which duplicate-weapon rules already forbid."
     }
   ]

@@ -1,241 +1,144 @@
 {
-  "_provenance": {
-    "doc": "docs/71-initial-weapon-numeric-catalog.md",
-    "section": "Rank-Zero Values and Ore-Stat Increments",
-    "lines": "70-90",
-    "extractedFor": "DAT-007",
-    "notes": [
-      "`M` is one unmodified mech collision diameter, a relative spatial unit, not a metric distance (docs/71-initial-weapon-numeric-catalog.md:24); numeric keys therefore carry an `M` suffix rather than `Meters`.",
-      "Ore-stat units differ per stat, so each entry in `oreUpgradeableStats` carries an explicit `unit` field instead of encoding the unit in the key name.",
-      "`signatureMech` comes from docs/36-initial-mech-catalog.md:45, which is authoritative for the assignment. The `Signature mech` column of docs/66-weapon-catalog-and-resource-graph.md:39 still reads \"Initial signature; mech TBD\" and docs/weapons/README.md:20 only records Yes/No; both agree on signature membership but neither names the mech.",
-      "The `Status at DEC-075` column of docs/66-weapon-catalog-and-resource-graph.md:39 is deliberately not transcribed: docs/66-weapon-catalog-and-resource-graph.md:37 states DEC-125 moved every row to a different status, so the column is stale.",
-      "`favorableHordeDps` is an analytic scene estimate, not a cap; docs/71-initial-weapon-numeric-catalog.md:68 states the assumed simultaneous-victim counts and that benchmark captures supersede it.",
-      "The content envelope required by docs/technical/40-content-data-and-validation.md:76-89 (`schema_version`, `content_version`, `status`, `name_key`, `summary_key`, `tags`, `source_refs`, `presentation_id`) is not populated: no design document supplies values for those fields, and this transcription follows the DAT-007 field conventions.",
-      "`focusFillSecondsAtRankZero` (5.0 s) comes from docs/71-initial-weapon-numeric-catalog.md:232; the Rank-Zero table at docs/71-initial-weapon-numeric-catalog.md:80 states only the 1×-to-2× range."
-    ]
-  },
   "id": "W-AF",
-  "name": "Tracking Laser",
-  "recipePair": {
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "weapon.W-AF.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#rank-zero-values-and-ore-stat-increments",
+    "recipe_pair: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "fabrication_cost: GDD-PROGRESSION#base-weapon-availability",
+    "base_automatic_attack: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "base_behavior: GDD-WEAPON-NUMERIC-CATALOG#w-af--tracking-laser",
+    "ore_upgradeable_stat_labels: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "damage_model: GDD-WEAPON-NUMERIC-CATALOG#base-weapon-summary",
+    "global_attack_rate_mapping: GDD-WEAPON-NUMERIC-CATALOG#global-weapon-attack-rate-mapping",
+    "branches.amplification.cost: GDD-WEAPON-NUMERIC-CATALOG#coherence-memory--amplification--2-asterite",
+    "branches.amplification.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.amplification: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.amplification: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.functional.cost: GDD-WEAPON-NUMERIC-CATALOG#target-designator--functional--2-flux-amber",
+    "branches.functional.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.functional: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.functional: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.conversion.cost: GDD-WEAPON-NUMERIC-CATALOG#cutting-vector--conversion--2-barysteel",
+    "branches.conversion.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.conversion: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.conversion: GDD-WEAPON-INDEX#catalog-lookup"
+  ],
+  "recipe_pair": {
     "notation": "A + F",
-    "materialCodes": [
+    "material_codes": [
       "A",
       "F"
     ],
-    "materialNames": [
+    "material_names": [
       "Asterite",
       "Flux Amber"
-    ],
-    "_source": {
-      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-      "section": "Accepted base catalog assignment",
-      "lines": "35-55"
-    }
+    ]
   },
-  "signatureMech": null,
-  "fabricationCost": {
+  "signature_mech": null,
+  "fabrication_cost": {
     "materials": [
       {
-        "materialCode": "A",
+        "material_code": "A",
         "material": "Asterite",
         "units": 1
       },
       {
-        "materialCode": "F",
+        "material_code": "F",
         "material": "Flux Amber",
         "units": 1
       }
     ],
-    "signatureWeaponBeginsEquippedWithoutPayingCost": true,
-    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost.",
-    "_source": {
-      "doc": "docs/60-resources-crafting-progression.md",
-      "section": "Base-weapon availability",
-      "lines": "104-110"
-    }
+    "signature_weapon_begins_equipped_without_paying_cost": true,
+    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost."
   },
-  "baseAutomaticAttack": {
-    "text": "Maintains a focus-building beam on one target",
-    "_source": {
-      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-      "section": "Accepted base catalog assignment",
-      "lines": "35-55"
-    }
+  "base_automatic_attack": {
+    "text": "Maintains a focus-building beam on one target"
   },
-  "baseBehavior": {
-    "text": "locks to one target in range and deals continuous damage. Its multiplier rises linearly from 1× to 2× as the focus meter fills, taking 5.0 s at rank zero. Losing the target normally resets focus.",
-    "_source": {
-      "doc": "docs/71-initial-weapon-numeric-catalog.md",
-      "section": "W-AF — Tracking Laser",
-      "lines": "230-232"
-    }
+  "base_behavior": {
+    "text": "locks to one target in range and deals continuous damage. Its multiplier rises linearly from 1× to 2× as the focus meter fills, taking 5.0 s at rank zero. Losing the target normally resets focus."
   },
-  "oreUpgradeableStatLabels": {
+  "ore_upgradeable_stat_labels": {
     "labels": [
       "Damage",
       "range",
       "focus rate"
-    ],
-    "_source": {
-      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-      "section": "Accepted base catalog assignment",
-      "lines": "35-55"
-    }
+    ]
   },
-  "oreUpgradeableStats": [
+  "ore_upgradeable_stats": [
     {
       "slot": 1,
       "name": "Base damage rate",
-      "rankZero": 18,
-      "incrementPerRank": 1.8,
+      "rank_zero": 18,
+      "increment_per_rank": 1.8,
       "unit": "damage per second",
       "discrete": false
     },
     {
       "slot": 2,
       "name": "Range",
-      "rankZero": 9,
-      "incrementPerRank": 0.9,
+      "rank_zero": 9,
+      "increment_per_rank": 0.9,
       "unit": "M",
       "discrete": false
     },
     {
       "slot": 3,
       "name": "Focus gain",
-      "rankZero": 20,
-      "incrementPerRank": 2,
+      "rank_zero": 20,
+      "increment_per_rank": 2,
       "unit": "percentage points per second",
       "discrete": false
     }
   ],
-  "fixedProperties": {
-    "focusMultiplierMinimum": 1,
-    "focusMultiplierMaximum": 2,
-    "focusFillSecondsAtRankZero": 5.0,
-    "focusResetsOnTargetLoss": true,
+  "fixed_properties": {
+    "focus_multiplier_minimum": 1,
+    "focus_multiplier_maximum": 2,
+    "focus_fill_seconds_at_rank_zero": 5.0,
+    "focus_resets_on_target_loss": true,
     "raw": "Focus multiplier rises linearly from 1× to 2× and resets on target loss"
   },
-  "damageModel": {
-    "rankZeroDamageModel": "18/s, focusing to 36/s",
-    "burst10Dps": 31.5,
-    "sustained30Dps": 36.0,
-    "favorableHordeDps": 36,
-    "primaryLimitation": "Requires uninterrupted focus on one target",
-    "_source": {
-      "doc": "docs/71-initial-weapon-numeric-catalog.md",
-      "section": "Base Weapon Summary",
-      "lines": "46-68"
-    }
+  "damage_model": {
+    "rank_zero_damage_model": "18/s, focusing to 36/s",
+    "burst_10_dps": 31.5,
+    "sustained_30_dps": 36.0,
+    "favorable_horde_dps": 36,
+    "primary_limitation": "Requires uninterrupted focus on one target"
   },
-  "globalAttackRateMapping": {
-    "affectedTiming": "None",
-    "unaffectedTiming": "Continuous damage tick and focus gain",
-    "_source": {
-      "doc": "docs/71-initial-weapon-numeric-catalog.md",
-      "section": "Global weapon Attack Rate mapping",
-      "lines": "102-124"
-    }
+  "global_attack_rate_mapping": {
+    "affected_timing": "None",
+    "unaffected_timing": "Continuous damage tick and focus gain"
   },
   "branches": {
     "amplification": {
       "name": "Coherence Memory",
-      "fundingMaterialCode": "A",
-      "fundingMaterial": "Asterite",
+      "funding_material_code": "A",
+      "funding_material": "Asterite",
       "cost": {
         "material": "Asterite",
-        "units": 2,
-        "_source": [
-          {
-            "doc": "docs/71-initial-weapon-numeric-catalog.md",
-            "section": "Coherence Memory — Amplification — 2 Asterite",
-            "lines": "234"
-          },
-          {
-            "doc": "docs/60-resources-crafting-progression.md",
-            "section": "Weapon stat and branch upgrading",
-            "lines": "160-170"
-          }
-        ]
-      },
-      "_source": [
-        {
-          "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-          "section": "Accepted base catalog assignment",
-          "lines": "35-55"
-        },
-        {
-          "doc": "docs/weapons/README.md",
-          "section": "Catalog lookup",
-          "lines": "18-36"
-        }
-      ]
+        "units": 2
+      }
     },
     "functional": {
       "name": "Target Designator",
-      "fundingMaterialCode": "F",
-      "fundingMaterial": "Flux Amber",
+      "funding_material_code": "F",
+      "funding_material": "Flux Amber",
       "cost": {
         "material": "Flux Amber",
-        "units": 2,
-        "_source": [
-          {
-            "doc": "docs/71-initial-weapon-numeric-catalog.md",
-            "section": "Target Designator — Functional — 2 Flux Amber",
-            "lines": "240"
-          },
-          {
-            "doc": "docs/60-resources-crafting-progression.md",
-            "section": "Weapon stat and branch upgrading",
-            "lines": "160-170"
-          }
-        ]
-      },
-      "_source": [
-        {
-          "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-          "section": "Accepted base catalog assignment",
-          "lines": "35-55"
-        },
-        {
-          "doc": "docs/weapons/README.md",
-          "section": "Catalog lookup",
-          "lines": "18-36"
-        }
-      ]
+        "units": 2
+      }
     },
     "conversion": {
       "name": "Cutting Vector",
-      "fundingMaterialCode": "B",
-      "fundingMaterial": "Barysteel",
+      "funding_material_code": "B",
+      "funding_material": "Barysteel",
       "cost": {
         "material": "Barysteel",
-        "units": 2,
-        "_source": [
-          {
-            "doc": "docs/71-initial-weapon-numeric-catalog.md",
-            "section": "Cutting Vector — Conversion — 2 Barysteel",
-            "lines": "247"
-          },
-          {
-            "doc": "docs/60-resources-crafting-progression.md",
-            "section": "Weapon stat and branch upgrading",
-            "lines": "160-170"
-          }
-        ]
-      },
-      "_source": [
-        {
-          "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-          "section": "Accepted base catalog assignment",
-          "lines": "35-55"
-        },
-        {
-          "doc": "docs/weapons/README.md",
-          "section": "Catalog lookup",
-          "lines": "18-36"
-        }
-      ]
-    },
-    "_note": "Branch mechanics are transcribed separately into content/branches/; only the branch identity, transformation class, funding material, and specialized-material price are recorded here."
+        "units": 2
+      }
+    }
   }
 }

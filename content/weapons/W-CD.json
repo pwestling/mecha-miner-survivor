@@ -1,239 +1,143 @@
 {
-  "_provenance": {
-    "doc": "docs/71-initial-weapon-numeric-catalog.md",
-    "section": "Rank-Zero Values and Ore-Stat Increments",
-    "lines": "70-90",
-    "extractedFor": "DAT-007",
-    "notes": [
-      "`M` is one unmodified mech collision diameter, a relative spatial unit, not a metric distance (docs/71-initial-weapon-numeric-catalog.md:24); numeric keys therefore carry an `M` suffix rather than `Meters`.",
-      "Ore-stat units differ per stat, so each entry in `oreUpgradeableStats` carries an explicit `unit` field instead of encoding the unit in the key name.",
-      "`signatureMech` comes from docs/36-initial-mech-catalog.md:45, which is authoritative for the assignment. The `Signature mech` column of docs/66-weapon-catalog-and-resource-graph.md:39 still reads \"Initial signature; mech TBD\" and docs/weapons/README.md:20 only records Yes/No; both agree on signature membership but neither names the mech.",
-      "The `Status at DEC-075` column of docs/66-weapon-catalog-and-resource-graph.md:39 is deliberately not transcribed: docs/66-weapon-catalog-and-resource-graph.md:37 states DEC-125 moved every row to a different status, so the column is stale.",
-      "`favorableHordeDps` is an analytic scene estimate, not a cap; docs/71-initial-weapon-numeric-catalog.md:68 states the assumed simultaneous-victim counts and that benchmark captures supersede it.",
-      "The content envelope required by docs/technical/40-content-data-and-validation.md:76-89 (`schema_version`, `content_version`, `status`, `name_key`, `summary_key`, `tags`, `source_refs`, `presentation_id`) is not populated: no design document supplies values for those fields, and this transcription follows the DAT-007 field conventions."
-    ]
-  },
   "id": "W-CD",
-  "name": "Arc Emitter",
-  "recipePair": {
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "weapon.W-CD.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#rank-zero-values-and-ore-stat-increments",
+    "recipe_pair: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "fabrication_cost: GDD-PROGRESSION#base-weapon-availability",
+    "base_automatic_attack: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "base_behavior: GDD-WEAPON-NUMERIC-CATALOG#w-cd--arc-emitter",
+    "ore_upgradeable_stat_labels: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "damage_model: GDD-WEAPON-NUMERIC-CATALOG#base-weapon-summary",
+    "global_attack_rate_mapping: GDD-WEAPON-NUMERIC-CATALOG#global-weapon-attack-rate-mapping",
+    "branches.amplification.cost: GDD-WEAPON-NUMERIC-CATALOG#total-conduction--amplification--2-cinderglass",
+    "branches.amplification.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.amplification: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.amplification: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.functional.cost: GDD-WEAPON-NUMERIC-CATALOG#disruption-current--functional--2-driftmetal",
+    "branches.functional.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.functional: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.functional: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.conversion.cost: GDD-WEAPON-NUMERIC-CATALOG#ball-lightning-projector--conversion--2-barysteel",
+    "branches.conversion.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.conversion: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.conversion: GDD-WEAPON-INDEX#catalog-lookup"
+  ],
+  "recipe_pair": {
     "notation": "C + D",
-    "materialCodes": [
+    "material_codes": [
       "C",
       "D"
     ],
-    "materialNames": [
+    "material_names": [
       "Cinderglass",
       "Driftmetal"
-    ],
-    "_source": {
-      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-      "section": "Accepted base catalog assignment",
-      "lines": "35-55"
-    }
+    ]
   },
-  "signatureMech": null,
-  "fabricationCost": {
+  "signature_mech": null,
+  "fabrication_cost": {
     "materials": [
       {
-        "materialCode": "C",
+        "material_code": "C",
         "material": "Cinderglass",
         "units": 1
       },
       {
-        "materialCode": "D",
+        "material_code": "D",
         "material": "Driftmetal",
         "units": 1
       }
     ],
-    "signatureWeaponBeginsEquippedWithoutPayingCost": true,
-    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost.",
-    "_source": {
-      "doc": "docs/60-resources-crafting-progression.md",
-      "section": "Base-weapon availability",
-      "lines": "104-110"
-    }
+    "signature_weapon_begins_equipped_without_paying_cost": true,
+    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost."
   },
-  "baseAutomaticAttack": {
-    "text": "Instantly chains damage through nearby unhit targets",
-    "_source": {
-      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-      "section": "Accepted base catalog assignment",
-      "lines": "35-55"
-    }
+  "base_automatic_attack": {
+    "text": "Instantly chains damage through nearby unhit targets"
   },
-  "baseBehavior": {
-    "text": "strikes the nearest target within 8M and chains to up to four additional enemies. A chain never hits the same enemy twice and each jump must be within current chain range.",
-    "_source": {
-      "doc": "docs/71-initial-weapon-numeric-catalog.md",
-      "section": "W-CD — Arc Emitter",
-      "lines": "351-353"
-    }
+  "base_behavior": {
+    "text": "strikes the nearest target within 8M and chains to up to four additional enemies. A chain never hits the same enemy twice and each jump must be within current chain range."
   },
-  "oreUpgradeableStatLabels": {
+  "ore_upgradeable_stat_labels": {
     "labels": [
       "Damage",
       "attack rate",
       "chain range"
-    ],
-    "_source": {
-      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-      "section": "Accepted base catalog assignment",
-      "lines": "35-55"
-    }
+    ]
   },
-  "oreUpgradeableStats": [
+  "ore_upgradeable_stats": [
     {
       "slot": 1,
       "name": "Arc damage",
-      "rankZero": 16,
-      "incrementPerRank": 1.6,
+      "rank_zero": 16,
+      "increment_per_rank": 1.6,
       "unit": "damage",
       "discrete": false
     },
     {
       "slot": 2,
       "name": "Attack rate",
-      "rankZero": 2.0,
-      "incrementPerRank": 0.2,
+      "rank_zero": 2.0,
+      "increment_per_rank": 0.2,
       "unit": "activations per second",
       "discrete": false
     },
     {
       "slot": 3,
       "name": "Chain range",
-      "rankZero": 3,
-      "incrementPerRank": 0.3,
+      "rank_zero": 3,
+      "increment_per_rank": 0.3,
       "unit": "M",
       "discrete": false
     }
   ],
-  "fixedProperties": {
-    "initialAcquisitionRangeM": 8,
-    "maximumTotalTargetCount": 5,
-    "repeatHitsSameEnemy": false,
+  "fixed_properties": {
+    "initial_acquisition_range_m": 8,
+    "maximum_total_target_count": 5,
+    "repeat_hits_same_enemy": false,
     "raw": "8M initial acquisition range, maximum five total targets"
   },
-  "damageModel": {
-    "rankZeroDamageModel": "16 every 0.5 s, up to five targets",
-    "burst10Dps": 32.0,
-    "sustained30Dps": 32.0,
-    "favorableHordeDps": 160,
-    "primaryLimitation": "Needs chainable targets within link range",
-    "_source": {
-      "doc": "docs/71-initial-weapon-numeric-catalog.md",
-      "section": "Base Weapon Summary",
-      "lines": "46-68"
-    }
+  "damage_model": {
+    "rank_zero_damage_model": "16 every 0.5 s, up to five targets",
+    "burst_10_dps": 32.0,
+    "sustained_30_dps": 32.0,
+    "favorable_horde_dps": 160,
+    "primary_limitation": "Needs chainable targets within link range"
   },
-  "globalAttackRateMapping": {
-    "affectedTiming": "Direct discharge rate; Ball-Lightning orb launch rate",
-    "unaffectedTiming": "Orb movement, orb lifetime, and internal twice-per-second emissions",
-    "_source": {
-      "doc": "docs/71-initial-weapon-numeric-catalog.md",
-      "section": "Global weapon Attack Rate mapping",
-      "lines": "102-124"
-    }
+  "global_attack_rate_mapping": {
+    "affected_timing": "Direct discharge rate; Ball-Lightning orb launch rate",
+    "unaffected_timing": "Orb movement, orb lifetime, and internal twice-per-second emissions"
   },
   "branches": {
     "amplification": {
       "name": "Total Conduction",
-      "fundingMaterialCode": "C",
-      "fundingMaterial": "Cinderglass",
+      "funding_material_code": "C",
+      "funding_material": "Cinderglass",
       "cost": {
         "material": "Cinderglass",
-        "units": 2,
-        "_source": [
-          {
-            "doc": "docs/71-initial-weapon-numeric-catalog.md",
-            "section": "Total Conduction — Amplification — 2 Cinderglass",
-            "lines": "355"
-          },
-          {
-            "doc": "docs/60-resources-crafting-progression.md",
-            "section": "Weapon stat and branch upgrading",
-            "lines": "160-170"
-          }
-        ]
-      },
-      "_source": [
-        {
-          "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-          "section": "Accepted base catalog assignment",
-          "lines": "35-55"
-        },
-        {
-          "doc": "docs/weapons/README.md",
-          "section": "Catalog lookup",
-          "lines": "18-36"
-        }
-      ]
+        "units": 2
+      }
     },
     "functional": {
       "name": "Disruption Current",
-      "fundingMaterialCode": "D",
-      "fundingMaterial": "Driftmetal",
+      "funding_material_code": "D",
+      "funding_material": "Driftmetal",
       "cost": {
         "material": "Driftmetal",
-        "units": 2,
-        "_source": [
-          {
-            "doc": "docs/71-initial-weapon-numeric-catalog.md",
-            "section": "Disruption Current — Functional — 2 Driftmetal",
-            "lines": "361"
-          },
-          {
-            "doc": "docs/60-resources-crafting-progression.md",
-            "section": "Weapon stat and branch upgrading",
-            "lines": "160-170"
-          }
-        ]
-      },
-      "_source": [
-        {
-          "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-          "section": "Accepted base catalog assignment",
-          "lines": "35-55"
-        },
-        {
-          "doc": "docs/weapons/README.md",
-          "section": "Catalog lookup",
-          "lines": "18-36"
-        }
-      ]
+        "units": 2
+      }
     },
     "conversion": {
       "name": "Ball-Lightning Projector",
-      "fundingMaterialCode": "B",
-      "fundingMaterial": "Barysteel",
+      "funding_material_code": "B",
+      "funding_material": "Barysteel",
       "cost": {
         "material": "Barysteel",
-        "units": 2,
-        "_source": [
-          {
-            "doc": "docs/71-initial-weapon-numeric-catalog.md",
-            "section": "Ball-Lightning Projector — Conversion — 2 Barysteel",
-            "lines": "367"
-          },
-          {
-            "doc": "docs/60-resources-crafting-progression.md",
-            "section": "Weapon stat and branch upgrading",
-            "lines": "160-170"
-          }
-        ]
-      },
-      "_source": [
-        {
-          "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-          "section": "Accepted base catalog assignment",
-          "lines": "35-55"
-        },
-        {
-          "doc": "docs/weapons/README.md",
-          "section": "Catalog lookup",
-          "lines": "18-36"
-        }
-      ]
-    },
-    "_note": "Branch mechanics are transcribed separately into content/branches/; only the branch identity, transformation class, funding material, and specialized-material price are recorded here."
+        "units": 2
+      }
+    }
   }
 }

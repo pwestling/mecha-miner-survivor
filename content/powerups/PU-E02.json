@@ -1,147 +1,106 @@
 {
-  "_provenance": {
-    "doc": "docs/62-permanent-powerup-catalog.md",
-    "section": "PU-E02 — Tether Amplifier",
-    "lines": "210-222",
-    "extractedFor": "DAT-008",
-    "notes": [
-      "id, domain, powerUp, perRankEffect, cap, maximumEffect and totalCostHyperGold come from the 'Catalog overview' table row at docs/62-permanent-powerup-catalog.md:48; field order follows that table's column order (ID | Domain | PowerUp | Per-rank effect | Cap | Maximum effect | Total cost).",
-      "ranks is the per-PowerUp rank/price table in the 'PU-E02 — Tether Amplifier' section; one object per doc row in rank order, columns Rank | Total extraction-zone radius | Price | Cumulative cost. The array has 5 entries because the cap is 5; rank-array lengths are deliberately not normalized across PowerUps.",
-      "The 'text' member of each effect object is the doc cell verbatim; the sibling numeric member is the same value typed as a number. No value is introduced.",
-      "rules are the verbatim bullets of the 'PU-E02 — Tether Amplifier' section, in document order.",
-      "No localization key, presentation identifier, icon, sort order, or content/schema version exists for PowerUps anywhere in docs/; those fields are therefore absent rather than guessed."
-    ]
-  },
   "id": "PU-E02",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "powerup.PU-E02.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-PERMANENT-POWERUP-CATALOG#pu-e02--tether-amplifier",
+    "catalog_overview_row: GDD-PERMANENT-POWERUP-CATALOG#catalog-overview",
+    "currency: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "ui_grouping: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "prerequisite: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "fresh_profile_purchasable: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "ranks_must_be_bought_sequentially: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "prices_fixed: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "applies_account_wide: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "refundable: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "purchasable_during_run: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "active_rank_policy: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "total_cost_hyper_gold: DEC-120#decision",
+    "maximum_effect: GDD-PROGRESSION#progression-layers"
+  ],
   "domain": "Mining/economy",
-  "powerUp": "Tether Amplifier",
-  "perRankEffect": {
+  "per_rank_effect": {
     "text": "+3% extraction-zone radius",
     "statistic": "extraction-zone radius",
     "percent": 3
   },
   "cap": 5,
-  "maximumEffect": {
+  "maximum_effect": {
     "text": "+15%",
     "statistic": "extraction-zone radius",
     "percent": 15
   },
-  "totalCostHyperGold": 675,
+  "total_cost_hyper_gold": 675,
   "currency": "Hyper Gold",
-  "uiGrouping": "Mining/economy",
+  "ui_grouping": "Mining/economy",
   "prerequisite": null,
-  "freshProfilePurchasable": true,
-  "ranksMustBeBoughtSequentially": true,
-  "pricesFixed": true,
-  "appliesAccountWide": true,
+  "fresh_profile_purchasable": true,
+  "ranks_must_be_bought_sequentially": true,
+  "prices_fixed": true,
+  "applies_account_wide": true,
   "refundable": true,
-  "purchasableDuringRun": false,
-  "activeRankPolicy": {
-    "minimumActiveRank": 0,
-    "maximumActiveRankEqualsPurchasedRank": true,
-    "changeCostHyperGold": 0,
-    "changeableBetweenRuns": true,
-    "changeableDuringRun": false
+  "purchasable_during_run": false,
+  "active_rank_policy": {
+    "minimum_active_rank": 0,
+    "maximum_active_rank_equals_purchased_rank": true,
+    "change_cost_hyper_gold": 0,
+    "changeable_between_runs": true,
+    "changeable_during_run": false
   },
-  "rankEffectColumn": "Total extraction-zone radius",
+  "rank_effect_column": "Total extraction-zone radius",
   "ranks": [
     {
       "rank": 1,
-      "totalEffect": {
+      "total_effect": {
         "text": "+3%",
         "percent": 3
       },
-      "priceHyperGold": 50,
-      "cumulativeCostHyperGold": 50
+      "price_hyper_gold": 50,
+      "cumulative_cost_hyper_gold": 50
     },
     {
       "rank": 2,
-      "totalEffect": {
+      "total_effect": {
         "text": "+6%",
         "percent": 6
       },
-      "priceHyperGold": 75,
-      "cumulativeCostHyperGold": 125
+      "price_hyper_gold": 75,
+      "cumulative_cost_hyper_gold": 125
     },
     {
       "rank": 3,
-      "totalEffect": {
+      "total_effect": {
         "text": "+9%",
         "percent": 9
       },
-      "priceHyperGold": 125,
-      "cumulativeCostHyperGold": 250
+      "price_hyper_gold": 125,
+      "cumulative_cost_hyper_gold": 250
     },
     {
       "rank": 4,
-      "totalEffect": {
+      "total_effect": {
         "text": "+12%",
         "percent": 12
       },
-      "priceHyperGold": 175,
-      "cumulativeCostHyperGold": 425
+      "price_hyper_gold": 175,
+      "cumulative_cost_hyper_gold": 425
     },
     {
       "rank": 5,
-      "totalEffect": {
+      "total_effect": {
         "text": "+15%",
         "percent": 15
       },
-      "priceHyperGold": 250,
-      "cumulativeCostHyperGold": 675
+      "price_hyper_gold": 250,
+      "cumulative_cost_hyper_gold": 675
     }
   ],
   "rules": [
     "Expands the visible automatic-mining boundary for every mining-point class and stacks additively with Extraction Tether.",
     "Does not change extraction speed, payouts, discovery, resource radar behavior, threat-beacon reach, or resonance-field size.",
     "The map-generation separation and base-travel rules continue using the unmodified baseline mining-zone size."
-  ],
-  "_source": {
-    "_catalogOverviewRow": {
-      "doc": "docs/62-permanent-powerup-catalog.md",
-      "section": "Catalog overview",
-      "lines": "48",
-      "notes": [
-        "Source of id, domain, powerUp, perRankEffect, cap, maximumEffect and totalCostHyperGold."
-      ]
-    },
-    "_sharedPurchaseRules": {
-      "doc": "docs/62-permanent-powerup-catalog.md",
-      "section": "Shared purchase rules",
-      "lines": "20-31",
-      "fields": [
-        "currency",
-        "uiGrouping",
-        "prerequisite",
-        "freshProfilePurchasable",
-        "ranksMustBeBoughtSequentially",
-        "pricesFixed",
-        "appliesAccountWide",
-        "refundable",
-        "purchasableDuringRun",
-        "activeRankPolicy"
-      ],
-      "notes": [
-        "These fields are the catalog-wide shared purchase rules and are identical on every PowerUp file.",
-        "prerequisite is null because line 23 states categories have no prerequisite tree, account-level gate, random availability, or purchase-order requirement.",
-        "uiGrouping repeats the Domain column; docs/technical/40-content-data-and-validation.md:136 requires PowerUps to carry rank cap, fixed costs/values by rank, active-rank policy, refundable flag, named-stat contribution, and UI grouping."
-      ]
-    },
-    "totalCostHyperGold": {
-      "doc": "docs/decisions/DEC-120-accept-permanent-powerup-catalog.md",
-      "section": "Decision",
-      "lines": "15",
-      "notes": [
-        "Corroborates the 9,450 Hyper Gold catalog total that the 13 totalCostHyperGold values sum to. DEC-120 is status: accepted, authoritative: false; docs/62 remains the authoritative source for the per-entry number."
-      ]
-    },
-    "maximumEffect": {
-      "doc": "docs/60-resources-crafting-progression.md",
-      "section": "Progression layers",
-      "lines": "74",
-      "notes": [
-        "Restates the fully active account envelope, corroborating this entry's maximumEffect. Also restated verbatim in docs/62-permanent-powerup-catalog.md 'Fully upgraded account envelope' lines 251-256."
-      ]
-    }
-  }
+  ]
 }

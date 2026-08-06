@@ -1,50 +1,42 @@
 {
-  "_provenance": {
-    "doc": "docs/40-mining-and-extraction.md",
-    "section": "### Standard ore seams",
-    "lines": "60-66",
-    "extractedFor": "DAT-008",
-    "notes": [
-      "id is null: this mining-site class has no ID and no table anywhere in docs/. A stable-ID decision is required before docs/technical/40-content-data-and-validation.md:67 (\"Reuse accepted gameplay IDs exactly\") can be satisfied; minting one is a boundary decision, not a transcription choice.",
-      "Field names are derived from prose because the source has no column headers (docs/40-mining-and-extraction.md:58-132 is entirely prose).",
-      "extractionZoneRadiusMeters is null: docs/40-mining-and-extraction.md:48 states \"Exact radius and any resource-specific size variation remain open.\"",
-      "totalUninterruptedExtractionPerMapSeconds 300 transcribes \"five minutes of uninterrupted extraction if all are depleted\" (docs/40-mining-and-extraction.md:66).",
-      "Arithmetic check: 20 seams x 100 ore = 2,000 common ore, matching the stated per-map total.",
-      "Cross-checked against docs/decisions/DEC-082, DEC-083, DEC-090 as listed at docs/40-mining-and-extraction.md:215-218.",
-      "presentation, map marker, and spawn exclusions (required by docs/technical/40-content-data-and-validation.md:140) are not specified for this class in the gameplay docs and are therefore absent rather than guessed."
-    ]
-  },
   "id": null,
-  "siteClass": "standard-ore-seam",
-  "className": "Standard ore seams",
-  "countPerStandardMap": 20,
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "mining_site.standard-ore-seams.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-MINING#standard-ore-seams"
+  ],
+  "site_class": "standard-ore-seam",
+  "count_per_standard_map": 20,
   "placement": "randomized locations",
-  "completionOnlyReward": false,
-  "payoutPerInstallment": {
+  "completion_only_reward": false,
+  "payout_per_installment": {
     "resource": "common ore",
     "amount": 10
   },
-  "installmentDurationSeconds": 1.5,
-  "installmentCount": 10,
-  "totalDepletionSeconds": 15,
-  "totalPayoutPerSeam": {
+  "installment_duration_seconds": 1.5,
+  "installment_count": 10,
+  "total_depletion_seconds": 15,
+  "total_payout_per_seam": {
     "resource": "common ore",
     "amount": 100
   },
-  "totalPayoutPerMap": {
+  "total_payout_per_map": {
     "resource": "common ore",
     "amount": 2000
   },
-  "totalUninterruptedExtractionPerMapSeconds": 300,
-  "extractionZoneRadiusMeters": null,
-  "progressDecay": {
-    "graceSeconds": 0.5,
-    "decayRateMultiplierOfForwardRate": 4,
-    "securedCheckpoint": "each completed installment",
+  "total_uninterrupted_extraction_per_map_seconds": 300,
+  "extraction_zone_radius_m": null,
+  "progress_decay": {
+    "grace_seconds": 0.5,
+    "decay_rate_multiplier_of_forward_rate": 4,
+    "secured_checkpoint": "each completed installment",
     "rule": "Ore from completed intervals remains secured in the run inventory. Leaving only threatens progress toward the current unfinished interval."
   },
-  "resonanceField": null,
-  "beaconThresholds": null,
-  "depletedState": "non-interactive mapped landmark for the rest of the run",
+  "resonance_field": null,
+  "beacon_thresholds": null,
+  "depleted_state": "non-interactive mapped landmark for the rest of the run",
   "persistence": "run-local; unspent common ore is lost when the run ends"
 }

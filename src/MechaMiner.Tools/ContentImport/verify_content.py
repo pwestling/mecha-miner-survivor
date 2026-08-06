@@ -1,0 +1,1375 @@
+#!/usr/bin/env python3
+"""Verify the authored JSON content catalog under content/.
+
+Python 3, standard library only, no dependencies. Run from anywhere:
+
+    python3 src/MechaMiner.Tools/ContentImport/verify_content.py
+
+Exit code is non-zero if any FAILURE is recorded. Warnings never change the
+exit code. Failures print before warnings.
+
+================================================================================
+ASSERTION TABLE - what this script claims, and the mandate behind each claim
+================================================================================
+
+  A1  Every *.json under content/ parses as UTF-8 JSON with no duplicate
+      object properties.
+      Mandate: docs/technical/40-content-data-and-validation.md:26
+      ("duplicate object properties ... are errors")                  FAILURE
+
+  A2  Envelope: every definition file carries schema_version (int),
+      content_version (int), status in {development, enabled, disabled,
+      retired}, tags (array), and source_refs (non-empty array of strings).
+      Mandate: docs/technical/40-content-data-and-validation.md:76-88
+      (envelope table); status vocabulary at 40:83                    FAILURE
+
+  A3  name_key and summary_key are both CONDITIONAL. summary_key is "where
+      relevant" (40:85); name_key is required only where a definition has a
+      genuinely player-facing name, with the compiler supplying the default
+      otherwise (40:90, "Optional fields have explicit defaults materialized
+      into the canonical bundle") - the same treatment presentation_id gets.
+      When either is present it must be a non-empty string that resolves in
+      en.json (see A11).                                              FAILURE
+      Omission is warned about, and the set of omitting files is asserted
+      against NAME_KEY_OMITTED below.                        WARNING + A19
+
+  A4  presentation_id is ABSENT, not present-and-null. No presentation
+      entry can exist until content/presentation/ is authored
+      (40:88 declares the field; 40:52 declares the directory).        FAILURE
+
+  A5  id must be present and a non-empty string, EXCEPT on the definitions
+      listed in ID_NULL_EXPECTED below, where no design document assigns a
+      stable ID and minting one would be inventing content.
+      Mandate: docs/technical/40-content-data-and-validation.md:80     FAILURE
+
+  A6  An absent or null id is reported as a warning with its path, never as
+      a failure, so an unminted ID never reddens the build.            WARNING
+
+  A19 Expected-set guards, so a change in either set is visible rather than
+      silently absorbed into the warning list: the set of definitions with a
+      null/absent id must equal ID_NULL_EXPECTED, and the set omitting
+      name_key must equal NAME_KEY_OMITTED. An unexpected member is a
+      failure; a member that has since been fixed is a warning asking for
+      the list to be shrunk.                             FAILURE + WARNING
+
+  A7  Naming: no property name anywhere in a definition contains [A-Z] or
+      starts with "_". Checked on KEYS ONLY - stable ID/enum/kind tokens in
+      VALUES keep their exact case by the same mandate.
+      Mandate: docs/technical/40-content-data-and-validation.md:26
+      ("Property names use snake_case; stable enum/kind/ID tokens remain
+      exact case-sensitive ASCII"), restated at 40:92-100              FAILURE
+
+  A8  No stale extraction metadata: no key named _provenance, _source,
+      notes, refs, lines, or line at any depth. Provenance now lives in
+      source_refs (40:87); unknown fields are errors (40:90).          FAILURE
+
+  A9  source_refs resolution: for every element, the document-ID portion
+      (after any "json.path: " prefix, before any "#anchor") is a doc_id
+      declared in the front matter of a file under docs/, and any #anchor
+      resolves to a real heading slug in that document.
+      Mandate: docs/technical/40-content-data-and-validation.md:87     FAILURE
+
+  A10 Localization: content/localization/en.json parses, is flat (all values
+      are strings), is lexically sorted, and has no duplicate keys.
+      Mandate: 40:211 (dedicated string catalog), 40:28 (dictionaries
+      emitted as lexically sorted key entries)                         FAILURE
+
+  A11 Every name_key / summary_key that IS present (and any other
+      *_key / *_keys reference) resolves to a key present in en.json, and no
+      key in en.json is orphaned.
+      Mandate: docs/technical/40-content-data-and-validation.md:216
+      ("Missing release strings are build errors") - so these are
+      failures, not warnings                                          FAILURE
+
+  A12 Entry counts per catalog directory match the EXPECTATIONS table.
+      Every row cites its own source doc:line.                        FAILURE
+
+  A13 Aggregate row counts match the PROBES table (35 minute rows,
+      4 beacon responses, 7 formations, 1 map contract file, and both world
+      prop families folded into that contract).
+      Every row cites its own source doc:line.                        FAILURE
+
+  A14 Doc-stated totals recompute from the JSON: PowerUp rank prices sum to
+      9,450 Hyper Gold and the six option-unlock costs sum to 2,150.
+      Actual vs expected is always printed.
+      Mandate: 40:136 ("Validators recompute total catalog costs");
+      sources docs/62-permanent-powerup-catalog.md:35 and
+      docs/63-permanent-option-unlock-catalog.md:48                   FAILURE
+
+  A15 Referential integrity: every branch's weapon reference resolves to a
+      file in content/weapons/, every enemy ID referenced by the encounter
+      schedule resolves in content/enemies/, and every mech's
+      signature-weapon reference resolves. Reference key names are
+      DISCOVERED from the data (snake_case), not hardcoded.
+      Mandate: docs/technical/40-content-data-and-validation.md:199
+      (relational layer: "References, uniqueness, graph coverage")     FAILURE
+
+  A16 Percentage-point policy: a property carrying a percentage should be
+      named *_percent, with the normalized factor left to the compiler as a
+      derived field. Occurrences are grouped by key name.
+      Mandate: docs/technical/40-content-data-and-validation.md:95
+      Reported as a warning because content/schemas/ does not exist yet
+      and the normalized-factor pass has no owner in this tree.        WARNING
+
+  A17 Formula policy: a player-facing formula must be a registered formula
+      kind plus parameters, never a script string. String-valued formula
+      expressions are grouped by key name.
+      Mandate: docs/technical/40-content-data-and-validation.md:99
+      Reported as a warning for the same reason as A16.                WARNING
+
+  A18 Derived-vs-authored regression guard, special-cased to the one known
+      transcription bug: the Sentry Pod (W-BE) deployment interval is 6.0
+      seconds (docs/71-initial-weapon-numeric-catalog.md:83), and 12 must
+      never appear as an authored deployment or ramp value anywhere in
+      content/weapons/ - 12 s is the DERIVED time for three pods to exist at
+      a 6 s cadence, not an authored number.
+      Mandate: docs/technical/40-content-data-and-validation.md:100
+      ("Derived values include source operands ... in reports")         FAILURE
+      A missing deployment field is only a warning, because the field name
+      is unvalidated until content/schemas/ exists.                    WARNING
+
+Not asserted here: no structural JSON Schema validation happens, because
+content/schemas/ (40:36) does not exist yet. Domain field names outside the
+envelope are therefore unvalidated and will need one reconciliation pass when
+the schemas land. See content/transcription-notes.md.
+"""
+
+from __future__ import annotations
+
+import json
+import re
+import sys
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+CONTENT = REPO_ROOT / "content"
+DOCS = REPO_ROOT / "docs"
+LOCALIZATION = CONTENT / "localization" / "en.json"
+
+# Directories under content/ that are not catalogs of definitions.
+NON_DEFINITION_DIRS = ("localization", "schemas")
+
+# --------------------------------------------------------------------------
+# A2/A4/A5 - envelope
+# --------------------------------------------------------------------------
+
+STATUS_VOCABULARY = ("development", "enabled", "disabled", "retired")
+# docs/technical/40-content-data-and-validation.md:83
+
+# A5/A6/A19 - definitions with no stable ID.
+#
+# Every other definition must carry a non-empty string id, including the
+# cohesive aggregates that now have doc-assigned IDs (the standard encounter
+# schedule is WAV-01, the standard map generation contract is MGC-01). Two files
+# that used to have no ID are gone entirely:
+#   - mechs/shared-baseline.json held player baseline values, not mech data. A
+#     mech definition carries OVERRIDES (40:110), and content/ has no player or
+#     run category yet; the schema stream owns that with PLY-001 as consumer.
+#   - maps/world-props.json held the destructible-rock and health-pack values,
+#     now fields of the MGC-01 definition. A18 asserts both prop families still
+#     appear inside MGC-01.
+#
+# The members below are expected, for two different reasons:
+#   - The resource radar and the four mining-site classes have NO doc-assigned
+#     ID at all. The radar is the thirteenth utility
+#     (docs/50-maps-resources-and-navigation.md:106) but never receives a UTL-*
+#     token; the four site classes are prose-only
+#     (docs/40-mining-and-extraction.md:58-132) with no table to carry an ID.
+#     Minting one here would be inventing content.
+#   - elite-modifier-profile and geode-resonance-effects are held pending a
+#     ruling on whether they are standalone definitions at all, or belong inside
+#     the enemy schema (40:114) and the mining-site schema (40:140)
+#     respectively, in which case they never get their own ID.
+ID_NULL_EXPECTED = frozenset(
+    {
+        "content/enemies/elite-modifier-profile.json",
+        "content/mining-sites/hyper-gold-sites.json",
+        "content/mining-sites/rich-ore-seams.json",
+        "content/mining-sites/specialized-material-geodes.json",
+        "content/mining-sites/standard-ore-seams.json",
+        "content/resources/geode-resonance-effects.json",
+        "content/utilities/radar-unassigned-id.json",
+    }
+)
+
+# A3/A19 - definitions that legitimately omit name_key.
+#
+# name_key is required only where a definition has a genuinely player-facing
+# name. None of these four is player-facing: WAV-01 and MGC-01 are authoring
+# contracts, and the other two are internal aggregates. Putting their titles in
+# the localization catalog would imply a UI surface that does not exist, so the
+# compiler supplies the default instead (40:90).
+NAME_KEY_OMITTED = frozenset(
+    {
+        "content/encounters/standard-encounter-schedule.json",
+        "content/enemies/elite-modifier-profile.json",
+        "content/maps/standard-map-generation-contract.json",
+        "content/resources/geode-resonance-effects.json",
+    }
+)
+
+# --------------------------------------------------------------------------
+# A8 - stale extraction metadata that must not survive anywhere
+# --------------------------------------------------------------------------
+
+FORBIDDEN_KEYS = (
+    "_provenance",
+    "_source",
+    "notes",
+    "refs",
+    "lines",
+    "line",
+    # shared_rule_refs was a second, parallel provenance carrier; its content
+    # belongs in source_refs, which is the only carrier the envelope names.
+    "shared_rule_refs",
+)
+
+# --------------------------------------------------------------------------
+# A12 - per-directory entry counts
+#
+# selector  : how a file is classified as a catalog "item"
+#             ("id_regex", pattern) - top-level "id" matches pattern
+#             ("has_key", key)      - top-level object has that key
+#             ("any_file",)         - every .json file in the directory
+# items     : expected number of item files (None = report, do not assert)
+# aggregates: expected number of non-item files (None = report only)
+# --------------------------------------------------------------------------
+
+EXPECTATIONS = [
+    dict(
+        dir="resources",
+        selector=("id_regex", r"^(?:[A-F]|common-ore|hyper-gold)$"),
+        items=8,
+        aggregates=None,
+        label="resources (6 specialized + common ore + Hyper Gold)",
+        source="docs/61-specialized-resource-identities.md:20 + docs/60-resources-crafting-progression.md:18",
+    ),
+    dict(
+        dir="mechs",
+        selector=("id_regex", r"^MCH-\d{2}$"),
+        items=6,
+        aggregates=0,
+        # No shared-baseline file: a mech definition carries overrides (40:110)
+        # and the player baseline belongs to a player/run category the schema
+        # stream owns (consumer PLY-001).
+        label="mechs (no baseline aggregate)",
+        source="docs/36-initial-mech-catalog.md:45",
+    ),
+    dict(
+        dir="enemies",
+        selector=("id_regex", r"^EN-\d{2}$"),
+        items=10,
+        aggregates=1,
+        label="ordinary enemies (+ 1 elite modifier profile aggregate)",
+        source="docs/31-initial-alien-roster.md:37 + docs/31-initial-alien-roster.md:104",
+    ),
+    dict(
+        dir="bosses",
+        selector=("id_regex", r"^BOSS-\d{2}$"),
+        items=4,
+        aggregates=None,
+        label="interval bosses",
+        source="docs/31-initial-alien-roster.md:121",
+    ),
+    dict(
+        dir="weapons",
+        selector=("id_regex", r"^W-[A-F]{2}$"),
+        items=15,
+        aggregates=1,
+        label="base weapons (+ 1 shared stat price formula aggregate)",
+        source="docs/66-weapon-catalog-and-resource-graph.md:39 + docs/65-weapon-stat-and-branch-upgrades.md:44",
+    ),
+    dict(
+        dir="branches",
+        selector=("has_key", "weapon_id"),
+        items=45,
+        aggregates=0,
+        label="weapon branches (15 weapons x 3)",
+        source="docs/71-initial-weapon-numeric-catalog.md:130",
+    ),
+    dict(
+        dir="utilities",
+        selector=("id_regex", r"^UTL-[A-F][12]$"),
+        items=12,
+        aggregates=1,
+        label="utilities (12 UTL-* + the resource radar, which has no doc ID)",
+        source="docs/68-utility-catalog.md:35 + docs/50-maps-resources-and-navigation.md:106",
+    ),
+    dict(
+        dir="relics",
+        selector=("id_regex", r"^REL-\d{2}$"),
+        items=10,
+        aggregates=0,
+        label="relics",
+        source="docs/69-initial-relic-catalog.md:26",
+    ),
+    dict(
+        dir="powerups",
+        selector=("id_regex", r"^PU-[A-Z]\d{2}$"),
+        items=13,
+        aggregates=0,
+        label="permanent PowerUps",
+        source="docs/62-permanent-powerup-catalog.md:35",
+    ),
+    dict(
+        dir="unlocks",
+        selector=("id_regex", r"^UNL-\d{2}$"),
+        items=6,
+        aggregates=0,
+        label="permanent option unlocks",
+        source="docs/63-permanent-option-unlock-catalog.md:48",
+    ),
+    dict(
+        dir="mining-sites",
+        selector=("any_file",),
+        items=4,
+        aggregates=None,
+        label="mining site classes (standard seam, rich seam, geode, Hyper Gold site)",
+        source="docs/40-mining-and-extraction.md:58",
+    ),
+    dict(
+        dir="encounters",
+        selector=("any_file",),
+        items=1,
+        aggregates=None,
+        label="standard encounter schedule (one cohesive aggregate)",
+        source="docs/32-standard-wave-and-beacon-schedule.md:54",
+    ),
+    dict(
+        dir="maps",
+        selector=("any_file",),
+        items=1,
+        aggregates=None,
+        # One MGC-01 definition; the destructible-rock and health-pack values
+        # are fields of it, not a separate world-props file.
+        label="standard map generation contract (world props folded in as fields)",
+        source="docs/51-standard-map-generation-contract.md:1 + docs/72-player-survivability-and-damage-baseline.md:180",
+    ),
+]
+
+# --------------------------------------------------------------------------
+# A13 - row counts inside aggregate files.
+#
+# "array_at_path" sums the lengths of arrays whose JSON path matches the
+# regex, so the key names are discovered from the data rather than assumed.
+# --------------------------------------------------------------------------
+
+PROBES = [
+    dict(
+        dir="encounters",
+        label="35 minute rows (minutes 0-34)",
+        expected=35,
+        kind="array_at_path",
+        pattern=r"\.minute_rows$",
+        source="docs/32-standard-wave-and-beacon-schedule.md:54",
+    ),
+    dict(
+        dir="encounters",
+        label="Hyper Gold threat-beacon responses",
+        expected=4,
+        kind="array_at_path",
+        pattern=r"beacon[^.]*\.responses$",
+        source="docs/32-standard-wave-and-beacon-schedule.md:100",
+    ),
+    dict(
+        dir="encounters",
+        label="formation grammar entries",
+        expected=7,
+        kind="array_at_path",
+        pattern=r"^\$\.(?:spawn_)?formations$",
+        source="docs/32-standard-wave-and-beacon-schedule.md:27",
+    ),
+    dict(
+        dir="maps",
+        label="map generation contract file",
+        expected=1,
+        kind="files_matching",
+        pattern=r"contract",
+        source="docs/51-standard-map-generation-contract.md:1",
+    ),
+    dict(
+        dir="maps",
+        label="world prop families present as fields (destructible rock, health pack)",
+        expected=2,
+        kind="key_families",
+        patterns=(r"destructible_rock|rock", r"health_pack"),
+        source="docs/72-player-survivability-and-damage-baseline.md:180 (health pack) + :190 (rock)",
+    ),
+]
+
+# --------------------------------------------------------------------------
+# A14 - doc-stated grand totals the JSON must reproduce
+# --------------------------------------------------------------------------
+
+POWERUP_TOTAL_HYPER_GOLD = 9450  # docs/62-permanent-powerup-catalog.md:35
+UNLOCK_TOTAL_HYPER_GOLD = 2150  # docs/63-permanent-option-unlock-catalog.md:48
+
+# --------------------------------------------------------------------------
+# A16 / A17 - reconciliation heuristics
+# --------------------------------------------------------------------------
+
+PERCENT_LITERAL = re.compile(r"[-+]?\d+(?:[.,]\d+)?\s*%")
+PERCENT_COMPLIANT_KEY = re.compile(r"(?:^|_)percent(?:_points)?$")
+FORMULA_KEY = re.compile(r"(?:^|_)(?:formula|formulas|expression|equation)s?$")
+# A pure algebraic expression: operators present, no word longer than three
+# letters (so prose containing a formula is not flagged), short.
+FORMULA_EXPRESSION = re.compile(r"^[\s\w().,+*/^×·÷-]{3,60}$")
+# Deliberately narrow, to keep the warning list actionable. A stable ID token
+# ("EN-01"), a line range ("65-71"), a ratio ("8/10"), and a bare percentage
+# ("+3%") are NOT formulas, so plain +, - and / never qualify on their own. A
+# value qualifies only if it contains a digit plus an explicit multiplicative or
+# exponent operator, or an implicit coefficient in front of a parenthesis as in
+# "5n(n + 1)". Formulas written with only + and - under a key whose name does
+# not say formula/expression/equation are therefore not detected here.
+FORMULA_OPERATOR = re.compile(r"[*^×·÷]|\d\s*[A-Za-z]?\s*\(")
+LONG_WORD = re.compile(r"[A-Za-z]{4,}")
+
+failures: list[str] = []
+warnings: list[str] = []
+
+
+def fail(msg: str) -> None:
+    failures.append(msg)
+
+
+def warn(msg: str) -> None:
+    warnings.append(msg)
+
+
+def rel(p: Path) -> str:
+    try:
+        return str(p.relative_to(REPO_ROOT))
+    except ValueError:
+        return str(p)
+
+
+# --------------------------------------------------------------------------
+# A1 - parse everything, rejecting duplicate object properties
+# --------------------------------------------------------------------------
+
+
+def _no_duplicate_keys(pairs):
+    seen: dict[str, int] = {}
+    for key, _ in pairs:
+        seen[key] = seen.get(key, 0) + 1
+    dupes = sorted(k for k, n in seen.items() if n > 1)
+    if dupes:
+        raise ValueError(f"duplicate object properties: {dupes}")
+    return dict(pairs)
+
+
+def load_json(path: Path):
+    """Return the parsed document, or None after recording a failure."""
+    try:
+        with path.open(encoding="utf-8") as fh:
+            return json.load(fh, object_pairs_hook=_no_duplicate_keys)
+    except (json.JSONDecodeError, UnicodeDecodeError, ValueError) as exc:
+        fail(f"PARSE ERROR {rel(path)}: {exc}")
+        return None
+
+
+def load_definitions() -> dict[Path, object]:
+    """All *.json under content/ except the non-definition directories."""
+    docs: dict[Path, object] = {}
+    if not CONTENT.is_dir():
+        fail(f"content/ directory not found at {CONTENT}")
+        return docs
+    for path in sorted(CONTENT.rglob("*.json")):
+        parts = path.relative_to(CONTENT).parts
+        if parts and parts[0] in NON_DEFINITION_DIRS:
+            continue
+        doc = load_json(path)
+        if doc is not None:
+            docs[path] = doc
+    return docs
+
+
+# --------------------------------------------------------------------------
+# traversal helpers
+# --------------------------------------------------------------------------
+
+
+def walk(obj, path="$"):
+    """Yield (json_path, key_or_None, value) for every node."""
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            yield f"{path}.{key}", key, value
+            yield from walk(value, f"{path}.{key}")
+    elif isinstance(obj, list):
+        for index, value in enumerate(obj):
+            yield f"{path}[{index}]", None, value
+            yield from walk(value, f"{path}[{index}]")
+
+
+def files_in(directory: str, docs: dict[Path, object]) -> dict[Path, object]:
+    base = CONTENT / directory
+    return {p: d for p, d in docs.items() if p.parent == base or base in p.parents}
+
+
+def is_item(doc, selector) -> bool:
+    kind = selector[0]
+    if kind == "any_file":
+        return True
+    if not isinstance(doc, dict):
+        return False
+    if kind == "id_regex":
+        value = doc.get("id")
+        return isinstance(value, str) and re.match(selector[1], value) is not None
+    if kind == "has_key":
+        return selector[1] in doc
+    raise ValueError(f"unknown selector {selector!r}")
+
+
+# --------------------------------------------------------------------------
+# A9 - document ID and heading-anchor index built from docs/ front matter
+# --------------------------------------------------------------------------
+
+FENCE = re.compile(r"^\s*(?:```|~~~)")
+HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*#*\s*$")
+
+
+def slugify(heading: str) -> str:
+    """GitHub-compatible heading slug.
+
+    Formatting is stripped, the text is lowercased, punctuation other than
+    hyphens/underscores is deleted, and each remaining whitespace character
+    becomes one hyphen. Runs of whitespace are NOT collapsed: a heading such
+    as "BOSS-01 - Riftjaw" written with an em dash slugs to
+    "boss-01--riftjaw", because the dash is deleted and both surrounding
+    spaces survive as hyphens.
+    """
+    text = re.sub(r"`([^`]*)`", r"\1", heading)
+    text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", text)
+    text = re.sub(r"[*~]", "", text)
+    text = text.strip().lower()
+    text = re.sub(r"[^\w\s-]", "", text)
+    return re.sub(r"\s", "-", text)
+
+
+def build_doc_index() -> dict[str, dict]:
+    """Map doc_id -> {"path": ..., "anchors": {slug, ...}}."""
+    index: dict[str, dict] = {}
+    if not DOCS.is_dir():
+        fail(f"docs/ directory not found at {DOCS}")
+        return index
+    for path in sorted(DOCS.rglob("*.md")):
+        lines = path.read_text(encoding="utf-8").splitlines()
+        if not lines or lines[0].strip() != "---":
+            continue
+        doc_id = None
+        for line in lines[1:]:
+            if line.strip() == "---":
+                break
+            match = re.match(r"\s*doc_id\s*:\s*(\S+)\s*$", line)
+            if match:
+                doc_id = match.group(1).strip("\"'")
+        if not doc_id:
+            continue
+        anchors: dict[str, int] = {}
+        in_fence = False
+        for line in lines:
+            if FENCE.match(line):
+                in_fence = not in_fence
+                continue
+            if in_fence:
+                continue
+            match = HEADING.match(line)
+            if not match:
+                continue
+            slug = slugify(match.group(2))
+            if not slug:
+                continue
+            count = anchors.get(slug, 0)
+            anchors[slug] = count + 1
+        expanded = set()
+        for slug, count in anchors.items():
+            expanded.add(slug)
+            for n in range(1, count):
+                expanded.add(f"{slug}-{n}")
+        if doc_id in index:
+            fail(
+                f"duplicate doc_id '{doc_id}' declared by {rel(index[doc_id]['path'])} "
+                f"and {rel(path)}"
+            )
+            continue
+        index[doc_id] = dict(path=path, anchors=expanded)
+    return index
+
+
+def split_source_ref(ref: str) -> tuple[str, str | None]:
+    """'field.path: DOC-ID#anchor' -> ('DOC-ID', 'anchor')."""
+    target = ref.split(": ", 1)[1] if ": " in ref else ref
+    target = target.strip()
+    if "#" in target:
+        doc_id, anchor = target.split("#", 1)
+        return doc_id.strip(), anchor.strip()
+    return target, None
+
+
+# --------------------------------------------------------------------------
+# A2-A9 - per-definition checks
+# --------------------------------------------------------------------------
+
+
+def check_definitions(docs: dict[Path, object], doc_index: dict[str, dict]) -> dict:
+    stats = dict(
+        checked=0,
+        missing_id=[],
+        null_id=[],
+        no_id=set(),
+        no_name_key=set(),
+        source_refs=0,
+        percent_hits={},
+        formula_hits={},
+        key_refs=set(),
+        envelope_key_refs=set(),
+    )
+    for path, doc in sorted(docs.items()):
+        name = rel(path)
+        if not isinstance(doc, dict):
+            fail(f"{name}: top-level JSON value is {type(doc).__name__}, expected an object")
+            continue
+        stats["checked"] += 1
+
+        # ---- A5/A6 id: absent or null is a warning, never a failure ----
+        if "id" not in doc:
+            stats["missing_id"].append(name)
+            stats["no_id"].add(name)
+            warn(f"{name}: no top-level 'id' (no stable ID assigned by any document, 40:80)")
+        elif doc["id"] is None:
+            stats["null_id"].append(name)
+            stats["no_id"].add(name)
+            warn(f"{name}: top-level 'id' is null (no stable ID assigned by any document, 40:80)")
+        elif not isinstance(doc["id"], str) or not doc["id"].strip():
+            fail(f"{name}: 'id' is {doc['id']!r}, expected a non-empty string (40:80)")
+
+        # ---- A2 envelope ----
+        for field in ("schema_version", "content_version"):
+            value = doc.get(field)
+            if field not in doc:
+                fail(f"{name}: missing required '{field}' (40:81-82)")
+            elif isinstance(value, bool) or not isinstance(value, int):
+                fail(f"{name}: '{field}' is {value!r}, expected an integer (40:81-82)")
+
+        if "status" not in doc:
+            fail(f"{name}: missing required 'status' (40:83)")
+        elif doc["status"] not in STATUS_VOCABULARY:
+            fail(
+                f"{name}: status {doc['status']!r} is not one of "
+                f"{list(STATUS_VOCABULARY)} (40:83)"
+            )
+
+        if "tags" not in doc:
+            fail(f"{name}: missing required 'tags' array (40:86)")
+        elif not isinstance(doc["tags"], list):
+            fail(f"{name}: 'tags' is {type(doc['tags']).__name__}, expected an array (40:86)")
+
+        if "source_refs" not in doc:
+            fail(f"{name}: missing required 'source_refs' array (40:87)")
+        elif not isinstance(doc["source_refs"], list) or not doc["source_refs"]:
+            fail(f"{name}: 'source_refs' must be a non-empty array (40:87)")
+        elif not all(isinstance(r, str) and r.strip() for r in doc["source_refs"]):
+            fail(f"{name}: every 'source_refs' element must be a non-empty string (40:87)")
+        else:
+            # ---- A9 resolution ----
+            for ref in doc["source_refs"]:
+                stats["source_refs"] += 1
+                doc_id, anchor = split_source_ref(ref)
+                entry = doc_index.get(doc_id)
+                if entry is None:
+                    fail(
+                        f"{name}: source_refs {ref!r} names doc_id {doc_id!r}, which no file "
+                        f"under docs/ declares in its front matter (40:87)"
+                    )
+                    continue
+                if anchor and anchor not in entry["anchors"]:
+                    fail(
+                        f"{name}: source_refs {ref!r} anchor '#{anchor}' is not a heading in "
+                        f"{rel(entry['path'])} (40:87)"
+                    )
+
+        # ---- A3 name_key is conditional on the definition being player-facing ----
+        if "name_key" not in doc:
+            stats["no_name_key"].add(name)
+            warn(
+                f"{name}: no 'name_key'; accepted only for a definition with no player-facing "
+                f"name, with the compiler supplying the default (40:84, 40:90)"
+            )
+        elif not isinstance(doc["name_key"], str) or not doc["name_key"].strip():
+            fail(
+                f"{name}: 'name_key' is {doc['name_key']!r}; when present it must be a non-empty "
+                f"string (40:84)"
+            )
+
+        # ---- A3 summary_key is conditional ----
+        if "summary_key" in doc and (
+            not isinstance(doc["summary_key"], str) or not doc["summary_key"].strip()
+        ):
+            fail(
+                f"{name}: 'summary_key' is {doc['summary_key']!r}; when present it must be a "
+                f"non-empty string (40:85)"
+            )
+
+        # ---- A4 presentation_id must be absent ----
+        if "presentation_id" in doc:
+            fail(
+                f"{name}: 'presentation_id' is present ({doc['presentation_id']!r}); it must be "
+                f"omitted entirely until content/presentation/ exists (40:52, 40:88)"
+            )
+
+        # ---- A7/A8/A11/A16/A17 - one traversal ----
+        for jpath, key, value in walk(doc):
+            if key is None:
+                continue
+            if re.search(r"[A-Z]", key):
+                fail(f"{name}{jpath[1:]}: property name '{key}' contains uppercase (40:26)")
+            if key.startswith("_"):
+                fail(f"{name}{jpath[1:]}: property name '{key}' starts with '_' (40:26, 40:90)")
+            if key in FORBIDDEN_KEYS:
+                fail(
+                    f"{name}{jpath[1:]}: stale extraction metadata key '{key}'; provenance "
+                    f"belongs in source_refs (40:87, 40:90)"
+                )
+            if key.endswith("_key") and isinstance(value, str) and value.strip():
+                stats["key_refs"].add(value)
+                if key in ("name_key", "summary_key"):
+                    stats["envelope_key_refs"].add(value)
+            if key.endswith("_keys") and isinstance(value, list):
+                for element in value:
+                    if isinstance(element, str) and element.strip():
+                        stats["key_refs"].add(element)
+            if isinstance(value, str):
+                if PERCENT_LITERAL.search(value) and not PERCENT_COMPLIANT_KEY.search(key):
+                    stats["percent_hits"].setdefault(key, []).append(f"{name}{jpath[1:]}")
+                if looks_like_formula(key, value):
+                    stats["formula_hits"].setdefault(key, []).append(f"{name}{jpath[1:]}")
+    return stats
+
+
+def looks_like_formula(key: str, value: str) -> bool:
+    text = value.strip()
+    if not text:
+        return False
+    if FORMULA_KEY.search(key):
+        return True
+    if len(text) > 60 or LONG_WORD.search(text) or not re.search(r"\d", text):
+        return False
+    return bool(FORMULA_EXPRESSION.match(text) and FORMULA_OPERATOR.search(text))
+
+
+def check_expected_sets(stats: dict) -> list[tuple]:
+    """A19 - the exception sets must not drift silently."""
+    rows = []
+    for label, actual, expected, hint in (
+        (
+            "definitions with a null/absent id",
+            stats["no_id"],
+            ID_NULL_EXPECTED,
+            "ID_NULL_EXPECTED",
+        ),
+        (
+            "definitions omitting name_key",
+            stats["no_name_key"],
+            NAME_KEY_OMITTED,
+            "NAME_KEY_OMITTED",
+        ),
+    ):
+        unexpected = sorted(actual - expected)
+        resolved = sorted(expected - actual)
+        rows.append(
+            (
+                label,
+                len(expected),
+                f"{len(actual)} ({len(unexpected)} unexpected, {len(resolved)} resolved)",
+                "ok" if not unexpected and not resolved else "FAIL" if unexpected else "WARN",
+            )
+        )
+        if unexpected:
+            fail(
+                f"{len(unexpected)} definition(s) newly in '{label}' and not listed in {hint}: "
+                f"{unexpected}. Either fix the definition or add it to {hint} with the reason."
+            )
+        if resolved:
+            warn(
+                f"{len(resolved)} definition(s) listed in {hint} no longer belong there "
+                f"({label} no longer applies): {resolved}. Shrink {hint}."
+            )
+    return rows
+
+
+def report_reconciliation(stats: dict) -> None:
+    for key, hits in sorted(stats["percent_hits"].items()):
+        warn(
+            f"40:95 percentage points on a property not named *_percent: '{key}' "
+            f"({len(hits)} occurrence(s)) e.g. {', '.join(hits[:2])}"
+        )
+    for key, hits in sorted(stats["formula_hits"].items()):
+        warn(
+            f"40:99 formula held as a string rather than a registered formula kind plus "
+            f"parameters: '{key}' ({len(hits)} occurrence(s)) e.g. {', '.join(hits[:2])}"
+        )
+
+
+# --------------------------------------------------------------------------
+# A10/A11 - localization
+# --------------------------------------------------------------------------
+
+
+def check_localization(stats: dict) -> list[tuple]:
+    rows: list[tuple] = []
+    if not LOCALIZATION.is_file():
+        fail(
+            f"{rel(LOCALIZATION)} does not exist; every name_key/summary_key is therefore "
+            f"unresolvable and missing release strings are build errors (40:216)"
+        )
+        rows.append(("en.json present", "yes", "no", "FAIL"))
+        return rows
+
+    text = LOCALIZATION.read_text(encoding="utf-8")
+    try:
+        pairs_seen: list[str] = []
+
+        def capture(pairs):
+            pairs_seen.extend(k for k, _ in pairs)
+            return _no_duplicate_keys(pairs)
+
+        catalog = json.loads(text, object_pairs_hook=capture)
+    except (json.JSONDecodeError, ValueError) as exc:
+        fail(f"PARSE ERROR {rel(LOCALIZATION)}: {exc}")
+        rows.append(("en.json parses", "yes", "no", "FAIL"))
+        return rows
+    rows.append(("en.json parses (no duplicate keys)", "yes", "yes", "ok"))
+
+    if not isinstance(catalog, dict):
+        fail(f"{rel(LOCALIZATION)}: top-level value is {type(catalog).__name__}, expected an object")
+        return rows
+
+    keys = list(catalog.keys())
+    nested = [k for k, v in catalog.items() if not isinstance(v, str)]
+    rows.append(("en.json is flat", 0, f"{len(nested)} non-string value(s)", "ok" if not nested else "FAIL"))
+    if nested:
+        fail(
+            f"{rel(LOCALIZATION)}: {len(nested)} key(s) hold non-string values; the catalog is "
+            f"flat key -> string (40:211): {nested[:10]}"
+        )
+
+    unsorted_at = [
+        (keys[i], keys[i + 1]) for i in range(len(keys) - 1) if keys[i] > keys[i + 1]
+    ]
+    rows.append(
+        ("en.json lexically sorted", 0, f"{len(unsorted_at)} inversion(s)", "ok" if not unsorted_at else "FAIL")
+    )
+    if unsorted_at:
+        fail(
+            f"{rel(LOCALIZATION)}: not lexically sorted, {len(unsorted_at)} inversion(s), "
+            f"first at {unsorted_at[0][0]!r} before {unsorted_at[0][1]!r} (40:28)"
+        )
+
+    present = set(keys)
+    envelope_missing = sorted(stats["envelope_key_refs"] - present)
+    other_missing = sorted((stats["key_refs"] - stats["envelope_key_refs"]) - present)
+    orphans = sorted(present - stats["key_refs"])
+
+    rows.append(
+        (
+            "name_key/summary_key resolve",
+            len(stats["envelope_key_refs"]),
+            f"{len(stats['envelope_key_refs']) - len(envelope_missing)} resolved",
+            "ok" if not envelope_missing else "FAIL",
+        )
+    )
+    if envelope_missing:
+        fail(
+            f"{len(envelope_missing)} name_key/summary_key value(s) have no string in "
+            f"{rel(LOCALIZATION)} (40:216): {envelope_missing[:15]}"
+        )
+
+    rows.append(
+        (
+            "other *_key references resolve",
+            len(stats["key_refs"] - stats["envelope_key_refs"]),
+            f"{len(other_missing)} unresolved",
+            "ok" if not other_missing else "FAIL",
+        )
+    )
+    if other_missing:
+        fail(
+            f"{len(other_missing)} other localization key reference(s) have no string in "
+            f"{rel(LOCALIZATION)} (40:216): {other_missing[:15]}"
+        )
+
+    rows.append(
+        ("no orphaned strings", 0, f"{len(orphans)} orphan(s)", "ok" if not orphans else "FAIL")
+    )
+    if orphans:
+        fail(
+            f"{len(orphans)} key(s) in {rel(LOCALIZATION)} are referenced by no definition "
+            f"(40:212 keys are tied to content IDs and UI roles): {orphans[:15]}"
+        )
+
+    rows.append(("en.json total strings", "", len(keys), "ok"))
+    return rows
+
+
+# --------------------------------------------------------------------------
+# A12 - per-directory counts
+# --------------------------------------------------------------------------
+
+
+def check_counts(docs: dict[Path, object]) -> list[tuple]:
+    rows = []
+    for spec in EXPECTATIONS:
+        directory = spec["dir"]
+        base = CONTENT / directory
+        present = files_in(directory, docs)
+        if not base.is_dir():
+            fail(f"missing catalog directory content/{directory}/ ({spec['source']})")
+            rows.append((directory, spec["label"], spec["items"], "DIR MISSING", "FAIL"))
+            continue
+        items = [p for p, d in present.items() if is_item(d, spec["selector"])]
+        others = [p for p in present if p not in items]
+        status = "ok"
+        if spec["items"] is not None and len(items) != spec["items"]:
+            status = "FAIL"
+            fail(
+                f"content/{directory}/: expected {spec['items']} entries, found {len(items)} "
+                f"({spec['label']}; source {spec['source']})"
+            )
+        if spec["aggregates"] is not None and len(others) != spec["aggregates"]:
+            status = "FAIL"
+            fail(
+                f"content/{directory}/: expected {spec['aggregates']} aggregate file(s), "
+                f"found {len(others)}: {[rel(p) for p in sorted(others)]} "
+                f"(source {spec['source']})"
+            )
+        rows.append(
+            (
+                directory,
+                spec["label"],
+                spec["items"],
+                f"{len(items)} entries + {len(others)} aggregate(s)",
+                status,
+            )
+        )
+    return rows
+
+
+# --------------------------------------------------------------------------
+# A13 - aggregate row probes
+# --------------------------------------------------------------------------
+
+
+def probe_array_at_path(present: dict[Path, object], pattern: str) -> tuple[int, list[str]]:
+    rx = re.compile(pattern)
+    total = 0
+    found: list[str] = []
+    for path, doc in sorted(present.items()):
+        for jpath, _, value in walk(doc):
+            if isinstance(value, list) and rx.search(jpath):
+                total += len(value)
+                found.append(f"{rel(path)}{jpath[1:]} ({len(value)})")
+    return total, found
+
+
+def check_probes(docs: dict[Path, object]) -> list[tuple]:
+    rows = []
+    for spec in PROBES:
+        present = files_in(spec["dir"], docs)
+        if spec["kind"] == "files_matching":
+            rx = re.compile(spec["pattern"])
+            matched = [p for p in sorted(present) if rx.search(p.stem)]
+            actual, found = len(matched), [rel(p) for p in matched]
+        elif spec["kind"] == "key_families":
+            found = []
+            for pattern in spec["patterns"]:
+                rx = re.compile(pattern)
+                hits = [
+                    f"{rel(path)}{jpath[1:]}"
+                    for path, doc in sorted(present.items())
+                    for jpath, key, _ in walk(doc)
+                    if key and rx.search(key)
+                ]
+                if hits:
+                    found.append(f"{pattern} -> {hits[0]}")
+            actual = len(found)
+        else:
+            actual, found = probe_array_at_path(present, spec["pattern"])
+        status = "ok" if actual == spec["expected"] else "FAIL"
+        if status == "FAIL":
+            fail(
+                f"content/{spec['dir']}/: expected {spec['expected']} {spec['label']}, "
+                f"found {actual} (source {spec['source']}; matched {found or 'nothing'})"
+            )
+        rows.append((spec["dir"], spec["label"], spec["expected"], actual, status))
+    return rows
+
+
+# --------------------------------------------------------------------------
+# A14 - doc-stated totals recomputed from the JSON
+# --------------------------------------------------------------------------
+
+
+def numbers_under(obj, key_pattern: str) -> list[float]:
+    rx = re.compile(key_pattern)
+    out: list[float] = []
+    for _, key, value in walk(obj):
+        if key and rx.search(key) and not isinstance(value, bool) and isinstance(value, (int, float)):
+            out.append(value)
+    return out
+
+
+def check_totals(docs: dict[Path, object]) -> list[tuple]:
+    rows = []
+
+    rank_prices: list[float] = []
+    stated_totals: list[float] = []
+    for path, doc in sorted(files_in("powerups", docs).items()):
+        if not isinstance(doc, dict) or not isinstance(doc.get("id"), str):
+            continue
+        for _, key, value in walk(doc):
+            if key and re.match(r"^ranks?$", key) and isinstance(value, list):
+                for entry in value:
+                    if isinstance(entry, dict):
+                        rank_prices.extend(numbers_under(entry, r"^price(?:_|$)"))
+        stated_totals.extend(
+            value
+            for key, value in doc.items()
+            if re.match(r"^total_cost(?:_|$)", key)
+            and not isinstance(value, bool)
+            and isinstance(value, (int, float))
+        )
+
+    rank_sum = int(sum(rank_prices))
+    stated_sum = int(sum(stated_totals))
+    rows.append(
+        (
+            f"PowerUp rank prices ({len(rank_prices)} rank rows)",
+            POWERUP_TOTAL_HYPER_GOLD,
+            rank_sum,
+            "ok" if rank_sum == POWERUP_TOTAL_HYPER_GOLD else "FAIL",
+        )
+    )
+    if rank_sum != POWERUP_TOTAL_HYPER_GOLD:
+        fail(
+            f"PowerUp rank prices sum to {rank_sum} Hyper Gold across {len(rank_prices)} rank "
+            f"rows, expected {POWERUP_TOTAL_HYPER_GOLD} (docs/62-permanent-powerup-catalog.md:35)"
+        )
+    rows.append(
+        (
+            f"PowerUp stated per-entry totals ({len(stated_totals)} entries)",
+            POWERUP_TOTAL_HYPER_GOLD,
+            stated_sum,
+            "ok" if stated_sum == POWERUP_TOTAL_HYPER_GOLD else "FAIL",
+        )
+    )
+    if stated_sum != POWERUP_TOTAL_HYPER_GOLD:
+        fail(
+            f"PowerUp per-entry total costs sum to {stated_sum} Hyper Gold, expected "
+            f"{POWERUP_TOTAL_HYPER_GOLD} (docs/62-permanent-powerup-catalog.md:35)"
+        )
+
+    unlock_costs: list[float] = []
+    for _, doc in sorted(files_in("unlocks", docs).items()):
+        if not isinstance(doc, dict) or not isinstance(doc.get("id"), str):
+            continue
+        if not re.match(r"^UNL-\d{2}$", doc["id"]):
+            continue
+        found = [
+            value
+            for key, value in doc.items()
+            if re.match(r"^(?:unlock_)?cost(?:_|$)", key)
+            and not isinstance(value, bool)
+            and isinstance(value, (int, float))
+        ]
+        if len(found) == 1:
+            unlock_costs.append(found[0])
+        elif not found:
+            fail(f"unlock {doc['id']}: no numeric top-level cost field found")
+        else:
+            fail(f"unlock {doc['id']}: ambiguous top-level cost fields {found}")
+    unlock_sum = int(sum(unlock_costs))
+    rows.append(
+        (
+            f"Option unlock costs ({len(unlock_costs)} unlocks)",
+            UNLOCK_TOTAL_HYPER_GOLD,
+            unlock_sum,
+            "ok" if unlock_sum == UNLOCK_TOTAL_HYPER_GOLD else "FAIL",
+        )
+    )
+    if unlock_sum != UNLOCK_TOTAL_HYPER_GOLD:
+        fail(
+            f"option unlock costs sum to {unlock_sum} Hyper Gold across {len(unlock_costs)} "
+            f"unlocks, expected {UNLOCK_TOTAL_HYPER_GOLD} "
+            f"(docs/63-permanent-option-unlock-catalog.md:48)"
+        )
+    return rows
+
+
+# --------------------------------------------------------------------------
+# A18 - derived-vs-authored regression guard
+#
+# Only the one known transcription bug is special-cased. 12 s is the DERIVED
+# time for three Sentry Pods to exist at a 6 s cadence with the first pod
+# immediate; it is not an authored value, and docs/71:83 authors only "One pod
+# every 6 s". A generic derived-value detector is not possible without schemas.
+# --------------------------------------------------------------------------
+
+SENTRY_POD_WEAPON_ID = "W-BE"
+SENTRY_POD_DEPLOYMENT_SECONDS = 6.0  # docs/71-initial-weapon-numeric-catalog.md:83
+DERIVED_DEPLOYMENT_SECONDS = 12  # derived from 6 s x (3 pods - 1), never authored
+DEPLOYMENT_KEY = re.compile(r"(?i)deploy|ramp")
+DEPLOYMENT_INTERVAL_KEY = re.compile(r"(?i)deploy.*(?:interval|cadence|seconds|period)")
+
+
+def check_derived_values(docs: dict[Path, object]) -> list[tuple]:
+    rows = []
+    banned_hits: list[str] = []
+    for path, doc in sorted(files_in("weapons", docs).items()):
+        for jpath, key, value in walk(doc):
+            if (
+                key
+                and DEPLOYMENT_KEY.search(key)
+                and not isinstance(value, bool)
+                and isinstance(value, (int, float))
+                and value == DERIVED_DEPLOYMENT_SECONDS
+            ):
+                banned_hits.append(f"{rel(path)}{jpath[1:]} = {value}")
+    rows.append(
+        (
+            "no authored 12 s deployment/ramp value in content/weapons/",
+            0,
+            len(banned_hits),
+            "ok" if not banned_hits else "FAIL",
+        )
+    )
+    if banned_hits:
+        fail(
+            f"{len(banned_hits)} deployment/ramp field(s) in content/weapons/ hold "
+            f"{DERIVED_DEPLOYMENT_SECONDS}, which is DERIVED from the {SENTRY_POD_DEPLOYMENT_SECONDS} s "
+            f"cadence, not authored (docs/71-initial-weapon-numeric-catalog.md:83, 40:100): "
+            f"{banned_hits}"
+        )
+
+    intervals: list[tuple[str, object]] = []
+    for path, doc in sorted(files_in("weapons", docs).items()):
+        if not isinstance(doc, dict) or doc.get("id") != SENTRY_POD_WEAPON_ID:
+            continue
+        for jpath, key, value in walk(doc):
+            if (
+                key
+                and DEPLOYMENT_INTERVAL_KEY.search(key)
+                and not isinstance(value, bool)
+                and isinstance(value, (int, float))
+            ):
+                intervals.append((f"{rel(path)}{jpath[1:]}", value))
+    if not intervals:
+        warn(
+            f"{SENTRY_POD_WEAPON_ID}: no numeric deployment-interval property found, so the "
+            f"{SENTRY_POD_DEPLOYMENT_SECONDS} s cadence at "
+            f"docs/71-initial-weapon-numeric-catalog.md:83 could not be checked "
+            f"(field names are unvalidated until content/schemas/ exists)"
+        )
+        rows.append(("W-BE deployment interval == 6.0 s", SENTRY_POD_DEPLOYMENT_SECONDS, "no field found", "WARN"))
+        return rows
+    wrong = [f"{p} = {v}" for p, v in intervals if float(v) != SENTRY_POD_DEPLOYMENT_SECONDS]
+    rows.append(
+        (
+            "W-BE deployment interval == 6.0 s",
+            SENTRY_POD_DEPLOYMENT_SECONDS,
+            ", ".join(f"{v}" for _, v in intervals),
+            "ok" if not wrong else "FAIL",
+        )
+    )
+    if wrong:
+        fail(
+            f"{SENTRY_POD_WEAPON_ID} Sentry Pod deployment interval must be "
+            f"{SENTRY_POD_DEPLOYMENT_SECONDS} s (docs/71-initial-weapon-numeric-catalog.md:83): "
+            f"{wrong}"
+        )
+    return rows
+
+
+# --------------------------------------------------------------------------
+# A15 - referential integrity (reference key names discovered from the data)
+# --------------------------------------------------------------------------
+
+
+def ids_in(directory: str, docs: dict[Path, object], pattern: str) -> set[str]:
+    rx = re.compile(pattern)
+    out: set[str] = set()
+    for _, doc in files_in(directory, docs).items():
+        if isinstance(doc, dict):
+            value = doc.get("id")
+            if isinstance(value, str) and rx.match(value):
+                out.add(value)
+    return out
+
+
+def check_references(docs: dict[Path, object]) -> list[tuple]:
+    rows = []
+    weapon_ids = ids_in("weapons", docs, r"^W-[A-F]{2}$")
+    enemy_ids = ids_in("enemies", docs, r"^EN-\d{2}$")
+
+    # branches -> weapons: any *weapon_id property, key name discovered
+    dangling: list[str] = []
+    refs = 0
+    keys_used: set[str] = set()
+    for path, doc in sorted(files_in("branches", docs).items()):
+        for _, key, value in walk(doc):
+            if key and re.search(r"(?:^|_)weapon_id$", key) and isinstance(value, str):
+                keys_used.add(key)
+                refs += 1
+                if value not in weapon_ids:
+                    dangling.append(f"{rel(path)}.{key} -> {value}")
+    rows.append(
+        (
+            f"branches {sorted(keys_used) or '(no key found)'} -> content/weapons/",
+            refs,
+            len(dangling),
+            "ok" if refs and not dangling else "FAIL" if dangling else "NO REFS",
+        )
+    )
+    if dangling:
+        fail(f"{len(dangling)} branch weapon reference(s) do not resolve: {dangling[:10]}")
+    if not refs:
+        fail("no branch -> weapon reference property found in content/branches/ (40:199)")
+
+    # encounters -> enemies: structured *enemy_id(s) properties plus any EN-nn token
+    dangling = []
+    refs = 0
+    keys_used = set()
+    seen: set[str] = set()
+    for path, doc in sorted(files_in("encounters", docs).items()):
+        for _, key, value in walk(doc):
+            tokens: list[str] = []
+            if key and re.search(r"(?:^|_)enemy_ids?$", key):
+                keys_used.add(key)
+                if isinstance(value, str):
+                    tokens = [value]
+                elif isinstance(value, list):
+                    tokens = [v for v in value if isinstance(v, str)]
+            elif isinstance(value, str):
+                tokens = re.findall(r"\bEN-\d{2}\b", value)
+            for token in tokens:
+                refs += 1
+                if token not in enemy_ids and token not in seen:
+                    seen.add(token)
+                    dangling.append(f"{rel(path)} -> {token}")
+    rows.append(
+        (
+            f"encounters {sorted(keys_used) or '(no key found)'} -> content/enemies/",
+            refs,
+            len(dangling),
+            "ok" if refs and not dangling else "FAIL" if dangling else "NO REFS",
+        )
+    )
+    if dangling:
+        fail(f"encounter schedule references enemy IDs with no enemy file: {dangling[:15]}")
+    if not refs:
+        fail("no enemy reference found in content/encounters/ (40:199)")
+
+    # mechs -> signature weapon
+    dangling = []
+    refs = 0
+    keys_used = set()
+    for path, doc in sorted(files_in("mechs", docs).items()):
+        for _, key, value in walk(doc):
+            if key and "signature" in key and "weapon" in key and isinstance(value, str):
+                keys_used.add(key)
+                refs += 1
+                if value not in weapon_ids:
+                    dangling.append(f"{rel(path)}.{key} -> {value}")
+    rows.append(
+        (
+            f"mechs {sorted(keys_used) or '(no key found)'} -> content/weapons/",
+            refs,
+            len(dangling),
+            "ok" if refs and not dangling else "FAIL" if dangling else "NO REFS",
+        )
+    )
+    if dangling:
+        fail(f"{len(dangling)} mech signature-weapon reference(s) do not resolve: {dangling}")
+    if not refs:
+        fail("no mech signature-weapon reference property found in content/mechs/ (40:199)")
+    return rows
+
+
+# --------------------------------------------------------------------------
+# reporting
+# --------------------------------------------------------------------------
+
+
+def table(title: str, headers: tuple, rows: list[tuple]) -> None:
+    print(f"\n{title}")
+    if not rows:
+        print("  (nothing to report)")
+        return
+    cols = [str(h) for h in headers]
+    body = [[("" if c is None else str(c)) for c in row] for row in rows]
+    widths = [max(len(cols[i]), *(len(r[i]) for r in body)) for i in range(len(cols))]
+    print("  " + "  ".join(c.ljust(widths[i]) for i, c in enumerate(cols)))
+    print("  " + "  ".join("-" * widths[i] for i in range(len(cols))))
+    for row in body:
+        print("  " + "  ".join(row[i].ljust(widths[i]) for i in range(len(cols))))
+
+
+def main() -> int:
+    print("Content verification (envelope, naming, references, totals, localization)")
+    print(f"repo:    {REPO_ROOT}")
+    print(f"content: {rel(CONTENT)}")
+
+    doc_index = build_doc_index()
+    print(f"docs:    {len(doc_index)} doc_id(s) indexed from {rel(DOCS)}")
+
+    docs = load_definitions()
+    print(f"parsed:  {len(docs)} definition file(s)")
+
+    stats = check_definitions(docs, doc_index)
+    set_rows = check_expected_sets(stats)
+    report_reconciliation(stats)
+    count_rows = check_counts(docs)
+    probe_rows = check_probes(docs)
+    total_rows = check_totals(docs)
+    ref_rows = check_references(docs)
+    derived_rows = check_derived_values(docs)
+    loc_rows = check_localization(stats)
+
+    table(
+        "A12 Per-directory entry counts",
+        ("directory", "catalog", "expected", "actual", "status"),
+        count_rows,
+    )
+    table("A13 Aggregate row probes", ("directory", "rows", "expected", "actual", "status"), probe_rows)
+    table("A14 Doc-stated totals (Hyper Gold)", ("total", "expected", "actual", "status"), total_rows)
+    table("A15 Referential integrity", ("check", "refs", "dangling", "status"), ref_rows)
+    table("A18 Derived-vs-authored guard", ("check", "expected", "actual", "status"), derived_rows)
+    table("A10/A11 Localization", ("check", "expected", "actual", "status"), loc_rows)
+    table("A19 Expected exception sets", ("set", "expected", "actual", "status"), set_rows)
+
+    print(f"\nA2-A9 envelope/naming: {stats['checked']} definition(s) checked, "
+          f"{stats['source_refs']} source_refs resolved against docs/")
+    print(f"A5/A6 definitions with no stable id ({len(stats['no_id'])}):")
+    for name in sorted(stats["no_id"]):
+        kind = "absent" if name in stats["missing_id"] else "null"
+        print(f"  - {name} ({kind})")
+    print(f"A3 definitions omitting name_key ({len(stats['no_name_key'])}):")
+    for name in sorted(stats["no_name_key"]):
+        print(f"  - {name}")
+
+    if failures:
+        print(f"\nFAILURES ({len(failures)}):")
+        for message in failures:
+            print(f"  x {message}")
+
+    if warnings:
+        print(f"\nWARNINGS ({len(warnings)}):")
+        for message in warnings:
+            print(f"  ! {message}")
+
+    print(f"\nRESULT: {'FAIL' if failures else 'PASS'} "
+          f"({len(failures)} failure(s), {len(warnings)} warning(s))")
+    return 1 if failures else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

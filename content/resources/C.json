@@ -1,33 +1,22 @@
 {
-  "_provenance": {
-    "doc": "docs/61-specialized-resource-identities.md",
-    "section": "Accepted identity map",
-    "lines": "20-27",
-    "extractedFor": "DAT-007",
-    "notes": [
-      "The table row for this material is line 24.",
-      "Resources carry no RES-* stable ID in any design doc; only the letter codes A-F (docs/61-specialized-resource-identities.md:18). RES-001..RES-006 are already taken by docs/research/, so no new RES-* ID was minted: `id` is the doc's own letter code verbatim.",
-      "docs/technical/40-content-data-and-validation.md:106 expects a `maximum safe count` on every resource definition; no gameplay doc states one, so maximumSafeCount is null.",
-      "Localization keys (name_key / summary_key per docs/technical/40-content-data-and-validation.md:76-89) are not authored here; content/localization/ is owned by a separate stream.",
-      "primaryColor is a presentation default, not part of the resource identity (docs/61-specialized-resource-identities.md:29): lighting, biome palettes, and visual effects may shift the rendered value while the other recognition channels are preserved.",
-      "docs/60-resources-crafting-progression.md:124-131 restates looseAssociation as a `Loose personality` column with the same content plus a serial `and` (e.g. 'Precision, focus, stable fields, and anchoring'); the authoritative docs/61 wording is used here.",
-      "The per-material prose sections (docs/61-specialized-resource-identities.md:31-77) and the `Accessibility and recognition standard` table (docs/61-specialized-resource-identities.md:109-116) are not transcribed here; those recognition cues belong to content/presentation/.",
-      "sharedEconomyTier is from docs/61-specialized-resource-identities.md:87 - specialized materials share the same economy tier and establish no global rarity or power hierarchy.",
-      "persistence is from docs/40-mining-and-extraction.md:90 - 'The specialized material and 50 common ore are run-local and are lost if unspent when the run ends.'",
-      "resonanceEffectName references the matching entry in geode-resonance-effects.json (resonance behavior registration per docs/technical/40-content-data-and-validation.md:106)."
-    ]
-  },
   "id": "C",
-  "playerFacingName": "Cinderglass",
-  "materialCharacter": "Dark glass with energetic internal fractures",
-  "looseAssociation": "Charge, conduction, propagation, controlled release",
-  "primaryColor": "Deep violet",
-  "iconAndSilhouetteCue": "Split diamond with a lightning fissure",
-  "audioCharacter": "Brittle crack followed by an electric snap",
-  "resourceClass": "specialized ordinary resource",
-  "inventoryScope": "run-local",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "resource.C.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-SPECIALIZED-RESOURCE-IDENTITIES#accepted-identity-map"
+  ],
+  "material_character": "Dark glass with energetic internal fractures",
+  "loose_association": "Charge, conduction, propagation, controlled release",
+  "primary_color": "Deep violet",
+  "icon_and_silhouette_cue": "Split diamond with a lightning fissure",
+  "audio_character": "Brittle crack followed by an electric snap",
+  "resource_class": "specialized ordinary resource",
+  "inventory_scope": "run-local",
   "persistence": "Run-local; unspent units are lost when the run ends",
-  "sharedEconomyTier": true,
-  "maximumSafeCount": null,
-  "resonanceEffectName": "Charged Payloads"
+  "shared_economy_tier": true,
+  "maximum_safe_count": null,
+  "resonance_effect_name": "Charged Payloads"
 }

@@ -1,20 +1,19 @@
 {
-  "_provenance": {
-    "doc": "docs/71-initial-weapon-numeric-catalog.md",
-    "section": "Seed Charges — Amplification — 2 Barysteel",
-    "lines": "282-287",
-    "extractedFor": "DAT-008",
-    "notes": [
-      "Branch sections in this document carry no standalone branch ID token; the heading supplies only name, class, and cost. The id is composed as <weaponId>-<branch-name-kebab-case>.",
-      "Section prose states no prerequisite. prerequisites is empty per docs/65-weapon-stat-and-branch-upgrades.md:50,66 (\"Branches have no stat-rank prerequisites\"; no rank, level, time, or boss prerequisite).",
-      "Exclusivity and irreversibility are not restated in this section; they come from docs/65-weapon-stat-and-branch-upgrades.md:56,68 and apply to all 45 branches.",
-      "Internally consistent: 4 micro-mines × 35% current Damage = the stated 140% parent damage for a fully used cluster."
-    ]
-  },
   "id": "W-BD-seed-charges",
-  "weaponId": "W-BD",
-  "weaponName": "Mine Layer",
-  "branchName": "Seed Charges",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-BD-seed-charges.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#seed-charges--amplification--2-barysteel",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#seed-charges--amplification--2-barysteel"
+  ],
+  "weapon_id": "W-BD",
+  "weapon_name": "Mine Layer",
   "class": "Amplification",
   "cost": {
     "resource": "Barysteel",
@@ -23,42 +22,34 @@
   "prerequisites": [],
   "exclusivity": {
     "scope": "weapon",
-    "mutuallyExclusiveWith": [
+    "mutually_exclusive_with": [
       "W-BD-selective-detonators",
       "W-BD-hunter-mines"
     ],
-    "irreversibleWithinRun": true,
-    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run.",
-    "refs": [
-      "docs/65-weapon-stat-and-branch-upgrades.md:56",
-      "docs/65-weapon-stat-and-branch-upgrades.md:68"
-    ]
+    "irreversible_within_run": true,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run."
   },
   "availability": {
-    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite.",
-    "refs": [
-      "docs/65-weapon-stat-and-branch-upgrades.md:50",
-      "docs/65-weapon-stat-and-branch-upgrades.md:66"
-    ]
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite."
   },
   "effects": {
-    "microMinesPerParentExplosion": 4,
-    "microMinePlacement": "evenly around the blast edge",
-    "microMineDamagePercentOfCurrentDamage": {
+    "micro_mines_per_parent_explosion": 4,
+    "micro_mine_placement": "evenly around the blast edge",
+    "micro_mine_damage_percent_of_current_damage": {
       "percent": 35
     },
-    "microMineBlastRadiusPercentOfCurrent": {
+    "micro_mine_blast_radius_percent_of_current": {
       "percent": 50
     },
-    "microMineArmSeconds": 0.25,
-    "microMineLifetimeSeconds": 4.0,
+    "micro_mine_arm_seconds": 0.25,
+    "micro_mine_lifetime_seconds": 4.0,
     "recursive": false,
-    "microMineCapacityMultiplierOfParentCapacity": 4,
-    "microMineCapacityOverflowBehavior": "the oldest expires when exceeded"
+    "micro_mine_capacity_multiplier_of_parent_capacity": 4,
+    "micro_mine_capacity_overflow_behavior": "the oldest expires when exceeded"
   },
-  "favorableSceneEffect": {
+  "favorable_scene_effect": {
     "magnitude": {
-      "addedDamagePercentOfParentDamage": {
+      "added_damage_percent_of_parent_damage": {
         "percent": 140
       }
     },
@@ -66,19 +57,15 @@
   },
   "rules": [
     {
-      "line": 284,
       "text": "A parent-mine explosion throws four micro-mines evenly around the blast edge."
     },
     {
-      "line": 285,
       "text": "Each micro-mine deals 35% current Damage, has 50% current blast radius, arms in 0.25 s, and expires after 4.0 s."
     },
     {
-      "line": 286,
       "text": "Micro-mines do not create more mines. Their separate capacity is four times current parent capacity; the oldest expires when exceeded."
     },
     {
-      "line": 287,
       "text": "A fully used cluster adds 140% parent damage, but the delayed spread makes that ceiling situational."
     }
   ]

@@ -1,70 +1,79 @@
 {
   "id": "UTL-B1",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "utility.UTL-B1.name",
+  "summary_key": "utility.UTL-B1.summary",
+  "tags": [],
+  "source_refs": [
+    "GDD-UTILITY-CATALOG#utl-b1--reinforced-bulkhead",
+    "external_numerics[]: GDD-INITIAL-MECH-CATALOG",
+    "external_numerics[]: GDD-PERMANENT-POWERUP-CATALOG"
+  ],
   "material": "Barysteel",
-  "utility": "Reinforced Bulkhead",
-  "primaryRole": "Survivability",
-  "installedToRank3": "+15 → +45 maximum Hull Integrity",
-  "description": "The bulkhead increases maximum Hull Integrity while preserving the mech's current missing-Hull amount.",
+  "primary_role": "Survivability",
+  "installed_to_rank_3": "+15 → +45 maximum Hull Integrity",
   "effect": {
-    "statNames": [
+    "stat_names": [
       "Maximum Hull Integrity"
     ],
-    "valueKind": "flat-additive-hull",
-    "stackingClassification": "Flat statistic changes apply before percentage modifiers. (docs/68-utility-catalog.md:253)"
+    "value_kind": "flat-additive-hull",
+    "stacking_classification": "Flat statistic changes apply before percentage modifiers. (docs/68-utility-catalog.md:253)"
   },
   "ranks": [
     {
       "state": "Installed",
-      "maximumHullIntegrity": 15
+      "maximum_hull_integrity": 15
     },
     {
       "state": "Rank 1",
-      "maximumHullIntegrity": 25
+      "maximum_hull_integrity": 25
     },
     {
       "state": "Rank 2",
-      "maximumHullIntegrity": 35
+      "maximum_hull_integrity": 35
     },
     {
       "state": "Rank 3",
-      "maximumHullIntegrity": 45
+      "maximum_hull_integrity": 45
     }
   ],
   "acquisition": {
-    "materialUnitCost": 1,
-    "utilitySlotsFilled": 1,
-    "rankCount": 3,
-    "rankOreCosts": [
+    "material_unit_cost": 1,
+    "utility_slots_filled": 1,
+    "rank_count": 3,
+    "rank_ore_costs": [
       50,
       100,
       150
     ],
-    "totalRankOreCost": 300,
-    "rankValuesAreTotalsNotCumulativeAdditions": true,
-    "uniqueInLoadout": true,
-    "hasBranches": false,
-    "hasAlternativeRecipes": false,
+    "total_rank_ore_cost": 300,
+    "rank_values_are_totals_not_cumulative_additions": true,
+    "unique_in_loadout": true,
+    "has_branches": false,
+    "has_alternative_recipes": false,
     "replaceable": false,
     "dismantlable": false,
     "sellable": false,
-    "refundableDuringRun": false,
-    "requiresManualActivation": false,
-    "previewsAllFourEffectTiers": true
+    "refundable_during_run": false,
+    "requires_manual_activation": false,
+    "previews_all_four_effect_tiers": true
   },
   "availability": {
-    "freshProfile": false,
-    "coverageRole": null,
-    "unlockId": "UNL-01",
-    "unlockName": "Advanced Utility Suite",
-    "unlockCostHyperGold": 600
+    "fresh_profile": false,
+    "coverage_role": null,
+    "unlock_id": "UNL-01",
+    "unlock_name": "Advanced Utility Suite",
+    "unlock_cost_hyper_gold": 600
   },
-  "effectRules": [
+  "effect_rules": [
     "Fabricating or ranking the bulkhead increases current and maximum Hull Integrity by the same amount. A mech missing 20 Hull before purchase remains 20 below its new maximum afterward.",
     "The increase combines with account and mech maximum-Hull modifiers and is shown in the fabrication preview.",
     "It supplies capacity rather than damage reduction or passive repair, keeping it distinct from Armor and Recovery."
   ],
-  "catalogWideRules": {
-    "sharedAcquisitionAndRankRules": [
+  "catalog_wide_rules": {
+    "shared_acquisition_and_rank_rules": [
       "Every non-radar utility costs one unit of its assigned specialized material and permanently fills one of three utility slots.",
       "Each begins at its listed Installed effect and has three common-ore ranks costing 50, 100, and 150 ore.",
       "The four values shown for a utility are its Installed, Rank 1, Rank 2, and Rank 3 totals—not cumulative additions.",
@@ -73,7 +82,7 @@
       "Fabrication previews all four effect tiers, the current build's affected systems, and any equipped weapon that receives no benefit from a weapon-support utility.",
       "The resource radar remains outside the material table: it costs 300 common ore, has no ranks, and retains its accepted seven-category directional behavior."
     ],
-    "modifierAndTimingRules": [
+    "modifier_and_timing_rules": [
       "Flat statistic changes apply before percentage modifiers. Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative.",
       "Attack rate is represented as attacks per second or equivalent frequency; a +20% attack-rate total produces 1.2 times the unmodified activation frequency.",
       "Recovery sources add in Hull Integrity per second.",
@@ -83,38 +92,16 @@
       "If a later relic explicitly replaces a statistic or rule, its description must state whether it overrides or combines with these utilities. Silent exceptions are not allowed."
     ]
   },
-  "externalNumerics": [
+  "external_numerics": [
     {
       "statement": "Bastion's 125 maximum Hull reaches 170 with a Rank 3 Reinforced Bulkhead (125 + 45).",
       "value": 170,
-      "_source": {
-        "doc": "docs/36-initial-mech-catalog.md",
-        "lines": "210",
-        "quote": "| Bastion | 125 maximum Hull | 170 with Reinforced Bulkhead |"
-      }
+      "quote": "| Bastion | 125 maximum Hull | 170 with Reinforced Bulkhead |"
     },
     {
       "statement": "Bastion's flat +25 maximum-Hull trait and Reinforced Bulkhead both apply after percentage maximum-Hull PowerUps.",
       "value": 25,
-      "_source": {
-        "doc": "docs/62-permanent-powerup-catalog.md",
-        "lines": "122",
-        "quote": "- Bastion's flat +25 trait and Reinforced Bulkhead apply afterward under their accepted flat-stat rules."
-      }
+      "quote": "- Bastion's flat +25 trait and Reinforced Bulkhead apply afterward under their accepted flat-stat rules."
     }
-  ],
-  "_provenance": {
-    "doc": "docs/68-utility-catalog.md",
-    "section": "UTL-B1 — Reinforced Bulkhead",
-    "lines": "86-99",
-    "extractedFor": "DAT-008",
-    "notes": [
-      "Overview-table row and per-utility rank table are both from docs/68-utility-catalog.md; the rank table is authoritative for the four tier values and the overview cell restates Installed and Rank 3.",
-      "acquisition mirrors the catalog-wide '## Shared acquisition and rank rules' at docs/68-utility-catalog.md:25-31; the 300-ore rank total is restated at docs/60-resources-crafting-progression.md:158.",
-      "catalogWideRules duplicates the two catalog-wide rule lists verbatim in every utility file because the mandated content layout (docs/technical/40-content-data-and-validation.md:34-63) provides no shared-rules file inside content/utilities/.",
-      "Markdown emphasis, code markers, and link syntax were removed from transcribed prose; wording is otherwise verbatim.",
-      "effect.stackingClassification is derived from the catalog-wide modifier rules at docs/68-utility-catalog.md:253-255, not from a dedicated doc field.",
-      "availability.coverageRole is null: the coverage-role column at docs/68-utility-catalog.md:265-272 exists only for the six fresh-profile utilities, and no doc assigns a coverage role to the six Advanced Utility Suite utilities. Logged as a gap."
-    ]
-  }
+  ]
 }

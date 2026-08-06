@@ -1,21 +1,19 @@
 {
-  "_provenance": {
-    "doc": "docs/71-initial-weapon-numeric-catalog.md",
-    "section": "Ball-Lightning Projector — Conversion — 2 Barysteel",
-    "lines": "367-372",
-    "extractedFor": "DAT-008",
-    "notes": [
-      "Branch sections in this document carry no standalone branch ID token; the heading supplies only name, class, and cost. The id is composed as <weaponId>-<branch-name-kebab-case>.",
-      "Section prose states no prerequisite. prerequisites is empty per docs/65-weapon-stat-and-branch-upgrades.md:50,66 (\"Branches have no stat-rank prerequisites\"; no rank, level, time, or boss prerequisite).",
-      "Exclusivity and irreversibility are not restated in this section; they come from docs/65-weapon-stat-and-branch-upgrades.md:56,68 and apply to all 45 branches.",
-      "Internally consistent: 8 hits × 16 rank-zero Arc damage = 128 per orb × 0.4 launches/s = the stated 51.2 rank-zero ideal single-target DPS.",
-      "Launch rate is stated as 0.4/s and \"exactly one fifth of the base Arc Emitter attack rate\" (2.000/s at rank zero); launchRateFractionOfBaseArcEmitterAttackRate records that one fifth as 0.2."
-    ]
-  },
   "id": "W-CD-ball-lightning-projector",
-  "weaponId": "W-CD",
-  "weaponName": "Arc Emitter",
-  "branchName": "Ball-Lightning Projector",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-CD-ball-lightning-projector.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#ball-lightning-projector--conversion--2-barysteel",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#ball-lightning-projector--conversion--2-barysteel"
+  ],
+  "weapon_id": "W-CD",
+  "weapon_name": "Arc Emitter",
   "class": "Conversion",
   "cost": {
     "resource": "Barysteel",
@@ -24,66 +22,54 @@
   "prerequisites": [],
   "exclusivity": {
     "scope": "weapon",
-    "mutuallyExclusiveWith": [
+    "mutually_exclusive_with": [
       "W-CD-total-conduction",
       "W-CD-disruption-current"
     ],
-    "irreversibleWithinRun": true,
-    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run.",
-    "refs": [
-      "docs/65-weapon-stat-and-branch-upgrades.md:56",
-      "docs/65-weapon-stat-and-branch-upgrades.md:68"
-    ]
+    "irreversible_within_run": true,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run."
   },
   "availability": {
-    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite.",
-    "refs": [
-      "docs/65-weapon-stat-and-branch-upgrades.md:50",
-      "docs/65-weapon-stat-and-branch-upgrades.md:66"
-    ]
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite."
   },
   "effects": {
-    "replacesDirectArcs": true,
-    "launchDirection": "along persistent mech facing",
-    "rankZeroOrbLaunchRatePerSecond": 0.4,
-    "launchRateFractionOfBaseArcEmitterAttackRate": 0.2,
-    "scalesWithAttackRateRanksAndGlobalModifiers": true,
-    "orbSpeedMPerSecond": 3,
-    "orbLifetimeSeconds": 4.0,
-    "orbEmissionsPerSecond": 2,
-    "maxDistinctTargetsPerEmission": 3,
-    "emissionRange": "current chain range",
-    "emissionDamagePercentOfCurrentDamage": {
+    "replaces_direct_arcs": true,
+    "launch_direction": "along persistent mech facing",
+    "rank_zero_orb_launch_rate_per_second": 0.4,
+    "launch_rate_fraction_of_base_arc_emitter_attack_rate": 0.2,
+    "scales_with_attack_rate_ranks_and_global_modifiers": true,
+    "orb_speed_m_per_s": 3,
+    "orb_lifetime_seconds": 4.0,
+    "orb_emissions_per_second": 2,
+    "max_distinct_targets_per_emission": 3,
+    "emission_range": "current chain range",
+    "emission_damage_percent_of_current_damage": {
       "percent": 100
     },
-    "maxHitsPerEnemyPerEmission": 1,
-    "appliesToBosses": true,
-    "passesThroughEnemies": true,
-    "passesThroughTerrainThatDoesNotBlockPlayerProjectiles": true,
-    "hitsPerOrbOnOneDurableTarget": 8,
-    "rankZeroIdealSingleTargetDps": 51.2
+    "max_hits_per_enemy_per_emission": 1,
+    "applies_to_bosses": true,
+    "passes_through_enemies": true,
+    "passes_through_terrain_that_does_not_block_player_projectiles": true,
+    "hits_per_orb_on_one_durable_target": 8,
+    "rank_zero_ideal_single_target_dps": 51.2
   },
-  "favorableSceneEffect": {
+  "favorable_scene_effect": {
     "magnitude": {
-      "rankZeroIdealSingleTargetDps": 51.2
+      "rank_zero_ideal_single_target_dps": 51.2
     },
     "qualitative": "moving targets or poor placement lower the result"
   },
   "rules": [
     {
-      "line": 369,
       "text": "Replaces direct arcs with a slow orb launched along persistent mech facing. Rank-zero orb launch rate is 0.4/s, exactly one fifth of the base Arc Emitter attack rate; attack-rate ranks and global modifiers scale it normally."
     },
     {
-      "line": 370,
       "text": "An orb moves at 3M/s for 4.0 s. Twice per second it emits current-Damage arcs to as many as three distinct enemies within current chain range."
     },
     {
-      "line": 371,
       "text": "The same enemy may be struck once per emission, including bosses. Orbs pass through enemies and terrain that does not explicitly block player projectiles."
     },
     {
-      "line": 372,
       "text": "A single orb can deal eight hits to one durable target over its life, yielding a rank-zero ideal of 51.2 single-target DPS at continuous launch cadence, while moving targets or poor placement lower the result."
     }
   ]

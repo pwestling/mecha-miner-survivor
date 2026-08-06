@@ -1,251 +1,150 @@
 {
-  "_provenance": {
-    "doc": "docs/71-initial-weapon-numeric-catalog.md",
-    "section": "Rank-Zero Values and Ore-Stat Increments",
-    "lines": "70-90",
-    "extractedFor": "DAT-007",
-    "notes": [
-      "`M` is one unmodified mech collision diameter, a relative spatial unit, not a metric distance (docs/71-initial-weapon-numeric-catalog.md:24); numeric keys therefore carry an `M` suffix rather than `Meters`.",
-      "Ore-stat units differ per stat, so each entry in `oreUpgradeableStats` carries an explicit `unit` field instead of encoding the unit in the key name.",
-      "`signatureMech` comes from docs/36-initial-mech-catalog.md:45, which is authoritative for the assignment. The `Signature mech` column of docs/66-weapon-catalog-and-resource-graph.md:39 still reads \"Initial signature; mech TBD\" and docs/weapons/README.md:20 only records Yes/No; both agree on signature membership but neither names the mech.",
-      "The `Status at DEC-075` column of docs/66-weapon-catalog-and-resource-graph.md:39 is deliberately not transcribed: docs/66-weapon-catalog-and-resource-graph.md:37 states DEC-125 moved every row to a different status, so the column is stale.",
-      "`favorableHordeDps` is an analytic scene estimate, not a cap; docs/71-initial-weapon-numeric-catalog.md:68 states the assumed simultaneous-victim counts and that benchmark captures supersede it.",
-      "The content envelope required by docs/technical/40-content-data-and-validation.md:76-89 (`schema_version`, `content_version`, `status`, `name_key`, `summary_key`, `tags`, `source_refs`, `presentation_id`) is not populated: no design document supplies values for those fields, and this transcription follows the DAT-007 field conventions.",
-      "`activationMovementSpeedThresholdOfBase` (20% of base speed) comes from docs/71-initial-weapon-numeric-catalog.md:450; the Rank-Zero table at docs/71-initial-weapon-numeric-catalog.md:89 calls the threshold fixed without giving its value."
-    ]
-  },
   "id": "W-DF",
-  "name": "Ram Field",
-  "recipePair": {
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "weapon.W-DF.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#rank-zero-values-and-ore-stat-increments",
+    "recipe_pair: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "signature_mech: GDD-INITIAL-MECH-CATALOG#catalog-overview",
+    "fabrication_cost: GDD-PROGRESSION#base-weapon-availability",
+    "base_automatic_attack: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "base_behavior: GDD-WEAPON-NUMERIC-CATALOG#w-df--ram-field",
+    "ore_upgradeable_stat_labels: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "damage_model: GDD-WEAPON-NUMERIC-CATALOG#base-weapon-summary",
+    "global_attack_rate_mapping: GDD-WEAPON-NUMERIC-CATALOG#global-weapon-attack-rate-mapping",
+    "branches.amplification.cost: GDD-WEAPON-NUMERIC-CATALOG#momentum-cascade--amplification--2-driftmetal",
+    "branches.amplification.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.amplification: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.amplification: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.functional.cost: GDD-WEAPON-NUMERIC-CATALOG#impact-transfer--functional--2-flux-amber",
+    "branches.functional.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.functional: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.functional: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.conversion.cost: GDD-WEAPON-NUMERIC-CATALOG#siege-anchor--conversion--2-asterite",
+    "branches.conversion.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.conversion: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.conversion: GDD-WEAPON-INDEX#catalog-lookup"
+  ],
+  "recipe_pair": {
     "notation": "D + F",
-    "materialCodes": [
+    "material_codes": [
       "D",
       "F"
     ],
-    "materialNames": [
+    "material_names": [
       "Driftmetal",
       "Flux Amber"
-    ],
-    "_source": {
-      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-      "section": "Accepted base catalog assignment",
-      "lines": "35-55"
-    }
+    ]
   },
-  "signatureMech": {
-    "mechId": "MCH-06",
+  "signature_mech": {
+    "mech_id": "MCH-06",
     "mech": "Razorback",
-    "isInitialSignature": true,
-    "_source": {
-      "doc": "docs/36-initial-mech-catalog.md",
-      "section": "Catalog overview",
-      "lines": "43-52"
-    }
+    "is_initial_signature": true
   },
-  "fabricationCost": {
+  "fabrication_cost": {
     "materials": [
       {
-        "materialCode": "D",
+        "material_code": "D",
         "material": "Driftmetal",
         "units": 1
       },
       {
-        "materialCode": "F",
+        "material_code": "F",
         "material": "Flux Amber",
         "units": 1
       }
     ],
-    "signatureWeaponBeginsEquippedWithoutPayingCost": true,
-    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost.",
-    "_source": {
-      "doc": "docs/60-resources-crafting-progression.md",
-      "section": "Base-weapon availability",
-      "lines": "104-110"
-    }
+    "signature_weapon_begins_equipped_without_paying_cost": true,
+    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost."
   },
-  "baseAutomaticAttack": {
-    "text": "Maintains a damaging forward ram while the mech moves",
-    "_source": {
-      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-      "section": "Accepted base catalog assignment",
-      "lines": "35-55"
-    }
+  "base_automatic_attack": {
+    "text": "Maintains a damaging forward ram while the mech moves"
   },
-  "baseBehavior": {
-    "text": "while movement speed is at least 20% of base speed, projects a short damaging field in front of the mech. An enemy overlapping it may be hit every 0.5 s and is pushed along the mech's facing direction. The field is inactive below that threshold.",
-    "_source": {
-      "doc": "docs/71-initial-weapon-numeric-catalog.md",
-      "section": "W-DF — Ram Field",
-      "lines": "448-450"
-    }
+  "base_behavior": {
+    "text": "while movement speed is at least 20% of base speed, projects a short damaging field in front of the mech. An enemy overlapping it may be hit every 0.5 s and is pushed along the mech's facing direction. The field is inactive below that threshold."
   },
-  "oreUpgradeableStatLabels": {
+  "ore_upgradeable_stat_labels": {
     "labels": [
       "Damage",
       "ram width",
       "knockback distance"
-    ],
-    "_source": {
-      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-      "section": "Accepted base catalog assignment",
-      "lines": "35-55"
-    }
+    ]
   },
-  "oreUpgradeableStats": [
+  "ore_upgradeable_stats": [
     {
       "slot": 1,
       "name": "Contact damage",
-      "rankZero": 16,
-      "incrementPerRank": 1.6,
+      "rank_zero": 16,
+      "increment_per_rank": 1.6,
       "unit": "damage",
       "discrete": false
     },
     {
       "slot": 2,
       "name": "Ram width",
-      "rankZero": 1.5,
-      "incrementPerRank": 0.12,
+      "rank_zero": 1.5,
+      "increment_per_rank": 0.12,
       "unit": "M",
       "discrete": false
     },
     {
       "slot": 3,
       "name": "Knockback",
-      "rankZero": 0.6,
-      "incrementPerRank": 0.06,
+      "rank_zero": 0.6,
+      "increment_per_rank": 0.06,
       "unit": "M",
       "discrete": false
     }
   ],
-  "fixedProperties": {
-    "forwardReachM": 1.2,
-    "perTargetRepeatIntervalSeconds": 0.5,
-    "activationMovementSpeedThresholdOfBase": {
+  "fixed_properties": {
+    "forward_reach_m": 1.2,
+    "per_target_repeat_interval_seconds": 0.5,
+    "activation_movement_speed_threshold_of_base": {
       "percent": 20
     },
     "raw": "1.2M forward reach, 0.5 s per-target repeat interval"
   },
-  "damageModel": {
-    "rankZeroDamageModel": "16 per target every 0.5 s",
-    "burst10Dps": 32.0,
-    "sustained30Dps": 32.0,
-    "favorableHordeDps": 128,
-    "primaryLimitation": "Requires movement directly through danger",
-    "_source": {
-      "doc": "docs/71-initial-weapon-numeric-catalog.md",
-      "section": "Base Weapon Summary",
-      "lines": "46-68"
-    }
+  "damage_model": {
+    "rank_zero_damage_model": "16 per target every 0.5 s",
+    "burst_10_dps": 32.0,
+    "sustained_30_dps": 32.0,
+    "favorable_horde_dps": 128,
+    "primary_limitation": "Requires movement directly through danger"
   },
-  "globalAttackRateMapping": {
-    "affectedTiming": "Per-enemy contact-repeat rate",
-    "unaffectedTiming": "Movement threshold and Siege Anchor setup",
-    "_source": {
-      "doc": "docs/71-initial-weapon-numeric-catalog.md",
-      "section": "Global weapon Attack Rate mapping",
-      "lines": "102-124"
-    }
+  "global_attack_rate_mapping": {
+    "affected_timing": "Per-enemy contact-repeat rate",
+    "unaffected_timing": "Movement threshold and Siege Anchor setup"
   },
   "branches": {
     "amplification": {
       "name": "Momentum Cascade",
-      "fundingMaterialCode": "D",
-      "fundingMaterial": "Driftmetal",
+      "funding_material_code": "D",
+      "funding_material": "Driftmetal",
       "cost": {
         "material": "Driftmetal",
-        "units": 2,
-        "_source": [
-          {
-            "doc": "docs/71-initial-weapon-numeric-catalog.md",
-            "section": "Momentum Cascade — Amplification — 2 Driftmetal",
-            "lines": "452"
-          },
-          {
-            "doc": "docs/60-resources-crafting-progression.md",
-            "section": "Weapon stat and branch upgrading",
-            "lines": "160-170"
-          }
-        ]
-      },
-      "_source": [
-        {
-          "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-          "section": "Accepted base catalog assignment",
-          "lines": "35-55"
-        },
-        {
-          "doc": "docs/weapons/README.md",
-          "section": "Catalog lookup",
-          "lines": "18-36"
-        }
-      ]
+        "units": 2
+      }
     },
     "functional": {
       "name": "Impact Transfer",
-      "fundingMaterialCode": "F",
-      "fundingMaterial": "Flux Amber",
+      "funding_material_code": "F",
+      "funding_material": "Flux Amber",
       "cost": {
         "material": "Flux Amber",
-        "units": 2,
-        "_source": [
-          {
-            "doc": "docs/71-initial-weapon-numeric-catalog.md",
-            "section": "Impact Transfer — Functional — 2 Flux Amber",
-            "lines": "459"
-          },
-          {
-            "doc": "docs/60-resources-crafting-progression.md",
-            "section": "Weapon stat and branch upgrading",
-            "lines": "160-170"
-          }
-        ]
-      },
-      "_source": [
-        {
-          "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-          "section": "Accepted base catalog assignment",
-          "lines": "35-55"
-        },
-        {
-          "doc": "docs/weapons/README.md",
-          "section": "Catalog lookup",
-          "lines": "18-36"
-        }
-      ]
+        "units": 2
+      }
     },
     "conversion": {
       "name": "Siege Anchor",
-      "fundingMaterialCode": "A",
-      "fundingMaterial": "Asterite",
+      "funding_material_code": "A",
+      "funding_material": "Asterite",
       "cost": {
         "material": "Asterite",
-        "units": 2,
-        "_source": [
-          {
-            "doc": "docs/71-initial-weapon-numeric-catalog.md",
-            "section": "Siege Anchor — Conversion — 2 Asterite",
-            "lines": "466"
-          },
-          {
-            "doc": "docs/60-resources-crafting-progression.md",
-            "section": "Weapon stat and branch upgrading",
-            "lines": "160-170"
-          }
-        ]
-      },
-      "_source": [
-        {
-          "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-          "section": "Accepted base catalog assignment",
-          "lines": "35-55"
-        },
-        {
-          "doc": "docs/weapons/README.md",
-          "section": "Catalog lookup",
-          "lines": "18-36"
-        }
-      ]
-    },
-    "_note": "Branch mechanics are transcribed separately into content/branches/; only the branch identity, transformation class, funding material, and specialized-material price are recorded here."
+        "units": 2
+      }
+    }
   }
 }

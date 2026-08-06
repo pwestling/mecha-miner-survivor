@@ -1,235 +1,137 @@
 {
-  "_provenance": {
-    "doc": "docs/69-initial-relic-catalog.md",
-    "section": "REL-05 — War-Drum Oscillator",
-    "lines": "104-113",
-    "extractedFor": "DAT-008",
-    "notes": [
-      "Field order follows the doc 69 `## Catalog overview` column order (ID, Relic, Primary transformation, Core tradeoff), then the per-relic prose fields.",
-      "Catalog-overview table row for this relic is docs/69-initial-relic-catalog.md:32; the fresh/unlocked availability rules are docs/69-initial-relic-catalog.md:39-59.",
-      "`rules` holds the relic's prose bullets verbatim with their source line numbers; numbers stated in that prose are also structured under `effects`.",
-      "`_source` marks every value or rule folded in from a document other than docs/69-initial-relic-catalog.md."
-    ]
-  },
   "id": "REL-05",
-  "name": "War-Drum Oscillator",
-  "primaryTransformation": "Synchronized arsenal bursts",
-  "coreTradeoff": "No weapon output between beats",
-  "discoverySentence": {
-    "text": "All weapon output is stored and unleashed together every three seconds with 35% bonus power.",
-    "lines": "106"
-  },
-  "affectedScope": "all equipped weapons",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "relic.REL-05.name",
+  "summary_key": "relic.REL-05.summary",
+  "tags": [],
+  "source_refs": [
+    "GDD-INITIAL-RELIC-CATALOG#rel-05--war-drum-oscillator",
+    "acquisition.unlock: GDD-INITIAL-RELIC-CATALOG#fresh-profile-and-unlocked-availability",
+    "acquisition.unlock: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#catalog-overview",
+    "acquisition.unlock: DEC-121",
+    "acquisition: GDD-INITIAL-RELIC-CATALOG#fresh-profile-and-unlocked-availability",
+    "acquisition: GDD-INITIAL-RELIC-CATALOG",
+    "acquisition: GDD-MECH-RELICS#acquisition",
+    "acquisition: GDD-MECH-RELICS#install-or-sell-choice",
+    "acquisition: GDD-MAP-GENERATION#relic-caches",
+    "acquisition: GDD-MAPS#relics-as-exploration-rewards",
+    "acquisition: GDD-PROGRESSION#relic-sale",
+    "acquisition: GDD-INTERFACE-FLOW#relic-cache-discovery-and-resolution",
+    "acquisition: TDD-MINING-PROGRESSION#relic-cache-transaction",
+    "rarity_and_weighting: GDD-INITIAL-RELIC-CATALOG#fresh-profile-and-unlocked-availability",
+    "rarity_and_weighting: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#relic-pool-behavior",
+    "rarity_and_weighting: GDD-INTERFACE-FLOW#cache-selection-and-signaling",
+    "stacking_and_exclusivity: GDD-INITIAL-RELIC-CATALOG#shared-interaction-and-preview-rules",
+    "stacking_and_exclusivity: GDD-INITIAL-RELIC-CATALOG#catalog-principles",
+    "stacking_and_exclusivity: GDD-MECH-RELICS#replacement-and-interaction-rules",
+    "stacking_and_exclusivity: GDD-COMBAT-ECONOMY-BALANCE-FRAMEWORK#stacking-and-comparison-order",
+    "behavior_registration: TDD-COMBAT-RUNTIME#relic-integration",
+    "discovery_sentence: GDD-INITIAL-RELIC-CATALOG#rel-05--war-drum-oscillator",
+    "trigger: GDD-INITIAL-RELIC-CATALOG#rel-05--war-drum-oscillator",
+    "pause_behavior: GDD-INITIAL-RELIC-CATALOG#rel-05--war-drum-oscillator",
+    "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-05--war-drum-oscillator"
+  ],
+  "primary_transformation": "Synchronized arsenal bursts",
+  "core_tradeoff": "No weapon output between beats",
+  "affected_scope": "all equipped weapons",
   "trigger": {
     "condition": "global beat every 3 active-simulation seconds; no weapon damage or control between beats",
-    "beatIntervalSeconds": 3,
-    "lines": "108-110"
+    "beat_interval_seconds": 3
   },
   "effects": {
-    "beatIntervalSeconds": 3,
-    "maxStoredOutputBeats": 2,
-    "releasedOutputBonus": {
+    "beat_interval_seconds": 3,
+    "max_stored_output_beats": 2,
+    "released_output_bonus": {
       "percent": 35
     },
-    "damageOrControlBetweenBeats": false,
-    "releaseOriginatesFromCurrentMechPositionAndFacing": true
+    "damage_or_control_between_beats": false,
+    "release_originates_from_current_mech_position_and_facing": true
   },
-  "pauseBehavior": {
-    "rule": "Fabrication and other full-simulation pauses freeze the beat and stored-output state.",
-    "lines": "113"
+  "pause_behavior": {
+    "rule": "Fabrication and other full-simulation pauses freeze the beat and stored-output state."
   },
-  "liveStateMeter": null,
+  "live_state_meter": null,
   "acquisition": {
     "method": "found in a relic cache through map exploration",
     "fabricable": false,
     "minable": false,
-    "listedInGeologicalSurvey": false,
-    "poolAvailability": "hyper-gold-unlock",
+    "listed_in_geological_survey": false,
+    "pool_availability": "hyper-gold-unlock",
     "unlock": {
-      "unlockId": "UNL-04",
-      "costHyperGold": 300,
+      "unlock_id": "UNL-04",
+      "cost_hyper_gold": 300,
       "currency": "Hyper Gold",
       "permanent": true,
       "refundable": false,
-      "canBeDisabled": false,
-      "effect": "Permanently adds the relic to the random relic-cache selection pool; it neither equips nor guarantees that relic.",
-      "_source": [
-        {
-          "doc": "docs/69-initial-relic-catalog.md",
-          "section": "Fresh-profile and unlocked availability",
-          "lines": "49-59"
-        },
-        {
-          "doc": "docs/63-permanent-option-unlock-catalog.md",
-          "section": "Catalog overview",
-          "lines": "53"
-        },
-        {
-          "doc": "docs/decisions/DEC-121-accept-initial-option-unlock-catalog.md",
-          "lines": "22"
-        }
-      ]
+      "can_be_disabled": false,
+      "effect": "Permanently adds the relic to the random relic-cache selection pool; it neither equips nor guarantees that relic."
     },
-    "cachesPerStandardMap": 3,
-    "cacheOpening": "automatic on mech contact; freezes the complete gameplay simulation",
-    "relicsDrawnPerRun": 3,
-    "drawWithoutReplacement": true,
-    "duplicatesWithinOneRun": false,
+    "caches_per_standard_map": 3,
+    "cache_opening": "automatic on mech contact; freezes the complete gameplay simulation",
+    "relics_drawn_per_run": 3,
+    "draw_without_replacement": true,
+    "duplicates_within_one_run": false,
     "resolution": "immediate install-or-sell; no relic inventory or deferred decision",
-    "saleValueCommonOre": 150,
-    "displacedRelicAutoSaleCommonOre": 150,
-    "saleValueVariesByIdentityOrderDurationOrProgress": false,
-    "_source": [
-      {
-        "doc": "docs/69-initial-relic-catalog.md",
-        "section": "Fresh-profile and unlocked availability",
-        "lines": "39-59"
-      },
-      {
-        "doc": "docs/69-initial-relic-catalog.md",
-        "lines": "183"
-      },
-      {
-        "doc": "docs/67-mech-relics.md",
-        "section": "Acquisition",
-        "lines": "28-34"
-      },
-      {
-        "doc": "docs/67-mech-relics.md",
-        "section": "Install-or-sell choice",
-        "lines": "36-49"
-      },
-      {
-        "doc": "docs/51-standard-map-generation-contract.md",
-        "section": "Relic caches",
-        "lines": "130-142"
-      },
-      {
-        "doc": "docs/50-maps-resources-and-navigation.md",
-        "section": "Relics as exploration rewards",
-        "lines": "96-100"
-      },
-      {
-        "doc": "docs/60-resources-crafting-progression.md",
-        "section": "Relic sale",
-        "lines": "174-178"
-      },
-      {
-        "doc": "docs/73-interface-screen-flow-and-information-architecture.md",
-        "section": "Relic Cache Discovery and Resolution",
-        "lines": "353-384"
-      },
-      {
-        "doc": "docs/technical/24-mining-fabrication-and-progression-runtime.md",
-        "section": "Relic cache transaction",
-        "lines": "135-143"
-      }
-    ]
+    "sale_value_common_ore": 150,
+    "displaced_relic_auto_sale_common_ore": 150,
+    "sale_value_varies_by_identity_order_duration_or_progress": false
   },
-  "rarityAndWeighting": {
-    "rarityTier": null,
-    "cacheSelectionWeight": null,
-    "selectionModel": "three distinct relics drawn without replacement from the currently unlocked pool and assigned to the three caches during generation",
-    "freshProfilePoolSize": 5,
-    "fullyUnlockedPoolSize": 10,
-    "inFreshProfilePool": false,
-    "guaranteedToAppear": false,
-    "_source": [
-      {
-        "doc": "docs/69-initial-relic-catalog.md",
-        "section": "Fresh-profile and unlocked availability",
-        "lines": "41-59"
-      },
-      {
-        "doc": "docs/63-permanent-option-unlock-catalog.md",
-        "section": "Relic-pool behavior",
-        "lines": "107-111"
-      },
-      {
-        "doc": "docs/73-interface-screen-flow-and-information-architecture.md",
-        "section": "Cache selection and signaling",
-        "lines": "355-361"
-      }
-    ]
+  "rarity_and_weighting": {
+    "rarity_tier": null,
+    "cache_selection_weight": null,
+    "selection_model": "three distinct relics drawn without replacement from the currently unlocked pool and assigned to the three caches during generation",
+    "fresh_profile_pool_size": 5,
+    "fully_unlocked_pool_size": 10,
+    "in_fresh_profile_pool": false,
+    "guaranteed_to_appear": false
   },
-  "stackingAndExclusivity": {
-    "relicSlots": 1,
-    "simultaneouslyActiveRelics": 1,
-    "stacksWithOtherRelics": false,
-    "installReplacesActiveRelic": true,
-    "runLocal": true,
-    "persistsAfterRun": false,
-    "combinesWith": [
+  "stacking_and_exclusivity": {
+    "relic_slots": 1,
+    "simultaneously_active_relics": 1,
+    "stacks_with_other_relics": false,
+    "install_replaces_active_relic": true,
+    "run_local": true,
+    "persists_after_run": false,
+    "combines_with": [
       "weapon branches",
       "weapon stat ranks",
       "utilities",
       "mech traits",
       "PowerUps"
     ],
-    "modifierOrder": "Relic-specific multipliers apply after the additive percentage modifiers supplied by mech traits, utilities, and PowerUps unless the relic explicitly replaces targeting or cadence.",
-    "appliesToEveryDamagingComponentDerivedFromAnEquippedWeapon": true,
-    "alreadyCreatedFiniteInstancesRetainCreationTimeRelicState": true,
-    "overridesOrReplaces": [
+    "modifier_order": "Relic-specific multipliers apply after the additive percentage modifiers supplied by mech traits, utilities, and PowerUps unless the relic explicitly replaces targeting or cadence.",
+    "applies_to_every_damaging_component_derived_from_an_equipped_weapon": true,
+    "already_created_finite_instances_retain_creation_time_relic_state": true,
+    "overrides_or_replaces": [
       "weapon output timing (all output gated to the global beat)"
-    ],
-    "_source": [
-      {
-        "doc": "docs/69-initial-relic-catalog.md",
-        "section": "Shared interaction and preview rules",
-        "lines": "168-175"
-      },
-      {
-        "doc": "docs/69-initial-relic-catalog.md",
-        "section": "Catalog principles",
-        "lines": "22"
-      },
-      {
-        "doc": "docs/67-mech-relics.md",
-        "section": "Replacement and interaction rules",
-        "lines": "63-71"
-      },
-      {
-        "doc": "docs/70-combat-and-economy-balance-framework.md",
-        "section": "Stacking and comparison order",
-        "lines": "264"
-      }
     ]
   },
-  "behaviorRegistration": {
+  "behavior_registration": {
     "hook": "output capture and global beat release",
-    "registrationModel": "Relics are cross-cutting policies registered by stable relic ID. They modify well-defined hook points rather than scattering ID checks through every weapon.",
-    "perWeaponCompatibilityManifest": "produced from tests; states fully affected, partially affected with disclosed reason, or invalid. The initial design expects no invalid pairing.",
-    "_source": {
-      "doc": "docs/technical/22-combat-and-weapon-runtime.md",
-      "section": "Relic integration",
-      "lines": "148-166"
-    }
+    "registration_model": "Relics are cross-cutting policies registered by stable relic ID. They modify well-defined hook points rather than scattering ID checks through every weapon.",
+    "per_weapon_compatibility_manifest": "produced from tests; states fully affected, partially affected with disclosed reason, or invalid. The initial design expects no invalid pairing."
   },
   "rules": [
     {
-      "text": "Weapons do not deal damage or apply control between global three-second beats.",
-      "lines": "108"
+      "text": "Weapons do not deal damage or apply control between global three-second beats."
     },
     {
-      "text": "Each weapon continues accumulating the attacks, movement triggers, or continuous output it would ordinarily have produced, up to two beats of stored output.",
-      "lines": "109"
+      "text": "Each weapon continues accumulating the attacks, movement triggers, or continuous output it would ordinarily have produced, up to two beats of stored output."
     },
     {
-      "text": "On each beat, every stored weapon releases its accumulated output in a synchronized burst from the mech's current position and facing, using the current valid target state.",
-      "lines": "110"
+      "text": "On each beat, every stored weapon releases its accumulated output in a synchronized burst from the mech's current position and facing, using the current valid target state."
     },
     {
-      "text": "Released damage and other scalable weapon output receive a 35% bonus. The beat does not erase ordinary targeting, branch behavior, capacity rules, or attack geometry.",
-      "lines": "111"
+      "text": "Released damage and other scalable weapon output receive a 35% bonus. The beat does not erase ordinary targeting, branch behavior, capacity rules, or attack geometry."
     },
     {
-      "text": "The HUD, audio, and mech effect telegraph the next beat clearly enough for the player to approach, face, or retreat around it.",
-      "lines": "112"
+      "text": "The HUD, audio, and mech effect telegraph the next beat clearly enough for the player to approach, face, or retreat around it."
     },
     {
-      "text": "Fabrication and other full-simulation pauses freeze the beat and stored-output state.",
-      "lines": "113"
+      "text": "Fabrication and other full-simulation pauses freeze the beat and stored-output state."
     }
   ],
-  "crossDocumentRules": []
+  "cross_document_rules": []
 }

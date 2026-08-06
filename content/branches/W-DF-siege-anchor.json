@@ -1,22 +1,20 @@
 {
-  "_provenance": {
-    "doc": "docs/71-initial-weapon-numeric-catalog.md",
-    "section": "Siege Anchor — Conversion — 2 Asterite",
-    "lines": "466-471",
-    "extractedFor": "DAT-008",
-    "notes": [
-      "Branch sections in this document carry no standalone branch ID token; the heading supplies only name, class, and cost. The id and filename are composed as <weaponId>-<branch-name-kebab-case>.",
-      "weaponId and weaponName come from the enclosing '## W-DF — Ram Field' heading (line 448).",
-      "`rules` holds every bullet of this section verbatim with its source line; `effects` is a structured restatement of those same bullets and introduces no value that is not written in them.",
-      "Section prose states no prerequisite. prerequisites is empty per docs/65-weapon-stat-and-branch-upgrades.md:50,66 (\"Branches have no stat-rank prerequisites\"; no rank, level, time, or boss prerequisite).",
-      "Exclusivity and irreversibility are not restated in this section; they come from docs/65-weapon-stat-and-branch-upgrades.md:56,68 and apply to all 45 branches.",
-      "expectedEffect is null: no bullet in this section is phrased as an 'Expected effect' estimate, unlike some earlier branch sections in this document. The section's own numeric outcomes are transcribed in `effects` and every bullet is preserved verbatim in `rules`, so nothing is lost."
-    ]
-  },
   "id": "W-DF-siege-anchor",
-  "weaponId": "W-DF",
-  "weaponName": "Ram Field",
-  "branchName": "Siege Anchor",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-DF-siege-anchor.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#siege-anchor--conversion--2-asterite",
+    "global_attack_rate_interaction: GDD-WEAPON-NUMERIC-CATALOG#global-weapon-attack-rate-mapping",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#siege-anchor--conversion--2-asterite"
+  ],
+  "weapon_id": "W-DF",
+  "weapon_name": "Ram Field",
   "class": "Conversion",
   "cost": {
     "resource": "Asterite",
@@ -25,67 +23,50 @@
   "prerequisites": [],
   "exclusivity": {
     "scope": "weapon",
-    "mutuallyExclusiveWith": [
+    "mutually_exclusive_with": [
       "W-DF-momentum-cascade",
       "W-DF-impact-transfer"
     ],
-    "irreversibleWithinRun": true,
-    "existingCommonOreStatTracksStillApply": true,
-    "addsNewStatTrack": false,
-    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run.",
-    "refs": [
-      "docs/65-weapon-stat-and-branch-upgrades.md:56",
-      "docs/65-weapon-stat-and-branch-upgrades.md:68"
-    ]
+    "irreversible_within_run": true,
+    "existing_common_ore_stat_tracks_still_apply": true,
+    "adds_new_stat_track": false,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run."
   },
   "availability": {
     "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite.",
-    "purchase": "Installing one is a single deterministic purchase costing exactly two units of its assigned specialized material.",
-    "refs": [
-      "docs/65-weapon-stat-and-branch-upgrades.md:50",
-      "docs/65-weapon-stat-and-branch-upgrades.md:66"
-    ]
+    "purchase": "Installing one is a single deterministic purchase costing exactly two units of its assigned specialized material."
   },
   "effects": {
-    "anchorTriggerMaximumMovementM": 0.25,
-    "anchorTriggerHoldSeconds": 1.25,
-    "replacesForwardRamWithCircularBarrier": true,
-    "barrierRadiusM": 2.2,
-    "barrierCrossingDamageOfCurrentDamage": {
+    "anchor_trigger_maximum_movement_m": 0.25,
+    "anchor_trigger_hold_seconds": 1.25,
+    "replaces_forward_ram_with_circular_barrier": true,
+    "barrier_radius_m": 2.2,
+    "barrier_crossing_damage_of_current_damage": {
       "percent": 150
     },
-    "barrierKnockbackDirection": "radially",
-    "perEnemyRepeatIntervalSeconds": 0.5,
-    "barrierThicknessSource": "current ram width",
-    "collapseDistanceFromAnchorPointM": 0.5,
-    "reanchorHoldSeconds": 1.25
+    "barrier_knockback_direction": "radially",
+    "per_enemy_repeat_interval_seconds": 0.5,
+    "barrier_thickness_source": "current ram width",
+    "collapse_distance_from_anchor_point_m": 0.5,
+    "reanchor_hold_seconds": 1.25
   },
-  "globalAttackRateInteraction": {
-    "branchNamedInMapping": true,
-    "affectedTiming": "Per-enemy contact-repeat rate",
-    "unaffectedTiming": "Movement threshold and Siege Anchor setup",
-    "_source": {
-      "doc": "docs/71-initial-weapon-numeric-catalog.md",
-      "section": "Global weapon Attack Rate mapping",
-      "lines": "121"
-    }
+  "global_attack_rate_interaction": {
+    "branch_named_in_mapping": true,
+    "affected_timing": "Per-enemy contact-repeat rate",
+    "unaffected_timing": "Movement threshold and Siege Anchor setup"
   },
-  "expectedEffect": null,
+  "expected_effect": null,
   "rules": [
     {
-      "line": 468,
       "text": "Moving less than 0.25M for 1.25 s replaces the forward ram with a circular barrier at 2.2M radius around the mech."
     },
     {
-      "line": 469,
       "text": "Crossing the barrier deals 150% current Damage, applies current knockback radially, and may affect a given enemy every 0.5 s."
     },
     {
-      "line": 470,
       "text": "Current ram width becomes barrier thickness. Moving 0.5M from the anchor point collapses it and another 1.25 s hold is required."
     },
     {
-      "line": 471,
       "text": "The branch converts an aggressive collision weapon into a high-output mining perimeter with a strict anchoring requirement."
     }
   ]

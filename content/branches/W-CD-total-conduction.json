@@ -1,19 +1,19 @@
 {
-  "_provenance": {
-    "doc": "docs/71-initial-weapon-numeric-catalog.md",
-    "section": "Total Conduction — Amplification — 2 Cinderglass",
-    "lines": "355-359",
-    "extractedFor": "DAT-008",
-    "notes": [
-      "Branch sections in this document carry no standalone branch ID token; the heading supplies only name, class, and cost. The id is composed as <weaponId>-<branch-name-kebab-case>.",
-      "Section prose states no prerequisite. prerequisites is empty per docs/65-weapon-stat-and-branch-upgrades.md:50,66 (\"Branches have no stat-rank prerequisites\"; no rank, level, time, or boss prerequisite).",
-      "Exclusivity and irreversibility are not restated in this section; they come from docs/65-weapon-stat-and-branch-upgrades.md:56,68 and apply to all 45 branches."
-    ]
-  },
   "id": "W-CD-total-conduction",
-  "weaponId": "W-CD",
-  "weaponName": "Arc Emitter",
-  "branchName": "Total Conduction",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-CD-total-conduction.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#total-conduction--amplification--2-cinderglass",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#total-conduction--amplification--2-cinderglass"
+  ],
+  "weapon_id": "W-CD",
+  "weapon_name": "Arc Emitter",
   "class": "Amplification",
   "cost": {
     "resource": "Cinderglass",
@@ -22,36 +22,28 @@
   "prerequisites": [],
   "exclusivity": {
     "scope": "weapon",
-    "mutuallyExclusiveWith": [
+    "mutually_exclusive_with": [
       "W-CD-disruption-current",
       "W-CD-ball-lightning-projector"
     ],
-    "irreversibleWithinRun": true,
-    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run.",
-    "refs": [
-      "docs/65-weapon-stat-and-branch-upgrades.md:56",
-      "docs/65-weapon-stat-and-branch-upgrades.md:68"
-    ]
+    "irreversible_within_run": true,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run."
   },
   "availability": {
-    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite.",
-    "refs": [
-      "docs/65-weapon-stat-and-branch-upgrades.md:50",
-      "docs/65-weapon-stat-and-branch-upgrades.md:66"
-    ]
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite."
   },
   "effects": {
-    "targetCapRemoved": true,
-    "removedTargetCap": 5,
-    "chainContinuesWhile": "a new valid enemy is within current chain range",
-    "damageFalloffAcrossJumps": {
+    "target_cap_removed": true,
+    "removed_target_cap": 5,
+    "chain_continues_while": "a new valid enemy is within current chain range",
+    "damage_falloff_across_jumps": {
       "percent": 0
     },
-    "maxHitsPerEnemyPerActivation": 1
+    "max_hits_per_enemy_per_activation": 1
   },
-  "favorableSceneEffect": {
+  "favorable_scene_effect": {
     "magnitude": {
-      "hordeThroughputIncreasePercent": {
+      "horde_throughput_increase_percent": {
         "min": 40,
         "max": 150
       },
@@ -61,15 +53,12 @@
   },
   "rules": [
     {
-      "line": 357,
       "text": "Removes the five-target cap. The arc continues jumping until no new valid enemy is within current chain range."
     },
     {
-      "line": 358,
       "text": "Damage does not diminish across jumps and no enemy may be hit twice by one activation."
     },
     {
-      "line": 359,
       "text": "Expected effect: no direct boss increase and approximately +40–150% horde throughput when chain density supports more than five victims."
     }
   ]

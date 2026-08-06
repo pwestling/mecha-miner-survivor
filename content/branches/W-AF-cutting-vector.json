@@ -1,20 +1,19 @@
 {
-  "_provenance": {
-    "doc": "docs/71-initial-weapon-numeric-catalog.md",
-    "section": "Cutting Vector — Conversion — 2 Barysteel",
-    "lines": "247-252",
-    "extractedFor": "DAT-008",
-    "notes": [
-      "No document in the repository assigns a stable branch ID; `id` and the filename are minted as <weaponId>-<branch-name-kebab-case> per the transcription convention.",
-      "Prerequisites, exclusivity, and the two-unit cost model are stated in docs/65-weapon-stat-and-branch-upgrades.md lines 66 and 68; the cost resource and amount for this branch come from this section's heading.",
-      "`rules` holds every bullet of the section verbatim with its source line; `effects` is the structured transcription of those same bullets."
-    ]
-  },
   "id": "W-AF-cutting-vector",
-  "weaponId": "W-AF",
-  "weaponName": "Tracking Laser",
-  "branchName": "Cutting Vector",
-  "branchClass": "Conversion",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-AF-cutting-vector.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#cutting-vector--conversion--2-barysteel",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#cutting-vector--conversion--2-barysteel",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches"
+  ],
+  "weapon_id": "W-AF",
+  "weapon_name": "Tracking Laser",
+  "branch_class": "Conversion",
   "cost": {
     "resource": "Barysteel",
     "amount": 2
@@ -22,51 +21,43 @@
   "prerequisites": [],
   "exclusivity": {
     "scope": "weapon",
-    "mutuallyExclusiveWith": [
+    "mutually_exclusive_with": [
       "W-AF-coherence-memory",
       "W-AF-target-designator"
     ],
     "irreversible": true
   },
-  "sharedRuleRefs": [
-    "docs/65-weapon-stat-and-branch-upgrades.md:66",
-    "docs/65-weapon-stat-and-branch-upgrades.md:68"
-  ],
   "effects": {
-    "removesAutomaticTargetLock": true,
-    "beamAlongMechFacing": true,
-    "unlimitedPierce": true,
-    "damagesEveryEnemyCrossedAtFullCurrentDamageRate": true,
-    "focusBuildsWithinFacingChangeDegrees": 12,
-    "focusDecayBandDegrees": {
+    "removes_automatic_target_lock": true,
+    "beam_along_mech_facing": true,
+    "unlimited_pierce": true,
+    "damages_every_enemy_crossed_at_full_current_damage_rate": true,
+    "focus_builds_within_facing_change_degrees": 12,
+    "focus_decay_band_degrees": {
       "min": 12,
       "max": 25
     },
-    "focusDecayRateMultiplierInBand": 2,
-    "focusResetBeyondDegrees": 25,
+    "focus_decay_rate_multiplier_in_band": 2,
+    "focus_reset_beyond_degrees": 25,
     "range": "the upgradeable laser range",
-    "beamWidthM": 0.35,
-    "beamWidthUpgradeable": false
+    "beam_width_m": 0.35,
+    "beam_width_upgradeable": false
   },
-  "expectedEffect": {
-    "preservesMaximumFocusedDps": true,
+  "expected_effect": {
+    "preserves_maximum_focused_dps": true,
     "narrative": "turns a safe tracker into a manually aimed horde cutter"
   },
   "rules": [
     {
-      "line": 249,
       "text": "Removes automatic target lock. The laser becomes an unlimited-pierce beam along mech facing and damages every enemy it crosses at the full current damage rate."
     },
     {
-      "line": 250,
       "text": "Focus builds while the player's facing remains within 12° of its previous direction. It decays at twice the current focus-gain rate between 12° and 25° and resets beyond 25°."
     },
     {
-      "line": 251,
       "text": "Range remains the upgradeable laser range and beam width is fixed at 0.35M."
     },
     {
-      "line": 252,
       "text": "This preserves maximum focused DPS but turns a safe tracker into a manually aimed horde cutter."
     }
   ]

@@ -1,20 +1,19 @@
 {
-  "_provenance": {
-    "doc": "docs/71-initial-weapon-numeric-catalog.md",
-    "section": "Deflection Ring — Functional — 2 Barysteel",
-    "lines": "337-342",
-    "extractedFor": "DAT-008",
-    "notes": [
-      "Branch sections in this document carry no standalone branch ID token; the heading supplies only name, class, and cost. The id is composed as <weaponId>-<branch-name-kebab-case>.",
-      "Section prose states no prerequisite. prerequisites is empty per docs/65-weapon-stat-and-branch-upgrades.md:50,66 (\"Branches have no stat-rank prerequisites\"; no rank, level, time, or boss prerequisite).",
-      "Exclusivity and irreversibility are not restated in this section; they come from docs/65-weapon-stat-and-branch-upgrades.md:56,68 and apply to all 45 branches.",
-      "No numeric favorable-scene magnitude is stated; realized value depends on incoming interceptable projectile volume, which the section does not quantify (line 342). favorableSceneEffect.magnitude is therefore null; only the class-level Functional range at docs/71-initial-weapon-numeric-catalog.md:503 applies."
-    ]
-  },
   "id": "W-BF-deflection-ring",
-  "weaponId": "W-BF",
-  "weaponName": "Orbital Cutters",
-  "branchName": "Deflection Ring",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-BF-deflection-ring.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#deflection-ring--functional--2-barysteel",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#deflection-ring--functional--2-barysteel"
+  ],
+  "weapon_id": "W-BF",
+  "weapon_name": "Orbital Cutters",
   "class": "Functional",
   "cost": {
     "resource": "Barysteel",
@@ -23,57 +22,45 @@
   "prerequisites": [],
   "exclusivity": {
     "scope": "weapon",
-    "mutuallyExclusiveWith": [
+    "mutually_exclusive_with": [
       "W-BF-kinetic-flywheel",
       "W-BF-tethered-reaper"
     ],
-    "irreversibleWithinRun": true,
-    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run.",
-    "refs": [
-      "docs/65-weapon-stat-and-branch-upgrades.md:56",
-      "docs/65-weapon-stat-and-branch-upgrades.md:68"
-    ]
+    "irreversible_within_run": true,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run."
   },
   "availability": {
-    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite.",
-    "refs": [
-      "docs/65-weapon-stat-and-branch-upgrades.md:50",
-      "docs/65-weapon-stat-and-branch-upgrades.md:66"
-    ]
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite."
   },
   "effects": {
-    "interceptsOrdinaryInterceptableEnemyProjectiles": true,
-    "interceptionTrigger": "contact with a cutter",
-    "shardsPerInterception": 6,
-    "shardDirection": "outward",
-    "shardDamagePercentOfCurrentCutterDamage": {
+    "intercepts_ordinary_interceptable_enemy_projectiles": true,
+    "interception_trigger": "contact with a cutter",
+    "shards_per_interception": 6,
+    "shard_direction": "outward",
+    "shard_damage_percent_of_current_cutter_damage": {
       "percent": 50
     },
-    "shardTravelM": 4,
-    "shardEndsOnFirstEnemy": true,
-    "maxShardsPerEnemyPerInterceptionBurst": 2,
-    "perCutterInterceptionCooldownSeconds": 0.5,
-    "undeflectableBossAttacks": "remain visually distinct"
+    "shard_travel_m": 4,
+    "shard_ends_on_first_enemy": true,
+    "max_shards_per_enemy_per_interception_burst": 2,
+    "per_cutter_interception_cooldown_seconds": 0.5,
+    "undeflectable_boss_attacks": "remain visually distinct"
   },
-  "favorableSceneEffect": {
+  "favorable_scene_effect": {
     "magnitude": null,
     "qualitative": "converts projectile pressure into retaliatory offense rather than simply deleting every threat"
   },
   "rules": [
     {
-      "line": 339,
       "text": "Cutters destroy ordinary interceptable enemy projectiles on contact."
     },
     {
-      "line": 340,
       "text": "Each interception emits six outward shards. A shard deals 50% current cutter Damage, travels 4M, and ends on its first enemy."
     },
     {
-      "line": 341,
       "text": "One enemy can take at most two shards from a single interception burst. Each cutter has a 0.5 s interception cooldown."
     },
     {
-      "line": 342,
       "text": "Undeflectable boss attacks remain visually distinct. The branch converts projectile pressure into retaliatory offense rather than simply deleting every threat."
     }
   ]

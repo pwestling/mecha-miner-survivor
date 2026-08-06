@@ -1,79 +1,56 @@
 {
-  "_provenance": {
-    "doc": "docs/36-initial-mech-catalog.md",
-    "section": "Catalog overview",
-    "lines": "43-52",
-    "extractedFor": "DAT-007",
-    "notes": [
-      "Row fields id/mech/signature/inherentTrait/selectionRole come from the Catalog overview table (line 48); field order follows that table's column order.",
-      "signatureWeaponId is not present in docs/36; it is resolved by weapon name against the Accepted base catalog assignment table in docs/66-weapon-catalog-and-resource-graph.md and carries its own _source.",
-      "The overview table (line 48) writes the trait effect as '+15% weapon damage'; the detail section (line 87) writes '+15% damage to all equipped weapons'. Both are recorded; they agree numerically.",
-      "traitNotes are the verbatim bullets of '### Signature and trait' minus the two bullets already captured as signature and inherentTrait.effect.",
-      "crossDocNotes is present on every mech for a uniform shape and is empty when docs outside 36 add no numeric fact about this mech."
-    ]
-  },
   "id": "MCH-02",
-  "mech": "Pike",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "mech.MCH-02.name",
+  "summary_key": "mech.MCH-02.summary",
+  "tags": [],
+  "source_refs": [
+    "GDD-INITIAL-MECH-CATALOG#catalog-overview",
+    "signature_weapon_id: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "trait_stacking: GDD-INITIAL-MECH-CATALOG#trait-comparison-and-stacking",
+    "initial_availability: GDD-INITIAL-MECH-CATALOG#initial-availability"
+  ],
   "signature": "Rail Lance",
-  "signatureWeaponId": "W-AB",
-  "_source": {
-    "signatureWeaponId": {
-      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-      "section": "Accepted base catalog assignment",
-      "lines": "41",
-      "notes": [
-        "Only the ID-to-weapon-name mapping is taken from docs/66. Its 'Signature mech' column reads 'Initial signature; mech TBD' and is stale; docs/36 is authoritative for the assignment."
-      ]
-    }
-  },
-  "inherentTrait": {
+  "signature_weapon_id": "W-AB",
+  "inherent_trait": {
     "name": "Heavy Calibration",
     "effect": "+15% weapon damage",
-    "effectDetail": "+15% damage to all equipped weapons",
-    "affectedStatistic": "weapon damage",
+    "effect_detail": "+15% damage to all equipped weapons",
+    "affected_statistic": "weapon damage",
     "modifier": {
       "percent": 15
     }
   },
-  "selectionRole": "Deliberate high-impact line striker",
-  "playerFacingIdentity": "Pike is a long-axis striker built around deliberate facing. Its slower Rail Lance rewards lining up crowds, while its general damage bonus ensures every later weapon benefits even if the run moves away from piercing attacks.",
-  "traitNotes": [
+  "selection_role": "Deliberate high-impact line striker",
+  "player_facing_identity": "Pike is a long-axis striker built around deliberate facing. Its slower Rail Lance rewards lining up crowds, while its general damage bonus ensures every later weapon benefits even if the run moves away from piercing attacks.",
+  "trait_notes": [
     "Uses the same weapon-attribution boundary as Harmonic Calibrator. It affects weapon-created mines, drones, turrets, delayed attacks, and persistent zones, but not environmental damage or non-weapon temporary effects.",
     "It does not alter Rail Lance cadence, projectile speed, width, range, or penetration allowance."
   ],
-  "topDownSilhouette": [
+  "top_down_silhouette": [
     "Long narrow body with an unmistakable forward lance boom.",
     "Two small rear stabilizer fins counterbalance the extended nose.",
     "Minimal side bulk keeps the silhouette visually linear even when the weapon is not firing.",
     "The chassis rotates continuously with persistent facing so the player can read its firing line before the next lance."
   ],
-  "selectionSummary": "A deliberate facing-based striker whose calibrated weapons hit harder across every build.",
-  "traitStacking": {
-    "changedBaseline": {
+  "trait_stacking": {
+    "changed_baseline": {
       "text": "115% weapon damage",
       "statistic": "weapon damage",
       "percent": 115
     },
-    "withMatchingUtilityRank3BeforePowerUps": {
+    "with_matching_utility_rank_3_before_power_ups": {
       "text": "135% with Harmonic Calibrator",
       "utility": "Harmonic Calibrator",
       "percent": 135
-    },
-    "_source": {
-      "doc": "docs/36-initial-mech-catalog.md",
-      "section": "Trait comparison and stacking",
-      "lines": "202-207"
     }
   },
-  "initialAvailability": {
+  "initial_availability": {
     "text": "Available",
     "available": true,
-    "recommendedDefault": false,
-    "_source": {
-      "doc": "docs/36-initial-mech-catalog.md",
-      "section": "Initial availability",
-      "lines": "215-222"
-    }
+    "recommended_default": false
   },
-  "crossDocNotes": []
+  "cross_doc_notes": []
 }

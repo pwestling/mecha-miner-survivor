@@ -1,248 +1,148 @@
 {
-  "_provenance": {
-    "doc": "docs/71-initial-weapon-numeric-catalog.md",
-    "section": "Rank-Zero Values and Ore-Stat Increments",
-    "lines": "70-90",
-    "extractedFor": "DAT-007",
-    "notes": [
-      "`M` is one unmodified mech collision diameter, a relative spatial unit, not a metric distance (docs/71-initial-weapon-numeric-catalog.md:24); numeric keys therefore carry an `M` suffix rather than `Meters`.",
-      "Ore-stat units differ per stat, so each entry in `oreUpgradeableStats` carries an explicit `unit` field instead of encoding the unit in the key name.",
-      "`signatureMech` comes from docs/36-initial-mech-catalog.md:45, which is authoritative for the assignment. The `Signature mech` column of docs/66-weapon-catalog-and-resource-graph.md:39 still reads \"Initial signature; mech TBD\" and docs/weapons/README.md:20 only records Yes/No; both agree on signature membership but neither names the mech.",
-      "The `Status at DEC-075` column of docs/66-weapon-catalog-and-resource-graph.md:39 is deliberately not transcribed: docs/66-weapon-catalog-and-resource-graph.md:37 states DEC-125 moved every row to a different status, so the column is stale.",
-      "`favorableHordeDps` is an analytic scene estimate, not a cap; docs/71-initial-weapon-numeric-catalog.md:68 states the assumed simultaneous-victim counts and that benchmark captures supersede it.",
-      "The content envelope required by docs/technical/40-content-data-and-validation.md:76-89 (`schema_version`, `content_version`, `status`, `name_key`, `summary_key`, `tags`, `source_refs`, `presentation_id`) is not populated: no design document supplies values for those fields, and this transcription follows the DAT-007 field conventions."
-    ]
-  },
   "id": "W-AD",
-  "name": "Gravity Projector",
-  "recipePair": {
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "weapon.W-AD.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#rank-zero-values-and-ore-stat-increments",
+    "recipe_pair: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "signature_mech: GDD-INITIAL-MECH-CATALOG#catalog-overview",
+    "fabrication_cost: GDD-PROGRESSION#base-weapon-availability",
+    "base_automatic_attack: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "base_behavior: GDD-WEAPON-NUMERIC-CATALOG#w-ad--gravity-projector",
+    "ore_upgradeable_stat_labels: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "damage_model: GDD-WEAPON-NUMERIC-CATALOG#base-weapon-summary",
+    "global_attack_rate_mapping: GDD-WEAPON-NUMERIC-CATALOG#global-weapon-attack-rate-mapping",
+    "branches.amplification.cost: GDD-WEAPON-NUMERIC-CATALOG#echo-well--amplification--2-asterite",
+    "branches.amplification.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.amplification: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.amplification: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.functional.cost: GDD-WEAPON-NUMERIC-CATALOG#gravity-slingshot--functional--2-driftmetal",
+    "branches.functional.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.functional: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.functional: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.conversion.cost: GDD-WEAPON-NUMERIC-CATALOG#singularity-forge--conversion--2-barysteel",
+    "branches.conversion.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.conversion: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.conversion: GDD-WEAPON-INDEX#catalog-lookup"
+  ],
+  "recipe_pair": {
     "notation": "A + D",
-    "materialCodes": [
+    "material_codes": [
       "A",
       "D"
     ],
-    "materialNames": [
+    "material_names": [
       "Asterite",
       "Driftmetal"
-    ],
-    "_source": {
-      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-      "section": "Accepted base catalog assignment",
-      "lines": "35-55"
-    }
+    ]
   },
-  "signatureMech": {
-    "mechId": "MCH-04",
+  "signature_mech": {
+    "mech_id": "MCH-04",
     "mech": "Lodestar",
-    "isInitialSignature": true,
-    "_source": {
-      "doc": "docs/36-initial-mech-catalog.md",
-      "section": "Catalog overview",
-      "lines": "43-52"
-    }
+    "is_initial_signature": true
   },
-  "fabricationCost": {
+  "fabrication_cost": {
     "materials": [
       {
-        "materialCode": "A",
+        "material_code": "A",
         "material": "Asterite",
         "units": 1
       },
       {
-        "materialCode": "D",
+        "material_code": "D",
         "material": "Driftmetal",
         "units": 1
       }
     ],
-    "signatureWeaponBeginsEquippedWithoutPayingCost": true,
-    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost.",
-    "_source": {
-      "doc": "docs/60-resources-crafting-progression.md",
-      "section": "Base-weapon availability",
-      "lines": "104-110"
-    }
+    "signature_weapon_begins_equipped_without_paying_cost": true,
+    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost."
   },
-  "baseAutomaticAttack": {
-    "text": "Creates a damaging pull pulse at an automatically selected ground location",
-    "_source": {
-      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-      "section": "Accepted base catalog assignment",
-      "lines": "35-55"
-    }
+  "base_automatic_attack": {
+    "text": "Creates a damaging pull pulse at an automatically selected ground location"
   },
-  "baseBehavior": {
-    "text": "places a field at the current center of the densest enemy concentration within 10M. The field damages and pulls ordinary enemies toward its center for its current duration.",
-    "_source": {
-      "doc": "docs/71-initial-weapon-numeric-catalog.md",
-      "section": "W-AD — Gravity Projector",
-      "lines": "176-178"
-    }
+  "base_behavior": {
+    "text": "places a field at the current center of the densest enemy concentration within 10M. The field damages and pulls ordinary enemies toward its center for its current duration."
   },
-  "oreUpgradeableStatLabels": {
+  "ore_upgradeable_stat_labels": {
     "labels": [
       "Damage",
       "field radius",
       "field duration"
-    ],
-    "_source": {
-      "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-      "section": "Accepted base catalog assignment",
-      "lines": "35-55"
-    }
+    ]
   },
-  "oreUpgradeableStats": [
+  "ore_upgradeable_stats": [
     {
       "slot": 1,
       "name": "Field damage",
-      "rankZero": 36,
-      "incrementPerRank": 3.6,
+      "rank_zero": 36,
+      "increment_per_rank": 3.6,
       "unit": "damage per second",
       "discrete": false
     },
     {
       "slot": 2,
       "name": "Field radius",
-      "rankZero": 2.5,
-      "incrementPerRank": 0.2,
+      "rank_zero": 2.5,
+      "increment_per_rank": 0.2,
       "unit": "M",
       "discrete": false
     },
     {
       "slot": 3,
       "name": "Field duration",
-      "rankZero": 1.5,
-      "incrementPerRank": 0.15,
+      "rank_zero": 1.5,
+      "increment_per_rank": 0.15,
       "unit": "seconds",
       "discrete": false
     }
   ],
-  "fixedProperties": {
-    "deploymentCadenceSeconds": 2.5,
-    "targetingRangeM": 10,
-    "inwardPullSpeedMPerSecond": 2,
+  "fixed_properties": {
+    "deployment_cadence_seconds": 2.5,
+    "targeting_range_m": 10,
+    "inward_pull_speed_m_per_s": 2,
     "raw": "2.5 s deployment cadence, 10M targeting range, 2M/s inward pull"
   },
-  "damageModel": {
-    "rankZeroDamageModel": "36/s for 1.5 s every 2.5 s",
-    "burst10Dps": 21.6,
-    "sustained30Dps": 21.6,
-    "favorableHordeDps": 173,
-    "primaryLimitation": "Delayed field placement and partial uptime",
-    "_source": {
-      "doc": "docs/71-initial-weapon-numeric-catalog.md",
-      "section": "Base Weapon Summary",
-      "lines": "46-68"
-    }
+  "damage_model": {
+    "rank_zero_damage_model": "36/s for 1.5 s every 2.5 s",
+    "burst_10_dps": 21.6,
+    "sustained_30_dps": 21.6,
+    "favorable_horde_dps": 173,
+    "primary_limitation": "Delayed field placement and partial uptime"
   },
-  "globalAttackRateMapping": {
-    "affectedTiming": "Base field deployment rate; Singularity Forge full-cycle rate",
-    "unaffectedTiming": "Echo delay, field ticks, and field duration",
-    "_source": {
-      "doc": "docs/71-initial-weapon-numeric-catalog.md",
-      "section": "Global weapon Attack Rate mapping",
-      "lines": "102-124"
-    }
+  "global_attack_rate_mapping": {
+    "affected_timing": "Base field deployment rate; Singularity Forge full-cycle rate",
+    "unaffected_timing": "Echo delay, field ticks, and field duration"
   },
   "branches": {
     "amplification": {
       "name": "Echo Well",
-      "fundingMaterialCode": "A",
-      "fundingMaterial": "Asterite",
+      "funding_material_code": "A",
+      "funding_material": "Asterite",
       "cost": {
         "material": "Asterite",
-        "units": 2,
-        "_source": [
-          {
-            "doc": "docs/71-initial-weapon-numeric-catalog.md",
-            "section": "Echo Well — Amplification — 2 Asterite",
-            "lines": "180"
-          },
-          {
-            "doc": "docs/60-resources-crafting-progression.md",
-            "section": "Weapon stat and branch upgrading",
-            "lines": "160-170"
-          }
-        ]
-      },
-      "_source": [
-        {
-          "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-          "section": "Accepted base catalog assignment",
-          "lines": "35-55"
-        },
-        {
-          "doc": "docs/weapons/README.md",
-          "section": "Catalog lookup",
-          "lines": "18-36"
-        }
-      ]
+        "units": 2
+      }
     },
     "functional": {
       "name": "Gravity Slingshot",
-      "fundingMaterialCode": "D",
-      "fundingMaterial": "Driftmetal",
+      "funding_material_code": "D",
+      "funding_material": "Driftmetal",
       "cost": {
         "material": "Driftmetal",
-        "units": 2,
-        "_source": [
-          {
-            "doc": "docs/71-initial-weapon-numeric-catalog.md",
-            "section": "Gravity Slingshot — Functional — 2 Driftmetal",
-            "lines": "187"
-          },
-          {
-            "doc": "docs/60-resources-crafting-progression.md",
-            "section": "Weapon stat and branch upgrading",
-            "lines": "160-170"
-          }
-        ]
-      },
-      "_source": [
-        {
-          "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-          "section": "Accepted base catalog assignment",
-          "lines": "35-55"
-        },
-        {
-          "doc": "docs/weapons/README.md",
-          "section": "Catalog lookup",
-          "lines": "18-36"
-        }
-      ]
+        "units": 2
+      }
     },
     "conversion": {
       "name": "Singularity Forge",
-      "fundingMaterialCode": "B",
-      "fundingMaterial": "Barysteel",
+      "funding_material_code": "B",
+      "funding_material": "Barysteel",
       "cost": {
         "material": "Barysteel",
-        "units": 2,
-        "_source": [
-          {
-            "doc": "docs/71-initial-weapon-numeric-catalog.md",
-            "section": "Singularity Forge — Conversion — 2 Barysteel",
-            "lines": "194"
-          },
-          {
-            "doc": "docs/60-resources-crafting-progression.md",
-            "section": "Weapon stat and branch upgrading",
-            "lines": "160-170"
-          }
-        ]
-      },
-      "_source": [
-        {
-          "doc": "docs/66-weapon-catalog-and-resource-graph.md",
-          "section": "Accepted base catalog assignment",
-          "lines": "35-55"
-        },
-        {
-          "doc": "docs/weapons/README.md",
-          "section": "Catalog lookup",
-          "lines": "18-36"
-        }
-      ]
-    },
-    "_note": "Branch mechanics are transcribed separately into content/branches/; only the branch identity, transformation class, funding material, and specialized-material price are recorded here."
+        "units": 2
+      }
+    }
   }
 }

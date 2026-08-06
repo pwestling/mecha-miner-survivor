@@ -1,20 +1,19 @@
 {
-  "_provenance": {
-    "doc": "docs/71-initial-weapon-numeric-catalog.md",
-    "section": "Replicator Swarm — Amplification — 2 Eidolon Coral",
-    "lines": "209-214",
-    "extractedFor": "DAT-008",
-    "notes": [
-      "No document in the repository assigns a stable branch ID; `id` and the filename are minted as <weaponId>-<branch-name-kebab-case> per the transcription convention.",
-      "Prerequisites, exclusivity, and the two-unit cost model are stated in docs/65-weapon-stat-and-branch-upgrades.md lines 66 and 68; the cost resource and amount for this branch come from this section's heading.",
-      "`rules` holds every bullet of the section verbatim with its source line; `effects` is the structured transcription of those same bullets."
-    ]
-  },
   "id": "W-AE-replicator-swarm",
-  "weaponId": "W-AE",
-  "weaponName": "Attack Drones",
-  "branchName": "Replicator Swarm",
-  "branchClass": "Amplification",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-AE-replicator-swarm.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#replicator-swarm--amplification--2-eidolon-coral",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#replicator-swarm--amplification--2-eidolon-coral",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches"
+  ],
+  "weapon_id": "W-AE",
+  "weapon_name": "Attack Drones",
+  "branch_class": "Amplification",
   "cost": {
     "resource": "Eidolon Coral",
     "amount": 2
@@ -22,50 +21,42 @@
   "prerequisites": [],
   "exclusivity": {
     "scope": "weapon",
-    "mutuallyExclusiveWith": [
+    "mutually_exclusive_with": [
       "W-AE-wolfpack-protocol",
       "W-AE-containment-lattice"
     ],
     "irreversible": true
   },
-  "sharedRuleRefs": [
-    "docs/65-weapon-stat-and-branch-upgrades.md:66",
-    "docs/65-weapon-stat-and-branch-upgrades.md:68"
-  ],
   "effects": {
     "trigger": "a permanent-drone kill",
-    "clonesPerTrigger": 1,
-    "cloneKind": "temporary exact clone of that drone",
-    "cloneLifetimeSeconds": 8.0,
-    "cloneInheritsCurrent": [
+    "clones_per_trigger": 1,
+    "clone_kind": "temporary exact clone of that drone",
+    "clone_lifetime_seconds": 8.0,
+    "clone_inherits_current": [
       "damage",
       "attackRate",
       "operationalRange"
     ],
-    "clonesCanCreateClones": false,
-    "maxTemporaryDrones": 6,
-    "overflowRule": "creating a seventh replaces the temporary drone with the least remaining life"
+    "clones_can_create_clones": false,
+    "max_temporary_drones": 6,
+    "overflow_rule": "creating a seventh replaces the temporary drone with the least remaining life"
   },
-  "expectedEffect": {
-    "benefitAgainstLoneDurableTarget": 0,
-    "maxTotalSquadSizeMultiplier": 3,
+  "expected_effect": {
+    "benefit_against_lone_durable_target": 0,
+    "max_total_squad_size_multiplier": 3,
     "condition": "while kills arrive quickly"
   },
   "rules": [
     {
-      "line": 211,
       "text": "A permanent-drone kill creates a temporary exact clone of that drone for 8.0 s."
     },
     {
-      "line": 212,
       "text": "Temporary drones inherit current Damage, attack rate, and operational range but cannot create more clones."
     },
     {
-      "line": 213,
       "text": "At most six temporary drones may exist. Creating a seventh replaces the temporary drone with the least remaining life."
     },
     {
-      "line": 214,
       "text": "Expected effect: no benefit against a lone durable target but up to 3× total squad size while kills arrive quickly."
     }
   ]

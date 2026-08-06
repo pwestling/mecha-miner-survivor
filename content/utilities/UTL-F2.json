@@ -1,78 +1,86 @@
 {
   "id": "UTL-F2",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "utility.UTL-F2.name",
+  "summary_key": "utility.UTL-F2.summary",
+  "tags": [],
+  "source_refs": [
+    "GDD-UTILITY-CATALOG#utl-f2--field-expander",
+    "external_numerics[]: GDD-INITIAL-MECH-CATALOG"
+  ],
   "material": "Flux Amber",
-  "utility": "Field Expander",
-  "primaryRole": "Weapon coverage",
-  "installedToRank3": "+8% → +20% weapon area",
-  "description": "The expander increases scalable spatial dimensions of weapon attacks.",
+  "primary_role": "Weapon coverage",
+  "installed_to_rank_3": "+8% → +20% weapon area",
   "effect": {
-    "statNames": [
+    "stat_names": [
       "Weapon area"
     ],
-    "valueKind": "additive-percent",
-    "stackingClassification": "Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative. (docs/68-utility-catalog.md:253)"
+    "value_kind": "additive-percent",
+    "stacking_classification": "Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative. (docs/68-utility-catalog.md:253)"
   },
   "ranks": [
     {
       "state": "Installed",
-      "weaponArea": {
+      "weapon_area": {
         "percent": 8
       }
     },
     {
       "state": "Rank 1",
-      "weaponArea": {
+      "weapon_area": {
         "percent": 12
       }
     },
     {
       "state": "Rank 2",
-      "weaponArea": {
+      "weapon_area": {
         "percent": 16
       }
     },
     {
       "state": "Rank 3",
-      "weaponArea": {
+      "weapon_area": {
         "percent": 20
       }
     }
   ],
   "acquisition": {
-    "materialUnitCost": 1,
-    "utilitySlotsFilled": 1,
-    "rankCount": 3,
-    "rankOreCosts": [
+    "material_unit_cost": 1,
+    "utility_slots_filled": 1,
+    "rank_count": 3,
+    "rank_ore_costs": [
       50,
       100,
       150
     ],
-    "totalRankOreCost": 300,
-    "rankValuesAreTotalsNotCumulativeAdditions": true,
-    "uniqueInLoadout": true,
-    "hasBranches": false,
-    "hasAlternativeRecipes": false,
+    "total_rank_ore_cost": 300,
+    "rank_values_are_totals_not_cumulative_additions": true,
+    "unique_in_loadout": true,
+    "has_branches": false,
+    "has_alternative_recipes": false,
     "replaceable": false,
     "dismantlable": false,
     "sellable": false,
-    "refundableDuringRun": false,
-    "requiresManualActivation": false,
-    "previewsAllFourEffectTiers": true
+    "refundable_during_run": false,
+    "requires_manual_activation": false,
+    "previews_all_four_effect_tiers": true
   },
   "availability": {
-    "freshProfile": false,
-    "coverageRole": null,
-    "unlockId": "UNL-01",
-    "unlockName": "Advanced Utility Suite",
-    "unlockCostHyperGold": 600
+    "fresh_profile": false,
+    "coverage_role": null,
+    "unlock_id": "UNL-01",
+    "unlock_name": "Advanced Utility Suite",
+    "unlock_cost_hyper_gold": 600
   },
-  "effectRules": [
+  "effect_rules": [
     "Applies to weapon-authored scalable radii, diameters, widths, blast areas, projectile bodies, cones, and persistent damage zones.",
     "Does not change targeting or placement range, projectile travel distance, orbit radius, mining zones, discovery radius, pickup radius, or resonance fields unless a weapon specification explicitly treats that dimension as Area.",
     "Fabrication lists the dimensions affected on every equipped weapon and warns when an equipped behavior receives no benefit."
   ],
-  "catalogWideRules": {
-    "sharedAcquisitionAndRankRules": [
+  "catalog_wide_rules": {
+    "shared_acquisition_and_rank_rules": [
       "Every non-radar utility costs one unit of its assigned specialized material and permanently fills one of three utility slots.",
       "Each begins at its listed Installed effect and has three common-ore ranks costing 50, 100, and 150 ore.",
       "The four values shown for a utility are its Installed, Rank 1, Rank 2, and Rank 3 totals—not cumulative additions.",
@@ -81,7 +89,7 @@
       "Fabrication previews all four effect tiers, the current build's affected systems, and any equipped weapon that receives no benefit from a weapon-support utility.",
       "The resource radar remains outside the material table: it costs 300 common ore, has no ranks, and retains its accepted seven-category directional behavior."
     ],
-    "modifierAndTimingRules": [
+    "modifier_and_timing_rules": [
       "Flat statistic changes apply before percentage modifiers. Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative.",
       "Attack rate is represented as attacks per second or equivalent frequency; a +20% attack-rate total produces 1.2 times the unmodified activation frequency.",
       "Recovery sources add in Hull Integrity per second.",
@@ -91,31 +99,13 @@
       "If a later relic explicitly replaces a statistic or rule, its description must state whether it overrides or combines with these utilities. Silent exceptions are not allowed."
     ]
   },
-  "externalNumerics": [
+  "external_numerics": [
     {
       "statement": "Lodestar's inherent 115% weapon area reaches 135% with a Rank 3 Field Expander.",
       "value": {
         "percent": 135
       },
-      "_source": {
-        "doc": "docs/36-initial-mech-catalog.md",
-        "lines": "209",
-        "quote": "| Lodestar | 115% weapon area | 135% with Field Expander |"
-      }
+      "quote": "| Lodestar | 115% weapon area | 135% with Field Expander |"
     }
-  ],
-  "_provenance": {
-    "doc": "docs/68-utility-catalog.md",
-    "section": "UTL-F2 — Field Expander",
-    "lines": "236-249",
-    "extractedFor": "DAT-008",
-    "notes": [
-      "Overview-table row and per-utility rank table are both from docs/68-utility-catalog.md; the rank table is authoritative for the four tier values and the overview cell restates Installed and Rank 3.",
-      "acquisition mirrors the catalog-wide '## Shared acquisition and rank rules' at docs/68-utility-catalog.md:25-31; the 300-ore rank total is restated at docs/60-resources-crafting-progression.md:158.",
-      "catalogWideRules duplicates the two catalog-wide rule lists verbatim in every utility file because the mandated content layout (docs/technical/40-content-data-and-validation.md:34-63) provides no shared-rules file inside content/utilities/.",
-      "Markdown emphasis, code markers, and link syntax were removed from transcribed prose; wording is otherwise verbatim.",
-      "effect.stackingClassification is derived from the catalog-wide modifier rules at docs/68-utility-catalog.md:253-255, not from a dedicated doc field.",
-      "availability.coverageRole is null: the coverage-role column at docs/68-utility-catalog.md:265-272 exists only for the six fresh-profile utilities, and no doc assigns a coverage role to the six Advanced Utility Suite utilities. Logged as a gap."
-    ]
-  }
+  ]
 }

@@ -214,6 +214,12 @@ internal sealed class RegistryValidatorTests
             ("tests/verification/FND-002.json", 18),
             ("tests/verification/FND-003.json", 12),
             ("tests/verification/FND-004.json", 8),
+            // FND-005's registry arrived with the base-branch merge. The census is a
+            // literal precisely so a registry appearing or disappearing is a mismatch
+            // rather than a smaller agreement with itself, and it fired on this one: the
+            // three-place edit below (this row, the file count, the entry count) is the
+            // edit tax working as designed, not an inconvenience.
+            ("tests/verification/FND-005.json", 12),
             ("tests/verification/FND-007.json", 11),
             ("tests/verification/FND-008.json", 7),
             ("tests/verification/FND-009.json", 14));
@@ -223,14 +229,14 @@ internal sealed class RegistryValidatorTests
     /// <see cref="ExpectedRegistryCensus"/> so deleting a registry and its census row
     /// together is still a failure.
     /// </summary>
-    private const int ExpectedRegistryFileCount = 7;
+    private const int ExpectedRegistryFileCount = 8;
 
     /// <summary>
     /// How many verification entries the registries hold in total. Declared independently of
     /// <see cref="ExpectedRegistryCensus"/> so deleting an entry and decrementing its census
     /// row together is still a failure.
     /// </summary>
-    private const int ExpectedRegistryEntryCount = 83;
+    private const int ExpectedRegistryEntryCount = 95;
 
     private static string Cell(SortedDictionary<string, int> counts, string path)
     {
@@ -302,7 +308,7 @@ internal sealed class RegistryValidatorTests
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Three, each named here rather than tolerated anonymously. All three are forward
+    /// Four, each named here rather than tolerated anonymously. All four are forward
     /// references to identifiers whose owning registry has not merged yet, and none is a
     /// broken link or a typo:
     /// </para>
@@ -319,13 +325,24 @@ internal sealed class RegistryValidatorTests
     ///     its implementation, so those two are exactly the entries the simulation stream is
     ///     registering on its own branch; naming them is the point of recording the ruling.
     ///   </description></item>
+    ///   <item><description>
+    ///     <c>docs/technical/91-verification-strategy.md</c> cites <c>VER-SIM-006-003</c> as
+    ///     a worked example of a <c>retired</c> entry naming a <c>VER-*</c> successor. It
+    ///     arrived with the base-branch merge, and the sentence citing it says in its own
+    ///     text that the entry exists at a sibling ref and not at this one, which is the
+    ///     historical-figure form that same rule permits. It resolves when
+    ///     <c>tests/verification/SIM-006.json</c> merges. The count went 3 to 4 here, which
+    ///     is the ratchet working: the merge added a citation and this test named its
+    ///     <c>file:line</c> rather than absorbing it.
+    ///   </description></item>
     /// </list>
     /// <para>
     /// None is repaired here. Rewriting an authoritative document's illustrative example, or
     /// removing a decided proof-gate ID, so a validator turns green is editing the
     /// specification to fit the tool. Each finding is reported with its <c>file:line</c> in
     /// the retained inventory and in this task's handoff, and each resolves by itself when
-    /// <c>tests/verification/SIM-001.json</c> and <c>SIM-005.json</c> merge.
+    /// <c>tests/verification/SIM-001.json</c>, <c>SIM-005.json</c> and
+    /// <c>SIM-006.json</c> merge.
     /// </para>
     /// <para>
     /// The constant is a ratchet in both directions. A new citation to a nonexistent
@@ -335,7 +352,7 @@ internal sealed class RegistryValidatorTests
     /// exactly that mechanism and fixed rather than absorbed.
     /// </para>
     /// </remarks>
-    private const int ExpectedSpecificationDefects = 3;
+    private const int ExpectedSpecificationDefects = 4;
 
     /// <summary>Every relative document link and anchor resolves.</summary>
     [Test]

@@ -228,6 +228,7 @@ readonly EXIT_VALIDATION=4
 readonly INVENTORY=(
   "build.sh|launcher||the POSIX entry point of the standard command surface (doc 100 § Standard command surface). Parses no policy and decides nothing: it locates the verb host, builds it if needed, and forwards the verb. Every gate below is reached through it"
   "build.ps1|launcher||the PowerShell entry point of the same surface, held at parity with build.sh by build/verify-wrapper-parity.sh. Note that it carries a shebang (#!/usr/bin/env pwsh) and so is seen by both enumerators; a .ps1 without one would be seen by only the extension enumerator, which is why § 1 requires them to agree"
+  "build/gate-output.sh|library||the shared output vocabulary every gate script sources: pass/fail for findings about the subject under test, control_pass/control_fail/control_detail for anything a negative control's fixture manufactured, section and gate_summary so a red run names the failing section. Sourced, never executed, and mode 644 so it cannot be a workflow step. Not a gate: it asserts nothing about the repository. Its own self-check, gate_assert_marking, runs inside each gate that sources it rather than here"
   "build/bootstrap-linux.sh|provisioning||installs and pins the .NET SDK, Godot and the Vulkan ICD, and verifies the pinned versions. Not a gate: the only thing it decides is whether the machine it is running on has the toolchain, and its failure means repair this machine, not repair this repository. Not reachable from a verb either - the verb host is a .NET process and this is what installs .NET - so the workflow's provisioning step is the only place it can be called from, and doc 100 § Standard command surface puts it there"
   "build/verify-architecture.sh|gate||asserts the project-reference graph, the Godot boundary and the no-GDScript rule"
   "build/verify-configurations.sh|gate||asserts the Godot project builds in all three configurations"
@@ -243,7 +244,11 @@ readonly INVENTORY=(
   "build/verify-wrapper-parity.sh|gate||asserts build.sh and build.ps1 expose the same verbs and classes"
 )
 
-readonly KNOWN_KINDS=("gate" "launcher" "provisioning")
+# "library" is new: build/gate-output.sh is sourced by every gate script and is not an
+# entry point, so it is neither a gate (it decides nothing) nor a launcher (nothing
+# invokes it). Only the "gate" kind is required to be reached-or-exempt by § 4, so a
+# library classifies without claiming a call site it does not have.
+readonly KNOWN_KINDS=("gate" "launcher" "provisioning" "library")
 
 # The extension enumerator's alphabet. Deliberately wider than what is present: an
 # extension nobody has used yet costs nothing here and closes the hole where the first
@@ -314,16 +319,9 @@ readonly -a SEARCH_ROOTS=(
   ".github"
 )
 
-failures=0
-
-fail() {
-  printf 'FAIL  %s\n' "$*"
-  failures=$((failures + 1))
-}
-
-pass() {
-  printf 'ok    %s\n' "$*"
-}
+# The shared emitters. This file used to carry its own pass/fail pair, which was the
+# fourth copy in build/; see build/gate-output.sh for why there is now one.
+source "${REPO_ROOT}/build/gate-output.sh"
 
 # The check functions below print their own ok/FAIL lines and RETURN their failure
 # count, rather than adding to the global. That is what makes § 5's controls in band:
@@ -396,7 +394,7 @@ for line in sys.stdin:
 ' "${REPO_ROOT}" | LC_ALL=C sort
 }
 
-echo "=== 1. enumerate every script two independent ways, and require them to agree"
+section "1. enumerate every script two independent ways, and require them to agree"
 
 mapfile -t by_extension < <(enumerate_by_extension)
 mapfile -t by_shebang < <(enumerate_by_shebang)
@@ -412,8 +410,7 @@ mapfile -t scripts < <(
 # enumerator, not a clean repository.
 if [[ "${#scripts[@]}" -eq 0 ]]; then
   fail "found no scripts at all; the enumerators are broken, not the repository clean"
-  echo
-  echo "verify-gate-wiring: FAIL (${failures} assertion(s))"
+  gate_summary "verify-gate-wiring" "${EXIT_VALIDATION}"
   exit "${EXIT_VALIDATION}"
 fi
 
@@ -453,10 +450,9 @@ check_failures=0
 enumerator_report="$(check_enumerators by_extension by_shebang)"
 enumerator_failures=$?
 printf '%s\n' "${enumerator_report}"
-failures=$((failures + enumerator_failures))
+gate_add_failures "${enumerator_failures}"
 
-echo
-echo "=== 2. the inventory classifies every enumerated script, and nothing else (VER-FND-005-010)"
+section "2. the inventory classifies every enumerated script, and nothing else (VER-FND-005-010)"
 
 # Set equality in both directions between INVENTORY's paths and the enumerated set,
 # plus a known kind on every entry. This is the check the name glob never made: under
@@ -534,7 +530,7 @@ check_failures=0
 inventory_report="$(check_inventory INVENTORY scripts)"
 inventory_failures=$?
 printf '%s\n' "${inventory_report}"
-failures=$((failures + inventory_failures))
+gate_add_failures "${inventory_failures}"
 
 # The gate subset, and the arguments each gate needs, taken from the inventory. §§ 3
 # and 4 are about these and not about launchers or provisioning.
@@ -1056,8 +1052,7 @@ resolve_sites() {
 if ! resolve_sites "${REPO_ROOT}" "${sites_table}" invocations "${gates[@]}"; then
   fail "the call-site analysis did not run; this gate cannot report a partition it did not compute"
   sed 's/^/      /' "${sites_table}.err"
-  echo
-  echo "verify-gate-wiring: FAIL (${failures} assertion(s))"
+  gate_summary "verify-gate-wiring" "${EXIT_VALIDATION}"
   exit "${EXIT_VALIDATION}"
 fi
 
@@ -1170,23 +1165,21 @@ check_partition() {
   return "${check_failures}"
 }
 
-echo
-echo "=== 3. every exemption names a script that exists and is not reached"
+section "3. every exemption names a script that exists and is not reached"
 
 check_failures=0
 exemption_report="$(check_exemptions EXEMPT "${sites_table}")"
 exemption_failures=$?
 printf '%s\n' "${exemption_report}"
-failures=$((failures + exemption_failures))
+gate_add_failures "${exemption_failures}"
 
-echo
-echo "=== 4. every gate script is reached from a workflow or exempt, and never both"
+section "4. every gate script is reached from a workflow or exempt, and never both"
 
 check_failures=0
 partition_report="$(check_partition gates EXEMPT "${sites_table}")"
 partition_failures=$?
 printf '%s\n' "${partition_report}"
-failures=$((failures + partition_failures))
+gate_add_failures "${partition_failures}"
 
 # --- § 5: the negative controls ------------------------------------------------
 # In band, in this script, on every run, for the same reason FND-004 carries its
@@ -1199,22 +1192,34 @@ failures=$((failures + partition_failures))
 # inputs into the very functions §§ 1-4 just ran - not copies of them - so a control
 # cannot pass against logic the gate does not use.
 
-echo
-echo "=== 5. negative controls: each check above can actually fail (VER-FND-005-010)"
+section "5. negative controls: each check above can actually fail (VER-FND-005-010)"
 
 controls_run=0
 readonly EXPECTED_CONTROLS=8
 
 # expect_red <name> <expected-failure-count-at-least> <report> <count>
+# Every line this prints is manufactured by a control's fixture, INCLUDING the FAIL lines
+# it quotes out of the report, so all of it goes through the marked emitters.
+#
+# That quoting is the confirmation trap this marking exists for. § 5 runs eight controls
+# whose fixtures produce real-looking failure text - a synthetic
+# verify-zzz-unclassified-control.sh being unclassified, a deliberately broken
+# verify-godot.sh call site - and every one of those lines is printed on a GREEN run. A
+# reader who predicted a cause, grepped this log for the string that cause would produce,
+# and found it here would stop looking. That happened: a session found its expected string
+# twice inside these fixtures and nearly shipped a fix for the wrong section, when the real
+# failure was § 2's classification check covering three scripts rather than § 4's wiring
+# check covering one. `grep -v '[control-fixture]'` now leaves only genuine findings, and
+# the summary names the failing section so the log does not have to be grepped at all.
 expect_red() {
   local name="$1" want="$2" report="$3" count="$4"
   controls_run=$((controls_run + 1))
   if [[ "${count}" -ge "${want}" ]]; then
-    pass "control: ${name} -> ${count} failure(s), as designed"
-    printf '%s\n' "${report}" | grep '^FAIL' | sed 's/^/        /'
+    control_pass "control: ${name} -> ${count} failure(s), as designed"
+    control_detail < <(grep '^FAIL' <<<"${report}")
   else
-    fail "control: ${name} produced ${count} failure(s); the check it exercises cannot fail, so its green means nothing"
-    printf '%s\n' "${report}" | sed 's/^/        /'
+    control_fail "control: ${name} produced ${count} failure(s); the check it exercises cannot fail, so its green means nothing"
+    control_detail <<<"${report}"
   fi
 }
 
@@ -1287,9 +1292,9 @@ check_failures=0
 report="$(check_enumerators control_extension control_shebang)"
 count=$?
 if [[ "${count}" -eq "${enumerator_failures}" ]]; then
-  pass "control fixtures removed: the enumerators report what they reported in § 1"
+  control_pass "control fixtures removed: the enumerators report what they reported in § 1"
 else
-  fail "control fixtures were not cleaned up: the enumerators now report ${count} failure(s), § 1 saw ${enumerator_failures}"
+  control_fail "control fixtures were not cleaned up: the enumerators now report ${count} failure(s), § 1 saw ${enumerator_failures}"
 fi
 
 # --- 5c. a classification that names a file that is not there -----------------
@@ -1338,16 +1343,19 @@ done < <(grep -rl --binary-files=without-match -F "${RENAME_TARGET}" "${control_
 
 control_sites="$(mktemp "${control_root}/sites.XXXXXX")"
 if ! resolve_sites "${control_root}" "${control_sites}" invocations "${gates[@]}"; then
-  fail "control: the renamed-call-site control could not run the analyzer at all"
-  sed 's/^/        /' "${control_sites}.err"
+  control_fail "control: the renamed-call-site control could not run the analyzer at all"
+  control_detail < <(sed 's/^/        /' "${control_sites}.err")
   controls_run=$((controls_run + 1))
 else
   check_failures=0
   report="$(check_partition gates EXEMPT "${control_sites}")"
   count=$?
   expect_red "the godot-import call site renamed away from ${RENAME_TARGET}" 1 "${report}" "${count}"
-  if ! printf '%s\n' "${report}" | grep -q "${RENAME_TARGET}"; then
-    fail "control: the renamed-call-site control went red without naming ${RENAME_TARGET}; a failure that does not say which gate is unrun is not the one this control is for"
+  # Here-string, not a pipe: `grep -q` exits on its first match, printf takes SIGPIPE, and
+  # `set -o pipefail` reports 141 - which on this negated test reads as "the report does not
+  # name it" and would fabricate a control failure. See delivery-waves § Decision 13.
+  if ! grep -q "${RENAME_TARGET}" <<<"${report}"; then
+    control_fail "control: the renamed-call-site control went red without naming ${RENAME_TARGET}; a failure that does not say which gate is unrun is not the one this control is for"
   fi
 fi
 
@@ -1361,8 +1369,8 @@ control_inventory=("${INVENTORY[@]/build\/verify-godot.sh|gate||/build\/verify-g
 mapfile -t control_invocations < <(invocations_of control_inventory)
 control_dual_sites="$(mktemp "${control_root}/dual.XXXXXX")"
 if ! resolve_sites "${REPO_ROOT}" "${control_dual_sites}" control_invocations "${gates[@]}"; then
-  fail "control: the dual-mode control could not run the analyzer at all"
-  sed 's/^/        /' "${control_dual_sites}.err"
+  control_fail "control: the dual-mode control could not run the analyzer at all"
+  control_detail < <(sed 's/^/        /' "${control_dual_sites}.err")
   controls_run=$((controls_run + 1))
 else
   check_failures=0
@@ -1375,17 +1383,18 @@ fi
 # A control set that quietly shrinks proves less than it claims, so the count is
 # asserted rather than assumed - FND-004's reason for doing the same.
 echo
+# Deliberately unmarked, unlike everything else in § 5: this is an assertion about the
+# control SET rather than output manufactured by a control, it quotes no fixture text, and
+# "the control set shrank" is precisely a finding a reader excluding control output still
+# needs to see.
 if [[ "${controls_run}" -eq "${EXPECTED_CONTROLS}" ]]; then
   pass "all ${EXPECTED_CONTROLS} negative controls ran"
 else
   fail "${controls_run} of ${EXPECTED_CONTROLS} negative controls ran; a control set that shrank proves less than it claims"
 fi
 
-echo
-if [[ "${failures}" -eq 0 ]]; then
-  echo "verify-gate-wiring: PASS"
-  exit 0
-fi
+# This gate's own § 5 is eight in-band controls, so it is the strongest instance of the
+# problem gate_assert_marking guards. Prove the separation still holds before summarising.
+gate_assert_marking
 
-echo "verify-gate-wiring: FAIL (${failures} assertion(s))"
-exit "${EXIT_VALIDATION}"
+gate_summary "verify-gate-wiring" "${EXIT_VALIDATION}"

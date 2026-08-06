@@ -65,7 +65,7 @@ internal sealed class GodotPin
     /// <summary>The exact editor version.</summary>
     public string Version { get; set; } = string.Empty;
 
-    /// <summary>Release channel; never a preview or nightly (doc 114 § External research defaults).</summary>
+    /// <summary>Release channel; never a preview or nightly (doc 114 § External research and dependency defaults).</summary>
     public string ReleaseChannel { get; set; } = string.Empty;
 
     /// <summary>Distribution flavor; the .NET builds identify as <c>mono</c>.</summary>

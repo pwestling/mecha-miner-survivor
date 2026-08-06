@@ -29,6 +29,12 @@ export_credentials.cfg
 # output per doc 100 § Repository structure.
 generated/build-manifest.json
 
-# Agent worktree scratch. Only worktrees/ is ignored, deliberately: the rest of
-# .claude/ (settings, skills) is shared project configuration and stays committable.
+# Git worktrees created when a session isolates parallel streams. Each holds a
+# .git gitlink, so git will not descend into it and collapses the whole tree to a
+# single "?? .clau...e/" line - one stream saw three complete checkouts of other
+# branches, 4098 files, hidden behind that one line. Anything that reacts to
+# "untracked files exist" by staging broadly would commit them.
+#
+# Scoped to the worktrees subdirectory on purpose: .claude/ itself may hold
+# committed configuration, and ignoring all of it would hide that.
 .claude/worktrees/

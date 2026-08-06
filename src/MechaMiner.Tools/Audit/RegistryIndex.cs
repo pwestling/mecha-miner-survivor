@@ -327,6 +327,22 @@ internal sealed class RegistryIndex
                 continue;
             }
 
+            // A token the document wrote as a WILDCARD - `VER-FND-009-*` - is also a
+            // reference to a family rather than to one member, and the digits it carries
+            // narrow the family instead of naming a member. The scanner stops at the `-`
+            // and hands over `VER-FND-009-`, which has digits, so the no-digit rule above
+            // does not catch it and it was reported as malformed. doc 91 line 118 writes
+            // exactly that form, correctly: "which rules are live is recorded by the
+            // `VER-FND-009-*` entries and their statuses". The test for whether a token is
+            // reaching for a specific member is what FOLLOWS it in the source line, so the
+            // check is on the line and not on the token.
+            if (match.Index + match.Length < line.Length
+                && line[match.Index + match.Length] == '*'
+                && token.EndsWith('-'))
+            {
+                continue;
+            }
+
             if (!IdentifierFamilies.IsWellFormed(token))
             {
                 _malformed.Add(new IdentifierOccurrence(

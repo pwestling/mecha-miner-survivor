@@ -30,16 +30,11 @@ set -euo pipefail
 readonly REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly EXIT_VALIDATION=4
 
-failures=0
-
-fail() {
-  printf 'FAIL  %s\n' "$*"
-  failures=$((failures + 1))
-}
-
-pass() {
-  printf 'ok    %s\n' "$*"
-}
+# The shared emitters: pass/fail for findings about the subject under test,
+# control_pass/control_fail for anything produced while a negative control's fixture is in
+# place, section/gate_summary so a red run names the failing section. See build/gate-output.sh
+# for why control output is marked and why that marking is enforced rather than conventional.
+source "${REPO_ROOT}/build/gate-output.sh"
 
 # --- Accepted layout (doc 100 § Repository structure) ------------------------
 
@@ -245,7 +240,7 @@ accepted_field() {
   return 1
 }
 
-echo "=== 1. accepted repository layout (VER-FND-001-003)"
+section "1. accepted repository layout (VER-FND-001-003)"
 for path in "${EXPECTED_PATHS[@]}"; do
   if [[ -e "${REPO_ROOT}/${path}" ]]; then
     pass "exists: ${path}"
@@ -254,8 +249,7 @@ for path in "${EXPECTED_PATHS[@]}"; do
   fi
 done
 
-echo
-echo "=== 2. solution contains exactly the accepted projects (VER-FND-001-003)"
+section "2. solution contains exactly the accepted projects (VER-FND-001-003)"
 actual_solution="$(cd "${REPO_ROOT}" && dotnet sln MechaMiner.sln list \
   | grep -E '\.csproj$' | tr '\\' '/' | sort)"
 expected_solution="$(printf '%s\n' "${EXPECTED_PROJECTS[@]}" | cut -d'|' -f1 | sort)"
@@ -266,8 +260,7 @@ else
   diff <(printf '%s\n' "${expected_solution}") <(printf '%s\n' "${actual_solution}") || true
 fi
 
-echo
-echo "=== 3. project reference edges match the accepted boundary (VER-FND-001-004)"
+section "3. project reference edges match the accepted boundary (VER-FND-001-004)"
 for entry in "${EXPECTED_PROJECTS[@]}"; do
   IFS='|' read -r project expected_refs _godot <<<"${entry}"
   if edges_match "${project}" "${expected_refs}"; then
@@ -277,10 +270,27 @@ for entry in "${EXPECTED_PROJECTS[@]}"; do
   fi
 done
 
-echo
-echo "=== 4. only game/ may reference Godot (VER-FND-001-004)"
+section "4. only game/ may reference Godot (VER-FND-001-004)"
 for entry in "${EXPECTED_PROJECTS[@]}"; do
   IFS='|' read -r project _expected_refs godot_allowed <<<"${entry}"
+  # From the base branch, kept verbatim in substance because this branch did not have it:
+  # the lock file is half of this row's evidence, and an absent one used to be skipped.
+  # `godot_locked` stayed empty, the row was decided on the MSBuild half alone, and the
+  # "must not reference Godot" branch still printed `ok`. Deleting a project's
+  # packages.lock.json therefore removed an assertion without failing anything, which is
+  # Decision 11 rule 2 - an empty candidate set never satisfies a gate - in the mild form.
+  # Every one of the accepted projects has a committed lock file today, so this holds in
+  # fact; asserting it makes it hold by construction. verify-configurations.sh § 4 carries
+  # the sharper set-level form; this row is the per-project half.
+  #
+  # It is here in the loop and NOT inside godot_matches() on purpose: § 8's fixture
+  # projects under build/policy-fixtures/architecture/ carry no lock file, and they must
+  # still be able to drive the same comparison the real projects drive.
+  if [[ ! -f "${REPO_ROOT}/$(dirname "${project}")/packages.lock.json" ]]; then
+    fail "$(project_name "${project}"): $(dirname "${project}")/packages.lock.json is absent, so the locked half of the Godot boundary was not read; an unread half is not a satisfied one"
+    continue
+  fi
+
   if godot_matches "${project}" "${godot_allowed}"; then
     if [[ "${godot_allowed}" == "yes" ]]; then
       pass "$(project_name "${project}") references Godot as accepted (locked: ${GODOT_LOCKED})"
@@ -342,16 +352,14 @@ assert_absent_pattern() {
   fi
 }
 
-echo
-echo "=== 5. no pure project references MechaMiner.Game (VER-FND-001-004)"
+section "5. no pure project references MechaMiner.Game (VER-FND-001-004)"
 assert_absent_pattern \
   "no project references MechaMiner.Game" \
   'ProjectReference[^>]*MechaMiner\.Game\.csproj' \
   '*.csproj' \
   src tests game
 
-echo
-echo "=== 6. no Godot types outside game/ (VER-FND-001-004)"
+section "6. no Godot types outside game/ (VER-FND-001-004)"
 #
 # The Godot namespace as a token in any position, not only after `using`.
 #
@@ -840,8 +848,7 @@ fi
 
 rm -rf "${godot_probe_dir}"
 
-echo
-echo "=== 7. no GDScript in the repository (VER-FND-001-005)"
+section "7. no GDScript in the repository (VER-FND-001-005)"
 #
 # "No production GDScript" is one of AGENTS.md § Nonnegotiable architecture's hard
 # prohibitions (TR-FND-002), and this gate could not enforce it. Two separate defects,
@@ -878,10 +885,19 @@ gdscript_probe() {
   fi
 }
 
-# The first line of a probe's verdict, without a pipe. `probe | head -1` makes head
-# exit after one line, the probe take SIGPIPE, and `set -o pipefail` abort the whole
-# script with 141 - a class doc 100 does not define, from a gate that had not decided
-# anything. It was intermittent and it fired during § 8's negative controls.
+# The first line of a probe's verdict, without a pipe. `probe | head -1` makes head exit
+# after one line, the probe take SIGPIPE, and `set -o pipefail` surface 141; `set -e` then
+# ABORTS THE WHOLE GATE mid-run - after § 1-6 have printed `ok` lines and before § 7 or
+# § 7a print anything, which reads as a truncated log rather than as a failure. It was
+# intermittent and it fired during § 8's negative controls.
+#
+# Measured over 300 trials on a probe emitting one path per offending file: 0 of 300 at
+# 428 bytes and at 4.1 KB, 136 of 300 at 70 KB, 300 of 300 at 326 KB. A tree with a few
+# hundred stray .gd files is exactly the tree this section exists to fail on, so the abort
+# was reachable precisely when the gate mattered. See delivery-waves § Decision 13.
+#
+# `tail -n +2` below is left as a pipeline on purpose: `tail` must read to EOF to know
+# where the end is, so it never closes the pipe early and there is no SIGPIPE to take.
 first_line() {
   local text="$1"
   printf '%s' "${text%%$'\n'*}"
@@ -899,8 +915,7 @@ else
   pass "no .gd file is tracked, and none is present untracked in the working tree"
 fi
 
-echo
-echo "=== 7a. negative controls: the no-GDScript gate can actually fail"
+section "7a. negative controls: the no-GDScript gate can actually fail"
 readonly GDSCRIPT_FIXTURE="${REPO_ROOT}/game/DeliberatelyForbiddenGdscriptFixture.gd"
 
 remove_gdscript_fixture() {
@@ -923,18 +938,18 @@ GDFIXTURE
 
   control_kind="$(first_line "$(gdscript_probe)")"
   if [[ "${control_kind}" == "violation" ]]; then
-    pass "an untracked .gd file is detected as a violation"
+    control_pass "an untracked .gd file is detected as a violation"
   else
-    fail "an untracked .gd file was reported as '${control_kind}'; the gate cannot see untracked GDScript"
+    control_fail "an untracked .gd file was reported as '${control_kind}'; the gate cannot see untracked GDScript"
   fi
 
   # Control 2: the same fixture, with git unable to answer. The gate must report that
   # it could not tell, and must never report a clean tree.
   control_kind="$(first_line "$(GIT_DIR=/nonexistent/verify-architecture-broken.git gdscript_probe)")"
   if [[ "${control_kind}" == "unreadable" ]]; then
-    pass "a git failure is reported as unreadable, not as a clean tree"
+    control_pass "a git failure is reported as unreadable, not as a clean tree"
   else
-    fail "with a broken git the probe reported '${control_kind}'; a failed enumeration must not pass"
+    control_fail "with a broken git the probe reported '${control_kind}'; a failed enumeration must not pass"
   fi
 
   remove_gdscript_fixture
@@ -945,14 +960,13 @@ GDFIXTURE
   # failed on - is not reported a second time as a fixture-cleanup failure.
   control_kind="$(first_line "$(gdscript_probe)")"
   if [[ "${control_kind}" == "${gdscript_kind}" ]]; then
-    pass "the fixture was removed; the probe reports '${control_kind}' again, as it did in § 7"
+    control_pass "the fixture was removed; the probe reports '${control_kind}' again, as it did in § 7"
   else
-    fail "the GDScript fixture was not removed: probe reports '${control_kind}', § 7 saw '${gdscript_kind}'"
+    control_fail "the GDScript fixture was not removed: probe reports '${control_kind}', § 7 saw '${gdscript_kind}'"
   fi
 fi
 
-echo
-echo "=== 8. the boundary comparisons above can actually fail (VER-FND-009-013)"
+section "8. the boundary comparisons above can actually fail (VER-FND-009-013)"
 #
 # Sections 3 and 4 only ever ran against compliant input, so nothing showed they were
 # capable of reporting a violation. MechaMiner.Diagnostics made that gap matter: it is a
@@ -1047,8 +1061,7 @@ else
   fi
 fi
 
-echo
-echo "=== 9. the CI workflow still gates the repository (VER-FND-005-009)"
+section "9. the CI workflow still gates the repository (VER-FND-005-009)"
 #
 # NUMBERED 9, NOT 8, AND ONLY FOR THAT REASON. FND-005 wrote this section as § 8 on
 # claude/hearth-thread-2vmaro-fnd-002 while FND-009 wrote a different § 8 above on
@@ -1147,10 +1160,8 @@ else
   done
 fi
 
-echo
-if [[ "${failures}" -eq 0 ]]; then
-  echo "verify-architecture: PASS"
-  exit 0
-fi
-echo "verify-architecture: FAIL (${failures} assertion(s))"
-exit "${EXIT_VALIDATION}"
+# This gate runs negative controls in band (§ 7a), so its log contains failure-shaped text
+# on a green run. Prove the marking that separates that text from genuine findings holds.
+gate_assert_marking
+
+gate_summary "verify-architecture" "${EXIT_VALIDATION}"

@@ -12,6 +12,19 @@ namespace MechaMiner.Simulation.Tests.Mining;
 [TestFixture]
 internal sealed class MiningDecayTests
 {
+    /// <summary>
+    /// The exit grace in ticks, as a literal: <c>30</c>.
+    /// </summary>
+    /// <remarks>
+    /// <b>A literal on purpose, and it was a measured defect that it was not.</b> Every loop below was
+    /// originally written as <c>GrayboxExtraction.ExitGraceTicks</c>, which made the whole fixture
+    /// insensitive to that constant's value: a negative control setting the documented 0.5 s to 0.0 ran
+    /// GREEN here, because a hold loop of length zero holds nothing and the assertions after it still
+    /// held. A gate expressed entirely in terms of the number it is checking cannot check it. The
+    /// literal is asserted against the production constant once, below, and used everywhere else.
+    /// </remarks>
+    private const int DocumentedGraceTicks = 30;
+
     private static readonly PlanarVector Centre = PlanarVector.Zero;
 
     private static PlanarVector Inside => Centre;
@@ -31,12 +44,30 @@ internal sealed class MiningDecayTests
     }
 
     [Test]
+    public void TheGraceIsTheDocumentedHalfSecond()
+    {
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                GrayboxExtraction.ExitGraceTicks,
+                Is.EqualTo(DocumentedGraceTicks),
+                "docs/40:52 - 'Leaving the circular zone begins a 0.5-second grace period', which at 60 Hz "
+                    + "is 30 ticks. This is the one assertion in this fixture that reads the production "
+                    + "constant; every loop below uses the literal, so a change to the constant fails HERE "
+                    + "rather than passing everywhere");
+            Assert.That(
+                GrayboxExtraction.ExitGraceSeconds,
+                Is.EqualTo(0.5).Within(1e-12));
+        });
+    }
+
+    [Test]
     public void UnfinishedProgressHoldsUnchangedForExactlyThirtyTicksAfterLeaving()
     {
         MiningSiteState seam = AfterTicksInside(60);
         int progressOnLeaving = seam.InstallmentProgressTicks;
 
-        for (int tick = 0; tick < GrayboxExtraction.ExitGraceTicks; tick++)
+        for (int tick = 0; tick < DocumentedGraceTicks; tick++)
         {
             seam = MiningAdvance.Advance(seam, Outside).State;
             Assert.That(
@@ -60,7 +91,7 @@ internal sealed class MiningDecayTests
         int progressOnLeaving = seam.InstallmentProgressTicks;
 
         // Past the grace, then ten more ticks of decay.
-        for (int tick = 0; tick < GrayboxExtraction.ExitGraceTicks + 10; tick++)
+        for (int tick = 0; tick < DocumentedGraceTicks + 10; tick++)
         {
             seam = MiningAdvance.Advance(seam, Outside).State;
         }
@@ -85,7 +116,7 @@ internal sealed class MiningDecayTests
         MiningSiteState seam = AfterTicksInside(StandardOreSeamProfile.InstallmentTicks / 2);
         int half = seam.InstallmentProgressTicks;
 
-        for (int tick = 0; tick < GrayboxExtraction.ExitGraceTicks; tick++)
+        for (int tick = 0; tick < DocumentedGraceTicks; tick++)
         {
             seam = MiningAdvance.Advance(seam, Outside).State;
         }
@@ -127,7 +158,7 @@ internal sealed class MiningDecayTests
     {
         MiningSiteState seam = AfterTicksInside(80);
 
-        for (int tick = 0; tick < GrayboxExtraction.ExitGraceTicks + 5; tick++)
+        for (int tick = 0; tick < DocumentedGraceTicks + 5; tick++)
         {
             seam = MiningAdvance.Advance(seam, Outside).State;
         }

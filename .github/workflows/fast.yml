@@ -205,7 +205,7 @@ jobs:
         if: always()
         # The roster of steps this record must account for is derived from the recorder
         # lines above, never written out here. A list would reproduce, one level up, the
-        # defect build/verify-gate-wiring.sh § 1 rejects: a step absent from the list
+        # defect build/verify-gate-wiring.sh §§ 1-2 reject: a step absent from the list
         # would pass by not being looked at, which is what happened - an extra row for a
         # step this workflow does not have was accepted and the suite still reported
         # that it had passed.
@@ -236,7 +236,7 @@ jobs:
 
           # The expected roster is derived from this workflow's own recorder lines and is
           # never written out here. A list would reproduce, one level up, the defect
-          # build/verify-gate-wiring.sh § 1 rejects: a step absent from the list would pass by
+          # build/verify-gate-wiring.sh §§ 1-2 reject: a step absent from the list would pass by
           # not being looked at, which is exactly what happened before this comment existed.
           if [[ ! -s "${workflow}" ]]; then
             fatal "${workflow} is missing or empty, so the expected step roster cannot be derived." \

@@ -115,7 +115,7 @@ The initial `schema_version` is `1` and the initial `content_version` is `1` for
 
 - a gameplay document ID with an optional anchor, for example `GDD-COMBAT` or `GDD-COMBAT#contact-damage`;
 - a gameplay decision ID, `DEC-###`;
-- a technical decision ID, `TDR-###`; or
+- a technical decision ID, `TDR-###`;
 - a technical requirement ID, `TR-<DOMAIN>-###`; or
 - a technical document ID with an optional anchor, for example `TDD-ENCOUNTERS` or `TDD-ENCOUNTERS#elite-construction`.
 

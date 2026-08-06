@@ -1,0 +1,67 @@
+# The complete set of content-ID prefixes docs/technical/40-content-data-and-validation.md
+# mints, PRE-REGISTERED BEFORE the merge of claude/hearth-thread-2vmaro-fnd-002 into
+# claude/hearth-thread-2vmaro-fnd-004, and committed on its own so the commit order proves it.
+#
+# Authority: docs/technical/40-content-data-and-validation.md
+#              § Minted content-ID grammars, § Map generation
+# Requirements: TR-CNT-001
+#
+# WHY THIS FILE EXISTS AT ALL, and why it is dated by its commit rather than by a comment.
+# Doc 40 diverged in BOTH directions across those two branches and neither side is a superset:
+#
+#   - the base branch carries the sixteen-row `### Minted content-ID grammars` table, and does
+#     not mint `SITE-`, `ELT-` or `PLAYER-`. It carries a paragraph saying those three are
+#     minted in this document's own FND-004 revision under `### Map generation`, that the table
+#     is complete only once FND-004 merges, and that "any check that reads this table must
+#     assert them by name, so that the mint's arrival breaks the build rather than passing
+#     silently".
+#   - the FND-004 branch is where those three are minted, under `### Map generation`, and has
+#     no table at all, because it never received the commit that added one.
+#
+# So taking either side of that file whole silently drops content, and git reports no conflict
+# for it: the two changes are in different regions of the same document. A union computed after
+# the merge would be indistinguishable from one fitted to whatever the merge happened to
+# produce, and this is precisely the case where fitting would look exactly like success. The
+# set below was therefore enumerated from the two parent revisions and committed before the
+# merge commit exists.
+#
+# Enumerated from:
+#   base   origin/claude/hearth-thread-2vmaro-fnd-002 @ 5589ad1, doc 40 § Minted content-ID
+#          grammars, the sixteen table rows (16 prefixes)
+#   ours   claude/hearth-thread-2vmaro-fnd-004 @ 0241102, doc 40 § Map generation, the mint
+#          sentence "WAV-01, MGC-01, SITE-01 through SITE-04, ELT-01, and PLAYER-01 are minted
+#          here" (5 prefixes, of which WAV- and MGC- are also table rows)
+#
+# Union: 16 + 3 = 19. The merged document must mint exactly these, no more and no fewer, and
+# the three the base paragraph was standing in for become rows in the table - which is the
+# event that paragraph named, so the paragraph goes and the rows replace it.
+#
+# NOT WIRED INTO A GATE. Nothing reads this file automatically. It is merge evidence, and
+# leaving it unread is deliberate for the same reason PR #7 leaves eight verify-*.sh scripts
+# unwired: which gate runs when is a workflow-contract decision, not part of resolving a merge.
+# Re-run the comparison by hand with:
+#
+#   grep -oE '^\| `[A-Z]+-`' docs/technical/40-content-data-and-validation.md \
+#     | tr -d '|` ' | sort -u
+#
+# One prefix per line, sorted, `#` comments and blank lines ignored.
+
+BOUNTY-
+CACHE-
+DEED-
+ELT-
+EXCL-
+FAB-
+FOOTPRINT-
+FORMULA-
+HOOK-
+HORDE-
+MGC-
+PLAYER-
+RESPEC-
+RSC-
+SIEGE-
+SITE-
+STACK-
+UTL-
+WAV-

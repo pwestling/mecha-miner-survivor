@@ -391,6 +391,40 @@
       ],
       "tier": "fast",
       "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-004-013",
+      "summary": "A paused-transaction commit that throws part way through invalidates the tick rather than wedging the run: for a throw from the staging callback and for a domain buffer handed in already open for another tick, nothing is published, the state version and the whole authoritative rendering are unchanged, the publisher's tick is invalidated and counted, and a subsequent BeginTick and a retry of the same transaction both succeed. TR-RUN-007 states the no-partial-state requirement unqualified; doc 20 \u00a7 Tick transaction rules only on a failure before commit, so the mid-commit case rests on TR-RUN-007 and not on that section.",
+      "task": "TASK-SIM-004-002",
+      "requirements": [
+        "TR-RUN-007",
+        "TR-RUN-003",
+        "TR-RUN-004"
+      ],
+      "technicalSources": [
+        "docs/technical/112-normative-requirement-index.md#foundation-and-runtime",
+        "docs/technical/20-simulation-core.md#tick-transaction",
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Commands.PausedTransactionTests.AFailedCommitInvalidatesTheTickInsteadOfWedgingTheRun"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output",
+        "negative-control"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
     }
   ]
 }

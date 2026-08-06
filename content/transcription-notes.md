@@ -835,8 +835,11 @@ C-1 showing up a second time in a second derived column, and is further evidence
 typesetting artefact rather than a competing authored value.
 
 **Verifier.** `A20` in `src/MechaMiner.Tools/ContentImport/verify_content.py` now asserts that no
-enemy definition carries either derived field, matching on key names across `content/enemies/` so a
-rename cannot slip past it. `reference_diameter_m` is explicitly allowlisted there, because `0.80 M`
+enemy definition carries either derived field, matching on key names across `content/enemies/`. *(Corrected
+under Ruling 46: this sentence said "so a rename cannot slip past it", which is false in the same way three
+other copies of that claim were. Key-name matching catches a rename only into a name the pattern still
+matches; A20 has no value layer, so a rename outside the pattern passes. See Ruling 27.)*
+`reference_diameter_m` is explicitly allowlisted there, because `0.80 M`
 is the Ripper's authored rank-zero diameter and not a per-enemy derived value.
 
 **What the ruling did not determine, and I chose:** leaving `contact_footprint` as an object with
@@ -1060,8 +1063,9 @@ two scopes**, not one rule over one directory:
   with them;
 - the **centre-distance** rule covers `content/enemies/` **and** `content/bosses/`.
 
-Both still match on key names, so a rename cannot slip past either, and `reference_diameter_m` stays
-allowlisted for the reason Ruling 6 gave.
+Both still match on key names — which catches a rename only into a name the pattern still matches, not a
+rename generally; *corrected under Ruling 46, where this sentence read "so a rename cannot slip past
+either"* — and `reference_diameter_m` stays allowlisted for the reason Ruling 6 gave.
 
 **What the ruling did not determine, and I chose:** leaving `contact_footprint` on the bosses as an
 object with four remaining fields rather than flattening it, matching the choice Ruling 6 recorded for
@@ -2587,15 +2591,18 @@ verified to reproduce exactly, and then **pulled back into the tree**:
 | stat upgrade price curve | 14 | **Would have moved 14 checkable numbers into an unchecked string.** |
 
 **The reason these two were wrong to remove — and the withdrawal of the reason first given.** An earlier
-draft of this ruling argued that removing the report would make `40:114`'s comparison a **tautology**: a
+draft of this ruling argued that removing the report would make the `docs/40` § *Enemies and bosses*
+comparison a **tautology**: a
 comparand produced by the code it is checked against agrees always and catches nothing. **That argument is
 withdrawn.** It was wrong on this tree. `docs/data/contact-damage-pressure.csv` carries the same report —
-`hits_to_defeat_100` and `continuous_overlap_ttd_s` for all 14 actors — and `72:167` states all five
+`hits_to_defeat_100` and `continuous_overlap_ttd_s` for all 14 actors — and `docs/72` § *Damage Pressure
+Reference* states all five
 resonant hit counts, so an independent comparand survives the removal either way.
 
 **The reason that is actually true: there are three writers on one report and no settled authority, so
 deleting any copy silently decides which survivor is authoritative.** The three are the docs table, the
-content block, and the compiler that `40:19` and `40:114` say derives the report. That decision has not been
+content block, and the compiler that `docs/40` § *Source-of-truth boundary* and § *Enemies and bosses* say
+derives the report. That decision has not been
 made by anyone, and this pass would have taken it **as a side effect of a commit whose stated purpose was
 deduplication**. Removing a redundant copy and choosing an authority are different acts, and only the first
 was authorised. **This reason generalises where the tautology version did not** — it holds whether or not
@@ -2776,16 +2783,29 @@ each removed value, no non-operand numeric leaf inside its own derivation site m
 compared exactly as `Fraction` with no tolerance. That survives a rename, a relocation within the site, a
 different unit suffix, and a change of arity (`32.0` → `[32.0]`), because none of those change the number.
 
-**Its radius is the limit, and the radius was chosen by measurement rather than asserted.** The site is the
-object that held the removed leaf — not the file, not the scope. At **file** radius this tree has **55**
-coincidental recurrences and at **scope** radius **400**, almost all magnitude coincidences between
-unrelated quantities: a `1.5` m/s world speed against a `1.5`-second control-immunity window, a hit count
-of `4` against `maximum_simultaneous_bosses`. An exception list of that size cannot be justified entry by
-entry, so the radius is narrow **and is stated to be narrow**. At site radius the list is **one entry**:
-`UTL-R1`'s removed `acquisition.total_rank_ore_cost` is `0`, being the sum of an empty `rank_ore_costs`
-list, and its `acquisition.rank_count` is independently `0` — two quantities that are both zero, not one
-quantity written twice. A declared exception that **stops** colliding also fails the generator, because a
-stale justification is as much a defect as a missing one.
+**Its radius is the limit, and the radius is now COMPUTED rather than quoted.** The site is the object that
+held the removed leaf — not the file, not the scope. `measure_search_radii()` in the generator counts, under
+one definition on the pinned `sweep_ref`, how many `(removed value, numeric leaf)` pairs each candidate
+radius would flag: a pair counts when the leaf holds the removed value exactly, is not the removed leaf, and
+is not one of that value's own operands in that file. The three counts are **1 : 40 : 668** at site, file and
+scope radius, they are carried in `search_radius_measurement` in the expectation file, and that is where the
+figures on a green run come from. Almost all of the widening is magnitude coincidences between unrelated
+quantities: a `1.5` m/s world speed against a `1.5`-second control-immunity window, a hit count of `4`
+against `maximum_simultaneous_bosses`. An exception list of 39 or 667 entries cannot be justified entry by
+entry, so the radius is narrow **and is stated to be narrow**.
+
+**Correction, Ruling 46.** This paragraph previously quoted **55** at file radius and **400** at scope
+radius. Neither reproduced: no code computed either, a hand count varies with which exclusions it applies
+(file radius comes out anywhere from 34 to 61 and scope radius from 326 to 3,495 depending on the choice),
+and both numbers were printed to every reader on a green run. They are computed now, under one stated
+definition, so the ratio a reader is shown is regenerable from the artifact. The design conclusion the old
+numbers supported — site radius is one, everything wider is at least an order of magnitude worse — is
+unchanged.
+
+At site radius the exception list is **one entry**: `UTL-R1`'s removed `acquisition.total_rank_ore_cost` is
+`0`, being the sum of an empty `rank_ore_costs` list, and its `acquisition.rank_count` is independently `0` —
+two quantities that are both zero, not one quantity written twice. A declared exception that **stops**
+colliding fails, in `verify_content.py` and in the generator, each measured against the tree in front of it.
 
 **Both layers were probed, per family, with four attack classes — 24 injections, each into a real
 `content/` file, measured with the real `verify_content.py`, and reverted.** The value layer is what fires;
@@ -2799,10 +2819,82 @@ whole reason the value layer exists:
 | **arity** — the number wrapped as `[value]`, same site | shape | 0/6 | **6/6** | caught |
 | **relocation** — same file, same number, moved *out* of the derivation site | position | 0/6 | **0/6** | **misses, by design** |
 
-**The relocation row is the radius, reported rather than buried.** It is not a bug to fix by widening: file
-radius costs 55 coincidental recurrences and scope radius 400, and an exception list that size is not
-auditable. The honest claim is "indifferent to name, unit and arity within the derivation site", and that is
+**The relocation row is the radius, reported rather than buried.** It is not a bug to fix by widening: the
+computed ratio is 1 : 40 : 668 at site, file and scope radius, and an exception list of 39 or 667 entries is
+not auditable. The honest claim is "indifferent to name, unit and arity within the derivation site", and that is
 now what the code, the tool README and this record all say.
+
+### Ruling 46 — the A28 value layer's own review pass: two blockers, both of them "the check did not run"
+
+The value layer shipped with no review pass behind it. It got one, and the two defects it found are the
+same shape: **a guard that reported a limit it did not have.** Both are now fixed and controlled.
+
+**Blocker 1 — the value layer searched ZERO leaves for 19 of the 115 records, and 6 of those could not fail
+on their own value.** The derivation site was computed as "the substring before the last `[` if the pointer
+ends `]`, else before the last `.`, else `""`", and then filtered with `if not (site and …): continue`. For a
+**root-level pointer** — no `.`, no trailing `]` — the site came out `""`, which is falsy, so the filter
+skipped **every leaf in the file**. The six affected records are `common-ore.json :: seam_total_per_map`
+(3600), `hyper-gold.json :: run_ceiling` (400), `rich-ore-seams.json :: total_depletion_seconds` (15) and
+`:: total_uninterrupted_extraction_per_map_seconds` (120), and `standard-ore-seams.json ::
+total_depletion_seconds` (15) and `:: total_uninterrupted_extraction_per_map_seconds` (300). **The correct
+reading of "the object that held the removed leaf" for a root-level leaf is the whole document**, and that is
+what `derivation_site()`/`is_in_site()` now implement, identically in `verify_content.py` and in the
+generator so `--check` stays consistent.
+
+Negative controls, run and reverted **individually**, one per record: injecting the removed value at file
+root under the off-class name `probe_zzz` now **FAILs** for all six, each naming its own family. The same
+value nested one level deeper as `probe_obj.probe_zzz` **also FAILs** for all six, which is the expected
+consequence of the site being the document: the subtree walk reaches it.
+
+**The second half, disclosed rather than buried: emptying a container empties the guard.** Fixing the
+root-site case takes the count of records searching zero leaves from 19 to **13**. The remaining 13 are the
+`{}` and `{"resource": "common ore"}` residues — the removal left their containing object with **no numeric
+leaves at all**, so there is nothing at their site for the layer to compare against and only a leaf
+reappearing *inside that same object* could fail. That count is now **asserted**
+(`EMPTY_SITE_GUARD_RECORDS = 13`) and printed, so emptying another container cannot shrink the guard
+quietly.
+
+**What concealed it was a mean.** The disclosure line read "299 numeric leaves across 115 removed values",
+which is 2.6 per record and reads as coverage of all 115. It is replaced by the **distribution** — `0 ×13,
+1 ×17, 2 ×2, 3 ×60, 5 ×4, 6 ×13, 7 ×1, 8 ×2, 11 ×2, 18 ×1` — with the minimum and the zero-count called out.
+A total or a mean over a population is not a statement about its members; that is the same lesson as the
+`docs/31` two-decimal argument above, arriving from the other direction.
+
+**Blocker 2 — "a stale exception fails too" was false in BOTH tools.** The generator's guard loaded the file
+from `Tree(sweep_ref)` — the pinned `fefb7a3`, where the colliding value collides *by construction* — so a
+declared exception was "still colliding" forever, whatever the tree did. And `verify_content.py` had **no
+staleness guard at all**: it consulted the set only as an exclusion. Proof: changing
+`content/utilities/UTL-R1.json :: acquisition.rank_count` from `0` to `1` ends the only declared collision,
+and both tools still exited **0**.
+
+A30 does this correctly sixty lines away — `stale = sorted(set(CSV_MIRROR_ROUNDED) - declared_used)`,
+computed against the current tree, where only an exception the scan actually *reached* counts as used. That
+pattern is copied into A28 in both tools, in two halves: **unused on the sweep ref** (it suppresses nothing)
+and **no longer colliding in the worktree** (its justification stopped being true, read from disk, not from
+the pinned blob). Control, the same injection: `rank_count` `0 → 1` now FAILs `verify_content.py`
+("1 declared value-collision exception(s) no longer suppress anything on this tree") **and** the generator
+("no longer collides in the CURRENT worktree"), and is reverted.
+
+**Finding 3 — four declared counts were written and never compared.** `total_removed`, `family_count`,
+`declared_family_count` and `declared_total_removed` were produced by the generator and read by nothing in
+`verify_content.py`; `grep -n declared verify_content.py` returned no hit anywhere in the A28/A29 code. So
+`verify_content.py` **alone** passed every vacuity injection. All four are now asserted in
+`verify_content.py`, against literals restated there on purpose — a count read only from the file it is meant
+to police cannot police it — together with per-family record-emptiness and a live scope check. Five
+injections into the expectation file, each run and reverted individually, each against `verify_content.py`
+alone:
+
+| Injection | Before | After |
+| --- | --- | --- |
+| `"families": []` | PASS | **FAIL**, 3 failures |
+| one family's scope repointed at `content/schemas/` (no definitions) | PASS | **FAIL**, 1 failure |
+| every family's `records` emptied | PASS | **FAIL**, 3 failures |
+| `removed_numeric_multiset` emptied and `sweep_ref` repinned to HEAD | PASS | **FAIL**, 1 failure |
+| the four counts overwritten `9999`/`99` | PASS | **FAIL**, 4 count rows red |
+
+`derive --check` caught these before, by regenerating the file and byte-comparing it. That is a
+**file-integrity** check: it fails for any edit at all, including a comment, and says nothing about whether
+the rule has content. The rule now says it.
 
 **What A28 still does not do.** The name layer catches a rename only within its own word class; the value
 layer catches relocation only within the derivation site. Neither makes reintroduction impossible, and the
@@ -2812,6 +2904,16 @@ does not evade it"), and the tool README's A20 paragraph ("so that a *rename* in
 cannot slip past"). All three were false in the same way, and the notes had already recorded the correct
 limitation for A20 under Ruling 27 — "a value injected under an unmatched name passes" — so the code
 contradicted the record rather than extending it.
+
+**Correction, Ruling 46: three was not all of them, because the pass grepped the FILES it had in hand
+instead of the CLAIM.** Four more copies of the same assertion survived it, and one — `verify_content.py`'s
+A20 block — contradicted itself inside two consecutive sentences ("a rename inside one of them cannot slip
+past. It does NOT catch the value reappearing under an unrelated name"). The other three are this record's
+own Ruling 6 and Ruling 8 verifier notes and the comment above `FAMILIES` in
+`derive_derived_value_expectations.py`. All four are corrected, and the method that found them is the method
+to use: **grep the repository for the assertion's substance, not the file you last edited.** The same audit
+found a stale "166-element prediction" and a stale "nine guards"/"the other eight" pair describing the
+current rule set, both left behind when 166 became 115 and nine became six.
 
 **The history: A28 was nine rules with nine scopes, for A20's reason, and its word classes came out of a
 failed control.**
@@ -2854,7 +2956,7 @@ a series word (`curve|table|ladder|schedule|steps|series|…`) rather than the t
 four aggregate families share one `AGGREGATE_WORDS` class that adds the cumulative half
 (`cumulative|accru|accumulat|rolled_up|to_date|so_far|subtotal|tally|…`) to the summation half. **Every
 widened rule was re-controlled at the pinned `sweep_ref`: each still matches its own removal set and nothing
-else in its scope, so the 166-element prediction is byte-identical and no `content/` value moved.**
+else in its scope, so the 115-element prediction is byte-identical and no `content/` value moved.**
 
 Two exclusions from the widened classes are deliberate and recorded beside the rules, because they are the
 same collision `total_` is in `content/powerups/`: `payout` is **not** in the mining-site class
@@ -2896,7 +2998,17 @@ touched files. The file count is unchanged at 139, so A21 is unaffected.
   `EN-01` hull 20 → 25, an authored non-derived value — would fail a rule about derived values, and the only
   way to clear that failure is to re-pin `sweep_ref` to a newer commit, which makes A29 compare the tree
   against itself and destroys the prediction-first property that is the entire point of the ordering.
-  **A29 is now one row: set equality over the removal set**, which does hold for every future commit.
+  **A29 is now one row: set equality over the removal set.**
+
+  **Correction, Ruling 46: only HALF of that row holds for every future commit**, and this line said the
+  whole of it did. Set equality has two halves. The `missing` half — every predicted removal is still
+  missing — does hold forever; nothing legitimately re-authors a value the compiler owns. The `unexpected`
+  half — nothing *else* is missing — does not: deleting any authored numeric leaf fails it. Controlled
+  individually: `EN-01` hull `20 → 25` in place **passes**; adding an authored numeric leaf to `EN-01`
+  **passes**; deleting `EN-01.earliest_minute` **FAILs**, "1 removed-but-unpredicted". So A29 will
+  false-fail on a future commit that deletes a field, and the fix then is to re-derive the expectation from
+  a newer `sweep_ref` deliberately, not to loosen the rule. The docstring and the tool `README.md` now say
+  this.
 - **`null` count: 0 → 0**, still with no declared exceptions.
 - **No list was emptied, and no object was left empty.** `first_ten_prices` — the one list an earlier draft
   emptied and dropped — is **restored** with all ten elements, so the question of what to do with a
@@ -4521,33 +4633,96 @@ Razorling is the one actor whose derived contact diameter does not land on the C
 `docs/31` § *Ordinary roster overview* states its body scale as `0.62×`, so the exact derived diameter is
 `0.62 × 0.80 = 0.496 M`; `docs/72` § *Collision and Contact Footprints* states its footprint as `0.50 M`,
 and the CSV mirrors 72. The propagated start distance is `0.496 / 2 + 0.50 = 0.748` against a stated `0.75`.
-**This is two `docs/` sources disagreeing, not a content defect** — `content/` faithfully transcribes the
-`0.62` from the source it cites, and `docs/40` § *Analytical* fails only on divergence "beyond documented
-rounding". Both pairs are **declared, with that reason, and the rule fails if a declared pair ever stops
-diverging** — a stale exception widens a check silently, so it is treated as a defect exactly like a missing
-one. Every other actor's derived diameter is exact, so nothing else is hiding behind the declaration.
+**Two `docs/` sources disagree. Which one is exact is an OPEN DESIGN QUESTION, with the design owner, and
+this record no longer settles it.** An earlier version of this paragraph did settle it — it asserted the
+`0.496` was "not a content defect" but "the exact product of the authored scale", and that `content/`
+"faithfully transcribes the `0.62` from the source it cites". Both halves are withdrawn. The declaration
+stays, the value stays, and the reason is now the question plus the evidence.
+
+**The argument that has force, and it was in nobody's list.** Every other ordinary body scale is a multiple
+of `0.05` — `0.55`, `1.00`, `1.30`, `1.05`, `1.20`, `1.00`, `1.10`, `1.65`, `1.35`. `0.62` is not, **but
+neither is `0.625`.** So the Razorling breaks the pattern under either hypothesis and the pattern alone
+decides nothing; what the hypotheses differ on is whether the break is **motivated**. Under `0.625` it is: a
+designer targeting a clean `0.50 M` contact diameter back-computes `0.50 / 0.80 = 0.625`, and the scale is
+whatever falls out of that. Under `0.62` it is not: someone working in `0.05` steps who wanted a small
+variant picks `0.60` or `0.65`. **A motivated exception beats an unmotivated one, and this favours `0.50`
+being the exact figure.**
+
+**Three arguments that do not discriminate, recorded as non-discriminating so a later reader does not weigh
+them.** This matters more than the conclusion: an argument listed as evidence gets weighed by whoever reads
+the list next.
+
+| Argument | Why it carries no information |
+| --- | --- |
+| "Both `docs/72` figures come out exact under `0.625`" | **One coincidence, not two.** Start distance is `diameter ÷ 2 + 0.50`, so once the diameter is exactly `0.50` the start distance is exactly `0.75` automatically. The second figure is a function of the first and adds nothing. |
+| "`docs/31`'s Body column prints every scale at two decimals, so `0.62×` is what `0.625` looks like at two places" | **Zero-discriminating.** All nine other scales are multiples of `0.05`, so two decimals always suffice for them. The column has never *needed* a third decimal, and therefore cannot distinguish "authored at two decimals" from "presented at two decimals". It is a fit over a population incapable of falsifying it — the same failure class as measuring narrowly and writing broadly. |
+| "`docs/31` § *Ordinary roster overview* delegates exactness to `docs/72` (\"Exact derived values and boss circles appear in the survivability baseline\")" | **Consistent with both readings.** It obliges `docs/72` to carry the exact value; it says nothing about *which* value is exact. That is why each side has read it as supporting theirs. |
+
+**What is wrong in the repository under either reading.** The framing "`content/` follows the source it
+cites" is false for this field, and it was the reason given here. `EN-07`'s own `source_refs` scopes
+`contact_footprint` to `GDD-PLAYER-SURVIVABILITY-BASELINE#collision-and-contact-footprints` — `docs/72`, the
+`0.50` side — while the scale it stores comes from `docs/31`. So for the footprint, content does **not**
+follow the source it cites. Corrected in the tool `README.md` as well.
+
+**Why the outcome is nonetheless to hold.** The evidence is balanced and none of it is decisive. The current
+state is internally consistent under the `0.62` reading. If that reading wins there is nothing to do; if the
+other wins, the work is one `content/` value plus a document revert, travelling with the merges. The
+magnitude is 0.8% of a hitbox, so nothing is at risk in the interval, and the question belongs to the design
+owner as a **design** question — which contact diameter the Razorling was meant to have — rather than being
+inferred from typography. **`body_scale_multiplier` is NOT changed by this pass.**
+
+**And why holding is safe rather than merely cheap: A30 fails in both directions while the question is
+open.** Each declared pair names the CSV's written value **and the single exact content-side value** it
+covers, so changing `body_scale_multiplier` fails; and a declared pair that stops diverging fails, so
+correcting `docs/72` to `0.496` fails too. Neither side can be taken quietly. Both controlled — scale
+`0.62 → 0.61875` (which the previous revision **passed**) now FAILs on both the divergence row and the
+staleness row, and the CSV row rewritten to `0.496`/`0.748` FAILs on the staleness row. Every other actor's
+derived diameter is exact, so nothing else is hiding behind the declaration.
+
+**Correction, Ruling 46: the declared exception carried a tolerance, inside a rule whose comment said it had
+none.** The declaration used to require only that the content value **round** to the CSV value at the CSV's
+written precision — half of the last decimal place, disclosed nowhere. `body_scale_multiplier` could sit
+anywhere in `[0.61875, 0.625)` undetected while the module comment said **"NO TOLERANCE. Values compare
+exactly as Fractions … never absorbed by a threshold."** A declaration now names both numbers exactly; the
+rounding clause is kept as a *second* condition so a declaration cannot cover a pair that is not even close.
 
 The rule also carries a **vacuity guard**: the comparison count is asserted at 98, because a mirror-agreement
-rule that compares nothing passes for free.
+rule that compares nothing passes for free. **And it now discloses its own limits on a green run** — A30 was
+the only new rule passed no `notes=` tuple, so nothing about it printed when it passed, and it was **absent
+from the assertion-table docstring** that enumerates A1–A29. Both fixed.
 
 **Citation convention for everything added in this pass.** New citations name the document and its
 **section heading** (`docs/71` § *Base Weapon Summary*) rather than a bare `file:line`. Line numbers on
 this project have been wrong twice already and do not survive an editorial pass; a heading does, and
 heading-plus-anchor is what `source_refs` uses throughout `content/`, so a bare `file:line` in these
-notes was inconsistent with the data beside it. Pre-existing `40:114`-style references in earlier
-rulings are left as they are — rewriting them is an editorial pass of its own, and quotations that
-record what a *source* said keep the reference that source used.
+notes was inconsistent with the data beside it. (The `40:114` spelling in the previous sentence names the
+**form** being retired; it is not a citation.) Pre-existing references in that form, in rulings written
+before this convention, are left as they are — rewriting them is an editorial pass of its own, and
+quotations that record what a *source* said keep the reference that source used.
+
+**Correction, Ruling 46: the conversion was incomplete inside its own declared scope.** Seventeen lines
+added by the commit that introduced this convention still carried a bare `file:line` —
+`verify_content.py` 2, `derive_derived_value_expectations.py` 5, `expected_derived_value_removals.json` 3
+(all three regenerated from generator strings) and these notes 7. Several were **new prose, not preserved
+quotations**, including A30's own module comment and docstring, and one claim was rendered both ways in the
+same commit: the tool `README.md` used headings while the generated `pulled_because` string used the bare
+form. All seventeen are converted. The declared scope is "citations added by this convention's commit
+onward"; the audit that establishes it is `git diff 13ad963 -- <file> | grep '^+'` filtered for `file:line`
+spellings that name no document section, and it now returns exactly one line — the sentence above that names
+the retired form.
 
 ### Findings still open after this pass
 
 | Finding | Owner needed |
 | --- | --- |
 | **Cheapest open item.** `resonant_damage` reproduces as `ceil(base × 1.20)` for all five and both halves are already documented (`docs/61` § *Geode resonance behavior* and `docs/72` § *Damage Pressure Reference* for the ×1.20, `docs/72` § *Incoming Damage Resolution* step 3 for the round-up). Only a `40:` line assigning its recomputation to the compiler is missing. **Documentation edit, not a decision.** | document owner (`docs/technical/40`) |
-| `40:203` assigns "Recalculate DPS estimates" without stating a derivation covering the 45. They partition into **8 rules** — 1 for `sustained_30_dps`, 6 for `burst_10_dps` by the warmup families `docs/70` § *Opening burst and sustained DPS* already names, and 1 shape for `favorable_horde_dps` whose per-weapon `k` is stored nowhere. `40:203` should name the families per rule and stop assigning `favorable_horde_dps`, which `docs/70` § *Horde damage throughput* defines as a measurement. | document owner (`docs/technical/40`, `docs/70`) |
-| `favorable_horde_dps` is an analytic placeholder, not a derivation: `docs/71` § *Base Weapon Summary* states every simultaneous-victim count and says "benchmark-scene captures supersede it once a playable build exists". `40:203` should stop assigning it to the compiler. *(An earlier draft of this table said the counts were authored nowhere — that was false; they are in `docs/71` § *Base Weapon Summary*.)* | document owner (`docs/70`, `docs/71`) |
-| **Three writers on the survivability report, and no settled authority.** `docs/data/contact-damage-pressure.csv`, the `damage_pressure` blocks in `content/`, and the compiler (`40:19`, `40:114`) all carry it. **Deleting any copy silently decides which survivor is authoritative** — a decision nobody has made, and one a deduplication pass must not take as a side effect. Needs a deliberate answer naming the owner; until then all copies stay and A30 asserts the two stored ones agree. *(The tautology argument once offered for this is withdrawn — the CSV supplies an independent comparand regardless.)* | document owner (`docs/technical/40`) |
-| **No written policy for a container the removal pass empties.** This pass empties none, but the earlier draft answered the question two ways at once — dropped an emptied array, kept four `{"purchases": n}` object shells. Needs one rule before the next removal pass. | validator stream |
-| A28's value layer has a **derivation-site radius**, chosen because file radius costs 55 coincidental recurrences and scope radius 400. Relocation outside the site still passes. Widening the radius needs a way to classify magnitude coincidences that is not a hand-written exception list. | validator stream |
+| `docs/40` § *Analytical* assigns "Recalculate DPS estimates" without stating a derivation covering the 45. They partition into **8 rules** — 1 for `sustained_30_dps`, 6 for `burst_10_dps` by the warmup families `docs/70` § *Opening burst and sustained DPS* already names, and 1 shape for `favorable_horde_dps` whose per-weapon `k` is stored nowhere. That section should name the families per rule and stop assigning `favorable_horde_dps`, which `docs/70` § *Horde damage throughput* defines as a measurement. | document owner (`docs/technical/40`, `docs/70`) |
+| `favorable_horde_dps` is an analytic placeholder, not a derivation: `docs/71` § *Base Weapon Summary* states every simultaneous-victim count and says "benchmark-scene captures supersede it once a playable build exists". `docs/40` § *Analytical* should stop assigning it to the compiler. *(An earlier draft of this table said the counts were authored nowhere — that was false; they are in `docs/71` § *Base Weapon Summary*.)* | document owner (`docs/70`, `docs/71`) |
+| **Three writers on the survivability report, and no settled authority.** `docs/data/contact-damage-pressure.csv`, the `damage_pressure` blocks in `content/`, and the compiler (`docs/40` § *Source-of-truth boundary*, § *Enemies and bosses*) all carry it. **Deleting any copy silently decides which survivor is authoritative** — a decision nobody has made, and one a deduplication pass must not take as a side effect. Needs a deliberate answer naming the owner; until then all copies stay and A30 asserts the two stored ones agree. *(The tautology argument once offered for this is withdrawn — the CSV supplies an independent comparand regardless.)* | document owner (`docs/technical/40`) |
+| **No written policy for a container the removal pass empties.** This pass empties no container *of its last member*, but it leaves **13** with no numeric leaves, which is what empties their A28 guard (row below); and the earlier draft answered the question two ways at once — dropped an emptied array, kept four `{"purchases": n}` object shells. Needs one rule before the next removal pass. | validator stream |
+| A28's value layer has a **derivation-site radius**, chosen because the computed coincidence ratio is 1 : 40 : 668 at site, file and scope radius. Relocation outside the site still passes. Widening the radius needs a way to classify magnitude coincidences that is not a hand-written exception list. | validator stream |
+| **A28's value layer has an EMPTY guard for 13 of the 115 removed values** — their container was left with no numeric leaves at all, so the layer searches nothing for them and only a leaf reappearing inside that same object could fail it. Asserted and printed (`EMPTY_SITE_GUARD_RECORDS`) rather than fixed: fixing it means widening the radius for exactly those records, which is the same unsolved problem as the row above. | validator stream |
+| **The `docs/72` versus `docs/31` Razorling diameter question** — `0.50 M`, or `0.62 × 0.80 = 0.496 M`? Evidence recorded in `CSV_MIRROR_ROUNDED`, including which arguments are non-discriminating and why. A30 fails in both directions while it is open, so holding is safe. | design owner (`docs/31`, `docs/72`) |
 | A20 still has **no value layer** — it is key-name patterns only, so the limitation Ruling 27 records for it still stands in full. **The design to copy is A28's value layer *after it has been attacked and reviewed*, not merely after it shipped.** It is new machinery with no review pass behind it; replicating an unreviewed design into a second checker doubles the surface of any mistake in it, which is why A20's value layer was deliberately kept out of this pass rather than forgotten. Whoever picks this up should copy something that has been tested, not something that passed. | validator stream, after A28 layer 2 review |
 | `DAT-004` behavior-registry migration is **14 sites**, all `behavior_kind` on the ten enemies and four bosses, each holding prose where a token will go. Blocked on the registry being re-keyed by field space *and* token, because a flat namespace collides in this tree (`UTL-E1`'s duplicated string; `"damage"` at 36 sites under 7 leaf names). 65 prose sites across all six `CTR-CNT-002` spaces is the upper bound. | schema stream / registry owner |
 | `obstacle_free_radius_in_mining_zone_diameters` — radius or diameter? Factor of two. | document owner (`docs/51`) |

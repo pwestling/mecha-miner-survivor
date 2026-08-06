@@ -149,7 +149,11 @@ Reproducibility was never the issue for any of the three: all 51 reproduce exact
 orthogonal to ownership** — it says nothing about who authors a value or which copy is authoritative, which
 is the question that actually decided these three.
 
-It has the same shape as A20 and the same limits, with these differences:
+Its **name layer** has the same shape as A20. It does **not** have the same limits, and an earlier revision
+of this sentence said it did — which contradicted *What the footprint guard does not do* above, where A20 is
+recorded as having no value layer at all. That was the same sentence flagged and corrected in
+`verify_content.py` while this copy was left, so it is worth naming the failure mode: the correction pass
+looked at one copy. **Grep for the claim, not for the file.** The differences:
 
 - rules are matched against every **name segment** of a pointer, not only the leaf key, because three
   families store their number under a generic leaf (`amount`, `minimum`, `maximum`) inside a
@@ -169,7 +173,7 @@ It has the same shape as A20 and the same limits, with these differences:
   aggregate families share `AGGREGATE_WORDS`, which carries the cumulative half
   (`cumulative|accru|accumulat|rolled_up|to_date|so_far|subtotal|tally|…`) as well as the summation half.
   Widening changed **no `content/` value**: each rule was re-controlled at the pinned `sweep_ref` and still
-  matches its own removal set and nothing else, so the 166-element prediction is byte-identical;
+  matches its own removal set and nothing else, so the 115-element prediction is byte-identical;
 - the scopes differ per rule for the same reason A20's two do, and so do two exclusions from the word
   classes. An absolute metres-per-second value is *always* derived under `content/enemies/` and
   `content/bosses/`, where a speed is authored as a percentage of the mech baseline, and *always* authored
@@ -190,20 +194,38 @@ It has the same shape as A20 and the same limits, with these differences:
   compared exactly as `Fraction`, with no tolerance. It survives a rename, a relocation within the site,
   a different unit suffix, and a change of arity (`32.0` → `[32.0]`), because none of those change the
   number. Its **radius is the limit, and it is stated rather than hidden**: the derivation site, not the
-  file and not the scope. That choice was measured — at file radius this tree has **55** coincidental
-  recurrences and at scope radius **400**, almost all magnitude coincidences between unrelated
-  quantities (a `1.5` m/s world speed against a `1.5` s control-immunity window; a hit count of `4`
-  against `maximum_simultaneous_bosses`). An exception list that size could not be justified entry by
-  entry, so the radius is narrow *and said to be narrow*. **One** exception is declared, with its
-  reason: `UTL-R1`'s removed `acquisition.total_rank_ore_cost` is `0` (the sum of an empty list) and its
-  `acquisition.rank_count` is independently `0`. A declared exception that stops colliding also fails,
-  because a stale justification is as much a defect as a missing one.
+  file and not the scope. That choice is **computed, not quoted**: the generator's
+  `measure_search_radii()` counts, under one definition on the pinned `sweep_ref`, how many
+  `(removed value, numeric leaf)` pairs each candidate radius would flag, and writes the three numbers
+  into `search_radius_measurement` in the expectation file, which is where the figures printed on a
+  green run come from. The ratio is **1 : 40 : 668** for site, file and scope radius — almost all of the
+  widening is magnitude coincidences between unrelated quantities (a `1.5` m/s world speed against a
+  `1.5` s control-immunity window; a hit count of `4` against `maximum_simultaneous_bosses`). An
+  exception list of 39 or 667 entries could not be justified entry by entry, so the radius is narrow
+  *and said to be narrow*. An earlier revision of this paragraph quoted **55** and **400**; no code
+  computed either and neither reproduced, which is why they are computed now. **One** exception is
+  declared, with its reason: `UTL-R1`'s removed `acquisition.total_rank_ore_cost` is `0` (the sum of an
+  empty list) and its `acquisition.rank_count` is independently `0`. A declared exception that stops
+  colliding **fails**, in `verify_content.py` and in the generator, both measured against the tree in
+  front of them — an earlier revision claimed this and had it in neither place;
+- **the guard is only as big as what survived inside the site, and that is a second limit.** Emptying a
+  container empties its guard: **13 of the 115** removed values sit in an object the removal left with no
+  numeric leaves at all (the `{}` and `{"resource": "common ore"}` residues), so this layer searches
+  nothing for them. The count is asserted (`EMPTY_SITE_GUARD_RECORDS`) and the per-record distribution
+  prints beneath the table. It replaced the line "299 numeric leaves across 115 removed values", which is
+  a **mean of 2.6** reading as coverage of all 115 — and which concealed a defect: for a root-level
+  pointer the site was computed as `""` and then discarded as falsy, so **six** records searched zero
+  leaves and could not fail on any injection at all. A root-level leaf's containing object is the
+  document.
 
-**What A28 still does not do, after the widening.** A word class is still a word class. The nine guards
-moved from "catches renames" to "catches renames and the obvious semantic neighbours"; a tenth probe chosen
-adversarially against the *new* lists would pass some of them. Only the damage-pressure family is asserted
-structurally — no numeric leaf of **any** name may sit under a `pressure`/`survivability` block — and
-generalising that form to the other eight is the next design step, not a claim this rule set makes.
+**What A28 still does not do, after the widening.** A word class is still a word class. The **six**
+surviving guards moved from "catches renames" to "catches renames and the obvious semantic neighbours"; a
+further probe chosen adversarially against the *new* lists would pass some of them. (The nine-guard counts
+in the paragraph above are history — they describe the draft the probes were run against, before three
+families were pulled.) Structural assertion — no numeric leaf of **any** name may sit under a given block —
+was reached only for the damage-pressure family, which is one of the three that were **pulled**, so no
+surviving family has it; generalising that form to the six is the next design step, not a claim this rule
+set makes.
 
 Two segment names are allowlisted, exactly as `reference_diameter_m` is: `purchases` (the authored
 checkpoint index the removed cumulative cost derives *from*, which matches only by inheriting its
@@ -223,17 +245,45 @@ check over zero values passes for free.
 Writing it surfaced a pre-existing divergence: **96 of 98 agree exactly.** `EN-07`'s derived diameter is
 `0.62 × 0.80 = 0.496 M` (`docs/31` § *Ordinary roster overview*) where the CSV states `0.50 M`
 (`docs/72` § *Collision and Contact Footprints*), and its start distance `0.748` against `0.75`. Two `docs/`
-sources disagree; `content/` follows the one it cites. Both pairs are declared with that reason, and a
-declared pair that stops diverging **fails**, because a stale exception widens the rule silently.
+sources disagree, and this is an **open design question escalated to the design owner** — which contact
+diameter the Razorling was meant to have — not something to settle from typography. Both pairs are declared
+with the evidence on each side recorded in `CSV_MIRROR_ROUNDED`, including which arguments are
+*non-discriminating* and why. The argument with actual force points the other way from the earlier text: every
+other ordinary body scale is a multiple of `0.05` and **neither `0.62` nor `0.625` is**, so the Razorling
+breaks the pattern either way — but under `0.625` the break is *motivated* (back-computed from a clean
+`0.50 M` diameter, `0.50 / 0.80 = 0.625`) and under `0.62` it is not.
+
+**The framing "`content/` follows the source it cites" is wrong for this field**, and it was used here before.
+`EN-07`'s own `source_refs` scopes `contact_footprint` to
+`GDD-PLAYER-SURVIVABILITY-BASELINE#collision-and-contact-footprints` — `docs/72`, the `0.50` side — while the
+scale it stores comes from `docs/31`. So content does *not* follow the source it cites for the footprint.
+
+A declared pair names the CSV's written value **and the single exact content-side value** it covers, so
+there is no tolerance band: an earlier revision accepted anything rounding to the CSV's written precision,
+which let `body_scale_multiplier` sit anywhere in `[0.61875, 0.625)` undetected while the module comment
+said **NO TOLERANCE**. A declared pair that stops diverging **fails** too, so the rule fails in *both*
+directions while the question is open — which is what makes holding safe rather than merely cheap.
 
 **A29 — the removal delta is the committed prediction, as set equality, and it is now ONE row.** `115 == 115` would also hold
 if one value were removed by mistake and a different one kept by mistake. A29 therefore reads the
 sweep-ref tree out of git at the SHA the expectation file names, enumerates its numeric leaves,
 subtracts the worktree's, and compares **element by element**: every `(file, pointer, value)` predicted
-must be missing, and nothing else may be. It additionally asserts that the added side is empty and that
-no surviving numeric leaf changed value — a removal pass introduces no numbers and retunes no operand.
-If the sweep ref cannot be read out of git the rule **fails**; it is not allowed to pass by being unable
-to run.
+must be missing, and nothing else may be. It does **not** assert that the added side is empty, and it does
+not assert that no surviving numeric leaf changed value. Both rows were deliberately deleted this pass as
+properties of one commit range rather than invariants, and an earlier revision of this paragraph still
+claimed them — adding an authored numeric leaf to `EN-01` **passes**, by design. Only *half* of what
+remains is a standing invariant: the `missing` half holds for every future commit, the `unexpected` half
+does not, because deleting any authored numeric leaf fails it (`EN-01.earliest_minute` → "1
+removed-but-unpredicted") while retuning one in place passes. If the sweep ref cannot be read out of git
+the rule **fails**; it is not allowed to pass by being unable to run.
+
+**The four declared counts are asserted in `verify_content.py`, not only by `derive --check`.**
+`total_removed`, `family_count`, `declared_family_count` and `declared_total_removed` were written by the
+generator and read by nothing here, so this file alone passed every vacuity injection — an empty `families`
+list, a scope pointed at a directory holding no definitions, every family's `records` emptied, an empty
+`removed_numeric_multiset` with `sweep_ref` repinned to HEAD, and the counts overwritten with `9999`/`99`.
+Only `derive --check` caught those, and it caught them by regenerating and byte-comparing, which is a
+file-integrity check rather than an assertion inside the rule.
 
 One reconciliation heuristic still reports as a warning rather than a failure, because no schema exists
 to settle it: formulas held as strings rather than a registered formula kind plus parameters (`40:99`).

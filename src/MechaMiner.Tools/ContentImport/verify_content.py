@@ -215,10 +215,16 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
           own it. content/maps/ joined the rule because the health pack
           stored 0.75 = its authored 0.25 M pickup radius + 0.50 M
           (docs/72:185).
-      Checked on KEY NAMES in the covered directories, so a rename inside
-      one of them cannot slip past. It does NOT catch the value reappearing
-      under an unrelated name or in an uncovered directory - see the
-      per-rule scopes above and README.md.
+      Checked on KEY NAMES in the covered directories. That catches a
+      rename ONLY INTO A NAME THE PATTERN STILL MATCHES, which is a narrow
+      thing and was previously written as though it were a general one: an
+      earlier revision of this paragraph said "a rename inside one of them
+      cannot slip past" and then, in the next sentence, that a value
+      reappearing under an unrelated name is not caught. Those contradict,
+      and the second is the true one. A20 has NO value layer, so a derived
+      footprint value reintroduced under any name the pattern misses, or in
+      an uncovered directory, passes - see the per-rule scopes above and
+      README.md.
       Mandate: docs/technical/40-content-data-and-validation.md:114
       ("Validation derives world speeds/footprints and compares them with
       the survivability report")                                      FAILURE
@@ -398,10 +404,26 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       survives a rename, a relocation within the site, a different unit
       suffix, and scalar -> [scalar]. Its RADIUS is the limit and is stated
       rather than hidden: the derivation site, not the file and not the
-      scope, because at file radius this tree has 55 coincidental
-      recurrences and at scope radius 400 - magnitude coincidences between
-      unrelated quantities, which no honest exception list can absorb. One
-      exception is declared, enumerated and justified.
+      scope. The three radii are COMPUTED, in the generator's
+      measure_search_radii(), under one definition on the pinned sweep ref,
+      and carried in search_radius_measurement in the expectation file so
+      the ratio a reader is shown reproduces from the artifact: 1 : 40 : 668
+      coincidental pairs at site, file and scope radius, almost all
+      magnitude coincidences between unrelated quantities. An earlier
+      revision quoted 55 and 400; no code computed either and neither
+      reproduced. One exception is declared, enumerated and justified, and
+      it FAILS if it stops colliding on the current tree - a claim that was
+      false in both tools before this pass.
+      A SECOND LIMIT, which the reported radius concealed: the guard is only
+      as large as what survived inside the site. 13 of the 115 removed
+      values sit in a container the removal left with no numeric leaves at
+      all, so their guard searches nothing. That count is asserted
+      (EMPTY_SITE_GUARD_RECORDS) and the per-record distribution prints
+      beneath the table, because the earlier line - "299 numeric leaves
+      across 115 removed values" - is a mean of 2.6 that reads as coverage
+      of all 115 and is what hid the empty-site defect: for a root-level
+      pointer the site was computed as "" and then filtered out as falsy, so
+      six records searched zero leaves and could not fail on anything.
       Two segment names are ALLOWLISTED, in the shape A20 allowlists
       reference_diameter_m: `purchases` (the authored checkpoint index the
       removed cumulative cost derives FROM, which matches only by
@@ -418,9 +440,9 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
                                                                     FAILURE
 
   A29 The numeric multiset the tree LOST equals the committed expectation,
-      as SET EQUALITY over all 166 elements - each (file, pointer, value)
+      as SET EQUALITY over all 115 elements - each (file, pointer, value)
       present in one side and the other - not as two totals that happen to
-      agree. 166 == 166 would also hold if one value were removed by
+      agree. 115 == 115 would also hold if one value were removed by
       mistake and a different one kept by mistake; element-wise equality
       would not.
       Measured, not asserted: the sweep-ref tree is read out of git at the
@@ -429,12 +451,48 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       BEFORE any content/ file changed (see that commit's --stat), so this
       check compares a prediction against a measurement rather than a diff
       against itself.
-      It also asserts the ADDED side is empty. A removal pass that quietly
-      introduced a number would otherwise pass every other rule here.
+      It does NOT assert that the added side is empty. That row was
+      deliberately deleted this pass: it is a property of one commit range,
+      not an invariant. Adding an authored numeric leaf to EN-01 PASSES, by
+      design.
+      ONLY HALF OF THIS IS A STANDING INVARIANT, and the asymmetry is
+      stated because it is not obvious. The `missing` half - every predicted
+      removal must still be missing - holds for every future commit. The
+      `unexpected` half - nothing else may be missing - does not: deleting
+      any authored numeric leaf, for any reason, fails it. Controlled:
+      deleting EN-01.earliest_minute FAILS with "1 removed-but-unpredicted",
+      while retuning EN-01 hull 20 -> 25 in place passes. So a future commit
+      that legitimately deletes a field will false-fail A29 and the fix is
+      to re-derive the expectation from a newer sweep ref, deliberately.
       Mandate: docs/technical/40-content-data-and-validation.md:100
       ("Derived values include source operands and calculation version in
       reports"), which is what makes a stored operand-plus-result pair the
       compiler's to emit and not content's to author         FAILURE
+
+  A30 docs/data/contact-damage-pressure.csv and content/ agree on every
+      value they share - 98 comparisons, seven columns x 14 actors, exact
+      Fraction arithmetic. Four columns compare against an authored content
+      field; three against values derived from surviving operands, which is
+      the comparison docs/40 section "Enemies and bosses" describes. Two
+      unguarded mirrors of one report is the shape where a later edit to
+      either produces a silent contradiction, so agreement is ASSERTED
+      rather than observed (Ruling 45 observed it and nothing kept it).
+      The comparison COUNT is asserted at 98, because a mirror check over
+      zero values passes for free.
+      NO TOLERANCE, including inside the declared exceptions: a declared
+      lower-precision pair names the CSV's written value AND the single
+      exact content-side value it covers, so the band an earlier revision
+      allowed ([0.61875, 0.625) for EN-07's body_scale_multiplier) is gone.
+      Two pairs are declared, both EN-07's, and both record an OPEN design
+      question rather than settling it. A declared pair that stops
+      diverging FAILS in either direction.
+      Not settled by this rule: which mirror is authoritative. When that
+      lands the loser becomes derived and A30 becomes redundant in the good
+      way rather than wrong.
+      Mandate: docs/technical/40-content-data-and-validation.md:114
+      ("Validation derives world speeds/footprints and compares them with
+      the survivability report") and :203 ("Reports compare with accepted
+      gameplay tables")                                     FAILURE
 
 Not asserted here: no structural JSON Schema validation happens, because
 content/schemas/ (40:36) does not exist yet. Domain field names outside the
@@ -2001,7 +2059,7 @@ def check_derived_footprint_fields(docs: dict[Path, object]) -> list[tuple]:
 
 
 # --------------------------------------------------------------------------
-# A28 / A29 - the nine derived-value families the compiler owns.
+# A28 / A29 - the six derived-value families the compiler owns.
 #
 # The rules live in expected_derived_value_removals.json, which was committed in
 # its own commit BEFORE any content/ file changed. Reading them from there rather
@@ -2011,6 +2069,26 @@ def check_derived_footprint_fields(docs: dict[Path, object]) -> list[tuple]:
 # --------------------------------------------------------------------------
 
 DERIVED_EXPECTATION = Path(__file__).resolve().parent / "expected_derived_value_removals.json"
+
+# The two counts the generator declares, restated here ON PURPOSE. This is the
+# one place in the A28/A29 code where duplication is right: everything else is
+# read from the expectation file so the assertion and the prediction cannot drift,
+# but a count read only from the file it is meant to police cannot police it. An
+# empty `families` list, a family with no records, and the counts overwritten with
+# 9999/99 all passed verify_content.py before these existed - only
+# `derive --check` caught them, by regenerating and byte-comparing, which is a
+# file-integrity check and not an assertion inside the rule.
+DECLARED_FAMILY_COUNT = 6
+DECLARED_TOTAL_REMOVED = 115
+
+# How many removed values sit in a container the removal left with no numeric
+# leaves at all, so that A28's value layer searches nothing for them. Asserted,
+# not remarked on: emptying a container empties its guard, and the number must not
+# grow without someone deciding that it may. The 13 are the `{}` and
+# `{"resource": "common ore"}` residues under content/resources/,
+# content/mining-sites/ - NOT the six root-level records, whose site is the
+# document itself.
+EMPTY_SITE_GUARD_RECORDS = 13
 
 
 def load_derived_expectation() -> dict:
@@ -2023,6 +2101,115 @@ def load_derived_expectation() -> dict:
         )
         return {}
     return json.loads(DERIVED_EXPECTATION.read_text())
+
+
+def check_derived_expectation_counts(docs: dict[Path, object]) -> list[tuple]:
+    """A28/A29 vacuity guards - the four declared counts, asserted HERE.
+
+    `total_removed`, `family_count`, `declared_family_count` and
+    `declared_total_removed` were written by the generator and read by nothing in
+    this file: `grep -n declared verify_content.py` returned no hit anywhere in the
+    A28/A29 code. verify_content.py on its own therefore passed every vacuity
+    injection - an empty `families` list, a scope pointed at a directory holding no
+    definitions, every family's `records` emptied, an empty
+    `removed_numeric_multiset` with `sweep_ref` repinned to HEAD, and the counts
+    overwritten with 9999/99. Only `derive --check` caught those, and it caught
+    them by regenerating the file and byte-comparing it: a file-integrity check,
+    which fails for any edit at all and says nothing about whether the RULE has
+    content. These rows are the rule saying it.
+
+    The scope row is deliberately measured against the CURRENT tree rather than
+    against the sweep ref, because a scope that resolves to nothing here is a rule
+    searching nothing here, whatever it searched when the prediction was written.
+    """
+    expectation = load_derived_expectation()
+    if not expectation:
+        return []
+    families = expectation.get("families") or []
+    built_records = sum(len(f.get("records") or []) for f in families)
+    multiset = expectation.get("removed_numeric_multiset") or []
+
+    empty_families = sorted(f.get("name", "?") for f in families if not (f.get("records") or []))
+
+    empty_scopes: list[str] = []
+    for family in families:
+        for scope in family.get("scopes") or []:
+            directory = scope.strip("/").split("/", 1)[1] if "/" in scope.strip("/") else ""
+            in_scope = files_in(directory, docs) if directory else {}
+            leaves = sum(1 for path in in_scope for _ in numeric_pointer_leaves(in_scope[path]))
+            if not in_scope or not leaves:
+                empty_scopes.append(f"{family.get('name', '?')} -> {scope}")
+
+    checks = [
+        (
+            "families in the expectation file",
+            DECLARED_FAMILY_COUNT,
+            len(families),
+            len(families) == DECLARED_FAMILY_COUNT,
+        ),
+        (
+            "family_count as written by the generator",
+            DECLARED_FAMILY_COUNT,
+            expectation.get("family_count"),
+            expectation.get("family_count") == DECLARED_FAMILY_COUNT,
+        ),
+        (
+            "declared_family_count as written by the generator",
+            DECLARED_FAMILY_COUNT,
+            expectation.get("declared_family_count"),
+            expectation.get("declared_family_count") == DECLARED_FAMILY_COUNT,
+        ),
+        (
+            "records summed over every family",
+            DECLARED_TOTAL_REMOVED,
+            built_records,
+            built_records == DECLARED_TOTAL_REMOVED,
+        ),
+        (
+            "total_removed as written by the generator",
+            DECLARED_TOTAL_REMOVED,
+            expectation.get("total_removed"),
+            expectation.get("total_removed") == DECLARED_TOTAL_REMOVED,
+        ),
+        (
+            "declared_total_removed as written by the generator",
+            DECLARED_TOTAL_REMOVED,
+            expectation.get("declared_total_removed"),
+            expectation.get("declared_total_removed") == DECLARED_TOTAL_REMOVED,
+        ),
+        (
+            "elements in removed_numeric_multiset (A29's comparand)",
+            DECLARED_TOTAL_REMOVED,
+            len(multiset),
+            len(multiset) == DECLARED_TOTAL_REMOVED,
+        ),
+        (
+            "families whose records list is EMPTY (a rule over no values passes free)",
+            0,
+            len(empty_families),
+            not empty_families,
+        ),
+        (
+            "family scopes holding no numeric leaves in the CURRENT tree",
+            0,
+            len(empty_scopes),
+            not empty_scopes,
+        ),
+    ]
+    rows = [(label, expected, actual, "ok" if good else "FAIL")
+            for label, expected, actual, good in checks]
+    bad = [f"{label}: expected {expected}, got {actual!r}"
+           for label, expected, actual, good in checks if not good]
+    if bad:
+        fail(
+            f"A28/A29 {len(bad)} declared count(s)/vacuity guard(s) in "
+            f"{rel(DERIVED_EXPECTATION)} do not hold. These are the rows that stop the rule from "
+            f"passing over nothing, so a mismatch is a failure of the rule and not only of the "
+            f"file: {bad}"
+            + (f" empty families={empty_families}" if empty_families else "")
+            + (f" empty scopes={empty_scopes}" if empty_scopes else "")
+        )
+    return rows
 
 
 def pointer_segments(pointer: str) -> list[str]:
@@ -2123,6 +2310,39 @@ def check_derived_family_absence(docs: dict[Path, object]) -> list[tuple]:
     )
 
 
+def derivation_site(pointer: str) -> str:
+    """The pointer of the object that HELD the removed leaf.
+
+    A trailing `[i]` means the container is the list, so the index is dropped;
+    otherwise the last dotted segment is dropped. A ROOT-LEVEL leaf has neither,
+    and the object that held it is the DOCUMENT ITSELF - returned as "" and read
+    by is_in_site() as the whole document, NOT as "no site".
+
+    That last case was a hole rather than a subtlety. An earlier revision returned
+    "" here and then filtered with `if not (site and ...): continue`, so a falsy
+    site skipped EVERY leaf: six root-level records searched nothing at all and
+    could not fail on any injection, including the removed value reinjected into
+    the same file. The six were content/resources/common-ore.json
+    seam_total_per_map, content/resources/hyper-gold.json run_ceiling, and
+    total_depletion_seconds plus total_uninterrupted_extraction_per_map_seconds on
+    both content/mining-sites/*-ore-seams.json.
+
+    Kept as a shared helper with the same name and body in the generator, because
+    `derive --check` regenerates the expectation from the same definition and the
+    two must not drift.
+    """
+    if pointer.endswith("]"):
+        return pointer[: pointer.rindex("[")]
+    return pointer.rsplit(".", 1)[0] if "." in pointer else ""
+
+
+def is_in_site(leaf: str, site: str) -> bool:
+    """Is `leaf` the site itself or inside its subtree? "" is the document root."""
+    if site == "":
+        return True
+    return leaf == site or leaf.startswith(site + ".") or leaf.startswith(site + "[")
+
+
 def check_derived_family_values(docs: dict[Path, object]) -> list[tuple]:
     """A28's VALUE layer, over the CURRENT tree - the half a name rule cannot do.
 
@@ -2135,44 +2355,57 @@ def check_derived_family_values(docs: dict[Path, object]) -> list[tuple]:
     change of arity (32.0 -> [32.0]) without changing the number, and all four are
     caught here while all four defeat the name layer.
 
-    Its RADIUS IS ITS LIMIT AND IS STATED: the derivation site, not the file and
-    not the scope. A value relocated OUT of its site still passes. That choice was
-    measured rather than assumed - see VALUE_COLLISION_EXCEPTIONS in the generator,
-    and the 55/400 coincidence counts at file and scope radius that make a wider
-    radius unlandable without a hand-written exception list nobody can audit.
+    TWO THINGS LIMIT ITS REACH AND BOTH PRINT ON A GREEN RUN.
+
+    (1) THE RADIUS: the derivation site, not the file and not the scope. A value
+        relocated OUT of its site still passes. The choice is measured, not
+        assumed - the generator's measure_search_radii() counts what each
+        candidate radius would flag under one definition and writes the three
+        numbers into search_radius_measurement in the expectation file, which is
+        where the ratio printed below comes from.
+
+    (2) THE GUARD IS ONLY AS BIG AS WHAT SURVIVED IN THE SITE. Emptying a
+        container empties its guard: where the removal left the containing object
+        with no numeric leaves at all, this layer searches ZERO leaves for that
+        record and cannot fail on anything short of a leaf reappearing inside that
+        same object. The count of such records is asserted and printed, because a
+        mean ("299 leaves across 115 values") reads as coverage of all 115 and is
+        exactly what hid the empty-site bug above.
     """
     expectation = load_derived_expectation()
     exceptions = {
         (e["file"], e["derived_pointer"], e["colliding_pointer"])
         for e in expectation.get("value_collision_exceptions", [])
     }
+    exceptions_used: set = set()
     by_path = {rel(p): d for p, d in docs.items()}
     rows = []
-    searched = 0
-    records_checked = 0
+    per_record: list[int] = []
     for family in expectation.get("families", []):
         hits: list[str] = []
         for record in family["records"]:
             doc = by_path.get(record["file"])
             if doc is None:
                 continue
-            records_checked += 1
             pointer = record["pointer"]
-            site = (pointer[: pointer.rindex("[")] if pointer.endswith("]")
-                    else (pointer.rsplit(".", 1)[0] if "." in pointer else ""))
+            site = derivation_site(pointer)
             own = {p.split("::", 1)[1] for p in record.get("operand_pointers", [])
                    if p.split("::", 1)[0] == record["file"]}
             target = Fraction(str(record["value"]))
+            searched_here = 0
             for leaf, value in numeric_pointer_leaves(doc):
-                if not (site and (leaf == site or leaf.startswith(site + ".")
-                                  or leaf.startswith(site + "["))):
+                if not is_in_site(leaf, site):
                     continue
-                searched += 1
+                searched_here += 1
                 if Fraction(str(value)) != target:
                     continue
-                if leaf in own or (record["file"], pointer, leaf) in exceptions:
+                if leaf in own:
+                    continue
+                if (record["file"], pointer, leaf) in exceptions:
+                    exceptions_used.add((record["file"], pointer, leaf))
                     continue
                 hits.append(f"{record['file']}.{leaf} = {value!r} (the removed {pointer})")
+            per_record.append(searched_here)
         rows.append(
             (
                 f"no {family['name']} VALUE at its derivation site",
@@ -2190,19 +2423,84 @@ def check_derived_family_values(docs: dict[Path, object]) -> list[tuple]:
                 f"genuine coincidence, add it to VALUE_COLLISION_EXCEPTIONS with a reason: "
                 f"{sorted(hits)[:10]}"
             )
+
+    # A STALE DECLARED EXCEPTION FAILS, HERE AND NOT ONLY IN THE GENERATOR. This
+    # is A30's pattern - `set(CSV_MIRROR_ROUNDED) - declared_used`, computed
+    # against the tree in front of it - and it is here because the sentence "a
+    # stale exception now fails too" was false in BOTH tools: this file had no
+    # staleness check at all and consulted the set only as an exclusion, while the
+    # generator checked it against the pinned sweep ref, where the colliding value
+    # collides by construction. Control: content/utilities/UTL-R1.json
+    # acquisition.rank_count 0 -> 1 ends the only declared collision, and before
+    # this row both tools still exited 0.
+    stale = sorted(exceptions - exceptions_used)
+    rows.append(
+        (
+            "declared value-collision exceptions that no longer collide (stale exceptions)",
+            0,
+            len(stale),
+            "ok" if not stale else "FAIL",
+        )
+    )
+    if stale:
+        fail(
+            f"A28 value layer: {len(stale)} declared value-collision exception(s) no longer suppress "
+            f"anything on this tree, so the justification recorded for each is no longer true. A "
+            f"stale exception silently widens the gate - delete it from "
+            f"VALUE_COLLISION_EXCEPTIONS in the generator and regenerate: {stale}"
+        )
+
+    # A record whose containing object lost all its numeric leaves has an empty
+    # guard, and the count of those is an assertion rather than a remark: if a
+    # later pass empties more containers, this row moves and someone has to look.
+    blind = sum(1 for n in per_record if n == 0)
+    rows.append(
+        (
+            "removed values whose site still holds numeric leaves to search "
+            "(the rest have an EMPTY guard)",
+            f"{len(per_record) - EMPTY_SITE_GUARD_RECORDS} of {len(per_record)}",
+            f"{len(per_record) - blind} of {len(per_record)}",
+            "ok" if blind == EMPTY_SITE_GUARD_RECORDS else "FAIL",
+        )
+    )
+    if blind != EMPTY_SITE_GUARD_RECORDS:
+        fail(
+            f"A28 value layer: {blind} removed value(s) have a derivation site holding no numeric "
+            f"leaves, so this layer searches nothing for them; "
+            f"EMPTY_SITE_GUARD_RECORDS declares {EMPTY_SITE_GUARD_RECORDS}. This is not a pass/fail "
+            f"about the tree's correctness - it is the SIZE OF THE BLIND SPOT, and it is asserted so "
+            f"that emptying another container cannot shrink the guard quietly."
+        )
+
+    radii = expectation.get("search_radius_measurement") or {}
+    distribution = ", ".join(
+        f"{n} leaf/leaves x{per_record.count(n)}" for n in sorted(set(per_record))
+    )
     # WHAT THIS CHECK SEARCHED AND WHAT IT CANNOT SEE, on the same table a passing
     # run prints. A limitation recorded only in a docstring or a notes file is not
-    # disclosed to the person reading a green run.
+    # disclosed to the person reading a green run. Reported as a DISTRIBUTION, not
+    # as a total or a mean: the previous line said "299 numeric leaves across 115
+    # removed values", which is a mean of 2.6 that reads as coverage of all 115
+    # and concealed 19 records searching nothing.
     return rows, (
-        f"RADIUS SEARCHED: the object that held each removed leaf, plus its subtree - "
-        f"{searched} numeric leaves across {records_checked} removed values, with "
-        f"{len(exceptions)} declared exception(s). Values compare exactly as Fractions; there is "
-        f"no tolerance and no rounding.",
-        "NOT CAUGHT by this layer: a removed value relocated OUT of its derivation site, elsewhere "
-        "in the same file or anywhere else in the scope. Probed per family - caught 0 of 6. Rename, "
-        "unit suffix and arity change (32.0 -> [32.0]) are caught 6 of 6. Wider radii were measured "
-        "and rejected: file radius has 55 coincidental recurrences on this tree and scope radius "
-        "400, which no exception list can justify entry by entry.",
+        f"RADIUS SEARCHED: the object that held each removed leaf, plus its subtree. Per-record "
+        f"distribution over {len(per_record)} removed values - {distribution} - so the MINIMUM is "
+        f"{min(per_record) if per_record else 0} and {blind} record(s) search nothing at all. "
+        f"{len(exceptions)} declared exception(s), each asserted to still collide. Values compare "
+        f"exactly as Fractions; there is no tolerance and no rounding.",
+        f"NOT CAUGHT (1) - RADIUS: a removed value relocated OUT of its derivation site, elsewhere "
+        f"in the same file or anywhere else in the scope. Probed per family - caught 0 of 6. Rename, "
+        f"unit suffix and arity change (32.0 -> [32.0]) are caught 6 of 6. Wider radii were measured "
+        f"under one definition on the pinned sweep ref and are recorded in "
+        f"search_radius_measurement: {radii.get('site_radius_pairs', '?')} coincidental pair(s) at "
+        f"site radius, {radii.get('file_radius_pairs', '?')} at file radius and "
+        f"{radii.get('scope_radius_pairs', '?')} at scope radius. Widening needs that many "
+        f"hand-written exceptions, which is what makes it unlandable rather than merely unchosen.",
+        f"NOT CAUGHT (2) - EMPTY GUARDS: {blind} of {len(per_record)} removed values sit in a "
+        f"container the removal left with NO numeric leaves ({{}} and {{'resource': ...}} residues), "
+        f"so their guard searches nothing and only a leaf reappearing inside that same object could "
+        f"fail it. Emptying a container empties its guard. The 6 root-level records are NOT in this "
+        f"set any more - their site is the document, which is the object that held them.",
     )
 
 
@@ -2216,34 +2514,84 @@ def check_derived_family_values(docs: dict[Path, object]) -> list[tuple]:
 # observed.
 #
 # This does NOT wait on the authority question (which of the two is the accepted
-# gameplay table 40:203 compares against). It is worth having either way, and when
-# the question lands, the loser becomes derived and this check becomes redundant in
-# the good way rather than wrong.
+# gameplay table docs/40 section 'Analytical' compares against). It is worth having
+# either way, and when the question lands, the loser becomes derived and this check
+# becomes redundant in the good way rather than wrong.
 #
-# NO TOLERANCE. Values compare exactly as Fractions. Where the CSV states a value
-# at lower precision than the derivation produces, the pair must be DECLARED
-# below - enumerated with a reason, never absorbed by a threshold - and the content
-# value must round to the CSV value at the CSV's own written precision. A new
-# inexact pair therefore fails instead of hiding behind the declared one.
+# NO TOLERANCE, AND THAT SENTENCE IS NOW TRUE FOR THE DECLARED PAIRS TOO. Values
+# compare exactly as Fractions. Where the CSV states a value at lower precision
+# than the derivation produces, the pair must be DECLARED below - enumerated with
+# a reason, never absorbed by a threshold.
+#
+# A declared entry names BOTH numbers: the CSV's written value and the EXACT
+# content-side value it is allowed to stand for. Both must hold. An earlier
+# revision required only that the content value ROUND to the CSV value at the
+# CSV's written precision, which is a tolerance of half the last decimal place
+# hiding inside a rule whose comment said "never absorbed by a threshold":
+# EN-07's body_scale_multiplier could sit anywhere in [0.61875, 0.625) undetected,
+# a band disclosed nowhere. It is now pinned to the single value 0.496, so any
+# retune of the scale fails, and the rounding clause is kept as a second condition
+# so a declaration cannot silently cover a pair that is not even close.
 # --------------------------------------------------------------------------
 PRESSURE_CSV = REPO_ROOT / "docs/data/contact-damage-pressure.csv"
 
+# (actor, column) -> (EXACT content-side value this declaration covers, reason).
+# The exact value is what removes the tolerance: nothing else passes, in either
+# direction.
 CSV_MIRROR_ROUNDED = {
     ("EN-07", "contact_diameter_m"): (
-        "Two docs/ sources disagree and content/ follows the one it cites. docs/31 section "
-     "'Ordinary roster overview' states the "
-        "Razorling body scale as 0.62x, so the derived diameter is 0.62 x 0.80 = 0.496 M exactly. "
-        "docs/72 section 'Collision and Contact Footprints' states its footprint as 0.50 M, and "
-        "this CSV mirrors 72. The 0.496 is not a "
-        "content defect - it is the exact product of the authored scale - and docs/40 section "
-        "'Analytical' fails only on "
-        "divergence 'beyond documented rounding'. EN-07 is the ONLY actor whose derived diameter "
-        "does not land on the CSV's two decimal places; every other one is exact."
+        "0.496",
+        "OPEN QUESTION, NOT A SETTLED ONE, and it is with the design owner: which contact diameter "
+        "was the Razorling meant to have? This entry records the question and the evidence on both "
+        "sides. It does not decide it, and an earlier version of this text did - it asserted the "
+        "0.496 was 'not a content defect, it is the exact product of the authored scale', which "
+        "reads as settled and is not supported. "
+        "THE DIVERGENCE: docs/31 section 'Ordinary roster overview' states the Razorling body scale "
+        "as 0.62x, so 0.62 x 0.80 = 0.496 M exactly; docs/72 section 'Collision and Contact "
+        "Footprints' states its footprint as 0.50 M and this CSV mirrors 72. EN-07 is the ONLY "
+        "actor whose derived diameter misses the CSV; the other 13 are exact. "
+        "THE ARGUMENT WITH FORCE, and it points at 0.50 being the exact one: every other ordinary "
+        "body scale is a multiple of 0.05 (0.55, 1.00, 1.30, 1.05, 1.20, 1.00, 1.10, 1.65, 1.35). "
+        "0.62 is not - but NEITHER IS 0.625. The Razorling breaks the pattern under either "
+        "hypothesis, so the pattern alone decides nothing; what the hypotheses differ on is whether "
+        "the break is MOTIVATED. Under 0.625 it is: a designer targeting a clean 0.50 M contact "
+        "diameter back-computes 0.50 / 0.80 = 0.625 and the scale is whatever falls out. Under 0.62 "
+        "it is not: someone working in 0.05 steps who wanted a small variant picks 0.60 or 0.65. A "
+        "motivated exception beats an unmotivated one. "
+        "THREE ARGUMENTS THAT DO NOT DISCRIMINATE, recorded as non-discriminating so a later reader "
+        "does not weigh them. (1) 'Both docs/72 figures come out exact under 0.625' is ONE "
+        "coincidence, not two: start distance is diameter / 2 + 0.50, so once the diameter is "
+        "exactly 0.50 the start distance is exactly 0.75 automatically. The second figure carries no "
+        "independent information. (2) 'docs/31 prints every scale at two decimals' is "
+        "ZERO-discriminating: all nine other scales are multiples of 0.05, so two decimals always "
+        "suffice for them - the column has never NEEDED a third decimal and therefore cannot "
+        "distinguish 'authored at two decimals' from 'presented at two decimals'. It is a fit over a "
+        "population incapable of falsifying it. (3) The delegation sentence at docs/31 section "
+        "'Ordinary roster overview' ('Exact derived values and boss circles appear in the "
+        "survivability baseline') obliges docs/72 to carry the exact value but says nothing about "
+        "WHICH value is exact, so it is consistent with both readings - which is why each side has "
+        "read it as supporting theirs. "
+        "WHAT IS WRONG IN THE REPOSITORY EITHER WAY: the framing 'content/ follows the source it "
+        "cites' is false for this field. EN-07's own source_refs scopes contact_footprint to "
+        "GDD-PLAYER-SURVIVABILITY-BASELINE#collision-and-contact-footprints - docs/72, the 0.50 "
+        "side - while the scale it stores comes from docs/31. Corrected in README.md too. "
+        "WHY THE OUTCOME IS NONETHELESS TO HOLD: the evidence is balanced and none of it decisive. "
+        "The current state is internally consistent under the 0.62 reading. If that reading wins "
+        "there is nothing to do; if the other wins the work is one content value plus a document "
+        "revert, travelling with the merges. The magnitude is 0.8% of a hitbox, so nothing is at "
+        "risk in the interval, and the question belongs to the design owner as a DESIGN question "
+        "rather than being inferred from typography. "
+        "AND WHY HOLDING IS SAFE RATHER THAN MERELY CHEAP: A30 fails in BOTH directions while the "
+        "question is open. Because this entry pins the exact content-side value, changing "
+        "body_scale_multiplier fails; because a declared pair that stops diverging is a failure, "
+        "correcting docs/72 to 0.496 fails too. Neither side can be taken quietly."
     ),
     ("EN-07", "contact_start_distance_m"): (
-        "The same 0.496 propagated: 0.496/2 + 0.50 = 0.748, which docs/72 section 'Collision and "
-        "Contact Footprints' states as 0.75. One "
-        "divergence, not two."
+        "0.748",
+        "The same 0.496 propagated: 0.496 / 2 + 0.50 = 0.748, which docs/72 section 'Collision and "
+        "Contact Footprints' states as 0.75. ONE divergence, not two - and that is exactly why the "
+        "'both figures are exact under 0.625' argument carries no independent weight; see the "
+        "contact_diameter_m entry."
     ),
 }
 
@@ -2259,15 +2607,16 @@ def check_csv_mirror_agreement(docs: dict[Path, object]) -> list[tuple]:
 
     Seven columns x 14 actors. Four columns compare against an AUTHORED content
     field; three compare against a value the compiler derives from surviving
-    operands, which is the comparison 40:114 actually describes ("derives world
-    speeds/footprints and compares them with the survivability report").
+    operands, which is the comparison docs/40 section "Enemies and bosses" actually
+    describes ("derives world speeds/footprints and compares them with the
+    survivability report").
     """
     if not PRESSURE_CSV.exists():
         fail(
             f"A30 {rel(PRESSURE_CSV)} is missing, so the CSV/content mirror is unmeasured. This "
             f"rule is not allowed to pass by being unable to run."
         )
-        return [("pressure CSV readable", "present", "missing", "FAIL")]
+        return [("pressure CSV readable", "present", "missing", "FAIL")], ()
 
     contract = None
     for path, doc in docs.items():
@@ -2275,7 +2624,7 @@ def check_csv_mirror_agreement(docs: dict[Path, object]) -> list[tuple]:
             contract = doc
     if not isinstance(contract, dict) or "reference_mech_speed_m_per_s" not in contract:
         fail("A30 could not read reference_mech_speed_m_per_s, an operand of the speed column.")
-        return [("mech base speed readable", "present", "missing", "FAIL")]
+        return [("mech base speed readable", "present", "missing", "FAIL")], ()
     base_speed = Fraction(str(contract["reference_mech_speed_m_per_s"]))
     ref_diameter = Fraction("0.80")   # docs/72 "Collision and Contact Footprints"
     player_radius = Fraction("0.50")  # docs/72 "Collision and Contact Footprints"
@@ -2348,7 +2697,13 @@ def check_csv_mirror_agreement(docs: dict[Path, object]) -> list[tuple]:
                 places = _csv_decimals(raw)
                 quantum = Fraction(10) ** places
                 rounded = Fraction(int(got * quantum + Fraction(1, 2)), quantum)
-                if key in CSV_MIRROR_ROUNDED and rounded == want:
+                declared = CSV_MIRROR_ROUNDED.get(key)
+                # BOTH conditions. The exact-value clause is what makes "no
+                # tolerance" true: without it the declaration accepted any value
+                # rounding to the CSV's figure, a half-last-place band nobody had
+                # disclosed. The rounding clause stays so a declaration cannot
+                # cover a pair that is not even close to the CSV.
+                if declared is not None and got == Fraction(declared[0]) and rounded == want:
                     declared_used.add(key)
                     continue
                 mismatches.append(
@@ -2401,7 +2756,28 @@ def check_csv_mirror_agreement(docs: dict[Path, object]) -> list[tuple]:
             f"A30 {len(stale)} declared lower-precision pair(s) now agree exactly. A stale "
             f"exception silently widens the rule - delete it: {stale}"
         )
-    return rows
+    # A30's own limits, on the output a green run prints. A30 caught 7 of 8
+    # attacks when it was reviewed; the one that escaped went through the declared
+    # exception, which is the note below.
+    return rows, (
+        f"WHAT IS COMPARED: {compared} value(s) - the 7 CSV columns x 14 actors that both sides "
+        f"carry. 4 columns compare against an AUTHORED content field; 3 against values derived from "
+        f"surviving operands (diameter, start distance, world speed), which is the comparison docs/40 "
+        f"section 'Enemies and bosses' describes. The count is asserted at "
+        f"{CSV_MIRROR_EXPECTED_COMPARISONS} because a mirror check over zero values passes free.",
+        f"DECLARED EXCEPTIONS ARE EXACT PAIRS, NOT BANDS: {len(CSV_MIRROR_ROUNDED)} declared, each "
+        f"naming the CSV value AND the single exact content-side value it covers ("
+        + ", ".join(f"{a}.{c} = {v[0]}" for (a, c), v in sorted(CSV_MIRROR_ROUNDED.items()))
+        + "). An earlier revision required only that the content value round to the CSV's written "
+        "precision, which let EN-07's body_scale_multiplier sit anywhere in [0.61875, 0.625) "
+        "undetected while this module's comment claimed NO TOLERANCE. There is now no band.",
+        "NOT CAUGHT by A30: a value neither side carries, a column the CSV does not have, and an "
+        "edit made to BOTH mirrors in the same commit - it asserts agreement, not correctness. It "
+        "also does not settle which mirror is authoritative; when that lands the loser becomes "
+        "derived and this rule becomes redundant rather than wrong. The EN-07 divergence is an OPEN "
+        "design question, recorded with its evidence in CSV_MIRROR_ROUNDED, and A30 fails in both "
+        "directions while it stays open.",
+    )
 
 
 def _numeric_multiset_at_ref(ref: str, paths: list[str]) -> dict[tuple[str, str], object]:
@@ -2431,8 +2807,21 @@ def check_derived_removal_delta() -> list[tuple]:
     failure is to re-pin sweep_ref to a newer commit, which makes A29 compare the
     tree against itself and destroys the prediction-first property that is the
     whole point. Those two measurements are evidence for this pull request and
-    live in its body. Set equality over the removal set is the invariant that
-    holds for every future commit, so it is the one that stays here.
+    live in its body.
+
+    ONLY HALF OF WHAT REMAINS IS A STANDING INVARIANT, and an earlier revision of
+    this docstring said the whole of it was. Set equality has two halves and they
+    have different futures:
+      `missing`    - every predicted removal must STILL be missing. This does hold
+                     for every future commit: nothing legitimately re-authors a
+                     value the compiler owns.
+      `unexpected` - nothing ELSE may be missing. This does NOT. Deleting any
+                     authored numeric leaf, for any reason, fails it.
+    Controlled individually: retuning EN-01 hull 20 -> 25 in place PASSES, adding
+    an authored numeric leaf to EN-01 PASSES, and deleting EN-01.earliest_minute
+    FAILS with "1 removed-but-unpredicted". So A29 WILL false-fail on a future
+    commit that deletes a field, and the fix then is to re-derive the expectation
+    from a newer sweep ref as a deliberate act - not to loosen this rule.
     """
     expectation = load_derived_expectation()
     if not expectation:
@@ -3240,9 +3629,10 @@ def main() -> int:
     ref_rows = check_references(docs)
     derived_rows = check_derived_values(docs)
     footprint_rows = check_derived_footprint_fields(docs)
+    derived_counts_rows = check_derived_expectation_counts(docs)
     derived_family_rows, derived_family_notes = check_derived_family_absence(docs)
     derived_value_rows, derived_value_notes = check_derived_family_values(docs)
-    csv_mirror_rows = check_csv_mirror_agreement(docs)
+    csv_mirror_rows, csv_mirror_notes = check_csv_mirror_agreement(docs)
     removal_delta_rows = check_derived_removal_delta()
     prefix_rows = check_scope_prefixes(docs)
     bound_rows = check_bound_spelling(docs)
@@ -3279,6 +3669,17 @@ def main() -> int:
         footprint_rows,
     )
     table(
+        "A28/A29 declared counts and vacuity guards (asserted here, not only by derive --check)",
+        ("check", "expected", "actual", "status"),
+        derived_counts_rows,
+        (
+            "These rows exist because total_removed, family_count, declared_family_count and "
+            "declared_total_removed were written by the generator and read by nothing here. Without "
+            "them this file passes an empty family list, empty records, an empty removal multiset "
+            "and the counts overwritten with 9999/99.",
+        ),
+    )
+    table(
         "A28 layer 1 of 2 - NAME: no derived-value family reappears under a matching name "
         "(six rules, six scopes; catches a rename only within its own word class)",
         ("check", "expected", "actual", "status"),
@@ -3297,6 +3698,7 @@ def main() -> int:
         "(two unguarded mirrors of one report; exact Fractions, declared exceptions only)",
         ("check", "expected", "actual", "status"),
         csv_mirror_rows,
+        csv_mirror_notes,
     )
     table(
         "A29 Removal delta == the expectation committed before the removals",

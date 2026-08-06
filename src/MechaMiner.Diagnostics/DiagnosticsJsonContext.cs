@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using MechaMiner.Diagnostics.Identity;
 using MechaMiner.Diagnostics.Logging;
+using MechaMiner.Diagnostics.Metrics;
 
 namespace MechaMiner.Diagnostics;
 
@@ -32,6 +33,7 @@ namespace MechaMiner.Diagnostics;
     DefaultIgnoreCondition = JsonIgnoreCondition.Never)]
 [JsonSerializable(typeof(BuildManifest))]
 [JsonSerializable(typeof(DiagnosticRunRecord))]
+[JsonSerializable(typeof(BenchmarkReport))]
 internal sealed partial class DiagnosticsJsonContext : JsonSerializerContext
 {
     /// <summary>Writes the <c>SCH-BLD-001</c> manifest as canonical UTF-8 JSON text with a trailing newline.</summary>
@@ -58,6 +60,19 @@ internal sealed partial class DiagnosticsJsonContext : JsonSerializerContext
     {
         return JsonSerializer.Deserialize(json, Default.DiagnosticRunRecord)
             ?? throw new JsonException("the SCH-OBS-001 diagnostic run record deserialized to null");
+    }
+
+    /// <summary>Writes the <c>SCH-OBS-002</c> performance report.</summary>
+    internal static string Serialize(BenchmarkReport report)
+    {
+        return JsonSerializer.Serialize(report, Default.BenchmarkReport) + "\n";
+    }
+
+    /// <summary>Reads a <c>SCH-OBS-002</c> performance report, rejecting unknown fields.</summary>
+    internal static BenchmarkReport DeserializeBenchmarkReport(string json)
+    {
+        return JsonSerializer.Deserialize(json, Default.BenchmarkReport)
+            ?? throw new JsonException("the SCH-OBS-002 performance report deserialized to null");
     }
 
     /// <summary>

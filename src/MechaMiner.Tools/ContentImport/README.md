@@ -460,9 +460,15 @@ reverted individually.
 ## `derive_citation_pass_expectations.py` and `expected_citation_deltas.json`
 
 ```sh
-python3 src/MechaMiner.Tools/ContentImport/derive_citation_pass_expectations.py           # derive
 python3 src/MechaMiner.Tools/ContentImport/derive_citation_pass_expectations.py --verify  # measure
+python3 src/MechaMiner.Tools/ContentImport/derive_citation_pass_expectations.py --write   # derive
 ```
+
+A **bare invocation writes nothing** and exits 2 with a usage error naming both verbs. Deriving is
+`--write`. Until that guard, bare *was* the generator — it rewrote `expected_citation_deltas.json` and
+exited 0 — so guessing this tool's checking verb as `--check` (its sibling's verb, one file over, for
+the same job) spent the guess on a silent rewrite of the committed artifact instead of on an error.
+Neither checking verb moved: `--verify` here, `--check` there, both exactly as before.
 
 Derives, from the frozen evidence artifact and a live sweep at a named git ref — **never from a diff** —
 what a citation pass is expected to change: the `(file, scope)` pairs, and the exact string and numeric
@@ -493,9 +499,14 @@ It also carries the live sweep that found the 16 mis-citations of audit §13 —
 ## `derive_derived_value_expectations.py` and `expected_derived_value_removals.json`
 
 ```sh
-python3 src/MechaMiner.Tools/ContentImport/derive_derived_value_expectations.py          # derive
 python3 src/MechaMiner.Tools/ContentImport/derive_derived_value_expectations.py --check  # regenerates?
+python3 src/MechaMiner.Tools/ContentImport/derive_derived_value_expectations.py --write  # derive
 ```
+
+A **bare invocation writes nothing** and exits 2 with a usage error naming both verbs, same guard as its
+sibling above. Bare used to rewrite `expected_derived_value_removals.json` at exit 0; that was harder to
+notice here, because `SWEEP_REF` is pinned, so bare rewrote the file with its own bytes and `git status`
+stayed clean — the write was real, and only the pinning made it idempotent. `--check` is unchanged.
 
 Enumerates, from a pinned commit SHA rather than `HEAD`, the stored numbers `content/` no longer authors
 because the compiler derives them, and records for each one its operands, its arithmetic, and the

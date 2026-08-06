@@ -1,6 +1,19 @@
 #!/usr/bin/env python3
 """Enumerate the authored derived values this pass removes, BEFORE removing them.
 
+    python3 src/MechaMiner.Tools/ContentImport/derive_derived_value_expectations.py --check
+    python3 src/MechaMiner.Tools/ContentImport/derive_derived_value_expectations.py --write
+
+A BARE INVOCATION DECIDES NOTHING AND WRITES NOTHING - it exits 2 with a usage
+error naming both verbs. Writing is `--write` and only `--write`. Until then bare
+WAS the generator: it rewrote the expectation file and exited 0. That was harder to
+notice here than in derive_citation_pass_expectations.py, because SWEEP_REF is
+pinned, so bare rewrote the file with its own bytes and `git status` stayed clean -
+the write was real (mtime moved, "wrote ..." printed) and only the pinning made it
+idempotent. Nothing about which mode CHECKS moved here: `--check` still asserts
+byte-identical regeneration exactly as it did, and the sibling's `--verify` is
+still spelled `--verify`; only the cost of guessing wrong did.
+
 WHY THIS SCRIPT EXISTS AND WHY IT IS COMMITTED FIRST
 ====================================================
 This pass deletes stored numbers from content/. A verifier written after the
@@ -1562,7 +1575,24 @@ def main() -> int:
         help=f"commit to enumerate from (default the pinned {SWEEP_REF[:12]})",
     )
     parser.add_argument("--check", action="store_true", help="fail if the committed file differs")
+    parser.add_argument(
+        "--write",
+        action="store_true",
+        help=f"derive afresh and REWRITE {OUT.name}. The only mode that touches the worktree, and "
+             f"it must be asked for by name: this is what a bare invocation used to do silently",
+    )
     args = parser.parse_args()
+
+    if not (args.check or args.write):
+        # Checked BEFORE build() so the usage error costs nothing but the message.
+        # --check is untouched by this guard; what used to fall through to the write
+        # branch below was a bare invocation.
+        parser.error(
+            f"no mode given. This tool does not default to writing: pass --check to assert "
+            f"{OUT.name} still regenerates byte-identically, or --write to regenerate it. Note "
+            f"that --check is this tool's checking verb; derive_citation_pass_expectations.py "
+            f"spells the same job --verify."
+        )
 
     payload = build(args.sweep_ref)
     text = json.dumps(payload, indent=2, sort_keys=False) + "\n"

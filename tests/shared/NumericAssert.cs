@@ -37,7 +37,7 @@ internal static class NumericAssert
                 actual.ToString("R", CultureInfo.InvariantCulture),
                 ", difference ",
                 difference.ToString("R", CultureInfo.InvariantCulture),
-                " exceeds tolerance ",
+                " is outside the allowed range ",
                 tolerance.ToString()));
     }
 

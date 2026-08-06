@@ -452,6 +452,17 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       number under a generic leaf (`amount`, `minimum`, `maximum`) inside a
       specifically named parent - a leaf-key-only rule would miss
       total_payout_per_map.amount entirely.
+      EACH NAME ROW NOW PRINTS ITS OWN DENOMINATOR - numeric leaves visited
+      and files scanned, counted by the walk as it runs rather than restated
+      from a hand-run figure - and one further row ASSERTS the walk:
+      non-zero leaves over exactly DERIVED_NAME_WALK_SCOPE_FILES files. The
+      six family rows cannot catch an emptied walk between them, because
+      each reports "0 hits" and a rule that searched no file reports "0
+      hits" too. Before this the six printed `0 / 0 / ok` with no coverage
+      figure at all, the only assertion in this file reporting a result with
+      no measure of what it looked at. Negative controls, each injected
+      alone and reverted: emptying one family's `scopes` list, and
+      misspelling a scope directory, each FAIL naming the collapse.
       (2) a VALUE layer, which is what a name rule cannot do: for each
       removed value, no non-operand numeric leaf inside its own derivation
       site may carry that value. Exact Fractions, no tolerance. This one
@@ -645,10 +656,23 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
            set is NAMED (A.json..F.json), not counted. A count of 6 passes
            when the key is deleted from D.json and added to common-ore.json
            in the same edit; the named set does not.
-        2. In each of those six, canonical_letter == that file's own id.
+        2. In each of those six, canonical_letter == that file's own id. The
+           six comparisons are NAMED on the passing run, not counted: a
+           green "6 agree, 0 disagree" tells the reader how many files the
+           row's argument rests on but not which, and the set is the half
+           worth auditing. Predicate unchanged - only the display.
         3. The six values are six DISTINCT letters and cover exactly
-           {A,B,C,D,E,F}. Redundant while rows 1 and 2 both hold - it is
-           the row that survives if either is ever weakened.
+           {A,B,C,D,E,F}. Redundant while rows 1 and 2 both hold, but what
+           it is redundant WITH is asymmetric and the earlier wording here
+           ("the row that survives if either is ever weakened") claimed
+           more than it does. Row 3 is a predicate over the VALUE SET only
+           - len(values), distinctness, and set equality with {A..F}. It
+           would INHERIT row 1's population claim if row 1 were weakened,
+           because six distinct letters cannot be present unless six
+           carriers are. It is BLIND to row 2's placement claim and would
+           inherit nothing from it: swapping B.json's and C.json's values
+           satisfies all three of row 3's conditions, and placement is the
+           defect A32 exists to catch.
         4. common-ore.json and hyper-gold.json do not carry the KEY AT ALL.
            A26 already forbids null repo-wide, so `"canonical_letter": null`
            in a currency file is caught with or without this row. Absence is
@@ -2723,8 +2747,13 @@ def check_canonical_letters(docs: dict[Path, object]) -> list[tuple]:
     expected_carriers = sorted(CANONICAL_LETTER_CARRIERS)
     row1_ok = carriers == expected_carriers
 
-    # ---- row 2: each of the six equals its OWN id.
+    # ---- row 2: each of the six equals its OWN id. `agreed` is collected for
+    # the PASSING display only: a green run used to print "6 agree, 0 disagree"
+    # and name the files solely on failure, so the reader auditing a passing run
+    # met a count and had to take the comparand set on trust. The predicate is
+    # unchanged - `mismatches` alone still decides the status.
     mismatches: list[str] = []
+    agreed: list[str] = []
     for name in CANONICAL_LETTER_CARRIERS:
         if name not in ids:
             mismatches.append(f"{name}: not a parsed definition")
@@ -2734,6 +2763,8 @@ def check_canonical_letters(docs: dict[Path, object]) -> list[tuple]:
             mismatches.append(
                 f"{name}: {CANONICAL_LETTER_KEY} is {carried[name]!r}, id is {ids[name]!r}"
             )
+        else:
+            agreed.append(f"{name}={carried[name]!r}")
 
     # ---- row 3: six distinct letters covering exactly {A..F}. repr() so a
     # non-string value (null, a number, an object) cannot raise in sorted().
@@ -2763,9 +2794,13 @@ def check_canonical_letters(docs: dict[Path, object]) -> list[tuple]:
         ),
         (
             "row 2: canonical_letter == that file's own id, in each of the six",
-            "6 agree",
-            f"{len(CANONICAL_LETTER_CARRIERS) - len(mismatches)} agree, "
-            f"{len(mismatches)} disagree",
+            "6 agree, named",
+            (
+                f"{len(agreed)} agree: " + ", ".join(agreed)
+                if not mismatches
+                else f"{len(agreed)} agree, {len(mismatches)} disagree: "
+                + "; ".join(mismatches)
+            ),
             "ok" if not mismatches else "FAIL",
         ),
         (
@@ -2910,6 +2945,22 @@ EMPTY_SITE_GUARD_RECORDS = 13
 # figure that was made up, which is precisely what 55 and 400 were.
 # (site, file, scope), as measured on the expectation's sweep_ref.
 SEARCH_RADIUS_DECLARED = (1, 40, 668)
+
+# The scope-file population A31's NAME layer walks, summed over the six families'
+# scopes. Pinned here so a scope list that is emptied or misspelled cannot quietly
+# shrink the walk to nothing while the six family rows keep printing `0 / ok` - a
+# rule that searched no file finds no hit, and "0 hits" is the same string either
+# way. It is 54 = enemies 11 + bosses 4 (family 1) + powerups 13 + utilities 13 +
+# resources 8 + mining-sites 4 + maps 1, the same per-directory populations A12
+# asserts; families overlap no directory, so the sum is also the distinct count.
+#
+# ONLY the file population is pinned. The LEAF count is asserted non-zero and
+# printed as measured, never pinned: a leaf count moves with any authored value
+# edit anywhere in seven directories, so pinning it would turn every ordinary
+# content change into a failure here, while a file population moves only when a
+# definition file is added or removed - which is deliberate, and which A12 and
+# A28 already require a decision for.
+DERIVED_NAME_WALK_SCOPE_FILES = 54
 
 
 def load_derived_expectation() -> dict:
@@ -3133,22 +3184,40 @@ def check_derived_family_absence(docs: dict[Path, object]) -> list[tuple]:
     derived value - is asserted by the generator against the pinned sweep ref and
     recorded in the expectation file, because it is a property of the removal set
     rather than of the current tree.
+
+    Every row carries the DENOMINATOR of its own search - the numeric leaves the
+    walk visited and the files it scanned - counted by the walk itself as it runs,
+    never restated from a hand-run figure. Without it these six rows printed
+    `0 / 0 / ok` and were the only assertion in this file that reported a result
+    with no measure of what it looked at (A26 prints files scanned, A27 files and
+    tokens, A29 `115 of 115`, A30 comparisons made, A31's own VALUE layer
+    `102 of 115` plus a distribution). A row reading `0` over 349 leaves and a row
+    reading `0` over no leaves at all are the same six characters on the page.
     """
     expectation = load_derived_expectation()
     rows = []
+    walked_leaves = 0
+    walked_files = 0
     for family in expectation.get("families", []):
         hits: list[str] = []
+        family_leaves = 0
+        family_files = 0
         for scope in family["scopes"]:
             directory = scope.strip("/").split("/", 1)[1]
             for path, doc in sorted(files_in(directory, docs).items()):
+                family_files += 1
                 for pointer, value in numeric_pointer_leaves(doc):
+                    family_leaves += 1
                     if derived_rule_matches(family, pointer):
                         hits.append(f"{rel(path)}.{pointer} = {value!r}")
+        walked_leaves += family_leaves
+        walked_files += family_files
         rows.append(
             (
                 f"no {family['name']} value in {' + '.join(family['scopes'])}",
                 0,
-                len(hits),
+                f"{len(hits)} of {family_leaves} numeric leaf/leaves "
+                f"in {family_files} file(s)",
                 "ok" if not hits else "FAIL",
             )
         )
@@ -3164,6 +3233,32 @@ def check_derived_family_absence(docs: dict[Path, object]) -> list[tuple]:
                 f"class - a value reintroduced under a name the class does not carry passes it, and "
                 f"the value layer is what covers that: {hits[:10]}"
             )
+
+    # The walk asserted, not only printed. The six rows above cannot fail on an
+    # empty walk: every one of them is `0 hits`, which is exactly what a rule
+    # searching nothing reports. This row is what a scope-list regression hits.
+    coverage_ok = walked_leaves > 0 and walked_files == DERIVED_NAME_WALK_SCOPE_FILES
+    rows.append(
+        (
+            "the walk itself: numeric leaves visited (non-zero) and scope files scanned",
+            f"non-zero leaves, {DERIVED_NAME_WALK_SCOPE_FILES} file(s)",
+            f"{walked_leaves} leaf/leaves, {walked_files} file(s)",
+            "ok" if coverage_ok else "FAIL",
+        )
+    )
+    if not coverage_ok:
+        fail(
+            f"A31 NAME layer walked {walked_leaves} numeric leaf/leaves across {walked_files} "
+            f"file(s), expected a non-zero leaf count over exactly "
+            f"{DERIVED_NAME_WALK_SCOPE_FILES} file(s). The six family rows above CANNOT catch "
+            f"this: each reports `0 hits`, and a rule that searched no file reports `0 hits` too, "
+            f"so an emptied or misspelled `scopes` entry in "
+            f"{rel(DERIVED_EXPECTATION)} collapses the walk while six rows keep printing `ok`. "
+            f"The leaf count is asserted non-zero rather than pinned because it moves with any "
+            f"authored value edit; the file count is pinned because it moves only when a "
+            f"definition file is added or removed, which A12 already requires a decision for."
+        )
+
     return rows, (
         "NOT CAUGHT by this layer: a derived value reintroduced under a name outside the family's "
         "word class, or in a directory the family does not scope. Probed per family with a "

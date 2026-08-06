@@ -4323,6 +4323,41 @@ touched files. The file count is unchanged at 139, so A21 is unaffected.
 5. docs/61-specialized-resource-identities.md:126 records that Hyper Gold's appearance and audio identity are explicitly undecided, so no icon or audio identity is authored here.
 6. Localization keys are not authored here; content/localization/ is owned by a separate stream.
 7. runCeiling 400 and increasedByPowerUps=false are from docs/60-resources-crafting-progression.md:80.
+8. **`resource_class` is authored, not transcribed, and no document sources it.** `content/resources/hyper-gold.json:17`
+   reads `"resource_class": "cross-run progression resource"`. The value is left exactly as authored; this note
+   records the search that failed to find a source for it, because "no source exists" and "nobody looked" are
+   indistinguishable on the page otherwise.
+   - **The search, run rather than assumed.** `git grep -i "cross-run progression resource" <ref> -- 'docs/*'` over
+     every one of the 18 `origin` refs this repository has, `origin/master` included — **zero hits in any design or
+     technical document that could serve as a source.** The corpus is the point of the entry: this is not "the phrase
+     is missing from the document I happened to open", it is the phrase missing from `docs/` on every ref.
+   - **The one hit anywhere, and why it is not a source.**
+     `docs/technical/40-content-data-and-validation.md:131` on `origin/claude/hearth-thread-2vmaro-fnd-002` contains
+     the phrase, but it contains it as a *quotation of this field value* inside its own record that the phrase
+     "returns zero verbatim hits in `docs/` on any ref of this repository". Citing it would be circular — its copy of
+     the phrase is derived from this file, so it corroborates the failed search rather than answering it.
+   - **The near miss, and why it does not qualify.** The closest thing in `docs/` is the heading
+     `## Cross-run progression loop` at `docs/60-resources-crafting-progression.md:53`. It names a **loop** — the
+     earn/bank/spend cycle — not a class of resource, and putting a process name into a classification field is a
+     different claim from the one the document makes. The other near misses name the concept without spelling any
+     class: `docs/40-mining-and-extraction.md:119` "the resource used for cross-run progression",
+     `docs/glossary.md:254` "which serves cross-run progression". None of the three states a class name.
+   - **Left as authored rather than replaced.** There is no sourced phrase to put in its place, so replacing it would
+     swap one unsourced value for another and destroy the record of which one was actually authored. Hyper Gold is
+     also the only one of the three class values in this position: per the same `fnd-002` section, `specialized-material`
+     is transcribed from `docs/65:19` and `common-ore` from `docs/60:212`, while `hyper-gold` is stated there to be
+     **assigned** rather than transcribed.
+   - **Expected to be replaced by a token, not sourced.** The document owner is minting a closed `resource_class`
+     vocabulary — `docs/technical/40` § *Minted value vocabularies* on `origin/claude/hearth-thread-2vmaro-fnd-002`
+     grants the field and assigns the token `hyper-gold` to this resource. The successor to this value is therefore a
+     **granted token**, not a document quotation, and the search above should not be re-run in the hope of a different
+     answer.
+   - **Deliberately not asserted.** No check in `src/MechaMiner.Tools/ContentImport/verify_content.py` references
+     `specialized-material`, `common-ore` or `hyper-gold` as class tokens, and none couples `resource_class` to
+     `canonical_letter`. That vocabulary is not minted on `master`, and importing an ungranted vocabulary into the
+     checker whose job is to adjudicate authorisation would beg the question it exists to answer. Asserting the
+     current prose values instead is the mirror error: it would ratify as a contract the prose the grant is about to
+     replace. Both were considered and left out; when the grant lands on `master`, the coupling is the row to add.
 
 #### Mining sites (`content/mining-sites/`)
 

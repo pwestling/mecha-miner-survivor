@@ -233,6 +233,172 @@ internal sealed class RegistryValidatorTests
     }
 
     /// <summary>
+    /// The composed registry these controls start from is itself clean, so each control
+    /// below is measuring its own injected violation.
+    /// </summary>
+    /// <remarks>
+    /// Without this, seven controls that all pass by producing a finding would also pass
+    /// against a validator that had broken into rejecting every registry. The composed
+    /// document is not the on-disk fixture: it carries two entries, because a
+    /// single-entry registry cannot exhibit an ordinal gap or a non-ascending pair, and
+    /// a numbering rule controlled only against a document that structurally cannot
+    /// violate it is not controlled.
+    /// </remarks>
+    [Test]
+    public void TheComposedTwoEntryRegistryProducesNoFindings()
+    {
+        ImmutableArray<RegistryFinding> findings = ValidateComposedRegistry(
+            ComposedRegistry(
+                FixtureEntry("VER-FIX-001-001"),
+                FixtureEntry("VER-FIX-001-002")));
+
+        Assert.That(RegistryValidator.Render(findings), Is.Empty);
+    }
+
+    /// <summary>
+    /// A registry file that is not parseable JSON is its own failure, not a registry
+    /// that happens to declare nothing.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The violation is a trailing comma after the last entry, which is what a real hand
+    /// edit leaves behind when an entry is deleted: JSON forbids it, every editor accepts
+    /// it, and the file still looks right. A file truncated mid-token would also fail,
+    /// but for reasons a reader could dismiss as "obviously broken"; this one is the
+    /// state an ordinary mistake produces.
+    /// </para>
+    /// <para>
+    /// This rule had no control. Deleting its findings from <c>Validate</c> left the
+    /// suite 23/23 green, which means nothing distinguished a validator that reports an
+    /// unreadable registry from one that silently substitutes an empty document — and an
+    /// empty document is exactly what <c>ReadRegistries</c> substitutes to keep going.
+    /// </para>
+    /// </remarks>
+    [Test]
+    public void AnUnparseableRegistryFileIsRejected()
+    {
+        string valid = ComposedRegistry(FixtureEntry("VER-FIX-001-001"));
+        string withTrailingComma = valid.Replace("    }\n  ]", "    },\n  ]", StringComparison.Ordinal);
+        Assert.That(
+            withTrailingComma,
+            Is.Not.EqualTo(valid),
+            "the trailing comma was not injected, so this control changes nothing");
+
+        ImmutableArray<RegistryFinding> findings = ValidateComposedRegistry(withTrailingComma);
+
+        Assert.That(
+            Contains(findings, RegistryRule.UnreadableRegistry),
+            Is.True,
+            RegistryValidator.Render(findings));
+    }
+
+    /// <summary>
+    /// Each of the three ways a registry's declared identity can disagree with the file
+    /// it is in.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// All three are the state a real edit leaves. A wrong <c>schema</c> is what copying
+    /// a sibling registry produces; a wrong <c>workPackage</c> is what copying the file
+    /// and renaming it produces; an entry ID from another package is what moving an entry
+    /// between registries produces. Each is coherent JSON of the right shape, so what
+    /// fails is the identity rule and not the parser.
+    /// </para>
+    /// <para>
+    /// <c>RegistryIdentityMismatch</c> had no control at all: deleting its findings left
+    /// the suite 23/23 green. Three controls rather than one because the rule has three
+    /// independent call sites and a single control would leave two of them unproved.
+    /// </para>
+    /// </remarks>
+    [TestCase("wrong schema", "\"schema\": \"SCH-QUA-001\"", "\"schema\": \"SCH-QUA-002\"")]
+    [TestCase("wrong workPackage", "\"workPackage\": \"FIX-001\"", "\"workPackage\": \"FIX-002\"")]
+    [TestCase("entry ID from another package", "\"id\": \"VER-FIX-001-001\"", "\"id\": \"VER-FIX-002-001\"")]
+    public void ARegistryWhoseDeclaredIdentityDisagreesWithItsFileIsRejected(
+        string description,
+        string original,
+        string replacement)
+    {
+        string json = ComposedRegistry(FixtureEntry("VER-FIX-001-001"));
+        Assert.That(
+            json.Contains(original, StringComparison.Ordinal),
+            Is.True,
+            "the composed registry no longer contains '" + original + "', so '" + description
+            + "' would substitute nothing");
+
+        ImmutableArray<RegistryFinding> findings = ValidateComposedRegistry(
+            json.Replace(original, replacement, StringComparison.Ordinal));
+
+        Assert.That(
+            Contains(findings, RegistryRule.RegistryIdentityMismatch),
+            Is.True,
+            description + ":\n" + RegistryValidator.Render(findings));
+    }
+
+    /// <summary>
+    /// Both ways entry ordinals can stop being the sequence doc 91 requires: a pair that
+    /// does not ascend, and a gap.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Doc 91 says entries "are never renumbered". The two violations are the two edits
+    /// that break that: reordering two entries so their ordinals descend, and deleting a
+    /// middle entry outright instead of leaving a retired tombstone. Both are coherent
+    /// registries — correct schema, correct package, resolvable selectors, complete
+    /// entries — so the only thing wrong with each is its numbering.
+    /// </para>
+    /// <para>
+    /// <c>RegistryNumbering</c> had no control. Deleting its findings left the suite
+    /// 23/23 green, while the PR body cited it as a rule that "was always real" and
+    /// pasted output showing it firing that no assertion required to exist. Two controls
+    /// because <c>ValidateNumbering</c> has two independent loops and returns after the
+    /// first finding, so a control for one branch leaves the other unproved.
+    /// </para>
+    /// </remarks>
+    [TestCase("descending pair", "VER-FIX-001-002", "VER-FIX-001-001")]
+    [TestCase("gap at 2", "VER-FIX-001-001", "VER-FIX-001-003")]
+    public void EntryOrdinalsThatAreNotTheDeclaredSequenceAreRejected(
+        string description,
+        string firstId,
+        string secondId)
+    {
+        ImmutableArray<RegistryFinding> findings = ValidateComposedRegistry(
+            ComposedRegistry(FixtureEntry(firstId), FixtureEntry(secondId)));
+
+        Assert.That(
+            Contains(findings, RegistryRule.RegistryNumbering),
+            Is.True,
+            description + ":\n" + RegistryValidator.Render(findings));
+    }
+
+    /// <summary>
+    /// A task whose only verification evidence is that the code compiles is rejected.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Doc 91: "An agent may not declare completion based solely on compilation." The
+    /// violation is a complete, well-formed, resolvable entry whose
+    /// <c>evidenceKinds</c> is exactly <c>["compilation"]</c> — which is the shape a real
+    /// entry takes when the work was done and the tests were not written. Nothing else
+    /// about the registry is wrong, so a validator that had stopped enforcing this would
+    /// report nothing.
+    /// </para>
+    /// <para>
+    /// This rule had no control: deleting its findings left the suite 23/23 green.
+    /// </para>
+    /// </remarks>
+    [Test]
+    public void ATaskWhoseOnlyEvidenceIsCompilationIsRejected()
+    {
+        ImmutableArray<RegistryFinding> findings = ValidateComposedRegistry(
+            ComposedRegistry(FixtureEntry("VER-FIX-001-001", evidenceKinds: "\"compilation\"")));
+
+        Assert.That(
+            Contains(findings, RegistryRule.TaskWithoutVerification),
+            Is.True,
+            RegistryValidator.Render(findings));
+    }
+
+    /// <summary>
     /// Every <c>nunit</c> selector in every <c>tests/verification/*.json</c> names a test the
     /// NUnit harness actually discovers, and the harness discovered a nonzero number of them.
     /// </summary>
@@ -471,6 +637,82 @@ internal sealed class RegistryValidatorTests
                 .WithVerificationRegistry("tests/verification/FIX-001.json", json)
                 .WithTests(tests));
     }
+
+    /// <summary>
+    /// One well-formed <c>SCH-QUA-001</c> entry, with the fields a control needs to vary
+    /// exposed as parameters and everything else fixed at a value the validator accepts.
+    /// </summary>
+    /// <remarks>
+    /// Composed here rather than added to <c>build/policy-fixtures/registry/</c> as more
+    /// on-disk fixture directories, because each control differs from the compliant
+    /// document by one field and a directory per field would make the difference the
+    /// reader has to find rather than the thing the test states.
+    /// </remarks>
+    private static string FixtureEntry(string id, string evidenceKinds = "\"test-counts\"")
+    {
+        return "    {\n"
+            + "      \"id\": \"" + id + "\",\n"
+            + "      \"summary\": \"The fixture verification proves the fixture requirement.\",\n"
+            + "      \"task\": \"TASK-FIX-001-001\",\n"
+            + "      \"requirements\": [\"TR-FIX-001\"],\n"
+            + "      \"technicalSources\": [\"" + FixtureTechnicalSource + "\"],\n"
+            + "      \"gameplaySources\": [],\n"
+            + "      \"selector\": { \"kind\": \"nunit\", \"value\": \"" + CompliantFixtureSelector + "\" },\n"
+            + "      \"fixtures\": [],\n"
+            + "      \"scenarios\": [],\n"
+            + "      \"evidenceKinds\": [" + evidenceKinds + "],\n"
+            + "      \"platforms\": [\"linux-x64\"],\n"
+            + "      \"tier\": \"fast\",\n"
+            + "      \"status\": \"implemented\"\n"
+            + "    }";
+    }
+
+    /// <summary>A well-formed <c>FIX-001</c> registry document around the given entries.</summary>
+    private static string ComposedRegistry(params string[] entries)
+    {
+        return "{\n"
+            + "  \"schema\": \"SCH-QUA-001\",\n"
+            + "  \"schemaVersion\": 1,\n"
+            + "  \"workPackage\": \"FIX-001\",\n"
+            + "  \"workPackageTitle\": \"Fixture work package\",\n"
+            + "  \"notes\": [\n"
+            + "    \"Composed by RegistryValidatorTests as the clean document its controls mutate.\"\n"
+            + "  ],\n"
+            + "  \"entries\": [\n"
+            + string.Join(",\n", entries) + "\n"
+            + "  ]\n"
+            + "}\n";
+    }
+
+    /// <summary>
+    /// Validates a composed registry document against the compliant fixture's
+    /// specification prose and declared test inventory.
+    /// </summary>
+    /// <remarks>
+    /// The prose comes from the fixture directory rather than from the real repository so
+    /// that a control proving one injected defect cannot also fail because a real document
+    /// was edited, which is the same reason <c>discovered-tests.txt</c> exists.
+    /// </remarks>
+    private static ImmutableArray<RegistryFinding> ValidateComposedRegistry(string json)
+    {
+        string directory = FixtureDirectory("compliant");
+        RegistrySources sources = RegistrySources.Empty();
+        foreach (string document in Directory.EnumerateFiles(directory, "*.md"))
+        {
+            sources.WithDocument(
+                "docs/technical/" + Path.GetFileName(document),
+                File.ReadAllText(document));
+        }
+
+        return RegistryValidator.Validate(
+            sources
+                .WithVerificationRegistry("tests/verification/FIX-001.json", json)
+                .WithTests(TestInventory.Of(ARealDiscoveredTest)));
+    }
+
+    /// <summary>The one technical source the fixture's requirement index actually defines.</summary>
+    private const string FixtureTechnicalSource =
+        "docs/technical/112-normative-requirement-index.md#fixture-requirements";
 
     /// <summary>The selector the compliant fixture carries, and the anchor these controls substitute.</summary>
     private const string CompliantFixtureSelector = "MechaMiner.Tools.Tests.Audit.RegistryValidatorTests";

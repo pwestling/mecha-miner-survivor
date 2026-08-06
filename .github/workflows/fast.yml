@@ -97,8 +97,17 @@ permissions:
 # Keeping them separate is now deliberate rather than accidental, because they are not
 # the same test. A push run checks out the branch commit; a pull_request run checks out
 # the merge of that commit into the base, which is the tree that would actually land.
-# Collapsing the two would have discarded one of those results at random - and on this
-# branch the pull_request run was the only run of the merged tree there has ever been.
+# Collapsing the two would have discarded one of those results at random, and nothing
+# else checks out the merged tree: a pull_request event is the only event that produces
+# it. Whether such a run exists at all is a property of the base, not of the branch under
+# test - a pull request gets pull_request runs only when the branch it merges into carries
+# this workflow. One based on a branch that carries it gets the merged-tree run; one based
+# on a branch that does not, `master` today among them, gets only the push runs of the
+# branch commit, and the tree that would land is never built. An earlier version of this
+# sentence asserted instead that "on this branch the pull_request run was the only run of
+# the merged tree there has ever been", which is a count over one ref of the kind doc 91
+# § Claim and measurement discipline rejects: true on the branch it was written on, false
+# the moment the file travelled to a branch with no pull_request run at all.
 concurrency:
   group: fast-suite-${{ github.event_name }}-${{ github.event.pull_request.head.ref || github.ref_name }}
   cancel-in-progress: true

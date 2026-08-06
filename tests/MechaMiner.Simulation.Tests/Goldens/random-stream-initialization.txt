@@ -1,0 +1,132 @@
+# authority: docs/technical/20-simulation-core.md § Authoritative random-number contract
+# random schema version: 1
+# derived by: an independent pure-Python PCG-XSH-RR 64/32 + SplitMix64 reference,
+#   not by the C# implementation under test. See Goldens/README.md.
+#
+# Initialization and first outputs, doc 20:51 and doc 20:55.
+# Initialization: state zero; increment (selector << 1) | 1; advance once;
+# add stateSeed to state modulo 2^64; advance once again. Both priming outputs
+# are discarded and are NOT counted as caller-visible draws. 'primed-state' is
+# the state after the second priming advance, i.e. the state the first
+# caller-visible draw reads.
+#
+# Output transformation reads the state BEFORE the advance:
+#   xorshifted = (uint32)(((prior >> 18) XOR prior) >> 27)
+#   rot        = (int)(prior >> 59)
+#   result     = rotate-right(xorshifted, rot)
+#
+# The last two streams differ only in instanceKey (3 vs 4); their outputs must
+# share no prefix, which is what makes instance separation visible.
+#
+# columns: 'output', zero-based index, value as hex uint32
+# streams=5
+
+stream	master=0x0123456789ABCDEF	family=0x0100	instance=0x0000000000000000
+state-seed	0x539E37C12C509BCD
+selector	0xF2837B02CF742AC9
+increment	0xE506F6059EE85593
+primed-state	0xD340BE7594896373
+output	00	0x04552DDA
+output	01	0x6013D277
+output	02	0x5A60A720
+output	03	0x650B8BD6
+output	04	0x8C53E6E5
+output	05	0x09051E3A
+output	06	0xBFA8DC50
+output	07	0x9A0EC3D3
+output	08	0xD38C4C4F
+output	09	0xE67CB6F2
+output	10	0x8A76DBD2
+output	11	0x0005514E
+output	12	0xBF7FB47A
+output	13	0x43FAC50E
+output	14	0x66DC5B8D
+output	15	0x04885DAC
+
+stream	master=0x0000000000000000	family=0x0200	instance=0x0000000000000000
+state-seed	0x602FD322D05CE30E
+selector	0xD9F8B25A6D49F280
+increment	0xB3F164B4DA93E501
+primed-state	0x3F82A3973EE180A4
+output	00	0xE5E0AB1D
+output	01	0x9A41E3EB
+output	02	0x225EDF32
+output	03	0xD1ECC2B4
+output	04	0x801168C9
+output	05	0xE4B49E61
+output	06	0x3978FFF2
+output	07	0x7F72228A
+output	08	0xCB0F6C07
+output	09	0x9D12B4B2
+output	10	0x5A6FAA2D
+output	11	0xA60C4D49
+output	12	0xDD98E253
+output	13	0x2E1D5108
+output	14	0xD5B00CF4
+output	15	0x558E5D22
+
+stream	master=0xFFFFFFFFFFFFFFFF	family=0x0300	instance=0x0000000000000000
+state-seed	0x341112F6D3BD968B
+selector	0xC45EE1CC7C07FB2E
+increment	0x88BDC398F80FF65D
+primed-state	0xFA945A3AA720D325
+output	00	0xA51927EC
+output	01	0xF440F0C1
+output	02	0x11B23FFF
+output	03	0x940B5C0E
+output	04	0x2BBB52F0
+output	05	0x0892EBA5
+output	06	0xDED937B2
+output	07	0xB6482C7A
+output	08	0xBFF29D69
+output	09	0x95741095
+output	10	0xA8DE43AC
+output	11	0x208C946E
+output	12	0x93D04A85
+output	13	0xCA623783
+output	14	0xCB1CED91
+output	15	0xDD8D2EE2
+
+stream	master=0x0123456789ABCDEF	family=0x0220	instance=0x0000000000000003
+state-seed	0xE7731DCF16D1EFCF
+selector	0x5E977917C290FFEB
+increment	0xBD2EF22F8521FFD7
+primed-state	0xC6E9999CB6847A05
+output	00	0x3504DADD
+output	01	0xE5823DDE
+output	02	0xCDC27666
+output	03	0x37AAE3C9
+output	04	0x0B459DCC
+output	05	0x76F7C5CE
+output	06	0x06F6D6E1
+output	07	0x593081DA
+output	08	0x6558C4B3
+output	09	0xE8C0B66C
+output	10	0x62835897
+output	11	0x0367BE6C
+output	12	0xC6D85B98
+output	13	0x4A1248D6
+output	14	0xFE7D2F42
+output	15	0x583C8987
+
+stream	master=0x0123456789ABCDEF	family=0x0220	instance=0x0000000000000004
+state-seed	0x8C39E318716C01B9
+selector	0x0599EAC53AFC31C1
+increment	0x0B33D58A75F86383
+primed-state	0xF0B79200ACC2F30F
+output	00	0x5BD716A4
+output	01	0x0DFAC281
+output	02	0x206E9784
+output	03	0x40F5D647
+output	04	0xAE75838E
+output	05	0x9BF7BC6B
+output	06	0x5F11DFE0
+output	07	0x86C04F95
+output	08	0x59E4C916
+output	09	0x7508921E
+output	10	0xA2FEF4A8
+output	11	0x88599BFB
+output	12	0x019C3770
+output	13	0xCF7E2B44
+output	14	0x38186243
+output	15	0x73F5DB15

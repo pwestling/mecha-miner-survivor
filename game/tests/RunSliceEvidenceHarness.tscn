@@ -1,0 +1,22 @@
+[gd_scene load_steps=2 format=3]
+
+; The run slice evidence harness scene. Run it with:
+;
+;     MECHAMINER_RUN_SLICE_OUTPUT=<dir> \
+;       godot --headless --path game res://tests/RunSliceEvidenceHarness.tscn
+;
+; Development scaffolding, on the same footing as res://tests/GodotTestRunner.tscn:
+; game/MechaMiner.Game.csproj removes game/tests/ from compilation under ExportRelease, so
+; this node's script is absent from the assembly in a Release build. FND-006 adds the
+; matching export-preset exclusion for the scene file itself.
+;
+; It exists because no test project may reference MechaMiner.Game under the accepted project
+; boundary (build/verify-architecture.sh § 3), so the camera, the input adapter, and the
+; snapshot-to-transform path have no NUnit selector available to them. The verification
+; entries in tests/verification/PRE-001.json, PRE-002.json, and UI-002.json name the
+; sections this harness writes.
+
+[ext_resource type="Script" path="res://tests/RunSliceEvidenceHarness.cs" id="1_evidence"]
+
+[node name="RunSliceEvidenceHarness" type="Node"]
+script = ExtResource("1_evidence")

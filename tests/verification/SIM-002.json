@@ -1,0 +1,337 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "SIM-002",
+  "workPackageTitle": "Pause-reason set, lifecycle, focus/suspend hooks",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91 \u00a7 Verification registry). This file is the first commit of the W1-SIM stream: no SIM production type or test class named by a selector below exists yet.",
+    "The structural validator for this file is owned by TASK-FND-009-002. Until it lands, the shape here matches tests/verification/FND-002.json and tests/verification/FND-003.json exactly.",
+    "Status is current status: every entry is 'registered' because no implementing task has landed. A later commit flips an entry to 'implemented' only when its selector actually runs and passes, as tests/verification/FND-002.json and tests/verification/FND-003.json do.",
+    "Every nunit selector is a fully qualified 'Namespace.Class.Method' so one entry names exactly one test method. Test namespaces mirror production namespaces per doc 114 \u00a7 Naming and file-placement defaults; the full type and method layout the implementation must produce is fixed in the W1-SIM design contract handed to the implementation tasks.",
+    "doc 110 registers the SIM work packages but not their task IDs. This stream adopts TASK-SIM-00N-001 for the first implementation task and TASK-SIM-00N-002 only where the package genuinely splits. SIM-002 does not split: the reason enum, the immutable reason set, and the focus/suspend hooks are one indivisible contract - a set without hooks cannot be exercised and hooks without the set have nothing to compose - so every entry below belongs to TASK-SIM-002-001.",
+    "doc 10 \u00a7 Pause contract names exactly seven initial blocking reasons: general pause, fabrication, relic resolution, blocking tutorial/modal, focus loss, operating-system suspension, and terminal transition. VER-SIM-002-003 is exhaustive over all 128 subsets of those seven rather than sampling combinations, which is what doc 10 \u00a7 Verification requirements means by \"every pause source in overlapping combinations\".",
+    "The 'platforms' list records the platforms an entry has actually been executed on, not the platforms its subject is intended to support, following tests/verification/FND-001.json and FND-002.json, which state the same convention and were corrected to it. On that reading windows-x64 and osx-arm64 are declared applicable and unexercised for every entry in this file: the subjects are portable .NET with no platform-conditional code, so they are expected to hold there, and that expectation is not coverage. linux-x64 is the only platform any run has covered. The linux-x64 result is now a runner's record and not only a local invocation: workflow 'fast suite' run 31097680603, job 'fast (bootstrap, format-check, build, test-fast, godot-import)', completed successfully on head 5a3f3ac at 2026-08-06T11:38:04Z on a pinned ubuntu-24.04 runner, reporting test-fast total 147, passed 147, failed 0, skipped 0. Read that record as covering the merged tree rather than this branch's tree: when it was taken .github/workflows/fast.yml was not in this branch at all, it was on the base branch, and a pull_request event resolves workflows from the merge of head into base, so what ran green was the tree that would land. The rest of what this note used to say here has been falsified by the base and is corrected rather than left to rot. It said this branch's own commit had never been run alone by a runner and that a push to it starts no workflow because its tree contains none; the base merge brought that workflow into this branch's tree, so the second clause is now false. Its triggers are pull_request, push, unfiltered on purpose, and workflow_dispatch, so a push to this branch does start a run, of this branch's own tree, and a pull request also gets pull_request runs of the merged tree whenever the branch it merges into carries the workflow too. Which runs exist for a given commit is a fact about the remote at the moment of reading and not about this file, so the run named above is recorded as the past measurement it is, with its head and its timestamp, and no claim is made here about what has run since. The retained artifact under artifacts/verbs/ still names the local invocation and its source_revision. Adding a platform back to any entry here requires a real run on it, which needs a runner FND-005 owns. No entry field holds 'applicable but unexercised': doc 91 \u00a7 Verification registry lists the accepted fields and there is no 'pendingPlatforms', so this note is where the applicability claim lives rather than a field invented for it.",
+    "tests/verification/SIM-negative-controls.md, a sibling of this file, is the whole negative-control record for the seven SIM packages: for each control the perturbation, the exact command, the exact failure text, and the forced-rebuild method that makes a transcript a claim about a build rather than about a source file. It is committed rather than cited from a reviewer's scratch directory, because a path only one person can open is not evidence; the transcripts that used to live in five session evidence files outside the repository are now in it. It is not scoped by an evidenceKinds value: the entries whose control it records name it in their own fixtures, qualified by section. Its \"Which entry each section controls\" table is the index over all seven files and is authoritative for what follows. In this file 9 entries name it: VER-SIM-002-001, VER-SIM-002-002, VER-SIM-002-003, VER-SIM-002-004, VER-SIM-002-005, VER-SIM-002-007, VER-SIM-002-008, VER-SIM-002-009, VER-SIM-002-010. The pointer this file previously recorded as owed, VER-SIM-002-004 to the idempotent pause-outcome control, is now made, and it names a second section as well because the perturbation that mutates the reason set in place reddens the same gate. 1 entry names it nowhere: VER-SIM-002-006, whose suspension-only half was never perturbed on its own. VER-SIM-002-010 does now name the document: its stub was repaired and the resulting failure is recorded, which is the control this file previously said did not exist in the tree.",
+    "On 'negative-control' in evidenceKinds. doc 91 \u00a7 What a kind may name rules that a technique is not a kind, and excludes the value from the minted inventory a kind must be added to before it may appear in a registry file, so it is a defect to correct in this file rather than a value grandfathered into it. Correcting it is a removal and not a substitution, because a negative control's evidence is not a different form of thing from an ordinary test's: a control run as an NUnit test produces exactly the artifact form a positive NUnit test produces. So an affected entry takes the kind its artifact form already gives it, which is the kind it already carries: 'test-counts' with 'test-output' for an nunit selector, the pair 53 positive nunit entries of that shape across these registries carry, and 'golden-text' with 'test-counts' and 'text-diff' for a golden comparison, the shape 11 positive entries carry. Nothing is minted, no kind is added, and no entry loses a kind its evidence needs. What the label carried is that the gate has a negative control, which is a fact about the gate and not about the form of its evidence, so it is required here to appear in prose that can say what a label could not: the entry summary names the perturbation injected and what was observed, and where tests/verification/SIM-negative-controls.md records that control the entry's fixtures name it, qualified by section, so the entry's own pointer reaches the transcript rather than only the artifact that cannot demonstrate a control. Summary text in these files is otherwise not reworded; the integration owner authorized 'summary or notes' for this correction specifically, and summary is the only per-entry prose field available, because doc 91 \u00a7 Verification registry lists the accepted entry fields and no per-entry 'notes' is among them, while doc 115 \u00a7 Schema registry has SCH-QUA-001 reject unknown fields. A field invented to hold it would repeat exactly the coining that produced this defect."
+  ],
+  "entries": [
+    {
+      "id": "VER-SIM-002-001",
+      "summary": "The blocking-reason set is exactly the seven reasons of doc 10 \u00a7 Pause contract - general pause, fabrication, relic resolution, blocking tutorial or modal, focus loss, operating-system suspension, terminal transition - with no eighth reason and none missing.",
+      "task": "TASK-SIM-002-001",
+      "requirements": [
+        "TR-RUN-003"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#pause-contract"
+      ],
+      "gameplaySources": [
+        "docs/20-run-structure-and-timing.md#general-pause-menu",
+        "docs/20-run-structure-and-timing.md#on-demand-crafting-pauses",
+        "docs/20-run-structure-and-timing.md#relic-resolution-pauses"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Runtime.PauseReasonSetTests.ExactlyTheSevenBlockingReasonsAreDefined"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 An eighth pause reason is defined"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-002-002",
+      "summary": "No tick executes while any blocking reason is present: for each of the seven reasons alone, an arbitrarily long host step runs zero ticks and leaves the tick index, run clock, and committed state unchanged.",
+      "task": "TASK-SIM-002-001",
+      "requirements": [
+        "TR-RUN-003",
+        "TR-RUN-002"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#pause-contract",
+        "docs/technical/10-runtime-architecture.md#clock-domains"
+      ],
+      "gameplaySources": [
+        "docs/20-run-structure-and-timing.md#general-pause-menu"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Runtime.PauseMatrixTests.NoTickExecutesWhileAnySingleReasonIsPresent"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 The host blocks on one reason instead of any"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-002-003",
+      "summary": "Exhaustively over all 128 subsets of the seven reasons, the run is blocking if and only if the set is non-empty: clearing any proper subset leaves it blocking, and it resumes only when the last reason is cleared, in every order of entry and exit.",
+      "task": "TASK-SIM-002-001",
+      "requirements": [
+        "TR-RUN-003"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#pause-contract",
+        "docs/technical/10-runtime-architecture.md#verification-requirements"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Runtime.PauseMatrixTests.ResumesOnlyWhenEveryOverlappingReasonIsCleared"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 The host blocks on one reason instead of any"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-002-004",
+      "summary": "The reason set is immutable and idempotent: adding a reason already present or clearing one absent yields an equal set and is not an error, and a set value handed to a consumer cannot be mutated by that consumer or by a later change to the run's own set.",
+      "task": "TASK-SIM-002-001",
+      "requirements": [
+        "TR-RUN-003",
+        "TR-CTR-004"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#pause-contract",
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Runtime.PauseReasonSetTests.SetIsImmutableAndIdempotent"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 Controls for the second review pass",
+        "tests/verification/SIM-negative-controls.md \u00a7 The reason set mutates in place"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-002-005",
+      "summary": "Focus recovery never dismisses a user-requested pause, a blocking tutorial or modal, a fabrication session, or a relic choice: clearing focus loss while any of those is present leaves the run paused and leaves that reason present.",
+      "task": "TASK-SIM-002-001",
+      "requirements": [
+        "TR-RUN-003"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#pause-contract"
+      ],
+      "gameplaySources": [
+        "docs/20-run-structure-and-timing.md#general-pause-menu",
+        "docs/20-run-structure-and-timing.md#relic-resolution-pauses"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Runtime.FocusAndSuspendHookTests.FocusRecoveryDismissesOnlyTheFocusLossReason"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 Focus recovery clears every reason"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-002-006",
+      "summary": "An operating-system suspension resume clears only the suspension reason and discards the elapsed wall time it spanned, so a long suspension neither resumes into a catch-up burst nor clears an unrelated reason.",
+      "task": "TASK-SIM-002-001",
+      "requirements": [
+        "TR-RUN-003",
+        "TR-RUN-002"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#pause-contract",
+        "docs/technical/10-runtime-architecture.md#clock-domains"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Runtime.FocusAndSuspendHookTests.SuspendResumeClearsOnlySuspensionAndDiscardsElapsedTime"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-002-007",
+      "summary": "The render and UI clocks continue while the run is blocked: a host step that runs zero ticks still reports its elapsed UI seconds, so pause presentation can animate without any gameplay clock advancing.",
+      "task": "TASK-SIM-002-001",
+      "requirements": [
+        "TR-RUN-003"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#pause-contract",
+        "docs/technical/10-runtime-architecture.md#clock-domains"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Runtime.PauseMatrixTests.UiClockAdvancesWhileNoGameplayClockDoes"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 The UI clock is frozen while paused"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-002-008",
+      "summary": "Terminal transition is a one-way blocking reason: once present it cannot be cleared back into an active run, and an attempt to clear it is rejected rather than silently ignored, because a run terminal result is assigned once and is immutable.",
+      "task": "TASK-SIM-002-001",
+      "requirements": [
+        "TR-RUN-003",
+        "TR-RUN-007"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#pause-contract",
+        "docs/technical/20-simulation-core.md#scope-and-invariants"
+      ],
+      "gameplaySources": [
+        "docs/20-run-structure-and-timing.md#success-failure-and-resource-settlement"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Runtime.PauseReasonSetTests.TerminalTransitionCannotBeClearedBackIntoAnActiveRun"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 The terminal transition can be cleared"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-002-009",
+      "summary": "A pause consumes no gameplay time: a run paused and resumed mid-stream produces exactly the same tick sequence, tick count, and run clock as an unpaused run fed the same unpaused elapsed seconds, compared as canonical ordered text.",
+      "task": "TASK-SIM-002-001",
+      "requirements": [
+        "TR-RUN-003",
+        "TR-RUN-002"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#pause-contract",
+        "docs/technical/20-simulation-core.md#verification"
+      ],
+      "gameplaySources": [
+        "docs/20-run-structure-and-timing.md#level-timer"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Runtime.PauseMatrixTests.PauseBoundaryConsumesNoGameplayTime"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Simulation.Tests/Goldens/runtime-pause-boundary-tick-sequence.txt",
+        "tests/verification/SIM-negative-controls.md \u00a7 A pause banks wall time into the accumulator"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "golden-text",
+        "text-diff"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-002-010",
+      "summary": "A negative control proves the pause gates can fail: a stub host that consults only a single boolean toggle instead of the reason set makes VER-SIM-002-002 and VER-SIM-002-003 fail, and a stub that clears the whole set on focus recovery makes VER-SIM-002-005 fail.",
+      "task": "TASK-SIM-002-001",
+      "requirements": [
+        "TR-QUA-001",
+        "TR-RUN-003"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#acceptance-evidence",
+        "docs/technical/10-runtime-architecture.md#pause-contract"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Runtime.PauseNegativeControlTests.PauseAssertionsFailAgainstDeliberatelyBrokenStubs"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 SIM-002's permanent negative control, with its stub repaired"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    }
+  ]
+}

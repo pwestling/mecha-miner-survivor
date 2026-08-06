@@ -1,0 +1,105 @@
+# entities-store-ordering
+#
+# Rule under test: doc 20 § Entity identity - "Stable ordering uses the full
+# entity ID after a system's authored priority keys", over an identity that "the
+# full entity ID compares by run session, then storage index, then generation".
+# Ordering is therefore authored priority key ascending, then run session, then
+# storage index, then generation.
+#
+# Storage index precedes generation because it is the only component that
+# discriminates among simultaneously-live entities; generation exists to order
+# records that share a recycled slot. Run session leads both because it is the
+# outermost component of the identity, which doc 20 § Entity identity states
+# outright, and because "IDs are unique only within one run session" makes it the
+# scope the other two components are unique inside. Cases 1 to 3 hold the session
+# constant and are therefore blind to a comparator with no session key at all -
+# deleting it left all three byte-identical - which is why case 4 exists.
+#
+# Case 4 is not a check that a foreign session is refused, and must not become
+# one. doc 20 § Entity identity puts that refusal where an identity is resolved or
+# freed, and rules the comparator out: "A redundant session check there would only
+# make the boundary check look unnecessary." The leading key is an order, not a
+# fence, and case 4 pins only the order.
+#
+# Storage indices are rendered partition-relative as pickup+N, where N is the
+# offset from the first slot of the Pickup partition. The partition offset itself
+# is computed by the fixture from the doc 20 § Authoritative population
+# categories capacity table, never written down as a literal. Three rows above
+# Pickup - enemy projectile, weapon actor, damage zone - are doc 22 §
+# Performance and capacity ceilings and move whenever doc 22 moves, so an
+# absolute index here would make this ordering golden fail for a capacity reason
+# that has nothing to do with ordering.
+#
+# Four cases, so that each component is the sole discriminator in at least one
+# of them and no component is dead:
+#
+# 1. live-store-tied-priority-keys - sole discriminator: storage index.
+#    PopulationCategory.Pickup, run session 0x9F0C0001, map manifest of 63 mining
+#    sites and 40 static world objects. Eight records are admitted with priority
+#    keys 30,10,20,10,30,10,20,20 in that order, then the third-admitted record
+#    is removed. The removal is a swap-remove, so the dense storage order
+#    afterwards is neither admission order nor key order. Every survivor is
+#    simultaneously live, so every survivor has a distinct storage index and all
+#    share generation 1: within a tied priority band the storage index is the
+#    only component that can decide anything. This case is therefore blind to a
+#    comparator that orders generation before storage index - case 2 exists to
+#    catch that, and the negative control asserts this blindness rather than
+#    leaving it implied.
+#
+# 2. retained-recycled-slot - sole discriminator: generation.
+#    A retained record set, not a live store: a live store cannot produce this
+#    shape, because two simultaneously-live entities have distinct storage
+#    indices by construction. The record sets that legitimately hold a slot's
+#    earlier occupant alongside the occupant that recycled it are recovery
+#    snapshots, persisted history, and retained diagnostic or statistics
+#    records. Slot 4 carries three generations at one priority key, so generation
+#    is the only component that can order them. Slot 2 carries generation 7,
+#    higher than any of them, and still sorts first: that is the direct proof
+#    that storage index precedes generation rather than the other way round.
+#
+# 3. retained-tied-priority-keys - sole discriminator: storage index, with the
+#    priority key shown to lead. All three records share generation 4, so
+#    generation can decide nothing. Two share priority key 5 and differ only in
+#    storage index. The third has priority key 42 and storage index 3, which
+#    falls between the other two, so it sorts last despite its middle index.
+#
+# 4. retained-cross-session-records - sole discriminator: run session.
+#    A retained record set, and the only case in which two sessions meet: no live
+#    collection holds identities from two runs, and doc 20 § Entity identity gives
+#    each of the three ordered collections that sort on the full entity ID an
+#    enforcement point that makes one impossible in it. What legitimately outlives
+#    a run is the diagnostic and statistics record set. Two records share priority
+#    key 10, storage index 3, and generation 1 and differ only in run session, so
+#    for that pair the session is the only component that can decide anything. The
+#    third record comes from the higher session at storage index 0 and still sorts
+#    last: that is the direct proof that run session precedes storage index rather
+#    than the other way round. Both identities are minted by real allocators over
+#    the same manifest counts, which is doc 20's "Two runs legitimately allocate
+#    the same storage index at the same generation" rather than a contrived pair.
+#
+# Derived by: the documented rule read off doc 20, computed in an independent
+# Python reference before any C# ran, and cross-checked against an independent
+# list sort in PackedEntityStoreTests. Not by accepting whatever the store
+# emitted.
+#
+## case live-store-tied-priority-keys: sole discriminator = storage index
+  0  priority=    10  pickup+1/g1@run2668363777
+  1  priority=    10  pickup+3/g1@run2668363777
+  2  priority=    10  pickup+5/g1@run2668363777
+  3  priority=    20  pickup+6/g1@run2668363777
+  4  priority=    20  pickup+7/g1@run2668363777
+  5  priority=    30  pickup+0/g1@run2668363777
+  6  priority=    30  pickup+4/g1@run2668363777
+## case retained-recycled-slot: sole discriminator = generation
+  0  priority=    10  pickup+2/g7@run2668363777
+  1  priority=    10  pickup+4/g1@run2668363777
+  2  priority=    10  pickup+4/g2@run2668363777
+  3  priority=    10  pickup+4/g3@run2668363777
+## case retained-tied-priority-keys: sole discriminator = storage index
+  0  priority=     5  pickup+2/g4@run2668363777
+  1  priority=     5  pickup+9/g4@run2668363777
+  2  priority=    42  pickup+3/g4@run2668363777
+## case retained-cross-session-records: sole discriminator = run session
+  0  priority=    10  pickup+3/g1@run2668363777
+  1  priority=    10  pickup+0/g1@run2668363778
+  2  priority=    10  pickup+3/g1@run2668363778

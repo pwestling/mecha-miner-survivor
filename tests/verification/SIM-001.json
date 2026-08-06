@@ -1,0 +1,472 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "SIM-001",
+  "workPackageTitle": "Fixed 60 Hz host, accumulator, catch-up limit, clock domains",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91 \u00a7 Verification registry). This file is the first commit of the W1-SIM stream: no SIM production type or test class named by a selector below exists yet.",
+    "The structural validator for this file is owned by TASK-FND-009-002. Until it lands, the shape here matches tests/verification/FND-002.json and tests/verification/FND-003.json exactly.",
+    "Status is current status: every entry is 'registered' because no implementing task has landed. A later commit flips an entry to 'implemented' only when its selector actually runs and passes, as tests/verification/FND-002.json and tests/verification/FND-003.json do.",
+    "Every nunit selector is a fully qualified 'Namespace.Class.Method' so one entry names exactly one test method. Test namespaces mirror production namespaces per doc 114 \u00a7 Naming and file-placement defaults; the full type and method layout the implementation must produce is fixed in the W1-SIM design contract handed to the implementation tasks.",
+    "Three evidence kinds are new to the registry vocabulary and are used here for the first time: 'diagnostic-counter' (the value of a named simulation diagnostic counter after the case), 'allocation-count' (managed allocations measured across a warmed-up region, doc 10 \u00a7 Performance posture), and 'benchmark-report' (the canonical report a './build.sh benchmark <id>' run emits, doc 100 \u00a7 Standard command surface).",
+    "doc 110 registers the SIM work packages but not their task IDs. This stream adopts TASK-SIM-00N-001 for the first implementation task of package SIM-00N and TASK-SIM-00N-002 only where the package genuinely splits into two independently landable tasks. SIM-001 splits: TASK-SIM-001-001 is the pure time layer (MechaMiner.Simulation.Time - tick index, tick rate, fixed-step accumulator, tick budget, catch-up policy) and TASK-SIM-001-002 is the host that drives it (MechaMiner.Simulation.Runtime - simulation host, tick target interface, run clock, final-boundary ordering). Each task owns non-compilation entries below.",
+    "The catch-up limit is a provisional baseline, not an ordinary local choice: it changes observable behaviour under load, so docs/technical/conventions.md \u00a7 Certainty requires it to name its validation gate. The baseline is four whole ticks per host step, derived in the W1-SIM design contract from TDR-003 \u00a7 Performance contract (\"No repeatable active-play stall may exceed 50 milliseconds\"): 0.050 s at 60 Hz is exactly three ticks of debt, plus one tick of headroom so a frame at the tolerance boundary cannot trip the bound through a fractional remainder. VER-SIM-001-006 pins that derivation as a unit test and VER-SIM-001-013 is its named proof gate on target hardware.",
+    "VER-SIM-001-009 asserts that the accumulator discards elapsed wall time on focus loss and operating-system suspension (doc 10 \u00a7 Clock domains). The hooks that raise and clear those two pause reasons belong to SIM-002; only the discard behaviour of the accumulator is asserted here, against a directly invoked resume.",
+    "VER-SIM-001-012 asserts the ordering contract of the 35:00 boundary against a stub tick target, not real extraction: at SIM-001 nothing can yet mine, deal damage, or resolve a terminal outcome. The gate is that the host evaluates the terminal boundary before it will admit any event scheduled at or after 35:00, which is falsifiable with a recording stub. The full final-tick death-versus-extraction golden is owned by the packages that own damage and extraction.",
+    "The 'platforms' list records the platforms an entry has actually been executed on, not the platforms its subject is intended to support, following tests/verification/FND-001.json and FND-002.json, which state the same convention and were corrected to it. On that reading windows-x64 and osx-arm64 are declared applicable and unexercised for every entry in this file: the subjects are portable .NET with no platform-conditional code, so they are expected to hold there, and that expectation is not coverage. linux-x64 is the only platform any run has covered. The linux-x64 result is now a runner's record and not only a local invocation: workflow 'fast suite' run 31097680603, job 'fast (bootstrap, format-check, build, test-fast, godot-import)', completed successfully on head 5a3f3ac at 2026-08-06T11:38:04Z on a pinned ubuntu-24.04 runner, reporting test-fast total 147, passed 147, failed 0, skipped 0. Read that record as covering the merged tree rather than this branch's tree: when it was taken .github/workflows/fast.yml was not in this branch at all, it was on the base branch, and a pull_request event resolves workflows from the merge of head into base, so what ran green was the tree that would land. The rest of what this note used to say here has been falsified by the base and is corrected rather than left to rot. It said this branch's own commit had never been run alone by a runner and that a push to it starts no workflow because its tree contains none; the base merge brought that workflow into this branch's tree, so the second clause is now false. Its triggers are pull_request, push, unfiltered on purpose, and workflow_dispatch, so a push to this branch does start a run, of this branch's own tree, and a pull request also gets pull_request runs of the merged tree whenever the branch it merges into carries the workflow too. Which runs exist for a given commit is a fact about the remote at the moment of reading and not about this file, so the run named above is recorded as the past measurement it is, with its head and its timestamp, and no claim is made here about what has run since. The retained artifact under artifacts/verbs/ still names the local invocation and its source_revision. Adding a platform back to any entry here requires a real run on it, which needs a runner FND-005 owns. No entry field holds 'applicable but unexercised': doc 91 \u00a7 Verification registry lists the accepted fields and there is no 'pendingPlatforms', so this note is where the applicability claim lives rather than a field invented for it.",
+    "tests/verification/SIM-negative-controls.md, a sibling of this file, is the whole negative-control record for the seven SIM packages: for each control the perturbation, the exact command, the exact failure text, and the forced-rebuild method that makes a transcript a claim about a build rather than about a source file. It is committed rather than cited from a reviewer's scratch directory, because a path only one person can open is not evidence; the transcripts that used to live in five session evidence files outside the repository are now in it. It is not scoped by an evidenceKinds value: the entries whose control it records name it in their own fixtures, qualified by section. Its \"Which entry each section controls\" table is the index over all seven files and is authoritative for what follows. In this file 12 entries name it: VER-SIM-001-001, VER-SIM-001-002, VER-SIM-001-003, VER-SIM-001-004, VER-SIM-001-005, VER-SIM-001-006, VER-SIM-001-007, VER-SIM-001-008, VER-SIM-001-009, VER-SIM-001-010, VER-SIM-001-011, VER-SIM-001-012. Each names the section or sections whose recorded failure text shows that entry's own selector going red, which is the rule the document states and applies. 2 entries name it nowhere because no transcript anywhere records a control for them: VER-SIM-001-013, VER-SIM-001-014. VER-SIM-001-013 is registered and its selector is a benchmark command no runner here can execute, so there is nothing to perturb; VER-SIM-001-014's gate scans the compiled assembly, so a control would mean committing a forbidden call, and its five injected evasion routes are recorded in that test's own remarks instead. Naming the document on either would point a reader at a transcript that does not mention it, which is the defect the pointer exists to prevent. Two of those pointers gained a second section in the third review pass: VER-SIM-001-010 names \u00a7 A refused commit leaves the run alive, so the tick re-runs and VER-SIM-001-012 names \u00a7 The pre-tick boundary position is never evaluated. Both are marked 'second test of the claim' in that document's index, which is the third kind of credit it defines: the section shows a test of the entry's claim going red in a case the entry's own selector does not reach, and the tally positively shows the selector passing. For VER-SIM-001-012 that is the whole point of the section, because the filter covers FinalBoundaryOrderingTests, where this entry's selector lives, and it stayed green while a 35:00 event was admitted after the boundary had been reached.",
+    "On 'negative-control' in evidenceKinds. doc 91 \u00a7 What a kind may name rules that a technique is not a kind, and excludes the value from the minted inventory a kind must be added to before it may appear in a registry file, so it is a defect to correct in this file rather than a value grandfathered into it. Correcting it is a removal and not a substitution, because a negative control's evidence is not a different form of thing from an ordinary test's: a control run as an NUnit test produces exactly the artifact form a positive NUnit test produces. So an affected entry takes the kind its artifact form already gives it, which is the kind it already carries: 'test-counts' with 'test-output' for an nunit selector, the pair 53 positive nunit entries of that shape across these registries carry, and 'golden-text' with 'test-counts' and 'text-diff' for a golden comparison, the shape 11 positive entries carry. Nothing is minted, no kind is added, and no entry loses a kind its evidence needs. What the label carried is that the gate has a negative control, which is a fact about the gate and not about the form of its evidence, so it is required here to appear in prose that can say what a label could not: the entry summary names the perturbation injected and what was observed, and where tests/verification/SIM-negative-controls.md records that control the entry's fixtures name it, qualified by section, so the entry's own pointer reaches the transcript rather than only the artifact that cannot demonstrate a control. Summary text in these files is otherwise not reworded; the integration owner authorized 'summary or notes' for this correction specifically, and summary is the only per-entry prose field available, because doc 91 \u00a7 Verification registry lists the accepted entry fields and no per-entry 'notes' is among them, while doc 115 \u00a7 Schema registry has SCH-QUA-001 reject unknown fields. A field invented to hold it would repeat exactly the coining that produced this defect.",
+    "VER-SIM-001-013's evidence is an SCH-OBS-002 document, which is why its kind is 'benchmark-report-json' and not a general one. doc 115 \u00a7 Schema registry defines SCH-OBS-002 as \"Performance report | scenario/device/settings, distributions, subsystem counters, budgets\", owned by CMP-OBS-001, and doc 115 adds that schemas reject unknown fields, carry structural and semantic validators, and are consumed as typed validated values rather than as generic JSON trees. Every element of this entry's claim has a home in those fields: the scenario is PERF-04; the device and settings are what doc 90 \u00a7 Canonical benchmark scenarios already pins for it, retail Steam Deck at 1280x800 for ten warmed minutes with seed, content/build, camera, settings, input script and driver/OS metadata fixed; the catch-up-bound hit count and the accumulator debt are both in doc 90 \u00a7 Frame metrics' per-frame and per-tick capture list as \"frame/tick catch-up count and accumulator debt\", so they are subsystem counters whose post-warm-up spread is a distribution; and the four-tick bound they are checked against is a budget. Nothing this entry needs is missing from the schema, and the metric it rests on is an existing CMP-OBS-001 metric rather than one nobody has defined. Naming the schema rather than a serialization is what makes the kind checkable: it is not a claim that PERF-04 emits JSON, which would assert a format decision QUA-005 has not made, but a claim about which document the evidence will be. The status is 'registered', and doc 91 \u00a7 What evidenceKinds means reads the list on a registered entry as the evidence the verification will produce, so no check may treat it as produced."
+  ],
+  "entries": [
+    {
+      "id": "VER-SIM-001-001",
+      "summary": "The simulation frequency is exactly 60 ticks per second with an exact rational seconds-per-tick of 1/60, it is exposed from exactly one place, and no API can change it after a run has started.",
+      "task": "TASK-SIM-001-001",
+      "requirements": [
+        "TR-RUN-002"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#clock-domains",
+        "docs/technical/20-simulation-core.md#numeric-and-unit-conventions"
+      ],
+      "gameplaySources": [
+        "docs/20-run-structure-and-timing.md#level-timer"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Time.TickRateTests.FrequencyIsSixtyHertzAndConstantWithinARun"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 The tick rate is changed to 50 Hz",
+        "tests/verification/SIM-negative-controls.md \u00a7 The rate is declared a second time",
+        "tests/verification/SIM-negative-controls.md \u00a7 A tick-rate member becomes settable"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-001-002",
+      "summary": "The accumulator yields only a whole number of ticks: a fractional remainder is retained across steps and never delivered, and neither the accumulator nor the host exposes any member from which a tick target could read a partial delta.",
+      "task": "TASK-SIM-001-001",
+      "requirements": [
+        "TR-RUN-002"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#clock-domains",
+        "docs/technical/20-simulation-core.md#scope-and-invariants"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Time.FixedStepAccumulatorTests.OnlyWholeTicksAreEverYielded"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 The tick count becomes fractional",
+        "tests/verification/SIM-negative-controls.md \u00a7 The retained fraction is exposed",
+        "tests/verification/SIM-negative-controls.md \u00a7 The accumulator ceilings instead of flooring"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-001-003",
+      "summary": "One host step yields zero ticks below one tick interval, exactly one at the interval, and the exact whole count above it; feeding 126,000 ticks worth of irregular frame deltas yields exactly 126,000 ticks with no accumulated drift.",
+      "task": "TASK-SIM-001-001",
+      "requirements": [
+        "TR-RUN-002"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#clock-domains",
+        "docs/technical/91-verification-strategy.md#runtime-and-clocks"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Time.FixedStepAccumulatorTests.ZeroOneAndManyTicksPerStepWithoutLongRunDrift"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 Long-run drift by subtraction"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-001-004",
+      "summary": "Game time is derived from the integer tick index, not from accumulated frame deltas: an irregular delta stream and a uniform delta stream of equal total elapsed time produce the identical tick index and the identical derived seconds, bit for bit.",
+      "task": "TASK-SIM-001-001",
+      "requirements": [
+        "TR-RUN-002"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#clock-domains",
+        "docs/technical/20-simulation-core.md#numeric-and-unit-conventions"
+      ],
+      "gameplaySources": [
+        "docs/20-run-structure-and-timing.md#level-timer"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Time.SimulationTickTests.DerivedSecondsComeFromTheTickIndexNotAccumulatedDeltas"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Simulation.Tests/Goldens/time-tick-index-derived-seconds.txt",
+        "tests/verification/SIM-negative-controls.md \u00a7 Seconds accumulated instead of divided"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output",
+        "golden-text"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-001-005",
+      "summary": "Elapsed time beyond the catch-up limit runs exactly the limit's ticks, reports the bound as reached, and reports the discarded seconds; the surplus is never queued into a later step, so a stall cannot compound into an unbounded spiral.",
+      "task": "TASK-SIM-001-001",
+      "requirements": [
+        "TR-RUN-002"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#clock-domains",
+        "docs/technical/90-performance-diagnostics-and-observability.md#target-device-frame-budget"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Time.CatchUpPolicyTests.SurplusBeyondTheBoundIsDiscardedAndReportedNotQueued"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 The catch-up bound is removed"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-001-006",
+      "summary": "The catch-up bound absorbs the largest stall TDR-003 tolerates without discarding any game time - 50 ms of debt is exactly three ticks at 60 Hz and all three run - and the first tick of debt beyond the bound is discarded and diagnosed, so the provisional baseline of four ticks is asserted rather than assumed.",
+      "task": "TASK-SIM-001-001",
+      "requirements": [
+        "TR-RUN-002",
+        "TR-QUA-001"
+      ],
+      "technicalSources": [
+        "docs/technical/decisions/TDR-003-require-sixty-fps-on-steam-deck.md#performance-contract",
+        "docs/technical/10-runtime-architecture.md#clock-domains"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Time.CatchUpPolicyTests.BoundAbsorbsTheLargestToleratedStallAndNoMore"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 The bound loses its headroom tick"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-001-007",
+      "summary": "Reaching the catch-up bound produces exactly one performance diagnostic per occurrence carrying the catch-up count and the accumulator debt, not one per discarded tick and not a silent clamp.",
+      "task": "TASK-SIM-001-002",
+      "requirements": [
+        "TR-RUN-002"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#clock-domains",
+        "docs/technical/90-performance-diagnostics-and-observability.md#frame-metrics"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Runtime.SimulationHostCatchUpDiagnosticTests.ReachingTheBoundEmitsOneDiagnosticCarryingCountAndDebt"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 One diagnostic per discarded tick instead of one per occurrence"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-001-008",
+      "summary": "A negative control proves the two accumulator gates can fail: a stub that emits a fractional tick makes VER-SIM-001-002 fail, and a stub that ignores the catch-up bound makes VER-SIM-001-005 fail, so neither gate can pass by asserting nothing.",
+      "task": "TASK-SIM-001-001",
+      "requirements": [
+        "TR-QUA-001",
+        "TR-RUN-002"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#acceptance-evidence",
+        "docs/technical/10-runtime-architecture.md#clock-domains"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Time.AccumulatorNegativeControlTests.WholeTickAndCatchUpAssertionsFailAgainstDeliberatelyBrokenStubs"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 SIM-001's permanent negative control, with its stub repaired"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-001-009",
+      "summary": "A focus-loss or operating-system-suspension resume discards the elapsed wall time instead of catching it up: the step after the resume runs zero ticks, reports the discarded seconds, and leaves the tick index and run clock exactly where the suspension found them.",
+      "task": "TASK-SIM-001-002",
+      "requirements": [
+        "TR-RUN-002",
+        "TR-RUN-003"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#clock-domains",
+        "docs/technical/10-runtime-architecture.md#pause-contract"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Runtime.SimulationHostTests.FocusLossAndSuspendResumeDiscardElapsedWallTime"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 Resume catches up instead of discarding"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-001-010",
+      "summary": "The host invokes the tick target exactly once per whole tick, in strictly ascending tick index with no gap and no repeat, and never re-entrantly: a recording stub world reproduces the exact expected call sequence for a mixed run of zero-, one-, and multi-tick steps.",
+      "task": "TASK-SIM-001-002",
+      "requirements": [
+        "TR-RUN-002",
+        "TR-RUN-005",
+        "TR-CTR-002"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#system-phase-ordering",
+        "docs/technical/115-component-contract-and-schema-registry.md#component-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Runtime.SimulationHostTests.TickTargetIsInvokedOncePerTickInAscendingOrder"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 A tick is invoked twice",
+        "tests/verification/SIM-negative-controls.md \u00a7 A refused commit leaves the run alive, so the tick re-runs"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-001-011",
+      "summary": "Run time advances only on committed authoritative ticks and equals the tick index divided by 60 exactly for every tick count tested; any amount of elapsed wall time that produces no tick leaves the run clock unchanged. This entry carried TASK-FND-009-001 in successor while its own status is implemented, which fails doc 91 \u00a7 What 'successor' means on both counts at once: a task ID where a VER-* ID belongs, and a successor on an entry that has not been retired. Unlike the two QUA-005 rows corrected alongside it, there is no deferred work here to restate. TASK-FND-009-001 replaces build/verify-architecture.sh with architecture tests, which is a coherent successor for VER-FND-001-004 and its script selector and has no bearing on this entry, whose selector is already an NUnit test about run time. The field arrived with the first registry commit as a copy of that FND-001 row's shape and never recorded a claim, so it is removed as an error rather than converted into a deferral this entry does not have. That correction was reasoned against a census doc 91 used to carry in that section, which said three entries carried the field, and the base has since withdrawn the census: \u00a7 What 'successor' means now states the rule and gives a jq search over tests/verification/*.json instead, because a count over a corpus that grows as branches merge is a measurement of one ref. The removal stands on the rule alone, which is the stronger ground and was always the real reason: this entry is not retired and TASK-FND-009-001 is not a VER-* ID. Nothing here should be read as a claim about how many entries carry the field; run the search.",
+      "task": "TASK-SIM-001-002",
+      "requirements": [
+        "TR-RUN-002",
+        "TR-CTR-002"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#clock-domains",
+        "docs/technical/20-simulation-core.md#numeric-and-unit-conventions"
+      ],
+      "gameplaySources": [
+        "docs/20-run-structure-and-timing.md#level-timer"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Runtime.RunClockTests.RunTimeAdvancesOnlyOnCommittedTicks"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 Run time accumulates instead of dividing the index"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-001-012",
+      "summary": "Active ticks cover only times strictly before 35:00, and after the final pre-boundary tick commits the host evaluates the terminal boundary before it will admit any event scheduled at or after 35:00: a recording stub proves the boundary evaluation precedes every 35:00-or-later scheduled callback.",
+      "task": "TASK-SIM-001-002",
+      "requirements": [
+        "TR-RUN-008",
+        "TR-RUN-005"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#boundary-and-tie-ordering",
+        "docs/technical/10-runtime-architecture.md#system-phase-ordering"
+      ],
+      "gameplaySources": [
+        "docs/20-run-structure-and-timing.md#mission-extraction",
+        "docs/32-standard-wave-and-beacon-schedule.md#complete-35-minute-schedule"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Runtime.FinalBoundaryOrderingTests.ExtractionBoundaryIsEvaluatedBeforeAnyEventAtOrAfterThirtyFiveMinutes"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Simulation.Tests/Goldens/time-final-boundary-ordering.txt",
+        "tests/verification/SIM-negative-controls.md \u00a7 A 35:00 event is admitted before the boundary is evaluated",
+        "tests/verification/SIM-negative-controls.md \u00a7 The pre-tick boundary position is never evaluated"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "golden-text",
+        "text-diff"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-001-013",
+      "summary": "The named proof gate for the provisional four-tick catch-up limit: a warmed ten-minute PERF-04 capture on the target device reports zero catch-up-bound hits and a bounded accumulator debt, so the baseline is validated on hardware rather than only in a unit test.",
+      "task": "TASK-SIM-001-002",
+      "requirements": [
+        "TR-RUN-002",
+        "TR-QUA-001"
+      ],
+      "technicalSources": [
+        "docs/technical/90-performance-diagnostics-and-observability.md#canonical-benchmark-scenarios",
+        "docs/technical/90-performance-diagnostics-and-observability.md#frame-metrics",
+        "docs/technical/decisions/TDR-003-require-sixty-fps-on-steam-deck.md#performance-contract"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "command",
+        "value": "./build.sh benchmark PERF-04"
+      },
+      "fixtures": [],
+      "scenarios": [
+        "PERF-04"
+      ],
+      "evidenceKinds": [
+        "command-exit-code",
+        "benchmark-report-json"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "main",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-001-014",
+      "summary": "The compiled MechaMiner.Simulation assembly's metadata references no wall-clock, nondeterministic-source, or engine API: a TypeReference and MemberReference scan of the built assembly fails on System.DateTime (including get_Now and get_UtcNow), System.DateTimeOffset, System.Diagnostics.Stopwatch, System.Environment.TickCount and TickCount64, System.Random, System.Guid.NewGuid, or any type in a Godot* namespace, so the check is over what the assembly actually references rather than over source text and the route used to reach the API is irrelevant. The gate's negative control is a set of injections rather than an argument. Four evasion routes were each written into a production file, built, and observed rather than reasoned about, and all four are caught through a TypeReference row: a System.DateTime reached only through a generic instantiation (a List<System.DateTime> field), one appearing only as a custom-attribute argument, one captured only in a lambda's closure class, and one named only in a method body's locals. A fully qualified System.DateTime.UtcNow with no using directive turns the gate red on the TypeReference row and the MemberReference row together while build/verify-architecture.sh still exits 0, and that contrast is what shows this gate reaches an axis a reference-level check cannot. One route is recorded as not caught: nameof(System.DateTime) folds to the constant string \"DateTime\" at compile time and leaves no token, so no metadata scan can see it.",
+      "task": "TASK-SIM-001-001",
+      "requirements": [
+        "TR-RUN-002",
+        "TR-CTR-001",
+        "TR-QUA-001"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#scope-and-invariants",
+        "docs/technical/10-runtime-architecture.md#clock-domains",
+        "docs/technical/91-verification-strategy.md#acceptance-evidence"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Support.SimulationAssemblyDeterminismTests.TheCompiledAssemblyReferencesNoForbiddenDeterminismApi"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    }
+  ]
+}

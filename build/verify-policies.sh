@@ -251,20 +251,70 @@ fi
 
 echo
 echo "=== policy inheritance guard 1: no Directory.Build.* file shadows the root pair"
+#
+# Scoped to this working tree's own files. A `git worktree` checkout nested inside
+# the tree - which this repository creates under .claude/worktrees/, and which the
+# .gitignore entry exists to accommodate - contains a complete second checkout,
+# root Directory.Build.props and all. Those are that checkout's files: MSBuild
+# cannot reach them from any project in this working tree, so they shadow nothing
+# here. One session worktree made this guard exit 4 with three false failures
+# (.claude/worktrees/<name>/Directory.Build.props, its .targets, and its
+# build/policy-fixtures/Directory.Build.props), which turned the gate hostile to
+# the very workflow the .gitignore change was made for.
+#
+# The distinguishing fact is asked of git rather than inferred from the path, and
+# it takes two conditions, so this cannot become a hiding place:
+#   * the directory must be the top level of a checkout of its own, which is what
+#     `git -C <dir> rev-parse --show-toplevel` returning <dir> itself means; a
+#     stray or invalid .git file does not satisfy it, and
+#   * the file must not be tracked by THIS repository. A tracked file is this
+#     repository's file whatever sits above it, and is always checked.
+nested_checkout_roots=()
+while IFS= read -r gitlink; do
+  candidate="${gitlink%/.git}"
+  [[ -n "${candidate}" && "${candidate}" != "${gitlink}" ]] || continue
+  candidate_real="$(cd "${REPO_ROOT}/${candidate}" 2>/dev/null && pwd -P)" || continue
+  toplevel="$(git -C "${REPO_ROOT}/${candidate}" rev-parse --show-toplevel 2>/dev/null)" || continue
+  if [[ -n "${toplevel}" && "${toplevel}" == "${candidate_real}" ]]; then
+    nested_checkout_roots+=("${candidate}")
+  fi
+done < <(cd "${REPO_ROOT}" && find . -mindepth 2 -name '.git' -printf '%P\n' 2>/dev/null | sort)
+
+nested_checkout_owner() {
+  # $1 repository-relative path. Prints the nested checkout that owns it and
+  # returns 0; returns nonzero when this working tree owns it.
+  local file="$1" root
+  for root in ${nested_checkout_roots[@]+"${nested_checkout_roots[@]}"}; do
+    if [[ "${file}" == "${root}/"* ]]; then
+      if git -C "${REPO_ROOT}" ls-files --error-unmatch -- "${file}" >/dev/null 2>&1; then
+        return 1
+      fi
+      printf '%s' "${root}"
+      return 0
+    fi
+  done
+  return 1
+}
+
 found_msbuild_files=()
 while IFS= read -r file; do
+  if owner="$(nested_checkout_owner "${file}")"; then
+    pass "not this working tree's file, it belongs to the nested checkout ${owner}/: ${file}"
+    continue
+  fi
   found_msbuild_files+=("${file}")
 done < <(cd "${REPO_ROOT}" && find . \
   \( -name 'Directory.Build.props' -o -name 'Directory.Build.targets' \) \
   -printf '%P\n' 2>/dev/null | sort)
 
 # An empty result would mean the scan found nothing at all, including the root
-# pair, so it must not be reported as compliance.
+# pair, so it must not be reported as compliance. Counted AFTER the nested-checkout
+# exclusion, so an exclusion that swallowed the root pair fails here.
 if [[ "${#found_msbuild_files[@]}" -lt "${#ROOT_MSBUILD_FILES[@]}" ]]; then
-  fail "the Directory.Build.* scan found ${#found_msbuild_files[@]} file(s); it cannot see even the root pair, so it proves nothing"
+  fail "the Directory.Build.* scan retained ${#found_msbuild_files[@]} file(s) of this working tree; it cannot see even the root pair, so it proves nothing"
 fi
 
-for file in "${found_msbuild_files[@]}"; do
+for file in ${found_msbuild_files[@]+"${found_msbuild_files[@]}"}; do
   is_root=0
   for root_file in "${ROOT_MSBUILD_FILES[@]}"; do
     if [[ "${file}" == "${root_file}" ]]; then

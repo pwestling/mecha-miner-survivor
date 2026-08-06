@@ -67,7 +67,8 @@ The starting scale is intended to make crossing the world a meaningful commitmen
 The deployment point changes every run and obeys all of the following:
 
 - It is not inside a spur pocket, against the world boundary, or inside a narrow connector.
-- It has obstacle-free space at least one mining-zone diameter around the mech.
+- It has an obstacle-free **radius** of at least one mining-zone diameter around the mech. That radius is one times the 6.0M zone diameter [DEC-128](./decisions/DEC-128-set-extraction-zone-and-resonance-field-radii.md) accepts, so 6.0M. It is derived from the zone and never authored as an independent figure.
+- Deployment clearance is never tighter than an ordinary mining point's cleared radius.
 - It offers at least two visibly distinct broad departure routes.
 - Ordinary enemies can enter from valid offscreen ground in at least three general directions without appearing inside the camera or overlapping the mech.
 - No Hyper Gold site, material geode, relic cache, damaging hazard, or automatic-contact choice appears inside the initial camera view.
@@ -75,6 +76,10 @@ The deployment point changes every run and obeys all of the following:
 - The complete Near band contains at least two standard seams, one rich seam, and at least one geode of each of the four present materials.
 
 The player is not told the directions of these opportunities. The guarantee prevents a resource-starved opening while preserving search and route choice.
+
+Deployment clearance states its dimension outright because "one mining-zone diameter around the mech" does not distinguish a radius from a total width — a factor of two in the space the player starts with — and this document uses diameters as a width unit for connectors. It is the radius because the [placement contract below](#placement-contract-shared-by-important-sites) unambiguously gives an ordinary mining point a 4.0M cleared radius: its entire 3.0M extraction circle plus a one-mech-width maneuvering band. The narrow reading would leave deployment a 3.0M cleared radius, tighter than an ordinary mining point at the one place where the player has no map knowledge and an immediate need to move. That asymmetry is what settles it, and the constraint bullet above states the resulting rule so map validation can check it. The radius reading leaves 5.5M of open ground beyond the mech's own 0.5M footprint radius, a little under two seconds of movement at 3.0M/s.
+
+This is a reading of an ambiguous sentence resolved by internal consistency with an unambiguous constraint in the same document, made under [doc 114's specification-maintenance rule](../technical/114-autonomous-agent-execution-protocol.md#specification-maintenance-autonomy). It is not a design decision handed down, it has no decision record, and an explicit ruling may override it.
 
 ## Placement contract shared by important sites
 
@@ -239,3 +244,4 @@ Changing one of these values does not reopen the large finite world, randomized 
 - [DEC-122 — Use destructible rocks as the health-pack source](./decisions/DEC-122-use-destructible-rocks-for-health-packs.md)
 - [DEC-123 — Replenish destructible rocks around the player](./decisions/DEC-123-replenish-destructible-rocks-around-the-player.md)
 - [DEC-126 — Adopt the initial player survivability baseline](./decisions/DEC-126-adopt-the-initial-player-survivability-baseline.md)
+- [DEC-128 — Set the extraction-zone and resonance-field radii](./decisions/DEC-128-set-extraction-zone-and-resonance-field-radii.md)

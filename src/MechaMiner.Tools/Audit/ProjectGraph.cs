@@ -434,10 +434,22 @@ internal sealed class ProjectGraph
     /// <para>
     /// The shell reader in <c>build/verify-architecture.sh</c> § 6 asks the same two
     /// questions with the same token, over a cruder <c>sed</c> stripper. It can lose a
-    /// token to an awkwardly quoted line where this reader would not; it cannot invent
-    /// one. The C# reader is the precise one, the shell reader is the one that needs no
-    /// build, and § 6 carries the same six-form control so a divergence shows up as a
-    /// failing control rather than as a silent disagreement.
+    /// token to a literal that spans lines or to a block comment where this reader would
+    /// not; it cannot invent one. The C# reader is the precise one, the shell reader is
+    /// the one that needs no build, and § 6 carries the same control list so a divergence
+    /// shows up as a failing control rather than as a silent disagreement.
+    /// </para>
+    /// <para>
+    /// KNOWN LIMITATION, stated because an implied one is a false claim. C# permits
+    /// Unicode escapes inside identifiers, so <c>using \u0047odot;</c> and
+    /// <c>\u0047odot.GD.Print()</c> are both valid C# that the compiler resolves to
+    /// <c>Godot</c>, and neither reader sees the token: after stripping, the text still
+    /// reads <c>\u0047odot</c>. Decoding identifier escapes needs identifier position told
+    /// apart from literal position, which is a parser rather than a text scan, and doing
+    /// it in one reader and not the other would reintroduce exactly the divergence the
+    /// pair exists to prevent. So this scan does not cover it, the control set does not
+    /// claim to, and <c>VER-FND-001-004</c> records it as a named gap. An analyzer over
+    /// the syntax tree is what would close it.
     /// </para>
     /// </remarks>
     internal static bool NamesGodotNamespace(string sourceText)
@@ -467,12 +479,26 @@ internal sealed class ProjectGraph
     /// structure so the caller can still reason per line.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// A character scanner rather than a regex, because the cases that matter are
     /// exactly the ones a regex gets wrong: an escaped quote inside a literal
     /// (<c>"\""</c>), a <c>//</c> inside a literal (<c>"https://..."</c>), and a quote
     /// inside a comment. Handles line comments, block comments, ordinary literals,
-    /// verbatim literals and raw string literals. Character literals are left alone;
-    /// a <c>char</c> cannot hold an identifier.
+    /// verbatim literals, raw string literals and character literals.
+    /// </para>
+    /// <para>
+    /// Character literals were originally left alone, on the reasoning that a
+    /// <c>char</c> cannot hold an identifier so there was nothing in one to hide. That
+    /// reasoning was wrong, and it was the hole: a <c>char</c> can hold a <em>quote</em>.
+    /// With no character-literal state the <c>"</c> inside <c>'"'</c> was read as a
+    /// string opener, so the scan ran on to the next <c>"</c> and blanked everything
+    /// between — which on the line <c>char q = '"'; Godot.GD.Print("y");</c> is the
+    /// reference itself. One line therefore defeated both readers of this rule while both
+    /// controls stayed green, because every control probe put its reference on a line of
+    /// its own. The controls now include the same-line decoys (see
+    /// <c>GodotNamingForms</c>), and a character literal is blanked like any other
+    /// literal.
+    /// </para>
     /// </remarks>
     private static string StripCommentsAndStringLiterals(string sourceText)
     {
@@ -524,10 +550,58 @@ internal sealed class ProjectGraph
                 continue;
             }
 
+            if (current == '\'')
+            {
+                index = BlankCharacterLiteral(sourceText, index, Blank);
+                continue;
+            }
+
             index++;
         }
 
         return new string(output);
+    }
+
+    /// <summary>
+    /// Blanks one character literal starting at <paramref name="start"/> and returns the
+    /// index after it.
+    /// </summary>
+    /// <remarks>
+    /// The literal's content cannot name a namespace, so what matters is only that the
+    /// scanner leaves the literal in the state it entered it: a <c>'"'</c> must not put
+    /// the caller inside a string. An unterminated literal stops at the newline rather
+    /// than swallowing the rest of the file, for the same reason
+    /// <see cref="BlankLiteral"/> does — a stray apostrophe in otherwise valid code must
+    /// cost at most its own line.
+    /// </remarks>
+    private static int BlankCharacterLiteral(string text, int start, Action<int, int> blank)
+    {
+        int index = start + 1;
+        while (index < text.Length)
+        {
+            char current = text[index];
+            if (current == '\\' && index + 1 < text.Length)
+            {
+                index += 2;
+                continue;
+            }
+
+            if (current == '\'')
+            {
+                index++;
+                break;
+            }
+
+            if (current == '\n')
+            {
+                break;
+            }
+
+            index++;
+        }
+
+        blank(start, index);
+        return index;
     }
 
     /// <summary>Blanks one string literal starting at <paramref name="start"/> and returns the index after it.</summary>

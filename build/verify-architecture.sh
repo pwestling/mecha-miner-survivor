@@ -359,7 +359,19 @@ echo "=== 6. no Godot types outside game/ (VER-FND-001-004)"
 # is a C# rule over a constructible graph and runs in test-fast; this one is a text
 # scan that needs no build and no audit assembly, so a defect in the audit code
 # cannot hide a violation from both. Do not delete either as duplicated work. If the
-# expression changes, change it in both files, and keep both six-form controls green.
+# expression changes, change it in both files, and keep both controls green.
+#
+# KNOWN LIMITATION, stated rather than implied. C# permits Unicode escapes inside
+# identifiers, so `using \u0047odot;` and `\u0047odot.GD.Print()` both compile to a
+# reference to `Godot`, and neither reader sees the token: after comment and literal
+# stripping the text still reads `\u0047odot`. Decoding identifier escapes would mean
+# either two independent decoders (the divergence this pair of readers exists to
+# prevent) or a shared one that has to know identifier position from string position -
+# which is a parser, not a text scan. So this is not covered, and the control below
+# says "the naming forms it covers" rather than "all six ways", because a stated
+# limitation is a limitation and an implied one is a false claim. VER-FND-001-004
+# records it. A compiler-backed reader (an analyzer over the syntax tree) is what would
+# close it; nothing in this gate can.
 #
 # Matching `Godot[.]` alone would not be sufficient: `using GodotAlias = Godot;` has
 # no dot after the token. The trailing class is therefore "any non-identifier
@@ -378,11 +390,35 @@ readonly GODOT_QUALIFIER='(^|[^A-Za-z0-9_.])Godot[[:space:]]*\.'
 # English word in a comment or a diagnostic message, and most of them are prose
 # explaining why this boundary exists. Rewording those to satisfy a text scan would
 # make the code worse and prove nothing about the boundary. This sed is cruder than
-# the C# reader's character scanner - it can lose a token to an awkwardly quoted
-# line - but it cannot invent one, so its error direction is a false negative that
-# the C# reader catches, never a false accusation.
+# the C# reader's character scanner - block comments and literals that span lines are
+# not tracked - but it cannot invent a token, so its error direction is a false
+# negative that the C# reader catches, never a false accusation.
+#
+# The three substitutions run in this order for three separate reasons, two of which
+# were holes:
+#
+#   1. Character literals go first. Without this pass the `"` inside `'"'` was read as
+#      a string opener, so the scan ran on to the next `"` and deleted everything
+#      between - and on the line `char q = '"'; Godot.GD.Print("y");` that is the
+#      reference itself. One line therefore defeated both readers of this rule with
+#      both controls green, because every control probe put its reference on a line of
+#      its own. The C# reader's remark said a `char` "cannot hold an identifier", which
+#      is true and was not the point: a char can hold a quote.
+#   2. Strings go before comments. The previous order deleted from the first `//` to end
+#      of line first, so `string u = "http://example.invalid"; Godot.GD.Print(x);` lost
+#      its reference to a `//` that was inside a literal. A URL beside a Godot call is
+#      ordinary code, and the C# reader already got this case right.
+#   3. Comments go last, over what is left, so a `//` outside any literal still takes
+#      the rest of its line.
+#
+# Each removal leaves a space rather than nothing, so deleting a literal cannot splice
+# two identifiers into a token nobody wrote.
 godot_strip_comments_and_strings() {
-  sed -E -e 's,//.*,,' -e 's/"([^"\\]|\\.)*"//g' "$1"
+  sed -E \
+    -e "s/'([^'\\\\]|\\\\.)*'/ /g" \
+    -e 's/@?"([^"\\]|\\.)*"/ /g' \
+    -e 's,//.*,,' \
+    "$1"
 }
 
 # Prints the files under the given roots that name the Godot namespace.
@@ -422,11 +458,21 @@ if [[ "${godot_scan_roots_present}" -eq 1 ]]; then
 fi
 
 # Control. The scan above has only ever run against a compliant tree, so on its own it
-# is indistinguishable from a scan that matches nothing. These six probes are the same
-# six forms ArchitectureRuleTests.GodotNamingForms feeds the C# reader; keeping one list
-# in two places is what makes a divergence between the two readers a failing control
-# rather than a silent disagreement. The three lookalikes must be accepted, or a scan
-# that flagged every file would pass the six above.
+# is indistinguishable from a scan that matches nothing. These probes are the same forms
+# ArchitectureRuleTests.GodotNamingForms feeds the C# reader; keeping one list in two
+# places is what makes a divergence between the two readers a failing control rather
+# than a silent disagreement. The lookalikes must be accepted, or a scan that flagged
+# every file would pass the positive probes.
+#
+# f1-f6 are the six ways C# offers of naming a namespace, each on a line of its own -
+# and that is exactly why they were not enough. A stripper defect that swallows the rest
+# of a line cannot be seen by a probe whose line holds nothing else, so all six stayed
+# green while `char q = '"'; Godot.GD.Print("y");` passed the real scan. f7-f9 are
+# therefore same-line probes: a decoy the stripper has to get right, followed on the
+# same line by a reference it has to keep. They are not contrived - a URL or a quote
+# character beside a Godot call is ordinary code - and f9 is the one the shell reader
+# failed while the C# reader passed, which is the divergence this shared list exists to
+# surface.
 godot_probe_dir="$(mktemp -d)"
 mkdir -p "${godot_probe_dir}/probe"
 printf 'using Godot;\ninternal static class P { internal static int R() => 1; }\n' \
@@ -441,24 +487,41 @@ printf 'using GodotAlias = Godot;\ninternal static class P { internal static int
   > "${godot_probe_dir}/probe/f5-alias-namespace.cs"
 printf 'internal static class P { internal static void R() => Godot.GD.Print("x"); }\n' \
   > "${godot_probe_dir}/probe/f6-fully-qualified.cs"
+# f7-f9: the decoy and the reference on ONE line. Each decoy is what defeated a
+# stripper: a quote held in a char literal, a `//` inside a string, and a URL inside a
+# string.
+printf 'internal static class P { internal static void R() { char q = %s"%s; Godot.GD.Print("y"); } }\n' "'" "'" \
+  > "${godot_probe_dir}/probe/f7-char-literal-quote.cs"
+printf 'internal static class P { internal static void R() { string s = "// not a comment"; Godot.GD.Print("y"); } }\n' \
+  > "${godot_probe_dir}/probe/f8-comment-in-string.cs"
+printf 'internal static class P { internal static void R() { string u = "http://example.invalid/x"; Godot.GD.Print("y"); } }\n' \
+  > "${godot_probe_dir}/probe/f9-url-in-string.cs"
 printf 'using MechaMiner.GodotLike;\ninternal static class N { internal static void R() => GodotLike.Do(); }\n' \
   > "${godot_probe_dir}/probe/n1-qualified-lookalike.cs"
 printf 'internal static class N { internal static string R() => "NotGodotish"; }\n' \
   > "${godot_probe_dir}/probe/n2-embedded-token.cs"
 printf '// Only game/ may reference Godot.\ninternal sealed class N { public int Godot { get; set; } }\n' \
   > "${godot_probe_dir}/probe/n3-comment-and-member.cs"
+# n4 is the other half of f8/f9: reordering the stripper so literals go before comments
+# must not stop it removing literals. A file whose only Godot text is inside a string is
+# not a reference, and if this one starts firing the stripper has stopped stripping.
+printf 'internal static class N { internal static string R() => "call Godot.GD.Print here"; }\n' \
+  > "${godot_probe_dir}/probe/n4-qualifier-in-string.cs"
 
-readonly EXPECTED_GODOT_PROBES=6
+readonly EXPECTED_GODOT_PROBES=9
+readonly EXPECTED_GODOT_LOOKALIKES=4
 godot_probe_hits="$(godot_namespace_hits "${godot_probe_dir}/probe")"
-godot_probe_caught="$(printf '%s' "${godot_probe_hits}" | grep -c '/f[1-6]-' || true)"
-godot_probe_false="$(printf '%s' "${godot_probe_hits}" | grep -c '/n[1-3]-' || true)"
+godot_probe_caught="$(printf '%s' "${godot_probe_hits}" | grep -c '/f[0-9][0-9]*-' || true)"
+godot_probe_false="$(printf '%s' "${godot_probe_hits}" | grep -c '/n[0-9][0-9]*-' || true)"
 
 if [[ "${godot_probe_caught}" -ne "${EXPECTED_GODOT_PROBES}" ]]; then
   fail "control: the Godot scan caught ${godot_probe_caught} of ${EXPECTED_GODOT_PROBES} naming forms; missed $(cd "${godot_probe_dir}/probe" && ls f*.cs | while read -r f; do printf '%s\n' "${godot_probe_hits}" | grep -q "/${f}\$" || printf '%s ' "${f}"; done)"
 elif [[ "${godot_probe_false}" -ne 0 ]]; then
-  fail "control: the Godot scan flagged $(printf '%s' "${godot_probe_hits}" | grep '/n[1-3]-' | paste -sd' ' -), which do not name the Godot namespace"
+  fail "control: the Godot scan flagged $(printf '%s' "${godot_probe_hits}" | grep '/n[0-9][0-9]*-' | paste -sd' ' -), which do not name the Godot namespace"
 else
-  pass "control: all ${EXPECTED_GODOT_PROBES} ways of naming the Godot namespace are caught, and 3 lookalikes are not"
+  # Deliberately not "all ways": identifiers written with Unicode escapes are the stated
+  # limitation above, and this control does not measure them.
+  pass "control: all ${EXPECTED_GODOT_PROBES} naming forms this scan covers are caught (6 spellings plus 3 same-line decoys), and ${EXPECTED_GODOT_LOOKALIKES} lookalikes are not; identifier Unicode escapes are out of reach and untested"
 fi
 rm -rf "${godot_probe_dir}"
 

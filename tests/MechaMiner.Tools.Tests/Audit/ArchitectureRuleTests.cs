@@ -460,14 +460,39 @@ internal sealed class ArchitectureRuleTests
     }
 
     /// <summary>
-    /// Every way C# offers of naming a namespace, each of which names <c>Godot</c>.
+    /// Every way C# offers of naming a namespace, each of which names <c>Godot</c>, plus
+    /// the same-line decoys a comment/literal stripper has to get right.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Add a form here and
     /// <see cref="TheGodotImportRuleCatchesEveryWayOfNamingTheNamespace"/> covers it
-    /// without a new test being written. The same six forms are the control set in
+    /// without a new test being written. The same forms are the control set in
     /// <c>build/verify-architecture.sh</c> § 6, so the two readers of this rule are
     /// measured against one list.
+    /// </para>
+    /// <para>
+    /// The first six forms each occupy a line of their own, and that is exactly why they
+    /// were not enough: a stripper defect that swallows the rest of a line is invisible to
+    /// a probe whose line holds nothing else. All six stayed green while the single line
+    /// <c>char q = '"'; Godot.GD.Print("y");</c> passed both readers, because the quote
+    /// held in the character literal opened a string state neither stripper knew how to
+    /// leave. The last three forms are therefore same-line probes - decoy first, reference
+    /// after it on the same line - one per stripper hazard: a quote in a character
+    /// literal, a <c>//</c> inside a string, and a URL inside a string. The URL case is
+    /// the one the shell reader failed while this reader passed, which is the divergence a
+    /// shared control list exists to surface.
+    /// </para>
+    /// <para>
+    /// KNOWN LIMITATION, recorded here, in <c>VER-FND-001-004</c>, and in
+    /// <c>build/verify-architecture.sh</c> § 6: C# allows Unicode escapes inside
+    /// identifiers, so <c>using \u0047odot;</c> and <c>\u0047odot.GD.Print()</c> both bind
+    /// to <c>Godot</c> and neither reader sees the token. Covering that means decoding
+    /// identifier escapes, which requires telling identifier position from literal
+    /// position - a parser, not a text scan. It is out of reach for both readers and is
+    /// deliberately absent from this list, so nothing here claims to be exhaustive over
+    /// what the compiler accepts. An analyzer over the syntax tree is what would close it.
+    /// </para>
     /// </remarks>
     private static IEnumerable<TestCaseData> GodotNamingForms
     {
@@ -482,6 +507,15 @@ internal sealed class ArchitectureRuleTests
                 "fully qualified, no using",
                 "namespace MechaMiner.Probe;\n\ninternal static class Probe\n{\n"
                 + "    internal static void Run() => Godot.GD.Print(\"x\");\n}\n");
+            yield return SameLineForm(
+                "a quote held in a char literal, then a reference on the same line",
+                "char q = '\"'; Godot.GD.Print(\"y\");");
+            yield return SameLineForm(
+                "a // inside a string, then a reference on the same line",
+                "string s = \"// not a comment\"; Godot.GD.Print(\"y\");");
+            yield return SameLineForm(
+                "a URL inside a string, then a reference on the same line",
+                "string u = \"http://example.invalid/x\"; Godot.GD.Print(\"y\");");
         }
     }
 
@@ -514,6 +548,16 @@ internal sealed class ArchitectureRuleTests
                 + "// Only game/ may reference Godot, which is why this project does not.\n"
                 + "internal static class Probe\n{\n"
                 + "    internal static string Run() => \"the pure tier launched no Godot process\";\n}\n");
+
+            // The other half of the two same-line string probes above. Reordering the
+            // strippers so literals are removed before comments must not stop them
+            // removing literals: a file whose only qualifier-position text sits inside a
+            // string is not a reference, and if this case starts firing, the stripper has
+            // stopped stripping and the same-line probes are passing for the wrong reason.
+            yield return new TestCaseData(
+                "a qualifier spelled inside a string literal, which is not a reference",
+                "namespace MechaMiner.Probe;\n\ninternal static class Probe\n{\n"
+                + "    internal static string Run() => \"call Godot.GD.Print here\";\n}\n");
         }
     }
 
@@ -524,6 +568,18 @@ internal sealed class ArchitectureRuleTests
             name,
             directive + "\n\nnamespace MechaMiner.Probe;\n\ninternal static class Probe\n{\n"
             + "    internal static int Run() => 1;\n}\n");
+    }
+
+    /// <summary>
+    /// A probe whose decoy and whose Godot reference share one line, so a stripper that
+    /// loses the rest of a line loses the reference with it.
+    /// </summary>
+    private static TestCaseData SameLineForm(string name, string statement)
+    {
+        return new TestCaseData(
+            name,
+            "namespace MechaMiner.Probe;\n\ninternal static class Probe\n{\n"
+            + "    internal static void Run() { " + statement + " }\n}\n");
     }
 
     /// <summary>

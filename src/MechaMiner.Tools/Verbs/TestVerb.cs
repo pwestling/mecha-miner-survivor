@@ -26,7 +26,7 @@ internal sealed class TestTally
 }
 
 /// <summary>
-/// A filesystem tripwire that makes "the pure tier launched no Godot process" a
+/// A filesystem tripwire that makes "no pure NUnit test process launched Godot" a
 /// falsifiable assertion.
 /// </summary>
 /// <remarks>
@@ -43,10 +43,30 @@ internal sealed class TestTally
 /// that directory is placed first on <c>PATH</c> for every pure test process, and
 /// <c>MECHAMINER_GODOT</c> is pointed at it as well, so both discovery routes the
 /// repository uses lead to it. The shim appends its own argument vector to a
-/// sentinel file and exits nonzero. If the sentinel exists afterwards, something in
-/// the pure tier tried to launch the engine and the tier fails with the recorded
-/// command line; if it does not, nothing did. The tripwire never launches the real
-/// engine, so a violation is caught rather than performed.
+/// sentinel file and exits nonzero. If the sentinel exists afterwards, something the
+/// tripwire armed tried to launch the engine and the tier fails with the recorded
+/// command line. The tripwire never launches the real engine, so a violation is caught
+/// rather than performed.
+/// </para>
+/// <para>
+/// WHAT THIS DOES NOT COVER, stated because the assertion used to be printed as
+/// though it covered everything the verb did. The shim reaches only the processes this
+/// class hands its <see cref="Environment"/> to, which is the pure NUnit test
+/// processes. <see cref="VerbContext.RunRepositoryScript"/> passes no environment, so
+/// the gate scripts <c>test-fast</c> runs in stages 1 and 2 inherit the verb host's own
+/// PATH and never see the shim. Their nested <c>./build.sh</c> invocations do launch the
+/// pinned engine - <c>build/verify-verbs.sh</c> probes it through <c>doctor</c> - and an
+/// empty sentinel says nothing about them. Reporting "no process in the pure tier tried
+/// to launch the engine" therefore asserted a fact over a region this tripwire is blind
+/// to, and the recorded assertion no longer says it.
+/// </para>
+/// <para>
+/// Closing that gap means propagating the tripwire environment through
+/// <c>RunRepositoryScript</c>, which is FND-003's to decide because the hard part is not
+/// the plumbing. A gate script legitimately runs <c>./build.sh doctor</c>, and doctor's
+/// job is to probe the pinned engine; arming the shim for gate scripts would either fail
+/// <c>doctor</c> or require an exception for it, and an exception is how a tripwire stops
+/// being one. Whoever takes it has to answer that question first, not the plumbing.
 /// </para>
 /// </remarks>
 internal sealed class GodotTripwire
@@ -111,12 +131,19 @@ internal sealed class GodotTripwire
         string shimName = Path.GetFileName(ShimPath);
         if (!tripped)
         {
+            // Scoped to the processes the shim actually reached. The wider claim - "no
+            // process in the pure tier tried to launch the engine" - was false whenever a
+            // gate script this verb runs invoked ./build.sh doctor, because
+            // RunRepositoryScript passes no environment and those processes never see the
+            // shim. Saying less is the fix; see the GodotTripwire remarks.
             context.Runner.RecordAssertion(
                 "no-godot-launched",
                 true,
                 "a '" + shimName + "' shim was first on PATH and MECHAMINER_GODOT pointed at it for every "
-                + "pure test process; it was never invoked, so no process in the pure tier tried to launch "
-                + "the engine");
+                + "pure NUnit test process this verb started, and it was never invoked, so no test process "
+                + "tried to launch the engine. This covers the test processes only: the gate scripts run in "
+                + "stages 1 and 2 are started without this environment, so their own nested ./build.sh "
+                + "invocations are outside what this assertion can observe");
             return;
         }
 
@@ -124,9 +151,9 @@ internal sealed class GodotTripwire
         context.Runner.RecordAssertion(
             "no-godot-launched",
             false,
-            "the pure tier tried to launch Godot, which doc 91 § Test project separation forbids. "
-            + "Recorded invocation(s): " + recorded.Replace('\n', ';'));
-        failures.Add("the pure tier launched Godot (see the no-godot-launched step)");
+            "a pure NUnit test process tried to launch Godot, which doc 91 § Test project separation "
+            + "forbids. Recorded invocation(s): " + recorded.Replace('\n', ';'));
+        failures.Add("a pure test process launched Godot (see the no-godot-launched step)");
     }
 
     private static string UnixShim(string sentinel)
@@ -232,6 +259,18 @@ internal static class TestVerb
     /// They were exempted from <c>build/verify-gate-wiring.sh</c> on a shared reason that
     /// did not reproduce; wiring each one and running this verb end to end is what
     /// retired it.
+    /// <para>
+    /// A hazard in that placement decision, written down because it is a dependency on a
+    /// property of someone else's fixtures. <c>build/verify-verbs.sh</c> wired into
+    /// <c>build</c> also exits 0, in 114 s, and it would be the more natural home for a
+    /// gate about the wrapper. It survives there only because every nested
+    /// <c>./build.sh build</c> it makes is deliberately broken first - § 8 and § 9 write
+    /// an uncompilable fixture, § 10 breaks the SDK pin - so each nested build fails at
+    /// compile or at the pin probe and never reaches the stage that would call the gate
+    /// again. If those fixtures ever stop breaking compilation, that placement becomes
+    /// unbounded recursion with no other change. It is here instead, where the recursion
+    /// cannot arise at all, and the 114 s measurement is not a reason to move it.
+    /// </para>
     /// </remarks>
     private static readonly (string Step, string Script, string Claim)[] FastTierWrapperGates =
     {
@@ -287,7 +326,7 @@ internal static class TestVerb
             }
         }
 
-        context.Section("stage 4: assert the pure tier launched no Godot process");
+        context.Section("stage 4: assert no pure NUnit test process launched Godot");
         tripwire.Assert(context, failures);
 
         return Summarize(context, tallies, failures, "test-fast");

@@ -53,11 +53,50 @@
 # call site to a verb needs member granularity, not file granularity: TestVerb.cs
 # holds both RunFastTier, which `test-fast` runs, and RunMainTier, which only
 # `test-main` runs, and the whole point of the finding is that those two are not the
-# same answer. The program is embedded rather than committed as build/*.py because
-# .py is not an owned text extension (src/MechaMiner.Tools/Text/OwnedTextHygiene.cs),
-# so a committed one would be the only file in the repository no formatter or policy
-# gate looks at; build/verify-verbs.sh and build/verify-architecture.sh embed python3
-# the same way.
+# same answer. The program is embedded rather than committed as build/*.py because .py
+# is not in OwnedTextHygiene.OwnedExtensions (src/MechaMiner.Tools/Text/), so a
+# committed one is inspected by no formatter and no policy gate;
+# build/verify-verbs.sh and build/verify-architecture.sh embed python3 the same way.
+#
+# That is not a hypothetical about a file this commit might have added.
+# src/MechaMiner.Tools/ContentImport/verify_content.py is on master right now, 132 KB
+# of it, in exactly that position - along with check_quote_mismatch_evidence.py and
+# derive_citation_pass_expectations.py.
+#
+# FOLLOW-UP (owner: FND-002, which owns format and OwnedTextHygiene): add ".py" to
+# OwnedExtensions. Checked rather than assumed to be small - it is not free. All three
+# of those files violate trim_trailing_whitespace today: 44 lines in
+# verify_content.py, 22 in check_quote_mismatch_evidence.py, 8 in
+# derive_citation_pass_expectations.py, 74 in total. All three already satisfy
+# end_of_line and insert_final_newline. So adding the extension turns format-check red
+# on master until `./build.sh format` repairs them, which it can do mechanically, and
+# it rewrites 74 lines in files DAT-006's content-import work owns. What it unblocks is
+# splitting the program below out of this file, which is the only reason it is inline.
+# Note also that verify_content.py matches this gate's own enumeration glob, so when
+# master merges here it will have to be wired or exempted like any other gate script -
+# which is the widened glob working, not a problem with it.
+#
+# WHAT THIS GATE DOES NOT ESTABLISH. Two of these fail closed and one fails open, and
+# they are separated on that line because only the third can let something through.
+#
+#   Fails closed, so the worst case is a red gate someone has to look at:
+#     * The C# member closure over-approximates. An unqualified identifier that names
+#       members of several types adds an edge to all of them, so a member can be
+#       attributed to more verbs than really reach it. That widens "reached", so it can
+#       make this gate weaker in a way section 3's output shows by naming the verbs.
+#     * A script path reached through a constant is not recognised. Only a literal in
+#       argument position counts, so refactoring a call site to
+#       `const string Script = "build/verify-x.sh";` makes this gate red rather than
+#       quietly satisfied. Extending the matcher is the fix if that is ever wanted.
+#
+#   FAILS OPEN, and is the one that can hide an unrun gate:
+#     * A call site in build.sh or build.ps1 is counted as reached without proving that
+#       the shell function containing it is ever called. The wrappers are launchers with
+#       no functions today, so there is nothing to get wrong yet; the day one of them
+#       grows a function, a gate invoked only from inside a function nothing calls would
+#       pass this partition. Closing it needs shell reachability, which this gate does
+#       not do. The C# side has no equivalent hole: there the member must be reachable
+#       from a workflow verb's entry point.
 #
 # Exit classes follow doc 100 § Standard command surface: 0 success,
 # 4 validation failure.
@@ -98,6 +137,16 @@ readonly EXIT_VALIDATION=4
 # below states what was measured or observed, and for verify-format.sh that is a
 # runtime cost rather than a failure - said plainly, because "slow" is an honest reason
 # and "re-entrancy" was not.
+#
+# EXEMPT MUST NOT COME TO MEAN NEVER RUNS. Every script on this list runs today only
+# when a person types it, which is the defect this whole file exists to name. The
+# follow-up is a second, slower CI tier that runs the two expensive ones -
+# FOLLOW-UP (OPS-001): a main-branch or nightly job that invokes build/verify-format.sh
+# and build/verify-test-harness.sh, where 230 s and 142 s are affordable and where
+# test-main already lives. OPS-001 owns the main and nightly suites (delivery-waves
+# § Step 4), so it owns this. It is deliberately not built here: this work package's
+# subject is the pull-request tier. Until that tier exists, these two and
+# verify-godot-runner.sh are gates nothing asks for, and the pull request says so.
 
 readonly EXEMPT=(
   "build/verify-format.sh|passes wired into build: ./build.sh build exits 0 in 248 s, of which verify-format is 230 s. Not wired because of that number and nothing else: 230 s is more than twice the whole fast job's current duration, and format-check, the verb whose subject it is, recurses (wired there, ./build.sh format-check did not terminate and was killed at 200 s). Runtime is the objection; whether to pay it on every pull request is a budget decision this file does not get to make"

@@ -62,6 +62,13 @@
 #    distinct CI tiers, not one." The second tier is OPS-001's; the screenshot and focus
 #    matrices themselves belong to UI-001 through UI-010. Also absent rather than
 #    declared.
+#  * Three gate scripts are on build/verify-gate-wiring.sh's deliberately-unwired list -
+#    verify-format.sh (230 s, measured), verify-test-harness.sh (a recursion cycle,
+#    observed), verify-godot-runner.sh (only test-main reaches it, and this job does not
+#    run test-main). Nothing runs them, so they run only when a person types them, which
+#    is a gap and not a resolution. FOLLOW-UP (OPS-001): a main-branch or nightly job
+#    that runs test-main and the two expensive gates, where their cost is affordable.
+#    It is not built here because this job's subject is the pull-request tier.
 
 name: fast suite
 

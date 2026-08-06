@@ -712,6 +712,15 @@ not by editing either. If `FND-009`'s documentation validator later wants the tw
 tables to agree literally, adding the missing row to doc 10 is the editorial
 correction, never removing the project.
 
+## Note on the enemy-projectile capacity ceiling
+
+- **Doc 22 § Performance and capacity now caps enemy projectiles at 2,048, not
+  512.** The needle flies for roughly 19 seconds — 2.25M/s against a one-screen-width
+  lifetime — so 180 Needlers at minute 32:30 plus `BOSS-03` Prism Crown's
+  twelve-projectile bursts put a legal peak near 1,010, which 512 cannot hold.
+  512 was the wrong ceiling, not an illegal build. The enemy-projectile store
+  `COM-002` builds should be sized for 2,048.
+
 ## Related documents
 
 - [Implementation Plan for AI Agents](./110-implementation-plan-for-ai-agents.md) - normative decomposition

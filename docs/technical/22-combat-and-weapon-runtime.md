@@ -197,12 +197,28 @@ Provisional authoritative hard capacities for stress validation are intentionall
 
 - 2,048 player weapon projectiles/actors combined;
 - 512 persistent damage zones/trail segments after behavior-specific compaction;
-- 512 enemy projectiles;
+- 2,048 enemy projectiles;
 - 256 pending delayed attacks;
 - 128 deployable/autonomous actors; and
 - 8,192 damage candidates in one tick before deterministic chunked processing.
 
 These are safety ceilings, not design allowances. Profiling and legal maximum-output analysis must tighten or expand them before content complete. Reaching 80% emits a diagnostic warning; reaching a hard cap in a legal build fails the stress gate.
+
+### Enemy projectile ceiling
+
+The enemy projectile ceiling is the expansion this section authorizes: the legal maximum-output analysis puts a legal peak above the earlier 512, so 512 was the wrong ceiling rather than the build being illegal. It is 2,048 and remains provisional under the same warning and stress-gate rules.
+
+Only two identities create enemy projectiles, and both count against this one ceiling: Needler, the sole ordinary projectile specialist, and `BOSS-03` Prism Crown.
+
+- Needler fires one non-homing needle per 4.5-second active cadence at 2.25M/s, slower than the 3.0M/s unmodified mech, with a lifetime carrying it slightly beyond one screen width. One screen width is approximately 42.7M at 16:9 against the fixed 24M vertical camera, so flight time is approximately 19 seconds, not the one or two seconds a projectile normally implies. That derivation is why 512 was set too low.
+- Maximum legal Needler population is 180, at minute 32:30: a 30% composition share of that row's 350 authored minimum, plus 30 scheduled-event overflow and 45 beacon-tagged responders drawn at the same share. Minute 21's larger 45% share is not the worst row, because its authored minimum is 150 and it is a boss-arrival minute with no formation.
+- Eidolon Coral resonance advances cadence at 1.20×, shortening the fire period to as little as 3.75 seconds. The field is a local non-overlapping circle around an unopened geode, so applying the multiplier to the whole population is an upper bound rather than a reachable state.
+- Prism Crown fires twelve projectiles every 7 seconds at the same 2.25M/s and the same range, and lives from 21:00 until killed, so it can be alive at minute 32. It adds 28 to 48 projectiles.
+- Legal worst case is therefore approximately 1,010 simultaneous enemy projectiles, and approximately 673 on the most conservative reading of the same numbers. Both exceed 512, and the old 80% warning line of 410 was already breached by baseline population plus a single beacon response at any late Needler minute.
+
+Neither elites nor player builds change the arithmetic. Needler is excluded from elite selection by content validation, and no elite modifier touches attack cadence or projectile count. No player build raises enemy fire rate: Claim-Jumper Core accelerates enemy movement and explicitly does not accelerate attack cadence, so Coral resonance is the only enemy-cadence multiplier in the game.
+
+2,048 rather than 1,024: 1,024 would place a legal peak at approximately 99% of cap, spamming the 80% warning and effectively failing the stress gate. 2,048 places the legal worst case at approximately 49%, keeps the warning line at 1,638, matches the power-of-two vocabulary already used above, and equals the accepted player projectile ceiling, so no new budget shape is introduced. Enemy projectile state is small, so the added headroom is cheap.
 
 At Steam Deck peak, combat scheduling, weapon actor simulation, target queries, hit generation, damage, control, and death processing together target at most 2.5 ms CPU at 95th percentile with zero steady-state managed allocation.
 

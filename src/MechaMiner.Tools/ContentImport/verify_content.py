@@ -393,9 +393,25 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       committed manifest at content-definition-manifest.txt, compared in both
       directions: a path in the tree and not the manifest, a path in the
       manifest and not the tree, and a path in both whose id differs are each
-      a separate failure naming the files. The committed bytes must also equal
-      what the generator produces, so the header and the line format cannot
-      drift either.
+      a separate failure naming the files. A fourth row compares the committed
+      file's BYTES against the generator's output byte-for-byte, so the header,
+      the line ORDER, whitespace padding and the line endings cannot drift
+      either. That row is the ONLY guard for reordering and padding: the three
+      pair rows compare two sets and a mapping, so a manifest whose lines are
+      reordered or padded still holds the same pairs.
+      The comparison reads with read_bytes() and the generator writes with
+      write_bytes(), both deliberately. Path.read_text() applies universal
+      newlines, so a manifest rewritten entirely in CRLF decoded to exactly the
+      generator's LF text: it passed with 0 failures while this very row
+      reported "identical", and every line of the file could be rewritten with
+      the gate green. Path.write_text() has the mirror defect - it translates
+      "\\n" to os.linesep, so the generator would emit CRLF on Windows and a byte
+      comparison against its own output could never converge there. A byte
+      comparison is the strict one: it keeps the reordering and padding guards
+      and adds line-ending drift, whereas relabelling the row as a TEXT
+      comparison would have kept the escape and merely described it.
+      .gitattributes pins the manifest to eol=lf so a checkout cannot
+      manufacture a false failure on a platform that would otherwise convert it.
       WHY PAIRS AND NOT NAMES. Two edits were invisible to every other
       assertion here. (1) Renaming a definition inside its own directory:
       A21's count row compared a NUMBER and was blind to which files those
@@ -2107,8 +2123,61 @@ def parse_manifest(text: str) -> tuple[list[tuple[str, str]], list[str]]:
     return sorted(pairs), malformed
 
 
-def write_manifest(pairs: list[tuple[str, str]]) -> None:
-    CONTENT_DEFINITION_MANIFEST.write_text(render_manifest(pairs), encoding="utf-8")
+def write_manifest(pairs: list[tuple[str, str]]) -> bool:
+    """Write the manifest as UTF-8 with LF endings. True when it was written.
+
+    write_bytes, not write_text: Path.write_text opens in text mode with
+    newline=None, which translates every "\\n" to os.linesep - so the generator
+    would emit CRLF on Windows and LF elsewhere, and a byte comparison against
+    its own output could never converge there. The manifest's bytes are the
+    thing being asserted, so the writer pins them.
+    """
+    try:
+        CONTENT_DEFINITION_MANIFEST.write_bytes(render_manifest(pairs).encode("utf-8"))
+        return True
+    except OSError as exc:
+        fail(
+            f"A28 could not write {rel(CONTENT_DEFINITION_MANIFEST)}: {exc}. The manifest path "
+            f"must be a writable regular file."
+        )
+        return False
+
+
+def _byte_difference(committed: bytes, expected: bytes) -> str:
+    """Name the kind of byte difference, so the failure is a diagnosis.
+
+    A byte comparison that only said "differs" would be a worse gate than the
+    newline-normalising one it replaced: line endings are invisible in a terminal,
+    and so is a trailing space. This says which it is.
+    """
+    crlf = b"\r\n"
+    cr = b"\r"
+    notes: list[str] = []
+    if crlf in committed:
+        notes.append(f"the committed file has {committed.count(crlf)} CRLF line ending(s)")
+    elif cr in committed:
+        notes.append(f"the committed file has {committed.count(cr)} lone CR(s)")
+    if committed.replace(crlf, b"\n").replace(cr, b"\n") == expected:
+        notes.append("line endings are the ONLY difference")
+    elif sorted(committed.split(b"\n")) == sorted(expected.split(b"\n")):
+        notes.append("the same lines are present but their ORDER differs")
+    else:
+        stripped = b"\n".join(line.rstrip() for line in committed.split(b"\n"))
+        if stripped == expected:
+            notes.append("trailing whitespace is the ONLY difference")
+        for offset, (a, b) in enumerate(zip(committed, expected)):
+            if a != b:
+                notes.append(
+                    f"first difference at byte {offset}: committed {bytes([a])!r} vs expected "
+                    f"{bytes([b])!r}"
+                )
+                break
+        else:
+            notes.append(
+                f"one is a prefix of the other: committed {len(committed)} byte(s) vs expected "
+                f"{len(expected)}"
+            )
+    return ("; ".join(notes) + ".") if notes else ""
 
 
 def check_definition_manifest(docs: dict[Path, object]) -> tuple[list[tuple], int | None]:
@@ -2129,27 +2198,72 @@ def check_definition_manifest(docs: dict[Path, object]) -> tuple[list[tuple], in
     update_requested = os.environ.get(GOLDEN_UPDATE_VARIABLE) == "1"
 
     if not CONTENT_DEFINITION_MANIFEST.is_file():
-        write_manifest(actual_pairs)
-        fail(
-            f"A28 manifest {rel(CONTENT_DEFINITION_MANIFEST)} did not exist and has been "
-            f"written with the {len(actual_pairs)} (path, id) pair(s) found in the tree. It "
-            f"records what the tree says, not what the documents say - review it against the "
-            f"A12 rows and the design documents before committing it, then rerun. This check "
-            f"fails on a freshly written manifest on purpose."
-        )
+        # is_file() is False for a directory or a special file at this path too, not
+        # only for an absent one. write_manifest() reports the OSError in that case
+        # rather than raising, so absurd input fails with a diagnosis instead of a
+        # traceback, and this message does not claim a write that did not happen.
+        existed = CONTENT_DEFINITION_MANIFEST.exists()
+        if write_manifest(actual_pairs):
+            fail(
+                f"A28 manifest {rel(CONTENT_DEFINITION_MANIFEST)} did not exist and has been "
+                f"written with the {len(actual_pairs)} (path, id) pair(s) found in the tree. It "
+                f"records what the tree says, not what the documents say - review it against the "
+                f"A12 rows and the design documents before committing it, then rerun. This check "
+                f"fails on a freshly written manifest on purpose."
+            )
         return (
             [
                 (
                     "committed (path, id) manifest",
-                    f"{rel(CONTENT_DEFINITION_MANIFEST)} present",
-                    "absent - written from the tree",
+                    f"{rel(CONTENT_DEFINITION_MANIFEST)} present, a regular file",
+                    "exists but is not a regular file" if existed else "absent",
                     "FAIL",
                 )
             ],
             None,
         )
 
-    committed_text = CONTENT_DEFINITION_MANIFEST.read_text(encoding="utf-8")
+    # read_bytes, not read_text: text mode applies universal newlines, so a
+    # manifest rewritten with CRLF - all 168 lines of it - decoded to exactly the
+    # generator's LF text and the comparison below passed while the row claimed
+    # the bytes were identical. The bytes are read raw and decoded explicitly.
+    try:
+        committed_bytes = CONTENT_DEFINITION_MANIFEST.read_bytes()
+    except OSError as exc:
+        fail(
+            f"A28 could not read {rel(CONTENT_DEFINITION_MANIFEST)}: {exc}. The manifest path "
+            f"must be a readable regular file; a directory or a special file there is not a "
+            f"manifest."
+        )
+        return (
+            [
+                (
+                    "committed (path, id) manifest",
+                    "readable regular file",
+                    f"unreadable: {type(exc).__name__}",
+                    "FAIL",
+                )
+            ],
+            None,
+        )
+    try:
+        committed_text = committed_bytes.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        fail(
+            f"A28 manifest {rel(CONTENT_DEFINITION_MANIFEST)} is not valid UTF-8: {exc}. "
+            f"Regenerate it with {GOLDEN_UPDATE_VARIABLE}=1."
+        )
+        return (
+            [
+                (
+                    "committed (path, id) manifest",
+                    "valid UTF-8",
+                    "undecodable",
+                    "FAIL",
+                )
+            ],
+            None,
+        )
     manifest_pairs, malformed = parse_manifest(committed_text)
     manifest_by_path = dict(manifest_pairs)
     if malformed:
@@ -2175,16 +2289,23 @@ def check_definition_manifest(docs: dict[Path, object]) -> tuple[list[tuple], in
         for path in set(actual_by_path) & set(manifest_by_path)
         if manifest_by_path[path] != actual_by_path[path]
     )
-    # The committed bytes must equal what the generator produces, the way a
+    # The committed BYTES must equal what the generator produces, the way a
     # golden does. Pair equality alone would leave the header and the line format
     # uncompared, so a stale header - including this file's own statement of what
     # it does and does not prove - could sit there indefinitely, and
     # GOLDEN_UPDATE_VARIABLE would refuse to rewrite it on the grounds that the
     # pairs already agree.
-    rendered = render_manifest(actual_pairs)
-    text_matches = committed_text == rendered
+    #
+    # This row is also the ONLY guard for two edits the three pair rows cannot
+    # see, because those are set and dict comparisons: the data lines REORDERED
+    # while holding the same pairs, and whitespace PADDING before a tab. Both
+    # survive a newline-normalising comparison, so the fix for the CRLF escape was
+    # to compare more strictly rather than to relabel the row - a byte comparison
+    # keeps both of those guards and adds line-ending drift on top.
+    rendered_bytes = render_manifest(actual_pairs).encode("utf-8")
+    bytes_match = committed_bytes == rendered_bytes
     pairs_match = not (only_in_tree or only_in_manifest or changed_ids or malformed)
-    matches = text_matches and pairs_match
+    matches = bytes_match and pairs_match
 
     rows = [
         (
@@ -2212,10 +2333,11 @@ def check_definition_manifest(docs: dict[Path, object]) -> tuple[list[tuple], in
             "ok" if not changed_ids else "FAIL",
         ),
         (
-            "committed bytes equal the generator's output (header and format)",
+            "committed bytes byte-for-byte equal the generator's output "
+            "(header, line order, padding, LF endings)",
             "identical",
-            "identical" if text_matches else "differs",
-            "ok" if text_matches else "FAIL",
+            "identical" if bytes_match else "differs",
+            "ok" if bytes_match else "FAIL",
         ),
         (
             "(path, id) pairs recorded [an edit tax, not evidence the ids are right]",
@@ -2249,11 +2371,14 @@ def check_definition_manifest(docs: dict[Path, object]) -> tuple[list[tuple], in
             f"other assertion. If the new id is intended, regenerate the manifest with "
             f"{GOLDEN_UPDATE_VARIABLE}=1 and commit the diff."
         )
-    if pairs_match and not text_matches:
+    if pairs_match and not bytes_match:
         fail(
             f"A28 {rel(CONTENT_DEFINITION_MANIFEST)} records the right (path, id) pairs but its "
-            f"bytes are not what the generator produces - the header or the line format has "
-            f"drifted, or the file was hand-edited. Regenerate it with "
+            f"bytes are not what the generator produces - the header, the line ORDER, whitespace "
+            f"padding or the line endings have drifted, or the file was hand-edited. This row is "
+            f"the only one that sees any of those: the three rows above compare sets and a "
+            f"mapping, so a reordered or padded manifest holds the same pairs. "
+            f"{_byte_difference(committed_bytes, rendered_bytes)} Regenerate it with "
             f"{GOLDEN_UPDATE_VARIABLE}=1 and commit the result."
         )
 
@@ -2264,8 +2389,7 @@ def check_definition_manifest(docs: dict[Path, object]) -> tuple[list[tuple], in
                 f"already matches the tree. Unset it: regenerating the manifest is a deliberate "
                 f"act with a reviewed rename or id change behind it, not a routine step."
             )
-        else:
-            write_manifest(actual_pairs)
+        elif write_manifest(actual_pairs):
             fail(
                 f"{rel(CONTENT_DEFINITION_MANIFEST)} has been rewritten because "
                 f"{GOLDEN_UPDATE_VARIABLE}=1, and this check STILL FAILS on purpose - a "

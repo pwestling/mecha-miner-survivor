@@ -1,0 +1,9 @@
+# The A28 definition manifest is compared against its generator's output
+# BYTE-for-byte (src/MechaMiner.Tools/ContentImport/verify_content.py, A28), and
+# the generator writes LF via write_bytes(). Pinning eol=lf here keeps a checkout
+# from converting the file to CRLF on a platform that otherwise would, which
+# would redden the gate without anything being wrong with the content.
+#
+# Scoped to this one path on purpose: it is the only file in the tree whose exact
+# bytes an assertion depends on.
+src/MechaMiner.Tools/ContentImport/content-definition-manifest.txt text eol=lf

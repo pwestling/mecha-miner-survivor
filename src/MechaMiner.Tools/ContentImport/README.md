@@ -157,6 +157,15 @@ file** (a plausible wrong ID still satisfies `A12`'s regex selector, the per-dir
 uniqueness). It also catches two files swapping IDs. Relocation *between* directories was already
 caught by `A12`'s per-directory counts and was never open.
 
+A fourth row compares the committed file's **bytes** against the generator's output byte-for-byte, so
+the header, the line **order**, whitespace padding and the line endings cannot drift. That row is the
+*only* guard for reordering and padding — the three pair rows compare two sets and a mapping, so a
+reordered or padded manifest still holds the same pairs. It is a genuine byte comparison
+(`read_bytes()`, and the generator writes `write_bytes()`): `Path.read_text()` applies universal
+newlines, and a manifest rewritten entirely in CRLF therefore decoded to exactly the generator's LF
+text and passed with the row reporting `identical`. `.gitattributes` pins this one path to `eol=lf` so
+a checkout cannot manufacture a false failure instead.
+
 Pairing path with ID is what makes this work; asserting `stem == id` does not. That was measured and
 rejected: 130 of the 138 definitions have `stem == id` byte-for-byte and 8 do not, and the mapping for
 those 8 is not a function of the string — alphabetically the four `mining-sites` stems yield

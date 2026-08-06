@@ -23,6 +23,11 @@
     Without this, a reflection-based JsonSerializer call in a src/ library passes
     under `dotnet test` and throws only in the real host - the exact defect class
     the suite exists to catch.
+
+    Do not consolidate this property. Moving it to Directory.Build.props or onto
+    a library silently disables it, and this host owes a runtime assertion that
+    the switch is live - full rule in
+    tests/MechaMiner.Content.Tests/MechaMiner.Content.Tests.csproj.
   -->
   <PropertyGroup>
     <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>

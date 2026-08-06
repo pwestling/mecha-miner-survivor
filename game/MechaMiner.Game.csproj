@@ -42,6 +42,11 @@
       constraint uniform across everything the repository builds and is what an
       exported, self-hosted build reads; it is not a claim about the editor's
       process.
+
+      Do not consolidate this property. Moving it to Directory.Build.props or
+      onto a library silently disables it in every host - full rule, and the
+      runtime assertion the test hosts owe, in
+      tests/MechaMiner.Content.Tests/MechaMiner.Content.Tests.csproj.
     -->
     <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
   </PropertyGroup>

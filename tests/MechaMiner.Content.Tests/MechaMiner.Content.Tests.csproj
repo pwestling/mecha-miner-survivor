@@ -25,6 +25,19 @@
     Without this, a reflection-based JsonSerializer call in a src/ library passes
     under `dotnet test` and throws only in the real host - the exact defect class
     the suite exists to catch.
+
+    Consolidating this - into Directory.Build.props, or onto the library it
+    constrains - reads as plainly correct in review and silently disables the
+    switch in every host, because neither location produces a host
+    runtimeconfig.json. It stays repeated per host.
+
+    Each test host therefore also owes a runtime assertion that the switch is
+    live: AppContext.TryGetSwitch(
+    "System.Text.Json.JsonSerializer.IsReflectionEnabledByDefault", out var
+    value) returns true with value == false. It must fail with a message naming
+    this MSBuild property and the .csproj carrying it, not just a false boolean;
+    whoever trips it moved a project property and has no reason to expect a
+    serialization switch to have an opinion about that (TASK-FND-003-001).
   -->
   <PropertyGroup>
     <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>

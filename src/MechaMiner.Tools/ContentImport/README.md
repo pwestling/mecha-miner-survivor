@@ -152,3 +152,39 @@ outside the envelope are unvalidated and will need one reconciliation pass when 
 
 When an expected count changes because a design document changed, edit the `EXPECTATIONS`/`PROBES`
 table and update the `source` citation on that row in the same commit.
+
+## `check_quote_mismatch_evidence.py` and `quote_mismatch_evidence.json`
+
+A second stdlib-only script, run the same way and independent of `verify_content.py`:
+
+```sh
+python3 src/MechaMiner.Tools/ContentImport/check_quote_mismatch_evidence.py
+```
+
+It exists to make one claim in `content/quote-verification-audit.md` checkable rather than merely
+stated. That document's §5 reports that all **378** of its genuine mismatches were re-tested against
+their cited sections under *maximal* normalization — every optional rule at once, plus full case
+folding — and that **zero** of them move. That result is what separates "four rules were adopted" from
+"the matcher was loosened until the tree went green": if no amount of loosening rescues a single
+mismatch, four rules is a finite list rather than the first four steps of a slope.
+
+Verifying it by re-implementation does not work, because a second matcher that disagreed would not
+establish which of the two was right. So the measurement is committed instead.
+`quote_mismatch_evidence.json` holds all 378 records — the stored string as measured, every citation it
+failed against, where the string *was* found under maximal normalization, and its maximally-normalized
+form — and the script re-derives every normalized form from the stored value, re-reads every cited
+section out of `docs/` at its current content, re-runs the containment test, and exits non-zero if any
+case moves.
+
+**The stored strings are frozen and everything else is recomputed.** Seven of the 378 have since been
+repaired in `content/` (six `UNL-0*` rules and `relics/REL-09.json`, the audit's one genuine drift), so
+reading them back out of the tree today would silently turn a 378-record claim into a 371-record one;
+the artifact records what each has become in `verdict_on_this_tree`. `docs/` is the half of the
+comparison this repository can still change, so it is read live: if a design document is ever edited
+such that one of these 378 becomes findable, the script fails and audit §5 needs re-measuring. That is
+the correct outcome, not a false alarm.
+
+It is not wired into `verify_content.py`, and deliberately so. `verify_content.py` asserts properties of
+`content/` against `docs/`; this asserts a property of a *measurement* the audit reports. Its negative
+controls are recorded in audit §5: injecting a verbatim source line into one record makes a case move,
+and corrupting one frozen normalized form makes the reproduction check fail. Both were run and reverted.

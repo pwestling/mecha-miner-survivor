@@ -1489,8 +1489,8 @@ use human-readable percentage points only when the property name says `_percent`
 normalized factors into the runtime bundle as a separate derived field") but ran only on *string* values
 and matched a literal `%` glyph. A numeric `25` under a non-`_percent` name was not even warned, while
 131 English sentences containing a percent sign were. A warning list a reader learns to ignore is worse
-than none. A16 is now three rules on **numbers and key names**, and a FAILURE rather than a warning
-(none of the three needs `content/schemas/`):
+than none. A16 is now **four** rules on **numbers and key names**, and a FAILURE rather than a warning
+(none of the four needs `content/schemas/`):
 
 1. a percent-named property resolves to at least one numeric leaf, so a percentage may not live only in
    prose under a name that promises a number;
@@ -1498,7 +1498,38 @@ than none. A16 is now three rules on **numbers and key names**, and a FAILURE ra
    its `minimum`/`maximum`/`percent` container leaves) may satisfy `0 < |v| < 1`;
 3. the compiler's normalized factor is never authored — no property name combines a percent token with a
    `factor`/`multiplier`/`fraction`/`normalized` token, and no object holds both `<stem>_percent` and a
-   same-stem factor sibling.
+   same-stem factor sibling;
+4. no **number** sits under a relative-magnitude name that says neither percent nor any unit-or-kind
+   token.
+
+**Rule 4 is the one this ruling nearly shipped without, and the reason it exists is the ruling's own
+finding turned on itself.** Rules 1–3 each *begin* by asking whether the name says percent, so in the
+revision this ruling describes every A16 rule sat behind `if not says_percent: … continue` and a bare
+number under a non-percent name was never examined at all — while the docstring advertised the rewrite
+as fixing exactly that case. `sneaky_bonus: 25` and `damage_bonus: 150` both passed with zero failures.
+That is the same defect as the one this ruling opens with: a guard that was green because it did not
+look, described as though it had.
+
+**What rule 4 claims, and what it does not.** It is a **closed vocabulary**, not a judgement about
+names in general. The relative-magnitude segments are exactly `bonus`, `bonuses`, `penalty`,
+`penalties`, `increase`, `increased`, `decrease`, `reduction`, `boost`, `malus`, `discount`,
+`surcharge`, `uplift`; a number under one of those, where the name carries no percent token and no
+unit-or-kind token, is a failure. It does **not** claim to detect a percentage arriving under any name
+that hides its unit — whether an arbitrary number "is a percentage" is not decidable from the number,
+and a percentage stored as `sneaky_value: 25` sails past. What is decidable is that a *relative*
+magnitude is necessarily proportional to something else, so it is either percentage points or a
+multiplicative scale, and `40:95` (percentage points say `_percent`) and `40:94` (an ambiguous numeric
+name carries a unit suffix) both require the name to say which. A unit-or-kind token **anywhere** in
+the name excludes it, not merely terminally: `single_target_ceiling_multiplier_at_full_bonus` is the
+tree's one such name — head noun `multiplier`, `bonus` a mid-name qualifier, and Ruling 14 makes
+`_multiplier` the unit declaration for a multiplicative scale. A terminal-token rule would have flagged
+it wrongly.
+
+**Rule 4 flags nothing in this tree**, so its evidence is its negative control rather than a count. Two
+injections on `content/enemies/EN-01.json`, each run and reverted individually: `sneaky_bonus: 25` →
+FAIL, `1 numeric value(s) sit under a relative-magnitude name … ['content/enemies/EN-01.json.sneaky_bonus = 25']`;
+`damage_bonus: 150` → FAIL, the same message reporting `['content/enemies/EN-01.json.damage_bonus = 150']`.
+Nothing beyond those two forms is claimed.
 
 **The 52 names that are *not* violations.** `percent_of_mech_base_speed`,
 `shockwave_damage_percent_of_current_damage` and 50 others put the percent token mid-name. `40:95`
@@ -2042,7 +2073,9 @@ destructible rock initial count must be 16".
 #### Ruling 35 — the quotation matcher's corpus premise is asserted, not documented (`A27`)
 
 The quotation rule adopted in `content/quote-verification-audit.md` §6 measured **zero** false
-positives across 1,072 quotations — but only because `.` is an unambiguous sentence terminator in this
+positives across 1,072 quotations — that audit's whole matched set, being its 806 decidable matches
+plus the 266 matches below its decidability gate, both derived in its §2 tree-state table — but only
+because `.` is an unambiguous sentence terminator in this
 corpus, and that is true only because `docs/` contains no `e.g.`, `i.e.`, `etc.` or `approx.` anywhere.
 **"It can stop being true silently" is the whole problem, and a documented assumption is a fail-open
 with a footnote.** So `A27` scans `docs/**/*.md` for eighteen sentence-internal abbreviations and fails

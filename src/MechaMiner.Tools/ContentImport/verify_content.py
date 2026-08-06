@@ -335,7 +335,9 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       content/quote-verification-audit.md adopts a quotation rule that
       fires when a stored string begins at a sentence boundary, carries its
       own terminator, and the source sentence continues past it. That rule
-      measured 2 hits in 1,072 quotations with ZERO false positives - but
+      measured 2 hits with ZERO false positives across the audit's whole
+      matched set - 1,072 records, which is its 806 decidable matches plus
+      the 266 matches below its decidability gate (audit §2, §6) - but
       only because `.`/`!`/`?` is an unambiguous sentence terminator in
       THIS corpus. The moment a design document writes "e.g." the terminator
       stops being unambiguous and the rule starts misfiring on innocent
@@ -349,8 +351,9 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       point is not followed by a sentence-initial capital and the audit
       measured zero decimal misfires across all 1,072 records.
       Matched case-insensitively at a word boundary, because unbounded
-      substring matching finds "st." inside "burst." and "ver." inside
-      "over." - both of which occur in docs/ and neither of which is an
+      substring matching finds "st." inside 93 ordinary words ending a
+      sentence ("first.", "specialist.", "cost.", ... 21 forms) and "ver."
+      inside 5 ("forever.", "solver.", "hover."). None of those 98 is an
       abbreviation. The bounded form finds zero today.
       THE FAILURE MESSAGE POINTS AT THE MATCHER, NOT AT A QUOTATION. The
       day someone writes "e.g." in a design document, nothing is wrong with
@@ -844,8 +847,8 @@ UNLOCK_TOTAL_HYPER_GOLD = 2150  # docs/63-permanent-option-unlock-catalog.md:48
 # That checks prose, not the rule: a numeric 25 under a non-percent name was not
 # even warned, while 131 English sentences containing a percent sign were. A
 # warning list a reader learns to ignore is worse than no list, so the prose scan
-# is gone and the three rules below run on NUMBERS and KEY NAMES instead. None of
-# them needs content/schemas/, so all three are failures rather than warnings.
+# is gone and the FOUR rules below run on NUMBERS and KEY NAMES instead. None of
+# them needs content/schemas/, so all four are failures rather than warnings.
 #
 # A NAME "SAYS _percent" WHEREVER THE TOKEN APPEARS, not only at the end.
 # 40:95 constrains what the name says; 40:96's terminal-unit rule is about unit
@@ -883,9 +886,16 @@ PERCENT_CONTAINER_KEY = frozenset({"minimum", "maximum", "percent", "value", "po
 # multiplicative scale. Requiring the token to be terminal would have flagged it.
 #
 # This rule flags NOTHING in the tree as authored. That is the point: it is a
-# regression guard against a percentage arriving under a name that hides its unit,
-# and its negative control - the two injections named above - is what demonstrates
-# it bites.
+# regression guard over a CLOSED VOCABULARY of relative-magnitude segments -
+# exactly the tokens in RELATIVE_MAGNITUDE_TOKEN below - and its negative control,
+# the two injections named above, is what demonstrates it bites.
+#
+# It does NOT catch "a percentage arriving under a name that hides its unit" in
+# general. Whether an arbitrary number is a percentage is not decidable from the
+# number, and `sneaky_value: 25` sails past this rule exactly as it sails past
+# rules 1-3. Nothing beyond the two enumerated forms - a number under a
+# relative-magnitude name carrying neither a percent token nor a unit-or-kind
+# token - is claimed here.
 RELATIVE_MAGNITUDE_TOKEN = re.compile(
     r"(?i)(?:^|_)(?:bonus|bonuses|penalty|penalties|increase|increased|decrease"
     r"|reduction|boost|malus|discount|surcharge|uplift)(?:$|_)"
@@ -2090,15 +2100,22 @@ def check_references(docs: dict[Path, object]) -> list[tuple]:
 
 
 # --------------------------------------------------------------------------
-# A16 - the numeric percentage-point policy (40:95). Three rules, all decidable
-# from key names and numbers, so all three are failures. See the constants above
+# A16 - the numeric percentage-point policy (40:95). Four rules, all decidable
+# from key names and numbers, so all four are failures. See the constants above
 # for what this replaced and why.
 # --------------------------------------------------------------------------
 
 
 def check_percentage_point_policy(docs: dict[Path, object]) -> list[tuple]:
-    """A16 - percentage points are numbers, are not normalized factors, and the
-    compiler's normalized factor is never authored beside them."""
+    """A16 - percentage points are numbers, are not normalized factors, the
+    compiler's normalized factor is never authored beside them, and no number
+    sits under a relative-magnitude name that says neither percent nor a unit.
+
+    Four rules. The fourth covers what the first three cannot reach, because
+    each of them begins by asking whether the name says percent. It is a closed
+    vocabulary (RELATIVE_MAGNITUDE_TOKEN), and nothing beyond that vocabulary is
+    claimed.
+    """
     no_number: list[str] = []
     factor_valued: list[str] = []
     hybrid_names: list[str] = []
@@ -2412,7 +2429,11 @@ def check_no_nulls() -> list[tuple]:
 # of a matcher described in content/quote-verification-audit.md. That matcher's
 # adopted rule - fail when a stored string begins at a sentence boundary, carries
 # its own trailing terminator, and the source sentence continues past it - was
-# measured at 2 hits in 1,072 quotations with zero false positives. The measurement
+# measured at 2 hits with zero false positives across the audit's whole matched set.
+# That set is 1,072 records: the 806 decidable matches of the audit's §2 tree-state
+# table (782 exact + 24 matching under a named rule) plus the 266 matches that sit
+# below its decidability gate. Every number in this comment derives from that table;
+# none of them is quoted from prose. The measurement
 # is only valid while `.` reliably means "end of sentence" in docs/. It does today.
 # Nothing keeps it true tomorrow, and "it can stop being true silently" is exactly
 # the property a documented assumption cannot address: a documented assumption is
@@ -2426,9 +2447,12 @@ def check_no_nulls() -> list[tuple]:
 # across all 1,072 records in both directions.
 #
 # WORD-BOUNDARY MATCHING IS LOAD-BEARING, not tidiness. Unbounded case-insensitive
-# substring matching for "st." hits "burst." (93 times) and "ver." hits "over."
-# (5 times) in this corpus. Both are sentence ends, not abbreviations. A check that
-# fires on those would be turned off within a day, which would leave no check.
+# substring matching for "st." hits 93 places in this corpus across 21 distinct word
+# forms - "first." 24, "specialist." 15, "cost." 10, "test." 9, "manifest." 6,
+# "burst." 4, and fifteen more - and "ver." hits 5, being "forever.", "solver." and
+# "hover.". Every one of them is a sentence end, not an abbreviation, and the word
+# boundary below removes all 98. A check that fires on those would be turned off
+# within a day, which would leave no check.
 #
 # THE MESSAGE IS THE POINT. When this fails, no content string is wrong. What is
 # wrong is that the quotation rule's premise has lapsed. The message must send the
@@ -2473,8 +2497,10 @@ def check_no_abbreviation_periods(docs_root: Path = DOCS) -> list[tuple]:
             f"revisiting, and no content string is implicated by this failure. "
             f"content/quote-verification-audit.md adopts a quotation rule that treats "
             f"'.' as an unambiguous sentence terminator in docs/. It was measured safe "
-            f"(2 hits in 1,072 quotations, zero false positives) against a corpus "
-            f"containing no abbreviation periods. docs/ now contains "
+            f"(2 hits, zero false positives, across that document's whole matched set of "
+            f"1,072 records = its 806 decidable matches plus the 266 matches below its "
+            f"decidability gate; both figures are in the tree-state table in its §2) "
+            f"against a corpus containing no abbreviation periods. docs/ now contains "
             f"{len(hits)}, so the rule can misfire on complete, honest quotations that "
             f"happen to end just before one. Re-measure the rule against the corpus and "
             f"either teach it this abbreviation or narrow it; do NOT edit the quotation "

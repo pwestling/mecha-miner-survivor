@@ -29,9 +29,16 @@ rather than an input: every string leaf that is not `source_refs`, not `tags`, n
 
 ```
 139 content files, 5,201 string leaves
+    382 of those leaves are named `text`  — the tree-wide count, stated in full in §10
   1,672 entered the candidate population
-    382 of those are `text`
+    305 of those candidates are named `text`
 ```
+
+The two `text` figures are two different populations and are kept apart deliberately. 382
+is every `text` string leaf in the tree; 305 is how many of them clear the candidate gate
+above. The other 77 are shorter than three words or are all-caps tokens, so the gate never
+admitted them — §10 tests all 382 anyway, because `text` is the one field name worth
+measuring outside the gate.
 
 | count | bucket |
 | ---: | --- |
@@ -50,7 +57,43 @@ second"` cannot be verified by containment no matter how the checker is written 
 nothing. 406 of 1,672 fall here and must not be bound by any assertion.
 
 Restricted to the 1,232 decidable cases in definition files: **799 match / 378 mismatch /
-55 uncheckable citation.**
+55 uncheckable citation.** (`799 = 773 + 26`, and `799 + 378 + 55 = 1,232`.)
+
+**On the two anchorless counts, 55 and 56.** Both are correct and they count different
+things. **56** records in the full 1,672 carry a `source_refs` element with no `#anchor`;
+**55** of those are decidable and appear in the table above, and the fifty-sixth is below
+the decidability gate and is counted in the 406. §12 says 56 because it is talking about
+whole records rather than about the decidable table.
+
+### Which tree each figure is measured against
+
+The buckets above are the measurement **as taken**, against the tree as it stood when the
+prototype ran. Three findings recorded below have since been fixed in `content/` — §3's
+`REL-09` drift, six `UNL-0*` `rules` entries citing the wrong section, and §6's two
+trailing periods — and those fixes move **seven** records out of `genuine mismatch` and
+two out of `match, only under a named rule`. Nothing else moved, and `docs/` is unchanged,
+so the two states differ by exactly this:
+
+| | as measured — §2, §4, §5 | current tree — §6, §12 |
+| --- | ---: | ---: |
+| match, exact | 773 | 782 |
+| match, only under a named rule | 26 | 24 |
+| genuine mismatch | 378 | 371 |
+| citation too coarse to check | 55 | 55 |
+| **decidable, in definition files** | **1,232** | **1,232** |
+| **decidable matches** | **799** | **806** |
+| matches below the decidability gate | 266 | 266 |
+| **whole matched set** | **1,065** | **1,072** |
+
+Every figure in this document names which column it comes from. §10 names neither, because
+none of the nine moved records is a `text` leaf or changes a field name's class: its
+`382 / 369 / 13` split and its `116 / 32 / 9` classification are identical in both columns
+and were re-measured against both.
+
+The mismatch figures are deliberately *not* restated to the current tree: §4's re-pointing
+work and §5's anti-golden proof are claims about the 378 that were measured, and
+`src/MechaMiner.Tools/ContentImport/quote_mismatch_evidence.json` freezes exactly those
+378 so the claims stay checkable after the tree moves again.
 
 ## 3. The one genuine drift — found, and fixed
 
@@ -78,11 +121,13 @@ quotation everywhere else. A mis-filed authored sentence, not a drifted quote.
 This is the headline, and it is not the result anyone expected.
 
 **248 of the 378 mismatches are verbatim quotations with a wrong citation** — 228 citing
-the wrong section of the right document, 20 citing the wrong document, across 85 distinct
-strings. The prose is correct. What is wrong is the pointer.
+the wrong section of the right document, 20 citing the wrong document, across **71 distinct
+strings in 85 distinct string/bucket groups** (fourteen strings are mis-cited in two
+different ways, so they appear in both the wrong-section and the wrong-document bucket).
+The prose is correct. What is wrong is the pointer.
 
-The largest single instance repeats **168 times**: each of the twelve non-radar utility
-files stores the seven `shared_acquisition_and_rank_rules` and seven
+The largest single instance repeats **182 times**: each of the thirteen utility files —
+the radar `UTL-R1` included — stores the seven `shared_acquisition_and_rank_rules` and seven
 `modifier_and_timing_rules` sentences verbatim from
 `GDD-UTILITY-CATALOG#shared-acquisition-and-rank-rules` and `#modifier-and-timing-rules`,
 while the only citation covering them is the file-level
@@ -145,6 +190,43 @@ That also gives a test for any fifth rule ever proposed: if a new rule is needed
 case pass, the zero-cases-move property has been broken, which means the case is a
 paraphrase and belongs in the data fix, not in the ladder.
 
+### The proof is committed, not described
+
+A reviewer objected that this claim was the one measurement in the document that could not
+be checked: confirming it meant rebuilding the matcher, and a second implementation that
+disagreed would not establish which of the two was right. The objection is correct and it
+generalises — **an unreproducible measurement is indistinguishable from one nobody made.**
+
+So the measurement ships:
+
+| file | what it is |
+| --- | --- |
+| `src/MechaMiner.Tools/ContentImport/quote_mismatch_evidence.json` | all **378** mismatch records as measured — the stored string, every citation it failed against, where the string *was* found under maximal normalization, and the maximally-normalized form of the string |
+| `src/MechaMiner.Tools/ContentImport/check_quote_mismatch_evidence.py` | re-derives every normalized form from the stored value, re-reads every cited section out of `docs/` at its current content, re-runs the containment test, and exits non-zero if any case moves |
+
+```
+$ python3 src/MechaMiner.Tools/ContentImport/check_quote_mismatch_evidence.py
+  mismatch records           : 378
+  citations re-tested        : 632
+  normalized forms reproduced: 378/378
+  CASES THAT MOVE under maximal normalization: 0
+RESULT: ok - zero cases move, as §5 claims
+```
+
+**What is frozen and what is recomputed** is the load-bearing distinction. The 378 stored
+strings are frozen, because seven of them have since been repaired in `content/` (§2's
+tree-state table) and reading them back out of the tree today would silently shrink a
+378-record claim to a 371-record one. Everything else — the normalization, the cited
+sections, the containment test — is recomputed on every run against live `docs/`, so the
+artifact cannot decay into a transcript of a result. If a design document is ever edited so
+that one of these 378 becomes findable, the script fails and this section needs
+re-measuring, which is the correct outcome rather than a false alarm.
+
+**Negative controls, both run and reverted.** Replacing one record's stored string with a
+line lifted verbatim out of its own cited section → `CASES THAT MOVE: 1`, `RESULT: FAIL`.
+Corrupting one frozen `maximal_normalized` field → `normalized forms reproduced: 377/378`,
+`RESULT: FAIL`. The script can fail, in both of the ways it claims to.
+
 ## 6. The truncation rule: measured against the corpus, then narrowed
 
 Containment tolerates truncation. A stored string can be a perfect substring and still have
@@ -152,7 +234,14 @@ dropped a qualifier. The obvious fix is a sentence-boundary rule — require the
 end where the source sentence ends. **Measuring it first is what saved it from being
 adopted.**
 
-The rule as proposed would **newly fail 137 of the 806 decidable currently-passing
+**This section is measured against the current tree, not against §2's snapshot**, because
+a boundary rule has to be judged on what it would do to the tree it would run in. The
+population is the **806 decidable matches** of §2's right-hand column: `782` exact plus
+`24` matching under a named rule. That is §2's 799 plus the seven records the §3 and §4
+fixes moved from mismatch to match. It is *not* an 800-ish approximation of 799 and it does
+not include `content/localization/en.json`, which contributes no matches at all.
+
+The rule as proposed would **newly fail 137 of those 806 decidable currently-passing
 quotations (17 %)**, and of those 137:
 
 | n | what actually follows the quotation in the source | verdict |
@@ -178,8 +267,14 @@ so the proposed rule would fail the very cases R8-period exists to let pass.
 > **Fail when a stored string (a) begins at a sentence boundary in the source, (b) ends
 > with its own `.`/`!`/`?`, and (c) the source sentence continues past that point.**
 
-Across the whole matched set — **1,072 records** — this conjunction fires on **exactly 2
-cases, with zero false positives**. It isolates precisely the "fragment dressed as a
+Across the whole matched set — **1,072 records = the 806 decidable matches above plus the
+266 matches that sit below the decidability gate** — this conjunction fires on **exactly 2
+cases, with zero false positives**. The undecidable 266 are included here deliberately and
+they are the only place in this document where they are bound by anything: the decidability
+gate exists because *containment* over a short string is not evidence, and this rule does
+not test containment. It tests where a string that already matched sits relative to the
+source sentence, which a four-word quotation answers as clearly as a forty-word one. It
+isolates precisely the "fragment dressed as a
 complete sentence" defect. **Exception list: zero**, because the fix is not a marker, it is
 deleting one character:
 
@@ -268,9 +363,12 @@ assertion are deliberate:
   content string is implicated; the rule's premise has lapsed and the rule needs
   revisiting. A message that blamed a quotation would send the reader to innocent data and
   teach them the check is noise.
-- **Matching is word-bounded.** Unbounded substring matching for `st.` finds `burst.` (93
-  times in this corpus) and `ver.` finds `over.` (5 times) — both sentence ends, neither an
-  abbreviation. A check that fired on those would be disabled within a day.
+- **Matching is word-bounded.** Unbounded substring matching for `st.` hits **93** places
+  in this corpus and `ver.` hits **5** — and not one of them is an abbreviation. They are
+  the tails of ordinary words ending a sentence: `first.` 24, `specialist.` 15, `cost.` 10,
+  `test.` 9, `manifest.` 6, `burst.` 4 across 21 distinct word forms for `st.`; `forever.`, `solver.` and
+  `hover.` for `ver.`. Word-bounded, all 93 and all 5 disappear. A check that fired on those
+  would be disabled within a day.
 
 Decimals and unit suffixes (`0.80M`, `1.5 s`, `45.6`) are deliberately **out** of the
 list: a decimal point is not a sentence-terminator candidate, since it is not followed by a
@@ -300,7 +398,10 @@ pursuer with exactly one additional behavior"`) while elsewhere carrying prose. 
 that is simultaneously a registry key and a sentence cannot be declared as either.
 
 `text` is the decisive row and deserves its own statement, over all 382 occurrences rather
-than only the decidable ones:
+than only the 305 that entered the candidate population or the 265 that are decidable. The
+word-count gate is lifted for this one measurement, deliberately: every `text` leaf is put
+through the containment test regardless of length, because the question here is whether the
+*field name* means quotation, and answering it by testing only the long values would beg it.
 
 ```
 382  `text` string leaves in the tree
@@ -323,7 +424,7 @@ field rather than to except it from a declaration.
 | 4 | **Rename `maximum_effect.text` on the 13 `PU-*` files** — bare numeric tokens under a name that promises prose | 13 files | schema |
 | 5 | **Re-file `specialized-material-geodes.json → progress_decay.rule`** — authored prose under a quotation field name (§3) | 1 field | content/integration |
 | 6 | **Implement the §6 rule in `verify_content.py`** as a refinement of R8-period, keeping R8's legitimate use passing. Currently the rule is measured and its 2 hits are fixed, but nothing enforces it | 1 assertion | tooling |
-| 7 | **Stop duplicating catalog-wide rules into every member.** Editing one sentence in `GDD-UTILITY-CATALOG#shared-acquisition-and-rank-rules` will break 12 files at once; same for the boss `assumptions` block (14 files) and the relic `acquisition.*` block (10). This is a content-shape change, not a checker change | content shape | content/integration |
+| 7 | **Stop duplicating catalog-wide rules into every member.** Editing one sentence in `GDD-UTILITY-CATALOG#shared-acquisition-and-rank-rules` will break all 13 utility files at once; same for the `damage_pressure.assumptions` block (14 files — 4 bosses and 10 enemies, not bosses alone) and the relic `acquisition.*` block (10 files, 55 string leaves). This is a content-shape change, not a checker change | content shape | content/integration |
 
 **Not open, and deliberately so:** the 406 undecidable cases. They are short field values,
 short values are not quotations, and binding them would produce either false confidence or
@@ -346,6 +447,10 @@ around.
 - **"Any occurrence may be clean" is the permissive reading** in §6, so every failure count
   there is a floor. In practice it changes nothing: 1,069 of the 1,072 records have a
   single occurrence in their cited section.
-- **§6 covers only the currently-*matching* records.** The `no-match` records and the 56
-  anchorless citations may contain truncations too; they already fail, so a boundary rule
-  can be neither credited nor blamed for them.
+- **§6 covers only the currently-*matching* records** — all 1,072 of them, decidable and
+  short alike. Its complement is the 510 `no-match` records and the **56** records whose
+  citation carries no `#anchor`. Both counts here are whole records rather than decidable
+  ones, which is why 56 appears rather than §2's 55: §2's table counts only the 55 that are
+  decidable, and the fifty-sixth anchorless record is short enough to fall in the 406.
+  Those records may contain truncations too; they already fail, so a boundary rule can be
+  neither credited nor blamed for them.

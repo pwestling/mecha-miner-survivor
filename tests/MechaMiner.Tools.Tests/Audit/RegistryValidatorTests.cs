@@ -345,18 +345,20 @@ internal sealed class RegistryValidatorTests
     }
 
     /// <summary>
-    /// Each of the four failure classes fails under its own rule, one fixture per class.
+    /// Each of the failure classes fails under its own rule, one fixture per class.
     /// </summary>
+    /// <remarks>
+    /// The class-to-rule pairing is read from <c>build/audit-expectations.env</c> rather
+    /// than written here, because <c>build/verify-registry.sh</c> stage 2 has to check the
+    /// headings this test writes and a second hardcoded list in the script is the
+    /// two-literal defect that let it accept
+    /// <c>## malformed (expects Whatever)</c>. One owner, two readers.
+    /// </remarks>
     [Test]
     public void EachFixtureClassFailsUnderItsOwnRule()
     {
-        (string Fixture, RegistryRule Rule)[] classes =
-        {
-            ("missing", RegistryRule.UndefinedIdentifier),
-            ("duplicate", RegistryRule.DuplicateIdentifier),
-            ("dangling", RegistryRule.BrokenLink),
-            ("malformed", RegistryRule.MalformedIdentifier),
-        };
+        ImmutableArray<(string Fixture, RegistryRule Rule)> classes =
+            AuditExpectations.RegistryFixtureClasses;
 
         List<string> evidence = new()
         {

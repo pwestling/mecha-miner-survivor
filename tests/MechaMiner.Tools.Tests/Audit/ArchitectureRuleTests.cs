@@ -54,6 +54,15 @@ internal sealed class ArchitectureRuleTests
     /// Every ordered pair of accepted projects that doc 115 does not permit is rejected,
     /// one negative control per pair.
     /// </summary>
+    /// <remarks>
+    /// The expected number of pairs is read from <c>build/audit-expectations.env</c> via
+    /// <see cref="AuditExpectations.ForbiddenEdgeControls"/> and asserted exactly, not as
+    /// a floor. <c>build/verify-registry.sh</c> stage 3 reads the same line and compares
+    /// the retained inventory against it, so the two readers of this matrix cannot report
+    /// different numbers: the count used to be a literal here and an equal literal there,
+    /// with a comment claiming they were the same, and changing this one to 10 left the
+    /// script reporting a floor of 100 and attributing it to this test by name.
+    /// </remarks>
     [Test]
     public void EveryForbiddenReferenceEdgeIsRejected()
     {
@@ -115,8 +124,10 @@ internal sealed class ArchitectureRuleTests
         {
             Assert.That(
                 controls,
-                Is.GreaterThanOrEqualTo(100),
-                "the forbidden-edge matrix must cover every accepted project pair, not a sample");
+                Is.EqualTo(AuditExpectations.ForbiddenEdgeControls),
+                "the forbidden-edge matrix must be every accepted project pair, not a sample;"
+                + " if the accepted boundary changed, FORBIDDEN_EDGE_CONTROLS in "
+                + AuditExpectations.FilePath + " changes with it in the same commit");
             Assert.That(unproved, Is.Empty);
         });
 

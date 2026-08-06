@@ -83,18 +83,45 @@ readonly FIXTURE_EVIDENCE="${REPO_ROOT}/artifacts/registry/registry-fixture-clas
 readonly EXIT_VALIDATION=4
 readonly EXIT_BUILD=5
 
-# The registry failure classes TASK-FND-009-002's completion gate names, each of which must
-# appear in the retained fixture-class inventory under its own heading.
-readonly REQUIRED_FIXTURE_CLASSES=(missing duplicate dangling malformed)
+readonly EXPECTATIONS="${REPO_ROOT}/build/audit-expectations.env"
 
-# The floor stage 3 holds the controlled-forbidden-edge count to. The number is not chosen
-# here: it is the same floor
-# MechaMiner.Tools.Tests.Audit.ArchitectureRuleTests.EveryForbiddenReferenceEdgeIsRejected
-# asserts with Assert.That(controls, Is.GreaterThanOrEqualTo(100)), which is what makes the
-# complete ordered-pair matrix a matrix rather than a sample. Stage 3 asserts the same floor
-# against the retained evidence so that a truncated, stubbed, or hand-edited inventory
-# cannot be reported as a covered one.
-readonly MINIMUM_FORBIDDEN_EDGE_CONTROLS=100
+#
+# The two expectations stages 2 and 3 compare evidence against are READ, not written down
+# here. They used to be written down here as well as in tests/MechaMiner.Tools.Tests/Audit,
+# and the comment above MINIMUM_FORBIDDEN_EDGE_CONTROLS said the number "is not chosen
+# here: it is the same floor" the C# test asserts. That was a description of an intention,
+# not of a mechanism: the two were separate literals that happened to be equal. Changing
+# the C# assertion from 100 to 10 left this script at exit 0 still printing "at or above
+# the floor of 100 that ArchitectureRuleTests.EveryForbiddenReferenceEdgeIsRejected
+# asserts" - a claim about a number the named test no longer asserted.
+#
+# So both readers parse build/audit-expectations.env, and this one has no fallback: if a
+# value is absent or unparseable, the stage that needs it fails rather than resuming the
+# number it used to hardcode. Whatever this script now reports about these values, it read.
+#
+expectation() {
+  # $1 key. Prints the value, or nothing when the file or the key is unusable.
+  local value
+  [[ -f "${EXPECTATIONS}" ]] || return 0
+  value="$(sed -n -E "s/^[[:space:]]*$1[[:space:]]*=[[:space:]]*(.*[^[:space:]])[[:space:]]*\$/\1/p" \
+    "${EXPECTATIONS}")"
+  # Exactly one declaration, or none: two lines for one key has no single answer.
+  [[ "$(printf '%s' "${value}" | grep -c .)" == "1" ]] || return 0
+  printf '%s' "${value}"
+}
+
+# The registry failure classes TASK-FND-009-002's completion gate names, each paired with
+# the rule its fixture must fail under. Both halves are checked: the heading has to name
+# the class AND the rule, and the section under it has to carry a row the named rule
+# produced.
+read -r -a REQUIRED_FIXTURE_CLASSES <<<"$(expectation REGISTRY_FIXTURE_CLASSES)"
+readonly REQUIRED_FIXTURE_CLASSES
+
+# The exact size of the forbidden-edge matrix, asserted rather than used as a floor. A
+# floor plus a footer/row self-consistency check - which is what stage 3 was - accepts a
+# hand-written inventory of 150 rows claiming 150, and one of exactly 100, while the real
+# matrix is 112. Neither is the matrix.
+readonly EXPECTED_FORBIDDEN_EDGE_CONTROLS="$(expectation FORBIDDEN_EDGE_CONTROLS)"
 
 failures=0
 
@@ -121,22 +148,67 @@ pass() {
 # returns 0 only when it accepts.
 #
 
-# Requires the fixture-class inventory to carry a heading for each of the failure classes.
+# Requires the fixture-class inventory to carry, for each failure class, a heading that
+# names the class AND the rule its fixture must fail under, and at least one row beneath
+# that heading which the named rule produced.
+#
+# Both halves were holes. The heading test was `grep -q "^## ${class} (expects "`, which
+# read the prefix and stopped: `## malformed (expects Whatever)` was accepted, so the
+# heading's own claim about which rule the fixture proves went unread. And nothing looked
+# below the headings at all, so four correct headings with zero rows under them - which is
+# what a stubbed or truncated evidence writer produces - was accepted and reported as
+# "4 registry failure class(es), one fixture each".
+#
+# The expected rule names come from build/audit-expectations.env, the same line
+# RegistryValidatorTests.EachFixtureClassFailsUnderItsOwnRule builds its class table from.
+# Hardcoding them here would have made this check a second literal disagreeing with the
+# writer of the file it checks, which is the defect it is closing.
 check_fixture_classes() {
-  local file="$1" headings missing=() class
+  local file="$1" headings pair class rule rows missing=() unproved=()
   if [[ ! -f "${file}" ]]; then
     printf 'the fixture-class evidence was not written (%s)\n' "${file}"
     return 1
   fi
+  if ((${#REQUIRED_FIXTURE_CLASSES[@]} == 0)); then
+    printf 'REGISTRY_FIXTURE_CLASSES could not be read from %s, so there is no list of failure classes to hold the inventory to\n' \
+      "${EXPECTATIONS}"
+    return 1
+  fi
 
-  for class in "${REQUIRED_FIXTURE_CLASSES[@]}"; do
-    if ! grep -q "^## ${class} (expects " "${file}"; then
-      missing+=("${class}")
+  for pair in "${REQUIRED_FIXTURE_CLASSES[@]}"; do
+    class="${pair%%:*}"
+    rule="${pair#*:}"
+    if [[ -z "${class}" || -z "${rule}" || "${pair}" != *:* ]]; then
+      printf 'REGISTRY_FIXTURE_CLASSES in %s carries %q, which is not a <class>:<rule> pair\n' \
+        "${EXPECTATIONS}" "${pair}"
+      return 1
+    fi
+
+    if ! grep -qxF "## ${class} (expects ${rule})" "${file}"; then
+      missing+=("## ${class} (expects ${rule})")
+      continue
+    fi
+
+    # Rows between this heading and the next one whose rule column is the named rule. A
+    # heading is a claim about what the fixture proved; the row is the proof.
+    rows="$(awk -F'\t' \
+      -v heading="## ${class} (expects ${rule})" -v rule="${rule}" '
+        $0 == heading { inside = 1; next }
+        substr($0, 1, 3) == "## " { inside = 0 }
+        inside && substr($0, 1, 1) != "#" && $2 == rule { found++ }
+        END { print found + 0 }' "${file}")"
+    if ((rows == 0)); then
+      unproved+=("${class} (no ${rule} row under its heading)")
     fi
   done
+
   if ((${#missing[@]} > 0)); then
-    printf 'the fixture-class inventory has no "## <class> (expects <rule>)" heading for: %s\n' \
-      "${missing[*]}"
+    printf 'the fixture-class inventory carries no heading reading exactly: %s\n' "${missing[*]}"
+    return 1
+  fi
+  if ((${#unproved[@]} > 0)); then
+    printf 'the fixture-class inventory has the heading but not the finding for: %s\n' \
+      "${unproved[*]}"
     return 1
   fi
 
@@ -147,15 +219,34 @@ check_fixture_classes() {
     return 1
   fi
 
-  printf '%s registry failure class(es), one fixture each (%s)\n' \
-    "${headings}" "${REQUIRED_FIXTURE_CLASSES[*]}"
+  printf '%s registry failure class(es), each with a heading naming its rule and at least one row that rule produced (%s)\n' \
+    "${#REQUIRED_FIXTURE_CLASSES[@]}" "${REQUIRED_FIXTURE_CLASSES[*]}"
 }
 
-# Requires the forbidden-edge inventory to carry a self-consistent count at or above the
-# floor. The count printed on a passing run is now the asserted one, rather than a number
-# read out of a file and echoed with the typography of an assertion.
+# Requires the forbidden-edge inventory to carry a self-consistent count that EQUALS the
+# committed size of the matrix, taking the expected count as $2 so the negative controls
+# below drive the identical predicate with the identical expectation.
+#
+# This was a floor plus a self-consistency check, not a comparison: a hand-written
+# inventory of 150 rows with a footer claiming 150 was accepted, and so was one of exactly
+# 100 rows claiming 100, while the real matrix is 112. A self-consistent inventory is
+# consistent with itself and says nothing about the matrix. The count cannot be derived
+# here either - it falls out of the accepted-boundary table in
+# src/MechaMiner.Tools/Audit/AcceptedArchitecture.cs, and re-deriving that in shell would
+# be a second implementation of what is being checked - so it is committed once in
+# build/audit-expectations.env and both readers compare against that.
 check_forbidden_edges() {
-  local file="$1" rows footer
+  local file="$1" expected="$2" rows footer
+  if [[ -z "${expected}" ]]; then
+    printf 'FORBIDDEN_EDGE_CONTROLS could not be read from %s, so the inventory has nothing to be compared against and its row count means nothing\n' \
+      "${EXPECTATIONS}"
+    return 1
+  fi
+  if [[ ! "${expected}" =~ ^(0|[1-9][0-9]*)$ ]]; then
+    printf 'FORBIDDEN_EDGE_CONTROLS in %s reads %q, which is not a count\n' \
+      "${EXPECTATIONS}" "${expected}"
+    return 1
+  fi
   if [[ ! -f "${file}" ]]; then
     printf 'the forbidden-edge evidence was not written (%s)\n' "${file}"
     return 1
@@ -174,14 +265,14 @@ check_forbidden_edges() {
       "${footer}" "${rows}"
     return 1
   fi
-  if ((rows < MINIMUM_FORBIDDEN_EDGE_CONTROLS)); then
-    printf 'the inventory carries %s controlled forbidden edge(s), below the floor of %s that ArchitectureRuleTests.EveryForbiddenReferenceEdgeIsRejected asserts\n' \
-      "${rows}" "${MINIMUM_FORBIDDEN_EDGE_CONTROLS}"
+  if ((rows != expected)); then
+    printf 'the inventory carries %s controlled forbidden edge(s) and the matrix is %s (FORBIDDEN_EDGE_CONTROLS in %s); a self-consistent inventory of the wrong size is not the matrix\n' \
+      "${rows}" "${expected}" "${EXPECTATIONS}"
     return 1
   fi
 
-  printf '%s controlled forbidden edge(s), at or above the floor of %s; see artifacts/architecture/architecture-forbidden-edges.txt\n' \
-    "${rows}" "${MINIMUM_FORBIDDEN_EDGE_CONTROLS}"
+  printf '%s controlled forbidden edge(s), exactly the %s the committed matrix size declares; see artifacts/architecture/architecture-forbidden-edges.txt\n' \
+    "${rows}" "${expected}"
 }
 
 # Requires the specification-defect inventory to declare exactly one "# total: <n>", for an
@@ -230,9 +321,12 @@ check_defect_inventory() {
 }
 
 # Runs one evidence check against deliberately defective evidence and requires rejection.
+# Everything after the checker name is passed through, so a control gives the checker the
+# same arguments the real stage gives it and differs only in the evidence.
 control() {
-  local description="$1" checker="$2" file="$3" reason
-  if reason="$("${checker}" "${file}" 2>&1)"; then
+  local description="$1" checker="$2" reason
+  shift 2
+  if reason="$("${checker}" "$@" 2>&1)"; then
     fail "negative control did not fire: ${description} was accepted (${reason})"
   else
     pass "${description} -> rejected: ${reason}"
@@ -265,7 +359,7 @@ else
 fi
 
 echo
-echo "=== 2. the four registry failure classes, one fixture each"
+echo "=== 2. every registry failure class, one fixture each, each proving its own rule"
 if summary="$(check_fixture_classes "${FIXTURE_EVIDENCE}")"; then
   pass "${summary}"
   sed 's/^/      /' "${FIXTURE_EVIDENCE}"
@@ -275,7 +369,7 @@ fi
 
 echo
 echo "=== 3. every forbidden project-reference edge, one negative control each"
-if summary="$(check_forbidden_edges "${ARCHITECTURE_EVIDENCE}")"; then
+if summary="$(check_forbidden_edges "${ARCHITECTURE_EVIDENCE}" "${EXPECTED_FORBIDDEN_EDGE_CONTROLS}")"; then
   pass "${summary}"
 else
   fail "${summary}"
@@ -293,36 +387,93 @@ else
 fi
 
 echo
-echo "=== 5. the three evidence checks above, each shown to reject defective evidence"
+echo "=== 5. the three evidence checks above, each shown to accept sound evidence and reject defective evidence"
 control_root="$(mktemp -d)"
 trap 'rm -rf "${control_root}"' EXIT
 
 : >"${control_root}/empty.txt"
 printf '# a single comment line and nothing else\n' >"${control_root}/one-comment.txt"
 
-# Three of the four required class headings.
+# A fixture-class inventory that carries every heading and every row it should, so the
+# defective variants below differ from an acceptable file in exactly one way each. Written
+# from the same class:rule list stage 2 checks against, because a control that hardcoded
+# the headings would stop tracking the list.
+fixture_class_section() {
+  # $1 class, $2 rule, $3 rule to spell in the row (so a "heading but no finding" variant
+  # can be built by naming a different rule).
+  printf '## %s (expects %s)\n' "$1" "$2"
+  printf 'Error\t%s\tdocs/x.md:1\tTR-X-001\tdetail\n' "$3"
+}
 {
-  printf '# three of four classes\n'
-  printf '## missing (expects UndefinedIdentifier)\n'
-  printf '## duplicate (expects DuplicateIdentifier)\n'
-  printf '## dangling (expects BrokenLink)\n'
-} >"${control_root}/three-classes.txt"
+  printf '# every heading, every row\n'
+  for pair in "${REQUIRED_FIXTURE_CLASSES[@]}"; do
+    printf '\n'
+    fixture_class_section "${pair%%:*}" "${pair#*:}" "${pair#*:}"
+  done
+} >"${control_root}/classes-complete.txt"
 
-# 100 control rows with no footer, the same 100 with a footer that disagrees, and 99 rows
-# with an honest footer just below the floor.
+# One heading short.
 {
-  printf '# rows but no footer\n'
-  for edge in $(seq 1 100); do printf 'edge-%s\tForbiddenReference\tForbiddenReference\n' "${edge}"; done
-} >"${control_root}/edges-no-footer.txt"
+  printf '# one class short\n'
+  for pair in "${REQUIRED_FIXTURE_CLASSES[@]:1}"; do
+    printf '\n'
+    fixture_class_section "${pair%%:*}" "${pair#*:}" "${pair#*:}"
+  done
+} >"${control_root}/classes-one-short.txt"
+
+# Every heading present, every rule name in the headings replaced. This is the variant the
+# old prefix grep accepted: `## malformed (expects Whatever)` matched `^## malformed
+# (expects ` and the rest of the heading was never read.
 {
-  cat "${control_root}/edges-no-footer.txt"
-  printf '# 112 forbidden edges, each individually controlled.\n'
-} >"${control_root}/edges-footer-disagrees.txt"
+  printf '# headings that name no real rule\n'
+  for pair in "${REQUIRED_FIXTURE_CLASSES[@]}"; do
+    printf '\n'
+    fixture_class_section "${pair%%:*}" "Whatever" "${pair#*:}"
+  done
+} >"${control_root}/classes-bogus-rule.txt"
+
+# Every heading correct and not one row beneath any of them, which is what a stubbed or
+# truncated evidence writer produces. Also accepted before.
 {
-  printf '# an honest inventory, one row short of the floor\n'
-  for edge in $(seq 1 99); do printf 'edge-%s\tForbiddenReference\tForbiddenReference\n' "${edge}"; done
-  printf '# 99 forbidden edges, each individually controlled.\n'
-} >"${control_root}/edges-below-floor.txt"
+  printf '# correct headings, no findings\n'
+  for pair in "${REQUIRED_FIXTURE_CLASSES[@]}"; do
+    printf '\n## %s (expects %s)\n' "${pair%%:*}" "${pair#*:}"
+  done
+} >"${control_root}/classes-no-rows.txt"
+
+# Every heading correct, rows present, but the last class's rows are all some other rule -
+# the heading claims a proof the section does not carry.
+{
+  printf '# a heading whose section proves a different rule\n'
+  for pair in "${REQUIRED_FIXTURE_CLASSES[@]::${#REQUIRED_FIXTURE_CLASSES[@]}-1}"; do
+    printf '\n'
+    fixture_class_section "${pair%%:*}" "${pair#*:}" "${pair#*:}"
+  done
+  printf '\n'
+  last="${REQUIRED_FIXTURE_CLASSES[*]: -1}"
+  fixture_class_section "${last%%:*}" "${last#*:}" "SomeOtherRule"
+} >"${control_root}/classes-wrong-rule-rows.txt"
+
+# Rows with no footer; the same rows with a footer that disagrees; an honest inventory one
+# row short of the matrix; and the two self-consistent-but-wrong inventories a floor plus a
+# self-consistency check accepted - one padded well above the matrix and one sitting exactly
+# on the old floor of 100.
+edge_inventory() {
+  # $1 row count, $2 footer count, or "none" for no footer.
+  local edge
+  printf '# a synthetic inventory\n'
+  for edge in $(seq 1 "$1"); do
+    printf 'edge-%s\tForbiddenReference\tForbiddenReference\n' "${edge}"
+  done
+  [[ "$2" == "none" ]] || printf '# %s forbidden edges, each individually controlled.\n' "$2"
+}
+edge_inventory "${EXPECTED_FORBIDDEN_EDGE_CONTROLS}" none >"${control_root}/edges-no-footer.txt"
+edge_inventory "${EXPECTED_FORBIDDEN_EDGE_CONTROLS}" \
+  "$((EXPECTED_FORBIDDEN_EDGE_CONTROLS + 1))" >"${control_root}/edges-footer-disagrees.txt"
+edge_inventory "$((EXPECTED_FORBIDDEN_EDGE_CONTROLS - 1))" \
+  "$((EXPECTED_FORBIDDEN_EDGE_CONTROLS - 1))" >"${control_root}/edges-one-short.txt"
+edge_inventory 150 150 >"${control_root}/edges-self-consistent-150.txt"
+edge_inventory 100 100 >"${control_root}/edges-self-consistent-100.txt"
 
 # A defect inventory with rows but no total, with an empty total, with a non-numeric total,
 # and with a total that disagrees with the rows it carries.
@@ -343,17 +494,30 @@ printf '# a single comment line and nothing else\n' >"${control_root}/one-commen
   printf '# total: 5\n'
 } >"${control_root}/defects-total-disagrees.txt"
 
+# The complete fixture-class inventory must be ACCEPTED, or the four rejections below
+# would also be produced by a check that rejects everything.
+if summary="$(check_fixture_classes "${control_root}/classes-complete.txt")"; then
+  pass "stage 2: a complete synthetic inventory -> accepted: ${summary}"
+else
+  fail "stage 2: a complete synthetic inventory was rejected (${summary}), so the rejections below prove nothing"
+fi
 control "stage 2: absent evidence" check_fixture_classes "${control_root}/absent.txt"
 control "stage 2: empty evidence" check_fixture_classes "${control_root}/empty.txt"
 control "stage 2: one comment line" check_fixture_classes "${control_root}/one-comment.txt"
-control "stage 2: three of four class headings" check_fixture_classes "${control_root}/three-classes.txt"
+control "stage 2: one class heading short" check_fixture_classes "${control_root}/classes-one-short.txt"
+control "stage 2: headings that name no real rule" check_fixture_classes "${control_root}/classes-bogus-rule.txt"
+control "stage 2: correct headings with no findings beneath them" check_fixture_classes "${control_root}/classes-no-rows.txt"
+control "stage 2: a heading whose section proves a different rule" check_fixture_classes "${control_root}/classes-wrong-rule-rows.txt"
 
-control "stage 3: absent evidence" check_forbidden_edges "${control_root}/absent.txt"
-control "stage 3: empty evidence" check_forbidden_edges "${control_root}/empty.txt"
-control "stage 3: one comment line" check_forbidden_edges "${control_root}/one-comment.txt"
-control "stage 3: 100 rows and no footer" check_forbidden_edges "${control_root}/edges-no-footer.txt"
-control "stage 3: footer disagrees with rows" check_forbidden_edges "${control_root}/edges-footer-disagrees.txt"
-control "stage 3: honest count one below the floor" check_forbidden_edges "${control_root}/edges-below-floor.txt"
+control "stage 3: absent evidence" check_forbidden_edges "${control_root}/absent.txt" "${EXPECTED_FORBIDDEN_EDGE_CONTROLS}"
+control "stage 3: empty evidence" check_forbidden_edges "${control_root}/empty.txt" "${EXPECTED_FORBIDDEN_EDGE_CONTROLS}"
+control "stage 3: one comment line" check_forbidden_edges "${control_root}/one-comment.txt" "${EXPECTED_FORBIDDEN_EDGE_CONTROLS}"
+control "stage 3: the right number of rows and no footer" check_forbidden_edges "${control_root}/edges-no-footer.txt" "${EXPECTED_FORBIDDEN_EDGE_CONTROLS}"
+control "stage 3: footer disagrees with rows" check_forbidden_edges "${control_root}/edges-footer-disagrees.txt" "${EXPECTED_FORBIDDEN_EDGE_CONTROLS}"
+control "stage 3: an honest inventory one row short of the matrix" check_forbidden_edges "${control_root}/edges-one-short.txt" "${EXPECTED_FORBIDDEN_EDGE_CONTROLS}"
+control "stage 3: self-consistent at 150, which is not the matrix" check_forbidden_edges "${control_root}/edges-self-consistent-150.txt" "${EXPECTED_FORBIDDEN_EDGE_CONTROLS}"
+control "stage 3: self-consistent at exactly the old floor of 100" check_forbidden_edges "${control_root}/edges-self-consistent-100.txt" "${EXPECTED_FORBIDDEN_EDGE_CONTROLS}"
+control "stage 3: an unreadable expected count" check_forbidden_edges "${ARCHITECTURE_EVIDENCE}" ""
 
 control "stage 4: absent evidence" check_defect_inventory "${control_root}/absent.txt"
 control "stage 4: empty evidence" check_defect_inventory "${control_root}/empty.txt"

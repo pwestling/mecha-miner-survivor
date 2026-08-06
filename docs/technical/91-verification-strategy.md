@@ -38,7 +38,46 @@ This document defines how agents prove implementation correctness, integration, 
 
 Each work package owns `tests/verification/<work-package-id>.json`. Every entry contains a stable `VER-<WORK-PACKAGE>-###` ID, summary, cited `TR-*` requirements and gameplay sources, automated test selectors or manual/device procedure ID, fixture/seed/scenario IDs, evidence artifact kinds, applicable platforms/tier, and current status. Entries are added before implementation and never renumbered; retired verification retains a tombstone and successor.
 
-The registry validator enforces unique IDs, existing requirements/sources/selectors/scenarios, at least one non-compilation verification for every implementation task, and no accepted behavior registration/content definition without coverage. Test runners emit executed verification IDs into the task evidence bundle. `PERF-*` and `WB-*` remain scenario IDs referenced by one or more `VER-*` entries.
+### Entry status
+
+`status` takes one of exactly three values, and the set is closed:
+
+- `registered` is an entry written before the verification it describes exists. The entry is authored, cited, and numbered; nothing runs yet.
+- `implemented` is an entry whose verification exists and runs.
+- `retired` is an entry withdrawn from the registry. The tombstone-and-successor rule above is what governs it, and retirement is the only state that carries a companion obligation.
+
+This is the status of an entry, not the state of a task. The [Autonomous Agent Execution Protocol](./114-autonomous-agent-execution-protocol.md) § Work states and integration defines Draft, Ready, Active, Evidence review, Done, and Blocked; those are states of a task, and they deliberately share no word with the three above. The two vocabularies are separate axes and are not to be reconciled by widening either one. A task in Evidence review may own entries that are still `registered`, and an entry may be `implemented` while its task is Blocked on something unrelated. A value from one vocabulary appearing in the other field is an error rather than a synonym, and it is the plausible wrong answer: an author who knows one vocabulary and not the other writes `Done` where `implemented` belongs.
+
+The three values are written down here because until now they were written down nowhere authoritative. They were stated in the registry validator's source, restated in prose `notes` inside individual registry files, and absent from every document. Three copies, none of them authoritative, one of them a comment. Copies agree until they do not, and when they disagree nothing decides which is right: the code and the data can each be internally consistent, agree with each other, and both drift, because there is no authority to drift from. Naming the vocabulary in this document is what makes disagreement with it a defect instead of an opinion.
+
+### What `evidenceKinds` means
+
+`evidenceKinds` is read against `status`, and its meaning changes with it. For a `registered` entry the list is the evidence the verification will produce once it is built, and no check may treat any of it as produced. For an `implemented` entry the list is the evidence that exists and runs, and a check may assert it. Nothing else in an entry distinguishes a record from a plan, and without this rule no check can assert the field in either direction: a check that reads it as a record is wrong about every `registered` entry, and a check that reads it as a plan can never assert anything at all.
+
+The consequence is that promoting an entry from `registered` to `implemented` is a claim that the evidence it lists now exists. It is not bookkeeping that trails the work, it is the assertion the work has to earn, and it is the moment every kind in the list becomes checkable.
+
+### What a kind may name
+
+A kind names the sort of evidence and nothing else. It does not name where the evidence was written, which tool produced it, or the technique that produced it.
+
+- A path is not a kind. A value such as `artifacts/architecture/architecture-forbidden-edges.txt` names a location, so it says nothing about what the evidence is: two entries retaining different files would share no kind, and two retaining the same file would be indistinguishable from two producing the same sort of evidence. A retained artifact belongs in a field that names the artifact, and no accepted entry field holds one today. Adding one, `retainedArtifacts` or a better name, is a proposal this document does not settle; `SCH-QUA-001` in the [Component, Contract, and Schema Registry](./115-component-contract-and-schema-registry.md) § Schema registry is where it would be accepted.
+- A technique is not a kind. `negative-control` and `tripwire-sentinel` describe how a gate was built, not what it emitted. The evidence a negative control actually produces is a test count, an exit code, or a diagnostic ID, all of which are kinds already, so recording the technique in this field both omits the evidence and inflates the coverage the field appears to report. Negative-control adequacy is governed by its own section below, where it is a rule about the gate rather than a label in a coverage list.
+
+The values named in those two bullets are in use, so each is a defect to correct in the registry file that carries it, owned by that file's work package. They are excluded from the inventory below rather than grandfathered into it, which is what makes the correction owed rather than optional.
+
+The vocabulary is open, and a kind is minted by adding it to the inventory below before it may appear in a registry file. The inventory as of this revision, including `compilation`, which the non-compilation rule below presupposes and which no entry currently uses: `absent-value-assertion`, `artifact-sha256`, `assembly-metadata`, `assembly-sha256`, `benchmark-report-json`, `build-manifest-json`, `canonical-ordering`, `captured-artifact`, `changed-file-list`, `command-exit-code`, `command-output`, `compilation`, `diagnostic-run-record-json`, `drop-counters`, `engine-log`, `expected-diagnostic-id`, `file-hash`, `frame-budget-table`, `golden-text`, `identity-equality`, `import-log`, `log-line`, `minimized-input-artifact`, `msbuild-property-values`, `pin-comparison`, `registry-report`, `rotated-file-set`, `runner-report-json`, `seed-identity`, `sink-touch-count`, `stdout-line`, `surviving-file-assertion`, `test-counts`, `test-output`, `text-diff`, `timeout-observation`, `verb-result-json`, `warning-count`. The inventory carries near-duplicates that a later revision should consolidate, among them `stdout-line` against `command-output` and the three hash kinds against one another; consolidating them edits registry files owned by their packages and is not done here.
+
+The list is not closed, and closing it would be a mistake dressed as rigor. Every kind above was minted by toolchain, wrapper, harness, architecture, diagnostics, and benchmark work, because those are the packages that have landed. Simulation, content, persistence, UI, performance, and device verification will need kinds nobody has written yet, such as image goldens, timing percentiles, save-migration outcomes, and replay divergence. A set closed against whichever packages happened to arrive first is widened on first contact with the next one, and a vocabulary widened whenever it is inconvenient was never closed. Requiring an edit to this document gives the field an authority without pretending the list is finished.
+
+### What `successor` means
+
+`successor` names the `VER-*` entry that replaces a retired one. It is a property of retirement: a `retired` entry must carry it, and no other status has anything to name. It does not name a task. Every entry that carries the field today, three of them, carries a task ID while its own status is `implemented`, which is two defects in one field: a task ID where a verification ID belongs, and a successor on an entry that has not been retired. What those entries mean is that a later task is expected to replace the verification, and that is not a successor, it is planned work. Record it in the entry summary or the registry file's notes, and set `successor` when the entry is actually retired and its replacement has an ID.
+
+### Validation and reporting
+
+The registry validator must enforce unique IDs, existing requirements/sources/selectors/scenarios, the closed `status` vocabulary and the `evidenceKinds` inventory above, at least one non-compilation verification for every implementation task, and no accepted behavior registration/content definition without coverage. `FND-009` owns it, under `TASK-FND-009-002`. This paragraph states what the validator is required to enforce, not what runs in a given revision; which rules are live is recorded by the `VER-FND-009-*` entries and their statuses, which is the only place that question is answered. Describing a gate in the present indicative reads as a report that it runs, and leaves a reader unable to tell an enforced rule from an intended one.
+
+Test runners emit executed verification IDs into the task evidence bundle. `PERF-*` and `WB-*` remain scenario IDs referenced by one or more `VER-*` entries.
 
 ## Determinism and fixture policy
 

@@ -63,6 +63,13 @@
 #     a gate and has no other mode. Its name begins with "check".
 #   * derive_citation_pass_expectations.py (on master) is a generator when invoked bare
 #     and a gate when invoked with --verify. Its name begins with "derive".
+#   * derive_derived_value_expectations.py (on master) has the same two modes one flag
+#     apart: a generator bare, a gate with --check. The flag was read at its main(),
+#     which registers exactly --sweep-ref and --check, rather than assumed from its
+#     sibling's spelling - the two derive scripts do not agree on one, which is why
+#     field 3 holds tokens instead of a convention. It was missing from this list and
+#     from the FOLLOW-UP below, both of which counted three ContentImport .py scripts by
+#     reading this prose instead of the directory. THERE ARE FOUR.
 #   * build/bootstrap-linux.sh is in this repository right now. The glob does not see it,
 #     so it is outside the partition's extent entirely, and it happens to be reached only
 #     because the workflow's provisioning step calls it. Nothing checked that.
@@ -95,20 +102,47 @@
 #   establish that --verify is what runs. Narrowing it to argument-position adjacency is
 #   possible and is not done here. This limit is now load-bearing rather than latent:
 #   derive_citation_pass_expectations.py arrived with the merge below and is the first
-#   and only entry to set field 3.
+#   and only entry to set field 3. The one other file that would set one -
+#   derive_derived_value_expectations.py, whose gate flag is spelled --check and not
+#   --verify - is not on this ref, so field 3 has one live user and not two.
 #
-# NOTHING NOT ON THIS REF IS PRE-LISTED - AND THE THREE THAT WERE NOT HAVE NOW ARRIVED.
-# When this paragraph was written the three ContentImport .py scripts were on master
-# only, were named here as evidence, and were deliberately absent from INVENTORY,
-# because classifying a file that is not here would be a stale inventory - the same
-# defect as a stale exemption, which § 3 exists to catch. They arrived on
-# claude/hearth-thread-hrufl9 (which had already merged master) and the enumerators
-# found all three immediately, exactly as predicted: the gate went red with three
-# unclassified-script findings and nothing else. They are classified in INVENTORY below,
-# each as a gate, each with its own reason, and - since classifying them as gates makes
-# §§ 3 and 4 apply - each with its own EXEMPT entry stating the failure observed when
-# wiring was attempted. The rule met them rather than them having to derive it, which is
-# what this paragraph asked for.
+# NOTHING NOT ON THIS REF IS PRE-LISTED, AND THREE OF MASTER'S FOUR ARE NOW ON THIS REF.
+# master carries FOUR ContentImport .py scripts (see the FOLLOW-UP below). When this
+# paragraph was first written none of them were here: they were named in this comment as
+# evidence and were deliberately absent from INVENTORY, because classifying a file that
+# is not here would be a stale inventory - the same defect as a stale exemption, which
+# § 3 exists to catch. Whoever merges master into this chain classifies what arrives; the
+# enumerators fail the gate until they do, which is the rule meeting them rather than
+# them having to derive it.
+#
+# THAT HAPPENED, FOR THREE OF THE FOUR. check_quote_mismatch_evidence.py,
+# derive_citation_pass_expectations.py and verify_content.py arrived on
+# claude/hearth-thread-hrufl9, which had already merged master, and the enumerators found
+# all three immediately, exactly as predicted: the gate went red with three
+# unclassified-script findings and nothing else. Those three are classified in INVENTORY
+# below, each as a gate, each with its own reason, and - since classifying them as gates
+# makes §§ 3 and 4 apply - each with its own EXEMPT entry stating the failure observed
+# when wiring was attempted.
+#
+# THE FOURTH IS DEFERRED, NOT OVERLOOKED. derive_derived_value_expectations.py is on
+# master and on no ref in this chain, so it is still not pre-listed, for exactly the
+# reason all four once were not. Re-enumerated rather than carried as prose - which is
+# the mistake this paragraph twice made before - `git ls-tree -r <ref> --name-only --
+# src/MechaMiner.Tools/ContentImport/` returns four .py files at master 3b4703b, THREE on
+# this ref, and ZERO on claude/hearth-thread-2vmaro-fnd-002 and at the merge base
+# 1c2f106. Its verified INVENTORY and EXEMPT pair is held as a comment in the block under
+# ON MERGE FROM master below, to go live in the commit that brings the file.
+#
+#   Measured on fnd-002, so that nobody has to rediscover it: an entry for a file the
+#   tree does not hold costs TWO findings, not one. § 2 direction 1 reports "stale
+#   classification" and § 3 reports "stale exemption" for the same path, because
+#   check_exemptions tests -f on every exempt path too. On fnd-002, which held none of
+#   the four, all four pairs pasted in cost eight findings and exit class 4, failing
+#   sections 2 and 3. The cost is proportional to how many are missing, so on this ref,
+#   missing one, pasting all four costs two. Either way the classification cannot be
+#   pushed ahead of the file as a courtesy to a future merge: it belongs IN the merge
+#   commit that brings it, which is why three of these are entries and the fourth is
+#   still a comment.
 #
 # THE RESIDUAL LIMIT. The inventory makes "is every script classified" machine checkable.
 # It does not make "is this classification correct" checkable. A gate deliberately filed
@@ -127,25 +161,43 @@
 # build/verify-verbs.sh and build/verify-architecture.sh embed python3 the same way.
 #
 # That is not a hypothetical about a file this commit might have added.
-# src/MechaMiner.Tools/ContentImport/verify_content.py is on master right now, 132 KB
-# of it, in exactly that position - along with check_quote_mismatch_evidence.py and
-# derive_citation_pass_expectations.py.
+# src/MechaMiner.Tools/ContentImport/verify_content.py is on master right now, 243 KB
+# of it (249,165 bytes at 76ef7a1 - the "132 KB" this line used to claim was measured
+# against an older master and had drifted), in exactly that position - along with
+# check_quote_mismatch_evidence.py, derive_citation_pass_expectations.py and
+# derive_derived_value_expectations.py.
 #
 # FOLLOW-UP (owner: FND-002, which owns format and OwnedTextHygiene): add ".py" to
-# OwnedExtensions. Checked rather than assumed to be small - it is not free. All three
-# of those files violate trim_trailing_whitespace today: 44 lines in
-# verify_content.py, 22 in check_quote_mismatch_evidence.py, 8 in
-# derive_citation_pass_expectations.py, 74 in total. All three already satisfy
-# end_of_line and insert_final_newline. So adding the extension turns format-check red
-# on master until `./build.sh format` repairs them, which it can do mechanically, and
-# it rewrites 74 lines in files DAT-006's content-import work owns. What it unblocks is
-# splitting the program below out of this file, which is the only reason it is inline.
-# Note also that all three are enumerated by BOTH enumerators below - .py is in
-# SCRIPT_EXTENSIONS and all three carry a shebang - so when master merges here the gate
-# is red until someone classifies them, and classifying any of them as a gate then makes
-# §§ 3 and 4 apply. That is the inverted enumeration working, not a problem with it, and
-# it is the whole reason the glob had to go: check_quote_mismatch_evidence.py and
-# derive_citation_pass_expectations.py match no glob spelled "verify".
+# OwnedExtensions. This paragraph used to say the change was not free and priced it at 74
+# trailing-whitespace lines across three files - 44 in verify_content.py, 22 in
+# check_quote_mismatch_evidence.py, 8 in derive_citation_pass_expectations.py. THAT NO
+# LONGER REPRODUCES. Re-measured at master 76ef7a1 by two independent methods (grep -P
+# '[ \t]+$' and a python3 re.search over the decoded text, which agree): all FOUR files
+# have ZERO lines with trailing whitespace, no CR anywhere, and every one ends in \n. So
+# all four already satisfy trim_trailing_whitespace, end_of_line and
+# insert_final_newline, and adding the extension rewrites nothing and turns format-check
+# red on nothing. The follow-up got cheaper, not larger, and the number that made it look
+# expensive was measured against an older master.
+#
+#   Worth stating how the stale number survived, because the mistake is easy to repeat
+#   and was repeated while checking this: `grep -c '[ \t]$'` does NOT count trailing
+#   whitespace. In a POSIX bracket expression \t is a backslash and a 't', so that
+#   pattern also matches every line ending in 't' or in a backslash, and on these files it
+#   reports 98/22/13/28 where the truth is 0/0/0/0. Use grep -P '[ \t]+$' or
+#   '[[:space:]]$'. Whether 44/22/8 was ever right or was that same artefact is not
+#   established here; what is established is what the files are today.
+#
+# What the extension change unblocks is splitting the program below out of this file,
+# which is the only reason it is inline.
+# Note also that all four are enumerated by BOTH enumerators below - .py is in
+# SCRIPT_EXTENSIONS and all four carry `#!/usr/bin/env python3` - so when master merges
+# here the gate is red until someone classifies them, and classifying any of them as a
+# gate then makes §§ 3 and 4 apply. Measured on the merged tree, that is exactly what
+# happens: four § 2 direction-2 findings before classification, and four § 4 findings
+# after it if the exemptions are omitted. That is the inverted enumeration working, not
+# a problem with it, and it is the whole reason the glob had to go:
+# check_quote_mismatch_evidence.py, derive_citation_pass_expectations.py and
+# derive_derived_value_expectations.py match no glob spelled "verify".
 #
 # WHAT THIS GATE DOES NOT ESTABLISH. Three of these fail closed and two fail open, and
 # they are separated on that line because only the latter can let something through.
@@ -235,7 +287,125 @@ readonly EXIT_VALIDATION=4
 # with its own control, because a mechanism with one live user is still a mechanism that
 # needs a control: if the field stopped being read, the one entry that depends on it
 # would silently degrade to path-only matching and nothing would say so.
-
+#
+#   Read from the resolved array rather than carried over from either side of the merge:
+#   of the 17 entries below exactly one has a non-empty third field, and it is that one.
+#   The sentence this replaced said field 3 was empty for every entry, which was true of
+#   claude/hearth-thread-2vmaro-fnd-002, where none of these files existed, and is false
+#   here. It is deleted rather than qualified, because two sentences disagreeing about
+#   the same column is worse than either of them.
+#
+# ON MERGE FROM master INTO THIS CHAIN, AND ONLY THAT DIRECTION: ADD THE LINES BELOW
+# THAT THE MERGED TREE ACTUALLY CONTAINS AND THAT ARE NOT ALREADY LIVE ABOVE, VERIFIED
+# RATHER THAN PROPOSED.
+#
+# THREE OF THE FOUR PAIRS BELOW ARE ALREADY LIVE ABOVE, so this is a partly discharged
+# instruction and not a fresh one, and a resolver who followed it literally today would
+# add three duplicates. check_quote_mismatch_evidence.py,
+# derive_citation_pass_expectations.py and verify_content.py are classified in INVENTORY
+# and exempted in EXEMPT above - in their own wording, measured on the tree they landed
+# in, rather than in the wording preserved below - because their files arrived on
+# claude/hearth-thread-hrufl9. Only derive_derived_value_expectations.py's pair is still
+# outstanding, and it is the pair whose field 3 is spelled --check rather than --verify.
+# A duplicate is not a harmless paste: § 2 direction 2 reports "is classified N times in
+# the inventory", so it reddens the same section that an entry for an absent file
+# reddens, and it is caught rather than tolerated.
+#
+# All eight lines are nonetheless left below exactly as they were verified, all four
+# pairs, because they are the measured record and deleting three of them would discard
+# the measurement rather than the instruction. What changed is only the framing above
+# them. Take from them a pair only where BOTH tests pass: the file is present on the ref
+# being merged in, AND no live entry above already names it. The first test is the
+# RE-ENUMERATE requirement below, kept because it is what turns "three are already live"
+# from a claim in this comment into a measurement on your own tree; the second is a grep
+# of the two arrays above for the path.
+#
+# READ THE DIRECTION BEFORE READING THE LINES. This block is an instruction for exactly
+# one merge: master merged INTO this fnd-002 chain, which is the fnd-002 -> master
+# reconcile this file's header describes. It is NOT an instruction for any other merge
+# direction, and in particular it is NOT one for merging fnd-002, or any branch of this
+# chain, INTO somewhere else. It is not a checklist that travels with this file, and
+# nothing about it fires just because this file appeared in a merge.
+#
+#   That is not a hypothetical either. A sibling stream merged fnd-002 into its own
+#   branch, read this heading as unconditional, and following it would have added lines
+#   naming TWO files that branch's enumerators cannot find - its ContentImport/ holds
+#   THREE .py scripts where master holds four, derive_derived_value_expectations.py being
+#   on master and not there. The result would have been the red gate two paragraphs down,
+#   in place of the one the resolver was trying to clear.
+#
+# AND THE FILE SET IS WHATEVER THE REF BEING MERGED IN CARRIES AT MERGE TIME, NOT THE
+# COUNT WRITTEN HERE. Four .py files under src/MechaMiner.Tools/ContentImport/ is what
+# master carried when these lines were verified, at master 76ef7a1; it was still four at
+# 3b4703b, re-measured rather than assumed. That is a per-ref measurement of a directory
+# that grows, not a constant, and this comment cannot be re-measured on your behalf. So
+# RE-ENUMERATE THAT DIRECTORY ON THE REF BEING MERGED IN - `git ls-tree -r <ref>
+# --name-only -- src/MechaMiner.Tools/ContentImport/` - and take from below only the
+# lines whose file that enumeration returns. If it returns a .py file no line below
+# covers, classify that one too, by reading its main() the way these four were read; § 2
+# direction 2 on the merged tree names exactly which files are outstanding.
+#
+# CLASSIFYING A FILE THE MERGED TREE DOES NOT CONTAIN IS A SECOND FAILURE, NOT A PARTIAL
+# FIX. An entry naming a file no enumerator found is red by § 2 direction 1 ("stale
+# classification"), and the same path's EXEMPT line is red again by § 3 ("stale
+# exemption"), because check_exemptions tests -f on every exempt path too. So pasting
+# these lines onto a tree holding fewer of these four files does not half-fix anything:
+# it trades unclassified-script findings for up to eight stale ones, in two sections
+# instead of one. The last row of the table below is that failure measured.
+#
+# These are not a suggestion for the merge resolver to compose. They were written, run
+# and measured before being written down here, on a throwaway worktree holding
+# fnd-002 + master at 76ef7a1 (union-resolved conflicts, never pushed):
+#
+#   with all eight lines live on the merged tree   bash build/verify-gate-wiring.sh -> 0,
+#                                                 18 scripts, both enumerators agreeing,
+#                                                 14 gates, all 8 in-band controls run
+#   with the four EXEMPT lines omitted             -> exit 4, FAILING SECTION 4, four
+#                                                 "is never invoked and is not on the
+#                                                 deliberately-unwired list". This is the
+#                                                 second reddening, and it is why the
+#                                                 exemptions are half of the change and
+#                                                 not an afterthought to it.
+#   with a fifth entry naming a missing file       -> exit 4, FAILING SECTIONS 2 and 4
+#   with one of the four INVENTORY lines removed   -> exit 4, FAILING SECTION 2, naming
+#                                                 exactly the file that was dropped
+#   all eight live on THIS ref, without the files  -> exit 4, FAILING SECTIONS 2 and 3,
+#                                                 eight findings. Not a peculiarity of
+#                                                 this ref: ANY tree missing those four
+#                                                 files fails this way, in proportion to
+#                                                 how many of them it is missing. Hence a
+#                                                 comment here rather than entries.
+#
+# All four are `gate`, and deliberately so. Filing any of them as `provisioning` or
+# `launcher` would make §§ 3 and 4 skip them and would turn a measured "nothing dispatches
+# these yet" into a silent claim that they are not gates - which is precisely the fail-open
+# this file names in capitals under WHAT THIS GATE DOES NOT ESTABLISH. They are gates; the
+# honest instrument for "a gate nothing runs yet" is EXEMPT with a measured reason, and
+# that is the form used. The reason measured, in all four cases, is that the § 4 analyzer
+# finds ZERO call sites - the report reads "is never invoked", not "has a call site but no
+# workflow reaches it" - and that wiring them means writing a content-tier verb, which is
+# DAT-006's work package and not this gate's decision to make.
+#
+# Strip the leading "#   " from each line. The first four are INVENTORY entries; the last
+# four are their matching EXEMPT entries, one per path, in the same order. They come in
+# pairs and go in pairs: an INVENTORY line added without its EXEMPT line is the § 4
+# failure in the table's second row, and either one added for a file the merged tree does
+# not hold is the § 2 / § 3 failure in its last row. Add a pair only for a path the
+# re-enumeration above actually returned - which, on a merge from master, has so far been
+# all four, and on any other ref is a question this comment does not answer.
+#
+#     "src/MechaMiner.Tools/ContentImport/check_quote_mismatch_evidence.py|gate||re-runs the anti-golden measurement behind content/quote-verification-audit.md § 5 - all 378 quote mismatches re-tested under maximal normalisation - and exits non-zero if any record moves or any frozen normalised form fails to reproduce from its stored value. A gate with no other mode: the file registers no arguments at all, so field 3 is empty. It is the first of the two files the header names as the reason the name glob had to go - 'check' matches no glob spelled 'verify'"
+#     "src/MechaMiner.Tools/ContentImport/derive_citation_pass_expectations.py|gate|--verify|a generator when invoked bare and a gate when invoked with --verify, which is the case field 3 was built for and says so. Bare it WRITES expected_citation_deltas.json; with --verify it measures the pass's own pinned range against that committed expectation and returns 1 on any disagreement. Read at main(): --ref, --previous-ref, --verify, --after-ref. Without field 3 a reachable bare call site would satisfy § 4 while running the generator and not the gate"
+#     "src/MechaMiner.Tools/ContentImport/derive_derived_value_expectations.py|gate|--check|the same dual shape one flag apart, and the flag is spelled differently: --check, not --verify. Bare it WRITES expected_derived_value_removals.json; with --check it re-derives from the pinned SWEEP_REF and returns 1 on MISSING or STALE. Read rather than assumed - main() registers exactly --sweep-ref and --check, and nothing else. This file appears in NEITHER of the header's two notes about master, both of which counted three ContentImport .py scripts; there are four"
+#     "src/MechaMiner.Tools/ContentImport/verify_content.py|gate||asserts the authored JSON content catalog under content/ against the assertion table in its own header, exiting non-zero on any FAILURE row while warnings never change the exit code. One mode, no arguments, so field 3 is empty. 249 KB of it, in exactly the position the header describes: a gate the old name glob did see, and the largest thing this inventory now has to account for"
+#
+#   -- and in EXEMPT:
+#
+#     "src/MechaMiner.Tools/ContentImport/verify_content.py|never invoked: the § 4 analyzer reports ZERO call sites for it in src/**.cs, build.sh, build.ps1 and .github - measured on the merged tree, not inferred from its name. The only occurrences in the search roots are prose in ContentImport/README.md, which the analyzer never opens (it reads .cs, .sh, .ps1, .yml, .yaml, .bash), and prose inside sibling .py files. Passes standalone. Not wired here because no verb dispatches the content tier at all: inventing one to satisfy this section would let a gate about wiring make a design decision it has no standing to make. DAT-006 owns content import and owns that verb"
+#     "src/MechaMiner.Tools/ContentImport/check_quote_mismatch_evidence.py|never invoked, same measurement: zero call sites in the four search roots. Its one occurrence outside README prose is `import check_quote_mismatch_evidence as Q` inside derive_citation_pass_expectations.py - a Python module import, not a shell or C# invocation, and in a file the analyzer does not read - so even the sibling that uses it does not make it reached. Passes standalone. Unblocked by the same content-tier verb as verify_content.py"
+#     "src/MechaMiner.Tools/ContentImport/derive_citation_pass_expectations.py|never invoked: zero call sites. Field 3 requires --verify, so a bare wiring would not satisfy § 4 either - and bare is the mode that OVERWRITES expected_citation_deltas.json, so a careless wiring gives a verb that rewrites its own expectation and then reports green. That is a reason to wire it deliberately in the work package that owns it, and not a reason to file it as anything other than a gate"
+#     "src/MechaMiner.Tools/ContentImport/derive_derived_value_expectations.py|never invoked: zero call sites. Same hazard as its sibling one flag over - bare it OVERWRITES expected_derived_value_removals.json - and field 3 requires --check. Note the coupling that makes wiring it a decision rather than a line: verify_content.py's A31/A29 already assert set equality against that same committed expectation, so the two gates must agree on which of them owns the check before either is wired. Unblocked by DAT-006"
+#
 readonly INVENTORY=(
   "build.sh|launcher||the POSIX entry point of the standard command surface (doc 100 § Standard command surface). Parses no policy and decides nothing: it locates the verb host, builds it if needed, and forwards the verb. Every gate below is reached through it"
   "build.ps1|launcher||the PowerShell entry point of the same surface, held at parity with build.sh by build/verify-wrapper-parity.sh. Note that it carries a shebang (#!/usr/bin/env pwsh) and so is seen by both enumerators; a .ps1 without one would be seen by only the extension enumerator, which is why § 1 requires them to agree"

@@ -35,10 +35,10 @@
     "may_damage_every_enemy_crossed": true,
     "unchanged_stats": [
       "damage",
-      "beamWidth",
+      "beam-width",
       "range",
       "cadence",
-      "projectileSpeed"
+      "projectile-speed"
     ]
   },
   "expected_effect": {

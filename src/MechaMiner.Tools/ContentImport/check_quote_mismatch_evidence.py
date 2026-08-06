@@ -54,7 +54,15 @@ RECOMPUTED on every run, so the artifact cannot rot into a transcript:
     frozen `maximal_normalized` field;
   - the cited section of every citation, read out of docs/**/*.md at its
     current content;
-  - the containment test itself.
+  - the containment test itself;
+  - `verdict_on_this_tree`, per record. This field is NOT frozen: it is the one
+    thing in the artifact that is a statement about content/ TODAY rather than
+    about the measurement, so it is re-derived from the live tree - the value at
+    that (file, pointer) as it now stands, against the source_refs that now
+    cover that pointer - and a disagreement with the stored field is a FAILURE.
+    Written down rather than recomputed, it would drift silently every time a
+    citation is re-pointed, which is exactly the kind of stale prose about an
+    artifact that this pair of files exists to make impossible.
 
 docs/ is the half of the comparison this repository can still change, and it is
 read live. If a design document is edited so that one of these 378 strings
@@ -90,6 +98,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 REPO_ROOT = HERE.parents[2]
 DOCS = REPO_ROOT / "docs"
+CONTENT = REPO_ROOT / "content"
 EVIDENCE = HERE / "quote_mismatch_evidence.json"
 
 # The audit's figure. Asserted, not inferred from the file's length, so a
@@ -154,6 +163,136 @@ def maximal_needle(s: str) -> str:
     s = re.sub(r"^\s*(?:[-*+]|\d+\.)\s+", "", s)
     s = _maximal_common(s)
     return s.rstrip(".!?;:, ").strip()
+
+
+# --------------------------------------------------------------------------
+# ADOPTED normalization - the four rules of audit section 5, and nothing else.
+#
+# This is the OTHER matcher in this file and the two must not be confused. The
+# maximal one above is a ceiling that nothing is allowed to pass under; this one
+# is the real rule, and it is what `verdict_on_this_tree` is measured with.
+#
+#   R1-quotes        curly quote characters -> straight
+#   R3-markup        inline Markdown stripped (links, backticks, emphasis)
+#   R7a-initial-case the FIRST character only may differ in case
+#   R8-period        a trailing "." on the stored string need not be in the source
+#
+# Deliberately absent: whitespace collapsing, dash folding, cell-pipe folding,
+# ellipsis folding and full case folding. Audit section 5 measured each of those
+# to have zero motivating cases, and three of them to have counter-examples in
+# this tree. Adding one here would quietly re-open the slope that section closes.
+# --------------------------------------------------------------------------
+
+
+def adopted(s: str) -> str:
+    """R1 and R3, applied to both sides."""
+    s = unicodedata.normalize("NFC", s)
+    for a, b in SMART_QUOTES.items():
+        s = s.replace(a, b)
+    return _strip_markup(s)
+
+
+def adopted_variants(value: str) -> list[str]:
+    """The needle under R7a and R8, which apply to the stored string only."""
+    base = adopted(value)
+    out = {base}
+    if base:
+        out.add(base[0].swapcase() + base[1:])
+    for form in list(out):
+        if form.endswith("."):
+            out.add(form[:-1])
+    return [f for f in out if f]
+
+
+# --------------------------------------------------------------------------
+# Which source_refs elements cover a JSON pointer, and which of those count.
+#
+# Audit section 12: "Multi-citation fields are checked disjunctively. When
+# several equally specific source_refs elements cover one field, a match against
+# any counts." EQUALLY SPECIFIC is the load-bearing half. A file-level citation
+# has specificity 0 and a scope prefix's specificity is its segment count, so
+# `persistence.reentry: X` (2) hides `persistence: Y` (1) for a field under
+# `persistence.reentry`. Checking every covering element instead - which is the
+# obvious implementation and the wrong one - makes four BOSS-0* records read as
+# matches on the tree this artifact was measured against, and the artifact says
+# they are not. That disagreement is how this rule was pinned down.
+# --------------------------------------------------------------------------
+
+POINTER_SEGMENT = re.compile(r"([a-z0-9_]+)((?:\[\d+\])*)")
+PREFIX_SELECTOR = re.compile(r"\[(\d+)?(?:\.\.(\d+))?\]")
+
+
+def _segments(path: str) -> list[str]:
+    """Split on '.' outside brackets, so 'rules[2..3]' survives intact."""
+    out, depth, cur = [], 0, ""
+    for char in path:
+        if char == "[":
+            depth += 1
+        elif char == "]":
+            depth -= 1
+        if char == "." and depth == 0:
+            out.append(cur)
+            cur = ""
+            continue
+        cur += char
+    out.append(cur)
+    return out
+
+
+def prefix_covers(prefix: str, pointer: str) -> bool:
+    """Does scope `prefix` cover the JSON pointer `pointer`?"""
+    pseg, qseg = _segments(prefix), _segments(pointer)
+    if len(pseg) > len(qseg):
+        return False
+    for p, q in zip(pseg, qseg):
+        if p.split("[", 1)[0] != q.split("[", 1)[0]:
+            return False
+        psel = PREFIX_SELECTOR.findall(p)
+        qsel = PREFIX_SELECTOR.findall(q)
+        if psel and not qsel:
+            return False
+        for (lo, hi), (index, _) in zip(psel, qsel):
+            if lo == "" and hi == "":
+                continue          # [] - every element
+            low = int(lo)
+            high = int(hi) if hi else low
+            if not low <= int(index) <= high:
+                return False
+    return True
+
+
+def covering_citations(refs, pointer: str) -> list[str]:
+    """The equally-most-specific citations covering `pointer`."""
+    best, chosen = -1, []
+    for ref in refs:
+        if not isinstance(ref, str):
+            continue
+        if ": " in ref:
+            prefix, cite = ref.split(": ", 1)
+            prefix = prefix.strip()
+            if not prefix_covers(prefix, pointer):
+                continue
+            specificity = len(_segments(prefix))
+        else:
+            cite, specificity = ref, 0
+        if specificity > best:
+            best, chosen = specificity, [cite]
+        elif specificity == best:
+            chosen.append(cite)
+    return chosen
+
+
+def value_at(doc, pointer: str):
+    """Resolve a dotted/indexed JSON pointer, or raise KeyError/IndexError."""
+    current = doc
+    for segment in _segments(pointer):
+        match = POINTER_SEGMENT.fullmatch(segment)
+        if match is None:
+            raise KeyError(segment)
+        current = current[match.group(1)]
+        for index in re.findall(r"\[(\d+)\]", match.group(2)):
+            current = current[int(index)]
+    return current
 
 
 # --------------------------------------------------------------------------
@@ -241,7 +380,47 @@ def main() -> int:
     moved: list[str] = []
     normalization_drift: list[str] = []
     unresolved: list[str] = []
+    verdict_drift: list[str] = []
+    verdicts: Counter = Counter()
     citations_tested = 0
+    adopted_haystacks: dict[tuple[str, str], str] = {}
+
+    def adopted_section(doc_id: str, anchor: str) -> str | None:
+        key = (doc_id, anchor)
+        if key not in adopted_haystacks:
+            entry = index.get(doc_id)
+            if entry is None or anchor not in entry["anchors"]:
+                return None
+            start, end = entry["anchors"][anchor]
+            adopted_haystacks[key] = adopted("\n".join(entry["lines"][start:end]))
+        return adopted_haystacks.get(key)
+
+    def verdict_now(rec) -> str:
+        """Re-derive verdict_on_this_tree from content/ as it stands."""
+        path = REPO_ROOT / rec["file"]
+        if not path.exists():
+            return "file-gone"
+        doc = json.loads(path.read_text(encoding="utf-8"))
+        try:
+            value = value_at(doc, rec["pointer"])
+        except (KeyError, IndexError, TypeError):
+            return "field-gone"
+        if not isinstance(value, str):
+            return "field-gone"
+        raw = adopted(value)
+        forms = adopted_variants(value)
+        best = "no-match"
+        for cite in covering_citations(doc.get("source_refs", []), rec["pointer"]):
+            if "#" not in cite:
+                continue
+            hay = adopted_section(*cite.split("#", 1))
+            if hay is None:
+                continue
+            if raw in hay:
+                return "exact"
+            if any(form in hay for form in forms):
+                best = "match-under-a-named-rule"
+        return best
 
     if len(records) != EXPECTED_RECORD_COUNT:
         failures.append(
@@ -253,6 +432,13 @@ def main() -> int:
 
     for rec in records:
         where = f"{rec['file']} :: {rec['pointer']}"
+        now = verdict_now(rec)
+        verdicts[now] += 1
+        if now != rec.get("verdict_on_this_tree"):
+            verdict_drift.append(
+                f"{where}: stored {rec.get('verdict_on_this_tree')!r}, "
+                f"recomputed {now!r}"
+            )
         needle = maximal_needle(rec["value"])
         if needle != rec["maximal_normalized"]:
             normalization_drift.append(
@@ -287,9 +473,11 @@ def main() -> int:
     for k, n in sorted(payload["located_breakdown"].items(), key=lambda kv: -kv[1]):
         print(f"    {n:5d}  {k}")
     print()
-    print("  the same 378 strings, re-checked against content/ as it stands today:")
-    for k, n in sorted(payload["verdict_on_this_tree"].items(), key=lambda kv: -kv[1]):
+    print("  the same 378 locations, RE-DERIVED against content/ as it stands today")
+    print("  (adopted rules only, disjunctive over the equally-most-specific citations):")
+    for k, n in sorted(verdicts.items(), key=lambda kv: -kv[1]):
         print(f"    {n:5d}  {k}")
+    print(f"  stored verdict_on_this_tree disagreements: {len(verdict_drift)}")
     print()
     print(f"  normalized forms reproduced: {len(records) - len(normalization_drift)}"
           f"/{len(records)}")
@@ -300,6 +488,7 @@ def main() -> int:
     for bucket, label in (
         (normalization_drift, "NORMALIZED FORM DID NOT REPRODUCE"),
         (unresolved, "CITATION DID NOT RESOLVE IN docs/"),
+        (verdict_drift, "VERDICT DRIFTED - stored != re-derived from content/"),
         (moved, "CASE MOVED - a mismatch became a match"),
     ):
         for item in bucket[:20]:
@@ -307,7 +496,21 @@ def main() -> int:
         if len(bucket) > 20:
             print(f"  ... and {len(bucket) - 20} more")
 
-    bad = failures + normalization_drift + unresolved + moved
+    if dict(verdicts) != payload.get("verdict_on_this_tree"):
+        failures.append(
+            f"payload verdict_on_this_tree summary {payload.get('verdict_on_this_tree')} "
+            f"!= re-derived {dict(verdicts)}"
+        )
+
+    bad = failures + normalization_drift + unresolved + verdict_drift + moved
+    if verdict_drift:
+        print()
+        print(
+            "verdict_on_this_tree is the artifact's one statement about content/ TODAY, "
+            "so it is re-derived rather than trusted. A disagreement means the tree moved "
+            "under it - a string was edited, a field was renamed, or a citation was "
+            "re-pointed - and the field must be regenerated, not reasoned about."
+        )
     if moved:
         print()
         print(

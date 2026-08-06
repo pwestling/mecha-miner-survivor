@@ -17,7 +17,10 @@
     "specialist_attack.projectile: TDD-ENCOUNTERS#needler",
     "specialist_attack.resonant_damage_reference: GDD-PLAYER-SURVIVABILITY-BASELINE#damage-pressure-reference",
     "first_playable_subset: GDD-INITIAL-ALIEN-ROSTER#first-playable-subset",
-    "description: GDD-INITIAL-ALIEN-ROSTER#six-silhouette-families"
+    "description: GDD-INITIAL-ALIEN-ROSTER#six-silhouette-families",
+    "specialist_attack.hard_control_interaction: TDD-ENCOUNTERS#needler",
+    "specialist_attack.projectile.lifetime_description: GDD-INITIAL-ALIEN-ROSTER#en-06--needler",
+    "specialist_attack.resonance_interactions.flux_amber: GDD-INITIAL-ALIEN-ROSTER#en-06--needler"
   ],
   "family": "Ranged stalk",
   "hull": 80,
@@ -101,8 +104,8 @@
         "speed",
         "damage",
         "lifetime",
-        "terrainCollision",
-        "noHoming"
+        "terrain-collision",
+        "no-homing"
       ]
     },
     "resonance_interactions": {

@@ -33,7 +33,7 @@
   "purchasable_during_run": false,
   "grants_account_access_only": true,
   "unlocks": {
-    "kind": "relicCachePoolEntry",
+    "kind": "relic-cache-pool-entry",
     "count": 1,
     "relic": "War-Drum Oscillator",
     "relic_id": "REL-05",

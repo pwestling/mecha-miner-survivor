@@ -2119,6 +2119,181 @@ modify `docs/`), reported in the pass summary.
   change; every remaining `(file, JSON path, value)` triple is unchanged.
 - **`null` count: 0 → 0**, still with no declared exceptions.
 
+#### Ruling 36 — the 248 wrong-section quotations are re-pointed with 59 scoped citations, and the file list came from the directory
+
+`content/quote-verification-audit.md` §4 records the dominant finding: **248 of the 378 prose
+mismatches are verbatim quotations whose covering `source_refs` element names the wrong section
+(228) or the wrong document (20)**. The prose was right and the pointer was wrong. This pass fixes
+the pointer, and **no existing citation was deleted** — every new element is an addition.
+
+**The affected set was enumerated from the tree, not from a count in a design document.** Grouping
+the 248 records of `src/MechaMiner.Tools/ContentImport/quote_mismatch_evidence.json` by
+`(file, scope)` yields **65 groups across 37 files**. Six of them — the `rules[]` entries of
+`UNL-01`…`UNL-06` — are **already correct on `master`**: the merged PR added the file-level
+`GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules` citation, and the evidence artifact
+records all six as `exact` rather than `no-match`. So **59 new scoped elements across 31 files**
+close the remaining 242.
+
+**On the audit's "64 new scoped `source_refs` elements across 37 files".** Enumeration gives 65, not
+64. The one-group difference is reproducible: `content/enemies/EN-06.json` has two groups —
+`specialist_attack.projectile.lifetime_description` and
+`specialist_attack.resonance_interactions.flux_amber` — whose correct section is the *same*
+(`GDD-INITIAL-ALIEN-ROSTER#en-06--needler`), so they collapse to one element under the shallower
+`specialist_attack:` prefix and the total becomes 64. They are kept separate here, because a prefix
+that also covers `specialist_attack.hard_control_interaction` — which is quoted from
+`TDD-ENCOUNTERS#needler`, a different document — would attribute that field to a section it does
+not come from. The audit's 37-file figure counts the six `UNL-0*` files this pass does not need to
+touch.
+
+**The largest single instance, and the count that had to be taken from the filesystem.** 182 of the
+248 are the shared utility rules block: seven `catalog_wide_rules.shared_acquisition_and_rank_rules`
+and seven `catalog_wide_rules.modifier_and_timing_rules` sentences in **thirteen** files, quoted
+verbatim from `GDD-UTILITY-CATALOG#shared-acquisition-and-rank-rules` and
+`#modifier-and-timing-rules` while the only covering citation was the file-level
+`GDD-UTILITY-CATALOG#utl-XX--<name>` (and, for the radar, `GDD-MAPS#resource-radar`).
+
+**`UTL-R1` is the thirteenth and it is the one a careless pass drops.** The design documents say
+"twelve non-radar utilities" in many places; that statement is true and it is *not* the file count.
+The radar is an entity the documents treat as an exception while still giving it its own definition,
+so a pass that reads "twelve" and enumerates twelve members produces a set that is internally
+consistent, passes a value-preservation check, and silently leaves 14 mis-cited quotations in
+`content/utilities/UTL-R1.json`. The set was therefore enumerated with `glob('content/utilities/*.json')`
+and **asserted to be 13** before any file was written, with the thirteen IDs checked against
+`UTL-A1 A2 B1 B2 C1 C2 D1 D2 E1 E2 F1 F2 R1`. `verify_content.py`'s own A12 row already carries the
+same correction in its selector comment.
+
+**How each target section was chosen.** For every group, the sections of `docs/` containing *every*
+record in that group were computed under the four adopted normalization rules of audit §5 — R1-quotes,
+R3-markup, R7a-initial-case, R8-period, and nothing else. Among those, preference went to a document
+the file already cites, then to the deepest heading level, then to the smallest span. All 248 had at
+least one hit under the adopted rules; none needed a fifth rule.
+
+**Proof, measured rather than asserted.** Before this pass, 10 of the 248 were covered by a citation
+naming a section that contains them; after it, **248 of 248**. The test uses the audit's own reading
+from §12 — disjunctive over the *equally most specific* covering elements, where a file-level
+citation has specificity 0 and a scope prefix's specificity is its segment count. That qualifier is
+load-bearing and was pinned down by disagreement rather than assumed: checking every covering element
+instead makes the four `BOSS-0*` `persistence.reentry.behavior` records read as matches on the tree
+the artifact was measured against, and the artifact says they are not.
+
+#### Ruling 37 — `verdict_on_this_tree` is re-derived by the checker, not stored prose
+
+Re-pointing 242 citations changes what `quote_mismatch_evidence.json` should say in
+`verdict_on_this_tree`, which is the artifact's one field that describes `content/` **today** rather
+than the frozen measurement. Hand-editing a summary count is precisely the defect this pair of files
+exists to prevent, so instead `check_quote_mismatch_evidence.py` now **recomputes the field per
+record** from the live tree — the value at that `(file, pointer)` as it now stands, against the
+`source_refs` that now cover that pointer, under the four adopted rules — and **fails** if the stored
+field disagrees.
+
+The recomputation was validated before it was trusted: run against `master` it reproduces the stored
+figures exactly, **371 `no-match` / 7 `exact`**. On this pass's tree it gives **248 `exact`, 1
+`match-under-a-named-rule`, 129 `no-match`**, and the artifact now stores that. The single
+rule-matched record is `content/enemies/EN-06.json :: specialist_attack.hard_control_interaction`,
+which needs R7a-initial-case because the document begins the sentence "Hard control may pause…".
+The frozen halves — the 378 stored strings, their citations as measured, `located_breakdown`, and
+`maximal_normalized` — are untouched, and `CASES THAT MOVE under maximal normalization` is still 0,
+so audit §5's anti-golden claim is unaffected.
+
+Negative controls, run and reverted individually:
+
+- **Flipping one record's stored `verdict_on_this_tree` from `no-match` to `exact`** →
+  `stored verdict_on_this_tree disagreements: 1`, the drifting record named, plus
+  `FAIL: payload verdict_on_this_tree summary … != re-derived …`, `RESULT: FAIL`.
+- **Deleting one of this pass's new citations from `content/utilities/UTL-R1.json`** (the
+  `catalog_wide_rules.modifier_and_timing_rules[]` element) →
+  `stored verdict_on_this_tree disagreements: 7`, each of the seven sentences named as
+  `stored 'exact', recomputed 'no-match'`, `RESULT: FAIL`.
+
+Both reverted; the checker returns `RESULT: ok` on the committed tree.
+
+#### Ruling 38 — `FORMULA-01`, and the summary that says what the definition is
+
+`content/weapons/stat-price-formula.json` carried `"id": "weapon-stat-price-formula"`, which matches
+no ID grammar in the tree — every other minted ID is `<PREFIX>-<NN>`. It is now **`FORMULA-01`**. The
+prefix was confirmed unused first: `grep -rn "FORMULA-" docs/ content/ src/` returned nothing.
+
+Its localization keys migrate to `weapon.FORMULA-01.*`, and `content/localization/en.json` stays
+flat, lexically sorted, duplicate-free and orphan-free (A10/A11 pass; 164 → 165 strings, the one
+addition being the new summary).
+
+A `summary_key` is added because the definition needed a summary that **disambiguates a definition
+from a formula kind**. A registry separately mints formula kinds as `snake_case` tokens, and
+`FORMULA-01` is not one of them: it is the definition that carries a kind together with that kind's
+parameters. The disambiguation belongs where a reader meets the definition rather than in a note
+elsewhere. The summary also states, truthfully, that this definition still holds its rule as the
+literal expression `5n(n + 1)` rather than as a registered kind — which is what `verify_content.py`
+already warns about at 40:99 for `stat-price-formula.json.formula` and
+`.equivalent_by_depth.formula`. Claiming the file already carries a registered kind would have been
+prose contradicted by the artifact.
+
+`FORMULA-01` does not match A12's weapons selector `^W-[A-F]{2}$`, so the file remains the weapons
+directory's one aggregate and the row still reads 15 items + 1 aggregate.
+
+#### Ruling 39 — eight camelCase value tokens become lower-kebab-case
+
+Property names in this tree are `snake_case`; **value** tokens are lower-kebab-case. Measured over
+`content/`, kebab-case value tokens occur **38 times across five token spaces** — `id`
+(`common-ore`, `hyper-gold`), `inventory_scope`, `pool_availability`, `site_class`, `value_kind` —
+against camelCase's **12 occurrences of 8 distinct tokens across four spaces**. (The brief for this
+pass said "six token spaces … against camelCase twice"; the 38 reproduces, the space counts do not,
+and the measured figures are recorded here rather than the quoted ones.)
+
+The eight were found by scanning every string leaf under `content/` for the camelCase shape rather
+than by trusting a list, and the scan now returns zero:
+
+| was | is | where |
+| --- | --- | --- |
+| `relicCachePoolEntry` | `relic-cache-pool-entry` | `UNL-02`…`UNL-06` `unlocks.kind` (5) |
+| `utilityBlueprints` | `utility-blueprints` | `UNL-01` `unlocks.kind` |
+| `terrainCollision` | `terrain-collision` | `EN-06` `specialist_attack.projectile.snapshot_at_creation[3]` |
+| `noHoming` | `no-homing` | `EN-06` `specialist_attack.projectile.snapshot_at_creation[4]` |
+| `beamWidth` | `beam-width` | `W-AB-unbounded-bore` `effects.unchanged_stats[1]` |
+| `projectileSpeed` | `projectile-speed` | `W-AB-unbounded-bore` `effects.unchanged_stats[4]` |
+| `attackRate` | `attack-rate` | `W-AE-replicator-swarm` `effects.clone_inherits_current[1]` |
+| `operationalRange` | `operational-range` | `W-AE-replicator-swarm` `effects.clone_inherits_current[2]` |
+
+None of the eight is referenced from `docs/`, `src/` or elsewhere in `content/`, so the rename has no
+other call site. The resource IDs, `canonical_letter` and `recipe_pair` are deliberately untouched:
+an `RSC-01`–`08` migration is pending and must land as one pass.
+
+#### Ruling 40 — the repo-`path:line`-in-a-value item is already closed, and the count is recorded
+
+The brief for this pass asked for **four fields embedding a repo `path:line` string inside a value**
+to be converted to `DOC-ID#anchor`. Measured against the tree rather than assumed: **there are
+none.** `A24`'s two regexes (`LINE_NUMBER_IN_VALUE`, `REPO_PATH_IN_VALUE`) applied to every string
+leaf of every `*.json` under `content/` — including `content/localization/en.json`, which
+`load_definitions()` skips and which A24 therefore never sees — return **0 hits**, and so does a
+deliberately wider net (`.md` anywhere in the value, or any of `docs|src|content|tools|assets`
+followed by a separator).
+
+Traced through history so the figure is checkable rather than asserted: `21f1734` held **15
+occurrences across 5 field paths** (`effect.stacking_classification` ×11,
+`minute_rows[].formation_events[].reconstruction_basis`, `beacon_response_source`,
+`external_numerics[].statement`, `price_curve_decision.note`); Rulings 25, 26 and 31 of the merged PR
+took that to 2 by `159b9c4` and to **0 by `4291cb0`**, which is on `master`. Nothing remains to
+convert. The only `path:line` strings left anywhere are inside
+`src/MechaMiner.Tools/ContentImport/quote_mismatch_evidence.json`, in the `cited[].span` and `file`
+fields of the measurement artifact, where a repository path is the subject rather than a citation.
+
+#### Value-preservation record — eighth pass
+
+**Range: `origin/master` (`4eda0c5`) → this pass's commit, `content/**/*.json` only, over all 41
+files touched.** Measured, not carried forward.
+
+- **Numeric leaves: 548 → 548.** Value multiset difference: **removed `{}`, added `{}`**. **No
+  gameplay number changed in this pass**, in either direction.
+- **String leaves: 1,605 → 1,666**, +61. Every one of the 61 is accounted for: 59 new
+  `source_refs` elements (Ruling 36), and `weapon.FORMULA-01.summary` plus the `summary_key` field
+  that points at it (Ruling 38).
+- **14 `(file, JSON path)` pairs changed value**: the 12 camelCase → kebab-case tokens (Ruling 39),
+  plus `stat-price-formula.json :: id` and `:: name_key` (Ruling 38). No other pair moved.
+- **1 pair removed, 62 added.** The removal is `en.json :: weapon.weapon-stat-price-formula.name`,
+  re-added at `weapon.FORMULA-01.name` with the string unchanged. The 62 are the 59 citations, the
+  two new localization entries, and the new `summary_key`.
+- **`null` count: 0 → 0**, still with no declared exceptions.
+- **No citation was deleted.** Every `source_refs` element present on `master` is present here.
+
 ### Per-definition notes, by catalog
 
 #### Weapons (`content/weapons/`)

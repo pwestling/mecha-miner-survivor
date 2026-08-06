@@ -1,9 +1,10 @@
 {
-  "id": "weapon-stat-price-formula",
+  "id": "FORMULA-01",
   "schema_version": 1,
   "content_version": 1,
   "status": "enabled",
-  "name_key": "weapon.weapon-stat-price-formula.name",
+  "name_key": "weapon.FORMULA-01.name",
+  "summary_key": "weapon.FORMULA-01.summary",
   "tags": [],
   "source_refs": [
     "GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",

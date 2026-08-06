@@ -134,12 +134,19 @@ while the only citation covering them is the file-level
 `GDD-UTILITY-CATALOG#utl-XX--<name>`. Same shape for all 23 `top_down_silhouette`, 16
 `trait_notes`, 6 `player_facing_identity` and 4 `core_tradeoff` values.
 
-**Still open.** The fix is **64 new scoped `source_refs` elements across 37 files**, plus
-21 anchors to add for the `external_numerics[].quote` values (the scoped section was found
-for every one of the 21, and each then matched with zero normalization rules). This is
-mechanical work, not a negotiation — but the check cannot be turned on as a hard failure
-before it is done, because it would redden the build on 248 strings that are *correct
-quotations of the wrong citation*.
+**Done for the wrong-citation half.** The re-pointing has landed:
+`content/transcription-notes.md`, Ruling 36. Enumerating the 248 records by `(file, scope)`
+gives **65 groups across 37 files**, not the 64 this section previously projected — the
+one-group difference is two `EN-06` groups that share a target section and collapse only
+under a prefix that would then mis-attribute a third field, so they were kept separate.
+Six of the 65 — the `UNL-01`…`UNL-06` `rules[]` entries — were already correct on `master`,
+so **59 new scoped elements across 31 files** were added and no existing citation was
+deleted. Measured before and after: **10 of 248 → 248 of 248** covered by a citation naming
+a section that contains them.
+
+**Still open:** the 21 anchors to add for the `external_numerics[].quote` values (the scoped
+section was found for every one of the 21, and each then matched with zero normalization
+rules). The check still cannot be turned on as a hard failure until that is done.
 
 ## 5. Normalization: four rules adopted, six built and dropped
 
@@ -202,13 +209,14 @@ So the measurement ships:
 | file | what it is |
 | --- | --- |
 | `src/MechaMiner.Tools/ContentImport/quote_mismatch_evidence.json` | all **378** mismatch records as measured — the stored string, every citation it failed against, where the string *was* found under maximal normalization, and the maximally-normalized form of the string |
-| `src/MechaMiner.Tools/ContentImport/check_quote_mismatch_evidence.py` | re-derives every normalized form from the stored value, re-reads every cited section out of `docs/` at its current content, re-runs the containment test, and exits non-zero if any case moves |
+| `src/MechaMiner.Tools/ContentImport/check_quote_mismatch_evidence.py` | re-derives every normalized form from the stored value, re-reads every cited section out of `docs/` at its current content, re-runs the containment test, re-derives `verdict_on_this_tree` per record from `content/` as it now stands, and exits non-zero if any case moves or any verdict disagrees |
 
 ```
 $ python3 src/MechaMiner.Tools/ContentImport/check_quote_mismatch_evidence.py
   mismatch records           : 378
   citations re-tested        : 632
   normalized forms reproduced: 378/378
+  stored verdict_on_this_tree disagreements: 0
   CASES THAT MOVE under maximal normalization: 0
 RESULT: ok - zero cases move, as §5 claims
 ```
@@ -222,10 +230,22 @@ artifact cannot decay into a transcript of a result. If a design document is eve
 that one of these 378 becomes findable, the script fails and this section needs
 re-measuring, which is the correct outcome rather than a false alarm.
 
+`verdict_on_this_tree` is the exception that proves the distinction: it is the artifact's
+one statement about `content/` **today** rather than about the measurement, so it is
+**recomputed per record** — the value at that `(file, pointer)` as it now stands, against
+the `source_refs` that now cover it, under the four adopted rules — and a disagreement with
+the stored field is a failure. Re-pointing a citation (§4) changes it, which is exactly why
+it must not be stored prose. The recomputation reproduces the pre-fix figures **371
+`no-match` / 7 `exact`** against `master`, which is how it was validated before being
+trusted; on the re-pointed tree it reads **248 `exact` / 1 `match-under-a-named-rule` / 129
+`no-match`**.
+
 **Negative controls, both run and reverted.** Replacing one record's stored string with a
 line lifted verbatim out of its own cited section → `CASES THAT MOVE: 1`, `RESULT: FAIL`.
 Corrupting one frozen `maximal_normalized` field → `normalized forms reproduced: 377/378`,
-`RESULT: FAIL`. The script can fail, in both of the ways it claims to.
+`RESULT: FAIL`. Flipping one record's stored `verdict_on_this_tree` → `disagreements: 1`,
+`RESULT: FAIL`. Deleting one re-pointed citation from `content/utilities/UTL-R1.json` →
+`disagreements: 7`, `RESULT: FAIL`. The script can fail, in each of the ways it claims to.
 
 ## 6. The truncation rule: measured against the corpus, then narrowed
 
@@ -418,7 +438,7 @@ field rather than to except it from a declaration.
 
 | # | Open item | Size | Owner |
 | --: | --- | --- | --- |
-| 1 | **Re-point the 248 wrong-citation quotations.** 64 new scoped `source_refs` elements across 37 files; the correct `doc_id#anchor` is known for each. Blocks turning the quotation check on as a hard failure | 37 files | content/integration |
+| 1 | ~~**Re-point the 248 wrong-citation quotations.**~~ **Done** — 59 new scoped `source_refs` elements across 31 files (`content/transcription-notes.md`, Ruling 36); enumeration gave 65 groups across 37 files, of which 6 were already correct on `master`. Coverage went 10/248 → 248/248. Item 2 still blocks turning the check on as a hard failure | 31 files | content/integration |
 | 2 | **Add the 21 missing anchors** on `external_numerics[].quote`, after which the highest-confidence quotation field in the tree becomes checkable | 21 refs | content/integration |
 | 3 | **Fix the 9 MIXED-USE field names**, and rename `behavior_kind` in one of its uses regardless (§10) | 9 names | schema |
 | 4 | **Rename `maximum_effect.text` on the 13 `PU-*` files** — bare numeric tokens under a name that promises prose | 13 files | schema |

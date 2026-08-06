@@ -35,7 +35,8 @@
     "summary_key: GDD-INITIAL-RELIC-CATALOG#rel-08--redline-crucible",
     "trigger: GDD-INITIAL-RELIC-CATALOG#rel-08--redline-crucible",
     "pause_behavior: GDD-INITIAL-RELIC-CATALOG#rel-08--redline-crucible",
-    "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-08--redline-crucible"
+    "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-08--redline-crucible",
+    "core_tradeoff: GDD-INITIAL-RELIC-CATALOG#catalog-overview"
   ],
   "primary_transformation": "Stationary heat overclock",
   "core_tradeoff": "Redline heat burns Hull until vented through movement",

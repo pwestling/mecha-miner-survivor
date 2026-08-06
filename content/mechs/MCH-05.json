@@ -11,7 +11,10 @@
     "signature_weapon_id: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
     "resolved_baseline: GDD-INITIAL-MECH-CATALOG#mch-05--bastion",
     "trait_stacking: GDD-INITIAL-MECH-CATALOG#trait-comparison-and-stacking",
-    "initial_availability: GDD-INITIAL-MECH-CATALOG#initial-availability"
+    "initial_availability: GDD-INITIAL-MECH-CATALOG#initial-availability",
+    "player_facing_identity: GDD-INITIAL-MECH-CATALOG#player-facing-identity-4",
+    "top_down_silhouette[]: GDD-INITIAL-MECH-CATALOG#top-down-silhouette-4",
+    "trait_notes[]: GDD-INITIAL-MECH-CATALOG#signature-and-trait-4"
   ],
   "signature": "Reactor Pulse",
   "signature_weapon_id": "W-CE",

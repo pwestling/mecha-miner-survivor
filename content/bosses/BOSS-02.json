@@ -20,7 +20,8 @@
     "persistence: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
     "resonance: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
     "defeat_reward: GDD-RUN-STRUCTURE#boss-defeat-reward",
-    "description: GDD-INITIAL-ALIEN-ROSTER#boss-02--brood-titan"
+    "description: GDD-INITIAL-ALIEN-ROSTER#boss-02--brood-titan",
+    "persistence.reentry.behavior: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward"
   ],
   "arrival": {
     "timecode": "14:00",

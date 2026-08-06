@@ -6,7 +6,8 @@
   "name_key": "mining_site.SITE-01.name",
   "tags": [],
   "source_refs": [
-    "GDD-MINING#standard-ore-seams"
+    "GDD-MINING#standard-ore-seams",
+    "depleted_state: GDD-MINING#specialized-material-geodes"
   ],
   "site_class": "standard-ore-seam",
   "count_per_standard_map": 20,

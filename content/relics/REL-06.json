@@ -28,7 +28,8 @@
     "cross_document_rules[]: TDD-COMBAT-RUNTIME",
     "summary_key: GDD-INITIAL-RELIC-CATALOG#rel-06--event-horizon-coupler",
     "trigger: GDD-INITIAL-RELIC-CATALOG#rel-06--event-horizon-coupler",
-    "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-06--event-horizon-coupler"
+    "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-06--event-horizon-coupler",
+    "core_tradeoff: GDD-INITIAL-RELIC-CATALOG#catalog-overview"
   ],
   "primary_transformation": "Pull and cluster amplification",
   "core_tradeoff": "Attacks compact the horde around their geometry",

@@ -1,7 +1,5 @@
 using System;
-using MechaMiner.Simulation.Commands;
 using MechaMiner.Simulation.Encounters;
-using MechaMiner.Simulation.Geometry;
 using MechaMiner.Simulation.Runtime;
 using MechaMiner.Simulation.Snapshots;
 using MechaMiner.Simulation.Time;

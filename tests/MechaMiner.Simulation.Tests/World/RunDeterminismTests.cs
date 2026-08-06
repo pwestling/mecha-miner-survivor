@@ -1,4 +1,3 @@
-using MechaMiner.Simulation.Encounters;
 using MechaMiner.Simulation.Random;
 using MechaMiner.Simulation.World;
 using MechaMiner.Tests.Support;

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using MechaMiner.Simulation.Combat;
-using MechaMiner.Simulation.Commands;
 using MechaMiner.Simulation.Encounters;
 using MechaMiner.Simulation.Entities;
 using MechaMiner.Simulation.Geometry;

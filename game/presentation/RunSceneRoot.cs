@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
 using Godot;
-using MechaMiner.Simulation.Combat;
+using MechaMiner.Simulation.Commands;
 using MechaMiner.Simulation.Encounters;
 using MechaMiner.Simulation.Entities;
-using MechaMiner.Simulation.Mining;
-using MechaMiner.Simulation.Commands;
 using MechaMiner.Simulation.Geometry;
+using MechaMiner.Simulation.Mining;
 using MechaMiner.Simulation.Snapshots;
 using MechaMiner.Simulation.Time;
 using MechaMiner.Simulation.World;
@@ -480,53 +479,53 @@ public partial class RunSceneRoot : Node3D
         switch (category)
         {
             case PopulationCategory.OrdinaryEnemy:
-            {
-                float diameter = (float)(EnemyRoster.Skitterling.ContactRadiusMeters * 2.0);
-                node.Mesh = new BoxMesh
                 {
-                    Size = new Vector3(diameter, diameter * 0.6f, diameter),
-                    Material = new StandardMaterial3D
+                    float diameter = (float)(EnemyRoster.Skitterling.ContactRadiusMeters * 2.0);
+                    node.Mesh = new BoxMesh
                     {
-                        AlbedoColor = new Color(0.72f, 0.24f, 0.30f),
-                        Roughness = 0.65f,
-                    },
-                };
-                node.Position = new Vector3(0.0f, diameter * 0.3f, 0.0f);
-                break;
-            }
+                        Size = new Vector3(diameter, diameter * 0.6f, diameter),
+                        Material = new StandardMaterial3D
+                        {
+                            AlbedoColor = new Color(0.72f, 0.24f, 0.30f),
+                            Roughness = 0.65f,
+                        },
+                    };
+                    node.Position = new Vector3(0.0f, diameter * 0.3f, 0.0f);
+                    break;
+                }
 
             case PopulationCategory.MiningSite:
-            {
-                float diameter = (float)(GrayboxExtraction.ZoneRadiusMeters * 2.0);
-                node.Mesh = new CylinderMesh
                 {
-                    TopRadius = diameter / 2.0f,
-                    BottomRadius = diameter / 2.0f,
-                    Height = 0.04f,
-                    Material = new StandardMaterial3D
+                    float diameter = (float)(GrayboxExtraction.ZoneRadiusMeters * 2.0);
+                    node.Mesh = new CylinderMesh
                     {
-                        AlbedoColor = new Color(0.24f, 0.58f, 0.42f),
-                        Roughness = 0.8f,
-                    },
-                };
-                node.Position = new Vector3(0.0f, 0.02f, 0.0f);
-                break;
-            }
+                        TopRadius = diameter / 2.0f,
+                        BottomRadius = diameter / 2.0f,
+                        Height = 0.04f,
+                        Material = new StandardMaterial3D
+                        {
+                            AlbedoColor = new Color(0.24f, 0.58f, 0.42f),
+                            Roughness = 0.8f,
+                        },
+                    };
+                    node.Position = new Vector3(0.0f, 0.02f, 0.0f);
+                    break;
+                }
 
             default:
-            {
-                node.Mesh = new BoxMesh
                 {
-                    Size = new Vector3(0.16f, 0.08f, 0.16f),
-                    Material = new StandardMaterial3D
+                    node.Mesh = new BoxMesh
                     {
-                        AlbedoColor = new Color(0.95f, 0.88f, 0.45f),
-                        Roughness = 0.3f,
-                    },
-                };
-                node.Position = new Vector3(0.0f, 0.35f, 0.0f);
-                break;
-            }
+                        Size = new Vector3(0.16f, 0.08f, 0.16f),
+                        Material = new StandardMaterial3D
+                        {
+                            AlbedoColor = new Color(0.95f, 0.88f, 0.45f),
+                            Roughness = 0.3f,
+                        },
+                    };
+                    node.Position = new Vector3(0.0f, 0.35f, 0.0f);
+                    break;
+                }
         }
 
         // The mesh hangs at its own height on a pivot whose own position is the authoritative

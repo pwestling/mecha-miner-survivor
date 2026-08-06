@@ -1,4 +1,3 @@
-using System;
 using MechaMiner.Simulation.Encounters;
 using MechaMiner.Simulation.Geometry;
 using MechaMiner.Simulation.Time;

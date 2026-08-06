@@ -2612,7 +2612,7 @@ version. The copy stays until the authority question is answered on purpose. Rec
 **Why the price curve was wrong to remove, and why editing the prose is not the fix.** All 14 values are
 still stated in the same file, in `defining_prose`: "The first ten prices are 10, 30, 60, 100, 150, 210,
 280, 360, 450, and 550 ore. Cumulative cost reaches 100 after three purchases, 200 after four, 350 after
-five, and 2,200 after ten." A28 matches **numeric leaves**, so removing the leaves moved 14 checkable
+five, and 2,200 after ten." A31 matches **numeric leaves**, so removing the leaves moved 14 checkable
 numbers to a place no assertion looks — strictly worse than leaving them, because the redundancy survived
 and the checkability did not. **The prose was not edited**: that sentence is a verified doc quotation in
 `quote_mismatch_evidence.json`, so rewriting its numerals would falsify the citation while every validator
@@ -2774,7 +2774,9 @@ in the removal set, so both still recompute 9,450, and the option-unlock 2,150 r
 PowerUps at all. Negative control: `PU-C01 :: ranks[0].price_hyper_gold` 50 → 60 → **FAIL**, "PowerUp rank
 prices sum to 9460 Hyper Gold across 58 rank rows, expected 9450".
 
-**A28 is now two layers, and the second one is the point: names are widenable forever, values are not.**
+**A31 is now two layers, and the second one is the point: names are widenable forever, values are not.**
+*(`A31` is this rule; it was `A28` until the merge with master collided with PR #12's manifest rule of the
+same name — see "Assertion-label collision resolved" near the end of this document for the mapping.)*
 The word-class widening below is kept as the record of how the name layer got where it is, but **widening
 word lists was the wrong response to the hole and has stopped.** Nine drafts of a name rule were defeated
 by nine semantic-neighbour probes; widening them would be defeated by a tenth probe chosen against the new
@@ -2824,7 +2826,7 @@ computed ratio is 1 : 40 : 668 at site, file and scope radius, and an exception 
 not auditable. The honest claim is "indifferent to name, unit and arity within the derivation site", and that is
 now what the code, the tool README and this record all say.
 
-### Ruling 46 — the A28 value layer's own review pass: two blockers, both of them "the check did not run"
+### Ruling 46 — the A31 value layer's own review pass: two blockers, both of them "the check did not run"
 
 The value layer shipped with no review pass behind it. It got one, and the two defects it found are the
 same shape: **a guard that reported a limit it did not have.** Both are now fixed and controlled.
@@ -2869,7 +2871,7 @@ and both tools still exited **0**.
 
 A30 does this correctly sixty lines away — `stale = sorted(set(CSV_MIRROR_ROUNDED) - declared_used)`,
 computed against the current tree, where only an exception the scan actually *reached* counts as used. That
-pattern is copied into A28 in both tools, in two halves: **unused on the sweep ref** (it suppresses nothing)
+pattern is copied into A31 in both tools, in two halves: **unused on the sweep ref** (it suppresses nothing)
 and **no longer colliding in the worktree** (its justification stopped being true, read from disk, not from
 the pinned blob). Control, the same injection: `rank_count` `0 → 1` now FAILs `verify_content.py`
 ("1 declared value-collision exception(s) no longer suppress anything on this tree") **and** the generator
@@ -2877,7 +2879,7 @@ the pinned blob). Control, the same injection: `rank_count` `0 → 1` now FAILs 
 
 **Finding 3 — four declared counts were written and never compared.** `total_removed`, `family_count`,
 `declared_family_count` and `declared_total_removed` were produced by the generator and read by nothing in
-`verify_content.py`; `grep -n declared verify_content.py` returned no hit anywhere in the A28/A29 code. So
+`verify_content.py`; `grep -n declared verify_content.py` returned no hit anywhere in the A31/A29 code. So
 `verify_content.py` **alone** passed every vacuity injection. All four are now asserted in
 `verify_content.py`, against literals restated there on purpose — a count read only from the file it is meant
 to police cannot police it — together with per-family record-emptiness and a live scope check. Five
@@ -2896,10 +2898,10 @@ alone:
 **file-integrity** check: it fails for any edit at all, including a comment, and says nothing about whether
 the rule has content. The rule now says it.
 
-**What A28 still does not do.** The name layer catches a rename only within its own word class; the value
+**What A31 still does not do.** The name layer catches a rename only within its own word class; the value
 layer catches relocation only within the derivation site. Neither makes reintroduction impossible, and the
 three places that previously claimed otherwise have been corrected — `verify_content.py`'s assertion table
-("so a rename cannot reintroduce the field under a new spelling"), its A28 failure message ("so a rename
+("so a rename cannot reintroduce the field under a new spelling"), its A31 failure message ("so a rename
 does not evade it"), and the tool README's A20 paragraph ("so that a *rename* inside a covered directory
 cannot slip past"). All three were false in the same way, and the notes had already recorded the correct
 limitation for A20 under Ruling 27 — "a value injected under an unmatched name passes" — so the code
@@ -2915,7 +2917,7 @@ to use: **grep the repository for the assertion's substance, not the file you la
 found a stale "166-element prediction" and a stale "nine guards"/"the other eight" pair describing the
 current rule set, both left behind when 166 became 115 and nine became six.
 
-**The history: A28 was nine rules with nine scopes, for A20's reason, and its word classes came out of a
+**The history: A31 was nine rules with nine scopes, for A20's reason, and its word classes came out of a
 failed control.**
 The first draft of the mining-site rule was `total|jackpot`; the negative control renamed
 `total_payout_per_map` to `aggregate_payout_per_map` and **passed**. The four aggregate-total families now
@@ -4711,6 +4713,57 @@ onward"; the audit that establishes it is `git diff 13ad963 -- <file> | grep '^+
 spellings that name no document section, and it now returns exactly one line — the sentence above that names
 the retired form.
 
+### Assertion-label collision resolved — `A28` (this branch) → **`A31`**
+
+**The mapping, stated once and plainly: the derived-value-family rule was `A28` and is now `A31`.** Every
+occurrence in this document, in `verify_content.py`, in `derive_derived_value_expectations.py`, in
+`expected_derived_value_removals.json` and in the tool `README.md` has moved. `A28` in this repository now
+means exactly one rule: **master's definition `(relative_path, id)` manifest**, from PR #12.
+
+**Why there were two.** Two streams claimed the label in parallel and neither could see the other. This
+branch's derived-value pass added `A28`, `A29` and `A30`; master's PR #12 added `A28` for the manifest. The
+merge (`b7aea04`) brought both into one file under one label and left a visible banner between the blocks
+rather than deciding. Enumerated at the merge-base rather than assumed: master added exactly `{A28}`, this
+branch added `{A28, A29, A30}`, and the intersection is `{A28}` — **`A28` was the only collision**, so `A29`
+and `A30` are this branch's alone and did not move.
+
+**Why this side moved and not master's.** Master's `A28` is merged and referenced on the trunk — from its own
+`A21` row, the manifest section of `verify_content.py`, the tool `README.md`, `content/README.md` and
+`.gitattributes`. **An identifier that has shipped does not move**, which is the same principle the content
+IDs follow and the reason `stem == id` was rejected in favour of a recorded pair. This branch's label had not
+shipped. Two rules under one label is a defect that compounds with every new reference, so it was fixed at
+the merge instead of deferred.
+
+**`A31`, and one label rather than two.** `A31` is the next unused number: the labels in use are `A1`–`A30`
+(plus `A24a`/`A24b` as internal sub-parts of `A24`), verified by enumeration across the whole repository, not
+assumed. The rule's two layers — NAME and VALUE — stay under the single label they already shared, because
+they share one expectation file, one mandate set and one summary heading, and because `A24a`/`A24b` is this
+file's precedent for naming the internal parts of one row rather than promoting them to rows. Splitting them
+would also make the mapping from the review's `A28` ambiguous.
+
+**A live review comment on PR #10 still says `A28` and cannot be edited.** That is why the mapping is
+recorded in three places a reader can reach from that comment — here, in the `A31` row of
+`verify_content.py`'s assertion table, and where the merge banner used to sit between the two blocks — rather
+than only in the commit message.
+
+**The rename was verified by re-running a negative control per layer under the new label, not by reading the
+diff.** A find-and-replace can move a name and leave the rule attached to nothing, so both layers were made
+to fail on purpose and the failing text was read for the new label:
+
+- **Layer 1 (NAME), isolated by choosing a value the pass did not remove.** `BOSS-01 ::
+  ability.charge_speed.world_speed_m_per_s = 7.7` → **FAIL**, "`A31` 1 field(s) under `content/enemies/` +
+  `content/bosses/` hold a 'enemy and boss world speed' value … `['content/bosses/BOSS-01.json.
+  ability.charge_speed.world_speed_m_per_s = 7.7']`", exit 1. The value layer stayed `ok`, which is what
+  makes this layer 1's control and not both layers'.
+- **Layer 2 (VALUE), isolated by choosing a name the word class does not carry.** the removed
+  `5.4` put back inside its own derivation site as `BOSS-01 :: ability.charge_speed.tuning_scalar` →
+  **FAIL**, "`A31` value layer: 1 numeric leaf/leaves carry a value this pass removed as a 'enemy and boss
+  world speed', inside that value's own derivation site and not as one of its operands … `['content/bosses/
+  BOSS-01.json.ability.charge_speed.tuning_scalar = 5.4 (the removed
+  ability.charge_speed.world_speed_m_per_s)']`", exit 1. The name layer stayed `ok`.
+
+Both edits were reverted and the file is byte-identical to `b7aea04`; the suite returns to PASS, 0 failures.
+
 ### Findings still open after this pass
 
 | Finding | Owner needed |
@@ -4719,11 +4772,12 @@ the retired form.
 | `docs/40` § *Analytical* assigns "Recalculate DPS estimates" without stating a derivation covering the 45. They partition into **8 rules** — 1 for `sustained_30_dps`, 6 for `burst_10_dps` by the warmup families `docs/70` § *Opening burst and sustained DPS* already names, and 1 shape for `favorable_horde_dps` whose per-weapon `k` is stored nowhere. That section should name the families per rule and stop assigning `favorable_horde_dps`, which `docs/70` § *Horde damage throughput* defines as a measurement. | document owner (`docs/technical/40`, `docs/70`) |
 | `favorable_horde_dps` is an analytic placeholder, not a derivation: `docs/71` § *Base Weapon Summary* states every simultaneous-victim count and says "benchmark-scene captures supersede it once a playable build exists". `docs/40` § *Analytical* should stop assigning it to the compiler. *(An earlier draft of this table said the counts were authored nowhere — that was false; they are in `docs/71` § *Base Weapon Summary*.)* | document owner (`docs/70`, `docs/71`) |
 | **Three writers on the survivability report, and no settled authority.** `docs/data/contact-damage-pressure.csv`, the `damage_pressure` blocks in `content/`, and the compiler (`docs/40` § *Source-of-truth boundary*, § *Enemies and bosses*) all carry it. **Deleting any copy silently decides which survivor is authoritative** — a decision nobody has made, and one a deduplication pass must not take as a side effect. Needs a deliberate answer naming the owner; until then all copies stay and A30 asserts the two stored ones agree. *(The tautology argument once offered for this is withdrawn — the CSV supplies an independent comparand regardless.)* | document owner (`docs/technical/40`) |
-| **No written policy for a container the removal pass empties.** This pass empties no container *of its last member*, but it leaves **13** with no numeric leaves, which is what empties their A28 guard (row below); and the earlier draft answered the question two ways at once — dropped an emptied array, kept four `{"purchases": n}` object shells. Needs one rule before the next removal pass. | validator stream |
-| A28's value layer has a **derivation-site radius**, chosen because the computed coincidence ratio is 1 : 40 : 668 at site, file and scope radius. Relocation outside the site still passes. Widening the radius needs a way to classify magnitude coincidences that is not a hand-written exception list. | validator stream |
-| **A28's value layer has an EMPTY guard for 13 of the 115 removed values** — their container was left with no numeric leaves at all, so the layer searches nothing for them and only a leaf reappearing inside that same object could fail it. Asserted and printed (`EMPTY_SITE_GUARD_RECORDS`) rather than fixed: fixing it means widening the radius for exactly those records, which is the same unsolved problem as the row above. | validator stream |
+| **No written policy for a container the removal pass empties.** This pass empties no container *of its last member*, but it leaves **13** with no numeric leaves, which is what empties their A31 guard (row below); and the earlier draft answered the question two ways at once — dropped an emptied array, kept four `{"purchases": n}` object shells. Needs one rule before the next removal pass. | validator stream |
+| A31's value layer has a **derivation-site radius**, chosen because the computed coincidence ratio is 1 : 40 : 668 at site, file and scope radius. Relocation outside the site still passes. Widening the radius needs a way to classify magnitude coincidences that is not a hand-written exception list. | validator stream |
+| **A31's value layer has an EMPTY guard for 13 of the 115 removed values** — their container was left with no numeric leaves at all, so the layer searches nothing for them and only a leaf reappearing inside that same object could fail it. Asserted and printed (`EMPTY_SITE_GUARD_RECORDS`) rather than fixed: fixing it means widening the radius for exactly those records, which is the same unsolved problem as the row above. | validator stream |
 | **The `docs/72` versus `docs/31` Razorling diameter question** — `0.50 M`, or `0.62 × 0.80 = 0.496 M`? Evidence recorded in `CSV_MIRROR_ROUNDED`, including which arguments are non-discriminating and why. A30 fails in both directions while it is open, so holding is safe. | design owner (`docs/31`, `docs/72`) |
-| A20 still has **no value layer** — it is key-name patterns only, so the limitation Ruling 27 records for it still stands in full. **The design to copy is A28's value layer *after it has been attacked and reviewed*, not merely after it shipped.** It is new machinery with no review pass behind it; replicating an unreviewed design into a second checker doubles the surface of any mistake in it, which is why A20's value layer was deliberately kept out of this pass rather than forgotten. Whoever picks this up should copy something that has been tested, not something that passed. | validator stream, after A28 layer 2 review |
+| A20 still has **no value layer** — it is key-name patterns only, so the limitation Ruling 27 records for it still stands in full. **The design to copy is A31's value layer *after it has been attacked and reviewed*, not merely after it shipped.** It is new machinery with no review pass behind it; replicating an unreviewed design into a second checker doubles the surface of any mistake in it, which is why A20's value layer was deliberately kept out of this pass rather than forgotten. Whoever picks this up should copy something that has been tested, not something that passed. | validator stream, after A31 layer 2 review |
+| **Assertion labels have no minted-label table, which is the cause of the `A28` collision and will cause the next one.** A label is allocated by whoever adds an assertion, on their own branch, from whatever number looks free *there* — so two branches adding rules in parallel both pick the same next number, and nothing detects it until they meet. `A28` → `A31` only got caught because it arrived through a merge that put the two blocks in one file; a collision between two branches that touch different regions, or one landing before the other is written, produces two rules under one label with no banner and no reader noticing. **The project already solved exactly this for content IDs**: `docs/technical/40` carries a minted-prefix table and a check reads it, so a prefix is *granted* rather than guessed. The analogue is a **minted assertion-label table** — one place where a label is granted, with the rule that a new assertion takes the next *unallocated* label from the table rather than the next number that looks free on the branch you happen to be on, and a check that fails when the table and the assertions disagree (a label in the table with no assertion, an assertion with no table row, or one label on two rules). Deliberately **not built in the PR that hit the collision**: minting a table is a convention change that needs the document owner's agreement on where the table lives and what the check reads, and doing it inside a rename pass would ship an unreviewed convention alongside a mechanical fix. | validator stream + document owner (`docs/technical/40`) |
 | `DAT-004` behavior-registry migration is **14 sites**, all `behavior_kind` on the ten enemies and four bosses, each holding prose where a token will go. Blocked on the registry being re-keyed by field space *and* token, because a flat namespace collides in this tree (`UTL-E1`'s duplicated string; `"damage"` at 36 sites under 7 leaf names). 65 prose sites across all six `CTR-CNT-002` spaces is the upper bound. | schema stream / registry owner |
 | `obstacle_free_radius_in_mining_zone_diameters` — radius or diameter? Factor of two. | document owner (`docs/51`) |
 | `REL-07 :: effects.explosion_area_multiplier` is still `null` from the same sentence whose sibling was omitted | integration owner |

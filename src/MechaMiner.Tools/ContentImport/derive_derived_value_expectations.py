@@ -10,7 +10,7 @@ nothing about whether the deletion was the intended one. So the order is fixed:
   commit 1  this script + the expectation file it writes, touching ZERO files
             under content/. `git show <commit 1> --stat` is the ordering proof:
             at that commit there is no diff to fit the expectation to.
-  commit 2  the removals, plus A28/A29 in verify_content.py, which measure the
+  commit 2  the removals, plus A31/A29 in verify_content.py, which measure the
             numeric multiset the tree actually lost and assert SET EQUALITY with
             the committed expectation - per element, not per count.
 
@@ -274,8 +274,8 @@ def numeric_leaves(obj, prefix: str = ""):
 #   (file, pointer, value, operands, arithmetic, recomputed)
 # and carries:
 #   doc      - the docs/ line that assigns the derivation to the compiler
-#   scopes   - the content/ directories A28's rule covers
-#   segment  - the pointer-SEGMENT regex A28 matches on. It is matched against
+#   scopes   - the content/ directories A31's rule covers
+#   segment  - the pointer-SEGMENT regex A31 matches on. It is matched against
 #              every NAME in the pointer, not only the leaf key, because three
 #              of these families store the number under a generic leaf name
 #              (`amount`, `minimum`, `maximum`) inside a specifically-named
@@ -1103,7 +1103,7 @@ PULLED_FROM_THIS_PASS = [
             "leaving them. All 14 values are still stated in the same file, in prose: "
             "`defining_prose` reads 'The first ten prices are 10, 30, 60, 100, 150, 210, 280, 360, "
             "450, and 550 ore. Cumulative cost reaches 100 after three purchases, 200 after four, "
-            "350 after five, and 2,200 after ten.' A28 matches numeric leaves, so removing the "
+            "350 after five, and 2,200 after ten.' A31 matches numeric leaves, so removing the "
             "leaves moved 14 checkable numbers somewhere no assertion looks. Editing the prose is "
             "NOT the fix and was not done: that sentence is a verified doc quotation in the "
             "quote-evidence artifact, so rewriting its numerals would falsify the citation while "
@@ -1144,7 +1144,7 @@ def pointer_segments(pointer: str) -> list[str]:
 
 
 def rule_matches(family: dict, pointer: str) -> bool:
-    """A28's matcher: a family's rule against a pointer's SEGMENT NAMES.
+    """A31's matcher: a family's rule against a pointer's SEGMENT NAMES.
 
     The allowlist is consulted on the LEAF segment, which is A20's semantics
     (`if key in DERIVED_FOOTPRINT_FIELD_ALLOWED: continue`). An allowlisted leaf
@@ -1173,7 +1173,7 @@ OPERAND_RE = re.compile(r"(content/[\w./-]+\.json)::([A-Za-z_][\w.\[\]]*)")
 def operand_pointers(record: dict) -> list[str]:
     """The record's operands as machine-readable (file, pointer) strings.
 
-    A28's value-keyed gate needs to know which leaves ARE the operands of a
+    A31's value-keyed gate needs to know which leaves ARE the operands of a
     derived value, because an operand holding the same value as the thing derived
     from it is not a second writer. `ranks[0].cumulative_cost_hyper_gold` is the
     sum of exactly one price, so it equals `ranks[0].price_hyper_gold` by
@@ -1224,7 +1224,7 @@ def is_in_site(leaf: str, site: str) -> bool:
 def value_collision_hits(
     family: dict, records: list[dict], tree: Tree
 ) -> tuple[list[tuple], set]:
-    """A28's VALUE-KEYED gate, measured on the sweep-ref tree.
+    """A31's VALUE-KEYED gate, measured on the sweep-ref tree.
 
     Asks the question the name rules cannot: is there a numeric leaf AT THE
     DERIVATION SITE carrying the derived value? The site is the object that held
@@ -1358,7 +1358,7 @@ def build(sweep_ref: str) -> dict:
             if not rule_matches(family, record["pointer"]):
                 failures.append(
                     f"{record['file']} :: {record['pointer']} is in family "
-                    f"'{family['name']}' but does not match its own A28 segment rule "
+                    f"'{family['name']}' but does not match its own A31 segment rule "
                     f"/{family['segment']}/ - the assertion would not catch its return."
                 )
                 continue
@@ -1376,7 +1376,7 @@ def build(sweep_ref: str) -> dict:
 
         # The rule must match the family's removal set and NOTHING ELSE in its
         # scope on the sweep ref. A rule that also matches a surviving authored
-        # field would make A28 unlandable; a rule that matches fewer than the
+        # field would make A31 unlandable; a rule that matches fewer than the
         # removal set would let part of the family return.
         expected_pointers = {(r["file"], r["pointer"]) for r in emitted}
         matched = set()
@@ -1414,7 +1414,7 @@ def build(sweep_ref: str) -> dict:
             over = sorted(matched - expected_pointers)
             under = sorted(expected_pointers - matched)
             failures.append(
-                f"family '{family['name']}' A28 rule /{family['segment']}/ over "
+                f"family '{family['name']}' A31 rule /{family['segment']}/ over "
                 f"{family['scopes']} matches {len(matched)} numeric leaf/leaves on {sweep_ref[:12]} "
                 f"but the removal set has {len(expected_pointers)}; "
                 f"extra={over[:6]} missing={under[:6]}"
@@ -1465,7 +1465,7 @@ def build(sweep_ref: str) -> dict:
 
     if not families:
         failures.append(
-            "FAMILIES is empty. A28 would report '(nothing to report)' and PASS under a heading "
+            "FAMILIES is empty. A31 would report '(nothing to report)' and PASS under a heading "
             "that promises the derived-value families, which is a vacuous pass."
         )
     if len(families) != DECLARED_FAMILY_COUNT:

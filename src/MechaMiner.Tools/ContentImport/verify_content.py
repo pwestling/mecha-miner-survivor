@@ -395,7 +395,32 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       Mandate: content/quote-verification-audit.md (adopted rule and its
       stated corpus dependency)                                     FAILURE
 
-  A28 No definition carries a compiler-derived value from any of the SIX
+  A31 RENAMED FROM A28. If you arrived here from a review comment, a commit
+      message or a branch note that says "A28" and means the derived-value
+      families, this row is that rule and A31 is its label. The number is out
+      of sequence with its neighbours for that reason and not by accident.
+      WHY IT MOVED: two streams independently claimed A28. This branch's
+      derived-value-family rule (PR #10) and the definition (path, id)
+      manifest (master, PR #12) both wrote "A28", and the merge that brought
+      master in put both under one label. Master's shipped: it is on the trunk
+      and referenced from its own A21 row, this file's manifest section, the
+      tool README, content/README.md and .gitattributes. An identifier that
+      has shipped does not move - the same principle content IDs follow. This
+      branch's label had not shipped, so this is the side that moved. A28
+      below is master's and keeps its number. Two rules under one label is a
+      defect that compounds with every new reference, so it was fixed at the
+      merge rather than deferred.
+      ONE LABEL, NOT TWO, for the two layers below: the layers share one
+      expectation file, one mandate set and one summary heading, and the
+      file's own precedent for a rule with named internal parts is A24a/A24b
+      - sub-parts of one row, not rows of their own. Splitting them into two
+      table numbers would also make the mapping from the review's "A28"
+      ambiguous, which is the thing this note exists to prevent.
+      THE CAUSE IS NOT FIXED HERE. Labels are still allocated by whoever adds
+      one, on their own branch, so the next two parallel additions collide the
+      same way - see the minted-assertion-label-table open item in
+      content/transcription-notes.md.
+      No definition carries a compiler-derived value from any of the SIX
       families removed by the derived-value pass. SIX RULES WITH SIX
       DIFFERENT SCOPES, for the same reason A20 is two rules with two
       scopes: some of these patterns flag legitimately AUTHORED fields in
@@ -517,17 +542,19 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       ("Validation derives world speeds/footprints and compares them with
       the survivability report") and :203 ("Reports compare with accepted
       gameplay tables")                                     FAILURE
-  !! ASSERTION-LABEL COLLISION, UNRESOLVED AND DELIBERATELY VISIBLE. Two
-     streams independently claimed the label A28 while this branch was under
-     review: the six derived-value families above (this branch, PR #10) and
-     the definition (path, id) manifest below (master, PR #12). Both rules
-     are real, both are asserted, and both are kept intact by this merge.
-     Only the LABEL collides. Renumbering either side is a mechanical
-     find-and-replace, but it is not this merge's call to make: renumbering
-     master's breaks the reference in its own A21 docstring and README on
-     the trunk, and renumbering this branch's three dangles every reference
-     in the review currently in flight. Escalated with the merge. Until it
-     is decided, read A28 by its table title, not by its number.
+  LABEL MAP: A28 (this branch, before the merge with master) -> A31. Two
+     streams independently claimed A28 - this branch's six derived-value
+     families and the definition (path, id) manifest immediately below, which
+     came from master's PR #12. The A28 below is master's and is the one that
+     keeps the number, because it has shipped on the trunk. If a review
+     comment, commit message or note says "A28" and describes derived-value
+     families, name layers, value layers or the 115 removed values, it means
+     A31 above. Enumerated at the merge: master's PR added exactly {A28} and
+     this branch added {A28, A29, A30}, so A28 was the only collision - A29
+     and A30 are this branch's alone and did not move.
+     The allocation problem behind it is recorded as an open item (a minted
+     assertion-label table) in content/transcription-notes.md and is
+     deliberately not built in this PR.
 
   A28 The definition population's (relative_path, id) PAIRS equal the
       committed manifest at content-definition-manifest.txt, compared in both
@@ -2642,7 +2669,7 @@ def check_derived_footprint_fields(docs: dict[Path, object]) -> list[tuple]:
 
 
 # --------------------------------------------------------------------------
-# A28 / A29 - the six derived-value families the compiler owns.
+# A29 / A31 - the six derived-value families the compiler owns.
 #
 # The rules live in expected_derived_value_removals.json, which was committed in
 # its own commit BEFORE any content/ file changed. Reading them from there rather
@@ -2654,7 +2681,7 @@ def check_derived_footprint_fields(docs: dict[Path, object]) -> list[tuple]:
 DERIVED_EXPECTATION = Path(__file__).resolve().parent / "expected_derived_value_removals.json"
 
 # The two counts the generator declares, restated here ON PURPOSE. This is the
-# one place in the A28/A29 code where duplication is right: everything else is
+# one place in the A29/A31 code where duplication is right: everything else is
 # read from the expectation file so the assertion and the prediction cannot drift,
 # but a count read only from the file it is meant to police cannot police it. An
 # empty `families` list, a family with no records, and the counts overwritten with
@@ -2665,7 +2692,7 @@ DECLARED_FAMILY_COUNT = 6
 DECLARED_TOTAL_REMOVED = 115
 
 # How many removed values sit in a container the removal left with no numeric
-# leaves at all, so that A28's value layer searches nothing for them. Asserted,
+# leaves at all, so that A31's value layer searches nothing for them. Asserted,
 # not remarked on: emptying a container empties its guard, and the number must not
 # grow without someone deciding that it may. The 13 are the `{}` and
 # `{"resource": "common ore"}` residues under content/resources/,
@@ -2677,7 +2704,7 @@ EMPTY_SITE_GUARD_RECORDS = 13
 def load_derived_expectation() -> dict:
     if not DERIVED_EXPECTATION.exists():
         fail(
-            f"A28/A29: {rel(DERIVED_EXPECTATION)} is missing. It is the committed prediction of "
+            f"A29/A31: {rel(DERIVED_EXPECTATION)} is missing. It is the committed prediction of "
             f"exactly which derived values this tree no longer authors, and both rules read their "
             f"scopes and patterns from it. Regenerate it with "
             f"derive_derived_value_expectations.py."
@@ -2687,12 +2714,12 @@ def load_derived_expectation() -> dict:
 
 
 def check_derived_expectation_counts(docs: dict[Path, object]) -> list[tuple]:
-    """A28/A29 vacuity guards - the four declared counts, asserted HERE.
+    """A29/A31 vacuity guards - the four declared counts, asserted HERE.
 
     `total_removed`, `family_count`, `declared_family_count` and
     `declared_total_removed` were written by the generator and read by nothing in
     this file: `grep -n declared verify_content.py` returned no hit anywhere in the
-    A28/A29 code. verify_content.py on its own therefore passed every vacuity
+    A29/A31 code. verify_content.py on its own therefore passed every vacuity
     injection - an empty `families` list, a scope pointed at a directory holding no
     definitions, every family's `records` emptied, an empty
     `removed_numeric_multiset` with `sweep_ref` repinned to HEAD, and the counts
@@ -2785,7 +2812,7 @@ def check_derived_expectation_counts(docs: dict[Path, object]) -> list[tuple]:
            for label, expected, actual, good in checks if not good]
     if bad:
         fail(
-            f"A28/A29 {len(bad)} declared count(s)/vacuity guard(s) in "
+            f"A29/A31 {len(bad)} declared count(s)/vacuity guard(s) in "
             f"{rel(DERIVED_EXPECTATION)} do not hold. These are the rows that stop the rule from "
             f"passing over nothing, so a mismatch is a failure of the rule and not only of the "
             f"file: {bad}"
@@ -2800,7 +2827,7 @@ def pointer_segments(pointer: str) -> list[str]:
 
 
 def derived_rule_matches(family: dict, pointer: str) -> bool:
-    """A28's matcher: a family's rule against a pointer's SEGMENT NAMES.
+    """A31's matcher: a family's rule against a pointer's SEGMENT NAMES.
 
     The allowlist is consulted on the LEAF segment, which is A20's semantics
     (`if key in DERIVED_FOOTPRINT_FIELD_ALLOWED: continue`) - an allowlisted leaf
@@ -2846,7 +2873,7 @@ def numeric_pointer_leaves(obj, prefix: str = ""):
 
 
 def check_derived_family_absence(docs: dict[Path, object]) -> list[tuple]:
-    """A28 - none of the six removed families may reappear.
+    """A31 - none of the six removed families may reappear.
 
     Two layers. This is the NAME layer, over pointer segment names; it catches a
     rename only within its own word class and cannot make one impossible. The
@@ -2875,7 +2902,7 @@ def check_derived_family_absence(docs: dict[Path, object]) -> list[tuple]:
         )
         if hits:
             fail(
-                f"A28 {len(hits)} field(s) under {' + '.join(family['scopes'])} hold a "
+                f"A31 {len(hits)} field(s) under {' + '.join(family['scopes'])} hold a "
                 f"'{family['name']}' value, which the compiler owns per "
                 f"{family['doc_assignment'].split(' - ')[0]}. Matched on pointer segment names "
                 f"/{family['pointer_segment_rule']}/"
@@ -2927,7 +2954,7 @@ def is_in_site(leaf: str, site: str) -> bool:
 
 
 def check_derived_family_values(docs: dict[Path, object]) -> list[tuple]:
-    """A28's VALUE layer, over the CURRENT tree - the half a name rule cannot do.
+    """A31's VALUE layer, over the CURRENT tree - the half a name rule cannot do.
 
     For every value this pass removed, no non-operand numeric leaf inside its own
     derivation site may carry that value. Compared exactly, as Fractions, with no
@@ -2999,7 +3026,7 @@ def check_derived_family_values(docs: dict[Path, object]) -> list[tuple]:
         )
         if hits:
             fail(
-                f"A28 value layer: {len(hits)} numeric leaf/leaves carry a value this pass removed "
+                f"A31 value layer: {len(hits)} numeric leaf/leaves carry a value this pass removed "
                 f"as a '{family['name']}', inside that value's own derivation site and not as one "
                 f"of its operands. Matched on the NUMBER, so a rename, a relocation within the "
                 f"site, a new unit suffix and a scalar-to-list change all fail it. If a hit is a "
@@ -3027,7 +3054,7 @@ def check_derived_family_values(docs: dict[Path, object]) -> list[tuple]:
     )
     if stale:
         fail(
-            f"A28 value layer: {len(stale)} declared value-collision exception(s) no longer suppress "
+            f"A31 value layer: {len(stale)} declared value-collision exception(s) no longer suppress "
             f"anything on this tree, so the justification recorded for each is no longer true. A "
             f"stale exception silently widens the gate - delete it from "
             f"VALUE_COLLISION_EXCEPTIONS in the generator and regenerate: {stale}"
@@ -3048,7 +3075,7 @@ def check_derived_family_values(docs: dict[Path, object]) -> list[tuple]:
     )
     if blind != EMPTY_SITE_GUARD_RECORDS:
         fail(
-            f"A28 value layer: {blind} removed value(s) have a derivation site holding no numeric "
+            f"A31 value layer: {blind} removed value(s) have a derivation site holding no numeric "
             f"leaves, so this layer searches nothing for them; "
             f"EMPTY_SITE_GUARD_RECORDS declares {EMPTY_SITE_GUARD_RECORDS}. This is not a pass/fail "
             f"about the tree's correctness - it is the SIZE OF THE BLIND SPOT, and it is asserted so "
@@ -4269,7 +4296,7 @@ def main() -> int:
         footprint_rows,
     )
     table(
-        "A28/A29 declared counts and vacuity guards (asserted here, not only by derive --check)",
+        "A29/A31 declared counts and vacuity guards (asserted here, not only by derive --check)",
         ("check", "expected", "actual", "status"),
         derived_counts_rows,
         (
@@ -4280,14 +4307,14 @@ def main() -> int:
         ),
     )
     table(
-        "A28 layer 1 of 2 - NAME: no derived-value family reappears under a matching name "
+        "A31 layer 1 of 2 - NAME: no derived-value family reappears under a matching name "
         "(six rules, six scopes; catches a rename only within its own word class)",
         ("check", "expected", "actual", "status"),
         derived_family_rows,
         derived_family_notes,
     )
     table(
-        "A28 layer 2 of 2 - VALUE: no removed value sits at a non-operand leaf inside its own "
+        "A31 layer 2 of 2 - VALUE: no removed value sits at a non-operand leaf inside its own "
         "derivation site (exact Fractions; indifferent to name, unit suffix and arity)",
         ("check", "expected", "actual", "status"),
         derived_value_rows,

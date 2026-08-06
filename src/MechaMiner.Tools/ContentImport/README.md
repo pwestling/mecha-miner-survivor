@@ -129,11 +129,19 @@ It is checked on key names rather than values, which catches a *rename inside th
 pattern* and nothing beyond it. **It does not catch a rename generally** — an earlier draft of this
 paragraph said it did, and that was false: a rename to a name the pattern does not match is exactly the
 case that passes, which is the sentence immediately above. Both claims are narrower than "fails the
-build if the field reappears under any name". A28's value layer is the shape that closes this for the
+build if the field reappears under any name". A31's value layer is the shape that closes this for the
 families it covers; A20 has no value layer yet, and adding one is the next design step.
 
-**A28 — the six derived-value families, six rules, six scopes, two layers.** A20 generalised: **115**
-stored numbers across **six** families were removed because the compiler owns them, and A28 asserts each
+**A31 — the six derived-value families, six rules, six scopes, two layers.**
+*Renamed from A28.* This rule was labelled `A28` for the whole of PR #10's first two review passes, and
+review comments that cannot be edited still say `A28`. It moved because merging `master` brought in PR
+#12's definition (path, id) manifest, which had independently claimed `A28` — that rule is on the trunk
+and referenced from `.gitattributes`, `content/README.md` and this file, so it kept the number and this
+one moved. `A28` in this document now means only the manifest rule (below, "Why the manifest and not
+`stem == id`"). The label-allocation problem behind the collision is recorded as an open item in
+`content/transcription-notes.md` and is deliberately not fixed here.
+A20 generalised: **115**
+stored numbers across **six** families were removed because the compiler owns them, and A31 asserts each
 family cannot return.
 
 **Six, not the nine an earlier draft of this pass claimed, and the arithmetic is 166 − 51 = 115.** Three
@@ -143,7 +151,7 @@ families were built, verified to reproduce exactly, and then *pulled*:
 | --- | ---: | --- |
 | damage-pressure survivability block | 32 | **Three writers on one report and no settled authority**, so deleting a copy silently decides which survivor is authoritative — a decision nobody has made, taken as a side effect of a deduplication pass. The three are `docs/data/contact-damage-pressure.csv`, the content block, and the compiler `docs/40` § *Source-of-truth boundary* and § *Enemies and bosses* say derives it. *(An earlier draft argued removal would make the `docs/40` § *Enemies and bosses* comparison a tautology. Withdrawn: the CSV supplies an independent comparand regardless — A30 now asserts the two agree. The reason above holds whether or not another mirror exists.)* |
 | resonant-value hit count | 5 | Same — rows of that same report, also stated in full at `docs/72` § *Damage Pressure Reference*. |
-| stat upgrade price curve | 14 | **Would move checkable numbers into an unchecked string.** All 14 are restated in prose in the same file (`defining_prose`), and A28 only matches numeric leaves. Editing the prose is *not* the fix and was not done — it is a verified doc quotation, so rewriting its numerals would falsify the citation while every validator stayed green. |
+| stat upgrade price curve | 14 | **Would move checkable numbers into an unchecked string.** All 14 are restated in prose in the same file (`defining_prose`), and A31 only matches numeric leaves. Editing the prose is *not* the fix and was not done — it is a verified doc quotation, so rewriting its numerals would falsify the citation while every validator stayed green. |
 
 Reproducibility was never the issue for any of the three: all 51 reproduce exactly. **Reproducibility is
 orthogonal to ownership** — it says nothing about who authors a value or which copy is authoritative, which
@@ -218,7 +226,7 @@ looked at one copy. **Grep for the claim, not for the file.** The differences:
   leaves and could not fail on any injection at all. A root-level leaf's containing object is the
   document.
 
-**What A28 still does not do, after the widening.** A word class is still a word class. The **six**
+**What A31 still does not do, after the widening.** A word class is still a word class. The **six**
 surviving guards moved from "catches renames" to "catches renames and the obvious semantic neighbours"; a
 further probe chosen adversarially against the *new* lists would pass some of them. (The nine-guard counts
 in the paragraph above are history — they describe the draft the probes were run against, before three
@@ -457,14 +465,14 @@ python3 src/MechaMiner.Tools/ContentImport/derive_derived_value_expectations.py 
 
 Enumerates, from a pinned commit SHA rather than `HEAD`, the stored numbers `content/` no longer authors
 because the compiler derives them, and records for each one its operands, its arithmetic, and the
-`docs/` line that assigns the derivation. Its output is the input to A28 and A29 — the rules are not
+`docs/` line that assigns the derivation. Its output is the input to A31 and A29 — the rules are not
 restated in `verify_content.py`, so the assertion and the prediction are one artifact.
 
 A candidate qualifies only if it reproduces **exactly** in `fractions.Fraction`, never in binary float;
 every operand survives the removal; a document assigns the derivation; and no `source_refs` scope prefix
 is left dangling. A stored value that disagrees with its operands is a defect, not a redundancy: the
 script names both numbers and exits non-zero rather than removing it. It also refuses to write unless
-each family's A28 rule matches that family's removal set **and nothing else** in its scope at the sweep
+each family's A31 rule matches that family's removal set **and nothing else** in its scope at the sweep
 ref — a rule that also flagged a surviving authored field would be unlandable, and one that flagged
 fewer would let part of the family return.
 

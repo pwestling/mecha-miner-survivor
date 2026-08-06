@@ -571,8 +571,27 @@ Doc 113 requires a risk review at each M0-M7 gate.
 
 ## Decisions already made
 
-Recorded here so no stream re-litigates them. Each was verified empirically in the
-FND-001 container, not recalled.
+Recorded here so no stream re-litigates them. **They were not all established the same
+way, and the list has grown past the sentence that used to cover it.** An earlier
+revision said "each was verified empirically in the FND-001 container, not recalled",
+which was true of Decisions 1-4 and is not true of the rest:
+
+- Decisions 1-4 were measured in the FND-001 container: versions installed, projects
+  built, exit codes observed. Each names the fixture or gate that holds it today.
+- Decisions 5-7 are design and routing choices, not measurements. There was nothing to
+  measure; what they record is which class, code, and owning package was chosen and why
+  a ninth exit class was rejected.
+- Decision 8's `build.ps1` half is a hand measurement on a host that had `pwsh`, not a
+  container result and not a committed gate. That bullet says so itself.
+- Decisions 9-11 are rules distilled from defects found in this repository's own gates.
+  Each cites the sites it came from; the rules themselves are obligations on future
+  gates and no gate asserts them.
+- Decision 12 is a claim about a commit message, two pull-request reviews, and the
+  absence of a file on any ref. It is established by search, and its own text records
+  that three of the nine items it tables have no gate at all.
+
+So read each decision for how it says it was established. Do not quote this section as
+a block of empirical results.
 
 ### Decision 1 - .NET SDK 10.0.302 with target framework `net8.0`
 

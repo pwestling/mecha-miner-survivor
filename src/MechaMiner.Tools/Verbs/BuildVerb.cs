@@ -131,6 +131,26 @@ internal static class BuildVerb
                 "the accepted project boundary or repository layout is violated; see the step log");
         }
 
+        // Stage 4 exists because of what stage 3 could not tell anyone: for as long
+        // as this repository had nine gate scripts, six of them were invoked by
+        // nothing, and no gate said so. This one asserts the partition -- every gate
+        // script is invoked or explicitly exempted -- so the next unwired script is a
+        // failure rather than an omission. It is here rather than in a script of its
+        // own tier because it is a repository-consistency assertion, it costs about a
+        // second, and `build` is the verb CI reaches first.
+        context.Section("stage 4: assert every gate script is wired or explicitly exempt");
+        CommandResult wiring = context.RunRepositoryScript(
+            "verify-gate-wiring",
+            "build/verify-gate-wiring.sh",
+            scriptArguments: null,
+            timeout: TimeSpan.FromMinutes(5));
+        if (!wiring.Succeeded)
+        {
+            return VerbOutcome.Validation(
+                "a gate script is neither invoked nor explicitly exempted, so it runs only when "
+                + "someone remembers to type it; see the step log");
+        }
+
         return VerbOutcome.Success(
             "build " + configuration.WorkflowName + " (MSBuild " + configuration.MsbuildName
             + ") succeeded with 0 warnings, 0 errors, and an intact project boundary");

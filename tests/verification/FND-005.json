@@ -13,7 +13,8 @@
     "Status is current status. VER-FND-005-008 is 'registered': its second half, a step that never ran while no step reported a failing class, has no evidence yet because no observed run has produced that state.",
     "Observed runs, one scratch branch per control so no run can be mistaken for another. Clean commit a77d5fd, run 31073418621: every step exit class 0. Boundary control b9d0774, run 31073523317: build exit class 4, MMT-4001. Lock control d75514b, run 31073565252: bootstrap exit class 3, MMT-3001. Format control a7945a4, run 31073610902: format-check exit class 4, MMT-4001. Test control 4e4ecb9, run 31073708816: test-fast exit class 4, MMT-4001, 1 failed of 27. Runs are at https://github.com/pwestling/mecha-miner-survivor/actions/runs/<id>; the scratch branches were deleted after observation, so the runs and these commit ids are the record.",
     "The lock control's observed class contradicted this registry's first prediction, and the registry was corrected to the observation rather than the reverse. VER-FND-005-004 originally predicted class 5 at the build step, which is what ./build.sh build alone returns for that commit locally (MMT-5001, NuGet NU1004). In run 31073565252 (commit d75514b) bootstrap stage 3 reached the same locked restore first and classified it MMT-3001, exit class 3. So the two verbs disagreed about one defect: bootstrap called a lock-file/props disagreement a mismatched pinned environment, build called it a build failure, and which class a caller saw depended only on which verb ran first.",
-    "That divergence has since been resolved, in FND-002's BootstrapVerb, in favour of build's class. Doc 100's verb table assigns 'locked restore' to build, so build owns the condition and doc 100 says wrappers 'preserve the owning tool's class'; class 3 is 'missing or mismatched pinned environment' and doc 100 scopes the environment through doctor's 'exact Godot/.NET/Blender/tool/template availability and hashes', which a disagreement between two committed repository files is not. bootstrap's stage-3 restore failure is now class 5 (MMT-5001), the same as build's. Control on this tree: with NUnit's central version changed and the lock files untouched, ./build.sh bootstrap exits 5 MMT-5001 and ./build.sh build exits 5 MMT-5001; with the change reverted bootstrap exits 0. The observation above is left as observed -- run 31073565252 really did report 3 -- because rewriting it would hide the defect that prompted the fix."
+    "That divergence has since been resolved, in FND-002's BootstrapVerb, in favour of build's class. Doc 100's verb table assigns 'locked restore' to build, so build owns the condition and doc 100 says wrappers 'preserve the owning tool's class'; class 3 is 'missing or mismatched pinned environment' and doc 100 scopes the environment through doctor's 'exact Godot/.NET/Blender/tool/template availability and hashes', which a disagreement between two committed repository files is not. bootstrap's stage-3 restore failure is now class 5 (MMT-5001), the same as build's. Control on this tree: with NUnit's central version changed and the lock files untouched, ./build.sh bootstrap exits 5 MMT-5001 and ./build.sh build exits 5 MMT-5001; with the change reverted bootstrap exits 0. The observation above is left as observed -- run 31073565252 really did report 3 -- because rewriting it would hide the defect that prompted the fix.",
+    "A second wiring gap, found while adding the workflow-existence check and fixed the same way. Nine build/verify-*.sh gate scripts existed and three were invoked by anything: verify-architecture.sh from build, verify-godot.sh from godot-import, verify-policies.sh from test-fast. The other six ran only when a person remembered to type them, so every 'all gates green' report in this repository was true about a subset nobody had stated. build/verify-gate-wiring.sh now asserts a partition -- every gate script is invoked or explicitly exempted with a reason -- and build reaches it at stage 4. Each of the six was run first: verify-configurations 93 s, verify-format 212 s, verify-verbs 89 s, verify-wrapper-parity 14 s, verify-godot-runner 25 s all pass standalone, so none is exempted for being broken. verify-godot-runner.sh is now invoked by test-main. The other five are exempted for one demonstrated reason: ./build.sh rebuilds the verb host on every invocation, so a gate whose subject is the wrapper, reached from inside a running verb, makes MSBuild rewrite the assembly the calling verb is executing from. Observed, not assumed: with verify-verbs.sh wired into test-fast its section 1 read an empty verb table and the gate failed; two of them also launch Godot on the way and tripped test-fast's pure-tier tripwire, so the wiring itself would have turned the tier red. Unblocking them is FND-002's: a wrapper dispatch that does not rebuild a host already running."
   ],
   "entries": [
     {
@@ -283,6 +284,40 @@
       },
       "fixtures": [
         "local control: .github/workflows/fast.yml renamed to fast.yml.disabled, then restored"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-005-010",
+      "summary": "Every gate script in the repository is either invoked automatically or listed as deliberately unwired with a reason, and build/verify-gate-wiring.sh fails when a script is neither. The candidate set is enumerated from the filesystem rather than from a list in the script, because a hardcoded roster reproduces the defect one level up: a new script absent from the roster would pass by not being looked at. An empty enumeration fails rather than passing. Three negative controls, all run: a new build/verify-zzz-probe.sh that is neither wired nor listed fails the check with exit 4 and fails ./build.sh build with class 4 MMT-4001; an exemption naming a script that does not exist fails as a stale exemption; and renaming the godot-import verb's call site away from build/verify-godot.sh fails the check by name. The third control also found a real defect in the first version of this gate: it matched any occurrence of the script name, so a diagnostic message that merely named the script counted as running it and the control passed. 'Invoked' now means a complete C# string literal or a shell/YAML command, never a mention.",
+      "task": "TASK-FND-005-001",
+      "requirements": [
+        "TR-BLD-005",
+        "TR-QUA-001"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface",
+        "docs/technical/91-verification-strategy.md#fast-pull-request-suite",
+        "docs/technical/91-verification-strategy.md#negative-control-adequacy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-gate-wiring.sh"
+      },
+      "fixtures": [
+        "local control: build/verify-zzz-probe.sh, neither invoked nor exempt",
+        "local control: an EXEMPT entry naming build/verify-deleted-yesterday.sh, which does not exist",
+        "local control: GodotImportVerb.cs's build/verify-godot.sh call site renamed away"
       ],
       "scenarios": [],
       "evidenceKinds": [

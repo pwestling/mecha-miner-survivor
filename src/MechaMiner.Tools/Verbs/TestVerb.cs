@@ -189,6 +189,25 @@ internal static class TestVerb
 
     private const string EngineTestProject = "tests/MechaMiner.Game.Tests/MechaMiner.Game.Tests.csproj";
 
+    /// <summary>
+    /// Engine-tier gate scripts the main tier runs: (step name, script, what a
+    /// failure means).
+    /// </summary>
+    /// <remarks>
+    /// Only scripts that drive the pinned engine and the SDK directly belong here. A
+    /// gate whose subject is <c>./build.sh</c> itself cannot be reached from any verb:
+    /// the wrapper rebuilds the verb host assembly on every invocation, including the
+    /// one the calling verb is currently executing from.
+    /// <c>build/verify-gate-wiring.sh</c> lists those and says so per script.
+    /// </remarks>
+    private static readonly (string Step, string Script, string Claim)[] MainTierContractGates =
+    {
+        (
+            "verify-godot-runner",
+            "build/verify-godot-runner.sh",
+            "the Godot integration runner's pass/fail/timeout/report contract is broken"),
+    };
+
     /// <summary>Runs the pure tiers and the build-policy fixtures, and launches no Godot process.</summary>
     internal static VerbOutcome RunFastTier(VerbContext context)
     {
@@ -240,7 +259,26 @@ internal static class TestVerb
             return import;
         }
 
-        context.Section("stage 3: Godot engine integration tier");
+        context.Section("stage 3: engine-tier gate scripts");
+
+        // verify-godot-runner.sh drives the pinned engine and the SDK directly, which
+        // is the definition of this tier, and it was previously invoked by nothing at
+        // all: it ran only when a person remembered to type it. It does not touch
+        // ./build.sh, so reaching it from a verb is safe.
+        foreach ((string step, string script, string claim) in MainTierContractGates)
+        {
+            CommandResult gate = context.RunRepositoryScript(
+                step,
+                script,
+                scriptArguments: null,
+                timeout: TimeSpan.FromMinutes(45));
+            if (!gate.Succeeded)
+            {
+                return VerbOutcome.Validation(claim + "; see the " + step + " step log");
+            }
+        }
+
+        context.Section("stage 4: Godot engine integration tier");
         List<TestTally> tallies = new();
         List<string> failures = new();
         VerbOutcome? failure = RunTestProject(context, EngineTestProject, tallies, failures);

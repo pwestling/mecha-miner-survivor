@@ -17,7 +17,9 @@ namespace MechaMiner.Simulation.Events;
 /// </para>
 /// <para>
 /// <b>The sequence is authored data, not the order the buffer happened to receive it in.</b>
-/// <c>VER-SIM-006-003</c> requires two runs that emit the same events in different collection
+/// <c>VER-SIM-006-011</c> - the successor to the retired <c>VER-SIM-006-003</c>, which named a
+/// three-key comparator that no longer exists - requires two runs that emit the same events in
+/// different collection
 /// order to produce identical batches. If the buffer stamped a sequence on arrival, a different
 /// arrival order would produce different sequences and therefore a different batch, and the
 /// ordering rule would be untestable. So the emitting system obtains a sequence from

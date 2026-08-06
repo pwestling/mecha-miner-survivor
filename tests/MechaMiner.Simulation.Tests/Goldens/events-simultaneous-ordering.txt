@@ -31,19 +31,44 @@
 # sequence, target ID, source ID, then insertion sequence - and that is untouched
 # by the rule above.
 #
-# Fixture: run session 0xE7E00001, tick 7, eight domain events across four system
-# phases (3, 8, 10, 11), two emissions per phase. Sequence ascends 0 to 7 and
-# phase is non-decreasing with it, so the fixture is a legal input. The events
-# are appended in sequence order 5,0,3,6,1,7,2,4 - and that batch is also
-# published reversed - so neither append order is the documented order and the
-# sort cannot be a no-op.
+# Two cases, so that each of the two keys is the sole discriminator in at least
+# one of them and neither key is dead:
 #
-# The previous fixture achieved that same non-no-op property by pairing phase 11
+# 1. one-tick-published-batch - sole discriminator: emission sequence.
+#    Run session 0xE7E00001, tick 7, eight domain events across four system
+#    phases (3, 8, 10, 11), two emissions per phase. Sequence ascends 0 to 7 and
+#    phase is non-decreasing with it, so the fixture is a legal input. The events
+#    are appended in sequence order 5,0,3,6,1,7,2,4 - and that batch is also
+#    published reversed - so neither append order is the documented order and the
+#    sort cannot be a no-op. Every row shares tick 7, so this case is blind to a
+#    comparator with no tick key at all: deleting that key left the whole suite
+#    green, which is why case 2 exists and why the negative control asserts this
+#    blindness rather than leaving it implied.
+#
+# 2. retained-multi-tick-records - sole discriminator: tick.
+#    A retained record set, not a published batch: a published batch cannot
+#    produce this shape, because doc 20 § Domain and presentation events makes the
+#    sequence "global to one tick" and a DomainEventBuffer refuses a record from
+#    another tick outright. The collection that legitimately holds several ticks'
+#    events at once is the diagnostic artifact the same section names: "Event
+#    schemas are versioned when written to diagnostic artifacts". Because the
+#    sequence restarts at zero every tick, across ticks the sequence alone is not
+#    an order at all and the tick is what supplies one. Rows 0 and 1 differ only
+#    on tick - same phase, same sequence, same emitter, same subject, same kind,
+#    same quantity - so for that pair the tick is the only component that can
+#    decide anything. The tick-8 row carries sequence 0, lower than every other
+#    row's, and still sorts last: that is the direct proof that tick precedes
+#    sequence rather than the other way round.
+#
+# The previous fixture achieved case 1's non-no-op property by pairing phase 11
 # with sequence 0 and phase 3 with sequence 1, deliberately disagreeing with
 # phase order. Under the contract above that is an input the system cannot
 # produce, so the old golden pinned an impossible state. Every observable field
-# here is now a function of the sequence rather than of the append position, so
-# the rows stay derivable once append order stops matching them.
+# here is now a function of the emission sequence rather than of the append
+# position, in both cases, so the rows stay derivable once append order stops
+# matching them. That is also what makes case 2's tick-only pair possible: two
+# rows at one sequence in different ticks agree in every other field by
+# construction rather than by being written out twice.
 #
 # The stored phase numerals are correct by contract, not by coincidence: doc 10 §
 # System phase ordering numbers a fixed fourteen phases and those numerals are
@@ -51,21 +76,23 @@
 # next unused number and a subdivision keeps its parent's. So a fixture may store
 # 3, 8, 10, 11 and rely on their meaning.
 #
-# Every identity here - four emitters and the shared subject - is drawn from the
-# OrdinaryEnemy partition, which begins immediately after Player. Player's
-# capacity is the doc 20 § Scope and invariants invariant "exactly one player
-# entity exists until terminal resolution", so the OrdinaryEnemy offset is 1 by
-# simulation invariant and no doc 22 § Performance and capacity combat ceiling
-# precedes it. The fixture asserts that computed containment rather than assuming
-# it. An earlier fixture drew its subject from Pickup, which sits after all three
-# doc 22 ceilings, which is why the literal 3830 was baked in here and would have
-# made this ordering golden fail when the enemy-projectile ceiling moved.
+# Every identity in either case - the four emitters and the shared subject - is
+# drawn from the OrdinaryEnemy partition, which begins immediately after Player.
+# Player's capacity is the doc 20 § Scope and invariants invariant "exactly one
+# player entity exists until terminal resolution", so the OrdinaryEnemy offset is
+# 1 by simulation invariant and no doc 22 § Performance and capacity combat
+# ceiling precedes it. The fixture asserts that computed containment rather than
+# assuming it. An earlier fixture drew its subject from Pickup, which sits after
+# all three doc 22 ceilings, which is why the literal 3830 was baked in here and
+# would have made this ordering golden fail when the enemy-projectile ceiling
+# moved.
 #
 # Derived by: the documented rule read off doc 10 and doc 20, computed in an
 # independent Python reference before any C# ran, and cross-checked against an
 # independent list sort in EventOrderingTests. Not by accepting whatever the
 # buffer emitted.
 #
+## case one-tick-published-batch: sole discriminator = emission sequence
   0  domain tick=7 phase= 3 seq=   0 from=entity:1/g1@run3890216961 source=E-FIXTURE kind=entity-defeated#1001 subject=entity:5/g1@run3890216961 at=(1.5,-0.25) payload=v1 quantity=1 magnitude=0.5 content=none
   1  domain tick=7 phase= 3 seq=   1 from=entity:2/g1@run3890216961 source=E-FIXTURE kind=resource-awarded#1002 subject=entity:5/g1@run3890216961 at=(3,-0.5) payload=v1 quantity=2 magnitude=1 content=none
   2  domain tick=7 phase= 8 seq=   2 from=entity:3/g1@run3890216961 source=E-FIXTURE kind=entity-defeated#1001 subject=entity:5/g1@run3890216961 at=(4.5,-0.75) payload=v1 quantity=3 magnitude=1.5 content=none
@@ -74,3 +101,8 @@
   5  domain tick=7 phase=10 seq=   5 from=entity:2/g1@run3890216961 source=E-FIXTURE kind=resource-awarded#1002 subject=entity:5/g1@run3890216961 at=(9,-1.5) payload=v1 quantity=6 magnitude=3 content=none
   6  domain tick=7 phase=11 seq=   6 from=entity:3/g1@run3890216961 source=E-FIXTURE kind=entity-defeated#1001 subject=entity:5/g1@run3890216961 at=(10.5,-1.75) payload=v1 quantity=7 magnitude=3.5 content=none
   7  domain tick=7 phase=11 seq=   7 from=entity:4/g1@run3890216961 source=E-FIXTURE kind=resource-awarded#1002 subject=entity:5/g1@run3890216961 at=(12,-2) payload=v1 quantity=8 magnitude=4 content=none
+## case retained-multi-tick-records: sole discriminator = tick
+  0  domain tick=6 phase=10 seq=   4 from=entity:1/g1@run3890216961 source=E-FIXTURE kind=entity-defeated#1001 subject=entity:5/g1@run3890216961 at=(7.5,-1.25) payload=v1 quantity=5 magnitude=2.5 content=none
+  1  domain tick=7 phase=10 seq=   4 from=entity:1/g1@run3890216961 source=E-FIXTURE kind=entity-defeated#1001 subject=entity:5/g1@run3890216961 at=(7.5,-1.25) payload=v1 quantity=5 magnitude=2.5 content=none
+  2  domain tick=7 phase=11 seq=   9 from=entity:2/g1@run3890216961 source=E-FIXTURE kind=resource-awarded#1002 subject=entity:5/g1@run3890216961 at=(15,-2.5) payload=v1 quantity=10 magnitude=5 content=none
+  3  domain tick=8 phase= 3 seq=   0 from=entity:1/g1@run3890216961 source=E-FIXTURE kind=entity-defeated#1001 subject=entity:5/g1@run3890216961 at=(1.5,-0.25) payload=v1 quantity=1 magnitude=0.5 content=none

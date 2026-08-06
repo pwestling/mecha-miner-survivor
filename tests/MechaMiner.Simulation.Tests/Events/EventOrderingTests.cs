@@ -65,19 +65,44 @@ internal sealed class EventOrderingTests
         + "# sequence, target ID, source ID, then insertion sequence - and that is untouched\n"
         + "# by the rule above.\n"
         + "#\n"
-        + "# Fixture: run session 0xE7E00001, tick 7, eight domain events across four system\n"
-        + "# phases (3, 8, 10, 11), two emissions per phase. Sequence ascends 0 to 7 and\n"
-        + "# phase is non-decreasing with it, so the fixture is a legal input. The events\n"
-        + "# are appended in sequence order 5,0,3,6,1,7,2,4 - and that batch is also\n"
-        + "# published reversed - so neither append order is the documented order and the\n"
-        + "# sort cannot be a no-op.\n"
+        + "# Two cases, so that each of the two keys is the sole discriminator in at least\n"
+        + "# one of them and neither key is dead:\n"
         + "#\n"
-        + "# The previous fixture achieved that same non-no-op property by pairing phase 11\n"
+        + "# 1. one-tick-published-batch - sole discriminator: emission sequence.\n"
+        + "#    Run session 0xE7E00001, tick 7, eight domain events across four system\n"
+        + "#    phases (3, 8, 10, 11), two emissions per phase. Sequence ascends 0 to 7 and\n"
+        + "#    phase is non-decreasing with it, so the fixture is a legal input. The events\n"
+        + "#    are appended in sequence order 5,0,3,6,1,7,2,4 - and that batch is also\n"
+        + "#    published reversed - so neither append order is the documented order and the\n"
+        + "#    sort cannot be a no-op. Every row shares tick 7, so this case is blind to a\n"
+        + "#    comparator with no tick key at all: deleting that key left the whole suite\n"
+        + "#    green, which is why case 2 exists and why the negative control asserts this\n"
+        + "#    blindness rather than leaving it implied.\n"
+        + "#\n"
+        + "# 2. retained-multi-tick-records - sole discriminator: tick.\n"
+        + "#    A retained record set, not a published batch: a published batch cannot\n"
+        + "#    produce this shape, because doc 20 § Domain and presentation events makes the\n"
+        + "#    sequence \"global to one tick\" and a DomainEventBuffer refuses a record from\n"
+        + "#    another tick outright. The collection that legitimately holds several ticks'\n"
+        + "#    events at once is the diagnostic artifact the same section names: \"Event\n"
+        + "#    schemas are versioned when written to diagnostic artifacts\". Because the\n"
+        + "#    sequence restarts at zero every tick, across ticks the sequence alone is not\n"
+        + "#    an order at all and the tick is what supplies one. Rows 0 and 1 differ only\n"
+        + "#    on tick - same phase, same sequence, same emitter, same subject, same kind,\n"
+        + "#    same quantity - so for that pair the tick is the only component that can\n"
+        + "#    decide anything. The tick-8 row carries sequence 0, lower than every other\n"
+        + "#    row's, and still sorts last: that is the direct proof that tick precedes\n"
+        + "#    sequence rather than the other way round.\n"
+        + "#\n"
+        + "# The previous fixture achieved case 1's non-no-op property by pairing phase 11\n"
         + "# with sequence 0 and phase 3 with sequence 1, deliberately disagreeing with\n"
         + "# phase order. Under the contract above that is an input the system cannot\n"
         + "# produce, so the old golden pinned an impossible state. Every observable field\n"
-        + "# here is now a function of the sequence rather than of the append position, so\n"
-        + "# the rows stay derivable once append order stops matching them.\n"
+        + "# here is now a function of the emission sequence rather than of the append\n"
+        + "# position, in both cases, so the rows stay derivable once append order stops\n"
+        + "# matching them. That is also what makes case 2's tick-only pair possible: two\n"
+        + "# rows at one sequence in different ticks agree in every other field by\n"
+        + "# construction rather than by being written out twice.\n"
         + "#\n"
         + "# The stored phase numerals are correct by contract, not by coincidence: doc 10 §\n"
         + "# System phase ordering numbers a fixed fourteen phases and those numerals are\n"
@@ -85,15 +110,16 @@ internal sealed class EventOrderingTests
         + "# next unused number and a subdivision keeps its parent's. So a fixture may store\n"
         + "# 3, 8, 10, 11 and rely on their meaning.\n"
         + "#\n"
-        + "# Every identity here - four emitters and the shared subject - is drawn from the\n"
-        + "# OrdinaryEnemy partition, which begins immediately after Player. Player's\n"
-        + "# capacity is the doc 20 § Scope and invariants invariant \"exactly one player\n"
-        + "# entity exists until terminal resolution\", so the OrdinaryEnemy offset is 1 by\n"
-        + "# simulation invariant and no doc 22 § Performance and capacity combat ceiling\n"
-        + "# precedes it. The fixture asserts that computed containment rather than assuming\n"
-        + "# it. An earlier fixture drew its subject from Pickup, which sits after all three\n"
-        + "# doc 22 ceilings, which is why the literal 3830 was baked in here and would have\n"
-        + "# made this ordering golden fail when the enemy-projectile ceiling moved.\n"
+        + "# Every identity in either case - the four emitters and the shared subject - is\n"
+        + "# drawn from the OrdinaryEnemy partition, which begins immediately after Player.\n"
+        + "# Player's capacity is the doc 20 § Scope and invariants invariant \"exactly one\n"
+        + "# player entity exists until terminal resolution\", so the OrdinaryEnemy offset is\n"
+        + "# 1 by simulation invariant and no doc 22 § Performance and capacity combat\n"
+        + "# ceiling precedes it. The fixture asserts that computed containment rather than\n"
+        + "# assuming it. An earlier fixture drew its subject from Pickup, which sits after\n"
+        + "# all three doc 22 ceilings, which is why the literal 3830 was baked in here and\n"
+        + "# would have made this ordering golden fail when the enemy-projectile ceiling\n"
+        + "# moved.\n"
         + "#\n"
         + "# Derived by: the documented rule read off doc 10 and doc 20, computed in an\n"
         + "# independent Python reference before any C# ran, and cross-checked against an\n"
@@ -119,6 +145,31 @@ internal sealed class EventOrderingTests
     /// what the fixture needs, and it no longer costs an illegal input to get.
     /// </remarks>
     private static readonly int[] AppendSequences = [5, 0, 3, 6, 1, 7, 2, 4];
+
+    /// <summary>
+    /// The retained cross-tick case's rows, in an arrival order that is neither the documented order nor its
+    /// reverse.
+    /// </summary>
+    /// <remarks>
+    /// Ticks 6 and 7 both carry sequence 4 at phase 10, so those two rows differ only on tick and the tick is
+    /// the only component that can order them. Tick 8 carries sequence 0, the lowest in the set, and still
+    /// sorts last, which is what makes the tick's precedence over the sequence observable rather than assumed.
+    /// Within tick 7 the phase does not decrease as the sequence rises - phase 10 at sequence 4, phase 11 at
+    /// sequence 9 - so the set is a legal input on the same terms case 1 is.
+    /// </remarks>
+    private static readonly MultiTickRow[] MultiTickRows =
+    [
+        new MultiTickRow(7L, 9L, 11),
+        new MultiTickRow(6L, 4L, 10),
+        new MultiTickRow(8L, 0L, 3),
+        new MultiTickRow(7L, 4L, 10),
+    ];
+
+    /// <summary>The name of the golden's first case, the one a published batch can produce.</summary>
+    private const string OneTickCaseName = "one-tick-published-batch";
+
+    /// <summary>The name of the golden's second case, the retained set that spans ticks.</summary>
+    private const string MultiTickCaseName = "retained-multi-tick-records";
 
     /// <summary>
     /// Verification: <c>VER-SIM-006-011</c> (successor to the retired <c>VER-SIM-006-003</c>).
@@ -162,8 +213,316 @@ internal sealed class EventOrderingTests
         AssertTheFixtureIsALegalInput(events);
         AssertOutOfPhaseOrderEmissionIsRejected();
 
-        GoldenText.Matches("events-simultaneous-ordering.txt", GoldenHeader + firstRendering);
+        string multiTickRendering = RenderMultiTickCase();
+        AssertEachCaseDetectsTheKeyItIsThereFor(events);
+
+        GoldenText.Matches(
+            "events-simultaneous-ordering.txt",
+            GoldenHeader
+                + RenderCase(OneTickCaseName, "emission sequence", firstRendering)
+                + RenderCase(MultiTickCaseName, "tick", multiTickRendering));
     }
+
+    /// <summary>Heads a case's block with its name and the component it leaves as the sole discriminator.</summary>
+    /// <param name="caseName">The case's stable name.</param>
+    /// <param name="soleDiscriminator">The key this case leaves as the only live one.</param>
+    /// <param name="rendering">The case's ordered rows.</param>
+    private static string RenderCase(string caseName, string soleDiscriminator, string rendering)
+    {
+        return "## case " + caseName + ": sole discriminator = " + soleDiscriminator + "\n" + rendering;
+    }
+
+    /// <summary>
+    /// Orders the retained cross-tick set through the production comparison and returns its rows, after
+    /// checking that the set really has the shape the case depends on.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This case cannot go through a <c>DomainEventBuffer</c>, and that is the finding rather than an
+    /// inconvenience: a buffer is tick-local and refuses a record from another tick, so every batch it can
+    /// publish shares one tick and no batch reaches the comparator's leading key. The set is therefore sorted
+    /// through <c>EventOrdering.Sort</c> directly, which is the same production comparison
+    /// <c>CopyOrderedTo</c> uses, and <c>EventOrdering.AssertTotalOrder</c> is run over the result so the
+    /// case still passes through the uniqueness and phase-agreement invariants a published batch would.
+    /// </para>
+    /// <para>
+    /// Two arrival orders are ordered and compared, so the rows record the rule rather than the order the
+    /// fixture happened to list.
+    /// </para>
+    /// </remarks>
+    private static string RenderMultiTickCase()
+    {
+        List<DomainEvent> arrival = BuildMultiTickRecords();
+        List<DomainEvent> reversed = new(arrival);
+        reversed.Reverse();
+
+        string rendering = EventContractAssertions.RenderDomainBatch(DocumentedSort(arrival));
+        string reversedRendering = EventContractAssertions.RenderDomainBatch(DocumentedSort(reversed));
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                reversedRendering,
+                Is.EqualTo(rendering).Using(StringComparer.Ordinal),
+                "the documented comparison must be a total order over this set, so a reversed arrival order "
+                    + "produces the identical result");
+            Assert.That(
+                rendering,
+                Is.Not.EqualTo(EventContractAssertions.RenderDomainBatch(arrival)).Using(StringComparer.Ordinal),
+                "the arrival order must differ from the documented order, or sorting is a no-op here too");
+            Assert.That(
+                rendering,
+                Is.Not.EqualTo(EventContractAssertions.RenderDomainBatch(reversed)).Using(StringComparer.Ordinal),
+                "and so must its reverse");
+            AssertTheMultiTickSetHasThePairItClaims(arrival);
+        });
+
+        return rendering;
+    }
+
+    /// <summary>
+    /// Asserts the retained set contains a pair of records differing only on tick, and a record whose tick is
+    /// highest while its sequence is lowest.
+    /// </summary>
+    /// <param name="records">The retained set, in arrival order.</param>
+    /// <remarks>
+    /// Without the first fact the case does not reach the tick key at all and is exactly as vacuous as the
+    /// one-tick case it was added to fix. Without the second, the case would not show that the tick
+    /// <em>precedes</em> the sequence rather than merely being consulted.
+    /// </remarks>
+    private static void AssertTheMultiTickSetHasThePairItClaims(List<DomainEvent> records)
+    {
+        int tickOnlyPairs = 0;
+        for (int left = 0; left < records.Count; left++)
+        {
+            for (int right = left + 1; right < records.Count; right++)
+            {
+                if (DiffersOnlyOnTick(records[left], records[right]))
+                {
+                    tickOnlyPairs++;
+                }
+            }
+        }
+
+        long highestTick = long.MinValue;
+        long sequenceAtHighestTick = 0L;
+        long lowestSequence = long.MaxValue;
+        foreach (DomainEvent record in records)
+        {
+            if (record.Provenance.Tick > highestTick)
+            {
+                highestTick = record.Provenance.Tick;
+                sequenceAtHighestTick = record.Provenance.Sequence;
+            }
+
+            if (record.Provenance.Sequence < lowestSequence)
+            {
+                lowestSequence = record.Provenance.Sequence;
+            }
+        }
+
+        Assert.That(
+            tickOnlyPairs,
+            Is.EqualTo(1),
+            "the retained set must hold exactly one pair of records that differ only on tick, or the tick key "
+                + "is not the sole discriminator for anything in it");
+        Assert.That(
+            sequenceAtHighestTick,
+            Is.EqualTo(lowestSequence),
+            "the highest tick must carry the lowest sequence in the set, or nothing here shows that the tick "
+                + "precedes the sequence rather than merely following it");
+    }
+
+    /// <summary>Whether two records agree in every rendered field except the tick.</summary>
+    /// <param name="left">One record.</param>
+    /// <param name="right">The other.</param>
+    /// <remarks>
+    /// Compared through the production rendering with the tick text substituted out, rather than field by
+    /// field: a field added to <c>DomainEvent</c> then has to agree too, instead of quietly escaping a
+    /// hand-written list.
+    /// </remarks>
+    private static bool DiffersOnlyOnTick(DomainEvent left, DomainEvent right)
+    {
+        if (left.Provenance.Tick == right.Provenance.Tick)
+        {
+            return false;
+        }
+
+        return string.Equals(
+            WithoutTickText(left),
+            WithoutTickText(right),
+            StringComparison.Ordinal);
+    }
+
+    private static string WithoutTickText(DomainEvent record)
+    {
+        return record.ToString().Replace(
+            "tick=" + record.Provenance.Tick.ToString(CultureInfo.InvariantCulture) + " ",
+            "tick=* ",
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Asserts which case notices each single-key degradation of the comparator, and which is blind to it.
+    /// </summary>
+    /// <param name="oneTickEvents">The one-tick case's records, in arrival order.</param>
+    /// <remarks>
+    /// <para>
+    /// doc 91 § Acceptance evidence wants evidence a gate can fail. For an ordering golden the sharp question
+    /// is whether its inputs reach every key, and the answer for the one-tick case was no: deleting the tick
+    /// key from the comparator left all 138 tests green, because every row in the golden and every
+    /// event-ordering fixture held the tick constant. The blindness is asserted here rather than described, so
+    /// that a fixture change which silently removes the coverage the second case adds turns this red.
+    /// </para>
+    /// <para>
+    /// Both degradations are expressed as reference comparisons over a list, independently of
+    /// <c>EventOrdering</c>, for the same reason <see cref="ReferenceSort"/> is: the claim is about the rule,
+    /// not about the implementation agreeing with itself.
+    /// </para>
+    /// </remarks>
+    private static void AssertEachCaseDetectsTheKeyItIsThereFor(List<DomainEvent> oneTickEvents)
+    {
+        List<DomainEvent> multiTickEvents = BuildMultiTickRecords();
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                DetectsDegradation(oneTickEvents, SortWithoutTickKey),
+                Is.False,
+                "the one-tick case must be blind to a comparator with no tick key: every row shares tick 7, "
+                    + "so deleting that key changes nothing there. This is the hole the retained case fills, "
+                    + "and if it ever stops being a hole the reasoning behind that case has changed");
+            Assert.That(
+                DetectsDegradation(oneTickEvents, SortWithoutSequenceKey),
+                Is.True,
+                "and it must notice a comparator with no sequence key, which is the key it is there for");
+            Assert.That(
+                DetectsDegradation(multiTickEvents, SortWithoutTickKey),
+                Is.True,
+                "the retained case must notice a comparator with no tick key, which is the key it is there "
+                    + "for and the defect this case was added to control");
+            Assert.That(
+                DetectsDegradation(multiTickEvents, SortWithoutSequenceKey),
+                Is.True,
+                "and it notices a missing sequence key too, because two of its rows share a tick");
+        });
+    }
+
+    /// <summary>
+    /// Whether a degraded comparison fails to reproduce the documented order for at least one arrival order.
+    /// </summary>
+    /// <param name="records">The case's records, in arrival order.</param>
+    /// <param name="degraded">The degraded sort.</param>
+    /// <remarks>
+    /// Two arrival orders are tried, because a dropped key shows up as a tie and a tie under a stable sort is
+    /// only visible as a disagreement between permutations.
+    /// </remarks>
+    private static bool DetectsDegradation(
+        List<DomainEvent> records,
+        Func<List<DomainEvent>, List<DomainEvent>> degraded)
+    {
+        List<DomainEvent> reversed = new(records);
+        reversed.Reverse();
+
+        string expected = EventContractAssertions.RenderDomainBatch(ReferenceSort(records));
+        string ascending = EventContractAssertions.RenderDomainBatch(degraded(records));
+        string descending = EventContractAssertions.RenderDomainBatch(degraded(reversed));
+
+        return !string.Equals(ascending, expected, StringComparison.Ordinal)
+            || !string.Equals(descending, expected, StringComparison.Ordinal);
+    }
+
+    /// <summary>The comparison with the tick key deleted: emission sequence only.</summary>
+    /// <param name="events">The records to sort.</param>
+    private static List<DomainEvent> SortWithoutTickKey(List<DomainEvent> events)
+    {
+        List<DomainEvent> sorted = new(events);
+        sorted.Sort((left, right) =>
+            left.Provenance.Sequence.CompareTo(right.Provenance.Sequence));
+        return sorted;
+    }
+
+    /// <summary>The comparison with the sequence key deleted: tick only.</summary>
+    /// <param name="events">The records to sort.</param>
+    private static List<DomainEvent> SortWithoutSequenceKey(List<DomainEvent> events)
+    {
+        List<DomainEvent> sorted = new(events);
+        sorted.Sort((left, right) => left.Provenance.Tick.CompareTo(right.Provenance.Tick));
+        return sorted;
+    }
+
+    /// <summary>
+    /// Sorts a record set through the production <c>EventOrdering</c> and runs the batch invariants over the
+    /// result.
+    /// </summary>
+    /// <param name="records">The records, in whatever order they arrived.</param>
+    private static List<DomainEvent> DocumentedSort(List<DomainEvent> records)
+    {
+        DomainEvent[] batch = new DomainEvent[records.Count];
+        for (int index = 0; index < records.Count; index++)
+        {
+            batch[index] = records[index];
+        }
+
+        EventOrdering.Sort(batch, batch.Length);
+        EventOrdering.AssertTotalOrder(batch, batch.Length);
+
+        List<DomainEvent> sorted = new(batch.Length);
+        foreach (DomainEvent record in batch)
+        {
+            sorted.Add(record);
+        }
+
+        return sorted;
+    }
+
+    /// <summary>
+    /// The retained cross-tick records, built from <see cref="MultiTickRows"/> by the same field derivation
+    /// case 1 uses.
+    /// </summary>
+    /// <remarks>
+    /// Every observable field is a function of the emission sequence, which is what lets two rows at one
+    /// sequence in different ticks agree in every field but the tick by construction rather than by being
+    /// spelled out twice.
+    /// </remarks>
+    private static List<DomainEvent> BuildMultiTickRecords()
+    {
+        EntityIdAllocator allocator = EventFixture.NewAllocator(EventFixture.RunSession);
+        EntityId[] emitters = new EntityId[4];
+        for (int index = 0; index < emitters.Length; index++)
+        {
+            Assert.That(
+                allocator.TryAllocate(PopulationCategory.OrdinaryEnemy, out emitters[index]),
+                Is.True);
+        }
+
+        Assert.That(
+            allocator.TryAllocate(PopulationCategory.OrdinaryEnemy, out EntityId subject),
+            Is.True);
+
+        AssertEveryIdentityIsIndependentOfCombatCeilings(allocator, emitters, subject);
+
+        List<DomainEvent> records = new(MultiTickRows.Length);
+        foreach (MultiTickRow row in MultiTickRows)
+        {
+            records.Add(EventFixture.Domain(
+                row.Sequence % 2 == 0 ? EventFixture.EntityDefeated : EventFixture.ResourceAwarded,
+                tick: row.Tick,
+                systemPhase: row.Phase,
+                sequence: row.Sequence,
+                emitter: emitters[row.Sequence % emitters.Length],
+                subject: subject,
+                quantity: row.Sequence + 1));
+        }
+
+        return records;
+    }
+
+    /// <summary>One row of the retained cross-tick case.</summary>
+    /// <param name="Tick">The tick the record belongs to.</param>
+    /// <param name="Sequence">The per-tick emission sequence.</param>
+    /// <param name="Phase">The emitting system phase.</param>
+    private readonly record struct MultiTickRow(long Tick, long Sequence, int Phase);
 
     /// <summary>
     /// Asserts the fixture satisfies both invariants the two-key comparator rests on, so the golden

@@ -13,7 +13,9 @@ namespace MechaMiner.Simulation.Tests.Events;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Verification: supports <c>VER-SIM-006-001</c>, <c>VER-SIM-006-003</c>, and <c>VER-SIM-006-010</c>.
+/// Verification: supports <c>VER-SIM-006-001</c>, <c>VER-SIM-006-011</c>, and <c>VER-SIM-006-010</c>.
+/// <c>VER-SIM-006-011</c> is the successor to the retired <c>VER-SIM-006-003</c>, which named a
+/// three-key comparator that no longer exists; the retired ID is not cited here as a live gate.
 /// </para>
 /// <para>
 /// <c>docs/technical/91-verification-strategy.md</c> § Acceptance evidence requires a negative control to

@@ -303,7 +303,7 @@
     },
     {
       "id": "VER-SIM-006-010",
-      "summary": "A negative control proves the loss and ordering gates can fail: a stub buffer that silently drops on overflow makes VER-SIM-006-001 fail, and a stub that publishes in hash-container enumeration order makes VER-SIM-006-003 fail.",
+      "summary": "A negative control proves the loss and ordering gates can fail: a stub buffer that silently drops on overflow makes VER-SIM-006-001 fail, and a stub that publishes in hash-container enumeration order makes VER-SIM-006-011 fail.",
       "task": "TASK-SIM-006-001",
       "requirements": [
         "TR-QUA-001",

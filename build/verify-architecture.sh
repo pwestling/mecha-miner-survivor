@@ -48,6 +48,12 @@ readonly EXPECTED_PATHS=(
   # They exist from FND-002 onward and are the only workflow entrypoint.
   "build.sh"
   "build.ps1"
+  # doc 100 § Continuous integration requires a pull-request job; FND-005 is that
+  # job and this is the only file that is it. Listing it here is what makes "CI
+  # exists" a checked fact rather than a claim: deleting or renaming the workflow
+  # un-gates every gate at once, silently and with no red build anywhere, which is
+  # the one failure mode no gate inside the workflow can catch.
+  ".github/workflows/fast.yml"
   "game/project.godot"
   "game/MechaMiner.Game.csproj"
   "game/scenes"

@@ -261,6 +261,38 @@
       ],
       "tier": "fast",
       "status": "registered"
+    },
+    {
+      "id": "VER-FND-005-009",
+      "summary": "Deleting or renaming .github/workflows/fast.yml fails the repository-layout gate by name, so the workflow's existence is a checked fact rather than an assumption. No gate inside the workflow can cover this: removing the file removes every gate at once and produces no red run anywhere, because there is no run. build/verify-architecture.sh's EXPECTED_PATHS now lists the workflow, and ./build.sh build reaches that assertion at stage 3. The negative control is the whole content of this entry: with the file renamed to fast.yml.disabled, verify-architecture printed 'FAIL  missing prescribed path: .github/workflows/fast.yml' and ./build.sh build exited class 4 (MMT-4001); with the file restored it printed 'ok    exists: .github/workflows/fast.yml' and exited 0. Without the control this entry would assert only that a string was added to an array.",
+      "task": "TASK-FND-005-001",
+      "requirements": [
+        "TR-BLD-006",
+        "TR-QUA-001"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#continuous-integration",
+        "docs/technical/100-build-dependencies-and-release-operations.md#repository-structure",
+        "docs/technical/91-verification-strategy.md#negative-control-adequacy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-architecture.sh"
+      },
+      "fixtures": [
+        "local control: .github/workflows/fast.yml renamed to fast.yml.disabled, then restored"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
     }
   ]
 }

@@ -1,0 +1,25 @@
+# entities-store-ordering
+#
+# Rule under test: doc 20 § Entity identity - "Stable ordering uses the full
+# entity ID after a system's authored priority keys." Ordering is therefore
+# authored priority key ascending, then run session, then storage index, then
+# generation.
+#
+# Fixture: PopulationCategory.Pickup, run session 0x9F0C0001, map manifest of 63
+# mining sites and 40 static world objects, so the Pickup slot partition begins at
+# index 3885. Eight records are admitted with priority keys
+# 30,10,20,10,30,10,20,20 in that order, then the third-admitted record is removed.
+# The removal is a swap-remove, so the dense storage order afterwards is neither
+# admission order nor key order; the order below can only come from the comparison.
+#
+# Derived by: the documented rule read off doc 20, cross-checked against an
+# independent list sort in PackedEntityStoreTests, not by accepting whatever the
+# store emitted.
+#
+  0  priority=    10  entity:3886/g1@run2668363777
+  1  priority=    10  entity:3888/g1@run2668363777
+  2  priority=    10  entity:3890/g1@run2668363777
+  3  priority=    20  entity:3891/g1@run2668363777
+  4  priority=    20  entity:3892/g1@run2668363777
+  5  priority=    30  entity:3885/g1@run2668363777
+  6  priority=    30  entity:3889/g1@run2668363777

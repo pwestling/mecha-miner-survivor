@@ -1,0 +1,593 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Reflection;
+using MechaMiner.Simulation.Entities;
+using MechaMiner.Tests.Support;
+using NUnit.Framework;
+
+namespace MechaMiner.Simulation.Tests.Entities;
+
+/// <summary>
+/// Proves the storage half of <c>SIM-003</c>: one purpose-built store per authoritative
+/// category, iteration ordered by the documented comparison, and an allocation-free churn
+/// cycle.
+/// </summary>
+/// <remarks>
+/// Verification: <c>VER-SIM-003-007</c>, <c>VER-SIM-003-010</c>, <c>VER-SIM-003-011</c>.
+///
+/// <c>docs/technical/20-simulation-core.md</c> § Authoritative population categories and
+/// § Entity identity; <c>docs/technical/10-runtime-architecture.md</c> § System phase
+/// ordering.
+/// </remarks>
+[TestFixture]
+internal sealed class PackedEntityStoreTests
+{
+    private const ulong RunSession = 0x9F0C_0001UL;
+    private const int MiningSiteManifestCount = 63;
+    private const int StaticWorldObjectManifestCount = 40;
+
+    /// <summary>How many churn cycles the storage invariant is checked across.</summary>
+    private const int ChurnCycles = 64;
+
+    /// <summary>
+    /// The provenance header committed with <c>entities-store-ordering.txt</c>, so the golden
+    /// is reviewable against its authoritative rule rather than merely diffable.
+    /// </summary>
+    /// <remarks>
+    /// doc 91 § Determinism and fixture policy: "Golden outputs are canonical, ordered, and
+    /// reviewable text". A reviewer needs the rule and the fixture to judge the file, not just
+    /// the bytes.
+    /// </remarks>
+    private const string GoldenHeader =
+        "# entities-store-ordering\n"
+        + "#\n"
+        + "# Rule under test: doc 20 § Entity identity - \"Stable ordering uses the full\n"
+        + "# entity ID after a system's authored priority keys.\" Ordering is therefore\n"
+        + "# authored priority key ascending, then run session, then storage index, then\n"
+        + "# generation.\n"
+        + "#\n"
+        + "# Fixture: PopulationCategory.Pickup, run session 0x9F0C0001, map manifest of 63\n"
+        + "# mining sites and 40 static world objects, so the Pickup slot partition begins at\n"
+        + "# index 3885. Eight records are admitted with priority keys\n"
+        + "# 30,10,20,10,30,10,20,20 in that order, then the third-admitted record is removed.\n"
+        + "# The removal is a swap-remove, so the dense storage order afterwards is neither\n"
+        + "# admission order nor key order; the order below can only come from the comparison.\n"
+        + "#\n"
+        + "# Derived by: the documented rule read off doc 20, cross-checked against an\n"
+        + "# independent list sort in PackedEntityStoreTests, not by accepting whatever the\n"
+        + "# store emitted.\n"
+        + "#\n";
+
+    /// <summary>The twelve categories doc 20 § Authoritative population categories tabulates, in table order.</summary>
+    private static readonly string[] DocumentedCategoryNames =
+    [
+        "Player",
+        "OrdinaryEnemy",
+        "Elite",
+        "Boss",
+        "EnemyProjectile",
+        "WeaponActor",
+        "DamageZone",
+        "MiningSite",
+        "Pickup",
+        "DestructibleRock",
+        "RelicCache",
+        "StaticWorldObject",
+    ];
+
+    /// <summary>
+    /// Verification: <c>VER-SIM-003-007</c>.
+    ///
+    /// Exactly twelve categories exist, each gets one store with its own disjoint slot
+    /// partition, and a thirteenth category has no store.
+    /// </summary>
+    [Test]
+    public void OneStoreExistsForEachAuthoritativePopulationCategory()
+    {
+        EntityIdAllocator allocator = NewAllocator();
+
+        List<PackedEntityStore<long>> stores = new(StoreCapacities.Categories.Count);
+        foreach (PopulationCategory category in StoreCapacities.Categories)
+        {
+            stores.Add(new PackedEntityStore<long>(category, allocator));
+        }
+
+        string[] actualNames = new string[StoreCapacities.Categories.Count];
+        for (int index = 0; index < StoreCapacities.Categories.Count; index++)
+        {
+            actualNames[index] = StoreCapacities.Categories[index].ToString();
+        }
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                StoreCapacities.Categories,
+                Has.Count.EqualTo(12),
+                "doc 20 § Authoritative population categories tabulates twelve rows; a "
+                    + "thirteenth would be an unregistered category");
+            Assert.That(
+                Enum.GetValues<PopulationCategory>(),
+                Has.Length.EqualTo(12),
+                "and the enumeration must not carry a member the table does not");
+            Assert.That(
+                actualNames,
+                Is.EqualTo(DocumentedCategoryNames),
+                "the canonical iteration order must be doc 20's table order, because the "
+                    + "allocator partitions the run's slot space by it");
+            Assert.That(stores, Has.Count.EqualTo(12), "one store per category, no more and no fewer");
+        });
+
+        // Purpose-built per category rather than one universal table: each store owns a
+        // disjoint slot partition, and together they tile the run's whole slot space.
+        int expectedOffset = 0;
+        bool[] categorySeen = new bool[12];
+        Expect.Multiple(() =>
+        {
+            foreach (PackedEntityStore<long> store in stores)
+            {
+                int ordinal = (int)store.Category;
+                Assert.That(categorySeen[ordinal], Is.False, "no category may have two stores");
+                categorySeen[ordinal] = true;
+                Assert.That(
+                    allocator.SlotOffsetFor(store.Category),
+                    Is.EqualTo(expectedOffset),
+                    store.Category.ToString() + " must start where the previous partition ended");
+                expectedOffset += store.Capacity.HardCapacity;
+            }
+
+            Assert.That(
+                expectedOffset,
+                Is.EqualTo(allocator.TotalSlotCapacity),
+                "the twelve partitions must tile the run's slot space exactly, so no live "
+                    + "identity can name two records");
+            Assert.That(categorySeen, Is.All.True);
+        });
+
+        // An unregistered category has no store and no capacity.
+        const PopulationCategory unregistered = (PopulationCategory)12;
+        Expect.Multiple(() =>
+        {
+            Expect.Throws<ArgumentOutOfRangeException>(
+                () => new PackedEntityStore<long>(unregistered, allocator));
+            Expect.Throws<ArgumentOutOfRangeException>(
+                () => StoreCapacities.For(unregistered, MiningSiteManifestCount, StaticWorldObjectManifestCount));
+            Expect.Throws<ArgumentOutOfRangeException>(() => allocator.CapacityFor(unregistered));
+        });
+
+        // Every store is usable, and the Player store already holds the run's one player.
+        Expect.Multiple(() =>
+        {
+            foreach (PackedEntityStore<long> store in stores)
+            {
+                if (store.Category == PopulationCategory.Player)
+                {
+                    Assert.That(store.Count, Is.EqualTo(1), "the player exists from the start of the run");
+                    Assert.That(store.TryGet(allocator.PlayerId, out long _), Is.True);
+                    continue;
+                }
+
+                Assert.That(store.Count, Is.EqualTo(0), store.Category.ToString() + " starts empty");
+                Assert.That(
+                    store.Capacity.HardCapacity,
+                    Is.GreaterThan(0),
+                    store.Category.ToString() + " must declare a positive hard capacity");
+            }
+        });
+    }
+
+    /// <summary>
+    /// Verification: <c>VER-SIM-003-010</c>.
+    ///
+    /// Iteration order is authored priority key then full entity ID: two stores holding the
+    /// same members inserted in different orders iterate identically, ties on the key break
+    /// by the full identity, and the order is not the dense storage order.
+    /// </summary>
+    /// <remarks>
+    /// Permuting admission necessarily attaches different identities to the same records,
+    /// because the allocator hands slots out in allocation order. So the cross-permutation
+    /// comparison is made over the ordered <em>priority-key sequence</em>, which is what
+    /// "the same members" can mean once identity depends on admission; identity's part in
+    /// the order is asserted separately by the tie fixture, where equal keys leave the full
+    /// entity ID as the only discriminator.
+    /// </remarks>
+    [Test]
+    public void IterationOrderIsPriorityKeysThenFullEntityId()
+    {
+        // Distinct keys whose ascending order matches neither admission order used below.
+        long[] distinctKeys = [30L, 10L, 20L, 40L, 50L, 15L, 25L, 35L];
+
+        StoreContractAssertions.IterationOrderMatchesTheDocumentedComparison(
+            "the packed pickup store, distinct priority keys",
+            RenderSortedKeyReference(distinctKeys),
+            RenderAdmittedKeySequence(distinctKeys, Ascending(distinctKeys.Length)),
+            RenderAdmittedKeySequence(distinctKeys, Descending(distinctKeys.Length)));
+
+        // Ties on the priority key leave the full entity ID as the only discriminator, and a
+        // swap-remove has already made the dense storage order disagree with both.
+        TieFixture fixture = BuildTieFixture();
+
+        StoreContractAssertions.IterationOrderMatchesTheDocumentedComparison(
+            "the packed pickup store, tied priority keys",
+            fixture.ReferenceRendering,
+            fixture.IteratedRendering,
+            fixture.IteratedRendering);
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                fixture.IteratedRendering,
+                Is.Not.EqualTo(fixture.StorageRendering),
+                "iteration order must not be the dense storage order, or the ordering rule "
+                    + "is untested: a swap-remove has already permuted storage");
+            Assert.That(
+                fixture.TiedKeyCount,
+                Is.GreaterThan(1),
+                "the fixture must actually contain tied priority keys");
+        });
+
+        GoldenText.Matches("entities-store-ordering.txt", GoldenHeader + fixture.IteratedRendering);
+    }
+
+    /// <summary>
+    /// Verification: <c>VER-SIM-003-011</c>.
+    ///
+    /// A full admit, mutate, resolve, order, and remove cycle allocates zero managed bytes
+    /// after warm-up, which index-addressed plain arrays plus a free list satisfy without
+    /// unsafe code.
+    /// </summary>
+    [Test]
+    public void ChurnCycleAllocatesNothingAfterWarmUp()
+    {
+        // Structural half: the dense region is readonly plain arrays sized at construction, so a churn cycle
+        // has nothing to allocate. A readonly array field assigned only in the constructor is
+        // reference-identical for the object's lifetime, which is what "allocates nothing" means here.
+        AssertDenseStorageFieldsAreReadonlyPlainArrays();
+
+        EntityIdAllocator allocator = NewAllocator();
+        PackedEntityStore<long> store = new(PopulationCategory.Pickup, allocator);
+        EntityId[] live = new EntityId[64];
+        EntityId[] ordered = new EntityId[64];
+
+        int capacityBefore = store.Capacity.HardCapacity;
+        for (int cycle = 0; cycle < ChurnCycles; cycle++)
+        {
+            RunChurnCycle(store, live, ordered);
+        }
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                store.Diagnostics.StoreGrowthCount,
+                Is.EqualTo(0),
+                ChurnCycles.ToString(CultureInfo.InvariantCulture)
+                    + " admit-mutate-resolve-order-remove cycles must not enlarge a backing array once");
+            Assert.That(
+                store.Capacity.HardCapacity,
+                Is.EqualTo(capacityBefore),
+                "and the declared capacity must not move");
+            Assert.That(
+                store.QueueDepth,
+                Is.EqualTo(0),
+                "nothing queued, so the only growable arrays in the store were never touched");
+            Assert.That(store.Count, Is.EqualTo(0), "the churn cycle must leave the store empty");
+            Assert.That(
+                store.Diagnostics.ReuseCount,
+                Is.GreaterThan(0L),
+                "the cycle must actually recycle slots, or it is not churn and the invariant is vacuous");
+            Assert.That(
+                store.Diagnostics.HighWaterMark,
+                Is.EqualTo(live.Length),
+                "the high-water mark must reflect the population the cycle reached");
+            Assert.That(
+                store.Diagnostics.Render(),
+                Does.Contain("store-growth=0"),
+                "and the counter must be observable to CMP-OBS-001, not only to this test");
+        });
+
+        // The zero above would be worthless if the counter could never be anything else, so prove it can.
+        AssertGrowthCounterRisesWhenTheQueueGrows();
+    }
+
+    /// <summary>
+    /// Proves the growth counter is capable of rising, so asserting zero across a churn cycle is evidence
+    /// rather than an unconditional truth.
+    /// </summary>
+    /// <remarks>
+    /// The churn cycle never reaches hard capacity and therefore never enqueues, so its
+    /// <c>StoreGrowthCount == 0</c> would hold even if the counter were never wired up. An authored-enemy
+    /// store driven past its ceiling by more than one queue's worth does grow, and must say so.
+    /// </remarks>
+    private static void AssertGrowthCounterRisesWhenTheQueueGrows()
+    {
+        EntityIdAllocator allocator = NewAllocator();
+        PackedEntityStore<long> store = new(PopulationCategory.Elite, allocator);
+        int hardCapacity = store.Capacity.HardCapacity;
+
+        for (int index = 0; index < hardCapacity; index++)
+        {
+            Assert.That(store.TryAdmit(index, index, out EntityId _), Is.True);
+        }
+
+        // The queue is preallocated to the hard capacity, so queueing more than that must enlarge it.
+        for (int index = 0; index < hardCapacity + 1; index++)
+        {
+            Assert.That(
+                store.TryAdmit(1_000 + index, 1_000 + index, out EntityId _),
+                Is.False,
+                "the store is at its ceiling, so these records queue");
+        }
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                store.QueueDepth,
+                Is.EqualTo(hardCapacity + 1),
+                "every refused authored admission queued, so nothing was cancelled");
+            Assert.That(
+                store.Diagnostics.StoreGrowthCount,
+                Is.GreaterThan(0),
+                "queueing past the preallocated queue size must enlarge it and be counted, which is what "
+                    + "makes the churn cycle's zero meaningful");
+            Assert.That(
+                store.Count,
+                Is.EqualTo(hardCapacity),
+                "and no resident record was displaced by the queueing");
+        });
+    }
+
+    /// <summary>
+    /// Asserts that the dense record region is <see langword="readonly"/> plain arrays, and that the only
+    /// non-readonly arrays are the authored-spawn queue, which doc 20 requires to be able to grow.
+    /// </summary>
+    /// <remarks>
+    /// This is what proves the summary's "index-addressed plain arrays rather than a reflection-driven or
+    /// pointer-based component table": the field types are arrays of the record type, not dictionaries,
+    /// not component bags, and not pointers.
+    /// </remarks>
+    private static void AssertDenseStorageFieldsAreReadonlyPlainArrays()
+    {
+        FieldInfo[] fields = typeof(PackedEntityStore<long>).GetFields(
+            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+
+        List<string> readonlyArrays = new();
+        List<string> growableArrays = new();
+        List<string> violations = new();
+
+        foreach (FieldInfo field in fields)
+        {
+            if (field.FieldType.IsPointer || field.FieldType == typeof(IntPtr))
+            {
+                violations.Add(field.Name + " is a pointer; the store must be plain arrays");
+                continue;
+            }
+
+            if (!field.FieldType.IsArray)
+            {
+                continue;
+            }
+
+            if (field.IsInitOnly)
+            {
+                readonlyArrays.Add(field.Name);
+            }
+            else
+            {
+                growableArrays.Add(field.Name);
+            }
+        }
+
+        readonlyArrays.Sort(StringComparer.Ordinal);
+        growableArrays.Sort(StringComparer.Ordinal);
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                readonlyArrays,
+                Is.EqualTo(new[] { "_denseIds", "_densePriorityKeys", "_denseStates", "_order", "_slotToDense" }),
+                "the dense region and the ordering scratch are readonly arrays, so no operation can replace "
+                    + "one; a new array field here is new per-churn storage and needs its own registry entry");
+            Assert.That(
+                growableArrays,
+                Is.EqualTo(new[] { "_queuedPriorityKeys", "_queuedStates" }),
+                "the authored-spawn queue is the only growable storage, because doc 20 § Capacity and overload "
+                    + "behavior says a queued authored enemy later enters and the queue must never lose it");
+            Assert.That(violations, Is.Empty, string.Join("; ", violations));
+            Assert.That(
+                typeof(PackedEntityStore<long>).GetField("_denseStates", BindingFlags.NonPublic | BindingFlags.Instance)!.FieldType,
+                Is.EqualTo(typeof(long[])),
+                "the record region is a contiguous array of the record type itself, not a component table");
+        });
+    }
+
+    private static void RunChurnCycle(PackedEntityStore<long> store, EntityId[] live, EntityId[] ordered)
+    {
+        for (int index = 0; index < live.Length; index++)
+        {
+            store.TryAdmit(live.Length - index, index, out live[index]);
+        }
+
+        for (int index = 0; index < live.Length; index++)
+        {
+            store.TryUpdate(live[index], index * 2);
+            store.TryGet(live[index], out long _);
+        }
+
+        store.CopyOrderedTo(ordered);
+
+        for (int index = 0; index < live.Length; index++)
+        {
+            store.TryRemove(live[index]);
+        }
+    }
+
+    private static int[] Ascending(int count)
+    {
+        int[] order = new int[count];
+        for (int index = 0; index < count; index++)
+        {
+            order[index] = index;
+        }
+
+        return order;
+    }
+
+    private static int[] Descending(int count)
+    {
+        int[] order = new int[count];
+        for (int index = 0; index < count; index++)
+        {
+            order[index] = count - 1 - index;
+        }
+
+        return order;
+    }
+
+    /// <summary>
+    /// Admits every member in <paramref name="admissionOrder"/> and renders the ordered
+    /// priority-key sequence the store iterates.
+    /// </summary>
+    private static string RenderAdmittedKeySequence(long[] priorityKeys, int[] admissionOrder)
+    {
+        EntityIdAllocator allocator = NewAllocator();
+        PackedEntityStore<long> store = new(PopulationCategory.Pickup, allocator);
+
+        foreach (int position in admissionOrder)
+        {
+            Assert.That(
+                store.TryAdmit(priorityKeys[position], position, out EntityId _),
+                Is.True,
+                "the pickup store must admit every member of the fixture");
+        }
+
+        EntityId[] ordered = new EntityId[store.Count];
+        int written = store.CopyOrderedTo(ordered);
+        Assert.That(written, Is.EqualTo(priorityKeys.Length));
+
+        System.Text.StringBuilder builder = new();
+        for (int index = 0; index < written; index++)
+        {
+            Assert.That(store.TryGetPriorityKey(ordered[index], out long key), Is.True);
+            builder.Append(key.ToString(CultureInfo.InvariantCulture)).Append('\n');
+        }
+
+        return builder.ToString();
+    }
+
+    /// <summary>
+    /// Renders the ascending key sequence from an independent sort, not from the store.
+    /// </summary>
+    /// <remarks>doc 91 § Reference models: a deliberately simple model, so agreement is evidence about the rule.</remarks>
+    private static string RenderSortedKeyReference(long[] priorityKeys)
+    {
+        List<long> sorted = new(priorityKeys);
+        sorted.Sort();
+
+        System.Text.StringBuilder builder = new();
+        foreach (long key in sorted)
+        {
+            builder.Append(key.ToString(CultureInfo.InvariantCulture)).Append('\n');
+        }
+
+        return builder.ToString();
+    }
+
+    /// <summary>
+    /// Builds a store whose priority keys tie, whose dense storage order has been permuted by
+    /// a swap-remove, and renders all three orders for comparison.
+    /// </summary>
+    private static TieFixture BuildTieFixture()
+    {
+        long[] keysByAdmission = [30L, 10L, 20L, 10L, 30L, 10L, 20L, 20L];
+
+        EntityIdAllocator allocator = NewAllocator();
+        PackedEntityStore<long> store = new(PopulationCategory.Pickup, allocator);
+
+        List<EntityId> admitted = new(keysByAdmission.Length);
+        foreach (long key in keysByAdmission)
+        {
+            Assert.That(store.TryAdmit(key, admitted.Count, out EntityId issued), Is.True);
+            admitted.Add(issued);
+        }
+
+        // A swap-remove of a middle record moves the last record into its place, so the dense
+        // storage order is now neither admission order nor key order.
+        Assert.That(store.TryRemove(admitted[2]), Is.True);
+        admitted[2] = admitted[^1];
+        admitted.RemoveAt(admitted.Count - 1);
+
+        List<EntityId> storageOrder = new(admitted);
+
+        EntityId[] ordered = new EntityId[store.Count];
+        int written = store.CopyOrderedTo(ordered);
+        Assert.That(written, Is.EqualTo(admitted.Count));
+
+        List<EntityId> iterated = new(written);
+        for (int index = 0; index < written; index++)
+        {
+            iterated.Add(ordered[index]);
+        }
+
+        // Independent reference comparison over the store's own contents.
+        List<EntityId> reference = new(admitted);
+        reference.Sort((left, right) =>
+        {
+            Assert.That(store.TryGetPriorityKey(left, out long leftKey), Is.True);
+            Assert.That(store.TryGetPriorityKey(right, out long rightKey), Is.True);
+            int byPriority = leftKey.CompareTo(rightKey);
+            if (byPriority != 0)
+            {
+                return byPriority;
+            }
+
+            int bySession = left.RunSession.CompareTo(right.RunSession);
+            if (bySession != 0)
+            {
+                return bySession;
+            }
+
+            int byIndex = left.Index.CompareTo(right.Index);
+            return byIndex != 0 ? byIndex : left.Generation.CompareTo(right.Generation);
+        });
+
+        long PriorityKeyOf(EntityId id)
+        {
+            Assert.That(store.TryGetPriorityKey(id, out long key), Is.True);
+            return key;
+        }
+
+        int tiedKeyCount = 0;
+        for (int index = 1; index < iterated.Count; index++)
+        {
+            if (PriorityKeyOf(iterated[index]) == PriorityKeyOf(iterated[index - 1]))
+            {
+                tiedKeyCount++;
+            }
+        }
+
+        return new TieFixture(
+            StoreContractAssertions.RenderOrder(iterated, PriorityKeyOf),
+            StoreContractAssertions.RenderOrder(reference, PriorityKeyOf),
+            StoreContractAssertions.RenderOrder(storageOrder, PriorityKeyOf),
+            tiedKeyCount);
+    }
+
+    /// <summary>The three renderings of one tie fixture, plus how many adjacent ties it contains.</summary>
+    /// <param name="IteratedRendering">What the store iterated.</param>
+    /// <param name="ReferenceRendering">What the independent comparison produced.</param>
+    /// <param name="StorageRendering">The dense storage order, which must differ from both.</param>
+    /// <param name="TiedKeyCount">How many adjacent pairs in the iterated order share a priority key.</param>
+    private readonly record struct TieFixture(
+        string IteratedRendering,
+        string ReferenceRendering,
+        string StorageRendering,
+        int TiedKeyCount);
+
+    private static EntityIdAllocator NewAllocator()
+    {
+        return new EntityIdAllocator(
+            RunSession,
+            MiningSiteManifestCount,
+            StaticWorldObjectManifestCount);
+    }
+}

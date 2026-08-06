@@ -27,7 +27,9 @@ internal static class BuildVerb
             context,
             "locked restore",
             "compile with analyzers and warnings as errors",
-            "assert the accepted project boundary");
+            "assert the accepted project boundary",
+            "assert every gate script is wired or explicitly exempt",
+            "assert both root wrappers expose the same verb table");
 
         ledger.Enter(0, "locked restore (" + configuration.WorkflowName + " -> MSBuild "
             + configuration.MsbuildName + ")");
@@ -143,7 +145,7 @@ internal static class BuildVerb
         // failure rather than an omission. It is here rather than in a script of its
         // own tier because it is a repository-consistency assertion, it costs about a
         // second, and `build` is the verb CI reaches first.
-        context.Section("stage 4: assert every gate script is wired or explicitly exempt");
+        ledger.Enter(3);
         CommandResult wiring = context.RunRepositoryScript(
             "verify-gate-wiring",
             "build/verify-gate-wiring.sh",
@@ -151,9 +153,9 @@ internal static class BuildVerb
             timeout: TimeSpan.FromMinutes(5));
         if (!wiring.Succeeded)
         {
-            return VerbOutcome.Validation(
+            return ledger.Abandon(VerbOutcome.Validation(
                 "a gate script is neither invoked nor explicitly exempted, so it runs only when "
-                + "someone remembers to type it; see the step log");
+                + "someone remembers to type it; see the step log"));
         }
 
         // Stage 5 is the wrapper's own contract. verify-wrapper-parity.sh runs both root
@@ -162,7 +164,7 @@ internal static class BuildVerb
         // back to this verb, and it costs about 13 seconds. It was exempted on the claim
         // that the wrapper rebuilds the verb host the calling verb runs from; wired here,
         // ./build.sh build exits 0.
-        context.Section("stage 5: assert both root wrappers expose the same verb table");
+        ledger.Enter(4);
         CommandResult parity = context.RunRepositoryScript(
             "verify-wrapper-parity",
             "build/verify-wrapper-parity.sh",
@@ -170,9 +172,9 @@ internal static class BuildVerb
             timeout: TimeSpan.FromMinutes(10));
         if (!parity.Succeeded)
         {
-            return VerbOutcome.Validation(
+            return ledger.Abandon(VerbOutcome.Validation(
                 "./build.sh and ./build.ps1 no longer expose the same verb and argument table, "
-                + "or a wrapper has started branching on the verb; see the step log");
+                + "or a wrapper has started branching on the verb; see the step log"));
         }
 
         return VerbOutcome.Success(

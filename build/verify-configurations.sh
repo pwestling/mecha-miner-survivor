@@ -255,6 +255,26 @@ lock_file_set_problems() {
   return 0
 }
 
+# The literal and the list encode the same fact, and that is a drift risk - so it is
+# asserted rather than left to memory. What it is NOT is a reason to derive the literal
+# from the list: the list is one of the two sets anchors 2 and 3 compare, so a count taken
+# from it agrees with it by construction and anchor 1 stops being an independent anchor.
+# That would reopen exactly the hole the comment above names from doc 91 § Negative control
+# adequacy - deleting a project, its lock file and its list entry together keeps both sets
+# equal and would then satisfy all three checks. The independent third artifact here is the
+# literal, which is the role a committed manifest plays in the content gate; the list is
+# the analogue of that gate's scan, not of its manifest.
+#
+# So both stay, and disagreement between them is a named failure instead of a silent one.
+# Adding a project now costs three edits - the list, this literal, and the lock file - and
+# the ceiling is stated: three consistent edits still pass, which makes an ACCIDENTAL
+# change loud and is not evidence the set is the right size.
+if [[ "${EXPECTED_LOCK_FILE_COUNT}" -ne "${#LOCK_FILE_PROJECT_DIRECTORIES[@]}" ]]; then
+  fail "EXPECTED_LOCK_FILE_COUNT is ${EXPECTED_LOCK_FILE_COUNT} but LOCK_FILE_PROJECT_DIRECTORIES lists ${#LOCK_FILE_PROJECT_DIRECTORIES[@]}; the two encode one fact and have drifted, so § 4's count anchor is measuring a set nobody declared"
+else
+  pass "the count anchor (${EXPECTED_LOCK_FILE_COUNT}) and the accepted project list agree, so anchor 1 is independent of the two sets without being stale"
+fi
+
 mapfile -t lock_set_problems < <(lock_file_set_problems "${LOCK_FILE_PROJECT_DIRECTORIES[@]}")
 if [[ "${#lock_set_problems[@]}" -eq 0 ]]; then
   pass "the lock-file set is exactly the ${EXPECTED_LOCK_FILE_COUNT} accepted projects, so § 4's drift check has something to compare"

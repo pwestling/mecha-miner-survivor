@@ -445,6 +445,10 @@ Many streams, but they are more coupled than wave 2, so each PR must name the
 performance and readability) and doc 110 wants it early: "PRE-001/002/004,
 UI-001 through UI-003: establish M2 and performance direction early."
 
+The extraction-zone radius (3.0M) and geode resonance-field radius (6.0M) are
+design-confirmed and accepted in `DEC-128`, so `MAP-003`, `MAP-006`, and `MIN-001`
+are no longer blocked on them and owe no proof gate for the values.
+
 ---
 
 ## Wave 4 - catalog breadth

@@ -46,7 +46,6 @@
     "rank_zero_damage_per_attack_at_focal_point": 63,
     "rotates_focal_point_toward_enemies_independently_of_mech_facing": false
   },
-  "expected_effect": null,
   "rules": [
     {
       "text": "All five pellets spread and then curve inward to converge on a focal point centered on persistent mech facing at current maximum range."

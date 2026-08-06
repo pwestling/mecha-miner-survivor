@@ -71,10 +71,7 @@
   },
   "availability": {
     "fresh_profile": true,
-    "coverage_role": "Weapon tempo",
-    "unlock_id": null,
-    "unlock_name": null,
-    "unlock_cost_hyper_gold": null
+    "coverage_role": "Weapon tempo"
   },
   "effect_rules": [
     "Increases attacks per second rather than subtracting the displayed percentage from cooldown.",
@@ -112,7 +109,6 @@
     },
     {
       "statement": "Reference-build progression uses the Installed +8% value by minute 14, +16% by minute 21, and +20% by minute 28.",
-      "value": null,
       "quote": "- Utilities by minute 14: Harmonic Amplifier and Cycle Capacitor, at their installed +8% values. Both reach Rank 2 (+16%) by minute 21 and Rank 3 (+20%) by minute 28."
     }
   ]

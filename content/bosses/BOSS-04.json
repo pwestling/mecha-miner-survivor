@@ -40,7 +40,6 @@
     "percent": 95
   },
   "defining_behavior": "Leaps onto a locked ground marker",
-  "armor": null,
   "behavior_kind": "persistent giant pursuer with exactly one additional behavior",
   "contact_footprint": {
     "contact_and_weapon_hurt_diameter_m": 1.9,
@@ -81,7 +80,6 @@
     "crouch_duration_seconds": 1.5,
     "landing_damage": 35,
     "marker_shape": "Circle",
-    "marker_diameter_m": null,
     "marker_placement": "a circular area centered on the mech's sampled position",
     "marker_tracks_after_appearing": false,
     "marker_visibility": "its boundary plus countdown remain visible beneath player and enemy effects",

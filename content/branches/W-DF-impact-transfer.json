@@ -48,7 +48,6 @@
     "bosses_can_be_launched": false,
     "bosses_can_be_damaged_by_launched_enemies": true
   },
-  "expected_effect": null,
   "rules": [
     {
       "text": "An ordinary enemy struck by the ram becomes a projectile for 1.0 s or until it has traveled 5M."

@@ -30,7 +30,6 @@
     "percent": 45
   },
   "earliest_minute": 4,
-  "variant_of": null,
   "behavior_kind": "pure contact pursuer",
   "armor": 0,
   "contact_footprint": {
@@ -73,10 +72,8 @@
     "repair_pickups": 0,
     "temporary_pickups": 0
   },
-  "specialist_attack": null,
   "first_playable_subset": {
-    "included": true,
-    "temporary_substitute": null
+    "included": true
   },
   "description": "A slow beetle-like alien whose large rounded carapace and short legs produce a broad solid silhouette. Shellbacks create durable moving obstacles without physically blocking the mech and teach that some bodies should be routed around or concentrated under sustained fire."
 }

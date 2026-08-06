@@ -17,23 +17,16 @@
     "external_numerics[]: GDD-UTILITY-CATALOG",
     "external_numerics[]: GDD-PROGRESSION"
   ],
-  "material": null,
-  "primary_role": null,
-  "installed_to_rank_3": null,
   "effect": {
     "stat_names": [],
-    "value_kind": "directional-bearings",
-    "stacking_classification": null
+    "value_kind": "directional-bearings"
   },
-  "ranks": null,
   "acquisition": {
-    "material_unit_cost": null,
     "common_ore_cost": 300,
     "utility_slots_filled": 1,
     "rank_count": 0,
     "rank_ore_costs": [],
     "total_rank_ore_cost": 0,
-    "rank_values_are_totals_not_cumulative_additions": null,
     "unique_in_loadout": true,
     "has_branches": false,
     "has_alternative_recipes": false,
@@ -41,15 +34,10 @@
     "dismantlable": false,
     "sellable": false,
     "refundable_during_run": false,
-    "requires_manual_activation": false,
-    "previews_all_four_effect_tiers": null
+    "requires_manual_activation": false
   },
   "availability": {
     "fresh_profile": true,
-    "coverage_role": null,
-    "unlock_id": null,
-    "unlock_name": null,
-    "unlock_cost_hyper_gold": null,
     "always_present_in_fixed_fabrication_catalog": true
   },
   "tracking": {
@@ -137,7 +125,6 @@
     },
     {
       "statement": "The radar has no initial upgrade track, unlike the twelve non-radar utilities with their 50/100/150-ore ranks.",
-      "value": null,
       "quote": "All base effects, rank totals, stacking rules, exclusions, rounding behavior, and affected-system disclosures are authoritative in that catalog. Their exact numeric values remain playtest baselines."
     }
   ]

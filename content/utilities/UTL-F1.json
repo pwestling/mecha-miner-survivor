@@ -69,10 +69,7 @@
   },
   "availability": {
     "fresh_profile": true,
-    "coverage_role": "Economy",
-    "unlock_id": null,
-    "unlock_name": null,
-    "unlock_cost_hyper_gold": null
+    "coverage_role": "Economy"
   },
   "effect_rules": [
     "Applies to common ore installments from standard and rich seams and to the common-ore jackpot from material geodes.",

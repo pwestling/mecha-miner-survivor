@@ -65,16 +65,13 @@
     }
   ],
   "partial_payout": "none; no partial material or ore payout",
-  "extraction_zone_radius_m": null,
   "progress_decay": {
     "grace_seconds": 0.5,
     "decay_rate_multiplier_of_forward_rate": 4,
-    "secured_checkpoint": null,
     "rule": "The reward is withheld until the Complete transition, so an incomplete attempt pays nothing."
   },
   "resonance_field": {
     "shape": "circular",
-    "radius_m": null,
     "larger_than_extraction_zone": true,
     "modifier_magnitude": {
       "percent": 20
@@ -95,7 +92,6 @@
     "uses_progress_thresholds": false,
     "modifier_named_in_geode_label_or_contextual_hud": true
   },
-  "beacon_thresholds": null,
   "depleted_state": "non-interactive mapped landmark for the rest of the run; cannot be reactivated",
   "persistence": "run-local; the specialized material and 50 common ore are lost if unspent when the run ends"
 }

@@ -71,10 +71,7 @@
   },
   "availability": {
     "fresh_profile": true,
-    "coverage_role": "Mobility",
-    "unlock_id": null,
-    "unlock_name": null,
-    "unlock_cost_hyper_gold": null
+    "coverage_role": "Mobility"
   },
   "effect_rules": [
     "Applies to direct movement in every direction without changing acceleration, stopping, facing, collision, mining progress, or enemy speed.",

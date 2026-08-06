@@ -9,9 +9,6 @@
     "destructible_rock_rules.destructible_rock: GDD-PLAYER-SURVIVABILITY-BASELINE#health-packs-and-destructible-rocks",
     "destructible_rock_rules.health_pack: GDD-PLAYER-SURVIVABILITY-BASELINE#health-packs-and-destructible-rocks"
   ],
-  "mode_id": null,
-  "map_id": null,
-  "generation_version": null,
   "mode": "standard",
   "distance_language": "Map distances are expressed as base-travel time: the time the shared unmodified mech would need to follow the shortest valid route between two points with no enemies or stops. Account PowerUps, mech traits, utilities, relics, and temporary effects do not change which distance band a location occupies during generation. These bands express route distance through traversable ground, not straight-line distance through obstacles.",
   "reference_mech_speed_m_per_s": 3.0,
@@ -19,11 +16,9 @@
     {
       "band": "Near",
       "base_travel_time_from_deployment": {
-        "minimum_seconds_exclusive": null,
         "maximum_seconds_inclusive": 45
       },
       "route_distance_m": {
-        "minimum_exclusive": null,
         "maximum_inclusive": 135
       },
       "source_text": "Up to 45 seconds | Up to 135M"
@@ -225,7 +220,6 @@
       "favors nearby unexplored or recently entered space without becoming a persistent map marker or exploration-completion item"
     ],
     "destructible_rock": {
-      "id": null,
       "prop": "Destructible rock",
       "hull": 100,
       "armor": 0,
@@ -248,11 +242,9 @@
         "A non-piercing projectile that directly hits a rock deals damage and ends normally; piercing attacks may continue according to their ordinary rule. \"Non-solid\" refers to movement, not immunity to weapon collision.",
         "Rocks never receive enemy damage, resonance modifiers, elite or boss multipliers, control, kill effects, or ordinary-enemy defeat credit.",
         "Damaging or destroying a rock never builds weapon focus, momentum, mass, charge, replication, exposure, or another enemy-hit or enemy-kill counter. It may still satisfy the basic requirement for an automatic weapon to launch an attack when no enemy is available."
-      ],
-      "presentation": null
+      ]
     },
     "health_pack": {
-      "id": null,
       "prop": "Health pack",
       "repair_hull": 25,
       "can_exceed_maximum_hull": false,
@@ -266,8 +258,7 @@
         "A pack is consumed at full Hull and wastes all excess repair above maximum.",
         "Repair amount is unaffected by Armor, Recovery, maximum-Hull modifiers, PowerUps, utilities, relics, current health, elapsed time, or hidden difficulty adjustment."
       ],
-      "source": "destroyed destructible rock, 20% chance independently per rock",
-      "presentation": null
+      "source": "destroyed destructible rock, 20% chance independently per rock"
     }
   },
   "landmarks_and_repetition": {
@@ -308,8 +299,7 @@
       "landmark and authored-structure repetition limits",
       "clear finite-boundary presentation"
     ],
-    "validation_distance_metric": "navigable route distance rather than straight-line proximity",
-    "retry_budgets": null
+    "validation_distance_metric": "navigable route distance rather than straight-line proximity"
   },
   "playtest_targets": [
     "At least 90% of blind first-run players who begin exploring should discover a mining opportunity within 45 seconds without radar guidance.",
@@ -330,6 +320,5 @@
     "per-region distribution caps and site-separation times",
     "the 16-rock active cap, offscreen spawn validity, one-second attempt interval, 10% spawn chance, and 20% health-pack chance",
     "expected exploration share and encounter cadence"
-  ],
-  "landmark_pools": null
+  ]
 }

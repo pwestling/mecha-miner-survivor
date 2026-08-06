@@ -51,7 +51,6 @@
       "pulse rate"
     ]
   },
-  "expected_effect": null,
   "rules": [
     {
       "text": "Every pulse pushes ordinary enemies 1.0M radially outward and slows them by 25% for 1.0 s."

@@ -40,7 +40,6 @@
     "percent": 92
   },
   "defining_behavior": "Fires a radial needle burst",
-  "armor": null,
   "behavior_kind": "persistent giant pursuer with exactly one additional behavior",
   "contact_footprint": {
     "contact_and_weapon_hurt_diameter_m": 1.6,
@@ -91,7 +90,6 @@
         "world_speed_m_per_s": 2.25
       },
       "homing": false,
-      "lifetime_seconds": null,
       "lifetime_description": "disappears after crossing slightly more than one screen width or hitting solid terrain"
     },
     "resonance_interactions": {

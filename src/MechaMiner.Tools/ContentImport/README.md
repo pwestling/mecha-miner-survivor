@@ -44,11 +44,27 @@ checks:
 - that no stale extraction metadata key (`_provenance`, `_source`, `notes`, `note`, `refs`, `lines`,
   `line`, `shared_rule_refs`) survives anywhere at any depth. The singular `note` was added after three
   keys survived a blocklist that carried only the plural;
-- that no string value anywhere under `content/` matches `docs/.*\.md`. `source_refs` was cleaned in an
-  earlier pass, but the citations had moved next door into domain fields, where nothing looked: eleven
-  `effect.stacking_classification` strings carried a parenthetical `(docs/68-…:253)`, and one field
-  literally named `beacon_response_source` held a repo path. A line number is unstable wherever it
-  hides, and `doc_id#anchor` in `source_refs` is the only citation form the envelope names;
+- that **no `null` appears anywhere under `content/`**, at any depth, in any of the 139 `*.json` files —
+  `localization/en.json` included, which the definition loader skips — and with **no exception set at
+  all**, because an exception set is a place for a null to hide. A `null` in a source definition is never
+  legal: `40:90` materializes an explicit default for every absent optional field, so an absent field gets
+  its default while a present-and-`null` one asks runtime to guess. 275 nulls across 101 of 138 definition
+  files were disposed of in one pass — 246 keys omitted, 24 fields removed as fields no schema will declare
+  (20 relic rarity/weighting, 4 boss `armor`), 3 `external_numerics[n].value` keys removed as shape
+  defects, 2 nested `id` keys removed because their objects are parameters of `MGC-01` rather than
+  addressable definitions. The two nested `id`s were briefly planned as declared exceptions; removing the
+  key instead made the assertion unconditional;
+- that **no line-number citation and no repository path** appears in any string value. This replaced
+  `docs/.*\.md`, which pinned three incidental spellings of a path — the directory name, a forward slash,
+  a lowercase `.md` — and let six forms through: no extension, a backslash separator, no `docs/` prefix,
+  uppercase, `.markdown`. It is now two rules keyed on what is wrong: a `:<digits>` suffix after any
+  path-like token, in either separator and any case with the extension optional; and any repository path
+  at all (`docs`, `src`, `content`, `tools`, `assets` plus a separator), line number or not. A bare
+  `#anchor` is **out of scope by design** — it is half of the sanctioned `doc_id#anchor` form, `A9` already
+  resolves anchors against real heading slugs, and it carries neither a path nor a line number. The
+  narrowness was not hypothetical: the new rules found two real defects the old pattern could not see, a
+  `content/`-prefixed path in an encounter-schedule value and a bare extensionless `docs/68` in a `UTL-A1`
+  statement, both the class `Ruling 25` removed 13 of;
 - **polarity agreement**: where a structured polarity value (a `direction`, or any field valued from the
   closed vocabulary higher/lower, increase/decrease, more/less, faster/slower, longer/shorter,
   raise/reduce, gain/lose) sits beside prose stating the same fact, the two must agree in sign. Prose is
@@ -61,7 +77,18 @@ checks:
   `0 < |v| < 1`, which would be the compiler's normalized factor stored where percentage points belong;
   and no name or object authors the normalized factor beside the points. A name "says `_percent`"
   wherever the token appears, so the 52 mid-name spellings such as `percent_of_mech_base_speed` are
-  correct and are not flagged;
+  correct and are not flagged. **A fourth rule covers the case the other three cannot reach**: all three
+  begin by asking whether the name says percent, so in the previous revision every rule sat behind
+  `if not says_percent: … continue` and a bare number under a non-percent name was never examined —
+  `sneaky_bonus: 25` and `damage_bonus: 150` both passed with zero failures, while the docstring
+  advertised the rewrite as fixing exactly that. Rule 4 fails any **number** under a relative-magnitude
+  name (`bonus`, `penalty`, `increase`, `decrease`, `reduction`, `boost`, `malus`, `discount`,
+  `surcharge`, `uplift`) that says neither percent nor any unit-or-kind token: such a number is either
+  percentage points or a multiplicative scale and the name does not say which, which `40:95` forbids for
+  the first and `40:94` forbids for the second. A unit-or-kind token anywhere in the name excludes it, so
+  `single_target_ceiling_multiplier_at_full_bonus` — head noun `multiplier`, `bonus` a mid-name qualifier
+  — is not flagged. Rule 4 flags **nothing** authored in this tree: it is a regression guard, and its
+  evidence is its negative control, the two injections above, each run and reverted individually;
 - that every `source_refs` element resolves — the document ID against `doc_id` front matter under
   `docs/`, and any `#anchor` against a real heading slug in that document;
 - that every `source_refs` **scope prefix** resolves to a field that exists in the definition it

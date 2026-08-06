@@ -70,10 +70,7 @@
   },
   "availability": {
     "fresh_profile": true,
-    "coverage_role": "Mining speed",
-    "unlock_id": null,
-    "unlock_name": null,
-    "unlock_cost_hyper_gold": null
+    "coverage_role": "Mining speed"
   },
   "effect_rules": [
     "Applies to standard seams, rich seams, material geodes, and Hyper Gold sites.",

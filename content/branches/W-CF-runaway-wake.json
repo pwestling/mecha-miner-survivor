@@ -62,7 +62,6 @@
       "segment duration"
     ]
   },
-  "expected_effect": null,
   "rules": [
     {
       "text": "After 2.0 s of continuous movement, the wake gains +10% Damage and +5% width for each additional second of movement."

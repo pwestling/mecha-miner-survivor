@@ -33,7 +33,6 @@
     "percent": 25
   },
   "earliest_minute": 16,
-  "variant_of": null,
   "behavior_kind": "pursuit and contact plus one telegraphed straight projectile",
   "armor": 0,
   "contact_footprint": {
@@ -91,7 +90,6 @@
         },
         "world_speed_m_per_s": 2.25
       },
-      "lifetime_seconds": null,
       "lifetime_description": "carries it slightly beyond one screen width",
       "homing": false,
       "leads_target": false,
@@ -127,8 +125,7 @@
     "hard_control_interaction": "hard control may pause locomotion but does not erase already-earned cadence; ordinary Needler charge may pause under hard control because it is not a boss ability"
   },
   "first_playable_subset": {
-    "included": true,
-    "temporary_substitute": null
+    "included": true
   },
   "description": "A narrow stalk-like organism with a visibly swollen projectile sac and two rear stabilizing limbs. It continues pursuing, but every 4.5 seconds it begins a conspicuous 0.8-second charge, samples the mech's current position, and fires one straight non-homing needle along that line."
 }

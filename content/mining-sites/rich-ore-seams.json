@@ -34,15 +34,12 @@
     "total_seam_payout_multiplier": 2,
     "exposure_per_secured_payout_multiplier": 2
   },
-  "extraction_zone_radius_m": null,
   "progress_decay": {
     "grace_seconds": 0.5,
     "decay_rate_multiplier_of_forward_rate": 4,
     "secured_checkpoint": "each completed installment",
     "rule": "A completed 40-ore installment is retained, while only the unfinished current 3-second interval can decay."
   },
-  "resonance_field": null,
-  "beacon_thresholds": null,
   "depleted_state": "non-interactive mapped landmark for the rest of the run",
   "persistence": "run-local; unspent common ore is lost when the run ends"
 }

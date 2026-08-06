@@ -23,19 +23,14 @@
     "resource": "Hyper Gold",
     "amount": 300
   },
-  "extraction_zone_radius_m": null,
   "progress_decay": {
     "grace_seconds": 0.5,
     "decay_rate_multiplier_of_forward_rate": 4,
-    "secured_checkpoint": null,
     "rule": "Leaving the area puts the entire pending reward at risk because unfinished progress decays rapidly."
   },
-  "resonance_field": null,
   "beacon_thresholds": [
     {
       "trigger": "Activation",
-      "progress": null,
-      "at_uninterrupted_seconds_from_zero": null,
       "detail": "The first extraction progress on a Hyper Gold site activates its threat beacon and begins a focused alien response."
     },
     {
@@ -43,24 +38,21 @@
       "progress": {
         "percent": 25
       },
-      "at_uninterrupted_seconds_from_zero": 11.25,
-      "detail": null
+      "at_uninterrupted_seconds_from_zero": 11.25
     },
     {
       "trigger": "50%",
       "progress": {
         "percent": 50
       },
-      "at_uninterrupted_seconds_from_zero": 22.5,
-      "detail": null
+      "at_uninterrupted_seconds_from_zero": 22.5
     },
     {
       "trigger": "75%",
       "progress": {
         "percent": 75
       },
-      "at_uninterrupted_seconds_from_zero": 33.75,
-      "detail": null
+      "at_uninterrupted_seconds_from_zero": 33.75
     }
   ],
   "beacon_rules": [

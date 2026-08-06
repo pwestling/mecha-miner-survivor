@@ -37,7 +37,6 @@
     "boss_slow_form": "globally resisted",
     "fields_may_overlap_and_damage_independently": true
   },
-  "expected_effect": null,
   "rules": [
     {
       "text": "The primary explosion leaves a 3.0 s hazard field at its impact point."

@@ -51,8 +51,6 @@
     "ghost_collides_mines_collects_opens_or_takes_damage": false,
     "values_are_initial_tuning": true
   },
-  "pause_behavior": null,
-  "live_state_meter": null,
   "acquisition": {
     "method": "found in a relic cache through map exploration",
     "fabricable": false,
@@ -79,8 +77,6 @@
     "sale_value_varies_by_identity_order_duration_or_progress": false
   },
   "rarity_and_weighting": {
-    "rarity_tier": null,
-    "cache_selection_weight": null,
     "selection_model": "three distinct relics drawn without replacement from the currently unlocked pool and assigned to the three caches during generation",
     "fresh_profile_pool_count": 5,
     "fully_unlocked_pool_count": 10,

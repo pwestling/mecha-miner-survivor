@@ -40,7 +40,6 @@
     "percent": 85
   },
   "defining_behavior": "Telegraphs and performs a straight charge",
-  "armor": null,
   "behavior_kind": "persistent giant pursuer with exactly one additional behavior",
   "contact_footprint": {
     "contact_and_weapon_hurt_diameter_m": 1.5,
@@ -90,7 +89,6 @@
     "ordinary_contact_damage_replaced_during_charge": 18,
     "turns_during_charge": false,
     "targeting": "displays a wide straight charge lane toward the mech's sampled position",
-    "lane_width_m": null,
     "lane_validation": "the lane never knowingly selects a route that immediately collides with terrain before covering one body length",
     "terrain_interaction": "terrain stops the charge without stunning or damaging the boss",
     "miss_consequence": "missing carries Riftjaw past the player and creates a brief damage opportunity before pursuit resumes",

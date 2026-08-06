@@ -61,10 +61,7 @@
   },
   "availability": {
     "fresh_profile": true,
-    "coverage_role": "Recovery",
-    "unlock_id": null,
-    "unlock_name": null,
-    "unlock_cost_hyper_gold": null
+    "coverage_role": "Recovery"
   },
   "effect_rules": [
     "Adds to other Recovery sources and functions during movement, combat, and mining.",

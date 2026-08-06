@@ -55,7 +55,6 @@
     "charge_consumption": "Charges are consumed by the next pulse and replaced by the count that pulse hits.",
     "charges_from_lone_boss": 1
   },
-  "expected_effect": null,
   "rules": [
     {
       "text": "Every enemy hit by a pulse gives one Critical Mass charge for the next pulse, capped at 20 charges."

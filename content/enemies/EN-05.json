@@ -30,7 +30,6 @@
     "percent": 25
   },
   "earliest_minute": 10,
-  "variant_of": null,
   "behavior_kind": "pure contact pursuer",
   "armor": 0,
   "contact_footprint": {
@@ -73,7 +72,6 @@
     "repair_pickups": 0,
     "temporary_pickups": 0
   },
-  "specialist_attack": null,
   "first_playable_subset": {
     "included": false,
     "temporary_substitute": "Lurker at equivalent population weight"

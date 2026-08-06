@@ -47,15 +47,12 @@
     "finite_weapon_created_duration_multiplier": 2,
     "increases_projectile_speed_range_knockback_control_or_capacity": false
   },
-  "pause_behavior": null,
-  "live_state_meter": null,
   "acquisition": {
     "method": "found in a relic cache through map exploration",
     "fabricable": false,
     "minable": false,
     "listed_in_geological_survey": false,
     "pool_availability": "fresh-profile",
-    "unlock": null,
     "caches_per_standard_map": 3,
     "cache_opening": "automatic on mech contact; freezes the complete gameplay simulation",
     "relics_drawn_per_run": 3,
@@ -67,8 +64,6 @@
     "sale_value_varies_by_identity_order_duration_or_progress": false
   },
   "rarity_and_weighting": {
-    "rarity_tier": null,
-    "cache_selection_weight": null,
     "selection_model": "three distinct relics drawn without replacement from the currently unlocked pool and assigned to the three caches during generation",
     "fresh_profile_pool_count": 5,
     "fully_unlocked_pool_count": 10,

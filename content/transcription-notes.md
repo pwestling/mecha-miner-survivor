@@ -1575,6 +1575,345 @@ in this pass's commit message instead. Together with the A20 over-claim in the p
 claim was written from the intent rather than from the diff. Every claim in a commit message or body on
 this branch is now checked against the actual diff before it is written.
 
+### Integration-owner rulings applied — sixth pass
+
+#### Ruling 29 — `null` is never legal in a source definition
+
+**The ruling.** A `null` in a source definition is never legal. `content/README.md` used to define a
+`null` as "the document states no value", which made absence expressible two ways — an omitted key and
+a nulled key — for one meaning. `docs/technical/40-content-data-and-validation.md:90` settles it:
+"Optional fields have explicit defaults materialized into the canonical bundle so runtime never
+guesses." An optional field that is absent gets its default; an optional field that is present and
+`null` asks runtime to guess, which is the thing that line forbids. So absence is spelled by omitting
+the key, and `null` is spelled nowhere.
+
+**The inventory, re-derived rather than inherited.** Walking every `*.json` under `content/` and
+counting `null` leaves at any depth: **275 nulls across 101 of the 138 definition files**
+(`content/localization/en.json` holds none, and the two Markdown files are not definitions). Every
+figure below was recomputed from the tree in this pass, not carried forward.
+
+| Bucket | Nulls | Disposition |
+| --- | ---: | --- |
+| (a) pure absence — no document states a value, and the per-definition note already says so | 178 | key omitted |
+| (b) the document states a value exists but supplies no number, or states it varies per instance | 52 | key omitted; the ten genuine gaps are recorded below first |
+| (c) fields no schema will declare — relic rarity/weighting, boss Armor | 24 | **field removed**, not converted |
+| (d) shape defects — a scalar slot that can never hold a scalar | 3 | **key removed**, shape defect recorded |
+| (e) nested `id` on two non-addressable objects | 2 | **key removed** |
+| (f) deliberate deferrals and pending citations | 16 | key omitted; see the two subsections below |
+| Total | 275 | no `null` remains anywhere under `content/` |
+
+**Order.** The gap entries below were written **before** any key was omitted. A `null` plus a
+per-definition note is a two-part record of a hole in the design spec; converting the `null` away
+first would leave the note without the thing it annotates, and for ten of them there was no note
+either. That is why this subsection precedes the conversion.
+
+#### Value gaps recorded before conversion
+
+These are holes in the **design specification**, not transcription defects: a document requires or
+implies a value and supplies none. They are recorded here because the `null` that used to mark them is
+gone. Grouped by gap, with the affected definitions listed inside; a field appearing on eight
+definitions for one reason is one gap, not eight.
+
+**Gap 1 — boss ability geometry is stated as a shape and never dimensioned (3 definitions).**
+`docs/31-initial-alien-roster.md` describes each boss ability's affected area in words and gives no
+extent for any of them. The three share one cause, so they are one gap:
+
+- `BOSS-01 :: ability.lane_width_m`. Being transcribed: the width of Riftjaw's charge lane. Expected: a
+  width in metres, because the ability's hit test is an area and the roster gives every other parameter
+  of the ability numerically — 8 s cadence, 1 s telegraph, 1.5 s charge, 180% / 5.40 M/s, 27 damage.
+  What the document actually says: `docs/31:134` — "displays a **wide** straight charge lane toward the
+  mech's sampled position". "Wide" is the only extent given, and `docs/31:136`'s "before covering one
+  body length" dimensions the lane's *length* test, not its width.
+- `BOSS-02 :: ability.ring_radius_m`. Being transcribed: the radius of the Skitterling ring Brood Titan
+  sheds. Expected: a radius in metres, since the sibling `ring_opening_degrees` is authored as 90 and a
+  ring needs both an angular opening and a radius to be placed. What the document actually says:
+  `docs/31:143` — "releases 16 Skitterlings in an incomplete ring **just outside its body**". The
+  placement is given relative to the body with no offset, and the boss's 2.00 M contact diameter is the
+  only nearby length. Deriving a radius from it would author a number `docs/31` does not state.
+- `BOSS-04 :: ability.marker_diameter_m`. Being transcribed: the diameter of Skybreaker Apex's locked
+  landing marker. Expected: a diameter in metres — the sibling `marker_shape` is authored as "Circle"
+  and landing damage of 35 applies "inside the circle", so the circle's size decides the ability's
+  entire threat area. What the document actually says: `docs/31:162` — "marks a **circular area**
+  centered on the mech's sampled position" — and `docs/31:163` — "Landing deals 35 damage inside the
+  circle." Neither gives a size, and the boss circles `docs/31:35` defers to
+  `docs/72-player-survivability-and-damage-baseline.md#collision-and-contact-footprints` are the
+  bosses' own contact diameters, not their ability markers.
+
+**Gap 2 — `REL-06 :: effects.clustering_distance_m`.** Being transcribed: the distance within which two
+living enemies count as clustered, which gates a +50% weapon damage bonus. Expected: a distance in
+metres; it is the sole spatial condition of the relic's headline effect, its sibling
+`minimum_other_living_enemies_for_clustering` is authored as 1, and the damage figure itself is authored
+as 50 percentage points. What the document actually says: `docs/69-initial-relic-catalog.md:121` — "An
+enemy within the **displayed** clustering distance of at least one other living enemy takes 50% more
+weapon damage." The distance is described as displayed to the player and is never stated, and unlike
+`REL-08` below the section does not say the value remains tuning — so the relic's central threshold is
+simply missing.
+
+**Gap 3 — `UTL-R1 :: availability.coverage_role`.** Being transcribed: the resource radar's
+coverage-role label. Expected: one of the role labels the utility catalog assigns every other
+fresh-profile utility, because the radar is a fresh-profile utility — `docs/50:106` and
+`docs/68:272` both have it offered in every profile. What the document actually says: the "Coverage
+role" column at `docs/68:265-272` has exactly six rows, one per material (Direct offense, Mining speed,
+Weapon tempo, Mobility, Recovery, Economy), and the radar is not one of them; `docs/68:272` mentions it
+only as "plus the resource radar", outside the table. **What existed before this entry, precisely.** `content/README.md` listed this
+field's *path* among ten it named as gaps, but nowhere in the repository recorded the *substance* — what
+was being transcribed, what value was expected and why, or what the document says instead — and
+`content/transcription-notes.md` did not mention `coverage_role` for the radar in any spelling. A path in
+a list is not a record of the gap; the same is true of Gaps 1 and 2. The six Advanced-Utility-Suite
+utilities that omit the same field for the same reason
+(`UTL-A2`, `UTL-B1`, `UTL-C2`, `UTL-D2`, `UTL-E2`, `UTL-F2`) each already carry a per-definition note
+saying so — the radar's note block records `primaryRole` and `installedToRank3` as gaps and never
+mentioned `coverageRole`, so converting its `null` without this entry would have destroyed the only
+trace.
+
+**Five more, recorded briefly because a sibling field preserves the fact.** These are gaps in the same
+sense, but nothing is lost by the conversion: each nulled numeric has a sibling in the same object that
+carries the document's own words, so the hole stays visible in the data.
+
+- `BOSS-03 :: ability.projectile.lifetime_seconds` and `EN-06 ::
+  specialist_attack.projectile.lifetime_seconds`. Both retain a sibling `lifetime_description` holding
+  the document's qualitative extent — "disappears after crossing slightly more than one screen width or
+  hitting solid terrain" and "carries it slightly beyond one screen width". A screen width is not a
+  world distance, so no duration is derivable; the prose says exactly that.
+- `REL-08 :: effects.positional_tolerance_m`, `effects.heat_build_rate_per_second`,
+  `effects.heat_vent_rate_per_second`. All three are named as unquantified by the relic's own
+  `rules[5]`, transcribed verbatim: "Exact positional tolerance and heating and venting rates remain
+  tuning." `rules[0]` additionally carries the qualitative behavior ("Remaining within a small
+  tolerance around the same world position builds heat; sustained travel outside that tolerance vents
+  it"). The document declares these tuning values rather than omitting them by accident.
+
+**Four gap families found by re-derivation, with no record anywhere.** The brief named five unrecorded
+gaps; re-deriving the inventory rather than trusting it surfaced four more field families whose name
+appears nowhere in this file, in any spelling. They are recorded here for the same reason as Gap 3 — the
+`null` was the only trace — and briefly, because none of them is a missing *number* whose magnitude a
+reader would need:
+
+- `live_state_meter` on eight relics (`REL-01`–`REL-07`, `REL-09`). `docs/technical/40:132`'s relic
+  field list includes "live-state meter", and no relic section in `docs/69` describes one for these
+  eight. One gap: the field list requires a meter description the catalog never writes.
+- `pause_behavior` on six relics (`REL-01`–`REL-04`, `REL-06`, `REL-07`). `REL-05` and `REL-08`–`REL-10`
+  do state pause behavior; these six sections say nothing about what happens across a
+  full-simulation pause. One gap, six pointers.
+- `first_playable_subset.temporary_substitute` on six enemies (`EN-01`–`EN-04`, `EN-06`, `EN-07`). The
+  sibling `included` is authored `true` on all six, so no substitute is needed and the field is
+  vestigial rather than missing — recorded so it is not later read as a hole.
+- `resonance_behavior.edge_case_rule` on three resources (`A`, `E`, `F`). `docs/40:110-116` states
+  edge-case rules for Cinderglass, Barysteel and Driftmetal and states none for Asterite, Eidolon Coral
+  or Flux Amber. One gap: three of the six resonance behaviors have no stated edge case.
+
+**Not gaps, and deliberately not written up as such.** 22 nulls sit under fields whose document says
+the value varies per instance or is decided at generation time, and two more (`presentation` on the
+destructible rock and the health pack) sit under `docs/51-standard-map-generation-contract.md:156`'s
+"Audiovisual treatment remains production work". A specification that deliberately defers a value is a
+specification, not a hole; writing register-style entries for them would dilute the gaps above. Their
+keys are simply omitted.
+
+#### Removals, not conversions — 29 keys leave the tree
+
+Data leaving the tree must not be described as a conversion. These fields were deleted, not omitted:
+
+**(c1) The 20 relic rarity-and-weighting fields.** `rarity_and_weighting.rarity_tier` and
+`rarity_and_weighting.cache_selection_weight` on all ten of `REL-01`–`REL-10`. **Ruled: these are fields
+that should not exist.** No design document mentions relic rarity or relic weighting anywhere;
+`docs/technical/40-content-data-and-validation.md:132`'s relic field list — pool availability/unlock,
+discovery sentence key, sale value, behavior registration, benefit/tradeoff parameters, hook points,
+affected weapon categories, live-state meter, presentation — omits both; and `DEC-127` fixes cache
+selection by drawing without replacement from the unlocked pool rather than by weight, so a per-relic
+weight has nothing to weight. **Measured before acting: no relic's `rarity_and_weighting` object is
+emptied by the removal.** All ten hold the same five surviving populated fields — `selection_model`,
+`fresh_profile_pool_count`, `fully_unlocked_pool_count`, `in_fresh_profile_pool`,
+`guaranteed_to_appear` — so in every one of the ten only the two keys are removed and the object stays.
+The whole-object removal contemplated for the empty case therefore applies to nothing, and each relic's
+three `rarity_and_weighting:` scoped `source_refs` prefixes still resolve, so no citation had to move
+(Ruling 13, `A22`).
+
+**(c2) Boss `armor`, on all four bosses.** **Ruled: the field should not exist on a boss.**
+`docs/technical/40-content-data-and-validation.md:114`'s enemies-and-bosses field list — Hull, movement,
+contact damage/diameter/cadence, control resistance, behavior registration, projectile or boss-ability
+parameters, elite eligibility, presentation, spawn classification, telemetry tags — omits Armor
+entirely, while `:110`'s mech list includes it. Armor is a mech stat. This is the same class as (c1): an
+invented field, not a missing value.
+
+**Reported, not acted on: the ten enemies also carry `armor`.** Every one of `EN-01`–`EN-10` holds a
+top-level `armor: 0` — a value, not a null, so it is outside Ruling 29's scope, and the `40:114`
+argument above would apply to it identically. The 0 comes from one prose sentence at `docs/31:25`
+("Ordinary enemies have no Armor"), not from a roster column. The ruling named bosses only, so the ten
+enemy fields are **left exactly as authored** and referred back to the integration owner rather than
+removed under an extended reading of a ruling that did not mention them.
+
+**(d) Three `external_numerics[n].value` shape defects.** `UTL-A1 :: external_numerics[1].value`,
+`UTL-C1 :: external_numerics[1].value`, `UTL-R1 :: external_numerics[6].value`. In each, the sibling
+`statement` and `quote` carry prose or several numbers at once — `UTL-A1`'s reference-build line states
++8% by minute 14, +16% by minute 21 and +20% by minute 28 in one sentence — so a single scalar slot can
+never be filled, whatever value were chosen. The `null` is removed because `null` is illegal. **The
+surrounding shape is deliberately left alone.** Whether `value` should become an array, whether the
+prose should be the sole carrier, or whether the entry should split into three is a shape question about
+a field name this transcription invented, and deciding it now would guess what `content/schemas/` will
+pick. Recorded here as a **shape defect for the schema-reconciliation pass**, alongside the other
+defects that need the schemas to land.
+
+**(e) Two nested `id` keys removed.** `content/maps/standard-map-generation-contract.json` under
+`destructible_rock_rules.destructible_rock` and `.health_pack`. **Ruled: the key should not exist, and
+no ID is to be minted.** Both are nested objects inside `MGC-01`, which already carries a stable ID, and
+neither is independently addressable — they are reached through `MGC-01` plus a JSON pointer, and nothing
+in the tree references a rock rule or a pack rule by ID. They are parameters of the map contract, not
+definitions. Minting IDs would create addressable entities the canonical bundle has no reason to
+address; if presentation later needs to bind visuals to them, that is `presentation_id`'s job, not
+`id`'s. The earlier plan to declare them as tolerated exceptions in the verifier is superseded: with the
+keys gone, **no `null` remains anywhere under `content/` and the new A26 assertion needs no exception
+set at all**, which is a stronger assertion than one carrying two permanent exemptions.
+
+#### Deliberate deferrals and pending citations
+
+- **`landmark_pools` (`MGC-01`)** — key omitted, and **no gap entry written**. It is already tracked as
+  `OQ-008` at `docs/open-questions.md:42`; duplicating a live open question into a gap register would
+  create two places to resolve one thing.
+- **`extraction_zone_radius_m` (4 mining-site classes) and `resonance_field.radius_m`
+  (specialized-material geodes)** — keys omitted, and these are **not gaps**: `DEC-128` sets them at
+  3.0 M and 6.0 M respectively, so a document does now supply the values. They are **resolved values
+  awaiting a reachable citation**. The numbers are deliberately not written in: the decision record is
+  not reachable from this branch, and `source_refs` must not point at nothing (40:87, and Ruling 13's
+  dangling-citation rule). This is a distinct state from "no document supplies this" and is recorded as
+  such so the next pass adds the numbers with their citation rather than re-deriving the gap.
+- **`presentation` on the destructible rock and the health pack** — keys omitted, no gap entry, per
+  `docs/51:156` above.
+
+#### A consequence the conversion produced, and `A22` caught: 19 citations de-scoped
+
+Omitting `prerequisite` on 13 PowerUps and 6 option unlocks left each of those 19 files with a
+`source_refs` entry scoped to a field that no longer exists — `prerequisite:
+GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules` and its unlocks equivalent. `A22` failed the run
+with all 19 named, which is exactly the defect class Ruling 13 made a failure, arriving from a direction
+nobody planned for: a legitimate conversion created dangling citations as a side effect.
+
+Fixed as `A22`'s own message prescribes — "drop the prefix and keep it file-level; never delete a
+citation that is the only support for a value still present". The 19 prefixes are removed and the
+citations kept at file level, unchanged in target: `GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules`
+now annotates the whole definition instead of one absent field. No citation was deleted and none was
+re-pointed at a different document; 0 of the 19 collided with an existing file-level entry, so 19
+citations remain 19. The shared purchase rules still apply to every PowerUp and unlock whether or not any
+of them has a prerequisite, so the file-level scope is the honest one.
+
+#### Ruling 30 — a silently rewritten quotation on `REL-09`, restored
+
+**The defect.** `content/relics/REL-09.json :: pause_behavior.rule` stored:
+
+> "The enemy speed increase ends immediately when mining stops because the mech leaves, the point
+> completes, or the simulation pauses."
+
+`docs/69-initial-relic-catalog.md:153` states:
+
+> "Every living enemy receives +50% movement speed while extraction progress is actively advancing. The
+> increase begins with forward progress and ends immediately when mining stops because the mech leaves,
+> the point completes, or the simulation pauses."
+
+The tail matched closely enough to read as a quotation; the head had been rewritten, and the rewrite
+**dropped the clause stating when the effect begins**. The lost clause is "The increase begins with
+forward progress" — the effect's **start condition**, which is the half of the sentence a reader
+consulting a field named `pause_behavior.rule` would most need, since a rule about when something stops
+is incomplete without the condition that starts it. The field presented itself as verbatim quotation, so
+nothing structural could see the change: it is not a null, not a naming defect, not a value, and no
+value-preservation proof over numeric leaves would ever touch it.
+
+**The fix.** The verbatim second sentence of `docs/69:153` is restored. This is **our** transcription
+error, not a design-source contradiction, so it belongs here and not in the contradictions section.
+
+**Second case, judged rather than fixed.** `content/mining-sites/specialized-material-geodes.json ::
+progress_decay.rule` reads "The reward is withheld until the Complete transition, so an incomplete
+attempt pays nothing", which overlaps its cited section (`GDD-MINING#specialized-material-geodes`) by
+very little and uses `Complete`-transition vocabulary from the technical state diagram rather than the
+geode section's wording. Reading the cited text: `docs/40:78` says the geode "awards that unit and 50
+common ore **only at completion** and provides **no partial material or ore payout**", and `docs/40:42`,
+in a different section, says "Material geodes and Hyper Gold sites **withhold their primary reward until
+the `Complete` transition**." **Conclusion: this field is our own description, not a quotation, and the
+text is left alone.** There is no single passage it could be a verbatim quote of — it synthesises two
+sentences from two different sections, and unlike `REL-09` nothing is lost in the synthesis: both source
+facts (reward only at completion, no partial payout) survive intact in it. It is recorded here as an
+**authored-description field** so that a later reader does not mistake it for a quotation and "restore"
+a passage that never existed. It also lacks a scoped `source_ref` for `progress_decay`, which is part of
+the wider citation-coverage finding deliberately left to a follow-up pass (below).
+
+**Deliberately out of scope.** The prototype that found these two also reported 248 further prose/citation
+mismatches needing roughly 64 new scoped `source_refs` entries across 37 files. Those are **citation**
+defects, not prose defects — the prose is right and the citation is too coarse to check it — and folding
+37 files into this pass would bury the fixes under review. That is a follow-up pull request.
+
+#### Ruling 31 — A24 was pinned to one spelling of a path, and two real defects were hiding behind it
+
+`A24` matched `docs/.*\.md`, which pins three incidental spellings of a path — the literal directory
+name, a forward slash, and a lowercase `.md` — and none of them is the unstable thing. Six citation
+forms walked through it: no extension, a backslash separator, no `docs/` prefix, uppercase, and
+`.markdown`. It is now two rules keyed on what is actually wrong: **a `:<digits>` line number after any
+path-like token**, in either separator and any case with the extension optional; and **any repository
+path at all** (`docs`, `src`, `content`, `tools`, `assets` followed by a separator), because
+`40:87` names `doc_id#anchor` as the citation form and a path is not one, line number or no line number.
+
+A bare `#anchor` is **out of scope by design**: it is half of the sanctioned form, `A9` already resolves
+every anchor in `source_refs` against real heading slugs, and it carries neither a path nor a line
+number. Flagging it would fire on the spelling the envelope endorses.
+
+**Two occurrences of Ruling 25's class were hiding behind the old pattern**, found by the new rules
+against the existing tree rather than by injection:
+
+- `standard-encounter-schedule.json :: minute_rows[33].formation_events[0].reconstruction_basis` ended
+  "See `content/transcription-notes.md`." — a repo path the old pattern could not match because the
+  prefix was `content/`, not `docs/`. Reworded to "The reconstruction is recorded in the transcription
+  notes beside this catalog."; the pointer's meaning is unchanged.
+- `UTL-A1 :: external_numerics[1].statement` said "`docs/68` calls it Harmonic Calibrator" — a `docs/`
+  path with no extension and no line number, which `docs/.*\.md` could not match. Rewritten to
+  "`GDD-UTILITY-CATALOG` calls it Harmonic Calibrator", which is the citation form `40:87` names. The
+  `UTL-A1` naming contradiction itself is unchanged and is still recorded as `C-2` above.
+
+#### Value-preservation record, corrected
+
+The earlier record on this branch stated the multiset difference of numeric leaves as `{0.75: 1}` and
+presented it as covering `21f1734 → 159b9c4`. **That figure is true of the final commit alone.**
+Recomputed: `75310ed → 159b9c4` removes `{0.75: 1}` and adds nothing, but across the full range
+`21f1734 → 159b9c4` the tree goes from **2,320 numeric leaves to 2,313** — **seven** left, not one, and
+the earlier report never named six of them. A measurement must be stated with the range it was taken
+over; this one was not.
+
+**All seven, enumerated.** Value multiset difference `21f1734 → 159b9c4`:
+removed `{0.75: 1, 1.1: 1, 1.25: 1, 1.3: 1, 1.45: 1, 1.5: 2}`, added `{}`.
+
+| # | Path | Value | Why it left |
+| --: | --- | ---: | --- |
+| 1 | `BOSS-01 :: contact_footprint.center_distance_that_begins_contact_m` | 1.25 | Ruling 12 — derived as radius + the player's 0.50 M collision radius; a second writer on a player-baseline constant |
+| 2 | `BOSS-02 :: contact_footprint.center_distance_that_begins_contact_m` | 1.5 | Ruling 12, same derivation |
+| 3 | `BOSS-03 :: contact_footprint.center_distance_that_begins_contact_m` | 1.3 | Ruling 12, same derivation |
+| 4 | `BOSS-04 :: contact_footprint.center_distance_that_begins_contact_m` | 1.45 | Ruling 12, same derivation |
+| 5 | `MGC-01 :: destructible_rock_rules.health_pack.collection_center_distance_with_standard_mech_circle_m` | 0.75 | Ruling 24 — the same derivation, third writer (0.25 M pickup radius + 0.50 M) |
+| 6 | `REL-09 :: cross_document_rules[0].enemy_movement_multiplier` | 1.5 | Ruling 19 — **a deletion.** Duplicate writer removed |
+| 7 | `REL-09 :: cross_document_rules[0].multiplies_with_elite_movement_multiplier` | 1.1 | Ruling 19 — **a deletion.** Duplicate writer removed |
+
+**Rows 6 and 7 are deletions and were never disclosed as removals.** A duplicate-writer removal is a
+deletion even when the value survives somewhere else, and both do survive: the 1.5 remains at
+`REL-09 :: effects.enemy_movement_speed_multiplier_while_mining`, and the 1.1 remains at
+`content/enemies/shared-elite-modifiers.json :: movement_speed_multiplier`, which is the catalog that
+owns the elite movement modifier. Surviving elsewhere is the *justification* for the deletion, not a
+reason to omit it from the record — the earlier report described Ruling 19 as collapsing duplicates and
+never said that two numeric leaves left the tree as a result.
+
+**This pass's own multiset difference, with its range named.** Range: `bb10612 → this pass's commit`,
+`content/**/*.json` only.
+
+- **Numeric leaves: 2,313 → 2,313.** Value multiset difference: **empty in both directions.** Stronger
+  than that, and measured: the multiset of `(file, JSON path, value)` triples is also unchanged — **0
+  gone, 0 new** — so no number moved to a different path either, which the value multiset alone would not
+  have shown. Every one of the 275 `null` dispositions replaces a nulled key with an absent key, and a
+  `null` is not a numeric leaf, so the conversions cannot move the count by construction; that is exactly
+  why the empty difference is a real check on the 29 removals below rather than a restatement of the
+  conversions.
+- **29 keys removed, carrying 0 numeric leaves.** The 20 relic `rarity_and_weighting` fields, the 4 boss
+  `armor` fields, the 3 `external_numerics[n].value` fields and the 2 nested `id` keys were every one of
+  them `null` at `bb10612`, so removing them deletes keys and no numbers. Stated explicitly because "29
+  keys removed" and "no numeric leaf moved" are both true and either one alone would mislead: the first
+  reads as data loss it is not, the second reads as nothing having been removed.
+- **1 string changed**, not a removal: `REL-09 :: pause_behavior.rule` gained back the dropped start
+  condition (Ruling 30). Two further strings were reworded to remove repository paths (Ruling 31), with
+  no change of meaning in either.
+- **`null` count: 275 → 0**, with **no declared exceptions**.
+
 ### Per-definition notes, by catalog
 
 #### Weapons (`content/weapons/`)

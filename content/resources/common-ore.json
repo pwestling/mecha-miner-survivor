@@ -19,7 +19,6 @@
   "persistence": "Retained after collection for the rest of the run; discarded when the run ends",
   "resource_class": "ordinary crafting resource",
   "inventory_scope": "run-local",
-  "maximum_safe_count": null,
   "sources": [
     {
       "source": "standard ore seam",

@@ -127,15 +127,46 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
         3. the compiler's normalized factor is never authored: no property
            name combines a percent token with factor/multiplier/fraction/
            normalized, and no object holds both <stem>_percent and a
-           same-stem factor sibling.
+           same-stem factor sibling;
+        4. no NUMBER sits under a relative-magnitude name - one whose
+           segments include bonus/bonuses, penalty/penalties, increase,
+           increased, decrease, reduction, boost, malus, discount,
+           surcharge or uplift - when that name says neither percent nor
+           any unit-or-kind token. Such a number is either percentage
+           points or a multiplicative scale and the name does not say
+           which; 40:95 permits percentage points only under a name that
+           says percent, and 40:94 requires an ambiguous numeric name to
+           carry a unit suffix.
       A name "says _percent" wherever the token appears, not only at the
       end - 40:95 constrains what the name says and 40:96's terminal-unit
       rule is about unit suffixes, so the 52 mid-name spellings such as
-      percent_of_mech_base_speed are correct and are not flagged.
-      This REPLACES a prose scan that matched a literal "%" glyph in string
+      percent_of_mech_base_speed are correct and are not flagged. Rule 4
+      excludes a unit-or-kind token wherever it appears too, for the
+      mirror-image reason: the tree's
+      single_target_ceiling_multiplier_at_full_bonus has `multiplier` as
+      its head noun and `bonus` as a mid-name qualifier, and Ruling 14
+      makes `_multiplier` the unit declaration for a multiplicative scale.
+      WHAT RULE 4 EXISTS FOR, and what it was verified to do. Rules 1-3 all
+      begin by asking whether the name says percent, so in the previous
+      revision every A16 rule was gated behind `if not says_percent: ...
+      continue` and a bare number under a non-percent name was never
+      examined. That revision's docstring nevertheless advertised the
+      rewrite as fixing exactly that case; it did not.
+      Rule 4 flags nothing in this tree as authored - it is a regression
+      guard, not a cleanup - so the claim above rests on its negative
+      control, not on a count. Two injections on content/enemies/EN-01.json
+      were each run and reverted individually:
+        sneaky_bonus: 25  -> FAIL, "1 numeric value(s) sit under a
+          relative-magnitude name ... ['content/enemies/EN-01.json.
+          sneaky_bonus = 25']", RESULT: FAIL (1 failure)
+        damage_bonus: 150 -> FAIL, the same message reporting
+          ['content/enemies/EN-01.json.damage_bonus = 150'],
+          RESULT: FAIL (1 failure)
+      Nothing beyond those two forms is claimed here.
+      A16 REPLACED a prose scan that matched a literal "%" glyph in string
       values: it left a numeric 25 under a non-percent name unchecked while
-      emitting 21 warnings about English sentences. None of the three rules
-      needs content/schemas/, so all three are failures.              FAILURE
+      emitting 21 warnings about English sentences. None of the four rules
+      needs content/schemas/, so all four are failures.              FAILURE
 
   A17 Formula policy: a player-facing formula must be a registered formula
       kind plus parameters, never a script string. String-valued formula
@@ -197,13 +228,27 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       with 40:90 ("Unknown fields are errors") for why a prefix may not name
       a field the definition does not have                            FAILURE
 
-  A24 No string value anywhere under content/ matches docs/.*\.md. A line
-      number is unstable wherever it hides, and source_refs (40:87) names
-      doc_id#anchor as the only citation form. source_refs itself was
-      cleaned in an earlier pass, but 13 citations had moved next door into
-      domain fields, where no assertion looked: eleven
-      effect.stacking_classification strings, one note, and one field
-      literally named beacon_response_source holding a repo path.
+  A24 Two rules over every string value under content/, each matching the
+      thing that is actually wrong rather than one spelling of a path:
+        a. no path-like token carries a `:<digits>` line number, in ANY
+           spelling - either slash separator, any case, extension optional
+           when a separator is present, and no `docs/` prefix required;
+        b. no repository path (docs, src, content, tools, assets followed by
+           a separator) appears at all, line number or not, because 40:87
+           names doc_id#anchor as the citation form and a path is not one.
+      A bare `#anchor` is OUT OF SCOPE by design: it is half of the
+      sanctioned citation form, A9 already resolves anchors against real
+      heading slugs, and it carries neither a path nor a line number.
+      REPLACED `docs/.*\.md`, which pinned three incidental spellings and
+      let six forms through. Each of seven forms was tested individually
+      against the new rules; the six defective ones are caught and the
+      anchor-only form is confirmed not matching.
+      The narrowness was not hypothetical: the new rules found TWO real
+      defects in this tree that the old pattern could not see - a
+      `content/transcription-notes.md` path in an encounter-schedule
+      reconstruction_basis, and a bare extensionless `docs/68` in a UTL-A1
+      statement. Both are the class Ruling 25 removed 13 of, and both were
+      rewritten in this pass.
       Mandate: docs/technical/40-content-data-and-validation.md:87    FAILURE
 
   A25 Polarity agreement. Where a structured polarity value (a "direction",
@@ -239,6 +284,29 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       Mandate: docs/technical/40-content-data-and-validation.md:26
       (snake_case property names) with 40:96 (the unit-suffix rule that fixes
       which end of the name the bound word may occupy)                FAILURE
+
+  A26 No `null` appears anywhere under content/, at any depth, in any file -
+      including content/localization/en.json, which the definition loader
+      skips. THERE IS NO EXCEPTION SET, and that is deliberate: an
+      exception set is a place for a null to hide. A null in a source
+      definition is never legal, because 40:90 materializes an explicit
+      default for every absent optional field ("Optional fields have
+      explicit defaults materialized into the canonical bundle so runtime
+      never guesses") - so an absent field gets its default and a
+      present-and-null field asks runtime to guess. Absence is spelled by
+      omitting the key.
+      275 nulls across 101 of 138 definition files were disposed of in the
+      pass that added this: 246 keys omitted, 20 relic rarity/weighting
+      fields and 4 boss armor fields REMOVED as fields no schema will
+      declare, 3 external_numerics[n].value keys removed as shape defects,
+      and 2 nested id keys removed because the objects holding them are not
+      independently addressable. The two nested ids were briefly planned as
+      declared exceptions; removing the key instead made the assertion
+      unconditional.
+      Negative control: `"probe_null": null` injected at the top level of
+      content/enemies/EN-01.json -> FAIL, "1 null(s) under content/ ...
+      ['content/enemies/EN-01.json.probe_null']".
+      Mandate: docs/technical/40-content-data-and-validation.md:90  FAILURE
 
 Not asserted here: no structural JSON Schema validation happens, because
 content/schemas/ (40:36) does not exist yet. Domain field names outside the
@@ -703,6 +771,46 @@ PERCENT_TOKEN_KEY = re.compile(r"(?i)(?:^|_)percent(?:age)?(?:_points?)?(?:$|_)"
 # percent-ness of the nearest ancestor key that says percent, so {"percent": 20}
 # and {"minimum": 40, "maximum": 80} are checked as percentage points.
 PERCENT_CONTAINER_KEY = frozenset({"minimum", "maximum", "percent", "value", "points"})
+# A16 rule 4 - the OTHER half of 40:95, which the previous rewrite claimed to fix
+# and did not.
+#
+# 40:95 reads "Percentages in authoring use human-readable percentage points ONLY
+# WHEN the property name says `_percent`". Rules 1-3 all begin by asking whether
+# the name says percent, so every one of them is gated behind that question and a
+# bare number under a name that does NOT say percent was never examined at all.
+# `sneaky_bonus: 25` and `damage_bonus: 150` both passed with zero failures.
+#
+# What is decidable here. Whether an arbitrary number "is a percentage" is not
+# decidable from the number. But a name whose head noun is a RELATIVE magnitude -
+# a bonus, a penalty, an increase, a reduction - names a quantity that is
+# necessarily proportional to something else, so it is either percentage points or
+# a multiplicative scale, and both 40:95 (percentage points say `_percent`) and
+# 40:94 (ambiguous numeric names carry a unit suffix) require the name to say
+# which. A relative-magnitude name carrying neither is a number whose unit the
+# reader cannot recover: 25 could be 25 percentage points or a 25x scale.
+#
+# A name that already declares its quantity kind ANYWHERE in the name is excluded,
+# not just terminally. `single_target_ceiling_multiplier_at_full_bonus` is the
+# tree's one such name: its head noun is `multiplier`, the `bonus` token is a
+# mid-name qualifier, and Ruling 14 makes `_multiplier` the unit declaration for a
+# multiplicative scale. Requiring the token to be terminal would have flagged it.
+#
+# This rule flags NOTHING in the tree as authored. That is the point: it is a
+# regression guard against a percentage arriving under a name that hides its unit,
+# and its negative control - the two injections named above - is what demonstrates
+# it bites.
+RELATIVE_MAGNITUDE_TOKEN = re.compile(
+    r"(?i)(?:^|_)(?:bonus|bonuses|penalty|penalties|increase|increased|decrease"
+    r"|reduction|boost|malus|discount|surcharge|uplift)(?:$|_)"
+)
+# Tokens that declare what kind of quantity the number is, so the name is not
+# ambiguous and 40:94 is satisfied. Matched as whole underscore-delimited segments
+# anywhere in the name.
+UNIT_OR_KIND_TOKEN = re.compile(
+    r"(?i)(?:^|_)(?:m|m_per_s|meters?|seconds?|milliseconds?|per_second|hull|armor"
+    r"|degrees|fraction|count|multiplier|scale|ore|hyper_gold|units?|ranks?|hits?"
+    r"|diameters?|tier|weight)(?:$|_)"
+)
 # The compiler-owned normalized factor. Authoring it puts a second writer on a
 # derived field, which is the second half of 40:95.
 NORMALIZED_FACTOR_TOKEN = re.compile(
@@ -1900,6 +2008,7 @@ def check_percentage_point_policy(docs: dict[Path, object]) -> list[tuple]:
     factor_valued: list[str] = []
     hybrid_names: list[str] = []
     twins: list[str] = []
+    unnamed_magnitude: list[str] = []
     checked = 0
 
     def check_twins(where: str, obj: dict) -> None:
@@ -1932,16 +2041,26 @@ def check_percentage_point_policy(docs: dict[Path, object]) -> list[tuple]:
                 check_twins(f"{name}{jpath[1:]}", value)
 
             if not says_percent:
+                inherits_percent = any(PERCENT_TOKEN_KEY.search(a) for a in ancestors)
+                is_number = not isinstance(value, bool) and isinstance(value, (int, float))
                 # Rule 2 reaches container leaves through the ancestry.
-                if (
-                    key in PERCENT_CONTAINER_KEY
-                    and not isinstance(value, bool)
-                    and isinstance(value, (int, float))
-                    and any(PERCENT_TOKEN_KEY.search(a) for a in ancestors)
-                ):
+                if key in PERCENT_CONTAINER_KEY and is_number and inherits_percent:
                     checked += 1
                     if value != 0 and abs(value) < 1:
                         factor_valued.append(f"{name}{jpath[1:]} = {value}")
+                # Rule 4 - a NUMBER under a name that does not say percent. This is
+                # the case rules 1-3 never reach, because all three ask "does the
+                # name say percent?" first. A relative-magnitude name that declares
+                # no unit and no kind cannot state whether its number is percentage
+                # points or a scale, and 40:95 permits percentage points only under
+                # a name that says percent.
+                elif (
+                    is_number
+                    and not inherits_percent
+                    and RELATIVE_MAGNITUDE_TOKEN.search(key)
+                    and not UNIT_OR_KIND_TOKEN.search(key)
+                ):
+                    unnamed_magnitude.append(f"{name}{jpath[1:]} = {value}")
                 continue
 
             # Rule 1 - a percent-named property must resolve to a number.
@@ -1974,6 +2093,12 @@ def check_percentage_point_policy(docs: dict[Path, object]) -> list[tuple]:
             f"{len(hybrid_names)} hybrid name(s), {len(twins)} twin(s)",
             "ok" if not (hybrid_names or twins) else "FAIL",
         ),
+        (
+            "relative magnitude under a name that declares no unit",
+            0,
+            f"{len(unnamed_magnitude)} bare number(s)",
+            "ok" if not unnamed_magnitude else "FAIL",
+        ),
     ]
     if no_number:
         fail(
@@ -1997,11 +2122,21 @@ def check_percentage_point_policy(docs: dict[Path, object]) -> list[tuple]:
             f"{len(twins)} object(s) author both percentage points and a same-stem normalized factor; "
             f"the factor is compiler-derived (40:95, 40:100): {twins[:10]}"
         )
+    if unnamed_magnitude:
+        fail(
+            f"{len(unnamed_magnitude)} numeric value(s) sit under a relative-magnitude name (bonus, "
+            f"penalty, increase, reduction, ...) that says neither percent nor a unit, so the number "
+            f"could be percentage points or a multiplicative scale and the name does not say which. "
+            f"40:95 allows human-readable percentage points only under a name that says percent, and "
+            f"40:94 requires an ambiguous numeric name to carry a unit suffix: rename to "
+            f"<stem>_percent, or to <stem>_multiplier if it is a scale, or add the unit suffix: "
+            f"{unnamed_magnitude[:10]}"
+        )
     return rows
 
 
 # --------------------------------------------------------------------------
-# A24 - no repo path with a line number may hide in a domain value.
+# A24 - no repo path, and no line number, may hide in a domain value.
 #
 # source_refs was cleaned in an earlier pass, but the citations had moved next
 # door: eleven effect.stacking_classification strings carried a parenthetical
@@ -2010,21 +2145,154 @@ def check_percentage_point_policy(docs: dict[Path, object]) -> list[tuple]:
 # A line number is unstable wherever it hides, and the doc_id#anchor form
 # (40:87) is the only citation form the envelope names, so the rule is scoped to
 # the value, not to one field.
+#
+# WHAT THIS USED TO BE, AND WHY IT WAS REPLACED. The pattern was `docs/.*\.md`,
+# which pins three incidental spellings of one path - the literal directory name,
+# a forward slash, and a lowercase `.md` - and matches on none of them being the
+# unstable thing. Six citation forms walked straight through it: no extension
+# (`docs/40-mining-and-extraction`), a backslash separator, no `docs/` prefix
+# (`40-mining-and-extraction.md:104`), uppercase (`DOCS/...MD:104`), and the
+# `.markdown` extension. It also missed two defects PRESENT IN THIS TREE, which is
+# how the narrowness was confirmed rather than assumed: a `content/`-prefixed repo
+# path in an encounter-schedule value, and a bare extensionless `docs/68` in a
+# UTL-A1 statement. Both are the class Ruling 25 removed 13 of; the old pattern
+# simply could not see them.
+#
+# The replacement is two rules, each matching what is actually wrong:
+#
+#   A24a THE LINE NUMBER. Any path-like token followed by `:<digits>`, in any
+#        spelling: either slash separator, any case, extension optional when a
+#        separator is present, and no directory name required. A line number is
+#        the unstable thing - it moves whenever the cited document is edited - so
+#        this rule keys on it rather than on how the path in front of it is spelled.
+#
+#   A24b THE REPO PATH. A repository directory (docs, src, content, tools, assets)
+#        followed by a separator and a path character, in any case and with either
+#        separator. A repo path is a defect even with no line number on it, because
+#        40:87 names doc_id#anchor as the citation form and a path is not one.
+#
+# A BARE `#anchor` IS DELIBERATELY OUT OF SCOPE, and the test below records it as
+# not matching. `#hyper-gold-sites` is not a defective citation form: it is HALF OF
+# THE SANCTIONED ONE. 40:87 names doc_id#anchor, A9 already resolves every anchor
+# that appears in source_refs against the real heading slugs of the cited document,
+# and a bare `#slug` carries neither a path nor a line number, so nothing about it
+# is unstable in the way this assertion is about. Flagging it would fire on the
+# very spelling the envelope endorses.
 # --------------------------------------------------------------------------
 
-DOC_PATH_IN_VALUE = re.compile(r"docs/.*\.md")
+# A24a - a path-like token carrying a line number, in any spelling.
+LINE_NUMBER_IN_VALUE = re.compile(
+    r"""(?ix)
+    (?:
+        [\w.\-]+ (?: [/\\] [\w.\-]+ )+          # any path with >=1 separator, extension optional
+      | [\w\-]+ \. (?: md | markdown | mdown | rst | txt | json | ya?ml | cs | py )
+                                                # or a bare filename with a document extension
+    )
+    \s* : \s* \d+
+    """
+)
+# A24b - a repository path in a domain value, line number or not.
+REPO_PATH_IN_VALUE = re.compile(
+    r"(?i)(?:^|[^\w/\\])(?:docs|src|content|tools|assets)[/\\][\w.\-]"
+)
+
+A24_RULES = (
+    (
+        "no line-number citation in any string value",
+        LINE_NUMBER_IN_VALUE,
+        "a line number moves whenever the cited document is edited, so it is unstable wherever "
+        "it hides; source_refs carries doc_id#anchor instead",
+    ),
+    (
+        "no repository path in any string value",
+        REPO_PATH_IN_VALUE,
+        "a repo path is not a citation form - 40:87 names doc_id#anchor - and it is a defect with "
+        "or without a line number attached",
+    ),
+)
 
 
 def check_no_doc_paths_in_values(docs: dict[Path, object]) -> list[tuple]:
-    """A24 - no string value anywhere under content/ matches docs/.*\\.md."""
+    """A24 - no line-number citation and no repository path in any string value.
+
+    Matched on the unstable thing rather than on one spelling of a path: either
+    slash separator, any case, extension optional. A bare `#anchor` is out of
+    scope by design - see the comment above.
+    """
+    rows = []
+    for label, rx, why in A24_RULES:
+        hits: list[str] = []
+        for path, doc in sorted(docs.items()):
+            for jpath, _, value in walk(doc):
+                if isinstance(value, str) and rx.search(value):
+                    hits.append(f"{rel(path)}{jpath[1:]} = {value!r}")
+        rows.append((label, 0, len(hits), "ok" if not hits else "FAIL"))
+        if hits:
+            fail(
+                f"{len(hits)} string value(s) under content/ violate A24 ({label}): {why} "
+                f"(40:87): {hits[:10]}"
+            )
+    return rows
+
+
+# --------------------------------------------------------------------------
+# A26 - no `null` anywhere under content/, with NO declared exceptions.
+#
+# THE RULING. A null in a source definition is never legal. content/README.md
+# used to define a null as "the document states no value", which made absence
+# expressible two ways - an omitted key and a nulled key - for one meaning. 40:90
+# settles it: "Optional fields have explicit defaults materialized into the
+# canonical bundle so runtime never guesses." An absent optional field gets its
+# default; a present-and-null one asks runtime to guess, which is what that line
+# forbids. So absence is spelled by omitting the key.
+#
+# 275 nulls across 101 of the 138 definition files were disposed of in one pass:
+# 246 keys omitted, 20 relic rarity/weighting fields removed as fields no schema
+# will declare, 4 boss armor fields removed for the same reason, 3
+# external_numerics[n].value keys removed as shape defects, and 2 nested id keys
+# removed because the objects they sat on are not independently addressable.
+#
+# THERE IS NO EXCEPTION SET, deliberately. An earlier plan declared the two nested
+# `id` nulls in content/maps/standard-map-generation-contract.json as tolerated
+# exceptions pending minted IDs. That is superseded: destructible_rock and
+# health_pack are nested objects inside MGC-01, which already carries an ID, and
+# neither is reachable except through MGC-01 plus a JSON pointer - nothing
+# references either by ID. They are parameters of the map contract, not
+# definitions, so the `id` key was removed rather than minted or tolerated. With
+# it gone the assertion is unconditional, which is stronger than one carrying two
+# permanent exemptions: an exception set is a place for a null to hide.
+#
+# This scans EVERY *.json under content/, including content/localization/en.json,
+# which load_definitions() skips. A24-style value rules only see definition files;
+# a null is illegal in the localization catalog too.
+# --------------------------------------------------------------------------
+
+
+def null_paths(obj, path="$"):
+    """Yield the JSON path of every null in a document."""
+    if obj is None:
+        yield path
+    elif isinstance(obj, dict):
+        for key, value in obj.items():
+            yield from null_paths(value, f"{path}.{key}")
+    elif isinstance(obj, list):
+        for index, value in enumerate(obj):
+            yield from null_paths(value, f"{path}[{index}]")
+
+
+def check_no_nulls() -> list[tuple]:
+    """A26 - no null anywhere under content/, with no declared exceptions."""
     hits: list[str] = []
-    for path, doc in sorted(docs.items()):
-        for jpath, _, value in walk(doc):
-            if isinstance(value, str) and DOC_PATH_IN_VALUE.search(value):
-                hits.append(f"{rel(path)}{jpath[1:]} = {value!r}")
+    scanned = 0
+    for path in sorted(CONTENT.rglob("*.json")):
+        doc = load_json(path)
+        if doc is None:
+            continue
+        scanned += 1
+        hits.extend(f"{rel(path)}{p[1:] or ' (whole document)'}" for p in null_paths(doc))
     rows = [
         (
-            "no string value matches docs/.*\\.md",
+            f"no null anywhere under content/ ({scanned} file(s) scanned, 0 exceptions declared)",
             0,
             len(hits),
             "ok" if not hits else "FAIL",
@@ -2032,9 +2300,11 @@ def check_no_doc_paths_in_values(docs: dict[Path, object]) -> list[tuple]:
     ]
     if hits:
         fail(
-            f"{len(hits)} string value(s) under content/ embed a docs/ path; citations use the "
-            f"doc_id#anchor form in source_refs, and a path with a line number is unstable "
-            f"wherever it hides (40:87): {hits[:10]}"
+            f"{len(hits)} null(s) under content/. A null in a source definition is never legal: "
+            f"40:90 materializes an explicit default for every absent optional field, so absence is "
+            f"spelled by OMITTING the key and a present-and-null field asks runtime to guess. Omit "
+            f"the key; if the field should not exist at all, remove it and record the removal. There "
+            f"is no exception set to add it to: {sorted(hits)[:15]}"
         )
     return rows
 
@@ -2199,6 +2469,7 @@ def main() -> int:
     percent_rows = check_percentage_point_policy(docs)
     doc_path_rows = check_no_doc_paths_in_values(docs)
     polarity_rows = check_polarity_agreement(docs)
+    null_rows = check_no_nulls()
     loc_rows = check_localization(stats)
 
     table(
@@ -2226,9 +2497,14 @@ def main() -> int:
         footprint_rows,
     )
     table(
-        "A24 No docs/*.md path in any string value",
+        "A24 No line-number citation and no repository path in any string value",
         ("check", "expected", "actual", "status"),
         doc_path_rows,
+    )
+    table(
+        "A26 No null anywhere under content/ (no declared exceptions)",
+        ("check", "expected", "actual", "status"),
+        null_rows,
     )
     table(
         "A25 Polarity agreement (structured direction vs sibling prose)",

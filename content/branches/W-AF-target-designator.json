@@ -38,7 +38,6 @@
     "stacks_with_second_copy": false,
     "modifier_kind": "weapon-specific damage-taken multiplier"
   },
-  "expected_effect": null,
   "rules": [
     {
       "text": "At 75% focus or higher, the locked target becomes Exposed."

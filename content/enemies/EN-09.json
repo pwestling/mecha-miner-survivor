@@ -73,7 +73,6 @@
     "repair_pickups": 0,
     "temporary_pickups": 0
   },
-  "specialist_attack": null,
   "first_playable_subset": {
     "included": false,
     "temporary_substitute": "elite Shellback"

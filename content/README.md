@@ -120,10 +120,11 @@ Five files that used to be here are gone, and their absence is deliberate:
   `MGC-01` map-generation-contract definition.
 - **`resources/geode-resonance-effects.json`** held the six geode resonance effects as one aggregate.
   Each effect now sits on the resource that owns it — `resources/A.json`…`F.json` each carry
-  `resonance_effect_name` and a `resonance_behavior` block — and the resonance field's radius is a
-  field of the geode site class (`resonance_field.radius_m` in
-  `mining-sites/specialized-material-geodes.json`), per the mining-site schema
-  (`docs/technical/40-content-data-and-validation.md:140`).
+  `resonance_effect_name` and a `resonance_behavior` block — and the resonance field lives on the geode
+  site class (`resonance_field` in `mining-sites/specialized-material-geodes.json`), per the mining-site
+  schema (`docs/technical/40-content-data-and-validation.md:140`). Its `radius_m` key is currently
+  omitted: `DEC-128` sets it at 6.0 M, but that decision record is not reachable from this branch, so the
+  number waits for a citation `source_refs` can carry (`40:87`).
 - **`enemies/elite-modifier-profile.json`** treated elite status as its own entity. It is not one:
   elite *eligibility* is a validated `elite_eligible` field on each of the ten enemies
   (`docs/technical/40-content-data-and-validation.md:114` lists "elite eligibility" among the enemy
@@ -205,27 +206,30 @@ rule:
 - **Ranges are `{minimum, maximum}` objects**, never a string like `"8-10"`.
 - **Per-rank values are rank-ordered arrays** (`ranks[0]` is rank 1), variable length: PowerUp rank
   arrays have 1, 3, 4, or 5 entries matching each entry's `maximum`, and `PU-S04` has exactly one rank.
-- **Values are transcribed, not derived.** No value is computed, rounded, or filled in. Where the docs
-  state no fact, the property is `null`. **The reason is recorded in `content/transcription-notes.md`
-  for most of those nulls, but not all of them.** A full inventory of the tree at this revision finds
-  275 null-valued properties in 101 of the 138 definition files (`content/localization/en.json` has
-  none), and 30 of the 275 have no transcription note recording them as a gap: the 20
-  `relics/REL-01`–`REL-10 :: rarity_and_weighting.{rarity_tier,
-  cache_selection_weight}` fields, which no design document and no field list in
-  `docs/technical/40-content-data-and-validation.md:132` supports at all, and ten fields standing for a
-  value the documents leave undecided — `BOSS-01 :: ability.lane_width_m`,
-  `BOSS-02 :: ability.ring_radius_m`, `BOSS-04 :: ability.marker_diameter_m`,
-  `BOSS-03 :: ability.projectile.lifetime_seconds`,
-  `EN-06 :: specialist_attack.projectile.lifetime_seconds`, `REL-06 :: effects.clustering_distance_m`,
-  `REL-08 :: effects.{positional_tolerance_m, heat_build_rate_per_second, heat_vent_rate_per_second}`,
-  and `UTL-R1 :: availability.coverage_role`. For those ten the `null` in the data is the only
-  machine-readable record that the value is undecided, so **omitting the key instead would delete the
-  record**. Five of the ten also survive as prose inside the definition — `BOSS-03` and `EN-06` each
-  carry a sibling `lifetime_description`, and `REL-08 :: rules[5]` ends "Exact positional tolerance and
-  heating and venting rates remain tuning" — and five survive nowhere else at all:
-  `BOSS-01 :: ability.lane_width_m`, `BOSS-02 :: ability.ring_radius_m`,
-  `BOSS-04 :: ability.marker_diameter_m`, `REL-06 :: effects.clustering_distance_m`, and
-  `UTL-R1 :: availability.coverage_role`.
+- **Values are transcribed, not derived.** No value is computed, rounded, or filled in.
+- **Absence is spelled by omitting the key. `null` appears nowhere in this tree.** Where the docs state
+  no fact, the property is **absent**, not present-and-`null`.
+  `docs/technical/40-content-data-and-validation.md:90` is the mandate: "Optional fields have explicit
+  defaults materialized into the canonical bundle so runtime never guesses." An absent optional field
+  gets its materialized default; a present-and-`null` one asks runtime to guess, which is what that line
+  forbids. So absence has exactly one spelling.
+  **This reverses what this file used to say.** It previously defined a `null` as "the docs state no
+  fact" and argued that for ten fields the `null` was the only machine-readable record that a value is
+  undecided, so omitting the key would delete the record. The premise was right and the conclusion was
+  wrong: the fix is to write the record down, not to leave an illegal value in the data as a marker. A
+  full inventory found **275 nulls across 101 of the 138 definition files**; all 275 are gone.
+  Ten gap entries were written into `content/transcription-notes.md` **before** any key was omitted —
+  what was being transcribed, what value was expected and why, and what the cited document actually says
+  instead — and four further gap families found by re-deriving the inventory were recorded with them.
+  Of the 275: 246 keys were omitted; 24 fields were **removed** as fields no schema will declare (the 20
+  `relics/REL-01`–`REL-10 :: rarity_and_weighting.{rarity_tier, cache_selection_weight}` fields, which no
+  design document mentions and `40:132`'s relic field list omits, and the 4 boss `armor` fields, which
+  `40:114`'s enemies-and-bosses field list omits while `40:110`'s mech list includes Armor); 3
+  `external_numerics[n].value` keys were removed as shape defects; and 2 nested `id` keys were removed
+  because the objects holding them are parameters of `MGC-01` rather than independently addressable
+  definitions. `A26` in the verifier now fails on any `null` anywhere under `content/`, **with no
+  exception set** — an exception set is a place for a null to hide. See Ruling 29 in
+  `content/transcription-notes.md` for the full bucket accounting.
 - **The authoritative source wins over its mirrors.** The Markdown design docs are authoritative; the
   CSVs under `docs/data/` are mirrors (`docs/data/README.md:5,10` — "when values disagree, update the
   data mirror to match the Markdown"). Where a mirror and a doc disagree, the doc value is transcribed
@@ -285,8 +289,8 @@ These live in **[`content/transcription-notes.md`](./transcription-notes.md)**, 
 
 1. **design-source contradictions needing a ruling** — places where the design documents disagree with
    themselves or with their CSV mirrors, and no local choice can settle it; and
-2. **transcription and shape notes** — values the docs leave open (carried as `null`), aggregates whose
-   file shape is provisional, and divergences resolved by choosing the authoritative document.
+2. **transcription and shape notes** — values the docs leave open (the key is omitted, and the gap is
+   recorded there rather than marked with a `null`), aggregates whose file shape is provisional, and divergences resolved by choosing the authoritative document.
 
 That file is deliberately *not* named `open-questions.md`: two open-question registers already exist
 (`docs/open-questions.md` and `docs/technical/open-questions.md`), and a third file with that name
@@ -313,6 +317,14 @@ file, and `src/MechaMiner.Tools/ContentImport/README.md`):
   `presentation_id` being absent rather than null;
 - a non-empty string `id` on every definition — a missing or null `id` is an unconditional failure,
   because the exception list is now empty;
+- that **no `null` appears anywhere under `content/`**, at any depth, in any of the 139 `*.json` files
+  including `localization/en.json`, with **no exception set at all** (`40:90`);
+- that no number sits under a relative-magnitude name (`bonus`, `penalty`, `increase`, `reduction`, ...)
+  which says neither percent nor any unit, so a percentage cannot arrive under a name that hides whether
+  it is percentage points or a scale (`40:95`, `40:94`);
+- that no string value carries a `:<digits>` line number after any path-like token, in either slash
+  direction and any case with the extension optional, and that no repository path appears in a value at
+  all — matched on the unstable thing rather than on one spelling of a path (`40:87`);
 - the two exception sets, so drift stays visible: the definitions carrying a null *or absent* `id`
   (currently none) and the definitions omitting `name_key` (currently three) must each match a list
   declared at the top of the verifier. A new member is a failure; a member that no longer belongs is a

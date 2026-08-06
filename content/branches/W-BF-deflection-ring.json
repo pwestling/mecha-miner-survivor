@@ -47,7 +47,6 @@
     "undeflectable_boss_attacks": "remain visually distinct"
   },
   "favorable_scene_effect": {
-    "magnitude": null,
     "qualitative": "converts projectile pressure into retaliatory offense rather than simply deleting every threat"
   },
   "rules": [

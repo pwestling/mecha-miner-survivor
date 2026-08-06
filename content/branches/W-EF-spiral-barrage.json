@@ -52,7 +52,6 @@
     "retains_current_speed_and_lifetime": true,
     "damages_every_enemy_in_explosion": true
   },
-  "expected_effect": null,
   "rules": [
     {
       "text": "Automatic homing is removed. Every salvo launches its four missiles in evenly spaced radial directions from the mech."

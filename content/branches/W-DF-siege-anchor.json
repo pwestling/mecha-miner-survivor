@@ -55,7 +55,6 @@
     "affected_timing": "Per-enemy contact-repeat rate",
     "unaffected_timing": "Movement threshold and Siege Anchor setup"
   },
-  "expected_effect": null,
   "rules": [
     {
       "text": "Moving less than 0.25M for 1.25 s replaces the forward ram with a circular barrier at 2.2M radius around the mech."

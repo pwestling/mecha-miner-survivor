@@ -39,7 +39,6 @@
     "percent": 90
   },
   "defining_behavior": "Periodically sheds a Skitterling ring",
-  "armor": null,
   "behavior_kind": "persistent giant pursuer with exactly one additional behavior",
   "contact_footprint": {
     "contact_and_weapon_hurt_diameter_m": 2.0,
@@ -81,7 +80,6 @@
     "spawn_count": 16,
     "spawn_enemy_id": "EN-01",
     "spawn_placement": "an incomplete ring just outside its body",
-    "ring_radius_m": null,
     "ring_opening_degrees": 90,
     "ring_opening_orientation": "oriented generally away from the boss's direction of approach",
     "spawn_population_class": "event overflow",

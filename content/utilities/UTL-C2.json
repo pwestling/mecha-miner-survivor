@@ -18,8 +18,7 @@
       "Recharge time",
       "Stored charges"
     ],
-    "value_kind": "recharging-charge",
-    "stacking_classification": null
+    "value_kind": "recharging-charge"
   },
   "ranks": [
     {
@@ -66,7 +65,6 @@
   },
   "availability": {
     "fresh_profile": false,
-    "coverage_role": null,
     "unlock_id": "UNL-01",
     "unlock_name": "Advanced Utility Suite",
     "unlock_cost_hyper_gold": 600

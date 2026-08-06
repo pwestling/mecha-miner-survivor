@@ -64,7 +64,6 @@
     "affected_timing": "Pulse or supernova activation rate",
     "unaffected_timing": "Charge tell and status durations"
   },
-  "expected_effect": null,
   "rules": [
     {
       "text": "Pulse rate is multiplied by 0.25; rank zero therefore changes from one pulse every 1.5 s to one every 6.0 s."

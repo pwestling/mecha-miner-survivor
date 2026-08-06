@@ -1,0 +1,396 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "SIM-004",
+  "workPackageTitle": "Command admission, sequence/idempotency, paused transaction shell",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91 \u00a7 Verification registry). This file is the first commit of the W1-SIM stream: no SIM production type or test class named by a selector below exists yet.",
+    "The structural validator for this file is owned by TASK-FND-009-002. Until it lands, the shape here matches tests/verification/FND-002.json and tests/verification/FND-003.json exactly.",
+    "Status is current status: every entry is 'registered' because no implementing task has landed. A later commit flips an entry to 'implemented' only when its selector actually runs and passes, as tests/verification/FND-002.json and tests/verification/FND-003.json do.",
+    "Every nunit selector is a fully qualified 'Namespace.Class.Method' so one entry names exactly one test method. Test namespaces mirror production namespaces per doc 114 \u00a7 Naming and file-placement defaults; the full type and method layout the implementation must produce is fixed in the W1-SIM design contract handed to the implementation tasks.",
+    "doc 110 registers the SIM work packages but not their task IDs. SIM-004 splits into TASK-SIM-004-001, the active command path (command envelope of CTR-RUN-002, movement intent normalization, admission gate of CMP-SIM-002, typed rejection), and TASK-SIM-004-002, the paused transaction shell (request and result of CTR-RUN-003, expected state version, idempotency key). doc 110 lists both in one package because they share the admission gate, but they are separately landable.",
+    "The paused transaction entries assert the shell only: expected-state-version checking, atomicity between ticks, typed rejection, and idempotent replay. The domain validations doc 20 \u00a7 Paused transactions lists - ownership, availability, slot capacity, duplication, cost, prerequisites, branch exclusivity, integer overflow - belong to the packages that own fabrication, relics, and PowerUps, and will register their own entries."
+  ],
+  "entries": [
+    {
+      "id": "VER-SIM-004-001",
+      "summary": "A command is applied at most once: resubmitting an envelope with the same run identity, target tick, and sequence is rejected as a duplicate and mutates nothing, including when the resubmission arrives in a later tick.",
+      "task": "TASK-SIM-004-001",
+      "requirements": [
+        "TR-RUN-004",
+        "TR-CTR-002"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#commands-and-mutations",
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Commands.CommandAdmissionGateTests.ACommandIsAppliedAtMostOnce"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-004-002",
+      "summary": "A stale, duplicate, or invalid envelope returns a typed rejection reason and leaves the admitted command set and the committed state byte-identical, so a rejection is never a partial mutation.",
+      "task": "TASK-SIM-004-001",
+      "requirements": [
+        "TR-RUN-004",
+        "TR-CTR-002"
+      ],
+      "technicalSources": [
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry",
+        "docs/technical/10-runtime-architecture.md#commands-and-mutations"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Commands.CommandAdmissionGateTests.StaleDuplicateAndInvalidEnvelopesRejectWithoutMutation"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-004-003",
+      "summary": "The command sequence is monotonic per run: a sequence at or below the highest already-admitted sequence is rejected, a gap is admitted without being backfilled, and no admitted envelope is ever reordered relative to another.",
+      "task": "TASK-SIM-004-001",
+      "requirements": [
+        "TR-RUN-004"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#commands-and-mutations",
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Commands.CommandAdmissionGateTests.SequenceIsMonotonicAndNeverReordered"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-004-004",
+      "summary": "Run-session identity fences admission: an envelope carrying another run's identity is rejected on identity alone, without its payload being normalized or inspected.",
+      "task": "TASK-SIM-004-001",
+      "requirements": [
+        "TR-RUN-004",
+        "TR-CTR-004"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#commands-and-mutations",
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Commands.CommandEnvelopeTests.AForeignRunIdentityIsRejectedBeforePayloadInspection"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-004-005",
+      "summary": "Movement intent is normalized to a planar vector with magnitude in [0,1]: an over-unit analog magnitude clamps, each of the eight digital directions - including the four diagonals - normalizes to exactly unit length within a named tolerance, and zero input is an explicit stop rather than a tiny direction.",
+      "task": "TASK-SIM-004-001",
+      "requirements": [
+        "TR-RUN-004"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#active-commands",
+        "docs/technical/91-verification-strategy.md#numeric-tolerance"
+      ],
+      "gameplaySources": [
+        "docs/30-combat-weapons-movement-camera.md#direct-controls",
+        "docs/72-player-survivability-and-damage-baseline.md#movement-and-speed-modifiers"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Commands.MovementIntentTests.MagnitudeClampsAndDigitalDiagonalsNormalizeToUnitLength"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-004-006",
+      "summary": "Commands are admitted and normalized in the first phase of the tick and are immutable thereafter: a command admitted for tick N is visible to tick N, is not visible to tick N-1, and no later phase can alter or append to that tick's admitted set.",
+      "task": "TASK-SIM-004-001",
+      "requirements": [
+        "TR-RUN-004",
+        "TR-RUN-005",
+        "TR-CTR-004"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#system-phase-ordering",
+        "docs/technical/20-simulation-core.md#tick-transaction"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Commands.CommandAdmissionGateTests.AdmittedCommandsAreFrozenForTheTickTheyTarget"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-004-007",
+      "summary": "A paused transaction is all-or-nothing between ticks: an accepted request publishes exactly one new state version with its domain events, a rejected one leaves the state version and every field unchanged, and no tick executes while the transaction is in flight.",
+      "task": "TASK-SIM-004-002",
+      "requirements": [
+        "TR-RUN-004",
+        "TR-RUN-003"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#paused-transactions",
+        "docs/technical/10-runtime-architecture.md#pause-contract"
+      ],
+      "gameplaySources": [
+        "docs/20-run-structure-and-timing.md#on-demand-crafting-pauses",
+        "docs/20-run-structure-and-timing.md#relic-resolution-pauses"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Commands.PausedTransactionTests.CommitIsAllOrNothingBetweenTicks"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-004-008",
+      "summary": "A stale expected state version changes nothing and returns a typed rejection: the immutable view captured when the pause opened is refused once the authoritative version has moved on, and the caller learns why.",
+      "task": "TASK-SIM-004-002",
+      "requirements": [
+        "TR-RUN-004",
+        "TR-CTR-004"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#paused-transactions",
+        "docs/technical/10-runtime-architecture.md#pause-contract",
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Commands.PausedTransactionTests.AStaleExpectedStateVersionChangesNothing"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-004-009",
+      "summary": "An idempotency key makes a replayed transaction observe the already-applied result rather than applying twice: the second submission returns the first result, the state version advances once, and the domain events are emitted once.",
+      "task": "TASK-SIM-004-002",
+      "requirements": [
+        "TR-RUN-004",
+        "TR-CTR-004"
+      ],
+      "technicalSources": [
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry",
+        "docs/technical/20-simulation-core.md#paused-transactions"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Commands.PausedTransactionTests.ReplayWithTheSameIdempotencyKeyObservesTheAppliedResult"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-004-010",
+      "summary": "An accepted paused transaction publishes a replacement snapshot before resumption, so no tick ever runs against a state the presentation has not been given.",
+      "task": "TASK-SIM-004-002",
+      "requirements": [
+        "TR-RUN-003",
+        "TR-SIM-005"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#pause-contract",
+        "docs/technical/20-simulation-core.md#presentation-snapshot"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Commands.PausedTransactionTests.ReplacementSnapshotIsPublishedBeforeResumption"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-004-011",
+      "summary": "Over randomized envelope streams containing out-of-order, duplicated, stale, and foreign-run entries, the admitted sequence equals a deliberately simple reference model's and no rejected envelope ever mutated state, with the seed logged before the body runs.",
+      "task": "TASK-SIM-004-001",
+      "requirements": [
+        "TR-RUN-004",
+        "TR-QUA-002"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#reference-models",
+        "docs/technical/10-runtime-architecture.md#commands-and-mutations"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Commands.CommandAdmissionPropertyTests.AdmittedSequenceMatchesTheReferenceModel"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "seed-identity",
+        "minimized-input-artifact"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-004-012",
+      "summary": "A negative control proves the command gates can fail: a stub gate that keeps no deduplication history makes VER-SIM-004-001 fail, and a stub transaction that mutates before validating makes VER-SIM-004-007 and VER-SIM-004-008 fail.",
+      "task": "TASK-SIM-004-002",
+      "requirements": [
+        "TR-QUA-001",
+        "TR-RUN-004"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#acceptance-evidence",
+        "docs/technical/10-runtime-architecture.md#commands-and-mutations"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Commands.CommandAdmissionNegativeControlTests.IdempotenceAndAtomicityAssertionsFailAgainstDeliberatelyBrokenStubs"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output",
+        "negative-control"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    }
+  ]
+}

@@ -1,0 +1,529 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "SIM-005",
+  "workPackageTitle": "Exact PCG32 implementation, SplitMix64 child derivation, registered stream families, recovery state, scripted test sources",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91 \u00a7 Verification registry). This file is the first commit of the W1-SIM stream: no SIM production type or test class named by a selector below exists yet.",
+    "The structural validator for this file is owned by TASK-FND-009-002. Until it lands, the shape here matches tests/verification/FND-002.json and tests/verification/FND-003.json exactly.",
+    "Status is current status: every entry is 'registered' because no implementing task has landed. A later commit flips an entry to 'implemented' only when its selector actually runs and passes, as tests/verification/FND-002.json and tests/verification/FND-003.json do.",
+    "Every nunit selector is a fully qualified 'Namespace.Class.Method' so one entry names exactly one test method. Test namespaces mirror production namespaces per doc 114 \u00a7 Naming and file-placement defaults; the full type and method layout the implementation must produce is fixed in the W1-SIM design contract handed to the implementation tasks.",
+    "doc 110 registers the SIM work packages but not their task IDs. SIM-005 splits into TASK-SIM-005-001, the algorithm and derivation (PCG32 generator, the SplitMix64-style Mix function and the d0/d1/state-seed/selector chain, the registered family key table, the stream set derived from a master seed and schema version), and TASK-SIM-005-002, the consumption and lifecycle layer (bounded conversion, canonical selection, injectable source, recovery state). The split is the one doc 110's completion gate already implies by listing golden vectors separately from bounded conversion, stable sequences, serialization, and independence.",
+    "No test in this package uses the shared DeterministicCase harness. Every assertion here is deterministic by construction - a pinned seed, a pinned family and instance key, and a committed golden - so there is no randomized body to log a harness seed for. DeterministicCase supplies test-harness randomness (System.Random) and is unrelated to the authoritative stream contract this package implements.",
+    "VER-SIM-005-004 is the entry that keeps the goldens honest. A golden vector regenerated from the same implementation it is meant to constrain proves only self-consistency; doc 91 \u00a7 Reference models requires deliberately simple independent logic where one implementation could repeat its own bug. The committed vectors must be reproduced by a second implementation written directly from doc 20 \u00a7 Authoritative random-number contract, and the gate fails if either implementation changes alone.",
+    "doc 20 \u00a7 Authoritative random-number contract registers 23 family keys. VER-SIM-005-010 asserts all 23 with their exact hex values; a new authoritative draw is a new registered key in doc 20 and a new entry here, never a reused key.",
+    "The golden fixtures named below are the vector files under tests/MechaMiner.Simulation.Tests/Goldens/, each of which declares its authority, the random schema version it pins, and the fact that it was derived by a reference implementation independent of the C# code under test. Two decisions doc 20 leaves open are fixed in those file headers rather than in code comments: the rejection-sampling threshold for bounded integers and the bit layout of the 53-bit [0,1) conversion. VER-SIM-005-005 and VER-SIM-005-006 assert exactly those decisions, so changing either is a golden change under doc 91 \u00a7 Determinism and fixture policy and not a local implementation choice."
+  ],
+  "entries": [
+    {
+      "id": "VER-SIM-005-001",
+      "summary": "PCG32 output matches the committed golden vector exactly: state advances modulo 2^64 with multiplier 6364136223846793005, and each output is the XSH-RR transformation of the prior state - xorshift by 18 then 27, rotated by the prior state's top five bits - for a pinned state and odd increment.",
+      "task": "TASK-SIM-005-001",
+      "requirements": [
+        "TR-SIM-006"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#authoritative-random-number-contract"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Random.Pcg32GoldenVectorTests.OutputSequenceMatchesTheCommittedVector"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Simulation.Tests/Goldens/random-stream-initialization.txt"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "golden-text",
+        "text-diff"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-005-002",
+      "summary": "The seed-derivation chain matches the committed golden vector exactly: Mix, then d0 from the master seed and schema version, d1 from d0 and the family key, the state seed from d1 and the instance key, and the selector from the state seed, with every step wrapping modulo 2^64.",
+      "task": "TASK-SIM-005-001",
+      "requirements": [
+        "TR-SIM-006",
+        "TR-RUN-009"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#authoritative-random-number-contract",
+        "docs/technical/10-runtime-architecture.md#randomness-and-reproducibility"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Random.SeedDerivationGoldenVectorTests.DerivationChainMatchesTheCommittedVector"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Simulation.Tests/Goldens/random-seed-derivation.txt"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "golden-text",
+        "text-diff"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-005-003",
+      "summary": "Stream initialization matches the committed golden vector exactly: state zero and increment (selector shifted left one bit) OR 1, advance once, add the state seed modulo 2^64, advance once more, and only then return the first caller-visible value.",
+      "task": "TASK-SIM-005-001",
+      "requirements": [
+        "TR-SIM-006"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#authoritative-random-number-contract"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Random.Pcg32InitializationGoldenVectorTests.InitializationMatchesTheCommittedVector"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Simulation.Tests/Goldens/random-stream-initialization.txt"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "golden-text",
+        "text-diff"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-005-004",
+      "summary": "The committed golden vectors were confirmed against an independent derivation rather than self-consistency: a second, deliberately simple implementation written from doc 20 alone reproduces every vector, and the gate fails if either implementation is changed without the other.",
+      "task": "TASK-SIM-005-001",
+      "requirements": [
+        "TR-SIM-006",
+        "TR-QUA-001"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#reference-models",
+        "docs/technical/20-simulation-core.md#authoritative-random-number-contract"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Random.IndependentReferenceDerivationTests.GoldenVectorsAreReproducedByAnIndependentImplementation"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Simulation.Tests/Goldens/random-seed-derivation.txt",
+        "tests/MechaMiner.Simulation.Tests/Goldens/random-stream-initialization.txt",
+        "tests/MechaMiner.Simulation.Tests/Goldens/random-bounded-conversion.txt",
+        "tests/MechaMiner.Simulation.Tests/Goldens/random-unit-double-conversion.txt",
+        "tests/MechaMiner.Simulation.Tests/Goldens/random-stream-independence.txt",
+        "tests/MechaMiner.Simulation.Tests/Goldens/random-degenerate-selection.txt"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "golden-text",
+        "text-diff"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-005-005",
+      "summary": "Bounded integers are unbiased by rejection sampling, not modulo reduction: for a bound that does not divide 2^32, every raw draw above the largest exact multiple of the bound is rejected and redrawn, the residue distribution over an enumerated window is exactly uniform, and the consumed-draw count exceeds the sample count.",
+      "task": "TASK-SIM-005-002",
+      "requirements": [
+        "TR-SIM-006"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#authoritative-random-number-contract"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Random.BoundedRandomTests.BoundedIntegersUseRejectionSamplingNotModulo"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-005-006",
+      "summary": "Exactly one 53-bit conversion to a double in [0,1) exists, it matches its committed golden, and it returns neither 1.0 nor a negative value for any input draw including all-zero and all-ones bit patterns.",
+      "task": "TASK-SIM-005-002",
+      "requirements": [
+        "TR-SIM-006"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#authoritative-random-number-contract",
+        "docs/technical/20-simulation-core.md#numeric-and-unit-conventions"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Random.BoundedRandomTests.TheSingleFiftyThreeBitUnitConversionIsGoldenAndInRange"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Simulation.Tests/Goldens/random-unit-double-conversion.txt"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "golden-text"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-005-007",
+      "summary": "A chance representable as an integer ratio compares integers and consumes exactly one draw: it does not route through the double conversion, and its boundary cases at ratio zero and ratio one consume no draw at all.",
+      "task": "TASK-SIM-005-002",
+      "requirements": [
+        "TR-SIM-006"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#authoritative-random-number-contract"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Random.BoundedRandomTests.IntegerRatioChanceComparesIntegersAndConsumesOneDraw"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-005-008",
+      "summary": "Selection from an empty or singleton collection consumes no draw: the stream's state, increment, and consumed-draw count are identical before and after, so adding a guaranteed-outcome selection cannot shift any later sequence.",
+      "task": "TASK-SIM-005-002",
+      "requirements": [
+        "TR-SIM-006"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#authoritative-random-number-contract"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Random.CanonicalSelectionTests.EmptyAndSingletonSelectionConsumeNoDraw"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Simulation.Tests/Goldens/random-degenerate-selection.txt"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "golden-text"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-005-009",
+      "summary": "Canonical selection establishes candidate order before drawing an index: two collections holding the same members in different insertion order select the same member from the same stream state, so no selection depends on dictionary or scene enumeration.",
+      "task": "TASK-SIM-005-002",
+      "requirements": [
+        "TR-SIM-006",
+        "TR-RUN-005"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#authoritative-random-number-contract",
+        "docs/technical/10-runtime-architecture.md#system-phase-ordering"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Random.CanonicalSelectionTests.CanonicalOrderIsEstablishedBeforeTheIndexIsDrawn"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-005-010",
+      "summary": "All 23 registered stream families of doc 20 are present with their exact hex family keys, every key is unique, the documented instance-key rule is declared for each, and deriving a stream for an unregistered family key is rejected rather than silently succeeding.",
+      "task": "TASK-SIM-005-001",
+      "requirements": [
+        "TR-SIM-006"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#authoritative-random-number-contract",
+        "docs/technical/10-runtime-architecture.md#randomness-and-reproducibility"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Random.RandomStreamFamilyTests.AllRegisteredFamilyKeysArePresentUniqueAndClosed"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Simulation.Tests/Goldens/random-stream-independence.txt"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "golden-text",
+        "text-diff"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-005-011",
+      "summary": "Stream families are independent: two families derived from the same master seed share no state, drawing from one does not advance the other, and inserting an extra draw into one family leaves every other family's sequence bit-identical.",
+      "task": "TASK-SIM-005-001",
+      "requirements": [
+        "TR-SIM-006",
+        "TR-RUN-009"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#authoritative-random-number-contract",
+        "docs/technical/10-runtime-architecture.md#randomness-and-reproducibility"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Random.RandomStreamIndependenceTests.AnExtraDrawInOneFamilyShiftsNoOtherFamily"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Simulation.Tests/Goldens/random-stream-independence.txt"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "golden-text",
+        "text-diff"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-005-012",
+      "summary": "Instance keys separate instances within one family: two instance keys yield independent sequences, the same instance key reproduces the same sequence, and a family whose registered instance key is zero rejects a nonzero instance key rather than deriving an unregistered stream.",
+      "task": "TASK-SIM-005-001",
+      "requirements": [
+        "TR-SIM-006"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#authoritative-random-number-contract"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Random.RandomStreamIndependenceTests.InstanceKeysSeparateStreamsWithinAFamily"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-005-013",
+      "summary": "Recovery round-trips every instantiated authoritative stream: state and odd increment serialize and restore exactly, and a restored stream produces the identical continuation of the sequence the original would have produced.",
+      "task": "TASK-SIM-005-002",
+      "requirements": [
+        "TR-SIM-006",
+        "TR-RUN-009"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#authoritative-random-number-contract",
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Random.RandomStreamRecoveryTests.StateAndIncrementRoundTripAndContinueTheSequence"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-005-014",
+      "summary": "A recovery artifact carrying a different random schema version is rejected as incompatible rather than resumed, and the presentation-only family is never written into the recovery state at all.",
+      "task": "TASK-SIM-005-002",
+      "requirements": [
+        "TR-SIM-006",
+        "TR-RUN-010"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#authoritative-random-number-contract",
+        "docs/technical/91-verification-strategy.md#determinism-and-fixture-policy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Random.RandomStreamRecoveryTests.IncompatibleSchemaVersionIsRejectedAndPresentationStateIsNeverSerialized"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-005-015",
+      "summary": "A test may inject a scripted source but production cannot select an alternate algorithm: the production stream set exposes no algorithm or source parameter, and a scripted source that runs out of scripted values fails loudly rather than falling back to a real generator.",
+      "task": "TASK-SIM-005-002",
+      "requirements": [
+        "TR-SIM-006",
+        "TR-QUA-001"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#authoritative-random-number-contract",
+        "docs/technical/20-simulation-core.md#headless-execution"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Random.RandomSourceInjectionTests.ScriptedSourceIsInjectableAndProductionHasNoAlgorithmChoice"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-005-016",
+      "summary": "A negative control proves the golden and independence gates can fail: a one-bit change to the multiplier, to either xorshift amount, to the rotation, and to the increment's low bit each make VER-SIM-005-001 through VER-SIM-005-003 fail, and a shared-state stub makes VER-SIM-005-011 fail.",
+      "task": "TASK-SIM-005-001",
+      "requirements": [
+        "TR-QUA-001",
+        "TR-SIM-006"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#acceptance-evidence",
+        "docs/technical/20-simulation-core.md#authoritative-random-number-contract"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Random.Pcg32NegativeControlTests.GoldenAndIndependenceAssertionsFailAgainstOneBitMutations"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output",
+        "negative-control"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    }
+  ]
+}

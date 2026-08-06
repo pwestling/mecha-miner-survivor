@@ -1,0 +1,361 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "SIM-007",
+  "workPackageTitle": "Immutable/double-buffered presentation snapshot and view-model primitives",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91 \u00a7 Verification registry). This file is the first commit of the W1-SIM stream: no SIM production type or test class named by a selector below exists yet.",
+    "The structural validator for this file is owned by TASK-FND-009-002. Until it lands, the shape here matches tests/verification/FND-002.json and tests/verification/FND-003.json exactly.",
+    "Status is current status: every entry is 'registered' because no implementing task has landed. A later commit flips an entry to 'implemented' only when its selector actually runs and passes, as tests/verification/FND-002.json and tests/verification/FND-003.json do.",
+    "Every nunit selector is a fully qualified 'Namespace.Class.Method' so one entry names exactly one test method. Test namespaces mirror production namespaces per doc 114 \u00a7 Naming and file-placement defaults; the full type and method layout the implementation must produce is fixed in the W1-SIM design contract handed to the implementation tasks.",
+    "doc 110 registers the SIM work packages but not their task IDs. SIM-007 does not split: CTR-SIM-003 is one payload, and its immutability, versioning, double buffering, and reconstruction guarantees cannot be landed or asserted separately. Every entry belongs to TASK-SIM-007-001.",
+    "The snapshot's field list grows with every later gameplay package. This package registers the structural contract - immutability, no exposed mutable store, run and tick and version identity, double buffering, reconstruction without mutation, and the interpolation-snap policy - plus the HUD view-model rounding rule. Each later package registers its own entries for the fields it adds.",
+    "The interpolation-snap distance threshold is a derived value, not a tuning knob. Its derivation from the fastest documented authoritative movement, the tick rate, and the camera scale is recorded in the W1-SIM design contract; VER-SIM-007-007 asserts the derivation rather than a bare constant."
+  ],
+  "entries": [
+    {
+      "id": "VER-SIM-007-001",
+      "summary": "The published snapshot is immutable and exposes no mutable store: every member is read-only, no collection it returns is a store's own backing array, and no path through it reaches a mutable simulation collection.",
+      "task": "TASK-SIM-007-001",
+      "requirements": [
+        "TR-SIM-005",
+        "TR-CTR-004"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#presentation-snapshot",
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Snapshots.PresentationSnapshotTests.SnapshotIsImmutableAndExposesNoMutableStore"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-007-002",
+      "summary": "Every snapshot carries run identity, tick, and a version that is strictly increasing across publications, so a consumer can always tell which of two snapshots is newer and whether either belongs to its run.",
+      "task": "TASK-SIM-007-001",
+      "requirements": [
+        "TR-SIM-005",
+        "TR-CTR-004"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#presentation-snapshot",
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Snapshots.PresentationSnapshotTests.RunTickAndVersionIdentityIsCompleteAndIncreasing"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-007-003",
+      "summary": "The snapshot is double-buffered: publishing for tick N+1 does not mutate a snapshot a consumer already holds for tick N, and the two most recent complete snapshots are simultaneously readable so presentation can interpolate between them.",
+      "task": "TASK-SIM-007-001",
+      "requirements": [
+        "TR-SIM-005",
+        "TR-CTR-004"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#presentation-snapshot",
+        "docs/technical/30-presentation-and-rendering.md#snapshot-synchronization"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Snapshots.SnapshotDoubleBufferTests.PublishingDoesNotMutateAHeldSnapshot"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-007-004",
+      "summary": "A consumer can fully rebuild its presentation from one mid-run snapshot without mutating simulation state: after a complete rebuild pass the committed state, the next tick's behaviour, and the run's diagnostic checksum are bit-identical to a run in which no rebuild occurred.",
+      "task": "TASK-SIM-007-001",
+      "requirements": [
+        "TR-SIM-005",
+        "TR-RUN-001"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#presentation-snapshot",
+        "docs/technical/10-runtime-architecture.md#verification-requirements"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Snapshots.SnapshotReconstructionTests.RebuildingFromASnapshotMutatesNothing"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-007-005",
+      "summary": "A snapshot is published only in the final phase of a committed tick: no partial snapshot is ever observable, and a tick invalidated before commit publishes nothing at all rather than a partial state.",
+      "task": "TASK-SIM-007-001",
+      "requirements": [
+        "TR-RUN-007",
+        "TR-RUN-005"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#tick-transaction",
+        "docs/technical/10-runtime-architecture.md#system-phase-ordering"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Snapshots.PresentationSnapshotTests.AnInvalidatedTickPublishesNoSnapshot"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-007-006",
+      "summary": "Presentation snaps rather than interpolates on spawn, teleport, boss re-entry, terminal transition, and a between-snapshot displacement above the documented distance threshold, and interpolates for every displacement below it.",
+      "task": "TASK-SIM-007-001",
+      "requirements": [
+        "TR-SIM-005"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#presentation-snapshot",
+        "docs/technical/30-presentation-and-rendering.md#snapshot-synchronization"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Snapshots.InterpolationSnapPolicyTests.SnapsOnSpawnTeleportReEntryTerminalAndAboveTheDistanceThreshold"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-007-007",
+      "summary": "The interpolation-snap distance threshold is the derived value and not a chosen constant: it is not reached by the fastest documented authoritative movement across the number of snapshot intervals the policy tolerates, and it is exceeded by the first interval beyond that, so the derivation is asserted rather than assumed.",
+      "task": "TASK-SIM-007-001",
+      "requirements": [
+        "TR-SIM-005",
+        "TR-QUA-001"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#presentation-snapshot",
+        "docs/technical/30-presentation-and-rendering.md#camera",
+        "docs/technical/20-simulation-core.md#numeric-and-unit-conventions"
+      ],
+      "gameplaySources": [
+        "docs/72-player-survivability-and-damage-baseline.md#movement-and-speed-modifiers",
+        "docs/51-standard-map-generation-contract.md#world-scale-and-major-regions"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Snapshots.InterpolationSnapPolicyTests.ThresholdMatchesItsDocumentedDerivation"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-007-008",
+      "summary": "HUD view models carry numbers that already reflect authoritative calculation and rounding: every displayed whole value equals the authoritative value after the documented rounding exactly, with no tolerance, and the view model is versioned so a consumer can detect a change without diffing fields.",
+      "task": "TASK-SIM-007-001",
+      "requirements": [
+        "TR-SIM-005",
+        "TR-CTR-004"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#presentation-snapshot",
+        "docs/technical/91-verification-strategy.md#numeric-tolerance"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Snapshots.HudViewModelTests.DisplayedWholeValuesEqualAuthoritativeValuesAfterDocumentedRounding"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-007-009",
+      "summary": "Untouched static map state is not copied per tick: publishing a snapshot across a churn-free tick performs zero managed allocation after warm-up, so double buffering shares immutable pages rather than duplicating the map every tick.",
+      "task": "TASK-SIM-007-001",
+      "requirements": [
+        "TR-SIM-005"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#presentation-snapshot",
+        "docs/technical/10-runtime-architecture.md#performance-posture"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Snapshots.SnapshotDoubleBufferTests.PublishingAChurnFreeTickAllocatesNothing"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "allocation-count"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-007-010",
+      "summary": "A stale snapshot is droppable: a consumer that skips an arbitrary number of published snapshots still reconstructs a state consistent with the latest snapshot it did read, and never one blended from two non-adjacent snapshots.",
+      "task": "TASK-SIM-007-001",
+      "requirements": [
+        "TR-SIM-005",
+        "TR-CTR-004"
+      ],
+      "technicalSources": [
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry",
+        "docs/technical/30-presentation-and-rendering.md#snapshot-synchronization"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Snapshots.SnapshotReconstructionTests.SkippedSnapshotsStillYieldAConsistentReconstruction"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "seed-identity"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-007-011",
+      "summary": "A negative control proves the immutability and no-mutation gates can fail: a stub snapshot that hands out a store's backing array makes VER-SIM-007-001 fail, and a rebuild pass that writes through to simulation state makes VER-SIM-007-004 fail.",
+      "task": "TASK-SIM-007-001",
+      "requirements": [
+        "TR-QUA-001",
+        "TR-SIM-005"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#acceptance-evidence",
+        "docs/technical/20-simulation-core.md#presentation-snapshot"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Snapshots.SnapshotNegativeControlTests.ImmutabilityAndNoMutationAssertionsFailAgainstDeliberatelyBrokenStubs"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output",
+        "negative-control"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    }
+  ]
+}

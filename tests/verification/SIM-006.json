@@ -1,0 +1,331 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "SIM-006",
+  "workPackageTitle": "Domain/presentation event buffers, provenance, stable ordering",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91 \u00a7 Verification registry). This file is the first commit of the W1-SIM stream: no SIM production type or test class named by a selector below exists yet.",
+    "The structural validator for this file is owned by TASK-FND-009-002. Until it lands, the shape here matches tests/verification/FND-002.json and tests/verification/FND-003.json exactly.",
+    "Status is current status: every entry is 'registered' because no implementing task has landed. A later commit flips an entry to 'implemented' only when its selector actually runs and passes, as tests/verification/FND-002.json and tests/verification/FND-003.json do.",
+    "Every nunit selector is a fully qualified 'Namespace.Class.Method' so one entry names exactly one test method. Test namespaces mirror production namespaces per doc 114 \u00a7 Naming and file-placement defaults; the full type and method layout the implementation must produce is fixed in the W1-SIM design contract handed to the implementation tasks.",
+    "doc 110 registers the SIM work packages but not their task IDs. SIM-006 does not split: the domain buffer, the presentation buffer, provenance, and the shared ordering rule are one contract - CTR-SIM-001 and CTR-SIM-002 differ precisely in their loss behaviour, which cannot be asserted for one without the other - so every entry belongs to TASK-SIM-006-001.",
+    "The event kinds themselves are not enumerated here. doc 20 \u00a7 Domain and presentation events gives examples, not a closed set, and each authoritative system registers the kinds it emits. This package proves the buffer, provenance, ordering, and loss contract that every later kind inherits."
+  ],
+  "entries": [
+    {
+      "id": "VER-SIM-006-001",
+      "summary": "A domain event is never dropped: at and beyond the buffer's initial capacity the buffer grows and every appended event appears in the tick's batch, and a buffer that genuinely cannot accept an event fails the tick invariant rather than discarding it.",
+      "task": "TASK-SIM-006-001",
+      "requirements": [
+        "TR-RUN-007",
+        "TR-CTR-002"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#domain-and-presentation-events",
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Events.DomainEventBufferTests.DomainEventsAreNeverDropped"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-006-002",
+      "summary": "Presentation events are coalesced only by an explicit named policy: an event kind with no policy is delivered verbatim, a policy never merges events of different kinds or different provenance, and the coalesced batch records how many source events it represents.",
+      "task": "TASK-SIM-006-001",
+      "requirements": [
+        "TR-CTR-004",
+        "TR-RUN-001"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#domain-and-presentation-events",
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Events.PresentationEventBufferTests.CoalescingHappensOnlyUnderAnExplicitNamedPolicy"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-006-003",
+      "summary": "Simultaneous events order by system phase, then explicit emission sequence, then the full entity ID: two runs that emit the same events in different collection order produce identical batches, so no observable order can come from collection or thread timing.",
+      "task": "TASK-SIM-006-001",
+      "requirements": [
+        "TR-RUN-005",
+        "TR-RUN-006"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#system-phase-ordering",
+        "docs/technical/20-simulation-core.md#boundary-and-tie-ordering",
+        "docs/technical/10-runtime-architecture.md#concurrency-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Events.EventOrderingTests.SimultaneousEventsUseDocumentedStableOrdering"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Simulation.Tests/Goldens/events-simultaneous-ordering.txt"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "golden-text",
+        "text-diff"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-006-004",
+      "summary": "Every event carries its tick, sequence, stable event kind, relevant entity and content IDs, position, and typed payload, and an event missing any required field cannot be constructed rather than being emitted with a default.",
+      "task": "TASK-SIM-006-001",
+      "requirements": [
+        "TR-CTR-004"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#domain-and-presentation-events",
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Events.EventProvenanceTests.EveryEventCarriesItsCompleteProvenance"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-006-005",
+      "summary": "The pair of tick and sequence is a total order across a run: sequence is strictly increasing within a tick, its per-tick origin is documented and asserted, and no two events in one run share the same pair.",
+      "task": "TASK-SIM-006-001",
+      "requirements": [
+        "TR-CTR-004",
+        "TR-RUN-005"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#domain-and-presentation-events"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Events.EventProvenanceTests.TickAndSequenceFormATotalOrder"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-006-006",
+      "summary": "Statistics consume domain and damage records before their buffers are released: releasing a buffer that still holds unconsumed records fails the invariant instead of dropping them, and the consumed count equals the emitted count exactly.",
+      "task": "TASK-SIM-006-001",
+      "requirements": [
+        "TR-RUN-007",
+        "TR-CTR-002"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#domain-and-presentation-events",
+        "docs/technical/20-simulation-core.md#tick-transaction"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Events.DomainEventBufferTests.BuffersAreNotReleasedWithUnconsumedRecords"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "diagnostic-counter",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-006-007",
+      "summary": "Presentation events are disposable: discarding an entire tick's presentation batch leaves the committed state, that tick's domain events, and the following tick's behaviour bit-identical, so no authority can leak into the presentation channel.",
+      "task": "TASK-SIM-006-001",
+      "requirements": [
+        "TR-RUN-001",
+        "TR-CTR-004"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#domain-and-presentation-events",
+        "docs/technical/10-runtime-architecture.md#architectural-style"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Events.PresentationEventBufferTests.DiscardingThePresentationBatchChangesNothingAuthoritative"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-006-008",
+      "summary": "Event buffers are tick-local: every buffer is empty at the start of each tick, and an event appended during tick N never appears in the batch published for tick N+1.",
+      "task": "TASK-SIM-006-001",
+      "requirements": [
+        "TR-RUN-005",
+        "TR-CTR-002"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#tick-transaction",
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Events.EventOrderingTests.BuffersAreTickLocalAndStartEmpty"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-006-009",
+      "summary": "Over randomized multi-system emission sequences the published batch equals a deliberately simple reference ordering and the domain record count equals the emitted count exactly, with the seed logged before the body runs.",
+      "task": "TASK-SIM-006-001",
+      "requirements": [
+        "TR-RUN-005",
+        "TR-QUA-002"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#reference-models",
+        "docs/technical/20-simulation-core.md#domain-and-presentation-events"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Events.EventOrderingPropertyTests.OrderedBatchMatchesTheReferenceOrdering"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "seed-identity",
+        "minimized-input-artifact"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-006-010",
+      "summary": "A negative control proves the loss and ordering gates can fail: a stub buffer that silently drops on overflow makes VER-SIM-006-001 fail, and a stub that publishes in hash-container enumeration order makes VER-SIM-006-003 fail.",
+      "task": "TASK-SIM-006-001",
+      "requirements": [
+        "TR-QUA-001",
+        "TR-RUN-005"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#acceptance-evidence",
+        "docs/technical/20-simulation-core.md#domain-and-presentation-events"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Events.EventBufferNegativeControlTests.LossAndOrderingAssertionsFailAgainstDeliberatelyBrokenStubs"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output",
+        "negative-control"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    }
+  ]
+}

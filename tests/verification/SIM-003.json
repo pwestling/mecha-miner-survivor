@@ -1,0 +1,394 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "SIM-003",
+  "workPackageTitle": "Generational entity IDs and packed category stores",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91 \u00a7 Verification registry). This file is the first commit of the W1-SIM stream: no SIM production type or test class named by a selector below exists yet.",
+    "The structural validator for this file is owned by TASK-FND-009-002. Until it lands, the shape here matches tests/verification/FND-002.json and tests/verification/FND-003.json exactly.",
+    "Status is current status: every entry is 'registered' because no implementing task has landed. A later commit flips an entry to 'implemented' only when its selector actually runs and passes, as tests/verification/FND-002.json and tests/verification/FND-003.json do.",
+    "Every nunit selector is a fully qualified 'Namespace.Class.Method' so one entry names exactly one test method. Test namespaces mirror production namespaces per doc 114 \u00a7 Naming and file-placement defaults; the full type and method layout the implementation must produce is fixed in the W1-SIM design contract handed to the implementation tasks.",
+    "doc 110 registers the SIM work packages but not their task IDs. SIM-003 splits into TASK-SIM-003-001, the identity layer (entity ID value type, allocator, generation and reserved-ID rules), and TASK-SIM-003-002, the storage layer (packed store per population category, capacity policy, stable ordering, diagnostics). The split is genuine: the identity layer is independently landable and testable, and the storage layer consumes it.",
+    "doc 20 \u00a7 Authoritative population categories lists twelve categories - player, ordinary enemy, elite, boss, enemy projectile, weapon actor, damage zone, mining site, pickup, destructible rock, relic cache, static world object. VER-SIM-003-007 asserts twelve, one store per category. Any later category is an edit to doc 20 and a new entry here, never an unregistered thirteenth store.",
+    "Initial soft targets and hard capacities per store are derived from the encounter schedule plus a documented margin, as doc 20 \u00a7 Capacity and overload behavior requires and never as a power of two chosen for convenience. The derivations live in the W1-SIM design contract; VER-SIM-003-008 asserts the derived numbers and the overflow behaviour rather than restating them here."
+  ],
+  "entries": [
+    {
+      "id": "VER-SIM-003-001",
+      "summary": "Reusing a storage slot increments its generation: freeing an entity and allocating again returns an ID with the same storage index and a different generation, so the freed ID is never equal to the new one.",
+      "task": "TASK-SIM-003-001",
+      "requirements": [
+        "TR-SIM-001"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#entity-identity"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Entities.EntityIdAllocatorTests.SlotReuseIncrementsGeneration"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-003-002",
+      "summary": "A stale generation-mismatched reference fails closed and increments a named diagnostic counter: resolving it yields nothing rather than the live record that now occupies the slot, and the counter rises by exactly one per failed resolution.",
+      "task": "TASK-SIM-003-001",
+      "requirements": [
+        "TR-SIM-001"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#entity-identity",
+        "docs/technical/20-simulation-core.md#scope-and-invariants"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Entities.EntityIdTests.StaleGenerationFailsClosedAndCountsADiagnostic"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "diagnostic-counter",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-003-003",
+      "summary": "Entity IDs are unique only within one run session: a store rejects an ID issued by another run's allocator instead of resolving it against a same-index live record, so a leaked cross-run reference cannot alias a live entity.",
+      "task": "TASK-SIM-003-001",
+      "requirements": [
+        "TR-SIM-001"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#entity-identity"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Entities.EntityIdTests.AnIdFromAnotherRunSessionNeverResolves"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-003-004",
+      "summary": "The player has a stable reserved ID: it is the same value in every run, ordinary allocation never returns it, and its slot is never recycled while the run is active, so exactly one player entity exists until terminal resolution.",
+      "task": "TASK-SIM-003-001",
+      "requirements": [
+        "TR-SIM-001"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#entity-identity",
+        "docs/technical/20-simulation-core.md#scope-and-invariants"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Entities.EntityIdAllocatorTests.ThePlayerIdIsReservedStableAndNeverRecycled"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-003-005",
+      "summary": "Over randomized allocate, free, and resolve sequences every live ID resolves to exactly one live record of the matching generation and every freed ID fails closed, compared against a deliberately simple dictionary reference model, with the seed and version identity logged before the body runs.",
+      "task": "TASK-SIM-003-001",
+      "requirements": [
+        "TR-SIM-001",
+        "TR-QUA-002"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#entity-identity",
+        "docs/technical/91-verification-strategy.md#reference-models"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Entities.EntityStorePropertyTests.LiveAndFreedIdentitiesMatchTheReferenceModel"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "seed-identity",
+        "minimized-input-artifact"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-003-006",
+      "summary": "Generation exhaustion cannot alias: when a slot's generation counter reaches its representable maximum the allocator retires the slot rather than wrapping to a value a still-held reference could match.",
+      "task": "TASK-SIM-003-001",
+      "requirements": [
+        "TR-SIM-001"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#entity-identity",
+        "docs/technical/20-simulation-core.md#numeric-and-unit-conventions"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Entities.EntityIdAllocatorTests.GenerationExhaustionRetiresTheSlotRatherThanAliasing"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-003-007",
+      "summary": "The store set covers exactly the twelve authoritative population categories of doc 20, one purpose-built packed store per category, with no category unstored and no store for an unregistered category.",
+      "task": "TASK-SIM-003-002",
+      "requirements": [
+        "TR-SIM-002",
+        "TR-CTR-002"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#authoritative-population-categories",
+        "docs/technical/115-component-contract-and-schema-registry.md#mutable-state-ownership-matrix"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Entities.PackedEntityStoreTests.OneStoreExistsForEachAuthoritativePopulationCategory"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-003-008",
+      "summary": "Each store declares and enforces a soft target, a hard capacity derived from the encounter schedule plus its documented margin, and its overflow behaviour: at the soft target it reports pressure, at hard capacity an authored enemy is queued rather than cancelled or converted, and an authoritative record is never dropped to make room for another.",
+      "task": "TASK-SIM-003-002",
+      "requirements": [
+        "TR-SIM-002",
+        "TR-CTR-002"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#capacity-and-overload-behavior",
+        "docs/technical/23-encounter-director-and-enemy-runtime.md#population-classes",
+        "docs/technical/22-combat-and-weapon-runtime.md#performance-and-capacity"
+      ],
+      "gameplaySources": [
+        "docs/32-standard-wave-and-beacon-schedule.md#complete-35-minute-schedule",
+        "docs/32-standard-wave-and-beacon-schedule.md#hyper-gold-threat-beacon-response",
+        "docs/51-standard-map-generation-contract.md#destructible-rocks"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Entities.StoreCapacityTests.SoftTargetHardCapacityAndOverflowBehaviourAreEnforcedPerStore"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output",
+        "diagnostic-counter"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-003-009",
+      "summary": "Capacity, high-water mark, queue depth, reuse count, and rejected requests are observable diagnostics after a run of randomized churn, and their values reconcile with the operations actually performed rather than being reset by a read.",
+      "task": "TASK-SIM-003-002",
+      "requirements": [
+        "TR-SIM-002"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#capacity-and-overload-behavior",
+        "docs/technical/90-performance-diagnostics-and-observability.md#frame-metrics"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Entities.StoreCapacityTests.CapacityDiagnosticsReconcileWithTheOperationsPerformed"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "diagnostic-counter",
+        "seed-identity"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-003-010",
+      "summary": "Stable ordering uses the full entity ID after a system's authored priority keys: two stores holding the same members inserted in different orders iterate identically, so no observable order depends on insertion or collection enumeration.",
+      "task": "TASK-SIM-003-002",
+      "requirements": [
+        "TR-SIM-001",
+        "TR-RUN-005"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#entity-identity",
+        "docs/technical/10-runtime-architecture.md#system-phase-ordering"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Entities.PackedEntityStoreTests.IterationOrderIsPriorityKeysThenFullEntityId"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Simulation.Tests/Goldens/entities-store-ordering.txt"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "golden-text",
+        "text-diff"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-003-011",
+      "summary": "A packed store performs a full allocate-mutate-free churn cycle with zero managed allocation after warm-up and without unsafe code, proving the storage is index-addressed plain arrays rather than a reflection-driven or pointer-based component table.",
+      "task": "TASK-SIM-003-002",
+      "requirements": [
+        "TR-SIM-002"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#entity-identity",
+        "docs/technical/10-runtime-architecture.md#entity-and-scene-boundary",
+        "docs/technical/10-runtime-architecture.md#performance-posture"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Entities.PackedEntityStoreTests.ChurnCycleAllocatesNothingAfterWarmUp"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "allocation-count"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-003-012",
+      "summary": "A negative control proves the identity gates can fail: a stub store that ignores the generation field makes VER-SIM-003-002 and VER-SIM-003-005 fail, and a stub that orders by insertion index makes VER-SIM-003-010 fail.",
+      "task": "TASK-SIM-003-002",
+      "requirements": [
+        "TR-QUA-001",
+        "TR-SIM-001"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#acceptance-evidence",
+        "docs/technical/20-simulation-core.md#entity-identity"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Entities.EntityStoreNegativeControlTests.IdentityAndOrderingAssertionsFailAgainstDeliberatelyBrokenStubs"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output",
+        "negative-control"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    }
+  ]
+}

@@ -1,0 +1,437 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "SIM-001",
+  "workPackageTitle": "Fixed 60 Hz host, accumulator, catch-up limit, clock domains",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91 \u00a7 Verification registry). This file is the first commit of the W1-SIM stream: no SIM production type or test class named by a selector below exists yet.",
+    "The structural validator for this file is owned by TASK-FND-009-002. Until it lands, the shape here matches tests/verification/FND-002.json and tests/verification/FND-003.json exactly.",
+    "Status is current status: every entry is 'registered' because no implementing task has landed. A later commit flips an entry to 'implemented' only when its selector actually runs and passes, as tests/verification/FND-002.json and tests/verification/FND-003.json do.",
+    "Every nunit selector is a fully qualified 'Namespace.Class.Method' so one entry names exactly one test method. Test namespaces mirror production namespaces per doc 114 \u00a7 Naming and file-placement defaults; the full type and method layout the implementation must produce is fixed in the W1-SIM design contract handed to the implementation tasks.",
+    "Three evidence kinds are new to the registry vocabulary and are used here for the first time: 'diagnostic-counter' (the value of a named simulation diagnostic counter after the case), 'allocation-count' (managed allocations measured across a warmed-up region, doc 10 \u00a7 Performance posture), and 'benchmark-report' (the canonical report a './build.sh benchmark <id>' run emits, doc 100 \u00a7 Standard command surface).",
+    "doc 110 registers the SIM work packages but not their task IDs. This stream adopts TASK-SIM-00N-001 for the first implementation task of package SIM-00N and TASK-SIM-00N-002 only where the package genuinely splits into two independently landable tasks. SIM-001 splits: TASK-SIM-001-001 is the pure time layer (MechaMiner.Simulation.Time - tick index, tick rate, fixed-step accumulator, tick budget, catch-up policy) and TASK-SIM-001-002 is the host that drives it (MechaMiner.Simulation.Runtime - simulation host, tick target interface, run clock, final-boundary ordering). Each task owns non-compilation entries below.",
+    "The catch-up limit is a provisional baseline, not an ordinary local choice: it changes observable behaviour under load, so docs/technical/conventions.md \u00a7 Certainty requires it to name its validation gate. The baseline is four whole ticks per host step, derived in the W1-SIM design contract from TDR-003 \u00a7 Performance contract (\"No repeatable active-play stall may exceed 50 milliseconds\"): 0.050 s at 60 Hz is exactly three ticks of debt, plus one tick of headroom so a frame at the tolerance boundary cannot trip the bound through a fractional remainder. VER-SIM-001-006 pins that derivation as a unit test and VER-SIM-001-013 is its named proof gate on target hardware.",
+    "VER-SIM-001-009 asserts that the accumulator discards elapsed wall time on focus loss and operating-system suspension (doc 10 \u00a7 Clock domains). The hooks that raise and clear those two pause reasons belong to SIM-002; only the discard behaviour of the accumulator is asserted here, against a directly invoked resume.",
+    "VER-SIM-001-012 asserts the ordering contract of the 35:00 boundary against a stub tick target, not real extraction: at SIM-001 nothing can yet mine, deal damage, or resolve a terminal outcome. The gate is that the host evaluates the terminal boundary before it will admit any event scheduled at or after 35:00, which is falsifiable with a recording stub. The full final-tick death-versus-extraction golden is owned by the packages that own damage and extraction."
+  ],
+  "entries": [
+    {
+      "id": "VER-SIM-001-001",
+      "summary": "The simulation frequency is exactly 60 ticks per second with an exact rational seconds-per-tick of 1/60, it is exposed from exactly one place, and no API can change it after a run has started.",
+      "task": "TASK-SIM-001-001",
+      "requirements": [
+        "TR-RUN-002"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#clock-domains",
+        "docs/technical/20-simulation-core.md#numeric-and-unit-conventions"
+      ],
+      "gameplaySources": [
+        "docs/20-run-structure-and-timing.md#level-timer"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Time.TickRateTests.FrequencyIsSixtyHertzAndConstantWithinARun"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-001-002",
+      "summary": "The accumulator yields only a whole number of ticks: a fractional remainder is retained across steps and never delivered, and neither the accumulator nor the host exposes any member from which a tick target could read a partial delta.",
+      "task": "TASK-SIM-001-001",
+      "requirements": [
+        "TR-RUN-002"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#clock-domains",
+        "docs/technical/20-simulation-core.md#scope-and-invariants"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Time.FixedStepAccumulatorTests.OnlyWholeTicksAreEverYielded"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-001-003",
+      "summary": "One host step yields zero ticks below one tick interval, exactly one at the interval, and the exact whole count above it; feeding 126,000 ticks worth of irregular frame deltas yields exactly 126,000 ticks with no accumulated drift.",
+      "task": "TASK-SIM-001-001",
+      "requirements": [
+        "TR-RUN-002"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#clock-domains",
+        "docs/technical/91-verification-strategy.md#runtime-and-clocks"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Time.FixedStepAccumulatorTests.ZeroOneAndManyTicksPerStepWithoutLongRunDrift"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-001-004",
+      "summary": "Game time is derived from the integer tick index, not from accumulated frame deltas: an irregular delta stream and a uniform delta stream of equal total elapsed time produce the identical tick index and the identical derived seconds, bit for bit.",
+      "task": "TASK-SIM-001-001",
+      "requirements": [
+        "TR-RUN-002"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#clock-domains",
+        "docs/technical/20-simulation-core.md#numeric-and-unit-conventions"
+      ],
+      "gameplaySources": [
+        "docs/20-run-structure-and-timing.md#level-timer"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Time.SimulationTickTests.DerivedSecondsComeFromTheTickIndexNotAccumulatedDeltas"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Simulation.Tests/Goldens/time-tick-index-derived-seconds.txt"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output",
+        "golden-text"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-001-005",
+      "summary": "Elapsed time beyond the catch-up limit runs exactly the limit's ticks, reports the bound as reached, and reports the discarded seconds; the surplus is never queued into a later step, so a stall cannot compound into an unbounded spiral.",
+      "task": "TASK-SIM-001-001",
+      "requirements": [
+        "TR-RUN-002"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#clock-domains",
+        "docs/technical/90-performance-diagnostics-and-observability.md#target-device-frame-budget"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Time.CatchUpPolicyTests.SurplusBeyondTheBoundIsDiscardedAndReportedNotQueued"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-001-006",
+      "summary": "The catch-up bound absorbs the largest stall TDR-003 tolerates without discarding any game time - 50 ms of debt is exactly three ticks at 60 Hz and all three run - and the first tick of debt beyond the bound is discarded and diagnosed, so the provisional baseline of four ticks is asserted rather than assumed.",
+      "task": "TASK-SIM-001-001",
+      "requirements": [
+        "TR-RUN-002",
+        "TR-QUA-001"
+      ],
+      "technicalSources": [
+        "docs/technical/decisions/TDR-003-require-sixty-fps-on-steam-deck.md#performance-contract",
+        "docs/technical/10-runtime-architecture.md#clock-domains"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Time.CatchUpPolicyTests.BoundAbsorbsTheLargestToleratedStallAndNoMore"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-001-007",
+      "summary": "Reaching the catch-up bound produces exactly one performance diagnostic per occurrence carrying the catch-up count and the accumulator debt, not one per discarded tick and not a silent clamp.",
+      "task": "TASK-SIM-001-002",
+      "requirements": [
+        "TR-RUN-002"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#clock-domains",
+        "docs/technical/90-performance-diagnostics-and-observability.md#frame-metrics"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Runtime.SimulationHostCatchUpDiagnosticTests.ReachingTheBoundEmitsOneDiagnosticCarryingCountAndDebt"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "diagnostic-counter",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-001-008",
+      "summary": "A negative control proves the two accumulator gates can fail: a stub that emits a fractional tick makes VER-SIM-001-002 fail, and a stub that ignores the catch-up bound makes VER-SIM-001-005 fail, so neither gate can pass by asserting nothing.",
+      "task": "TASK-SIM-001-001",
+      "requirements": [
+        "TR-QUA-001",
+        "TR-RUN-002"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#acceptance-evidence",
+        "docs/technical/10-runtime-architecture.md#clock-domains"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Time.AccumulatorNegativeControlTests.WholeTickAndCatchUpAssertionsFailAgainstDeliberatelyBrokenStubs"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output",
+        "negative-control"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-001-009",
+      "summary": "A focus-loss or operating-system-suspension resume discards the elapsed wall time instead of catching it up: the step after the resume runs zero ticks, reports the discarded seconds, and leaves the tick index and run clock exactly where the suspension found them.",
+      "task": "TASK-SIM-001-002",
+      "requirements": [
+        "TR-RUN-002",
+        "TR-RUN-003"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#clock-domains",
+        "docs/technical/10-runtime-architecture.md#pause-contract"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Runtime.SimulationHostTests.FocusLossAndSuspendResumeDiscardElapsedWallTime"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-001-010",
+      "summary": "The host invokes the tick target exactly once per whole tick, in strictly ascending tick index with no gap and no repeat, and never re-entrantly: a recording stub world reproduces the exact expected call sequence for a mixed run of zero-, one-, and multi-tick steps.",
+      "task": "TASK-SIM-001-002",
+      "requirements": [
+        "TR-RUN-002",
+        "TR-RUN-005",
+        "TR-CTR-002"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#system-phase-ordering",
+        "docs/technical/115-component-contract-and-schema-registry.md#component-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Runtime.SimulationHostTests.TickTargetIsInvokedOncePerTickInAscendingOrder"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-001-011",
+      "summary": "Run time advances only on committed authoritative ticks and equals the tick index divided by 60 exactly for every tick count tested; any amount of elapsed wall time that produces no tick leaves the run clock unchanged.",
+      "task": "TASK-SIM-001-002",
+      "requirements": [
+        "TR-RUN-002",
+        "TR-CTR-002"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#clock-domains",
+        "docs/technical/20-simulation-core.md#numeric-and-unit-conventions"
+      ],
+      "gameplaySources": [
+        "docs/20-run-structure-and-timing.md#level-timer"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Runtime.RunClockTests.RunTimeAdvancesOnlyOnCommittedTicks"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered",
+      "successor": "TASK-FND-009-001"
+    },
+    {
+      "id": "VER-SIM-001-012",
+      "summary": "Active ticks cover only times strictly before 35:00, and after the final pre-boundary tick commits the host evaluates the terminal boundary before it will admit any event scheduled at or after 35:00: a recording stub proves the boundary evaluation precedes every 35:00-or-later scheduled callback.",
+      "task": "TASK-SIM-001-002",
+      "requirements": [
+        "TR-RUN-008",
+        "TR-RUN-005"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#boundary-and-tie-ordering",
+        "docs/technical/10-runtime-architecture.md#system-phase-ordering"
+      ],
+      "gameplaySources": [
+        "docs/20-run-structure-and-timing.md#mission-extraction",
+        "docs/32-standard-wave-and-beacon-schedule.md#complete-35-minute-schedule"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Runtime.FinalBoundaryOrderingTests.ExtractionBoundaryIsEvaluatedBeforeAnyEventAtOrAfterThirtyFiveMinutes"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Simulation.Tests/Goldens/time-final-boundary-ordering.txt"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "golden-text",
+        "text-diff"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "registered"
+    },
+    {
+      "id": "VER-SIM-001-013",
+      "summary": "The named proof gate for the provisional four-tick catch-up limit: a warmed ten-minute PERF-04 capture on the target device reports zero catch-up-bound hits and a bounded accumulator debt, so the baseline is validated on hardware rather than only in a unit test.",
+      "task": "TASK-SIM-001-002",
+      "requirements": [
+        "TR-RUN-002",
+        "TR-QUA-001"
+      ],
+      "technicalSources": [
+        "docs/technical/90-performance-diagnostics-and-observability.md#canonical-benchmark-scenarios",
+        "docs/technical/90-performance-diagnostics-and-observability.md#frame-metrics",
+        "docs/technical/decisions/TDR-003-require-sixty-fps-on-steam-deck.md#performance-contract"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "command",
+        "value": "./build.sh benchmark PERF-04"
+      },
+      "fixtures": [],
+      "scenarios": [
+        "PERF-04"
+      ],
+      "evidenceKinds": [
+        "command-exit-code",
+        "benchmark-report",
+        "diagnostic-counter"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "main",
+      "status": "registered"
+    }
+  ]
+}

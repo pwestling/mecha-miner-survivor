@@ -51,12 +51,19 @@ internal sealed class RegistryDocument
 /// value. A fixture declares which paths it pretends exist, so a broken-link control does
 /// not depend on the fixture tree mirroring the real repository.
 /// </para>
+/// <para>
+/// <see cref="Tests"/> is the same idea for <c>nunit</c> selector resolution. The real
+/// source set carries what the NUnit harness actually discovered; a fixture declares its
+/// own inventory in <c>discovered-tests.txt</c>. Both are values, so a control can supply
+/// an empty inventory and require the failure that produces.
+/// </para>
 /// </remarks>
 internal sealed class RegistrySources
 {
     private readonly List<RegistryDocument> _documents = new();
     private readonly List<RegistryDocument> _verificationRegistries = new();
     private readonly HashSet<string> _existingPaths = new(StringComparer.Ordinal);
+    private TestInventory _tests = TestInventory.Nothing("no test inventory was supplied to this source set");
 
     /// <summary>Markdown documents scanned for definitions, references, headings, and links.</summary>
     internal IReadOnlyList<RegistryDocument> Documents => _documents;
@@ -66,6 +73,9 @@ internal sealed class RegistrySources
 
     /// <summary>Repository-relative paths that exist, for link resolution.</summary>
     internal IReadOnlyCollection<string> ExistingPaths => _existingPaths;
+
+    /// <summary>The tests the harness discovered, for <c>nunit</c> selector resolution.</summary>
+    internal TestInventory Tests => _tests;
 
     /// <summary>Builds an empty source set for a test to populate.</summary>
     internal static RegistrySources Empty()
@@ -130,14 +140,17 @@ internal sealed class RegistrySources
             }
         }
 
+        sources._tests = TestInventory.Discover(repositoryRoot);
         sources.Sort();
         return sources;
     }
 
     /// <summary>
     /// Reads one fixture directory. <c>.md</c> files become documents, <c>.json</c> files
-    /// become verification registries, and an optional <c>existing-paths.txt</c> declares
-    /// which repository paths the fixture pretends exist.
+    /// become verification registries, an optional <c>existing-paths.txt</c> declares
+    /// which repository paths the fixture pretends exist, and an optional
+    /// <c>discovered-tests.txt</c> declares which tests the fixture pretends the harness
+    /// discovered.
     /// </summary>
     internal static RegistrySources ReadFixture(string fixtureDirectory)
     {
@@ -172,6 +185,22 @@ internal sealed class RegistrySources
             }
         }
 
+        string discovered = Path.Combine(fixtureDirectory, "discovered-tests.txt");
+        if (File.Exists(discovered))
+        {
+            List<string> names = new();
+            foreach (string line in File.ReadAllLines(discovered))
+            {
+                string trimmed = line.Trim();
+                if (trimmed.Length > 0 && !trimmed.StartsWith('#'))
+                {
+                    names.Add(trimmed);
+                }
+            }
+
+            sources._tests = TestInventory.Of(names);
+        }
+
         sources.Sort();
         return sources;
     }
@@ -189,6 +218,17 @@ internal sealed class RegistrySources
     {
         _verificationRegistries.Add(new RegistryDocument(path, json));
         _existingPaths.Add(path);
+        return this;
+    }
+
+    /// <summary>
+    /// Declares the test inventory <c>nunit</c> selectors resolve against, for a test that
+    /// constructs sources inline.
+    /// </summary>
+    internal RegistrySources WithTests(TestInventory tests)
+    {
+        ArgumentNullException.ThrowIfNull(tests);
+        _tests = tests;
         return this;
     }
 

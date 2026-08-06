@@ -15,6 +15,17 @@ rather than a second repository.
 | `dangling/` | a relative link to a file that does not exist, a link to a heading that does not exist, and a registry entry citing a nonexistent anchor |
 | `malformed/` | identifier-shaped tokens that violate the grammar, plus registry shape defects: an unaccepted `tier`, an empty required field, and a section sign written as a JSON escape |
 
+Two optional per-fixture declarations keep a fixture from depending on the real tree.
+`existing-paths.txt` lists the repository paths the fixture pretends exist, for link
+resolution. `discovered-tests.txt` lists the tests the fixture pretends the NUnit harness
+discovered, so an `nunit` selector in `FIX-001.json` resolves against a declared list
+instead of against whatever tests the repository currently has; both files are read by
+`RegistrySources.ReadFixture`. `discovered-tests.txt` is deliberately nonempty in every
+fixture here, because an empty inventory is itself a validator failure
+(`RegistryRule.EmptyTestInventory`): a selector resolved against nothing can never be
+contradicted, so a fixture with no declared tests would prove its own defect for the wrong
+reason.
+
 These files are **not part of `MechaMiner.sln`**. The repository policy keeps a
 deliberately invalid fixture out of every production project, which is why they live
 here beside the build-policy fixtures rather than under `tests/`.

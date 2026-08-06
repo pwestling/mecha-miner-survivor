@@ -51,6 +51,19 @@ internal enum RegistryRule
 
     /// <summary>A registry file escapes a character it is required to encode as UTF-8.</summary>
     NonCanonicalEncoding,
+
+    /// <summary>An <c>nunit</c> selector names no test the harness actually discovers.</summary>
+    UnresolvedTestSelector,
+
+    /// <summary>
+    /// Test discovery produced nothing, so no <c>nunit</c> selector could be resolved.
+    /// </summary>
+    /// <remarks>
+    /// Its own rule rather than a silent skip. An empty inventory contradicts no selector,
+    /// so resolving against it would report every entry as fine no matter what the
+    /// registries said. The empty inventory is the failure.
+    /// </remarks>
+    EmptyTestInventory,
 }
 
 /// <summary>How much a finding matters.</summary>
@@ -127,7 +140,9 @@ internal sealed class RegistryFinding
 /// <para>
 /// <see cref="Validate"/> is a pure function from <see cref="RegistrySources"/> to
 /// findings. Nothing is read from the filesystem here, which is what lets a fixture prove
-/// each failure class.
+/// each failure class. That includes the discovered test list: it arrives as
+/// <see cref="RegistrySources.Tests"/>, so a control can hand the validator an empty
+/// inventory and require the failure that produces.
 /// </para>
 /// <para>
 /// Findings carry a severity, and the split is by rule rather than by whether the
@@ -151,13 +166,16 @@ internal static class RegistryValidator
     private static readonly ImmutableArray<string> Platforms =
         ImmutableArray.Create("linux-x64", "windows-x64", "osx-arm64");
 
-    private static readonly ImmutableArray<string> TestAssemblies = ImmutableArray.Create(
-        "MechaMiner.Simulation.Tests",
-        "MechaMiner.Content.Tests",
-        "MechaMiner.Diagnostics.Tests",
-        "MechaMiner.Persistence.Tests",
-        "MechaMiner.Tools.Tests",
-        "MechaMiner.Game.Tests");
+    /// <summary>
+    /// The test projects of the accepted decomposition, derived rather than restated.
+    /// </summary>
+    /// <remarks>
+    /// Read from <see cref="AcceptedArchitecture"/> so there is one list of test projects
+    /// in the tool. A second copy here could agree with the decomposition today and
+    /// disagree after the next project is added, and the disagreement would show up as a
+    /// registry finding blaming an entry that is correct.
+    /// </remarks>
+    private static readonly ImmutableArray<string> TestAssemblies = BuildTestAssemblies();
 
     /// <summary>The escape a registry file must not use for the section sign.</summary>
     /// <remarks>
@@ -406,6 +424,10 @@ internal static class RegistryValidator
     {
         Dictionary<string, List<VerificationEntry>> entriesByTask = new(StringComparer.Ordinal);
 
+        // Every nunit selector seen, with the entry that carries it, so the empty-set guard
+        // below can key on how many selectors depend on discovery having worked.
+        List<(string Subject, string Location, string Selector)> nunitSelectors = new();
+
         for (int fileIndex = 0; fileIndex < registries.Count; fileIndex++)
         {
             VerificationRegistryDocument registry = registries[fileIndex];
@@ -460,10 +482,71 @@ internal static class RegistryValidator
                     + ", expected 1"));
             }
 
-            ValidateEntries(registry, expectedWorkPackage, path, index, findings, entriesByTask);
+            ValidateEntries(
+                registry,
+                expectedWorkPackage,
+                path,
+                index,
+                findings,
+                entriesByTask,
+                nunitSelectors);
         }
 
         ValidateTaskCoverage(entriesByTask, index, findings);
+        ValidateTestSelectors(sources.Tests, nunitSelectors, findings);
+    }
+
+    /// <summary>
+    /// Resolves every <c>nunit</c> selector against the tests the harness actually
+    /// discovered.
+    /// </summary>
+    /// <remarks>
+    /// The empty inventory is handled first and on its own. If discovery returned nothing,
+    /// every selector would fail resolution, and reporting forty identical failures would
+    /// bury the one fact that matters: nobody asked the harness successfully. The guard
+    /// keys on <see cref="TestInventory.Count"/>, so an inventory that is nonempty but
+    /// wrong still reaches per-selector resolution and still fails there.
+    /// </remarks>
+    private static void ValidateTestSelectors(
+        TestInventory tests,
+        List<(string Subject, string Location, string Selector)> nunitSelectors,
+        List<RegistryFinding> findings)
+    {
+        if (nunitSelectors.Count == 0)
+        {
+            return;
+        }
+
+        if (tests.IsEmpty)
+        {
+            findings.Add(new RegistryFinding(
+                RegistryRule.EmptyTestInventory,
+                RegistrySeverity.Error,
+                "test discovery",
+                nunitSelectors[0].Location,
+                nunitSelectors.Count.ToString(CultureInfo.InvariantCulture)
+                + " nunit selector(s) must be resolved, but test discovery found 0 tests, so no selector "
+                + "could be contradicted. An empty inventory is a harness failure, not a passing run. "
+                + tests.DiscoveryReport.Replace('\n', ';')));
+            return;
+        }
+
+        foreach ((string subject, string location, string selector) in nunitSelectors)
+        {
+            if (!tests.Resolves(selector))
+            {
+                findings.Add(new RegistryFinding(
+                    RegistryRule.UnresolvedTestSelector,
+                    RegistrySeverity.Error,
+                    subject,
+                    location,
+                    "selector.value '" + selector + "' names no test among the "
+                    + tests.Count.ToString(CultureInfo.InvariantCulture)
+                    + " the harness discovers, so the entry cites test code that does not run. "
+                    + "A selector must be the full name of a discovered test, or a namespace or class "
+                    + "that contains one"));
+            }
+        }
     }
 
     private static void ValidateEntries(
@@ -472,7 +555,8 @@ internal static class RegistryValidator
         string path,
         RegistryIndex index,
         List<RegistryFinding> findings,
-        Dictionary<string, List<VerificationEntry>> entriesByTask)
+        Dictionary<string, List<VerificationEntry>> entriesByTask,
+        List<(string Subject, string Location, string Selector)> nunitSelectors)
     {
         List<int> ordinals = new();
 
@@ -579,16 +663,25 @@ internal static class RegistryValidator
                 {
                     Invalid("selector.kind", entry.Selector.Kind, SelectorKinds);
                 }
-                else if (string.Equals(entry.Selector.Kind, "nunit", StringComparison.Ordinal)
-                    && !NamesAKnownTestAssembly(entry.Selector.Value))
+                else if (string.Equals(entry.Selector.Kind, "nunit", StringComparison.Ordinal))
                 {
-                    findings.Add(new RegistryFinding(
-                        RegistryRule.InvalidVerificationValue,
-                        RegistrySeverity.Error,
-                        subject,
-                        location,
-                        "selector.value '" + entry.Selector.Value
-                        + "' does not begin with the namespace of a test project in the accepted decomposition"));
+                    if (!NamesAKnownTestAssembly(entry.Selector.Value))
+                    {
+                        findings.Add(new RegistryFinding(
+                            RegistryRule.InvalidVerificationValue,
+                            RegistrySeverity.Error,
+                            subject,
+                            location,
+                            "selector.value '" + entry.Selector.Value
+                            + "' does not begin with the namespace of a test project in the accepted "
+                            + "decomposition"));
+                    }
+                    else
+                    {
+                        // Named a real test project, so the selector is worth resolving
+                        // against the tests that project actually contains.
+                        nunitSelectors.Add((subject, location, entry.Selector.Value));
+                    }
                 }
             }
 
@@ -763,6 +856,20 @@ internal static class RegistryValidator
                 location,
                 "cited by " + subject + " but '" + path + "' has no heading whose anchor is '" + anchor + "'"));
         }
+    }
+
+    private static ImmutableArray<string> BuildTestAssemblies()
+    {
+        ImmutableArray<string>.Builder builder = ImmutableArray.CreateBuilder<string>();
+        foreach (AcceptedProject project in AcceptedArchitecture.Projects)
+        {
+            if (project.ProjectPath.StartsWith("tests/", StringComparison.Ordinal))
+            {
+                builder.Add(project.Name);
+            }
+        }
+
+        return builder.ToImmutable();
     }
 
     private static bool NamesAKnownTestAssembly(string selector)

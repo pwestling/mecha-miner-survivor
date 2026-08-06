@@ -150,12 +150,81 @@ msbuild_property() {
 }
 
 godot_assembly_names() {
-  # Filters a list of reference identities or paths on stdin down to the Godot
-  # assemblies among them, as a comma-separated list. Matches the file name so a
-  # bare assembly name and a full HintPath are treated alike.
-  sed -E 's|.*[/\\]||; s|\.dll$||' \
+  # Filters a list of reference identities, assembly identities or paths on stdin
+  # down to the Godot assemblies among them, as a comma-separated list. Matches
+  # the last path segment so a bare assembly name and a full HintPath are treated
+  # alike. Tabs are treated as separators, so a caller may feed it more than one
+  # column per reference.
+  tr '\t' '\n' \
+    | sed -E 's|.*[/\\]||; s|\.dll$||' \
     | grep -iE '^Godot([A-Za-z0-9.]*)?$' \
     | sort -u | paste -sd, - || true
+}
+
+resolved_assembly_identities() {
+  # $1 project. Prints "<assembly identity>\t<file name>" for every resolved
+  # compile-time reference. Returns nonzero on the same conditions as
+  # msbuild_items.
+  #
+  # The identity is the simple name out of FusionName, which
+  # ResolveAssemblyReferences reads from the assembly's own metadata. It therefore
+  # does not change when the FILE is renamed, which is the whole point: copying
+  # GodotSharp.dll to build/probe/Engine.dll and referencing it as
+  # <Reference Include="Engine"> defeated every name-based check while putting the
+  # real Godot assembly on a pure project's compile line.
+  #
+  # The file name is printed ALONGSIDE the identity, not instead of it, so a
+  # reference whose identity metadata cannot be read is still matched by name
+  # rather than reported as clean.
+  local project="$1"
+  local output
+  output="$(dotnet msbuild "${REPO_ROOT}/${project}" -nologo \
+    -getItem:ReferencePath -t:ResolveAssemblyReferences \
+    -p:BuildProjectReferences=false 2>/dev/null)" || return 1
+  printf '%s' "${output}" | python3 -c '
+import json, sys
+try:
+    document = json.load(sys.stdin)
+except ValueError:
+    sys.exit(1)
+items = document.get("Items")
+if not isinstance(items, dict) or "ReferencePath" not in items:
+    sys.exit(1)
+for entry in items["ReferencePath"]:
+    path = (entry.get("Identity") or "").replace("\\", "/")
+    name = path.rsplit("/", 1)[-1]
+    if name.lower().endswith(".dll"):
+        name = name[:-4]
+    fusion = (entry.get("FusionName") or "").strip()
+    identity = fusion.split(",")[0].strip() if fusion else ""
+    sys.stdout.write("%s\t%s\n" % (identity, name))
+'
+}
+
+compiled_source_files() {
+  # $1 project. Prints the absolute path of every file in the project's evaluated
+  # Compile item set - the actual compiler input, after default globs, explicit
+  # includes, links and any <Import>ed contribution. FullPath rather than
+  # Identity, because a linked file's Identity is relative to the project and can
+  # point anywhere. Returns nonzero when the project cannot be evaluated or the
+  # Compile item name is absent from the output; an EMPTY Compile set is valid
+  # (several projects in this repository have no sources yet).
+  local output
+  output="$(dotnet msbuild "${REPO_ROOT}/$1" -nologo -getItem:Compile 2>/dev/null)" || return 1
+  printf '%s' "${output}" | python3 -c '
+import json, sys
+try:
+    document = json.load(sys.stdin)
+except ValueError:
+    sys.exit(1)
+items = document.get("Items")
+if not isinstance(items, dict) or "Compile" not in items:
+    sys.exit(1)
+for entry in items["Compile"]:
+    path = (entry.get("FullPath") or "").strip()
+    if path:
+        sys.stdout.write(path + "\n")
+'
 }
 
 project_name() {
@@ -313,8 +382,9 @@ echo "=== 6. only game/ may reference Godot (VER-FND-001-004)"
 #
 # Three independent signals, because each covers routes the others miss:
 #
-#   resolved  ReferencePath after ResolveAssemblyReferences - the actual compile
-#             line. This is the authoritative signal: it covers PackageReference,
+#   resolved  the ASSEMBLY IDENTITY of every ReferencePath entry after
+#             ResolveAssemblyReferences - the actual compile line. This is the
+#             authoritative signal: it covers PackageReference,
 #             a raw <Reference> with a HintPath, a <Reference> contributed by an
 #             <Import>ed props/targets file, a Directory.Build.* contribution,
 #             central package management including GlobalPackageReference, and
@@ -330,12 +400,22 @@ echo "=== 6. only game/ may reference Godot (VER-FND-001-004)"
 # a PackageReference and contributes nothing to packages.lock.json, so a project
 # could expose a Godot type on its public API surface with this section reporting
 # "has no Godot dependency".
+#
+# The resolved signal reads the reference's ASSEMBLY IDENTITY, not its file name,
+# because a file name is not an identity. Copying
+# ~/.nuget/packages/godotsharp/4.7.1/lib/net8.0/GodotSharp.dll to
+# build/probe/Engine.dll and referencing it as <Reference Include="Engine"> with a
+# HintPath put the real Godot assembly on MechaMiner.Content's compile line, let it
+# compile Godot.Vector2, and this section still reported "MechaMiner.Content has no
+# Godot dependency". FusionName is what ResolveAssemblyReferences read out of that
+# file's own metadata: "GodotSharp, Version=4.7.1.0, Culture=neutral,
+# PublicKeyToken=null", regardless of what the file was called.
 for entry in "${EXPECTED_PROJECTS[@]}"; do
   IFS='|' read -r project _expected_refs godot_allowed <<<"${entry}"
   directory="${REPO_ROOT}/$(dirname "${project}")"
   name="$(project_name "${project}")"
 
-  if ! resolved_references="$(msbuild_items "${project}" ReferencePath ResolveAssemblyReferences)"; then
+  if ! resolved_references="$(resolved_assembly_identities "${project}")"; then
     fail "${name}: the resolved compile-time reference set could not be evaluated, so its Godot boundary is unverified"
     continue
   fi
@@ -361,7 +441,7 @@ for entry in "${EXPECTED_PROJECTS[@]}"; do
     fi
   else
     if [[ -z "${godot_resolved}" && -z "${godot_declared}" && -z "${godot_locked}" ]]; then
-      pass "${name} has no Godot dependency (resolved compile-time reference set checked)"
+      pass "${name} has no Godot dependency (assembly identity of every resolved compile-time reference checked)"
     else
       fail "${name} must not reference Godot (resolved: ${godot_resolved:-none}, declared: ${godot_declared:-none}, locked: ${godot_locked:-none})"
     fi
@@ -422,6 +502,58 @@ if [[ "${scan_roots_present}" -eq 1 ]]; then
     fail "Godot type named outside game/: $(printf '%s' "${stray_godot}" | paste -sd' ' -)"
   fi
 fi
+
+# Second reader of the same rule, over a file set the directory scan cannot have.
+#
+# A directory scan only sees the directories it names. A pure project that
+# <Compile Include=>s a file from anywhere else compiles source this section never
+# looks at: pulling generated/HiddenGodotSource.cs into MechaMiner.Content let it
+# compile Godot.Vector2 while this section reported "no C# file under src/ tests/
+# build/policy-fixtures/ names a Godot type" and the gate exited 0. The file set is
+# therefore also taken from each pure project's EVALUATED Compile item set - the
+# real compiler input, after default globs, explicit includes, links, and any
+# <Import>ed contribution - wherever those files live, including under obj/ and
+# outside the repository's source directories entirely.
+#
+# The two readers deliberately share one rule (GODOT_TOKEN, matched against raw
+# file text). Only the file set differs. NOTE for integration: the FND-004 branch
+# strips comments and string literals before applying this same token, and
+# requires it in `using` or qualifier position. That is a change to the RULE and
+# belongs in one place; when the branches meet, both readers here must take it
+# together, not one of them.
+echo
+for entry in "${EXPECTED_PROJECTS[@]}"; do
+  IFS='|' read -r project _expected_refs godot_allowed <<<"${entry}"
+  [[ "${godot_allowed}" == "no" ]] || continue
+  name="$(project_name "${project}")"
+
+  if ! compiled_sources="$(compiled_source_files "${project}")"; then
+    fail "${name}: the evaluated Compile item set could not be read, so the source side of its Godot boundary is unverified"
+    continue
+  fi
+
+  compiled_count=0
+  compiled_offenders=()
+  while IFS= read -r source; do
+    [[ -n "${source}" ]] || continue
+    compiled_count=$((compiled_count + 1))
+    if [[ ! -f "${source}" ]]; then
+      # A compile input that does not exist would fail the build, but it must not
+      # read here as a file that was scanned and found clean.
+      compiled_offenders+=("${source#"${REPO_ROOT}/"} (missing)")
+      continue
+    fi
+    if grep -qE "${GODOT_TOKEN}" "${source}"; then
+      compiled_offenders+=("${source#"${REPO_ROOT}/"}")
+    fi
+  done <<<"${compiled_sources}"
+
+  if [[ "${#compiled_offenders[@]}" -eq 0 ]]; then
+    pass "${name} compiles ${compiled_count} source file(s), none naming a Godot type"
+  else
+    fail "${name} compiles source that names a Godot type: $(printf '%s ' "${compiled_offenders[@]}")"
+  fi
+done
 
 echo
 echo "=== 9. no GDScript in the repository (VER-FND-001-005)"

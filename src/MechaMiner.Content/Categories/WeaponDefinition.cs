@@ -170,7 +170,7 @@ public static class WeaponReader
             return new DefinitionReadResult(null, bag.Diagnostics, structure);
         }
 
-        Validate(dto, context, id, bag);
+        Validate(dto, context, id, StructuralReport.Of(bag), bag);
 
         if (bag.HasErrors || envelope is null)
         {
@@ -204,6 +204,7 @@ public static class WeaponReader
         WeaponDto dto,
         CategoryReadContext context,
         string? id,
+        StructuralReport structural,
         DiagnosticBag bag)
     {
         JsonPointer root = JsonPointer.Root;
@@ -223,24 +224,31 @@ public static class WeaponReader
                 root.AppendProperty("signature_mech_id"), context, id, bag);
         }
 
-        ValidateRecipe(dto, context, id, bag);
-        ValidateStatTracks(dto, context, id, bag);
-        ValidateBranchIds(dto, context, id, bag);
+        ValidateRecipe(dto, context, id, structural, bag);
+        ValidateStatTracks(dto, context, id, structural, bag);
+        ValidateBranchIds(dto, context, id, structural, bag);
     }
 
     private static void ValidateRecipe(
         WeaponDto dto,
         CategoryReadContext context,
         string? id,
+        StructuralReport structural,
         DiagnosticBag bag)
     {
         List<string> materials = dto.RecipePairMaterialIds ?? new();
         JsonPointer pointer = JsonPointer.Root.AppendProperty("recipe_pair_material_ids");
 
-        SemanticCheck.ExactCount(
-            materials.Count, WeaponSchema.RecipeMaterialCount, pointer, context, id, bag,
-            "a recipe pair names exactly two resources, because a weapon ID is a two-letter "
-                + "material pair and the two have to line up");
+        // The array itself is the operand: absent, it deserializes to an empty list, and
+        // the cardinality report would say the recipe names no resources rather than
+        // that the field is not there.
+        if (!structural.Reported(pointer))
+        {
+            SemanticCheck.ExactCount(
+                materials.Count, WeaponSchema.RecipeMaterialCount, pointer, context, id, bag,
+                "a recipe pair names exactly two resources, because a weapon ID is a two-letter "
+                    + "material pair and the two have to line up");
+        }
 
         for (int index = 0; index < materials.Count; index++)
         {
@@ -259,28 +267,34 @@ public static class WeaponReader
         WeaponDto dto,
         CategoryReadContext context,
         string? id,
+        StructuralReport structural,
         DiagnosticBag bag)
     {
         List<WeaponDto.StatTrackDto> tracks = dto.OreUpgradeableStats ?? new();
         JsonPointer pointer = JsonPointer.Root.AppendProperty("ore_upgradeable_stats");
 
-        SemanticCheck.ExactCount(
-            tracks.Count, WeaponSchema.StatTrackCount, pointer, context, id, bag,
-            "a weapon declares exactly three ore-upgradeable stat tracks, which doc 40 § Weapons "
-                + "states as a compiler check. A branch may not add a fourth, so three is the "
-                + "whole vocabulary a branch's effects can name");
+        if (!structural.Reported(pointer))
+        {
+            SemanticCheck.ExactCount(
+                tracks.Count, WeaponSchema.StatTrackCount, pointer, context, id, bag,
+                "a weapon declares exactly three ore-upgradeable stat tracks, which doc 40 "
+                    + "§ Weapons states as a compiler check. A branch may not add a fourth, so "
+                    + "three is the whole vocabulary a branch's effects can name");
+        }
 
         List<string> names = new(tracks.Count);
         List<long> slots = new(tracks.Count);
+        List<JsonPointer> slotPointers = new(tracks.Count);
 
         for (int index = 0; index < tracks.Count; index++)
         {
             WeaponDto.StatTrackDto track = tracks[index];
             JsonPointer trackPointer = pointer.AppendIndex(index);
+            JsonPointer slotPointer = trackPointer.AppendProperty("slot");
 
             names.Add(track.Name ?? string.Empty);
-            slots.Add(SemanticCheck.Integer(
-                track.Slot, trackPointer.AppendProperty("slot"), context, id, bag, "slot"));
+            slotPointers.Add(slotPointer);
+            slots.Add(SemanticCheck.Integer(track.Slot, slotPointer, context, id, bag, "slot"));
 
             SemanticCheck.Token(
                 track.Unit, WeaponSchema.StatUnits, trackPointer.AppendProperty("unit"), context,
@@ -300,24 +314,31 @@ public static class WeaponReader
             names, pointer, context, id, bag,
             "a weapon's stat track names. Branch effects reference a track by name, so two tracks "
                 + "sharing one would make that reference ambiguous");
-        SemanticCheck.Contiguous(
-            slots, 1, pointer, context, id, bag, "a weapon's stat track slots");
+        if (!structural.ReportedAny(slotPointers))
+        {
+            SemanticCheck.Contiguous(
+                slots, 1, pointer, context, id, bag, "a weapon's stat track slots");
+        }
     }
 
     private static void ValidateBranchIds(
         WeaponDto dto,
         CategoryReadContext context,
         string? id,
+        StructuralReport structural,
         DiagnosticBag bag)
     {
         List<string> branchIds = dto.BranchIds ?? new();
         JsonPointer pointer = JsonPointer.Root.AppendProperty("branch_ids");
 
-        SemanticCheck.ExactCount(
-            branchIds.Count, WeaponSchema.BranchCount, pointer, context, id, bag,
-            "a weapon has exactly three branches. That they are one amplification, one "
-                + "functional, and one conversion is asserted from the branches catalog, because "
-                + "branch_class lives on the branch");
+        if (!structural.Reported(pointer))
+        {
+            SemanticCheck.ExactCount(
+                branchIds.Count, WeaponSchema.BranchCount, pointer, context, id, bag,
+                "a weapon has exactly three branches. That they are one amplification, one "
+                    + "functional, and one conversion is asserted from the branches catalog, "
+                    + "because branch_class lives on the branch");
+        }
 
         for (int index = 0; index < branchIds.Count; index++)
         {

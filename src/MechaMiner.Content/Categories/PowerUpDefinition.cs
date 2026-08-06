@@ -282,7 +282,7 @@ public static class PowerUpReader
             return new DefinitionReadResult(null, bag.Diagnostics, structure);
         }
 
-        Validate(dto, context, id, bag);
+        Validate(dto, context, id, StructuralReport.Of(bag), bag);
 
         if (bag.HasErrors || envelope is null)
         {
@@ -312,6 +312,7 @@ public static class PowerUpReader
         PowerUpDto dto,
         CategoryReadContext context,
         string? id,
+        StructuralReport structural,
         DiagnosticBag bag)
     {
         JsonPointer root = JsonPointer.Root;
@@ -338,7 +339,7 @@ public static class PowerUpReader
             dto.Cap, 1, root.AppendProperty("cap"), context, id, bag,
             "cap is the highest purchasable rank and is at least one");
 
-        ValidateRanks(dto, cap, context, id, bag);
+        ValidateRanks(dto, cap, context, id, structural, bag);
         ValidateActiveRankPolicy(dto, cap, context, id, bag);
     }
 
@@ -347,23 +348,35 @@ public static class PowerUpReader
         long cap,
         CategoryReadContext context,
         string? id,
+        StructuralReport structural,
         DiagnosticBag bag)
     {
         List<PowerUpDto.RankDto> ranks = dto.Ranks ?? new();
         JsonPointer pointer = JsonPointer.Root.AppendProperty("ranks");
+        JsonPointer capPointer = JsonPointer.Root.AppendProperty("cap");
 
-        SemanticCheck.ExactCount(
-            ranks.Count, (int)cap, pointer, context, id, bag,
-            "the rank ladder holds one row per purchasable rank, so its length equals the cap. "
-                + "The two are checked against each other rather than both against a constant, so "
-                + "a cap raised without adding a row fails and so does the reverse");
+        // The length is compared against the cap, so both are operands. Without the
+        // guard a renamed cap defaults to zero and this reports "holds exactly 0
+        // elements; found 5" over a file with five visible rows.
+        if (!structural.ReportedEither(pointer, capPointer))
+        {
+            SemanticCheck.ExactCount(
+                ranks.Count, (int)cap, pointer, context, id, bag,
+                "the rank ladder holds one row per purchasable rank, so its length equals the "
+                    + "cap. The two are checked against each other rather than both against a "
+                    + "constant, so a cap raised without adding a row fails and so does the "
+                    + "reverse");
+        }
 
         List<long> ordinals = new(ranks.Count);
+        List<JsonPointer> ordinalPointers = new(ranks.Count);
         for (int index = 0; index < ranks.Count; index++)
         {
             JsonPointer row = pointer.AppendIndex(index);
+            JsonPointer ordinalPointer = row.AppendProperty("rank");
+            ordinalPointers.Add(ordinalPointer);
             ordinals.Add(SemanticCheck.Integer(
-                ranks[index].Rank, row.AppendProperty("rank"), context, id, bag, "rank"));
+                ranks[index].Rank, ordinalPointer, context, id, bag, "rank"));
 
             SemanticCheck.Integer(
                 ranks[index].PriceHyperGold, row.AppendProperty("price_hyper_gold"), context, id,
@@ -376,8 +389,13 @@ public static class PowerUpReader
                     + "a flat ladder a designer is free to author");
         }
 
-        SemanticCheck.Contiguous(
-            ordinals, 1, pointer, context, id, bag, "a PowerUp's rank numbers");
+        // Every ordinal is an operand: one absent rank number defaults to zero and the
+        // contiguity report then names an ordinal nobody wrote.
+        if (!structural.ReportedAny(ordinalPointers))
+        {
+            SemanticCheck.Contiguous(
+                ordinals, 1, pointer, context, id, bag, "a PowerUp's rank numbers");
+        }
     }
 
     private static void ValidateActiveRankPolicy(

@@ -213,7 +213,7 @@ public static class BranchReader
             return new DefinitionReadResult(null, bag.Diagnostics, structure);
         }
 
-        Validate(dto, context, id, bag);
+        Validate(dto, context, id, StructuralReport.Of(bag), bag);
 
         if (bag.HasErrors || envelope is null)
         {
@@ -237,6 +237,7 @@ public static class BranchReader
         BranchDto dto,
         CategoryReadContext context,
         string? id,
+        StructuralReport structural,
         DiagnosticBag bag)
     {
         JsonPointer root = JsonPointer.Root;
@@ -258,7 +259,7 @@ public static class BranchReader
                 + "that costs nothing is not a fabrication choice");
 
         ValidateParentWeapon(dto, context, id, bag);
-        ValidateExclusivity(dto, context, id, bag);
+        ValidateExclusivity(dto, context, id, structural, bag);
     }
 
     private static void ValidateParentWeapon(
@@ -297,6 +298,7 @@ public static class BranchReader
         BranchDto dto,
         CategoryReadContext context,
         string? id,
+        StructuralReport structural,
         DiagnosticBag bag)
     {
         if (dto.Exclusivity is null)
@@ -308,10 +310,14 @@ public static class BranchReader
             JsonPointer.Root.AppendProperty("exclusivity").AppendProperty("mutually_exclusive_with");
         List<string> exclusions = dto.Exclusivity.MutuallyExclusiveWith ?? new List<string>();
 
-        SemanticCheck.ExactCount(
-            exclusions.Count, BranchSchema.MutuallyExclusiveBranchCount, pointer, context, id, bag,
-            "a branch rules out exactly the other two branches of its own weapon, because a "
-                + "weapon has three and installing one commits to it for the run");
+        if (!structural.Reported(pointer))
+        {
+            SemanticCheck.ExactCount(
+                exclusions.Count, BranchSchema.MutuallyExclusiveBranchCount, pointer, context, id,
+                bag,
+                "a branch rules out exactly the other two branches of its own weapon, because a "
+                    + "weapon has three and installing one commits to it for the run");
+        }
 
         for (int index = 0; index < exclusions.Count; index++)
         {

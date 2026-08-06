@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -93,6 +94,65 @@ internal sealed class FixtureDocument
         return this;
     }
 
+    /// <summary>
+    /// Removes the value an RFC 6901 pointer addresses, at any depth, through objects
+    /// and arrays alike.
+    /// </summary>
+    /// <remarks>
+    /// A test that has to say "remove the operand this check reads" needs to name the
+    /// operand the same way a diagnostic does. Naming it with the same pointer syntax
+    /// the diagnostic reports is what lets the assertion and the mutation be read
+    /// against each other rather than translated by hand.
+    /// </remarks>
+    internal FixtureDocument RemoveAt(string pointer)
+    {
+        (JsonNode parent, string token) = Resolve(pointer);
+        switch (parent)
+        {
+            case JsonObject o:
+                o.Remove(token);
+                return this;
+
+            case JsonArray a:
+                a.RemoveAt(int.Parse(token, CultureInfo.InvariantCulture));
+                return this;
+
+            default:
+                throw new InvalidOperationException(pointer + " does not address a member");
+        }
+    }
+
+    /// <summary>Sets the value an RFC 6901 pointer addresses.</summary>
+    internal FixtureDocument SetAt(string pointer, JsonNode? value)
+    {
+        (JsonNode parent, string token) = Resolve(pointer);
+        switch (parent)
+        {
+            case JsonObject o:
+                o[token] = value;
+                return this;
+
+            case JsonArray a:
+                a[int.Parse(token, CultureInfo.InvariantCulture)] = value;
+                return this;
+
+            default:
+                throw new InvalidOperationException(pointer + " does not address a member");
+        }
+    }
+
+    /// <summary>Removes a property from every element of the array a pointer addresses.</summary>
+    internal FixtureDocument RemoveFromEvery(string arrayPointer, string property)
+    {
+        JsonArray array = (JsonArray)Node(arrayPointer);
+        foreach (JsonNode? element in array)
+        {
+            ((JsonObject)element!).Remove(property);
+        }
+
+        return this;
+    }
+
     /// <summary>The document's UTF-8 bytes.</summary>
     internal byte[] ToUtf8()
     {
@@ -116,6 +176,41 @@ internal sealed class FixtureDocument
                 + string.Join("; ", result.Diagnostics));
 
         return (TDefinition)result.Definition!;
+    }
+
+    /// <summary>Splits a pointer into the container and the last token.</summary>
+    private (JsonNode Parent, string Token) Resolve(string pointer)
+    {
+        int last = pointer.LastIndexOf('/');
+        if (last < 0)
+        {
+            throw new InvalidOperationException("'" + pointer + "' is not a JSON pointer");
+        }
+
+        return (Node(pointer[..last]), pointer[(last + 1)..]);
+    }
+
+    /// <summary>Walks a pointer to the node it addresses.</summary>
+    private JsonNode Node(string pointer)
+    {
+        JsonNode current = _root;
+        foreach (string token in pointer.Split('/'))
+        {
+            if (token.Length == 0)
+            {
+                continue;
+            }
+
+            current = current switch
+            {
+                JsonArray array => array[int.Parse(token, CultureInfo.InvariantCulture)]!,
+                JsonObject o => o[token]
+                    ?? throw new InvalidOperationException(pointer + " does not resolve"),
+                _ => throw new InvalidOperationException(pointer + " does not resolve"),
+            };
+        }
+
+        return current;
     }
 
     /// <summary>Builds a JSON array of strings.</summary>

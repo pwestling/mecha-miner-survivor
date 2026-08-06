@@ -358,7 +358,7 @@ public static class UtilityReader
             return new DefinitionReadResult(null, bag.Diagnostics, structure);
         }
 
-        Validate(dto, outline, context, id, bag);
+        Validate(dto, outline, context, id, StructuralReport.Of(bag), bag);
 
         if (bag.HasErrors || envelope is null)
         {
@@ -393,6 +393,7 @@ public static class UtilityReader
         DocumentOutline outline,
         CategoryReadContext context,
         string? id,
+        StructuralReport structural,
         DiagnosticBag bag)
     {
         JsonPointer root = JsonPointer.Root;
@@ -430,9 +431,9 @@ public static class UtilityReader
             "stored_charges is at least one where it is present; a recharging utility with no "
                 + "charge to store is not one");
 
-        ValidateOreOnlyException(dto, outline, context, id, bag);
-        ValidateRanks(dto, outline, context, id, bag);
-        ValidateAvailability(dto, context, id, bag);
+        ValidateOreOnlyException(dto, outline, context, id, structural, bag);
+        ValidateRanks(dto, outline, context, id, structural, bag);
+        ValidateAvailability(dto, context, id, structural, bag);
     }
 
     private static void ValidateOreOnlyException(
@@ -440,10 +441,21 @@ public static class UtilityReader
         DocumentOutline outline,
         CategoryReadContext context,
         string? id,
+        StructuralReport structural,
         DiagnosticBag bag)
     {
-        bool exception = dto.OreOnlyException ?? false;
         JsonPointer root = JsonPointer.Root;
+
+        // Every branch below reads ore_only_exception, and a missing one defaults to
+        // false. That default is what tells the ore-only radar three times over that it
+        // is not the ore-only radar. The discriminator is the operand; without it there
+        // is no arm to check against.
+        if (structural.Reported(root.AppendProperty("ore_only_exception")))
+        {
+            return;
+        }
+
+        bool exception = dto.OreOnlyException ?? false;
 
         if (exception)
         {
@@ -523,6 +535,7 @@ public static class UtilityReader
         DocumentOutline outline,
         CategoryReadContext context,
         string? id,
+        StructuralReport structural,
         DiagnosticBag bag)
     {
         JsonPointer acquisition = JsonPointer.Root.AppendProperty("acquisition");
@@ -544,13 +557,19 @@ public static class UtilityReader
 
         List<double> oreCosts = dto.Acquisition?.RankOreCosts ?? new List<double>();
         JsonPointer costsPointer = acquisition.AppendProperty("rank_ore_costs");
+        JsonPointer rankCountPointer = acquisition.AppendProperty("rank_count");
         if (dto.Acquisition?.RankOreCosts is not null)
         {
-            SemanticCheck.ExactCount(
-                oreCosts.Count, (int)rankCount, costsPointer, context, id, bag,
-                "rank_ore_costs holds one price per rank above Installed, so its length equals "
-                    + "rank_count; the two are checked against each other rather than both "
-                    + "against a constant");
+            // rank_count is the operand. rank_ore_costs itself is not: unreadable, it
+            // deserializes to null and the enclosing branch does not run at all.
+            if (!structural.Reported(rankCountPointer))
+            {
+                SemanticCheck.ExactCount(
+                    oreCosts.Count, (int)rankCount, costsPointer, context, id, bag,
+                    "rank_ore_costs holds one price per rank above Installed, so its length "
+                        + "equals rank_count; the two are checked against each other rather "
+                        + "than both against a constant");
+            }
 
             for (int index = 0; index < oreCosts.Count; index++)
             {
@@ -571,29 +590,42 @@ public static class UtilityReader
         List<UtilityDto.RankDto> ranks = dto.Ranks ?? new();
         JsonPointer pointer = JsonPointer.Root.AppendProperty("ranks");
 
-        SemanticCheck.ExactCount(
-            ranks.Count, (int)rankCount + 1, pointer, context, id, bag,
-            "a utility's rank array holds one row per rank plus one for Installed, so its length "
-                + "is rank_count plus one. The invariant is conditioned on the ore-only exception "
-                + "rather than applied blindly, because the radar has no ladder at all");
-
-        List<long> ordinals = new(ranks.Count);
-        for (int index = 0; index < ranks.Count; index++)
+        if (!structural.ReportedEither(pointer, rankCountPointer))
         {
-            ordinals.Add(SemanticCheck.Integer(
-                ranks[index].Rank, pointer.AppendIndex(index).AppendProperty("rank"), context, id,
-                bag, "rank"));
+            SemanticCheck.ExactCount(
+                ranks.Count, (int)rankCount + 1, pointer, context, id, bag,
+                "a utility's rank array holds one row per rank plus one for Installed, so its "
+                    + "length is rank_count plus one. The invariant is conditioned on the "
+                    + "ore-only exception rather than applied blindly, because the radar has no "
+                    + "ladder at all");
         }
 
-        SemanticCheck.Contiguous(
-            ordinals, 0, pointer, context, id, bag,
-            "a utility's ranks, where zero is Installed");
+        List<long> ordinals = new(ranks.Count);
+        List<JsonPointer> ordinalPointers = new(ranks.Count);
+        for (int index = 0; index < ranks.Count; index++)
+        {
+            JsonPointer ordinalPointer = pointer.AppendIndex(index).AppendProperty("rank");
+            ordinalPointers.Add(ordinalPointer);
+            ordinals.Add(SemanticCheck.Integer(
+                ranks[index].Rank, ordinalPointer, context, id, bag, "rank"));
+        }
+
+        // Every ordinal is an operand. With the rank numbers absent they all default to
+        // zero, and contiguity then reports "element 1 is 0 where 1 was required" about
+        // a value the document never carried.
+        if (!structural.ReportedAny(ordinalPointers))
+        {
+            SemanticCheck.Contiguous(
+                ordinals, 0, pointer, context, id, bag,
+                "a utility's ranks, where zero is Installed");
+        }
     }
 
     private static void ValidateAvailability(
         UtilityDto dto,
         CategoryReadContext context,
         string? id,
+        StructuralReport structural,
         DiagnosticBag bag)
     {
         if (dto.Availability is null)
@@ -602,9 +634,17 @@ public static class UtilityReader
         }
 
         JsonPointer pointer = JsonPointer.Root.AppendProperty("availability");
+        JsonPointer poolPointer = pointer.AppendProperty("pool_availability");
         SemanticCheck.Token(
             dto.Availability.PoolAvailability, UtilitySchema.PoolAvailabilities,
-            pointer.AppendProperty("pool_availability"), context, id, bag);
+            poolPointer, context, id, bag);
+
+        // A missing pool_availability is not "some pool other than hyper-gold-unlock";
+        // it is no pool at all, and the unlock rules below have no arm to select.
+        if (structural.Reported(poolPointer))
+        {
+            return;
+        }
 
         bool unlocked = string.Equals(
             dto.Availability.PoolAvailability, "hyper-gold-unlock", StringComparison.Ordinal);

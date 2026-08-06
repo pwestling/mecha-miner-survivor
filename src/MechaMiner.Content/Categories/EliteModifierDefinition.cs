@@ -132,7 +132,7 @@ public static class EliteModifierReader
             return new DefinitionReadResult(null, bag.Diagnostics, structure);
         }
 
-        Validate(dto, context, id, bag);
+        Validate(dto, context, id, StructuralReport.Of(bag), bag);
 
         if (bag.HasErrors || envelope is null)
         {
@@ -157,6 +157,7 @@ public static class EliteModifierReader
         EliteModifierDto dto,
         CategoryReadContext context,
         string? id,
+        StructuralReport structural,
         DiagnosticBag bag)
     {
         JsonPointer root = JsonPointer.Root;
@@ -242,10 +243,13 @@ public static class EliteModifierReader
 
         SemanticCheck.Distinct(
             order, orderPointer, context, id, bag, "the modifier application layers");
-        SemanticCheck.ExactCount(
-            order.Count, EliteModifierSchema.ModifierLayers.Tokens.Count, orderPointer, context,
-            id, bag,
-            "modifier_application_order lists every layer exactly once, so it is a total order "
-                + "over the closed layer vocabulary rather than a subset of it");
+        if (!structural.Reported(orderPointer))
+        {
+            SemanticCheck.ExactCount(
+                order.Count, EliteModifierSchema.ModifierLayers.Tokens.Count, orderPointer,
+                context, id, bag,
+                "modifier_application_order lists every layer exactly once, so it is a total "
+                    + "order over the closed layer vocabulary rather than a subset of it");
+        }
     }
 }

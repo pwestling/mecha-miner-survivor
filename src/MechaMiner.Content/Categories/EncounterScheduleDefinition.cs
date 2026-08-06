@@ -199,7 +199,7 @@ public static class EncounterScheduleReader
             return new DefinitionReadResult(null, bag.Diagnostics, structure);
         }
 
-        List<long> minutes = Validate(dto, context, id, bag);
+        List<long> minutes = Validate(dto, context, id, StructuralReport.Of(bag), bag);
 
         if (bag.HasErrors || envelope is null)
         {
@@ -220,6 +220,7 @@ public static class EncounterScheduleReader
         EncounterScheduleDto dto,
         CategoryReadContext context,
         string? id,
+        StructuralReport structural,
         DiagnosticBag bag)
     {
         JsonPointer root = JsonPointer.Root;
@@ -242,8 +243,8 @@ public static class EncounterScheduleReader
             context, id, bag,
             "boss_arrival_warning_seconds is a duration and durations are nonnegative");
 
-        ValidateFormationDefinitions(dto, context, id, bag);
-        List<long> minutes = ValidateMinuteRows(dto, context, id, bag);
+        ValidateFormationDefinitions(dto, context, id, structural, bag);
+        List<long> minutes = ValidateMinuteRows(dto, context, id, structural, bag);
         ValidateBeaconResponses(dto, context, id, bag);
         return minutes;
     }
@@ -252,11 +253,13 @@ public static class EncounterScheduleReader
         EncounterScheduleDto dto,
         CategoryReadContext context,
         string? id,
+        StructuralReport structural,
         DiagnosticBag bag)
     {
         List<EncounterScheduleDto.FormationDefinitionDto> formations =
             dto.SpawnFormations ?? new();
         JsonPointer pointer = JsonPointer.Root.AppendProperty("spawn_formations");
+        bool arrayIsReadable = !structural.Reported(pointer);
         List<string> tokens = new(formations.Count);
 
         for (int index = 0; index < formations.Count; index++)
@@ -270,37 +273,49 @@ public static class EncounterScheduleReader
 
         SemanticCheck.Distinct(
             tokens, pointer, context, id, bag, "the formations the schedule defines");
-        SemanticCheck.ExactCount(
-            formations.Count, EncounterScheduleSchema.Formations.Tokens.Count, pointer, context,
-            id, bag,
-            "spawn_formations defines every formation in the closed vocabulary exactly once, so a "
-                + "minute row can never name a formation the schedule has not defined");
+        if (arrayIsReadable)
+        {
+            SemanticCheck.ExactCount(
+                formations.Count, EncounterScheduleSchema.Formations.Tokens.Count, pointer,
+                context, id, bag,
+                "spawn_formations defines every formation in the closed vocabulary exactly once, "
+                    + "so a minute row can never name a formation the schedule has not defined");
+        }
     }
 
     private static List<long> ValidateMinuteRows(
         EncounterScheduleDto dto,
         CategoryReadContext context,
         string? id,
+        StructuralReport structural,
         DiagnosticBag bag)
     {
         List<EncounterScheduleDto.MinuteRowDto> rows = dto.MinuteRows ?? new();
         JsonPointer pointer = JsonPointer.Root.AppendProperty("minute_rows");
         List<long> minutes = new(rows.Count);
+        List<JsonPointer> minutePointers = new(rows.Count);
 
+        // minute_rows is the operand. duration_minutes is not: unreadable, it already
+        // falls back to the row count on the line above and the comparison is vacuous.
         long duration = dto.DurationMinutes is null ? rows.Count : (long)dto.DurationMinutes.Value;
-        SemanticCheck.ExactCount(
-            rows.Count, (int)duration, pointer, context, id, bag,
-            "minute_rows holds one row per minute of the run, so its length equals "
-                + "duration_minutes; the two are checked against each other rather than both "
-                + "against a constant, so raising the duration without adding rows fails");
+        if (!structural.Reported(pointer))
+        {
+            SemanticCheck.ExactCount(
+                rows.Count, (int)duration, pointer, context, id, bag,
+                "minute_rows holds one row per minute of the run, so its length equals "
+                    + "duration_minutes; the two are checked against each other rather than both "
+                    + "against a constant, so raising the duration without adding rows fails");
+        }
 
         for (int index = 0; index < rows.Count; index++)
         {
             EncounterScheduleDto.MinuteRowDto row = rows[index];
             JsonPointer rowPointer = pointer.AppendIndex(index);
 
+            JsonPointer minutePointer = rowPointer.AppendProperty("minute");
+            minutePointers.Add(minutePointer);
             minutes.Add(SemanticCheck.Integer(
-                row.Minute, rowPointer.AppendProperty("minute"), context, id, bag, "minute"));
+                row.Minute, minutePointer, context, id, bag, "minute"));
 
             SemanticCheck.Integer(
                 row.MinimumCount, rowPointer.AppendProperty("minimum_count"), context, id, bag,
@@ -310,7 +325,7 @@ public static class EncounterScheduleReader
                 "minimum_count is a desired live population and is nonnegative");
 
             ValidatePulse(row.Pulse, rowPointer, context, id, bag);
-            ValidateComposition(row.Composition, rowPointer, context, id, bag);
+            ValidateComposition(row.Composition, rowPointer, context, id, structural, bag);
             ValidateDebuts(row.DebutEnemyIds, rowPointer, context, id, bag);
             ValidateFormationEvents(row.FormationEvents, rowPointer, context, id, bag);
             ValidateScheduledElites(row.ScheduledElites, rowPointer, context, id, bag);
@@ -323,8 +338,12 @@ public static class EncounterScheduleReader
             }
         }
 
-        SemanticCheck.Contiguous(
-            minutes, 0, pointer, context, id, bag, "the schedule's minute numbers");
+        if (!structural.ReportedAny(minutePointers))
+        {
+            SemanticCheck.Contiguous(
+                minutes, 0, pointer, context, id, bag, "the schedule's minute numbers");
+        }
+
         return minutes;
     }
 
@@ -359,6 +378,7 @@ public static class EncounterScheduleReader
         JsonPointer rowPointer,
         CategoryReadContext context,
         string? id,
+        StructuralReport structural,
         DiagnosticBag bag)
     {
         List<EncounterScheduleDto.CompositionEntryDto> entries = composition ?? new();
@@ -366,22 +386,23 @@ public static class EncounterScheduleReader
 
         long total = 0;
         List<string> enemyIds = new(entries.Count);
+        List<JsonPointer> sharePointers = new(entries.Count);
         for (int index = 0; index < entries.Count; index++)
         {
             EncounterScheduleDto.CompositionEntryDto entry = entries[index];
             JsonPointer entryPointer = pointer.AppendIndex(index);
+            JsonPointer sharePointer = entryPointer.AppendProperty("share_percent");
 
             enemyIds.Add(entry.EnemyId ?? string.Empty);
             SemanticCheck.ReferenceGrammar(
                 entry.EnemyId, ContentCategory.Enemy, entryPointer.AppendProperty("enemy_id"),
                 context, id, bag);
 
+            sharePointers.Add(sharePointer);
             total += SemanticCheck.Integer(
-                entry.SharePercent, entryPointer.AppendProperty("share_percent"), context, id, bag,
-                "share_percent");
+                entry.SharePercent, sharePointer, context, id, bag, "share_percent");
             SemanticCheck.Within(
-                entry.SharePercent, 1, 100, entryPointer.AppendProperty("share_percent"), context,
-                id, bag,
+                entry.SharePercent, 1, 100, sharePointer, context, id, bag,
                 "share_percent is a whole percentage point share of the minute's replenishment; "
                     + "an entry with a zero share is the absence of the entry");
         }
@@ -389,7 +410,10 @@ public static class EncounterScheduleReader
         SemanticCheck.Distinct(
             enemyIds, pointer, context, id, bag, "a minute row's composition enemy IDs");
 
-        if (entries.Count > 0)
+        // Every share is a part of the sum, so every share is an operand. With the
+        // shares absent they default to zero and the total reports "sums to 100; the
+        // parts sum to 0" about parts the row does not carry.
+        if (entries.Count > 0 && !structural.ReportedAny(sharePointers))
         {
             SemanticCheck.SumEquals(
                 total, 100, pointer, context, id, bag,

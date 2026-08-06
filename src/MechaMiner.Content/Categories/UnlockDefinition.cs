@@ -152,7 +152,7 @@ public static class UnlockReader
             return new DefinitionReadResult(null, bag.Diagnostics, structure);
         }
 
-        Validate(dto, context, id, bag);
+        Validate(dto, context, id, StructuralReport.Of(bag), bag);
 
         if (bag.HasErrors || envelope is null)
         {
@@ -172,6 +172,7 @@ public static class UnlockReader
         UnlockDto dto,
         CategoryReadContext context,
         string? id,
+        StructuralReport structural,
         DiagnosticBag bag)
     {
         JsonPointer root = JsonPointer.Root;
@@ -190,7 +191,10 @@ public static class UnlockReader
         List<string> granted = dto.GrantedIds ?? new();
         JsonPointer pointer = root.AppendProperty("granted_ids");
 
-        if (granted.Count == 0)
+        // An absent granted_ids deserializes to an empty list, which is not an unlock
+        // that grants nothing - it is an unlock with no grant list, already reported at
+        // this same pointer by the field table.
+        if (granted.Count == 0 && !structural.Reported(pointer))
         {
             bag.Add(ContentDiagnostic.CreateError(
                 ContentDiagnosticCodes.ArrayCardinalityWrong,

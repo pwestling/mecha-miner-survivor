@@ -1039,6 +1039,72 @@
       ],
       "tier": "fast",
       "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-030",
+      "summary": "A root-level unknown field on a category document is reported exactly once and by the layer that names the kind, compared by counting the diagnostics at that one pointer after reading a valid fixture given one extra root property, and again with three, so the rule cannot be satisfied by a fix keyed to a single document's shape.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-002",
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#common-definition-envelope",
+        "docs/technical/40-content-data-and-validation.md#structural"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.RootUnknownFieldOwnershipTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/bosses/valid-boss.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/valid-utility.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-031",
+      "summary": "The over-suppression control for VER-DAT-003-030: an envelope read with no category field table behind it must still reject an unknown root field, so the deduplication cannot be satisfied by deleting the envelope's check. The same document is read by both routes and the two constraint messages are compared, one naming the envelope and one naming the kind.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-002",
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#common-definition-envelope"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.RootUnknownFieldOwnershipTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/powerups/valid-powerup.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
     }
   ]
 }

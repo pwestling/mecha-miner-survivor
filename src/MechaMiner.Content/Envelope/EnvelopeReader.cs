@@ -152,31 +152,30 @@ public static class EnvelopeReader
 
         bool kindsAreSound = true;
 
-        foreach (string name in structure.RootPropertyNames)
+        // doc 40 § Common definition envelope: "Unknown fields are errors rather than
+        // silently ignored." Which layer says so depends on which layer holds the
+        // document's field table. Under a category, DefinitionShapeValidator walks this
+        // same root immediately afterwards with the kind's own vocabulary, so reporting
+        // here as well would be one fault under two diagnostics with the same code and
+        // pointer - and the envelope's half could only describe a domain field in
+        // envelope terms. See EnvelopeReadContext.OwnsRootFieldTable.
+        if (context.OwnsRootFieldTable)
         {
-            if (EnvelopeSchema.Declares(name))
+            foreach (string name in structure.RootPropertyNames)
             {
-                continue;
-            }
+                if (EnvelopeSchema.Declares(name))
+                {
+                    continue;
+                }
 
-            // A domain field belongs to the owning category's field table, which the
-            // category reader walks straight after this. Reporting it here would make
-            // every category definition fail with one unknown-field diagnostic per
-            // domain field, drowning the real fault.
-            if (context.DeclaresDomainField(name))
-            {
-                continue;
+                bag.Add(ContentDiagnostic.CreateError(
+                    ContentDiagnosticCodes.UnknownField,
+                    context.SourcePath,
+                    JsonPointer.Root.AppendProperty(name),
+                    contentId,
+                    "the envelope declares exactly these fields: "
+                        + string.Join(", ", EnvelopeSchema.Fields)));
             }
-
-            // doc 40 § Common definition envelope: "Unknown fields are errors rather
-            // than silently ignored."
-            bag.Add(ContentDiagnostic.CreateError(
-                ContentDiagnosticCodes.UnknownField,
-                context.SourcePath,
-                JsonPointer.Root.AppendProperty(name),
-                contentId,
-                "the envelope declares exactly these fields: "
-                    + string.Join(", ", EnvelopeSchema.Fields)));
         }
 
         foreach (string field in EnvelopeSchema.Fields)

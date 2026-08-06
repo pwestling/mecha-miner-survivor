@@ -15,9 +15,9 @@ namespace MechaMiner.Content.Envelope;
 /// </remarks>
 public sealed class EnvelopeReadContext
 {
-    private static readonly HashSet<string> NoDomainFields = new(StringComparer.Ordinal);
+    private static readonly IReadOnlyCollection<string> NoDomainFields = Array.Empty<string>();
 
-    private readonly HashSet<string> _domainFields;
+    private readonly IReadOnlyCollection<string> _domainFields;
 
     /// <summary>Creates a read context.</summary>
     /// <param name="sourcePath">The repository-relative path every diagnostic reports.</param>
@@ -25,11 +25,10 @@ public sealed class EnvelopeReadContext
     /// <param name="policy">The strict codec policy, defaulting to the definition policy.</param>
     /// <param name="retiredIds">The tombstones an ID may not collide with.</param>
     /// <param name="domainFields">
-    /// The root-level field names a category's own field table declares. The envelope
-    /// reader accepts them without asserting anything about them, so that reading the
-    /// envelope of a full definition does not report every domain field as unknown.
-    /// Omitted, the envelope is the whole accepted field set, which is what an envelope
-    /// fixture wants.
+    /// The root-level field names a category's own field table declares. Supplying them
+    /// says a second field table exists and will walk this document's root, which is
+    /// what <see cref="OwnsRootFieldTable"/> reads. Omitted, the envelope is the whole
+    /// accepted field set, which is what an envelope fixture wants.
     /// </param>
     /// <exception cref="ArgumentException"><paramref name="sourcePath"/> is blank.</exception>
     public EnvelopeReadContext(
@@ -52,19 +51,32 @@ public sealed class EnvelopeReadContext
         RetiredIds = retiredIds ?? RetiredIdRegistry.Shipped;
         _domainFields = domainFields is null || domainFields.Count == 0
             ? NoDomainFields
-            : new HashSet<string>(domainFields, StringComparer.Ordinal);
+            : domainFields;
     }
 
     /// <summary>
-    /// True when <paramref name="field"/> is a domain field the owning category
-    /// declares, and so is not the envelope reader's to reject.
+    /// True when the envelope is the whole accepted field set for this document, and so
+    /// is the layer that owns an unknown property at the root.
     /// </summary>
-    /// <exception cref="ArgumentNullException"><paramref name="field"/> is null.</exception>
-    public bool DeclaresDomainField(string field)
-    {
-        ArgumentNullException.ThrowIfNull(field);
-        return _domainFields.Contains(field);
-    }
+    /// <remarks>
+    /// <para>
+    /// A caller that supplied a category's field names has a field table of its own, and
+    /// that table walks the same root immediately afterwards, at every object depth and
+    /// with the kind's vocabulary in hand. Two layers reporting the same property at the
+    /// same pointer is one fault counted twice, and the envelope's wording is the wrong
+    /// one of the two to keep: handed a category's names it can only describe a miss in
+    /// envelope vocabulary, which sends an author to the envelope for a field the
+    /// envelope has nothing to do with.
+    /// </para>
+    /// <para>
+    /// A caller that supplied none is reading an envelope on its own - an envelope
+    /// fixture, or a document with no category behind it. Nothing else will walk the
+    /// root, so the envelope reports it or nobody does. The condition is derived from
+    /// the field table rather than carried as a separate flag, because a flag and a
+    /// table can disagree and this cannot.
+    /// </para>
+    /// </remarks>
+    public bool OwnsRootFieldTable => _domainFields.Count == 0;
 
     /// <summary>The repository-relative path every diagnostic reports.</summary>
     public string SourcePath { get; }

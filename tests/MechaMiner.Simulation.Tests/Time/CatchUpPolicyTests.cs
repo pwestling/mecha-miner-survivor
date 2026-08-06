@@ -132,7 +132,7 @@ internal sealed class CatchUpPolicyTests
                 "the default policy is exactly that derivation applied to the two published inputs");
 
             // The upper-bound check of the derivation: a four-tick recovery step is itself inside
-            // the 50 ms stall tolerance, using doc 90 § Target device frame budget's allocation.
+            // the 50 ms stall tolerance, using doc 90 § Target-device frame budget's allocation.
             const double frameBudgetMilliseconds = 16.67;
             const double simulationAllocationMilliseconds = 5.00;
             double recoveryStepMilliseconds =

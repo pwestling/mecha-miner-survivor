@@ -50,7 +50,7 @@ public enum PauseReason
     Fabrication = 2,
 
     /// <summary>A relic choice is awaiting resolution.</summary>
-    /// <remarks><c>docs/20-run-structure-and-timing.md</c> § Relic resolution pauses.</remarks>
+    /// <remarks><c>docs/20-run-structure-and-timing.md</c> § Relic-resolution pauses.</remarks>
     RelicResolution = 4,
 
     /// <summary>A blocking tutorial step or modal dialog is open.</summary>

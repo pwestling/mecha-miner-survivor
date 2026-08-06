@@ -228,7 +228,7 @@ public static class StoreCapacities
     /// <para>
     /// <b>Open question, filed to the encounter stream.</b> A schedule-derived worst case
     /// can exceed 512. A Needler fires every 4.5 s
-    /// (<c>docs/31-standard-enemy-and-boss-roster.md</c>) with a lifetime carrying the
+    /// (<c>docs/31-initial-alien-roster.md</c> § EN-06 — Needler) with a lifetime carrying the
     /// projectile "slightly beyond one screen width", which is about 42.7 M at the 24 m
     /// camera (<c>docs/technical/30-presentation-and-rendering.md</c> § Camera), so about
     /// 19 s of flight and about 4.2 projectiles in the air per Needler. At the 45% peak

@@ -30,7 +30,8 @@ internal static class BuildVerb
             "compile with analyzers and warnings as errors",
             "assert the accepted project boundary",
             "assert every gate script is wired or explicitly exempt",
-            "assert both root wrappers expose the same verb table");
+            "assert both root wrappers expose the same verb table",
+            "emit the SCH-BLD-001 build manifest");
 
         ledger.Enter(0, "locked restore (" + configuration.WorkflowName + " -> MSBuild "
             + configuration.MsbuildName + ")");
@@ -183,11 +184,17 @@ internal static class BuildVerb
         // unrelated work. FND-005 keeps 4 and 5 because tests/verification/FND-005.json says
         // in so many words that "build reaches it at stage 4", which makes that number a
         // registry claim; this stage's number is cited nowhere, so it is the one that moves.
-        context.Section("stage 6: emit the SCH-BLD-001 build manifest");
+        //
+        // It goes through the ledger like the other five, and that is not tidiness. Declared
+        // outside it, the verb printed "stage 5 of 5" and then a "stage 6" - so the ledger's
+        // count was a claim about a run that had one more stage than it said, and a failure
+        // in an earlier stage could not name this one among the stages that did not run,
+        // which is the whole point of the ledger.
+        ledger.Enter(5);
         VerbOutcome? manifestFailure = EmitBuildManifest(context, out string manifestPath);
         if (manifestFailure is not null)
         {
-            return manifestFailure;
+            return ledger.Abandon(manifestFailure);
         }
 
         return VerbOutcome.Success(

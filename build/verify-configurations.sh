@@ -183,19 +183,28 @@ section "4. no committed lock file changed (restore stays configuration-independ
 # that "an invariant asserting that two sets match is blind to a correlated deletion from
 # both sides": deleting a project AND its lock file together keeps the two sets equal. So
 # the count is asserted against EXPECTED_LOCK_FILE_COUNT, a literal independent of both.
-readonly EXPECTED_LOCK_FILE_COUNT=9
+# Twelve, not nine, from the FND-004/FND-009 merge: src/MechaMiner.Diagnostics,
+# tests/MechaMiner.Diagnostics.Tests and tests/MechaMiner.Tools.Tests are three new
+# accepted projects and each carries a committed lock file. The literal fired on all three
+# by name, which is the third anchor doing exactly its job - a set-equality check alone
+# would have been blind to it. Adding a project means editing this number and the list
+# below in the same change; that is the cost of the anchor and it is the point of it.
+readonly EXPECTED_LOCK_FILE_COUNT=12
 
 # The project set this section requires a lock file for: every project probed above, plus
-# the four test projects, which restore under the same three configurations.
+# the six test projects, which restore under the same three configurations.
 readonly LOCK_FILE_PROJECT_DIRECTORIES=(
   "src/MechaMiner.Content"
+  "src/MechaMiner.Diagnostics"
   "src/MechaMiner.Simulation"
   "src/MechaMiner.Persistence"
   "src/MechaMiner.Tools"
   "game"
   "tests/MechaMiner.Content.Tests"
+  "tests/MechaMiner.Diagnostics.Tests"
   "tests/MechaMiner.Simulation.Tests"
   "tests/MechaMiner.Persistence.Tests"
+  "tests/MechaMiner.Tools.Tests"
   "tests/MechaMiner.Game.Tests"
 )
 

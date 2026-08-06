@@ -141,13 +141,13 @@ families were built, verified to reproduce exactly, and then *pulled*:
 
 | Pulled family | Values | Why |
 | --- | ---: | --- |
-| damage-pressure survivability block | 32 | **Comparand, not a derived duplicate.** `40:114` has the compiler derive world speeds and footprints and "compare them with the survivability report". The report is the independent side of that comparison; authoring it in the compiler makes validation compare a derivation against itself — always agreeing, catching nothing, printing like a working cross-check. |
-| resonant-value hit count | 5 | Same reading of `40:114`: these five are rows of that same survivability report (`72:167`). |
+| damage-pressure survivability block | 32 | **Three writers on one report and no settled authority**, so deleting a copy silently decides which survivor is authoritative — a decision nobody has made, taken as a side effect of a deduplication pass. The three are `docs/data/contact-damage-pressure.csv`, the content block, and the compiler `docs/40` § *Source-of-truth boundary* and § *Enemies and bosses* say derives it. *(An earlier draft argued removal would make the `docs/40` § *Enemies and bosses* comparison a tautology. Withdrawn: the CSV supplies an independent comparand regardless — A30 now asserts the two agree. The reason above holds whether or not another mirror exists.)* |
+| resonant-value hit count | 5 | Same — rows of that same report, also stated in full at `docs/72` § *Damage Pressure Reference*. |
 | stat upgrade price curve | 14 | **Would move checkable numbers into an unchecked string.** All 14 are restated in prose in the same file (`defining_prose`), and A28 only matches numeric leaves. Editing the prose is *not* the fix and was not done — it is a verified doc quotation, so rewriting its numerals would falsify the citation while every validator stayed green. |
 
-Reproducibility was never the issue for any of the three: all 51 reproduce exactly. **The
-operand/comparand distinction is orthogonal to reproducibility**, and the generator now records the same
-test applied to all six surviving families.
+Reproducibility was never the issue for any of the three: all 51 reproduce exactly. **Reproducibility is
+orthogonal to ownership** — it says nothing about who authors a value or which copy is authoritative, which
+is the question that actually decided these three.
 
 It has the same shape as A20 and the same limits, with these differences:
 
@@ -212,6 +212,19 @@ parent's name) and `total_seam_payout_multiplier` (left authored, because its si
 
 The rules, scopes and allowlists are **read from `expected_derived_value_removals.json`** rather than
 restated in `verify_content.py`, so the assertion and the prediction cannot drift apart.
+
+**A30 — the docs CSV mirror and `content/` must agree, value by value.** `docs/data/contact-damage-pressure.csv`
+and the `content/` `damage_pressure` blocks are two mirrors of one report, neither derived from the other.
+Agreement was previously observed and nothing kept it. A30 asserts it over **98 comparisons** — seven columns
+× 14 actors — in exact `Fraction` arithmetic with no tolerance: four columns against authored content fields,
+three against values derived from surviving operands. The comparison count is asserted too, since a mirror
+check over zero values passes for free.
+
+Writing it surfaced a pre-existing divergence: **96 of 98 agree exactly.** `EN-07`'s derived diameter is
+`0.62 × 0.80 = 0.496 M` (`docs/31` § *Ordinary roster overview*) where the CSV states `0.50 M`
+(`docs/72` § *Collision and Contact Footprints*), and its start distance `0.748` against `0.75`. Two `docs/`
+sources disagree; `content/` follows the one it cites. Both pairs are declared with that reason, and a
+declared pair that stops diverging **fails**, because a stale exception widens the rule silently.
 
 **A29 — the removal delta is the committed prediction, as set equality, and it is now ONE row.** `115 == 115` would also hold
 if one value were removed by mistake and a different one kept by mistake. A29 therefore reads the

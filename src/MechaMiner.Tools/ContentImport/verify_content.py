@@ -448,6 +448,7 @@ import json
 import re
 import subprocess
 import sys
+import textwrap
 from fractions import Fraction
 from pathlib import Path
 
@@ -2114,7 +2115,12 @@ def check_derived_family_absence(docs: dict[Path, object]) -> list[tuple]:
                 f"class - a value reintroduced under a name the class does not carry passes it, and "
                 f"the value layer is what covers that: {hits[:10]}"
             )
-    return rows
+    return rows, (
+        "NOT CAUGHT by this layer: a derived value reintroduced under a name outside the family's "
+        "word class, or in a directory the family does not scope. Probed per family with a "
+        "semantic-neighbour name - caught 0 of 6. This layer catches a rename only WITHIN its own "
+        "word class. Layer 2 below is the one that does not depend on the name at all.",
+    )
 
 
 def check_derived_family_values(docs: dict[Path, object]) -> list[tuple]:
@@ -2142,12 +2148,15 @@ def check_derived_family_values(docs: dict[Path, object]) -> list[tuple]:
     }
     by_path = {rel(p): d for p, d in docs.items()}
     rows = []
+    searched = 0
+    records_checked = 0
     for family in expectation.get("families", []):
         hits: list[str] = []
         for record in family["records"]:
             doc = by_path.get(record["file"])
             if doc is None:
                 continue
+            records_checked += 1
             pointer = record["pointer"]
             site = (pointer[: pointer.rindex("[")] if pointer.endswith("]")
                     else (pointer.rsplit(".", 1)[0] if "." in pointer else ""))
@@ -2155,10 +2164,11 @@ def check_derived_family_values(docs: dict[Path, object]) -> list[tuple]:
                    if p.split("::", 1)[0] == record["file"]}
             target = Fraction(str(record["value"]))
             for leaf, value in numeric_pointer_leaves(doc):
-                if Fraction(str(value)) != target:
-                    continue
                 if not (site and (leaf == site or leaf.startswith(site + ".")
                                   or leaf.startswith(site + "["))):
+                    continue
+                searched += 1
+                if Fraction(str(value)) != target:
                     continue
                 if leaf in own or (record["file"], pointer, leaf) in exceptions:
                     continue
@@ -2180,6 +2190,217 @@ def check_derived_family_values(docs: dict[Path, object]) -> list[tuple]:
                 f"genuine coincidence, add it to VALUE_COLLISION_EXCEPTIONS with a reason: "
                 f"{sorted(hits)[:10]}"
             )
+    # WHAT THIS CHECK SEARCHED AND WHAT IT CANNOT SEE, on the same table a passing
+    # run prints. A limitation recorded only in a docstring or a notes file is not
+    # disclosed to the person reading a green run.
+    return rows, (
+        f"RADIUS SEARCHED: the object that held each removed leaf, plus its subtree - "
+        f"{searched} numeric leaves across {records_checked} removed values, with "
+        f"{len(exceptions)} declared exception(s). Values compare exactly as Fractions; there is "
+        f"no tolerance and no rounding.",
+        "NOT CAUGHT by this layer: a removed value relocated OUT of its derivation site, elsewhere "
+        "in the same file or anywhere else in the scope. Probed per family - caught 0 of 6. Rename, "
+        "unit suffix and arity change (32.0 -> [32.0]) are caught 6 of 6. Wider radii were measured "
+        "and rejected: file radius has 55 coincidental recurrences on this tree and scope radius "
+        "400, which no exception list can justify entry by entry.",
+    )
+
+
+# --------------------------------------------------------------------------
+# A30 - the docs CSV mirror and content/ must agree, value by value.
+#
+# docs/data/contact-damage-pressure.csv and content/ both carry the survivability
+# report. Ruling 45 found all overlapping values agreeing and said so; nothing
+# KEPT them agreeing. Two unguarded mirrors is the exact shape where a later edit
+# to one produces a silent contradiction, so agreement is asserted rather than
+# observed.
+#
+# This does NOT wait on the authority question (which of the two is the accepted
+# gameplay table 40:203 compares against). It is worth having either way, and when
+# the question lands, the loser becomes derived and this check becomes redundant in
+# the good way rather than wrong.
+#
+# NO TOLERANCE. Values compare exactly as Fractions. Where the CSV states a value
+# at lower precision than the derivation produces, the pair must be DECLARED
+# below - enumerated with a reason, never absorbed by a threshold - and the content
+# value must round to the CSV value at the CSV's own written precision. A new
+# inexact pair therefore fails instead of hiding behind the declared one.
+# --------------------------------------------------------------------------
+PRESSURE_CSV = REPO_ROOT / "docs/data/contact-damage-pressure.csv"
+
+CSV_MIRROR_ROUNDED = {
+    ("EN-07", "contact_diameter_m"): (
+        "Two docs/ sources disagree and content/ follows the one it cites. docs/31 section "
+     "'Ordinary roster overview' states the "
+        "Razorling body scale as 0.62x, so the derived diameter is 0.62 x 0.80 = 0.496 M exactly. "
+        "docs/72 section 'Collision and Contact Footprints' states its footprint as 0.50 M, and "
+        "this CSV mirrors 72. The 0.496 is not a "
+        "content defect - it is the exact product of the authored scale - and docs/40 section "
+        "'Analytical' fails only on "
+        "divergence 'beyond documented rounding'. EN-07 is the ONLY actor whose derived diameter "
+        "does not land on the CSV's two decimal places; every other one is exact."
+    ),
+    ("EN-07", "contact_start_distance_m"): (
+        "The same 0.496 propagated: 0.496/2 + 0.50 = 0.748, which docs/72 section 'Collision and "
+        "Contact Footprints' states as 0.75. One "
+        "divergence, not two."
+    ),
+}
+
+CSV_MIRROR_EXPECTED_COMPARISONS = 98
+
+
+def _csv_decimals(text: str) -> int:
+    return len(text.split(".", 1)[1]) if "." in text else 0
+
+
+def check_csv_mirror_agreement(docs: dict[Path, object]) -> list[tuple]:
+    """A30 - every value docs/data/contact-damage-pressure.csv shares with content/.
+
+    Seven columns x 14 actors. Four columns compare against an AUTHORED content
+    field; three compare against a value the compiler derives from surviving
+    operands, which is the comparison 40:114 actually describes ("derives world
+    speeds/footprints and compares them with the survivability report").
+    """
+    if not PRESSURE_CSV.exists():
+        fail(
+            f"A30 {rel(PRESSURE_CSV)} is missing, so the CSV/content mirror is unmeasured. This "
+            f"rule is not allowed to pass by being unable to run."
+        )
+        return [("pressure CSV readable", "present", "missing", "FAIL")]
+
+    contract = None
+    for path, doc in docs.items():
+        if path.name == "standard-map-generation-contract.json":
+            contract = doc
+    if not isinstance(contract, dict) or "reference_mech_speed_m_per_s" not in contract:
+        fail("A30 could not read reference_mech_speed_m_per_s, an operand of the speed column.")
+        return [("mech base speed readable", "present", "missing", "FAIL")]
+    base_speed = Fraction(str(contract["reference_mech_speed_m_per_s"]))
+    ref_diameter = Fraction("0.80")   # docs/72 "Collision and Contact Footprints"
+    player_radius = Fraction("0.50")  # docs/72 "Collision and Contact Footprints"
+
+    by_id = {}
+    for path, doc in docs.items():
+        if isinstance(doc, dict) and isinstance(doc.get("id"), str):
+            if path.parent.name in ("enemies", "bosses"):
+                by_id[doc["id"]] = doc
+
+    import csv as _csv
+
+    compared = 0
+    exact_hits = 0
+    declared_used: set = set()
+    mismatches: list[str] = []
+    missing_actors: list[str] = []
+
+    with PRESSURE_CSV.open() as handle:
+        for row in _csv.DictReader(handle):
+            actor = row["actor_id"]
+            doc = by_id.get(actor)
+            if doc is None:
+                missing_actors.append(actor)
+                continue
+            footprint = doc.get("contact_footprint") or {}
+            if "contact_and_weapon_hurt_diameter_m" in footprint:
+                diameter = Fraction(str(footprint["contact_and_weapon_hurt_diameter_m"]))
+                diameter_basis = "authored contact_and_weapon_hurt_diameter_m"
+            else:
+                diameter = Fraction(str(doc["body_scale_multiplier"])) * ref_diameter
+                diameter_basis = f"body_scale_multiplier x {ref_diameter}"
+            percent = Fraction(
+                str(doc["movement_speed"]["percent_of_mech_base_speed"]["percent"])
+            )
+            block = doc.get("damage_pressure") or {}
+
+            candidates = [
+                ("contact_diameter_m", diameter, diameter_basis),
+                ("contact_start_distance_m", diameter / 2 + player_radius,
+                 f"{diameter_basis} / 2 + {player_radius}"),
+                ("move_speed_mps", percent / 100 * base_speed,
+                 f"percent_of_mech_base_speed / 100 x {base_speed}"),
+                ("contact_damage", Fraction(str(doc["contact_damage"])), "authored contact_damage"),
+                ("control_resistance", Fraction(str(doc["control_resistance"]["percent"])) / 100,
+                 "authored control_resistance.percent / 100"),
+            ]
+            if "hits_to_defeat_100_hull" in block:
+                candidates.append(
+                    ("hits_to_defeat_100", Fraction(str(block["hits_to_defeat_100_hull"])),
+                     "authored damage_pressure.hits_to_defeat_100_hull")
+                )
+            if "continuous_overlap_time_to_defeat_seconds" in block:
+                candidates.append(
+                    ("continuous_overlap_ttd_s",
+                     Fraction(str(block["continuous_overlap_time_to_defeat_seconds"])),
+                     "authored damage_pressure.continuous_overlap_time_to_defeat_seconds")
+                )
+
+            for column, got, basis in candidates:
+                raw = row.get(column)
+                if raw is None or raw == "":
+                    continue
+                compared += 1
+                want = Fraction(raw)
+                if want == got:
+                    exact_hits += 1
+                    continue
+                key = (actor, column)
+                places = _csv_decimals(raw)
+                quantum = Fraction(10) ** places
+                rounded = Fraction(int(got * quantum + Fraction(1, 2)), quantum)
+                if key in CSV_MIRROR_ROUNDED and rounded == want:
+                    declared_used.add(key)
+                    continue
+                mismatches.append(
+                    f"{actor}.{column}: CSV {raw} vs content {got} (= {float(got)!r}, from "
+                    f"{basis})"
+                )
+
+    stale = sorted(set(CSV_MIRROR_ROUNDED) - declared_used)
+    rows = [
+        (
+            f"docs CSV vs content/: every shared value agrees ({compared} compared, "
+            f"{exact_hits} exactly, {len(declared_used)} at the CSV's stated precision)",
+            0,
+            len(mismatches),
+            "ok" if not mismatches else "FAIL",
+        ),
+        (
+            f"comparisons made (vacuity guard; a mirror check over 0 values passes for free)",
+            CSV_MIRROR_EXPECTED_COMPARISONS,
+            compared,
+            "ok" if compared == CSV_MIRROR_EXPECTED_COMPARISONS else "FAIL",
+        ),
+        (
+            "declared lower-precision pairs that no longer diverge (stale exceptions)",
+            0,
+            len(stale),
+            "ok" if not stale else "FAIL",
+        ),
+    ]
+    if mismatches:
+        fail(
+            f"A30 {len(mismatches)} value(s) disagree between {rel(PRESSURE_CSV)} and content/. "
+            f"Both carry the survivability report and neither is derived from the other, so a "
+            f"divergence is a silent contradiction between two mirrors: {sorted(mismatches)[:10]}"
+        )
+    if compared != CSV_MIRROR_EXPECTED_COMPARISONS:
+        fail(
+            f"A30 compared {compared} value(s), expected {CSV_MIRROR_EXPECTED_COMPARISONS}. A "
+            f"mirror-agreement rule that compares nothing passes vacuously, so the count is "
+            f"asserted. If a column or an actor was legitimately added or removed, update "
+            f"CSV_MIRROR_EXPECTED_COMPARISONS deliberately."
+        )
+    if missing_actors:
+        fail(
+            f"A30 {len(missing_actors)} CSV actor(s) have no definition under content/enemies/ or "
+            f"content/bosses/: {missing_actors}"
+        )
+    if stale:
+        fail(
+            f"A30 {len(stale)} declared lower-precision pair(s) now agree exactly. A stale "
+            f"exception silently widens the rule - delete it: {stale}"
+        )
     return rows
 
 
@@ -2974,18 +3195,28 @@ def check_polarity_agreement(docs: dict[Path, object]) -> list[tuple]:
 # --------------------------------------------------------------------------
 
 
-def table(title: str, headers: tuple, rows: list[tuple]) -> None:
+def table(title: str, headers: tuple, rows: list[tuple], notes: tuple = ()) -> None:
+    """Print an assertion table, then any `notes` beneath it.
+
+    `notes` exists so a rule can disclose WHAT IT CANNOT SEE on the same output a
+    passing run produces. A limitation that lives only in a docstring or in
+    content/transcription-notes.md is not disclosed to the person reading a green
+    run, which is the only person who needs to be told.
+    """
     print(f"\n{title}")
-    if not rows:
+    if rows:
+        cols = [str(h) for h in headers]
+        body = [[("" if c is None else str(c)) for c in row] for row in rows]
+        widths = [max(len(cols[i]), *(len(r[i]) for r in body)) for i in range(len(cols))]
+        print("  " + "  ".join(c.ljust(widths[i]) for i, c in enumerate(cols)))
+        print("  " + "  ".join("-" * widths[i] for i in range(len(cols))))
+        for row in body:
+            print("  " + "  ".join(row[i].ljust(widths[i]) for i in range(len(cols))))
+    else:
         print("  (nothing to report)")
-        return
-    cols = [str(h) for h in headers]
-    body = [[("" if c is None else str(c)) for c in row] for row in rows]
-    widths = [max(len(cols[i]), *(len(r[i]) for r in body)) for i in range(len(cols))]
-    print("  " + "  ".join(c.ljust(widths[i]) for i, c in enumerate(cols)))
-    print("  " + "  ".join("-" * widths[i] for i in range(len(cols))))
-    for row in body:
-        print("  " + "  ".join(row[i].ljust(widths[i]) for i in range(len(cols))))
+    for note in notes:
+        for i, line in enumerate(textwrap.wrap(note, 104)):
+            print(("  ! " if i == 0 else "    ") + line)
 
 
 def main() -> int:
@@ -3009,8 +3240,9 @@ def main() -> int:
     ref_rows = check_references(docs)
     derived_rows = check_derived_values(docs)
     footprint_rows = check_derived_footprint_fields(docs)
-    derived_family_rows = check_derived_family_absence(docs)
-    derived_value_rows = check_derived_family_values(docs)
+    derived_family_rows, derived_family_notes = check_derived_family_absence(docs)
+    derived_value_rows, derived_value_notes = check_derived_family_values(docs)
+    csv_mirror_rows = check_csv_mirror_agreement(docs)
     removal_delta_rows = check_derived_removal_delta()
     prefix_rows = check_scope_prefixes(docs)
     bound_rows = check_bound_spelling(docs)
@@ -3051,12 +3283,20 @@ def main() -> int:
         "(six rules, six scopes; catches a rename only within its own word class)",
         ("check", "expected", "actual", "status"),
         derived_family_rows,
+        derived_family_notes,
     )
     table(
         "A28 layer 2 of 2 - VALUE: no removed value sits at a non-operand leaf inside its own "
         "derivation site (exact Fractions; indifferent to name, unit suffix and arity)",
         ("check", "expected", "actual", "status"),
         derived_value_rows,
+        derived_value_notes,
+    )
+    table(
+        "A30 docs/data/contact-damage-pressure.csv and content/ agree on every shared value "
+        "(two unguarded mirrors of one report; exact Fractions, declared exceptions only)",
+        ("check", "expected", "actual", "status"),
+        csv_mirror_rows,
     )
     table(
         "A29 Removal delta == the expectation committed before the removals",

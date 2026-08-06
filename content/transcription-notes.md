@@ -2583,22 +2583,24 @@ verified to reproduce exactly, and then **pulled back into the tree**:
 | Pulled | Values | Why it was wrong to remove |
 | --- | ---: | --- |
 | `damage_pressure` survivability block | 32 | **Comparand, not a derived duplicate** (see below). |
-| resonant-value hit counts | 5 | Same — rows of the same survivability report (`72:167`). |
+| resonant-value hit counts | 5 | Same — rows of the same survivability report, also stated in full in `docs/`. |
 | stat upgrade price curve | 14 | **Would have moved 14 checkable numbers into an unchecked string.** |
 
-**The comparand argument, and the caveat that the measurement forced onto it.** `40:114` reads "Validation
-derives world speeds/footprints and compares them with the survivability report". The object of *derives*
-is world speeds and footprints; the report is what they are compared **against**. A comparand produced by
-the same code it is checked against is a tautology that agrees always, catches nothing, and prints exactly
-like a working cross-check. **But the report is not only in `content/`:**
-`docs/data/contact-damage-pressure.csv` carries `hits_to_defeat_100` and `continuous_overlap_ttd_s` for all
-14 actors, and **all 28 values match the content block exactly** — checked here in exact rational
-arithmetic, not assumed. `72:167` likewise states all five resonant hit counts. So the honest statement is
-**not** "removing these makes the comparison vacuous" — `docs/` would still supply a comparand. It is that
-**there are three writers on this report** (the docs table, the content block, and the compiler), and which
-of the first two is the "accepted gameplay table" `40:203` compares reports against is **unsettled**.
-Restoring is the conservative move while that is open; it is **not** a finding that the content copy is
-right. Recorded as an open item.
+**The reason these two were wrong to remove — and the withdrawal of the reason first given.** An earlier
+draft of this ruling argued that removing the report would make `40:114`'s comparison a **tautology**: a
+comparand produced by the code it is checked against agrees always and catches nothing. **That argument is
+withdrawn.** It was wrong on this tree. `docs/data/contact-damage-pressure.csv` carries the same report —
+`hits_to_defeat_100` and `continuous_overlap_ttd_s` for all 14 actors — and `72:167` states all five
+resonant hit counts, so an independent comparand survives the removal either way.
+
+**The reason that is actually true: there are three writers on one report and no settled authority, so
+deleting any copy silently decides which survivor is authoritative.** The three are the docs table, the
+content block, and the compiler that `40:19` and `40:114` say derives the report. That decision has not been
+made by anyone, and this pass would have taken it **as a side effect of a commit whose stated purpose was
+deduplication**. Removing a redundant copy and choosing an authority are different acts, and only the first
+was authorised. **This reason generalises where the tautology version did not** — it holds whether or not
+another mirror happens to exist, which is exactly why it survives the measurement that killed the first
+version. The copy stays until the authority question is answered on purpose. Recorded as an open item.
 
 **Why the price curve was wrong to remove, and why editing the prose is not the fix.** All 14 values are
 still stated in the same file, in `defining_prose`: "The first ten prices are 10, 30, 60, 100, 150, 210,
@@ -2657,11 +2659,12 @@ It reproduces as `ceil(base_damage × 1.20)` for **all five**, verified in exact
 `BOSS-03 :: ability` 18 → `21.6` → **22**; `BOSS-04 :: ability` 35 → `42.0` → **42**;
 `shared-elite-modifiers :: worked_examples[0]` 36 → `43.2` → **44**. Both halves are documented:
 
-- the **×1.20** at `61:92`–`61:101` (the accepted 20% modifier per material) and in the table at `72:167`,
+- the **×1.20** at `docs/61` § *Geode resonance behavior* (the accepted 20% modifier per material) and in
+  the table at `docs/72` § *Damage Pressure Reference*,
   which states all five results;
-- the **rounding** at `72:120`, step 3 of the damage-resolution order — "Round the result up to the next
+- the **rounding** at `docs/72` § *Incoming Damage Resolution*, step 3 of the damage-resolution order — "Round the result up to the next
   whole Hull point" — immediately after step 2, "Multiply listed base damage by current attacker-side
-  damage modifiers". That composition *is* `ceil(base × modifier)`. `72:126` shows it worked through on a
+  damage modifiers". That composition *is* `ceil(base × modifier)`. the same section shows it worked through on a
   sixth case (`38 × 1.20 = 45.6`, rounded up to 46).
 
 `ceil` is also the **only** rounding that reproduces all five: `32.4 → 33` and `43.2 → 44` rule out both
@@ -2684,21 +2687,21 @@ question about whether the values are derived.
 either way. The 8 counts *distinct arithmetics*: 1 for `sustained_30_dps`, 6 for `burst_10_dps`, 1 shape for
 `favorable_horde_dps`. Counting the horde multiplier's documented cases as separate rules — four for
 line/contact, five for the mortar, eight for Gravity Projector, ten for Reactor Pulse, two per missile blast
-(`docs/71:68`) — turns that one shape into five, giving 12. **Neither number is wrong; the useful figure is
+(`docs/71` § *Base Weapon Summary*) — turns that one shape into five, giving 12. **Neither number is wrong; the useful figure is
 whichever a validator has to implement**, and a validator implementing the horde column needs one
-multiplication plus a per-weapon constant it reads from `71:68`, so this ruling states 8 and shows the
+multiplication plus a per-weapon constant it reads from `docs/71` § *Base Weapon Summary*, so this ruling states 8 and shows the
 5-way split inside the horde entry rather than hiding it. The count is recorded both ways so a later reader
 does not have to reconcile them.
 
 **The partition, measured in exact rational
 arithmetic, never binary float; **no stored value was changed to make any of it fit**:
 
-- **`sustained_30_dps` — 15 of 15, one rule.** The steady-state ideal DPS of `70:52`
+- **`sustained_30_dps` — 15 of 15, one rule.** The steady-state ideal DPS of `docs/70` § *Ideal single-target DPS*
   (`damage per hit × damaging hits per activation × activations per second`), rounded to one decimal place.
   `W-AB` `96 / 3 = 32.0`; `W-AD` `36 × 1.5 / 2.5 = 21.6`; `W-BE` `3 × 8 × 1.4 = 33.6`;
   `W-CF` `2 × 18 = 36.0` at the two-segment overlap cap; `W-AF` `18 × 2 = 36.0` at full focus;
   `W-EF` `4 × 26 / 3 = 34.666… → 34.7`, the only one where the rounding is load-bearing.
-- **`burst_10_dps` — 6 rules, and they group by the warmup shapes `70:64` already names**
+- **`burst_10_dps` — 6 rules, and they group by the warmup shapes `docs/70` § *Opening burst and sustained DPS* already names**
   ("charge time, deployment buildup, actor capacity, delayed impacts, focus growth, mine setup"):
   - **10 of 15 by one rule** — `ceil(10 / cadence)` activations land in the first 10 s counting the one at
     t = 0, so `damage × ceil(10 / T) / 10`. `W-AB` `4 × 96 / 10 = 38.4`; `W-AC` `3 × 128 / 10 = 38.4`;
@@ -2725,7 +2728,7 @@ arithmetic, never binary float; **no stored value was changed to make any of it 
   `W-BD` `27 × 5 = 135`; `W-BF` `32 × 4 = 128`; `W-CD` `32 × 5 = 160`; `W-CE` `18 × 10 = 180`;
   `W-CF` `36 × 4 = 144`; `W-DF` `32 × 4 = 128`; `W-EF` `34.666… × 2 = 69.33 → 69`; and `k = 1` for
   `W-AE`, `W-AF`, `W-BC`, `W-BE`, `W-DE`. **An earlier draft of this ruling claimed the 15 `k` values
-  "appear nowhere in `docs/` or in `content/`". That was wrong, and `docs/71:68` states all of them**:
+  "appear nowhere in `docs/` or in `content/`". That was wrong, and `docs/71` § *Base Weapon Summary* states all of them**:
   "The favorable-horde column uses approximately four simultaneous victims for line/contact weapons, five
   for the mortar, eight for Gravity Projector, ten for Reactor Pulse, and two victims per missile blast. It
   exists to catch order-of-magnitude errors; benchmark-scene captures supersede it once a playable build
@@ -2739,15 +2742,15 @@ arithmetic, never binary float; **no stored value was changed to make any of it 
   `docs/`, and the figures were sitting in the same document as the DPS table itself. The same line settles
   the field's status: it "exists to catch order-of-magnitude errors" and "benchmark-scene captures supersede
   it", so `favorable_horde_dps` is an **analytic placeholder for a measurement**, which is also what
-  `70:78` says when it defines horde throughput as counting "actual hits rather than multiplying
+  `docs/70` § *Horde damage throughput* says when it defines horde throughput as counting "actual hits rather than multiplying
   single-target DPS by a theoretical unlimited target count".
 
 **What that means for the two candidate readings.** The set does *not* need something close to 45 rules, so
 this is not an ad-hoc-computation problem. It needs **one rule for `sustained_30_dps`, six for
-`burst_10_dps` grouped by the warmup families `70:64` already names, and an admission that
-`favorable_horde_dps` is an analytic placeholder for a measurement, per `71:68`**. The documentation edit is
+`burst_10_dps` grouped by the warmup families `docs/70` § *Opening burst and sustained DPS* already names, and an admission that
+`favorable_horde_dps` is an analytic placeholder for a measurement, per `docs/71` § *Base Weapon Summary*.**. The documentation edit is
 correspondingly small: `40:203` should say DPS estimates are derived **per warmup family**, name each
-family's rule, cross-reference `71:68` for the horde multipliers it already states, state
+family's rule, cross-reference `docs/71` § *Base Weapon Summary* for the horde multipliers it already states, state
 the one-decimal rounding (load-bearing only for `W-EF` sustained and `W-BE` burst), and stop assigning
 `favorable_horde_dps` to the compiler until its per-weapon `k` is authored somewhere. Until that exists,
 removing these 45 would replace a stated number with an unstated one, so the family stays **out of scope,
@@ -4495,17 +4498,57 @@ names across thirty-six sites, so the correction records the measured pair. Anno
 spaces settle would be annotate-twice churn, so the README now states the migration size and stops there.
 **65 is an upper bound on sites to annotate, not a settled classification.**
 
+### A30 (new) — the two survivability mirrors must agree, asserted rather than observed
+
+Ruling 45 *observed* that `docs/data/contact-damage-pressure.csv` and the `content/` `damage_pressure`
+blocks agree. Nothing **kept** them agreeing, and two unguarded mirrors of one report is precisely the shape
+where a later edit to one produces a silent contradiction. A30 asserts agreement on **every** value the two
+share: seven columns × 14 actors, **98 comparisons**, in exact rational arithmetic with no tolerance.
+
+Four columns compare against an authored content field (`contact_damage`, `hits_to_defeat_100`,
+`continuous_overlap_ttd_s`, `control_resistance`, the last as `percent / 100`). Three compare against a value
+the compiler derives from surviving operands — `contact_diameter_m`, `contact_start_distance_m` and
+`move_speed_mps` — which is the comparison `docs/40` § *Enemies and bosses* actually describes. **It is not
+gated on the authority question**: it is worth having either way, and when that question lands the loser
+becomes derived and this check becomes redundant in the good way rather than wrong.
+
+**Negative control.** `EN-03 :: damage_pressure.hits_to_defeat_100_hull` 8 → 9, against the CSV's 8, and
+A30 **failed**: "1 value(s) disagree between docs/data/contact-damage-pressure.csv and content/ ...
+EN-03.hits_to_defeat_100: CSV 8 vs content 9". Reverted.
+
+**Writing it found a divergence that already existed: 96 of the 98 agree exactly, not all 98.** `EN-07`
+Razorling is the one actor whose derived contact diameter does not land on the CSV's two decimal places.
+`docs/31` § *Ordinary roster overview* states its body scale as `0.62×`, so the exact derived diameter is
+`0.62 × 0.80 = 0.496 M`; `docs/72` § *Collision and Contact Footprints* states its footprint as `0.50 M`,
+and the CSV mirrors 72. The propagated start distance is `0.496 / 2 + 0.50 = 0.748` against a stated `0.75`.
+**This is two `docs/` sources disagreeing, not a content defect** — `content/` faithfully transcribes the
+`0.62` from the source it cites, and `docs/40` § *Analytical* fails only on divergence "beyond documented
+rounding". Both pairs are **declared, with that reason, and the rule fails if a declared pair ever stops
+diverging** — a stale exception widens a check silently, so it is treated as a defect exactly like a missing
+one. Every other actor's derived diameter is exact, so nothing else is hiding behind the declaration.
+
+The rule also carries a **vacuity guard**: the comparison count is asserted at 98, because a mirror-agreement
+rule that compares nothing passes for free.
+
+**Citation convention for everything added in this pass.** New citations name the document and its
+**section heading** (`docs/71` § *Base Weapon Summary*) rather than a bare `file:line`. Line numbers on
+this project have been wrong twice already and do not survive an editorial pass; a heading does, and
+heading-plus-anchor is what `source_refs` uses throughout `content/`, so a bare `file:line` in these
+notes was inconsistent with the data beside it. Pre-existing `40:114`-style references in earlier
+rulings are left as they are — rewriting them is an editorial pass of its own, and quotations that
+record what a *source* said keep the reference that source used.
+
 ### Findings still open after this pass
 
 | Finding | Owner needed |
 | --- | --- |
-| **Cheapest open item.** `resonant_damage` reproduces as `ceil(base × 1.20)` for all five and both halves are already documented (`61:92`/`72:167` for the ×1.20, `72:120` step 3 for the round-up). Only a `40:` line assigning its recomputation to the compiler is missing. **Documentation edit, not a decision.** | document owner (`docs/technical/40`) |
-| `40:203` assigns "Recalculate DPS estimates" without stating a derivation covering the 45. They partition into **8 rules** — 1 for `sustained_30_dps`, 6 for `burst_10_dps` by the warmup families `70:64` already names, and 1 shape for `favorable_horde_dps` whose per-weapon `k` is stored nowhere. `40:203` should name the families per rule and stop assigning `favorable_horde_dps`, which `70:78` defines as a measurement. | document owner (`docs/technical/40`, `docs/70`) |
-| `favorable_horde_dps` is an analytic placeholder, not a derivation: `71:68` states every simultaneous-victim count and says "benchmark-scene captures supersede it once a playable build exists". `40:203` should stop assigning it to the compiler. *(An earlier draft of this table said the counts were authored nowhere — that was false; they are at `71:68`.)* | document owner (`docs/70`, `docs/71`) |
-| **Three writers on the survivability report.** `docs/data/contact-damage-pressure.csv`, the `damage_pressure` blocks in `content/`, and the compiler all carry it; all 28 overlapping values agree exactly. Which of the first two is the "accepted gameplay table" `40:203` compares reports against is unsettled, and until it is, the content copy stays. | document owner (`docs/technical/40`) |
+| **Cheapest open item.** `resonant_damage` reproduces as `ceil(base × 1.20)` for all five and both halves are already documented (`docs/61` § *Geode resonance behavior* and `docs/72` § *Damage Pressure Reference* for the ×1.20, `docs/72` § *Incoming Damage Resolution* step 3 for the round-up). Only a `40:` line assigning its recomputation to the compiler is missing. **Documentation edit, not a decision.** | document owner (`docs/technical/40`) |
+| `40:203` assigns "Recalculate DPS estimates" without stating a derivation covering the 45. They partition into **8 rules** — 1 for `sustained_30_dps`, 6 for `burst_10_dps` by the warmup families `docs/70` § *Opening burst and sustained DPS* already names, and 1 shape for `favorable_horde_dps` whose per-weapon `k` is stored nowhere. `40:203` should name the families per rule and stop assigning `favorable_horde_dps`, which `docs/70` § *Horde damage throughput* defines as a measurement. | document owner (`docs/technical/40`, `docs/70`) |
+| `favorable_horde_dps` is an analytic placeholder, not a derivation: `docs/71` § *Base Weapon Summary* states every simultaneous-victim count and says "benchmark-scene captures supersede it once a playable build exists". `40:203` should stop assigning it to the compiler. *(An earlier draft of this table said the counts were authored nowhere — that was false; they are in `docs/71` § *Base Weapon Summary*.)* | document owner (`docs/70`, `docs/71`) |
+| **Three writers on the survivability report, and no settled authority.** `docs/data/contact-damage-pressure.csv`, the `damage_pressure` blocks in `content/`, and the compiler (`40:19`, `40:114`) all carry it. **Deleting any copy silently decides which survivor is authoritative** — a decision nobody has made, and one a deduplication pass must not take as a side effect. Needs a deliberate answer naming the owner; until then all copies stay and A30 asserts the two stored ones agree. *(The tautology argument once offered for this is withdrawn — the CSV supplies an independent comparand regardless.)* | document owner (`docs/technical/40`) |
 | **No written policy for a container the removal pass empties.** This pass empties none, but the earlier draft answered the question two ways at once — dropped an emptied array, kept four `{"purchases": n}` object shells. Needs one rule before the next removal pass. | validator stream |
 | A28's value layer has a **derivation-site radius**, chosen because file radius costs 55 coincidental recurrences and scope radius 400. Relocation outside the site still passes. Widening the radius needs a way to classify magnitude coincidences that is not a hand-written exception list. | validator stream |
-| A20 still has **no value layer** — it is key-name patterns only, so the limitation Ruling 27 records for it still stands in full. A28's value layer is the shape that closes this; porting it to A20 is the next design step. | validator stream |
+| A20 still has **no value layer** — it is key-name patterns only, so the limitation Ruling 27 records for it still stands in full. **The design to copy is A28's value layer *after it has been attacked and reviewed*, not merely after it shipped.** It is new machinery with no review pass behind it; replicating an unreviewed design into a second checker doubles the surface of any mistake in it, which is why A20's value layer was deliberately kept out of this pass rather than forgotten. Whoever picks this up should copy something that has been tested, not something that passed. | validator stream, after A28 layer 2 review |
 | `DAT-004` behavior-registry migration is **14 sites**, all `behavior_kind` on the ten enemies and four bosses, each holding prose where a token will go. Blocked on the registry being re-keyed by field space *and* token, because a flat namespace collides in this tree (`UTL-E1`'s duplicated string; `"damage"` at 36 sites under 7 leaf names). 65 prose sites across all six `CTR-CNT-002` spaces is the upper bound. | schema stream / registry owner |
 | `obstacle_free_radius_in_mining_zone_diameters` — radius or diameter? Factor of two. | document owner (`docs/51`) |
 | `REL-07 :: effects.explosion_area_multiplier` is still `null` from the same sentence whose sibling was omitted | integration owner |

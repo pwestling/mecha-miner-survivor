@@ -97,10 +97,11 @@ RETAINED_BECAUSE_OPERAND = {
         "Reproduces for all 5 as ceil(base_damage x 1.20), and RETAINED because it is the operand "
         "the removed fresh_mech_hits_to_defeat_at_resonant_value derives from. CORRECTION to this "
         "note's earlier claim that 'no line in docs/ states the rounding': the rounding IS stated. "
-        "72:120 step 3 of the damage-resolution order says 'Round the result up to the next whole "
+        "docs/72 section 'Incoming Damage Resolution' step 3 says 'Round the result up to the next whole "
         "Hull point', immediately after step 2 'Multiply listed base damage by current "
         "attacker-side damage modifiers' - that is exactly ceil(base x modifier). 72:126 shows it "
-        "worked (38 x 1.20 = 45.6, rounded up to 46) and 61:92-101 states the 20% modifier. ceil "
+        "worked (38 x 1.20 = 45.6, rounded up to 46) and docs/61 section 'Geode resonance behavior' "
+        "states the 20% modifier. ceil "
         "is also the ONLY rounding that reproduces all five: 32.4 -> 33 and 43.2 -> 44 rule out "
         "both floor and round-half. So resonant_damage is fully documented arithmetic, and whether "
         "it is removable turns only on whether a docs/ line assigns ITS recomputation to the "
@@ -1029,22 +1030,27 @@ FAMILIES = [
 #
 # The `damage-pressure survivability block` and `resonant-value hit count`
 # families are pulled for ONE reason, and it is not reproducibility - both
-# reproduce exactly. `40:114` reads "Validation derives world speeds/footprints
-# and compares them with the survivability report". The object of "derives" is
-# world speeds and footprints; "them" is those derived values; the survivability
-# report is the COMPARAND. A comparand must be independent of the thing compared
-# against it or the comparison is a tautology - if the compiler authors the
-# report too, validation compares its own derivation against its own derivation,
-# reports agreement always, catches nothing ever, and reads in the output
-# exactly like a working cross-check. Removing the report removes the only
-# independent side of the check. This makes F1 (world speeds) STRONGER, not
-# weaker: the speeds stay removed, and the report is what catches it if the
-# derivation ever goes wrong.
+# reproduce exactly.
+#
+# AN EARLIER DRAFT OF THIS COMMENT ARGUED THAT REMOVING THE REPORT WOULD MAKE
+# 40:114's COMPARISON A TAUTOLOGY. THAT ARGUMENT IS WITHDRAWN. It was wrong on
+# this tree: docs/data/contact-damage-pressure.csv carries the same report, so
+# an independent comparand survives the removal either way, and A30 now asserts
+# the two mirrors agree.
+#
+# THE REASON THAT IS ACTUALLY TRUE, and which holds whether or not another mirror
+# happens to exist: there are THREE WRITERS on this report - the docs table, the
+# content block, and the compiler that 40:19 and 40:114 say derives it - and NO
+# SETTLED AUTHORITY among them. Deleting any one copy silently DECIDES which of
+# the survivors is authoritative. That is a decision nobody has made, and this
+# pass would have taken it as a side effect of a commit whose stated purpose was
+# deduplication. Removing a redundant copy and choosing an authority are different
+# acts; only the first was authorised. So the copy stays until the authority
+# question is answered on purpose.
 #
 # THE OPERAND/COMPARAND DISTINCTION IS ORTHOGONAL TO REPRODUCIBILITY. Every one
 # of the 115 reproduces exactly; that says nothing about whether it is a
-# comparand. `sweep_comparand_audit` below records the same test applied to all
-# six surviving families.
+# comparand, and nothing about who owns it.
 # --------------------------------------------------------------------------
 PULLED_FROM_THIS_PASS = [
     dict(
@@ -1052,18 +1058,16 @@ PULLED_FROM_THIS_PASS = [
         builder=fam_damage_pressure_block,
         scopes=["enemies", "bosses"],
         pulled_because=(
-            "COMPARAND, not a derived duplicate. 40:114 assigns the compiler the derivation of "
-            "world speeds and footprints and has it 'compare them with the survivability report'. "
-            "The report is the independent side of that comparison, and a comparand computed by the "
-            "same code it is compared against is a tautology that prints like a cross-check. All 32 "
-            "restored. CAVEAT MEASURED HERE, NOT ASSERTED AWAY: the report ALSO exists at "
-            "docs/data/contact-damage-pressure.csv, whose hits_to_defeat_100 and "
-            "continuous_overlap_ttd_s columns match all 28 content values exactly. So 40:114 has an "
-            "independent comparand either way, and the honest statement is not 'removing this makes "
-            "the comparison vacuous' but 'there are three writers on this report - the docs table, "
-            "the content block, and the compiler - and which of the first two is the accepted "
-            "gameplay table 40:203 compares against is unsettled'. Restoring is the conservative "
-            "move while that is unsettled; it is NOT a finding that the content copy is correct."
+            "THREE WRITERS ON ONE REPORT AND NO SETTLED AUTHORITY, so deleting a copy would "
+            "silently decide which survivor is authoritative - a decision nobody has made, taken as "
+            "a side effect of a deduplication pass. The three are docs/data/"
+            "contact-damage-pressure.csv, the content block, and the compiler that 40:19 and 40:114 "
+            "say derives the report. All 32 restored. Removing a redundant copy and choosing an "
+            "authority are different acts and only the first was authorised. NOTE the earlier "
+            "argument here - that removal would make 40:114's comparison a tautology - is WITHDRAWN: "
+            "the CSV supplies an independent comparand regardless, all 28 overlapping values "
+            "agreeing exactly, and A30 now asserts that agreement. The withdrawn version depended on "
+            "no other mirror existing; this one does not."
         ),
     ),
     dict(
@@ -1071,11 +1075,9 @@ PULLED_FROM_THIS_PASS = [
         builder=fam_resonant_hits,
         scopes=["enemies", "bosses"],
         pulled_because=(
-            "COMPARAND, same reading of 40:114 and for the same reason as the damage-pressure "
-            "block: these five are rows of the same survivability report (72:167), which is what "
-            "the derivation is compared AGAINST. All 5 restored. Same caveat: 72:167 states all "
-            "five in docs/, so the comparand survives in docs/ regardless, and the third-writer "
-            "question is open rather than settled."
+            "Same reason as the damage-pressure block: these five are rows of the same "
+            "survivability report, which 72:167 also states in full, so removing them would decide "
+            "an unsettled authority question by side effect. All 5 restored."
         ),
     ),
     dict(

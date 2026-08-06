@@ -179,7 +179,7 @@
         "osx-arm64"
       ],
       "tier": "fast",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-SIM-005-006",
@@ -211,7 +211,7 @@
         "osx-arm64"
       ],
       "tier": "fast",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-SIM-005-007",
@@ -240,7 +240,7 @@
         "osx-arm64"
       ],
       "tier": "fast",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-SIM-005-008",
@@ -271,7 +271,7 @@
         "osx-arm64"
       ],
       "tier": "fast",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-SIM-005-009",
@@ -302,7 +302,7 @@
         "osx-arm64"
       ],
       "tier": "fast",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-SIM-005-010",
@@ -429,7 +429,7 @@
         "osx-arm64"
       ],
       "tier": "fast",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-SIM-005-014",
@@ -460,7 +460,7 @@
         "osx-arm64"
       ],
       "tier": "fast",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-SIM-005-015",
@@ -491,7 +491,7 @@
         "osx-arm64"
       ],
       "tier": "fast",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-SIM-005-016",

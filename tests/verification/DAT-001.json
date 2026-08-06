@@ -923,7 +923,7 @@
     },
     {
       "id": "VER-DAT-001-039",
-      "summary": "The content-ID grammars minted in docs/technical/40-content-data-and-validation.md must agree with the id patterns in content/schemas/** and with the grammars in ContentCategories. The document is the anchor and the other two are asserted against it rather than against each other. EnvelopeSchemaPatternTests holds the schema patterns and the C# constants equal to each other, which stops those two drifting apart and does nothing to stop them drifting from the document together - two-party agreement is not verification when both parties derive from a third thing and neither reads it, which doc 91 Negative control adequacy states as the rule that a two-set invariant needs a third anchor naming the expected members independently of either side. How the design constraints are honoured. (1) The check reads only the machine-readable grammar table under doc 40 'Minted content-ID grammars' - prefix, pattern, category, directory - and never its prose; a check that scraped English would break on the first editorial rewrite and be deleted as flaky. (2) Agreement is three-way: for each minted prefix the document's grammar is compared against the category schema's properties/id pattern, against the envelope schema's stable_id alternative, and against the ContentCategories descriptor. (3) A prefix the document mints that no schema implements is reported by name rather than skipped - eleven aggregate prefixes have no definition extracted yet and are asserted as an explicit list, so the day one gains a schema the assertion fails and forces it to be wired in. Route covered: every content-ID prefix in the document's grammar table - the five with an implementation compared three ways, the eleven without one asserted as a named coverage gap. Covered in reverse too: every grammar ContentCategories declares that the document does not mint is recorded by name, which is how SITE-, ELT- and PLAYER- stay visible as unminted rather than passing as documented. Route not covered: whether the corpus under content/ satisfies these grammars - content/resources/ still carries the pre-migration slug and letter IDs that doc 40's RSC- migration replaces, and corpus conformance is DAT-002's population rule rather than this grammar agreement. Negative controls, each a coherent well-formed violation per doc 91: changing the document's RSC- row to a three-digit grammar failed TheDocumentSchemaAndCodeStateOneGrammarFor_RSC, naming the schema, the envelope and ContentCategories as the three disagreeing artifacts; deleting the FORMULA- grammar from both envelope.schema.json and ContentCategories - the correlated deletion that leaves EnvelopeSchemaPatternTests green, confirmed green - failed TheDocumentSchemaAndCodeStateOneGrammarFor_FORMULA; deleting the SIEGE- row from the document failed TheDocumentTableIsExactlyTheSixteenPrefixesNamedHere reporting 'Missing (1): SIEGE-'.",
+      "summary": "The content-ID grammars minted in docs/technical/40-content-data-and-validation.md must agree with the id patterns in content/schemas/** and with the grammars in ContentCategories. The document is the anchor and the other two are asserted against it rather than against each other. EnvelopeSchemaPatternTests holds the schema patterns and the C# constants equal to each other, which stops those two drifting apart and does nothing to stop them drifting from the document together - two-party agreement is not verification when both parties derive from a third thing and neither reads it, which doc 91 Negative control adequacy states as the rule that a two-set invariant needs a third anchor naming the expected members independently of either side. How the design constraints are honoured. (1) The check reads only the machine-readable grammar table under doc 40 'Minted content-ID grammars' - prefix, pattern, category, directory - and never its prose; a check that scraped English would break on the first editorial rewrite and be deleted as flaky. (2) Agreement is three-way: for each minted prefix the document's grammar is compared against the category schema's properties/id pattern, against the envelope schema's stable_id alternative, and against the ContentCategories descriptor. (3) A prefix the document mints that no schema implements is reported by name rather than skipped - eleven aggregate prefixes have no definition extracted yet and are asserted as an explicit list, so the day one gains a schema the assertion fails and forces it to be wired in. Route covered: every content-ID prefix in the document's grammar table - the five with an implementation compared three ways, the eleven without one asserted as a named coverage gap. Covered in reverse too: every grammar ContentCategories declares that the document does not mint is recorded by name, which is how SITE-, ELT- and PLAYER- stay visible as unminted rather than passing as documented. Route not covered: this gate anchors doc 40's table, the schemas and ContentCategories to one another and opens no file under content/, so whether the corpus satisfies these grammars is outside it and belongs to DAT-002's population rule. Separately, and not a limitation of the gate: content/schemas/resource.schema.json asserts ^RSC-[0-9]{2}$ while all eight files under content/resources/ author A, B, C, D, E, F, common-ore and hyper-gold, so those two committed artifacts contradict each other today and nothing is red only because no check reads the corpus. That is a defect in the data rather than a scope note: the content is behind, not the schema. The catalog stream has accepted the RSC- rename, the grammar and the canonical_letter split already exist to receive it, and the migration is scheduled after that stream's PR #10; it is owned there and is deliberately not attempted from this entry. Negative controls, each a coherent well-formed violation per doc 91: changing the document's RSC- row to a three-digit grammar failed TheDocumentSchemaAndCodeStateOneGrammarFor_RSC, naming the schema, the envelope and ContentCategories as the three disagreeing artifacts; deleting the FORMULA- grammar from both envelope.schema.json and ContentCategories - the correlated deletion that leaves EnvelopeSchemaPatternTests green, confirmed green - failed TheDocumentSchemaAndCodeStateOneGrammarFor_FORMULA; deleting the SIEGE- row from the document failed TheDocumentTableIsExactlyTheSixteenPrefixesNamedHere reporting 'Missing (1): SIEGE-'.",
       "task": "TASK-DAT-001-001",
       "requirements": ["TR-DAT-002", "TR-DAT-004"],
       "technicalSources": [
@@ -994,6 +994,98 @@
       ],
       "scenarios": [],
       "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-042",
+      "summary": "The envelope schema's properties, required list, status enum and tag enum are each compared against a third anchor stated in the test, not only against EnvelopeSchema and the vocabulary types. Route: each set is read from content/schemas/envelope.schema.json, compared member by member against a roster written out in EnvelopeSchemaPatternTests, compared as a set against that roster so an addition fails, compared against the C# declaration, and counted. Why the third anchor: the four assertions were two-set comparisons between artifacts that both derive from doc 40, which doc 91 Negative control adequacy names as blind to a correlated deletion, and the counts their names asserted - nine fields, six required - were not asserted by their bodies at all. Technique: each anchor was proved by injecting the correlated deletion into both real artifacts at once and confirming the pre-existing set assertion stayed green while the new roster and count assertions failed naming the member. Deleting summary_key from the schema's properties and from EnvelopeSchema.DeclaredOrder failed ThePropertiesAreExactlyTheNineEnvelopeFields on 'no longer declares the property summary_key' and on Count 8 versus 9, with Is.EquivalentTo(EnvelopeSchema.Fields) not among the reported failures; deleting tags from the schema's required array and from EnvelopeSchema.RequiredFields failed TheRequiredListIsExactlyTheSixRequiredEnvelopeFields the same way at 5 versus 6; deleting retired from the schema enum and from DefinitionStatuses failed TheStatusEnumIsExactlyTheAcceptedTokens at 3 versus 4. The tags case is the empty-set one: both sides are empty by design, so adding legacy to the schema enum and to TagVocabulary.Declared together was the injection, and it failed the roster and the IsEmpty assertion while the old two-set comparison passed. Deleting the enum keyword from $defs/tag - which an absent-versus-empty set comparison cannot distinguish - failed the explicit declaration assertion.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-004", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#common-definition-envelope",
+        "docs/technical/40-content-data-and-validation.md#tags-vocabulary",
+        "docs/technical/91-verification-strategy.md#negative-control-adequacy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.EnvelopeSchemaPatternTests"
+      },
+      "fixtures": [
+        "content/schemas/envelope.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-043",
+      "summary": "The cardinalities VER-DAT-001-039 advertises are asserted rather than only named. Route: doc 40's minted-grammar table is read and its row count compared against sixteen, the roster of sixteen prefixes stated in DocumentGrammarAgreementTests is compared against sixteen, the eleven aggregates with no implementation are counted, and the eleven grammars ContentCategories declares that no document mints are counted. Why: each of those three tests held a set read from an artifact equal to a literal list in the test, which is a real third anchor for a one-sided deletion and no anchor at all for a deletion taken from the artifact and the literal together - and the numbers were in the test names only. Technique: deleting the SITE- grammar from ContentCategories and its line from TheGrammarsNoDocumentMints in one edit left Is.EquivalentTo green and failed only the two new count assertions at 10 versus 11; deleting SIEGE- from the sixteen-prefix roster failed both the set assertion, naming SIEGE- as Extra, and the count at 15 versus 16.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-004", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#stable-id-policy",
+        "docs/technical/91-verification-strategy.md#negative-control-adequacy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.DocumentGrammarAgreementTests"
+      },
+      "fixtures": [
+        "content/schemas/envelope.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-044",
+      "summary": "The nine bound keywords are counted, not only listed. Route: SchemaAuthority.BoundKeywords() is compared member by member and as a set against the roster stated in SchemaAuthorityCoverageTests, and both the rule and the roster are then compared against nine. Why: the roster made a one-sided deletion fail by name, and a keyword removed from the rule and from the roster in the same edit kept every existing assertion green while narrowing what the x-authority gate reaches - the nine is advertised by content/schemas/README.md, by VER-DAT-001-025 and VER-DAT-001-027, and by doc 91 Negative control adequacy, so it is a promise rather than a label. Technique: removing multipleOf from SchemaAuthority.BoundKeywords() and from TheNineBoundKeywords together left the per-keyword and set assertions passing and failed only the two new counts at 8 versus 9.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-004", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline",
+        "docs/technical/91-verification-strategy.md#negative-control-adequacy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.SchemaAuthorityCoverageTests"
+      },
+      "fixtures": [
+        "content/schemas"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-045",
+      "summary": "The maximal envelope fixture is compared field by field against the eight authorable envelope fields rather than spot-checked. Route: the fixture's root property names are read from the JSON and compared as a set against the eight written out in the test, then counted against the declared nine less the required-absent ones. Why: the test asserted the identity, name_key and summary_key and left the remaining five to the validator, so 'carries every authorable field' was a claim about the fixture that the fixture's own contents were never compared to. This strengthens a claim that was already held indirectly - the six required fields are enforced by the read succeeding and presentation_id by its required-absent rule - rather than closing a fail-open.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-004", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#common-definition-envelope"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Fixtures.ValidFixtureCorpusTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/valid/envelope-maximal.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"

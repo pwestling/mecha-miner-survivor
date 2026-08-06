@@ -42,17 +42,50 @@ internal sealed class RelationalConstraintTests
             + "tolerance exists because the values are doubles and not because the arithmetic "
             + "is approximate");
 
+    /// <summary>
+    /// The accepted geometry satisfies both declared relational constraints.
+    /// </summary>
+    /// <remarks>
+    /// The emptiness assertion is over whatever <see cref="RelationalConstraints.All"/>
+    /// holds, so it passes just as cleanly over one constraint, or none, as over both -
+    /// the "both" in this test's name was a label rather than a claim. The count anchors
+    /// it. Two is advertised outside this file: <c>tests/verification/DAT-002.json</c>
+    /// heads its section "the two relational constraints" and
+    /// <see cref="RelationalConstraints"/>' own remarks open "Two constraints", so deleting
+    /// one must fail here rather than quietly reduce what this test ranges over.
+    /// </remarks>
     [Test]
     public void TheAcceptedCatalogSatisfiesBothRelations()
     {
         DiagnosticBag bag = new();
         RelationalConstraints.Evaluate(AcceptedCatalog(), CatalogPath, bag);
 
-        Assert.That(
-            bag.Diagnostics,
-            Is.Empty,
-            () => "the accepted geometry must satisfy both relations: "
-                + string.Join("; ", bag.Diagnostics));
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                RelationalConstraints.All,
+                Has.Count.EqualTo(2),
+                () => "this package declares two relational constraints and evaluating them "
+                    + "is what this test does; over a shorter list it would report a clean "
+                    + "catalog either way. Declared: "
+                    + string.Join(", ", Ids(RelationalConstraints.All)));
+            Assert.That(
+                bag.Diagnostics,
+                Is.Empty,
+                () => "the accepted geometry must satisfy both relations: "
+                    + string.Join("; ", bag.Diagnostics));
+        });
+    }
+
+    private static List<string> Ids(IReadOnlyList<RelationalConstraint> constraints)
+    {
+        List<string> ids = new(constraints.Count);
+        foreach (RelationalConstraint constraint in constraints)
+        {
+            ids.Add(constraint.Id);
+        }
+
+        return ids;
     }
 
     /// <summary>

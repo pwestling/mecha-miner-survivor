@@ -148,10 +148,25 @@ public static class CatalogChecks
     /// The weapons catalog holds exactly fifteen distinct unordered material pairs.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// The route sorts each weapon's two resource IDs and matches on the sorted pair, so
     /// two weapons whose recipes differ only in order collide as they should. The count
     /// is of distinct pairs and not of files: counting files alone would let two weapons
     /// share one recipe and still make fifteen.
+    /// </para>
+    /// <para>
+    /// <b>Do not harmonise this with
+    /// <see cref="RecipeLettersSpellTheWeaponId"/>, which does not sort.</b> The two
+    /// checks read the same field and disagree about order on purpose, because they ask
+    /// different questions of it. This one asks <em>which two materials</em> a recipe
+    /// names: a material pair is a set, so <c>[RSC-02, RSC-01]</c> and
+    /// <c>[RSC-01, RSC-02]</c> are one recipe and must collide rather than make up the
+    /// fifteen twice. Sorting is what makes that true, and
+    /// <c>ARecipePairReusedInTheOtherOrderCollides</c> is its control. Its sibling asks
+    /// whether the recipe is written in the order the weapon's own ID states, which is a
+    /// question about sequence and cannot survive a sort. Making this one order-sensitive
+    /// would let a reversed duplicate pass as a sixteenth recipe.
+    /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException">Any argument is null.</exception>
     public static void FifteenDistinctRecipePairs(
@@ -213,10 +228,26 @@ public static class CatalogChecks
     /// concatenate to the weapon ID's own two-letter suffix.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// This is the compensation for a recipe that stopped being human-legible. Once a
     /// recipe holds resource IDs, a mis-assigned pair is invisible to a reader;
     /// resolving each ID to its letter and comparing the concatenation restores the
     /// check a human used to perform by eye.
+    /// </para>
+    /// <para>
+    /// <b>The authored order is load-bearing, and this check must not be harmonised with
+    /// <see cref="FifteenDistinctRecipePairs"/>, which sorts.</b> Side by side the two
+    /// look inconsistent - one field, two orderings - and the tidying instinct is to sort
+    /// here too. Do not: <c>W-AB</c> naming <c>[RSC-02, RSC-01]</c> spells <c>BA</c>
+    /// against a suffix of <c>AB</c> and is the only fault either check catches, because
+    /// its sibling sorts that very difference away before comparing and a swapped pair is
+    /// individually valid in every other respect. Sorting the resolved letters here would
+    /// make the comparison <c>AB == AB</c> for both orderings and delete the check
+    /// entirely while leaving it looking like a check.
+    /// <c>ARecipePairWrittenInTheOtherOrderFailsTheLetterSpelling</c> in
+    /// <c>CategorySemanticRuleTests</c> is the wall: it asserts this diagnostic fires on a
+    /// reversed pair, and it goes red the moment a sort is introduced.
+    /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException">Any argument is null.</exception>
     public static void RecipeLettersSpellTheWeaponId(

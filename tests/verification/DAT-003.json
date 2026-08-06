@@ -1216,6 +1216,70 @@
       ],
       "tier": "fast",
       "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-035",
+      "summary": "A recipe pair written in the other order, correct in every other respect, is reported by RecipeLettersSpellTheWeaponId and deliberately not by FifteenDistinctRecipePairs. Route: weapons/catalog-recipe-pair-reversed.json is W-AB carrying [RSC-02, RSC-01] and nothing else changed; the letters are resolved in authored order and the concatenation compared against the weapon ID's suffix, which spells BA against AB and must emit MMC-7005, while the sorted-pair route is asserted to stay silent because a material pair is unordered. Why it is a test and not a comment: the two checks read one field and disagree about ordering on purpose, which reads as an inconsistency side by side, and harmonising them by sorting the resolved letters deletes the only check that catches a swapped pair while leaving it looking like a check. Technique: sorting the resolved letters in RecipeLettersSpellTheWeaponId - the exact cleanup the remarks on both methods warn against - failed this test with 'Expected: some item equal to MMC-7005, But was: <empty>'.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-004",
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#weapons",
+        "docs/technical/91-verification-strategy.md#negative-control-adequacy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/catalog-recipe-pair-reversed.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-036",
+      "summary": "The branch_class field name is justified by what the value classifies, in both artifacts that justify it, and by no appeal to C# naming. Route: the branch_class description in content/schemas/branch.schema.json is read and compared against the ground that holds and against the withdrawn appeal's vocabulary, and BranchDto is reflected over so that every property is asserted to carry JsonPropertyName. Why: the schema and BranchDefinition's remarks both argued the name partly on the claim that the shorter spelling is a keyword a typed model would have to escape, which is false - the DTO annotates all eight properties, so the wire name is never a C# identifier, and the property behind a wire name of class would be Class - and a justification retracted in one copy while the other still carries it is later read as corroboration and restored. Technique: restoring the withdrawn clause to the schema description failed the first test naming both 'escape' and 'keyword'; removing JsonPropertyName from BranchDto.BranchClass failed the second naming BranchClass, which is the fact the retraction rests on.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-004",
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#branches"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.BranchClassNamingRationaleTests"
+      },
+      "fixtures": [
+        "content/schemas/branch.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
     }
   ]
 }

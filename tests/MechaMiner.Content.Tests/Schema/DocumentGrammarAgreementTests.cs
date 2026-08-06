@@ -209,11 +209,34 @@ internal sealed class DocumentGrammarAgreementTests
     [Test]
     public void TheDocumentTableIsExactlyTheSixteenPrefixesNamedHere()
     {
-        Assert.That(
-            ReadDocumentTable().Keys,
-            Is.EquivalentTo(TheSixteenMintedPrefixes),
-            "doc 40 § Minted content-ID grammars mints a different set of prefixes than "
-                + nameof(TheSixteenMintedPrefixes) + " states");
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                ReadDocumentTable().Keys,
+                Is.EquivalentTo(TheSixteenMintedPrefixes),
+                "doc 40 § Minted content-ID grammars mints a different set of prefixes than "
+                    + nameof(TheSixteenMintedPrefixes) + " states");
+
+            // The set assertion above compares the document against this fixture's roster,
+            // which is the third anchor - but only against whatever the roster currently
+            // holds. Deleting a row from the document and the matching line from
+            // TheSixteenMintedPrefixes in one edit shrinks both and leaves it green. The
+            // sixteen is advertised outside this file: VER-DAT-001-039's summary records
+            // that deleting the SIEGE- row "failed
+            // TheDocumentTableIsExactlyTheSixteenPrefixesNamedHere", and doc 40 names the
+            // eleven aggregates that make up part of the total. It is a promise, so it is
+            // asserted.
+            Assert.That(
+                TheSixteenMintedPrefixes,
+                Has.Length.EqualTo(16),
+                nameof(TheSixteenMintedPrefixes) + " no longer states sixteen prefixes. A "
+                    + "prefix may only leave this roster when doc 40 retires it under "
+                    + "§ Stable ID policy, which requires a migration or tombstone entry");
+            Assert.That(
+                ReadDocumentTable(),
+                Has.Count.EqualTo(16),
+                "doc 40 § Minted content-ID grammars no longer mints sixteen prefixes");
+        });
     }
 
     /// <summary>
@@ -244,14 +267,36 @@ internal sealed class DocumentGrammarAgreementTests
             }
         }
 
-        Assert.That(
-            unimplemented,
-            Is.EquivalentTo(new[]
-            {
-                "FAB-", "STACK-", "CACHE-", "EXCL-", "HOOK-", "RESPEC-",
-                "DEED-", "HORDE-", "FOOTPRINT-", "SIEGE-", "BOUNTY-",
-            }),
-            "the set of minted prefixes awaiting an implementation changed");
+        string[] theElevenAggregates =
+        {
+            "FAB-", "STACK-", "CACHE-", "EXCL-", "HOOK-", "RESPEC-",
+            "DEED-", "HORDE-", "FOOTPRINT-", "SIEGE-", "BOUNTY-",
+        };
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                unimplemented,
+                Is.EquivalentTo(theElevenAggregates),
+                "the set of minted prefixes awaiting an implementation changed");
+
+            // Doc 40 § Minted content-ID grammars states the eleven by name, and
+            // VER-DAT-001-039's summary promises "eleven aggregate prefixes have no
+            // definition extracted yet and are asserted as an explicit list". Deleting a
+            // row from the document and its line from this literal together satisfies the
+            // set assertion; the count is what does not shrink with it.
+            Assert.That(
+                theElevenAggregates,
+                Has.Length.EqualTo(11),
+                "doc 40 names eleven aggregates awaiting extraction, and this list must "
+                    + "still hold eleven of them");
+            Assert.That(
+                unimplemented,
+                Has.Count.EqualTo(11),
+                "eleven minted prefixes have no schema and no category today. If one gained "
+                    + "one, move it into " + nameof(TheFiveImplementedGrammars)
+                    + " so it starts being compared three ways");
+        });
     }
 
     /// <summary>
@@ -280,11 +325,31 @@ internal sealed class DocumentGrammarAgreementTests
             }
         }
 
-        Assert.That(
-            unminted,
-            Is.EquivalentTo(TheGrammarsNoDocumentMints),
-            nameof(ContentCategories) + " declares a different set of undocumented grammars"
-                + " than " + nameof(TheGrammarsNoDocumentMints) + " records");
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                unminted,
+                Is.EquivalentTo(TheGrammarsNoDocumentMints),
+                nameof(ContentCategories) + " declares a different set of undocumented "
+                    + "grammars than " + nameof(TheGrammarsNoDocumentMints) + " records");
+
+            // The recorded debt is eleven grammars. Dropping one from ContentCategories and
+            // its line from TheGrammarsNoDocumentMints in one edit keeps the two sides
+            // equal and reduces what this test ranges over, which is how a recorded debt
+            // stops being recorded. The count is the part that does not move with it.
+            Assert.That(
+                TheGrammarsNoDocumentMints,
+                Has.Length.EqualTo(11),
+                nameof(TheGrammarsNoDocumentMints) + " no longer records eleven grammars. A "
+                    + "grammar leaves this list when a document mints it - in which case it "
+                    + "must appear in doc 40's table - or when the category is retired, not "
+                    + "because the line was tidied away");
+            Assert.That(
+                unminted,
+                Has.Count.EqualTo(11),
+                nameof(ContentCategories) + " declares a different number of grammars no "
+                    + "accepted document mints");
+        });
     }
 
     /// <summary>

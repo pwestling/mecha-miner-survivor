@@ -99,6 +99,25 @@ internal sealed class SchemaAuthorityCoverageTests
                 declared,
                 Is.Unique,
                 "a keyword listed twice would run its control twice and prove nothing extra");
+
+            // The set assertion above holds the rule equal to this fixture's roster, and
+            // deleting a keyword from BoundKeywords() and its line here in one edit keeps
+            // the two equal while narrowing the rule. The nine is advertised elsewhere -
+            // content/schemas/README.md "Every key must be one of the nine bound keywords",
+            // VER-DAT-001-025 and VER-DAT-001-027 both name the nine, and doc 91
+            // § Negative control adequacy cites "a parameterized control across all nine
+            // bound keywords" - so the number is asserted rather than merely stated.
+            Assert.That(
+                TheNineBoundKeywords,
+                Has.Length.EqualTo(9),
+                nameof(TheNineBoundKeywords) + " no longer states nine keywords. Removing "
+                    + "one from the roster and from SchemaAuthority.BoundKeywords() together "
+                    + "is the correlated deletion every other assertion here is blind to");
+            Assert.That(
+                declared,
+                Has.Count.EqualTo(9),
+                "SchemaAuthority.BoundKeywords() no longer declares nine bound keywords, so "
+                    + "the rule reaches fewer numbers than every document describing it says");
         });
     }
 

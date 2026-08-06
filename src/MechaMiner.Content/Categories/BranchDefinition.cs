@@ -25,10 +25,20 @@ namespace MechaMiner.Content.Categories;
 /// <para>
 /// <b>The field is <c>branch_class</c>, never <c>class</c>.</b> Thirty of the
 /// forty-five files used the shorter spelling and fifteen the longer. The longer one
-/// wins on two independent grounds: it says what the value classifies, and
-/// <c>class</c> is a C# keyword, so a typed model reading it would need an escape or an
-/// attribute on every branch. A document carrying <c>class</c> fails as an unknown
-/// field, which is what stops the two spellings coexisting.
+/// wins on one ground and it is sufficient: it says what the value classifies. A
+/// document carrying the shorter spelling fails as an unknown field, which is what stops
+/// the two spellings coexisting.
+/// </para>
+/// <para>
+/// <b>A second ground stood here and in <c>branch.schema.json</c> until it was
+/// withdrawn.</b> It appealed to C# naming rather than to content, and it was false on
+/// its own terms: <see cref="BranchDto"/> already annotates every property with
+/// <see cref="JsonPropertyNameAttribute"/>, so the wire name and the property name are
+/// independent, and the property behind the shorter wire spelling would be <c>Class</c>
+/// - an ordinary identifier. The withdrawal is recorded rather than quietly deleted, and
+/// <c>BranchClassNamingRationaleTests</c> holds both artifacts to it, because a
+/// justification retracted in one copy and left standing in the other is how a wrong
+/// argument survives.
 /// </para>
 /// <para>
 /// <b>One <c>expected_effect</c>, not a three-way split.</b> Two field names carried

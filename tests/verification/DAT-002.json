@@ -1053,6 +1053,38 @@
       ],
       "tier": "fast",
       "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-031",
+      "summary": "The clean-catalog assertion for the relational constraints is anchored to the number of constraints it ran. Route: the accepted catalog is evaluated through RelationalConstraints.Evaluate and the resulting diagnostic bag compared against empty, and RelationalConstraints.All is separately counted against two, with the failure message naming the constraint IDs that remain. Why: an empty bag is what a catalog satisfying both relations produces and equally what evaluating one relation, or none, produces, so the word 'both' in the test name was a label the body never checked - two is stated by this registry file's own section note and by RelationalConstraints' remarks. Technique: deleting DeploymentClearanceCoversMiningPoint from the declared array left the emptiness assertion green and failed the count at 1 versus 2, reporting 'Declared: RC-01'.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-004",
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#mining-sites",
+        "docs/technical/91-verification-strategy.md#negative-control-adequacy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.RelationalConstraintTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/mining-sites/valid-geode.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
     }
   ]
 }

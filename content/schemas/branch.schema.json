@@ -61,7 +61,7 @@
     },
     "branch_class": {
       "type": "string",
-      "description": "Which of the three transformation classes this branch is. The field is branch_class and never class: it says what the value classifies, and class is a keyword a typed model would have to escape.",
+      "description": "Which of the three transformation classes this branch is. The field is branch_class and never class: it says what the value classifies.",
       "enum": [
         "amplification",
         "functional",

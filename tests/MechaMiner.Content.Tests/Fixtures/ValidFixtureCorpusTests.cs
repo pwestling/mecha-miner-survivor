@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text.Json;
 using MechaMiner.Content.Envelope;
 using MechaMiner.Tests.Support;
 using NUnit.Framework;
@@ -85,6 +86,16 @@ internal sealed class ValidFixtureCorpusTests
         Assert.That(result.Envelope, Is.Not.Null, () => string.Join("; ", result.Diagnostics));
         DefinitionEnvelope envelope = result.Envelope!;
 
+        List<string> authored = new();
+        using (JsonDocument document =
+               JsonDocument.Parse(FixtureCorpus.Read("valid/envelope-maximal.json")))
+        {
+            foreach (JsonProperty property in document.RootElement.EnumerateObject())
+            {
+                authored.Add(property.Name);
+            }
+        }
+
         HashSet<SourceRefKind> kinds = new();
         foreach (SourceRef reference in envelope.SourceRefs)
         {
@@ -96,6 +107,26 @@ internal sealed class ValidFixtureCorpusTests
             NumericAssert.AreExactlyEqual("W-AB", envelope.Id.Value, "the maximal fixture's ID");
             Assert.That(envelope.NameKey, Is.Not.Null);
             Assert.That(envelope.SummaryKey, Is.Not.Null);
+
+            // "Carries every authorable field" was asserted for three of the eight - id,
+            // name_key and summary_key - so a fixture that quietly stopped authoring tags
+            // or source_refs was still maximal by this test's account. EnvelopeDto calls
+            // them "the eight authorable envelope fields"; they are the nine minus
+            // presentation_id, which is required absent and cannot appear in a legal
+            // document.
+            Assert.That(
+                authored,
+                Is.EquivalentTo(new[]
+                {
+                    "id", "schema_version", "content_version", "status",
+                    "name_key", "summary_key", "tags", "source_refs",
+                }),
+                () => "valid/envelope-maximal.json must author every field a definition may "
+                    + "author and nothing else; it authors: " + string.Join(", ", authored));
+            Assert.That(
+                authored,
+                Has.Count.EqualTo(EnvelopeSchema.Fields.Count - EnvelopeSchema.RequiredAbsent.Count),
+                "the authorable fields are the declared nine less the required-absent ones");
             Assert.That(
                 kinds,
                 Is.EquivalentTo(new[]

@@ -383,6 +383,64 @@ internal sealed class CategorySemanticRuleTests
         });
     }
 
+    /// <summary>
+    /// A recipe written in the other order, with everything else correct, must fail
+    /// <see cref="CatalogChecks.RecipeLettersSpellTheWeaponId"/>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>This test is the wall in front of a tempting cleanup.</b>
+    /// <see cref="CatalogChecks.FifteenDistinctRecipePairs"/> sorts each pair before
+    /// deduplicating and <see cref="CatalogChecks.RecipeLettersSpellTheWeaponId"/> does not
+    /// sort at all. Read side by side that is one field with two orderings and looks like an
+    /// inconsistency, and the natural tidy-up is to sort in both. Sorting the resolved
+    /// letters deletes the only check that catches a swapped recipe pair, and deletes it
+    /// silently, because the check keeps running and keeps passing.
+    /// </para>
+    /// <para>
+    /// <c>weapons/catalog-recipe-pair-reversed.json</c> is <c>W-AB</c> with
+    /// <c>[RSC-02, RSC-01]</c> and no other change. It is individually valid; its pair is
+    /// the accepted one; <see cref="CatalogChecks.FifteenDistinctRecipePairs"/> is right not
+    /// to mind. The letters spell <c>BA</c> under an ID whose suffix is <c>AB</c>, and only
+    /// the order-sensitive check can say so - which is asserted below rather than left to
+    /// the remark on either method, because a comment is advice and this is a wall.
+    /// </para>
+    /// </remarks>
+    [Test]
+    public void ARecipePairWrittenInTheOtherOrderFailsTheLetterSpelling()
+    {
+        List<ResourceDefinition> resources = SixMaterials();
+        WeaponDefinition reversed = Load<WeaponDefinition>(
+            "weapons/catalog-recipe-pair-reversed.json", DefinitionKind.Weapon);
+
+        DiagnosticBag spelling = new();
+        CatalogChecks.RecipeLettersSpellTheWeaponId(
+            new[] { reversed }, resources, CatalogPath, spelling);
+
+        DiagnosticBag pairs = new();
+        CatalogChecks.FifteenDistinctRecipePairs(new[] { reversed }, CatalogPath, pairs);
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                Codes(spelling),
+                Does.Contain(ContentDiagnosticCodes.RecipeLettersMismatch),
+                () => "W-AB authoring [RSC-02, RSC-01] spells BA against a suffix of AB and "
+                    + "must be reported. If this passes, the letters are being compared after "
+                    + "a sort, which makes the comparison AB == AB for either order and leaves "
+                    + "a swapped recipe pair with no check at all: "
+                    + string.Join("; ", spelling.Diagnostics));
+
+            Assert.That(
+                Codes(pairs),
+                Does.Not.Contain(ContentDiagnosticCodes.CatalogDuplicateIdentity),
+                () => "and the sorting check must stay indifferent - a material pair is "
+                    + "unordered, so a reversed pair is not a second recipe. That is why the "
+                    + "difference between the two checks is load-bearing rather than an "
+                    + "inconsistency to harmonise: " + string.Join("; ", pairs.Diagnostics));
+        });
+    }
+
     private static List<ResourceDefinition> SixMaterials()
     {
         List<ResourceDefinition> resources = new();

@@ -101,6 +101,10 @@ An entity ID contains a reusable storage index and a generation. Reusing a slot 
 - Invalid, expired, or generation-mismatched references fail closed and produce a diagnostic counter.
 - Stable ordering uses the full entity ID after a system's authored priority keys.
 
+The full entity ID compares by run session, then storage index, then generation. Storage index must precede generation because it is the only component that discriminates among simultaneously live entities: two live records in one run session never share a storage index, so a comparison over a live entity set resolves on storage index and never reaches the generation. Generation exists to order records that share a recycled slot, which arises only where records from different lifetimes of one slot coexist — recovery snapshots, persisted history, and retained diagnostic or statistics records — not in a live entity set. Run session precedes both for the same reason it bounds uniqueness: two IDs from different sessions are otherwise incomparable.
+
+Generation is therefore not exercised by any fixture whose records all carry distinct storage indices; such a fixture pins the storage-index comparison and nothing more. A fixture that intends to cover generation ordering must reuse one storage index across two generations.
+
 The implementation uses purpose-built packed stores by population category, not a general reflection-driven ECS framework. A new generic abstraction is justified only when at least three concrete systems require the same lifecycle and query semantics.
 
 ## Authoritative population categories
@@ -196,6 +200,10 @@ Domain events are immutable facts used by other authoritative or application sys
 - Presentation events may be coalesced by an explicit visual policy; domain events may not be dropped.
 - Statistics consume domain/damage records before their buffers are released.
 - Event schemas are versioned when written to diagnostic artifacts.
+
+The sequence is global to one tick. It begins at the tick's first emitted event and increments monotonically across the entire tick regardless of which system phase or which emitter produced the event, so `(tick, sequence)` is by itself a total order over every event the tick publishes and no further tiebreak key exists. Per-phase and per-emitter numbering are both rejected: either scheme lets two events of one tick share a counter value and so reintroduces the ties this ordering exists to remove, and presentation's detection of missed event sequence numbers requires one contiguous run of numbers per tick.
+
+Two events published by one tick that carry the same sequence are a defect, not a tie. An implementation must fail loudly on a duplicate rather than falling through to a further sort key, because silently ordering an impossible state hides the emission bug that produced it. This rule governs event ordering only; damage instances retain the separate resolution order defined under [Boundary and tie ordering](#boundary-and-tie-ordering).
 
 ## Presentation snapshot
 

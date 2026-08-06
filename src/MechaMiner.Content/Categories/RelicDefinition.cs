@@ -32,6 +32,23 @@ namespace MechaMiner.Content.Categories;
 /// the requirement checks.
 /// </para>
 /// <para>
+/// <b><c>hook</c> is unmapped prose, and this field table does not represent it.</b>
+/// The corpus carries a <c>behavior_registration.hook</c> sentence per relic, and this
+/// schema used to read those ten sentences as each naming one distinct hook point with
+/// no overlap between them - which would have made <c>behavior_kind</c> a mapping of
+/// them. Measured against the corpus it is false. There are <b>nineteen</b> hook points
+/// across the ten strings: nine of the ten join two noun phrases with different head
+/// nouns by "and", and both conjuncts are independently realised in the same file's
+/// <c>effects</c> block - <c>REL-01</c>'s "activation-rate transformation and opposite
+/// geometry" carries <c>primary_activation_frequency_multiplier: 3</c> for the first and
+/// <c>mirrors_directional_and_targeted_geometry: true</c> for the second. Only
+/// <c>REL-04</c> names a single hook point, and three of the strings overlap each other
+/// on rate/cadence transformation. A relic-to-hook mapping would need nineteen invented
+/// names and a document that mints them, so there is none: <c>behavior_kind</c> is a
+/// token the behavior registry resolves, and it asserts neither a hook vocabulary nor
+/// one hook per relic.
+/// </para>
+/// <para>
 /// <b><c>effects</c> is the strongest case in the tree for an open parameter map.</b>
 /// Seventy-four keys across ten relics, with <em>none</em> shared between any two.
 /// There is literally no common structure to factor, so the per-kind parameter schema
@@ -148,7 +165,10 @@ public sealed class RelicDefinition : ContentDefinition
     /// <summary>What the transformation applies to.</summary>
     public IReadOnlyList<string> AffectedScope { get; }
 
-    /// <summary>The registered behavior token, formerly the prose hook description.</summary>
+    /// <summary>
+    /// The registered behavior token. Not a mapping of the corpus's <c>hook</c> prose -
+    /// see <see cref="RelicSchema"/> for why one is not derivable.
+    /// </summary>
     public string BehaviorKind { get; }
 
     /// <summary>Which pool this relic is drawn from.</summary>

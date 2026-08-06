@@ -55,13 +55,13 @@ above.
 
 | Directory | Owner | State |
 | --- | --- | --- |
-| `resources/` (9 files: `A`–`F`, `common-ore`, `hyper-gold`, `geode-resonance-effects`) | catalog transcription (CAT) | authored |
+| `resources/` (8 files: `A`–`F`, `common-ore`, `hyper-gold`) | catalog transcription (CAT) | authored |
 | `mechs/` (6: `MCH-01`–`MCH-06`) | CAT | authored |
-| `enemies/` (11: `EN-01`–`EN-10`, `elite-modifier-profile`) | CAT | authored |
+| `enemies/` (11: `EN-01`–`EN-10`, `shared-elite-modifiers`) | CAT | authored |
 | `bosses/` (4: `BOSS-01`–`BOSS-04`) | CAT | authored |
 | `weapons/` (16: `W-AB`…`W-EF`, `stat-price-formula`) | CAT | authored |
 | `branches/` (45: `<weapon-id>-<branch-name>`) | CAT | authored |
-| `utilities/` (13: `UTL-A1`…`UTL-F2`, `radar-unassigned-id`) | CAT | authored |
+| `utilities/` (13: `UTL-A1`…`UTL-F2` plus the resource radar `UTL-R1`) | CAT | authored |
 | `relics/` (10: `REL-01`–`REL-10`) | CAT | authored |
 | `powerups/` (13: `PU-*`) | CAT | authored |
 | `unlocks/` (6: `UNL-01`–`UNL-06`) | CAT | authored |
@@ -73,10 +73,15 @@ above.
 | `presentation/` | presentation/audio definitions, `SCH-CNT-003` (`docs/technical/115-component-contract-and-schema-registry.md:91`) | **not authored here** |
 | `../generated/` | bundle compiler and report generators (`DAT-006`, `DAT-008`); "Generated files are changed through their generator" (`docs/technical/110-implementation-plan-for-ai-agents.md:92`) | **not authored here** |
 
-139 definition JSON files in total. `content/schemas/`, `content/presentation/`, and `generated/` are
-absent from this tree because they belong to other streams, not because they are optional.
+**138 definition files plus `content/localization/en.json`** — 139 `*.json` files under `content/` in
+total. The two numbers are different things and are stated separately on purpose: the definition count
+is what the per-directory rows above sum to, and the 139 total is what the verifier asserts as
+`EXPECTED_CONTENT_JSON_FILES`. `content/` also holds two Markdown files (this one and
+`transcription-notes.md`) which are documentation, not content, and are counted in neither figure.
+`content/schemas/`, `content/presentation/`, and `generated/` are absent from this tree because they
+belong to other streams, not because they are optional.
 
-Two files that used to be here are gone, and their absence is deliberate:
+Five files that used to be here are gone, and their absence is deliberate:
 
 - **`mechs/shared-baseline.json`** held player baseline values. A mech definition carries *overrides*
   (`docs/technical/40-content-data-and-validation.md:110`), and `content/` has no player or run
@@ -84,6 +89,20 @@ Two files that used to be here are gone, and their absence is deliberate:
 - **`maps/world-props.json`** held the destructible-rock and health-pack values
   (`docs/72-player-survivability-and-damage-baseline.md:180,190`). Those are now fields of the
   `MGC-01` map-generation-contract definition.
+- **`resources/geode-resonance-effects.json`** held the six geode resonance effects as one aggregate.
+  Each effect now sits on the resource that owns it — `resources/A.json`…`F.json` each carry
+  `resonance_effect_name` and a `resonance_behavior` block — and the resonance field's radius is a
+  field of the geode site class (`resonance_field.radius_m` in
+  `mining-sites/specialized-material-geodes.json`), per the mining-site schema
+  (`docs/technical/40-content-data-and-validation.md:140`).
+- **`enemies/elite-modifier-profile.json`** treated elite status as its own entity. It is not one:
+  elite *eligibility* is a validated `elite_eligible` field on each of the ten enemies
+  (`docs/technical/40-content-data-and-validation.md:114` lists "elite eligibility" among the enemy
+  fields), and the shared elite multipliers (`docs/31-initial-alien-roster.md:104`) are now the
+  constants block `enemies/shared-elite-modifiers.json`, which the enemies read.
+- **`utilities/radar-unassigned-id.json`** is now **`utilities/UTL-R1.json`**. The rulings pass
+  assigned the resource radar the stable ID `UTL-R1` and a player-facing name, so it is an ordinary
+  utility item like the other twelve rather than an aggregate with no ID.
 
 ## Authoring conventions
 
@@ -97,10 +116,11 @@ list, and the verifier under
   `BOSS-03.json`, `W-BE.json`, `REL-10.json`, `UTL-C2.json`, `UNL-04.json`, `PU-*.json`. IDs are
   copied verbatim from the design docs and never re-cased or re-numbered
   (`docs/technical/40-content-data-and-validation.md:67`: "Reuse accepted gameplay IDs exactly").
-- **Kebab-case file names for cohesive aggregates** — `elite-modifier-profile.json`,
-  `geode-resonance-effects.json`, `stat-price-formula.json`, `standard-encounter-schedule.json`
-  (`WAV-01`), `standard-map-generation-contract.json` (`MGC-01`), the four
-  `*-seams`/`*-geodes`/`*-sites` mining-site files, and `radar-unassigned-id.json`.
+- **Kebab-case file names for cohesive aggregates** — `shared-elite-modifiers.json`,
+  `stat-price-formula.json`, `standard-encounter-schedule.json` (`WAV-01`),
+  `standard-map-generation-contract.json` (`MGC-01`), and the four `*-seams`/`*-geodes`/`*-sites`
+  mining-site files. A file only carries a kebab-case name because no doc assigns it an ID; once one
+  is assigned the file is renamed to it, as the resource radar was to `UTL-R1.json`.
 - **Branch files** are named `<weapon-id>-<branch-name-kebab-case>.json` (e.g.
   `W-AD-singularity-forge.json`) because no doc assigns branch IDs.
 - **Formatting:** 2-space indent, LF line endings, one trailing newline, UTF-8 without BOM.
@@ -120,8 +140,9 @@ rule:
   makes this explicit: "IDs are case-sensitive ASCII tokens ... and never localized."
 - **Units live in key-name suffixes**, per
   `docs/technical/40-content-data-and-validation.md:94` (`_m`, `_m_per_s`, `_seconds`, `_per_second`,
-  `_hull`, `_degrees`, `_fraction`, `_count`): `movement_speed_m_per_second`, `base_work_seconds`,
-  `collision_diameter_m`, `recovery_hull_per_second`, `cost_hyper_gold`, `warning_seconds`.
+  `_hull`, `_degrees`, `_fraction`, `_count`): `movement_speed_m_per_s`,
+  `extraction_duration_seconds`, `reference_diameter_m`, `recovery_hull_per_second`,
+  `cost_hyper_gold`, `warning_seconds`.
 - **Percentage points belong only on a property whose name says `_percent`**
   (`docs/technical/40-content-data-and-validation.md:95`). The normalized factor is *not* authored
   here — the compiler writes it into the runtime bundle as a separate derived field.
@@ -147,11 +168,11 @@ independently addressable definition. The literal values this tree carries today
 
 | Field | Mandate | In this tree |
 | --- | --- | --- |
-| `id` | `40:80` — stable category-valid ID | present on 133 of 139 definitions, including the aggregates that have doc-assigned IDs (`WAV-01`, `MGC-01`). Six carry `"id": null` because **no design document assigns them one**: the resource radar (`docs/50-maps-resources-and-navigation.md:106` makes it the thirteenth utility but never gives it a `UTL-*` token), the four prose-only mining-site classes (`docs/40-mining-and-extraction.md:58-132`), and `elite-modifier-profile`. Minting IDs here would be inventing content |
+| `id` | `40:80` — stable category-valid ID | present as a non-empty string on 133 of the 138 definitions, including the aggregates that have doc-assigned IDs (`WAV-01`, `MGC-01`). Five definitions have no stable ID. Four carry `"id": null` — the prose-only mining-site classes (`docs/40-mining-and-extraction.md:58-132`), which no table gives an ID token, so minting one would be inventing content. On the fifth, `enemies/shared-elite-modifiers.json`, the field is **absent** rather than null: a constants block has nothing to be referenced *by*, so it needs no ID at all |
 | `schema_version` | `40:81` — integer version of its definition schema | `1` everywhere; no schema exists to version yet |
 | `content_version` | `40:82` — monotonic revision | `1` everywhere; this is the first authored revision |
 | `status` | `40:83` — exactly one of `development`, `enabled`, `disabled`, `retired` | `"enabled"` everywhere; nothing here is gated or retired |
-| `name_key` | `40:84` — localization key, never literal player-facing text | **conditional**, like `presentation_id`: required only where a definition has a genuinely player-facing name, with the compiler supplying the default otherwise (`40:90`). Present on 135 of 139, always resolving into `content/localization/en.json`. The four omissions — `WAV-01`, `MGC-01`, `elite-modifier-profile`, `geode-resonance-effects` — are authoring contracts and internal aggregates; naming them in the localization catalog would imply a UI surface that does not exist |
+| `name_key` | `40:84` — localization key, never literal player-facing text | **conditional**, like `presentation_id`: required only where a definition has a genuinely player-facing name, with the compiler supplying the default otherwise (`40:90`). Present on 135 of the 138 definitions, always resolving into `content/localization/en.json`. The three omissions — `WAV-01`, `MGC-01`, and `shared-elite-modifiers` — are authoring contracts and a constants block; naming them in the localization catalog would imply a UI surface that does not exist |
 | `summary_key` | `40:85` — "concise player-facing summary key **where relevant**" | conditional, so it is present only where a summary exists (29 definitions); its absence is never an error |
 | `tags` | `40:86` — closed or validated vocabulary, never hidden behavior | present as an array on every definition, currently empty: no tag vocabulary has been minted, and inventing one here would be hidden behavior |
 | `source_refs` | `40:87` — gameplay document IDs/anchors and decision IDs implemented | present and non-empty on every definition; see below |
@@ -218,8 +239,8 @@ file, and `src/MechaMiner.Tools/ContentImport/README.md`):
 - every file parses, with no duplicate object properties (`40:26`);
 - the full envelope above, including `status` from exactly the four accepted literals (`40:83`) and
   `presentation_id` being absent rather than null;
-- the two exception sets, so drift stays visible: the definitions carrying a null `id` and the
-  definitions omitting `name_key` must each match a list declared at the top of the verifier. A new
+- the two exception sets, so drift stays visible: the definitions carrying a null *or absent* `id` and
+  the definitions omitting `name_key` must each match a list declared at the top of the verifier. A new
   member is a failure; a member that no longer belongs is a warning to shrink the list;
 - `snake_case` property names everywhere, keys only, so ID/enum tokens in values keep their case
   (`40:26`);
@@ -231,10 +252,17 @@ file, and `src/MechaMiner.Tools/ContentImport/README.md`):
 - per-catalog entry counts and aggregate row counts, each row citing its own source `doc:line`;
 - the two doc-stated grand totals recomputed from the JSON (PowerUp ranks = 9,450 Hyper Gold;
   option unlocks = 2,150);
-- branch→weapon, encounter→enemy, and mech→signature-weapon referential integrity (`40:199`); and
-- one derived-value regression guard: the Sentry Pod deployment interval is the authored 6.0 s
+- branch→weapon, encounter→enemy, and mech→signature-weapon referential integrity (`40:199`);
+- two derived-value guards. The first is a regression guard on the one known transcription bug: the
+  Sentry Pod deployment interval is the authored 6.0 s
   (`docs/71-initial-weapon-numeric-catalog.md:83`), and the derived 12 s must not appear as an
-  authored deployment or ramp value.
+  authored deployment or ramp value. The second is a second-writer guard on enemy footprints: an
+  enemy authors `body_scale_multiplier` and no enemy definition may carry a contact diameter or the
+  centre distance that begins contact, because the compiler derives both from it
+  (`40:114`); `reference_diameter_m` is allowlisted because 0.80 M is the Ripper's authored rank-zero
+  diameter, the shared reference the scale multiplies; and
+- the total `*.json` inventory under `content/`, so a file in a directory no per-catalog row covers is
+  still caught.
 
 ## Reconciling with the canonical schemas
 

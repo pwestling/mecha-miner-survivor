@@ -186,17 +186,32 @@ internal sealed class GameplayLoopTests
     [Test]
     public void ThePhaseSevenTargetIsTheNearestEnemyInRangeOnEveryTick()
     {
-        RunComposition run = Fresh(0x100B_0000_0009UL);
+        // Under the AUTHORED minute-0 row this assertion cannot fail, and that is measured rather than
+        // suspected: doc 32:56's pulse of 2 every 1.5 s staggers arrivals so that usually exactly one
+        // pursuer is inside the 8 m range, and with one candidate the nearest and the first in stable
+        // order are the same enemy. A negative control inverting phase 7's comparison ran GREEN there.
+        // The lethal stress row puts dozens in range at once, which is the only condition under which
+        // "nearest" and "first in order" differ - so the population this assertion runs over is chosen to
+        // be one that can falsify it.
+        RunComposition run = RunComposition.CreateGraybox(
+            0x100B_0000_0009UL,
+            HarnessStressRows.LethalSwarm);
 
         int ticksWithATarget = 0;
+        int ticksWithSeveralInRange = 0;
         int ticksWithoutATarget = 0;
         long shotsWhenLastWithoutATarget = 0;
         int misselections = 0;
         int outOfRangeSelections = 0;
         int spentWithoutATarget = 0;
 
-        for (long tick = 0; tick < 1800; tick++)
+        for (long tick = 0; tick < 1100; tick++)
         {
+            if (run.World.HasEnded)
+            {
+                break;
+            }
+
             long shotsBefore = run.World.ProjectilesFired;
             Step(run, PlanarVector.Zero, tick);
 
@@ -239,6 +254,22 @@ internal sealed class GameplayLoopTests
             }
 
             ticksWithATarget++;
+
+            int inRange = 0;
+            for (int index = 0; index < run.World.LiveEnemyCount; index++)
+            {
+                if (run.World.EnemyAt(index).Position.DistanceTo(run.World.Player.Position)
+                    <= PulseRepeaterBaseline.TargetingRangeMeters)
+                {
+                    inRange++;
+                }
+            }
+
+            if (inRange > 1)
+            {
+                ticksWithSeveralInRange++;
+            }
+
             if (!run.Snapshots.Latest!.VisibleEntities.ToArray().Any(
                     entity => entity.Id == target
                         && entity.Category == PopulationCategory.OrdinaryEnemy))
@@ -263,6 +294,12 @@ internal sealed class GameplayLoopTests
         {
             Assert.That(ticksWithATarget, Is.GreaterThan(100), "there were ticks with a target to check");
             Assert.That(ticksWithoutATarget, Is.GreaterThan(0), "and ticks with none, so both arms ran");
+            Assert.That(
+                ticksWithSeveralInRange,
+                Is.GreaterThan(100),
+                "and on more than a hundred ticks SEVERAL pursuers were in range at once, which is the "
+                    + "only condition under which 'nearest' and 'first in stable order' can differ. "
+                    + "Without this the assertion below would be over a population that cannot falsify it");
             Assert.That(
                 misselections,
                 Is.Zero,

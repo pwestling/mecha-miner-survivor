@@ -165,6 +165,25 @@
 #       pass this partition. Closing it needs shell reachability, which this gate does
 #       not do. The C# side has no equivalent hole: there the member must be reachable
 #       from a workflow verb's entry point.
+#     * A HERE-DOC BODY LINE THAT LOOKS LIKE A COMMAND IS COUNTED AS A CALL SITE. The
+#       shell matcher requires command position and does not track here-doc bodies, so an
+#       indented bare path inside <<'WORD' or PowerShell's @'...'@ reads exactly like a
+#       command. Two live instances, observed rather than imagined: build.sh:59 and
+#       build.ps1:64 are `sudo build/bootstrap-linux.sh` inside the help text a wrapper
+#       prints when the SDK is missing, and the analyzer reports both as
+#       "(root wrapper ...) yes". VER-FND-005-011's twelve-form control set does include
+#       here-doc prose, but the form it used is a sentence - "see build/verify-zzz.sh for
+#       details" - which is not in command position; a line that a human is being told to
+#       type is. Checked rather than assumed: no gate script's reached status depends on
+#       this today - all seven reached gates are reached from C# call sites in
+#       src/MechaMiner.Tools/Verbs/ - so the hole is live for provisioning and latent for
+#       gates. It is also why § 4 is not extended to require that provisioning scripts be
+#       reached from a workflow step: that check would be satisfied by help text, and a
+#       check satisfied by help text is the substitution this file exists to catch.
+#       FOLLOW-UP (FND-005, which owns the matcher through VER-FND-005-011): track
+#       here-doc and PowerShell here-string bodies in strip_shell_comment's neighbourhood
+#       and add the thirteenth control form - a bare indented path inside <<'WORD' - in
+#       both directions. Then § 4 can cover provisioning.
 #     * A GATE MISFILED AS `launcher` OR `provisioning` ESCAPES §§ 3 AND 4 ENTIRELY, and
 #       so does a dual-mode gate whose entry names no arguments. The inventory makes
 #       every script's classification visible and diffable; it cannot make the

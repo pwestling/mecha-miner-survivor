@@ -440,10 +440,19 @@ public sealed class CommandAdmissionGate
 
         // The single admission path. Every statement above is a refusal, so reaching this point means the
         // idempotency history and the monotonic high-water mark have both been consulted and both admitted
-        // this envelope. There is no other way into these four writes.
+        // this envelope. There is no other way into these five writes.
+        //
+        // The history write goes first, and the order matters. Its Add throws on a duplicate key, so it is the
+        // only one of the five that can fail; the other four are unconditional. Written first, a throw leaves
+        // every other datum exactly as it was, which is the shape docs/technical/20-simulation-core.md
+        // § Tick transaction asks for - an invariant failure before anything has moved. Written third, as it
+        // once was, a throw would leave the open tick's two working lists already carrying the envelope. That
+        // was never observable here, because TryAdmit publishes nothing and the two checks above make the
+        // duplicate unreachable, so it is not the § Tick transaction violation the paused-transaction commit
+        // had; the ordering is simply free, and none of the four other writes reads the history.
+        _admittedTickBySequence.Add(envelope.Sequence, envelope.TargetTick.Index);
         _openTickSequences.Add(envelope.Sequence);
         _openTickIntents.Add(intent);
-        _admittedTickBySequence.Add(envelope.Sequence, envelope.TargetTick.Index);
         _highestAdmittedSequence = envelope.Sequence;
         _admittedInRun++;
 

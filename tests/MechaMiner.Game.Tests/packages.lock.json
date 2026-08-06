@@ -140,7 +140,8 @@
       "mechaminer.simulation": {
         "type": "Project",
         "dependencies": {
-          "MechaMiner.Content": "[1.0.0, )"
+          "MechaMiner.Content": "[1.0.0, )",
+          "MechaMiner.Persistence": "[1.0.0, )"
         }
       }
     }

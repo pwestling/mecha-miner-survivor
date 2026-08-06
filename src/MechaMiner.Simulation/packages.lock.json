@@ -4,6 +4,12 @@
     "net8.0": {
       "mechaminer.content": {
         "type": "Project"
+      },
+      "mechaminer.persistence": {
+        "type": "Project",
+        "dependencies": {
+          "MechaMiner.Content": "[1.0.0, )"
+        }
       }
     }
   }

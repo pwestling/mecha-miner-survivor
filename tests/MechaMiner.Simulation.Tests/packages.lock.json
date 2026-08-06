@@ -131,10 +131,17 @@
       "mechaminer.content": {
         "type": "Project"
       },
-      "mechaminer.simulation": {
+      "mechaminer.persistence": {
         "type": "Project",
         "dependencies": {
           "MechaMiner.Content": "[1.0.0, )"
+        }
+      },
+      "mechaminer.simulation": {
+        "type": "Project",
+        "dependencies": {
+          "MechaMiner.Content": "[1.0.0, )",
+          "MechaMiner.Persistence": "[1.0.0, )"
         }
       }
     }

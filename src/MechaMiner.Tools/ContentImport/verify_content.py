@@ -2705,6 +2705,17 @@ DECLARED_TOTAL_REMOVED = 115
 # document itself.
 EMPTY_SITE_GUARD_RECORDS = 13
 
+# The three search-radius figures A31 PRINTS on a green run, declared here so that
+# the tool which prints them also asserts them. They are computed by
+# derive_derived_value_expectations.py on the pinned sweep ref and byte-checked by
+# `derive --check`; that is a different tool, which nobody running verify_content.py
+# has to run. Measured before this existed: editing file_radius_pairs back to the old
+# unreproducible 55 made A31 print "1 : 55 : 668" at exit 0 with 0 failures. A figure
+# a reader meets on a passing run and no assertion binds is indistinguishable from a
+# figure that was made up, which is precisely what 55 and 400 were.
+# (site, file, scope), as measured on the expectation's sweep_ref.
+SEARCH_RADIUS_DECLARED = (1, 40, 668)
+
 
 def load_derived_expectation() -> dict:
     if not DERIVED_EXPECTATION.exists():
@@ -2745,6 +2756,25 @@ def check_derived_expectation_counts(docs: dict[Path, object]) -> list[tuple]:
     multiset = expectation.get("removed_numeric_multiset") or []
 
     empty_families = sorted(f.get("name", "?") for f in families if not (f.get("records") or []))
+
+    # The three figures A31 prints, plus the prose half of the same measurement. The
+    # numbers and the sentence are two writers on one measurement, so an edit to
+    # either alone has to fail: the row above pins the numbers, this pins the sentence
+    # to them.
+    measured_radii = expectation.get("search_radius_measurement") or {}
+    site, file_r, scope_r = (measured_radii.get(k) for k in
+                             ("site_radius_pairs", "file_radius_pairs", "scope_radius_pairs"))
+    conclusion = measured_radii.get("conclusion") or ""
+    if not all(isinstance(n, int) for n in (site, file_r, scope_r)):
+        radius_conclusion_state = "radii missing or not integers"
+    else:
+        wanted = (
+            f"Ratio {site} : {file_r} : {scope_r}",
+            f"file would need {file_r - site} more",
+            f"scope {scope_r - site} more",
+        )
+        absent = [w for w in wanted if w not in conclusion]
+        radius_conclusion_state = "consistent" if not absent else f"text disagrees: {absent}"
 
     empty_scopes: list[str] = []
     for family in families:
@@ -2809,6 +2839,28 @@ def check_derived_expectation_counts(docs: dict[Path, object]) -> list[tuple]:
             0,
             len(empty_scopes),
             not empty_scopes,
+        ),
+        (
+            "search radii A31 PRINTS (site : file : scope), asserted by the tool that prints them",
+            " : ".join(str(n) for n in SEARCH_RADIUS_DECLARED),
+            " : ".join(str(measured_radii.get(k, "?"))
+                       for k in ("site_radius_pairs", "file_radius_pairs", "scope_radius_pairs")),
+            tuple(measured_radii.get(k) for k in
+                  ("site_radius_pairs", "file_radius_pairs", "scope_radius_pairs"))
+            == SEARCH_RADIUS_DECLARED,
+        ),
+        (
+            "the printed radii and the conclusion sentence's own arithmetic agree",
+            f"file-site={SEARCH_RADIUS_DECLARED[1] - SEARCH_RADIUS_DECLARED[0]}, "
+            f"scope-site={SEARCH_RADIUS_DECLARED[2] - SEARCH_RADIUS_DECLARED[0]} in the text",
+            radius_conclusion_state,
+            radius_conclusion_state == "consistent",
+        ),
+        (
+            "the pair definition is present, so the printed figures print with what they counted",
+            "present",
+            "present" if (measured_radii.get("definition") or "").strip() else "MISSING",
+            bool((measured_radii.get("definition") or "").strip()),
         ),
     ]
     rows = [(label, expected, actual, "ok" if good else "FAIL")
@@ -2920,8 +2972,11 @@ def check_derived_family_absence(docs: dict[Path, object]) -> list[tuple]:
     return rows, (
         "NOT CAUGHT by this layer: a derived value reintroduced under a name outside the family's "
         "word class, or in a directory the family does not scope. Probed per family with a "
-        "semantic-neighbour name - caught 0 of 6. This layer catches a rename only WITHIN its own "
-        "word class. Layer 2 below is the one that does not depend on the name at all.",
+        "semantic-neighbour name - caught 0 of 6. That figure is a HAND-RUN PROBE, not a "
+        "measurement this run made: six injections, one per family, each reintroducing the family's "
+        "value under a name outside its word class, and no assertion here recomputes it. This "
+        "layer catches a rename only WITHIN its own word class. Layer 2 below is the one that "
+        "does not depend on the name at all.",
     )
 
 
@@ -3105,12 +3160,23 @@ def check_derived_family_values(docs: dict[Path, object]) -> list[tuple]:
         f"exactly as Fractions; there is no tolerance and no rounding.",
         f"NOT CAUGHT (1) - RADIUS: a removed value relocated OUT of its derivation site, elsewhere "
         f"in the same file or anywhere else in the scope. Probed per family - caught 0 of 6. Rename, "
-        f"unit suffix and arity change (32.0 -> [32.0]) are caught 6 of 6. Wider radii were measured "
+        f"unit suffix and arity change (32.0 -> [32.0]) are caught 6 of 6. BOTH of those are "
+        f"HAND-RUN PROBES - twelve injections done by hand, six per row - and no assertion in this "
+        f"run recomputes either; unlike the three radii below, which this tool asserts. Wider radii "
+        f"were measured "
         f"under one definition on the pinned sweep ref and are recorded in "
         f"search_radius_measurement: {radii.get('site_radius_pairs', '?')} coincidental pair(s) at "
         f"site radius, {radii.get('file_radius_pairs', '?')} at file radius and "
         f"{radii.get('scope_radius_pairs', '?')} at scope radius. Widening needs that many "
-        f"hand-written exceptions, which is what makes it unlandable rather than merely unchosen.",
+        f"hand-written exceptions, which is what makes it unlandable rather than merely unchosen. "
+        f"WHAT A PAIR IS, stated here rather than pointed at, because a reader meeting "
+        f"'{radii.get('site_radius_pairs', '?')} : {radii.get('file_radius_pairs', '?')} : "
+        f"{radii.get('scope_radius_pairs', '?')}' cannot otherwise tell what was counted: "
+        f"{(radii.get('definition') or 'DEFINITION MISSING from the expectation file').strip()} "
+        f"These three figures are ASSERTED by this tool against SEARCH_RADIUS_DECLARED "
+        f"({' : '.join(str(n) for n in SEARCH_RADIUS_DECLARED)}) in the A29/A31 declared-counts "
+        f"rows above, not merely printed from the expectation file; the file's own byte-integrity is "
+        f"a separate check (derive_derived_value_expectations.py --check).",
         f"NOT CAUGHT (2) - EMPTY GUARDS: {blind} of {len(per_record)} removed values sit in a "
         f"container the removal left with NO numeric leaves ({{}} and {{'resource': ...}} residues), "
         f"so their guard searches nothing and only a leaf reappearing inside that same object could "
@@ -3172,7 +3238,10 @@ CSV_MIRROR_ROUNDED = {
         "the break is MOTIVATED. Under 0.625 it is: a designer targeting a clean 0.50 M contact "
         "diameter back-computes 0.50 / 0.80 = 0.625 and the scale is whatever falls out. Under 0.62 "
         "it is not: someone working in 0.05 steps who wanted a small variant picks 0.60 or 0.65. A "
-        "motivated exception beats an unmotivated one. "
+        "motivated exception is better evidence than an unmotivated one, so this is the strongest "
+        "single argument on the table and it points at 0.625 - which is why the evidence LEANS that "
+        "way rather than sitting balanced. What it does not do is settle the question; see the "
+        "closing paragraphs. "
         "THREE ARGUMENTS THAT DO NOT DISCRIMINATE, recorded as non-discriminating so a later reader "
         "does not weigh them. (1) 'Both docs/72 figures come out exact under 0.625' is ONE "
         "coincidence, not two: start distance is diameter / 2 + 0.50, so once the diameter is "
@@ -3190,7 +3259,18 @@ CSV_MIRROR_ROUNDED = {
         "cites' is false for this field. EN-07's own source_refs scopes contact_footprint to "
         "GDD-PLAYER-SURVIVABILITY-BASELINE#collision-and-contact-footprints - docs/72, the 0.50 "
         "side - while the scale it stores comes from docs/31. Corrected in README.md too. "
-        "WHY THE OUTCOME IS NONETHELESS TO HOLD: the evidence is balanced and none of it decisive. "
+        "WHERE THE EVIDENCE POINTS, AND WHY THAT IS STILL NOT A DECISION: it LEANS TOWARD 0.625. "
+        "The motivated-exception argument above is the strongest single argument here and it points "
+        "that way, and the three arguments below discriminate nothing, so nothing pulls the other "
+        "way with comparable force. It is NOT DECISIVE, for two reasons that are not weak: it is an "
+        "inference about a designer's intent, and it runs against the LITERAL TEXT of docs/31, "
+        "which states 0.62x and is a document of record; and against the operand-home argument - "
+        "docs/31's roster is where body scales live, so the scale column is the natural home of the "
+        "authored quantity and docs/72's 0.50 M is the natural home of a presented consequence. A "
+        "leaning inference does not overturn a stated number, so the question stays OPEN and it is "
+        "the design owner's to close. "
+        "WHY THE CURRENT STATE IS HELD, AND ON WHAT GROUNDS: on COST, not on evidence - the lean is "
+        "recorded above and holding does not deny it. "
         "The current state is internally consistent under the 0.62 reading. If that reading wins "
         "there is nothing to do; if the other wins the work is one content value plus a document "
         "revert, travelling with the merges. The magnitude is 0.8% of a hitbox, so nothing is at "
@@ -3211,6 +3291,12 @@ CSV_MIRROR_ROUNDED = {
 }
 
 CSV_MIRROR_EXPECTED_COMPARISONS = 98
+
+# How many definitions must author contact_footprint.reference_diameter_m, the
+# operand A30's diameter column multiplies. Ten - the ordinary enemy roster. The
+# four bosses author their diameters flat (docs/72:105-110) and have no reference,
+# which is why this is 10 and not 14.
+CSV_MIRROR_REFERENCE_DIAMETER_AUTHORS = 10
 
 
 def _csv_decimals(text: str) -> int:
@@ -3241,14 +3327,53 @@ def check_csv_mirror_agreement(docs: dict[Path, object]) -> list[tuple]:
         fail("A30 could not read reference_mech_speed_m_per_s, an operand of the speed column.")
         return [("mech base speed readable", "present", "missing", "FAIL")], ()
     base_speed = Fraction(str(contract["reference_mech_speed_m_per_s"]))
-    ref_diameter = Fraction("0.80")   # docs/72 "Collision and Contact Footprints"
-    player_radius = Fraction("0.50")  # docs/72 "Collision and Contact Footprints"
+
+    # THE PLAYER'S COLLISION RADIUS IS THE ONE OPERAND WITH NO AUTHORED MIRROR, and
+    # the asymmetry with reference_diameter_m below is deliberate rather than an
+    # oversight. docs/72:86 states it: "Contact begins when the enemy contact circle
+    # and the mech's 0.50M-radius collision circle overlap." It is a PLAYER-baseline
+    # constant, and A20's centre-distance rule exists precisely to keep it OUT of
+    # content/enemies/, content/bosses/ and content/maps/ - storing the sum there put
+    # a second writer on it in fifteen files (Ruling 12, content/transcription-notes.md
+    # sections on the centre distance). So there is nothing in the tree to read and
+    # this literal is the repository's only copy of it.
+    # SEARCHED BEFORE CONCLUDING: every numeric leaf equal to 0.5 under
+    # content/**/*.json is 20 leaves, none of them a player/mech footprint field
+    # (pulse intervals, arm/grace/decay seconds, per-rank increments, a charging
+    # multiplier, an anchor collapse distance); no key anywhere under content/ matches
+    # player_radius / collision_radius; and the only occurrences of the phrase are
+    # prose in content/README.md and content/transcription-notes.md, which are
+    # documentation of this derivation, not values it may read. If the mech baseline
+    # ever becomes authored content, read it here the way ref_diameter is read.
+    player_radius = Fraction("0.50")  # docs/72:86 - no authored mirror; see above
 
     by_id = {}
     for path, doc in docs.items():
         if isinstance(doc, dict) and isinstance(doc.get("id"), str):
             if path.parent.name in ("enemies", "bosses"):
                 by_id[doc["id"]] = doc
+
+    # THE OTHER OPERAND OF THE DIAMETER COLUMN IS AUTHORED, SO IT IS READ FROM THE
+    # TREE. All ten enemy files store contact_footprint.reference_diameter_m = 0.8,
+    # A20's DERIVED_FOOTPRINT_FIELD_ALLOWED allowlists it as authored and required to
+    # stay, and this derivation multiplies it. It used to be hardcoded here as
+    # Fraction("0.80"), which made the derivation agree with ITSELF rather than with
+    # the tree: setting the field to 1.0 in all ten files left the whole suite green,
+    # 0 failures, 10 of 10 escaped, and 0.9 and 0.8000001 likewise - while the sibling
+    # operand body_scale_multiplier went red, so the field was stored, mirrored in the
+    # CSV's derivation, allowlisted as authored, and read by nothing.
+    # TWO ROWS, because reading it is not enough on its own. The per-actor read makes
+    # an edit to ONE file fail that actor's diameter and start-distance comparisons;
+    # the population and distinct-value rows make DELETING the field, or giving one
+    # file a different reference from the other nine, fail as well - the shared
+    # reference is one quantity with one owner, and a per-file reference would be a
+    # second owner smuggled in one file at a time.
+    authored_ref_diameters: dict[str, Fraction] = {}
+    for actor_id, doc in by_id.items():
+        footprint = doc.get("contact_footprint") or {}
+        if "reference_diameter_m" in footprint:
+            authored_ref_diameters[actor_id] = Fraction(str(footprint["reference_diameter_m"]))
+    distinct_ref_diameters = sorted(set(authored_ref_diameters.values()))
 
     import csv as _csv
 
@@ -3257,6 +3382,7 @@ def check_csv_mirror_agreement(docs: dict[Path, object]) -> list[tuple]:
     declared_used: set = set()
     mismatches: list[str] = []
     missing_actors: list[str] = []
+    missing_ref_diameter: list[str] = []
 
     with PRESSURE_CSV.open() as handle:
         for row in _csv.DictReader(handle):
@@ -3269,9 +3395,19 @@ def check_csv_mirror_agreement(docs: dict[Path, object]) -> list[tuple]:
             if "contact_and_weapon_hurt_diameter_m" in footprint:
                 diameter = Fraction(str(footprint["contact_and_weapon_hurt_diameter_m"]))
                 diameter_basis = "authored contact_and_weapon_hurt_diameter_m"
-            else:
+            elif actor in authored_ref_diameters:
+                ref_diameter = authored_ref_diameters[actor]
                 diameter = Fraction(str(doc["body_scale_multiplier"])) * ref_diameter
-                diameter_basis = f"body_scale_multiplier x {ref_diameter}"
+                diameter_basis = (
+                    f"body_scale_multiplier x authored contact_footprint."
+                    f"reference_diameter_m {ref_diameter}"
+                )
+            else:
+                # No authored diameter and no authored reference to derive one from.
+                # The population row below is what reports this; skipping here also
+                # drops the comparison count, so the vacuity guard fails too.
+                missing_ref_diameter.append(actor)
+                continue
             percent = Fraction(
                 str(doc["movement_speed"]["percent_of_mech_base_speed"]["percent"])
             )
@@ -3347,6 +3483,20 @@ def check_csv_mirror_agreement(docs: dict[Path, object]) -> list[tuple]:
             len(stale),
             "ok" if not stale else "FAIL",
         ),
+        (
+            "enemy files authoring contact_footprint.reference_diameter_m (the operand "
+            "this rule reads instead of hardcoding)",
+            CSV_MIRROR_REFERENCE_DIAMETER_AUTHORS,
+            len(authored_ref_diameters),
+            "ok" if len(authored_ref_diameters) == CSV_MIRROR_REFERENCE_DIAMETER_AUTHORS
+            else "FAIL",
+        ),
+        (
+            "distinct authored reference diameters (one shared reference, one owner)",
+            "1 (0.8)",
+            f"{len(distinct_ref_diameters)} ({', '.join(str(float(d)) for d in distinct_ref_diameters) or 'none'})",
+            "ok" if len(distinct_ref_diameters) == 1 else "FAIL",
+        ),
     ]
     if mismatches:
         fail(
@@ -3371,6 +3521,28 @@ def check_csv_mirror_agreement(docs: dict[Path, object]) -> list[tuple]:
             f"A30 {len(stale)} declared lower-precision pair(s) now agree exactly. A stale "
             f"exception silently widens the rule - delete it: {stale}"
         )
+    if len(authored_ref_diameters) != CSV_MIRROR_REFERENCE_DIAMETER_AUTHORS:
+        fail(
+            f"A30 {len(authored_ref_diameters)} enemy definition(s) author "
+            f"contact_footprint.reference_diameter_m, expected "
+            f"{CSV_MIRROR_REFERENCE_DIAMETER_AUTHORS}. It is the authored operand this rule "
+            f"multiplies by body_scale_multiplier, and A20's DERIVED_FOOTPRINT_FIELD_ALLOWED "
+            f"allowlists it on the basis that it stays. Missing from: "
+            f"{sorted(set(by_id) - set(authored_ref_diameters))[:12]}"
+        )
+    if len(distinct_ref_diameters) != 1:
+        fail(
+            f"A30 the authored reference diameter is not one shared value: "
+            f"{[str(d) for d in distinct_ref_diameters]}. docs/72:86 gives ONE reference (the "
+            f"Ripper's 0.80 M rank-zero contact diameter) that every ordinary body scale "
+            f"multiplies, so a per-file reference is a second owner for one quantity."
+        )
+    if missing_ref_diameter:
+        fail(
+            f"A30 {len(missing_ref_diameter)} actor(s) have neither an authored contact diameter "
+            f"nor an authored reference to derive one from, so their diameter and start-distance "
+            f"columns were not compared: {sorted(missing_ref_diameter)}"
+        )
     # A30's own limits, on the output a green run prints. A30 caught 7 of 8
     # attacks when it was reviewed; the one that escaped went through the declared
     # exception, which is the note below.
@@ -3380,6 +3552,17 @@ def check_csv_mirror_agreement(docs: dict[Path, object]) -> list[tuple]:
         f"surviving operands (diameter, start distance, world speed), which is the comparison docs/40 "
         f"section 'Enemies and bosses' describes. The count is asserted at "
         f"{CSV_MIRROR_EXPECTED_COMPARISONS} because a mirror check over zero values passes free.",
+        f"WHERE THE DERIVED COLUMNS' OPERANDS COME FROM, named because a hardcoded operand makes a "
+        f"derivation agree with itself: reference_mech_speed_m_per_s READ from "
+        f"content/maps/standard-map-generation-contract.json; contact_footprint."
+        f"reference_diameter_m READ per actor from the "
+        f"{len(authored_ref_diameters)} enemy definition(s) that author it (asserted above, one "
+        f"distinct value: {', '.join(str(float(d)) for d in distinct_ref_diameters) or 'none'}); "
+        f"body_scale_multiplier and the authored boss diameters READ per actor. The player's "
+        f"{float(player_radius):.2f} M collision radius is the ONLY hardcoded operand, from "
+        f"docs/72:86, and it "
+        f"is hardcoded because A20 keeps it out of content/ deliberately - it is a player-baseline "
+        f"constant and storing it in an enemy, boss or map file put a second writer on it.",
         f"DECLARED EXCEPTIONS ARE EXACT PAIRS, NOT BANDS: {len(CSV_MIRROR_ROUNDED)} declared, each "
         f"naming the CSV value AND the single exact content-side value it covers ("
         + ", ".join(f"{a}.{c} = {v[0]}" for (a, c), v in sorted(CSV_MIRROR_ROUNDED.items()))
@@ -3499,6 +3682,67 @@ def check_derived_removal_delta() -> list[tuple]:
 
 def check_derived_values(docs: dict[Path, object]) -> list[tuple]:
     rows = []
+
+    # THE BANNED VALUE IS DERIVED FROM THE TREE, not hardcoded, for the reason A30's
+    # reference diameter was: 12 is cadence x (pods - 1), and both operands are
+    # AUTHORED in content/weapons/W-BE.json (deployment_cadence_seconds = 6.0,
+    # maximum_active_pod_count = 3). Hardcoding the product made this ban agree with
+    # itself: retuning the pod cap to 4 makes the derived total 18, and a ban on 12
+    # would then police a figure nobody would author while the real derived value
+    # walked in unchallenged - the ban narrows to nothing, silently. So the product is
+    # computed from the two authored operands and DERIVED_DEPLOYMENT_SECONDS is the
+    # DECLARED expectation it must equal, which turns a retune into a deliberate
+    # re-declaration instead of a quiet loss of coverage.
+    pod_props: dict = {}
+    for _, doc in sorted(files_in("weapons", docs).items()):
+        if isinstance(doc, dict) and doc.get("id") == SENTRY_POD_WEAPON_ID:
+            pod_props = doc.get("fixed_properties") or {}
+    cadence = pod_props.get("deployment_cadence_seconds")
+    pods = pod_props.get("maximum_active_pod_count")
+    if (
+        isinstance(cadence, (int, float))
+        and not isinstance(cadence, bool)
+        and isinstance(pods, int)
+        and not isinstance(pods, bool)
+        and pods > 1
+    ):
+        derived_total = Fraction(str(cadence)) * (pods - 1)
+        basis = f"{cadence} x ({pods} - 1)"
+        rows.append(
+            (
+                "banned deployment total, derived from W-BE's authored operands "
+                f"({basis}), == the declared {DERIVED_DEPLOYMENT_SECONDS}",
+                DERIVED_DEPLOYMENT_SECONDS,
+                str(float(derived_total)),
+                "ok" if derived_total == DERIVED_DEPLOYMENT_SECONDS else "FAIL",
+            )
+        )
+        if derived_total != DERIVED_DEPLOYMENT_SECONDS:
+            fail(
+                f"the Sentry Pod deployment total derived from content/weapons/ is "
+                f"{float(derived_total)} s ({basis}), but DERIVED_DEPLOYMENT_SECONDS declares "
+                f"{DERIVED_DEPLOYMENT_SECONDS}. The ban below is on the DERIVED value, so a retune "
+                f"of the cadence or the pod cap has to re-declare it deliberately - otherwise this "
+                f"rule keeps banning a stale figure and stops covering the live one."
+            )
+    else:
+        derived_total = Fraction(DERIVED_DEPLOYMENT_SECONDS)
+        basis = f"declared {DERIVED_DEPLOYMENT_SECONDS} (operands not readable)"
+        warn(
+            f"{SENTRY_POD_WEAPON_ID}: deployment_cadence_seconds / maximum_active_pod_count were "
+            f"not both readable, so the banned deployment total falls back to the declared "
+            f"{DERIVED_DEPLOYMENT_SECONDS} s instead of being derived from the tree (field names "
+            f"are unvalidated until content/schemas/ exists)"
+        )
+        rows.append(
+            (
+                "banned deployment total, derived from W-BE's authored operands",
+                DERIVED_DEPLOYMENT_SECONDS,
+                "operands not readable - using the declared value",
+                "WARN",
+            )
+        )
+
     banned_hits: list[str] = []
     for path, doc in sorted(files_in("weapons", docs).items()):
         for jpath, key, value in walk(doc):
@@ -3507,12 +3751,13 @@ def check_derived_values(docs: dict[Path, object]) -> list[tuple]:
                 and DEPLOYMENT_KEY.search(key)
                 and not isinstance(value, bool)
                 and isinstance(value, (int, float))
-                and value == DERIVED_DEPLOYMENT_SECONDS
+                and Fraction(str(value)) == derived_total
             ):
                 banned_hits.append(f"{rel(path)}{jpath[1:]} = {value}")
     rows.append(
         (
-            "no authored 12 s deployment/ramp value in content/weapons/",
+            f"no authored {float(derived_total):g} s deployment/ramp value in content/weapons/ "
+            f"({basis})",
             0,
             len(banned_hits),
             "ok" if not banned_hits else "FAIL",
@@ -3521,8 +3766,8 @@ def check_derived_values(docs: dict[Path, object]) -> list[tuple]:
     if banned_hits:
         fail(
             f"{len(banned_hits)} deployment/ramp field(s) in content/weapons/ hold "
-            f"{DERIVED_DEPLOYMENT_SECONDS}, which is DERIVED from the {SENTRY_POD_DEPLOYMENT_SECONDS} s "
-            f"cadence, not authored (docs/71-initial-weapon-numeric-catalog.md:83, 40:100): "
+            f"{float(derived_total):g}, which is DERIVED from W-BE's authored operands "
+            f"({basis}), not authored (docs/71-initial-weapon-numeric-catalog.md:83, 40:100): "
             f"{banned_hits}"
         )
 
@@ -4308,7 +4553,10 @@ def main() -> int:
             "These rows exist because total_removed, family_count, declared_family_count and "
             "declared_total_removed were written by the generator and read by nothing here. Without "
             "them this file passes an empty family list, empty records, an empty removal multiset "
-            "and the counts overwritten with 9999/99.",
+            "and the counts overwritten with 9999/99. The last three rows are the same defect for "
+            "the three search radii A31 PRINTS: editing file_radius_pairs back to the old "
+            "unreproducible 55 used to make this tool print '1 : 55 : 668' at exit 0, with only "
+            "derive --check objecting.",
         ),
     )
     table(

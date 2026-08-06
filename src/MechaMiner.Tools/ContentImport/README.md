@@ -145,14 +145,52 @@ mistake.
 Five kebab-case file names now carry a stable ID without being renamed to it
 (`enemies/shared-elite-modifiers.json` is `ELT-01`, and the four `mining-sites/*.json` are
 `SITE-01`…`SITE-04`). That is deliberate: the canonical bundle orders by the `id` field, not by the file
-stem, so the file name is not load-bearing. See `content/transcription-notes.md`.
+stem, so the file name is not load-bearing *for the compiled output*. See
+`content/transcription-notes.md`.
+
+Because nothing downstream of the compiler would notice a file being renamed, `A28` pins it here
+instead: `content-definition-manifest.txt` is a committed, sorted, tab-separated manifest of every
+definition's `(relative_path, id)` pair, compared against the tree in both directions. It closes two
+edits that every other assertion missed — renaming a definition **inside its own directory** (the `A21`
+count row compared a number and was blind to which files those were) and editing the **`id` inside a
+file** (a plausible wrong ID still satisfies `A12`'s regex selector, the per-directory count and
+uniqueness). It also catches two files swapping IDs. Relocation *between* directories was already
+caught by `A12`'s per-directory counts and was never open.
+
+A fourth row compares the committed file's **bytes** against the generator's output byte-for-byte, so
+the header, the line **order**, whitespace padding and the line endings cannot drift. That row is the
+*only* guard for reordering and padding — the three pair rows compare two sets and a mapping, so a
+reordered or padded manifest still holds the same pairs. It is a genuine byte comparison
+(`read_bytes()`, and the generator writes `write_bytes()`): `Path.read_text()` applies universal
+newlines, and a manifest rewritten entirely in CRLF therefore decoded to exactly the generator's LF
+text and passed with the row reporting `identical`. `.gitattributes` pins this one path to `eol=lf` so
+a checkout cannot manufacture a false failure instead.
+
+Pairing path with ID is what makes this work; asserting `stem == id` does not. That was measured and
+rejected: 130 of the 138 definitions have `stem == id` byte-for-byte and 8 do not, and the mapping for
+those 8 is not a function of the string — alphabetically the four `mining-sites` stems yield
+`SITE-03, 02, 04, 01`, so it is not even ordinal. Exempting those directories would drop the check from
+exactly the eight files whose names are prose, which are the ones anyone would actually rename: nobody
+tidies `BOSS-01.json`, and `standard-ore-seams.json` is precisely the file someone would.
+
+Regenerate with `MECHAMINER_GOLDEN_UPDATE=1`, the same switch and the same semantics as
+`tests/shared/GoldenText.cs` — **it rewrites the manifest and the check still fails**, so a
+regeneration can never be what turns a run green. Review the diff, confirm the rename or ID change was
+intended, commit the manifest with it, then rerun without the switch. Setting the switch when the
+manifest already matches is itself a failure. The manifest is an **edit tax, not evidence**: someone
+who changes a file and regenerates passes, and the manifest agrees with the tree again by
+construction. Its value is that the change cannot happen without a reviewable diff in the same commit;
+it does not establish that any path or `id` is correct. The design documents and the `A12` rows that
+cite them remain the authority for that.
 
 It performs no JSON Schema validation: `content/schemas/` does not exist yet, so domain field names
 outside the envelope are unvalidated and will need one reconciliation pass when the schemas land.
 Landing that directory does not redden anything: `NON_DEFINITION_DIRS` already names `schemas`
 alongside `localization`, and the `A21` inventory rows now honour it through
-`in_non_definition_dir()`. Both rows count **138 definition files** and the three documentation
-Markdown files, and files beneath `content/schemas/` are outside both populations. `A21` previously
+`in_non_definition_dir()`. Both rows cover **138 definition files** and the three documentation
+Markdown files, and files beneath `content/schemas/` are outside both populations. The definition
+count is not a literal: it is `len()` of the `A28` manifest described below, so the size and the
+record of *which* files exist cannot drift apart. `A21` previously
 enumerated `content/` bare, which put `localization/en.json` in the definition total (139) and made
 the first schema authored under `content/schemas/` fail as though a definition had appeared in an
 uncovered directory. `en.json` loses nothing by leaving that total: `A10`/`A11` assert far more about

@@ -1,0 +1,168 @@
+# Committed manifest of the content/ definition population: one line per
+# definition file, "<path>\t<id>", sorted by path.
+#
+# WHAT THIS IS FOR. Three edits used to be invisible to every assertion in
+# verify_content.py: renaming a definition file inside its own directory,
+# editing the id inside one, and swapping two ids between files. The inventory
+# assertion compared a COUNT, so a rename left the count unchanged and passed;
+# the id assertions checked a REGEX, per-directory counts and uniqueness, all of
+# which a plausible wrong id satisfies. Pairing the path with the id closes both
+# halves: the path set catches the rename and the id beside it catches the edit.
+#
+# WHAT THIS IS NOT. This manifest is an EDIT TAX, not evidence. It records what
+# the tree currently says, not what any document says it should say. Someone who
+# renames a file or changes an id and then regenerates this manifest passes the
+# check, and nothing here contradicts them - the manifest agrees with the tree
+# again by construction. Its whole value is that the change becomes LOUD: it
+# cannot happen without a diff to this file in the same commit, and that diff is
+# what a reviewer reads. It does not establish that any path or id is correct.
+# The authority for that is the design documents and the A12 per-directory rows
+# that cite them.
+#
+# HOW TO REGENERATE. Run verify_content.py with MECHAMINER_GOLDEN_UPDATE=1. That
+# rewrites this file AND STILL FAILS, deliberately: a regeneration can never be
+# the thing that turns a run green. Review the diff, confirm the rename or the
+# id change was intended, commit this file with it, then rerun without the
+# switch. Do not hand-edit - the generator is the only writer.
+#
+# Two placeholders can appear in the id column and neither is a real id:
+# <no-id> for a definition with no id (A5/A6 also fail) and <unparseable> for
+# one that did not parse (A1 also fails).
+content/bosses/BOSS-01.json	BOSS-01
+content/bosses/BOSS-02.json	BOSS-02
+content/bosses/BOSS-03.json	BOSS-03
+content/bosses/BOSS-04.json	BOSS-04
+content/branches/W-AB-fracture-lance.json	W-AB-fracture-lance
+content/branches/W-AB-kinetic-capacitor.json	W-AB-kinetic-capacitor
+content/branches/W-AB-unbounded-bore.json	W-AB-unbounded-bore
+content/branches/W-AC-danger-close-protocol.json	W-AC-danger-close-protocol
+content/branches/W-AC-interdiction-payload.json	W-AC-interdiction-payload
+content/branches/W-AC-saturation-cascade.json	W-AC-saturation-cascade
+content/branches/W-AD-echo-well.json	W-AD-echo-well
+content/branches/W-AD-gravity-slingshot.json	W-AD-gravity-slingshot
+content/branches/W-AD-singularity-forge.json	W-AD-singularity-forge
+content/branches/W-AE-containment-lattice.json	W-AE-containment-lattice
+content/branches/W-AE-replicator-swarm.json	W-AE-replicator-swarm
+content/branches/W-AE-wolfpack-protocol.json	W-AE-wolfpack-protocol
+content/branches/W-AF-coherence-memory.json	W-AF-coherence-memory
+content/branches/W-AF-cutting-vector.json	W-AF-cutting-vector
+content/branches/W-AF-target-designator.json	W-AF-target-designator
+content/branches/W-BC-broadside-oscillator.json	W-BC-broadside-oscillator
+content/branches/W-BC-suppressive-sequencer.json	W-BC-suppressive-sequencer
+content/branches/W-BC-zero-lag-emitter.json	W-BC-zero-lag-emitter
+content/branches/W-BD-hunter-mines.json	W-BD-hunter-mines
+content/branches/W-BD-seed-charges.json	W-BD-seed-charges
+content/branches/W-BD-selective-detonators.json	W-BD-selective-detonators
+content/branches/W-BE-battery-overclock.json	W-BE-battery-overclock
+content/branches/W-BE-forward-bastion.json	W-BE-forward-bastion
+content/branches/W-BE-guardian-firmware.json	W-BE-guardian-firmware
+content/branches/W-BF-deflection-ring.json	W-BF-deflection-ring
+content/branches/W-BF-kinetic-flywheel.json	W-BF-kinetic-flywheel
+content/branches/W-BF-tethered-reaper.json	W-BF-tethered-reaper
+content/branches/W-CD-ball-lightning-projector.json	W-CD-ball-lightning-projector
+content/branches/W-CD-disruption-current.json	W-CD-disruption-current
+content/branches/W-CD-total-conduction.json	W-CD-total-conduction
+content/branches/W-CE-critical-mass-cycle.json	W-CE-critical-mass-cycle
+content/branches/W-CE-kinetic-vent.json	W-CE-kinetic-vent
+content/branches/W-CE-supernova-cycle.json	W-CE-supernova-cycle
+content/branches/W-CF-carrier-ignition.json	W-CF-carrier-ignition
+content/branches/W-CF-circuit-closure.json	W-CF-circuit-closure
+content/branches/W-CF-runaway-wake.json	W-CF-runaway-wake
+content/branches/W-DE-concussive-fan.json	W-DE-concussive-fan
+content/branches/W-DE-focal-array.json	W-DE-focal-array
+content/branches/W-DE-saturation-choke.json	W-DE-saturation-choke
+content/branches/W-DF-impact-transfer.json	W-DF-impact-transfer
+content/branches/W-DF-momentum-cascade.json	W-DF-momentum-cascade
+content/branches/W-DF-siege-anchor.json	W-DF-siege-anchor
+content/branches/W-EF-guardian-reserve.json	W-EF-guardian-reserve
+content/branches/W-EF-mirv-saturation.json	W-EF-mirv-saturation
+content/branches/W-EF-spiral-barrage.json	W-EF-spiral-barrage
+content/encounters/standard-encounter-schedule.json	WAV-01
+content/enemies/EN-01.json	EN-01
+content/enemies/EN-02.json	EN-02
+content/enemies/EN-03.json	EN-03
+content/enemies/EN-04.json	EN-04
+content/enemies/EN-05.json	EN-05
+content/enemies/EN-06.json	EN-06
+content/enemies/EN-07.json	EN-07
+content/enemies/EN-08.json	EN-08
+content/enemies/EN-09.json	EN-09
+content/enemies/EN-10.json	EN-10
+content/enemies/shared-elite-modifiers.json	ELT-01
+content/maps/standard-map-generation-contract.json	MGC-01
+content/mechs/MCH-01.json	MCH-01
+content/mechs/MCH-02.json	MCH-02
+content/mechs/MCH-03.json	MCH-03
+content/mechs/MCH-04.json	MCH-04
+content/mechs/MCH-05.json	MCH-05
+content/mechs/MCH-06.json	MCH-06
+content/mining-sites/hyper-gold-sites.json	SITE-03
+content/mining-sites/rich-ore-seams.json	SITE-02
+content/mining-sites/specialized-material-geodes.json	SITE-04
+content/mining-sites/standard-ore-seams.json	SITE-01
+content/powerups/PU-C01.json	PU-C01
+content/powerups/PU-C02.json	PU-C02
+content/powerups/PU-C03.json	PU-C03
+content/powerups/PU-C04.json	PU-C04
+content/powerups/PU-E01.json	PU-E01
+content/powerups/PU-E02.json	PU-E02
+content/powerups/PU-E03.json	PU-E03
+content/powerups/PU-M01.json	PU-M01
+content/powerups/PU-M02.json	PU-M02
+content/powerups/PU-S01.json	PU-S01
+content/powerups/PU-S02.json	PU-S02
+content/powerups/PU-S03.json	PU-S03
+content/powerups/PU-S04.json	PU-S04
+content/relics/REL-01.json	REL-01
+content/relics/REL-02.json	REL-02
+content/relics/REL-03.json	REL-03
+content/relics/REL-04.json	REL-04
+content/relics/REL-05.json	REL-05
+content/relics/REL-06.json	REL-06
+content/relics/REL-07.json	REL-07
+content/relics/REL-08.json	REL-08
+content/relics/REL-09.json	REL-09
+content/relics/REL-10.json	REL-10
+content/resources/A.json	A
+content/resources/B.json	B
+content/resources/C.json	C
+content/resources/D.json	D
+content/resources/E.json	E
+content/resources/F.json	F
+content/resources/common-ore.json	common-ore
+content/resources/hyper-gold.json	hyper-gold
+content/unlocks/UNL-01.json	UNL-01
+content/unlocks/UNL-02.json	UNL-02
+content/unlocks/UNL-03.json	UNL-03
+content/unlocks/UNL-04.json	UNL-04
+content/unlocks/UNL-05.json	UNL-05
+content/unlocks/UNL-06.json	UNL-06
+content/utilities/UTL-A1.json	UTL-A1
+content/utilities/UTL-A2.json	UTL-A2
+content/utilities/UTL-B1.json	UTL-B1
+content/utilities/UTL-B2.json	UTL-B2
+content/utilities/UTL-C1.json	UTL-C1
+content/utilities/UTL-C2.json	UTL-C2
+content/utilities/UTL-D1.json	UTL-D1
+content/utilities/UTL-D2.json	UTL-D2
+content/utilities/UTL-E1.json	UTL-E1
+content/utilities/UTL-E2.json	UTL-E2
+content/utilities/UTL-F1.json	UTL-F1
+content/utilities/UTL-F2.json	UTL-F2
+content/utilities/UTL-R1.json	UTL-R1
+content/weapons/W-AB.json	W-AB
+content/weapons/W-AC.json	W-AC
+content/weapons/W-AD.json	W-AD
+content/weapons/W-AE.json	W-AE
+content/weapons/W-AF.json	W-AF
+content/weapons/W-BC.json	W-BC
+content/weapons/W-BD.json	W-BD
+content/weapons/W-BE.json	W-BE
+content/weapons/W-BF.json	W-BF
+content/weapons/W-CD.json	W-CD
+content/weapons/W-CE.json	W-CE
+content/weapons/W-CF.json	W-CF
+content/weapons/W-DE.json	W-DE
+content/weapons/W-DF.json	W-DF
+content/weapons/W-EF.json	W-EF
+content/weapons/stat-price-formula.json	FORMULA-01

@@ -134,6 +134,38 @@ public readonly struct PlayerState : IEquatable<PlayerState>
         return Create(position, facingRadians, _hull);
     }
 
+    /// <summary>
+    /// Returns this state with <paramref name="damage"/> subtracted from Hull, floored at zero.
+    /// </summary>
+    /// <param name="damage">The damage to apply. Must be positive.</param>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="damage"/> is not positive.</exception>
+    /// <remarks>
+    /// <para>
+    /// <b>Position and facing are unchanged, and that is the rule rather than an omission.</b>
+    /// <c>docs/31-initial-alien-roster.md</c>:29 - "Damage does not make the mech flinch, move, stop
+    /// mining, or lose control." <c>docs/40-mining-and-extraction.md</c>:56 says the mining half again -
+    /// "Taking ordinary contact or projectile damage does not interrupt extraction, reset progress, or
+    /// move the mech." A method that could not change the position is how those two sentences become
+    /// properties of the type instead of things every damage call site has to remember.
+    /// </para>
+    /// <para>
+    /// <b>Armor is not subtracted here.</b> <c>docs/72-player-survivability-and-damage-baseline.md</c>:36
+    /// sets baseline Armor to 0, so no mitigation is observable in this slice, and the mitigation
+    /// <em>order</em> is a documented rule in its own right that the damage half of <c>PLY-001</c> owns.
+    /// Applying a zero here would look like the rule was implemented when only the value was.
+    /// </para>
+    /// <para>
+    /// Floored at zero: doc 20 § Numeric and unit conventions gives durability a validated nonnegative
+    /// domain, so overkill is discarded rather than carried. <see cref="IsDestroyed"/> is the predicate
+    /// phase 13 reads, and it tests for exactly zero.
+    /// </para>
+    /// </remarks>
+    public PlayerState Damaged(int damage)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(damage, 1);
+        return new PlayerState(_position, _facingRadians, Math.Max(0, _hull - damage));
+    }
+
     /// <summary>Compares two states for exact equality of every field.</summary>
     public static bool operator ==(PlayerState left, PlayerState right)
     {

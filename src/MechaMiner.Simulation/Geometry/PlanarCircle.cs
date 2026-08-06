@@ -113,6 +113,61 @@ public readonly struct PlanarCircle : IEquatable<PlanarCircle>
         return _centre.DistanceSquaredTo(other._centre) <= summedRadii * summedRadii;
     }
 
+    /// <summary>
+    /// Whether the swept segment from <paramref name="from"/> to <paramref name="to"/> touches this
+    /// circle.
+    /// </summary>
+    /// <param name="from">The segment's start.</param>
+    /// <param name="to">The segment's end.</param>
+    /// <remarks>
+    /// <para>
+    /// <c>docs/technical/10-runtime-architecture.md</c> § Entity and scene boundary: simulation-owned
+    /// spatial queries are "suited to circular and swept-area tests". This is the swept half, and it
+    /// exists because a point test on a moving body is wrong in two ways, one of which is already live.
+    /// </para>
+    /// <para>
+    /// The live one is a blind interval at the muzzle: a projectile created at the mech's centre and
+    /// first tested one step later can never hit a body overlapping the mech, which is exactly where a
+    /// pure contact pursuer ends up, since doc 31:26 makes enemies non-solid and they walk through it.
+    /// That is not a mis-hit, it makes the run unwinnable.
+    /// </para>
+    /// <para>
+    /// The other is tunnelling, and the margin is worth stating rather than assuming: a Pulse Repeater
+    /// projectile advances 0.267 m per tick against a 0.44 m Skitterling footprint, so the body is
+    /// 1.65 times the step and cannot currently be tunnelled. The margin is a ratio, not a guarantee -
+    /// it is consumed by any faster projectile or smaller body, and doc 71:76's Rail Lance already
+    /// specifies a 30 m/s projectile, which is a 0.5 m step. <c>PlanarCircleTests</c> asserts the
+    /// tunnelling case against a body small enough to demonstrate it and records the EN-01 ratio
+    /// separately, so neither claim borrows the other's evidence.
+    /// </para>
+    /// <para>
+    /// The test is the squared distance from the centre to the nearest point of the segment, compared
+    /// inclusively against the squared radius - the same inclusive-and-squared convention
+    /// <see cref="Contains"/> and <see cref="Overlaps"/> use, per doc 21:103. A degenerate segment
+    /// whose endpoints coincide reduces to <see cref="Contains"/> rather than dividing by zero.
+    /// </para>
+    /// <para>
+    /// Like <see cref="Overlaps"/>, this answers a geometric question and nothing more. It does not
+    /// know what a projectile is, whether one may hit twice, or which of several touched bodies a
+    /// weapon should pick.
+    /// </para>
+    /// </remarks>
+    public bool OverlapsSegment(PlanarVector from, PlanarVector to)
+    {
+        PlanarVector along = to - from;
+        double lengthSquared = along.MagnitudeSquared;
+        if (lengthSquared == 0.0)
+        {
+            return Contains(from);
+        }
+
+        PlanarVector toCentre = _centre - from;
+        double projection = ((toCentre.X * along.X) + (toCentre.Y * along.Y)) / lengthSquared;
+        double clamped = Math.Clamp(projection, 0.0, 1.0);
+        PlanarVector nearest = from + (along * clamped);
+        return _centre.DistanceSquaredTo(nearest) <= _radius * _radius;
+    }
+
     /// <summary>Returns this footprint moved to <paramref name="centre"/>, keeping its radius.</summary>
     /// <param name="centre">The new ground-plane centre.</param>
     public PlanarCircle MovedTo(PlanarVector centre)

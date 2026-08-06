@@ -1,0 +1,144 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "COM-005",
+  "workPackageTitle": "Pulse Repeater plus Rail Lance representative direct primitives",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91-verification-strategy.md § Verification registry). Every entry below was authored before the production code it names.",
+    "'status' takes exactly one of 'registered', 'implemented', 'retired' (doc 91 § Entry status). 'evidenceKinds' is read against 'status' (doc 91 § What evidenceKinds means).",
+    "The structural validator for this file is owned by TASK-FND-009-002. Until it lands, the shape here matches tests/verification/PLY-001.json exactly.",
+    "This file is deliberately NOT named SIM-0*.json. tests/MechaMiner.Simulation.Tests/Support/NegativeControlCoverageTests.cs globs 'SIM-0*.json' with a totals assertion across those seven files.",
+    "This slice implements the Pulse Repeater half of COM-005 and none of Rail Lance. It also implements only rank zero: no ore-stat rank, no branch, no relic, no PowerUp, and not MCH-01 Kestrel's own +15% Accelerated Feed trait, because applying the trait would assume a mech selection and no mech selection flow exists. The 0.25M hit push of docs/71:81 is absent too - it needs the displacement and control-resistance rules of docs/72, which are COM-004's. Entries for all of those are COM-004's, COM-005's remainder, and COM-009's.",
+    "Why a weapon exists in a slice about enemies and mining: without one, nothing kills an enemy, so phase 10 has no death to resolve and phase 12 no deferred removal to apply, and two of the phases that slice owns would have been empty for a missing input rather than a scope boundary. docs/36:47 makes Pulse Repeater the signature weapon of the mech docs/36:58 calls 'the recommended first deployment', so the first weapon to exist is the first weapon a player meets.",
+    "Negative controls are recorded in tests/verification/M3-negative-controls.md. No automated gate asserts that document's coverage; see that file's own statement of why."
+  ],
+  "entries": [
+    {
+      "id": "VER-COM-005-001",
+      "summary": "W-BC Pulse Repeater's rank-zero numbers equal the authored catalog row: 12 damage per projectile, an 8 m targeting range, and a 16 m/s projectile, with the 0.375 s activation period and the 8 m / 16 m/s flight time both landing on whole numbers of half-ticks and ticks respectively.",
+      "task": "TASK-COM-005-001",
+      "requirements": [
+        "TR-COM-001"
+      ],
+      "technicalSources": [
+        "docs/technical/22-combat-and-weapon-runtime.md#behavior-implementation-strategy"
+      ],
+      "gameplaySources": [
+        "docs/71-initial-weapon-numeric-catalog.md#rank-zero-values-and-ore-stat-increments",
+        "docs/71-initial-weapon-numeric-catalog.md#base-weapon-summary"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Combat.PulseRepeaterTests"
+      },
+      "fixtures": [
+        "tests/verification/M3-negative-controls.md § Pulse Repeater catalog numbers"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-COM-005-002",
+      "summary": "The attack schedule yields the documented rate exactly rather than a rounded one: it begins ready, its activations fall on alternating 22- and 23-tick gaps, 160 activations occur in the first 60 seconds against the 2.6667/s the catalog's 0.375 s period implies, and idle credit never accumulates past one activation.",
+      "task": "TASK-COM-005-001",
+      "requirements": [
+        "TR-COM-001"
+      ],
+      "technicalSources": [
+        "docs/technical/22-combat-and-weapon-runtime.md#behavior-implementation-strategy"
+      ],
+      "gameplaySources": [
+        "docs/71-initial-weapon-numeric-catalog.md#base-weapon-summary",
+        "docs/71-initial-weapon-numeric-catalog.md#measurement-conventions"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Combat.WeaponScheduleTests"
+      },
+      "fixtures": [
+        "tests/verification/M3-negative-controls.md § exact attack cadence"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-COM-005-003",
+      "summary": "Target selection is the nearest enemy within range, measured centre to centre, re-selected every tick, with ties broken on the stable entity order and never on iteration or allocation order; an enemy beyond the range is not selected and no activation is spent when there is no target.",
+      "task": "TASK-COM-005-002",
+      "requirements": [
+        "TR-COM-002"
+      ],
+      "technicalSources": [
+        "docs/technical/22-combat-and-weapon-runtime.md#target-acquisition"
+      ],
+      "gameplaySources": [
+        "docs/66-weapon-catalog-and-resource-graph.md#w-bc--pulse-repeater"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.World.GameplayLoopTests"
+      },
+      "fixtures": [
+        "tests/verification/M3-negative-controls.md § nearest-target selection"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-COM-005-004",
+      "summary": "A projectile travels the bearing it was fired along and does not home, damages at most one target and is consumed by doing so, expires after travelling its weapon's range, and hits a body it passes through mid-tick rather than tunnelling past it or missing one overlapping the muzzle.",
+      "task": "TASK-COM-005-002",
+      "requirements": [
+        "TR-COM-002"
+      ],
+      "technicalSources": [
+        "docs/technical/22-combat-and-weapon-runtime.md#behavior-implementation-strategy"
+      ],
+      "gameplaySources": [
+        "docs/66-weapon-catalog-and-resource-graph.md#w-bc--pulse-repeater",
+        "docs/71-initial-weapon-numeric-catalog.md#measurement-conventions"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Combat.ProjectileStateTests"
+      },
+      "fixtures": [
+        "tests/verification/M3-negative-controls.md § projectile flight and one hit per projectile"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    }
+  ]
+}

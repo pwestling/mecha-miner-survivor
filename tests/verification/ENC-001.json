@@ -1,0 +1,206 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "ENC-001",
+  "workPackageTitle": "Pure pursuer enemy store/update/contact and fixed profiles",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91-verification-strategy.md § Verification registry). Every entry below was authored before the production code it names.",
+    "'status' takes exactly one of 'registered', 'implemented', 'retired' (doc 91 § Entry status). 'evidenceKinds' is read against 'status' (doc 91 § What evidenceKinds means): for a 'registered' entry the list is evidence the verification will produce once built, and nothing may treat it as produced.",
+    "The structural validator for this file is owned by TASK-FND-009-002. Until it lands, the shape here matches tests/verification/PLY-001.json exactly.",
+    "This file is deliberately NOT named SIM-0*.json. tests/MechaMiner.Simulation.Tests/Support/NegativeControlCoverageTests.cs globs 'SIM-0*.json' and asserts a totals line accounting for every entry across those seven files, so adding an entry to one of them from another work package would break an unrelated package's gate.",
+    "Negative controls for these entries are recorded in tests/verification/M3-negative-controls.md. No automated gate asserts that document's coverage: the existing coverage gate (NegativeControlCoverageTests) is scoped to the seven SIM registries and its partition arithmetic is over those files only. That is stated here so a reader does not assume an enforcement that does not exist.",
+    "This slice implements the EN-01 Skitterling row of docs/31 § Ordinary roster overview and none of the other nine. docs/32:56 composes minute 0 from 'Skitterling 100%', and minute 1 is the first row needing a second identity, so authoring the other nine here would author content for a schedule row this package does not execute. Entries for the remaining identities, the shared elite treatment, and Needler's projectile are ENC-004's and ENC-005's and have no entry here yet.",
+    "TR-GEO-006 ('Valid spawns are offscreen, navigable, safe, and nonoverlapping with prohibited envelopes') is deliberately NOT cited by VER-ENC-001-004 as satisfied. Measured: the graybox arena's half extent is 20 m and the gameplay camera is about 42.7 m wide at 16:9, so no ring inside the arena is offscreen for every bearing. src/MechaMiner.Simulation/Encounters/GrayboxSpawnRing.cs records the arithmetic. The requirement is MAP-007's and GEO-005's to satisfy and is named here only so the gap is recorded rather than implied."
+  ],
+  "entries": [
+    {
+      "id": "VER-ENC-001-001",
+      "summary": "The EN-01 Skitterling profile equals the authored roster row: 20 maximum Hull, 5 contact damage, a 42% movement share that derives to 1.26 m/s against the shared 3.0 m/s baseline, and a 0.55x body scale that derives to a 0.44 m contact diameter against the Ripper's 0.80M reference.",
+      "task": "TASK-ENC-001-001",
+      "requirements": [
+        "TR-ENC-004"
+      ],
+      "technicalSources": [],
+      "gameplaySources": [
+        "docs/31-initial-alien-roster.md#ordinary-roster-overview",
+        "docs/72-player-survivability-and-damage-baseline.md#movement-and-speed-modifiers"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Encounters.EnemyRosterTests"
+      },
+      "fixtures": [
+        "tests/verification/M3-negative-controls.md § EN-01 profile"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-ENC-001-002",
+      "summary": "A pursuer advances toward the mech's authoritative centre every tick at exactly its own world speed, on the direction phase 4 resolved before phase 5 integrated, and neither collides with nor is slowed by the mech or another pursuer.",
+      "task": "TASK-ENC-001-001",
+      "requirements": [
+        "TR-ENC-004",
+        "TR-GEO-003"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#system-phase-ordering"
+      ],
+      "gameplaySources": [
+        "docs/31-initial-alien-roster.md#shared-ordinary-enemy-rules",
+        "docs/72-player-survivability-and-damage-baseline.md#movement-and-speed-modifiers"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Encounters.EnemyPursuitTests"
+      },
+      "fixtures": [
+        "tests/verification/M3-negative-controls.md § pursuit speed and non-solidity"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-ENC-001-003",
+      "summary": "Contact damage follows both documented intervals: an overlapping pursuer damages the mech immediately when eligible and then no sooner than 0.75 s later, and a resolved contact opens a 0.20 s grace during which no other pursuer may land an instance, so a crowd of any size cannot exceed one instance per 0.20 s.",
+      "task": "TASK-ENC-001-002",
+      "requirements": [
+        "TR-ENC-004",
+        "TR-COM-004"
+      ],
+      "technicalSources": [],
+      "gameplaySources": [
+        "docs/31-initial-alien-roster.md#shared-ordinary-enemy-rules",
+        "docs/72-player-survivability-and-damage-baseline.md#shared-player-baseline"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Encounters.ContactDamageCadenceTests"
+      },
+      "fixtures": [
+        "tests/verification/M3-negative-controls.md § contact cadence"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-ENC-001-004",
+      "summary": "Baseline replenishment executes the authored minute-0 row: a pulse of 2 every 1.50 s while the live population is below the desired minimum of 8, trimmed to the shortfall, and nothing at all once the minimum is met.",
+      "task": "TASK-ENC-001-003",
+      "requirements": [
+        "TR-ENC-001",
+        "TR-ENC-002"
+      ],
+      "technicalSources": [
+        "docs/technical/23-encounter-director-and-enemy-runtime.md#minute-schedule-execution"
+      ],
+      "gameplaySources": [
+        "docs/32-standard-wave-and-beacon-schedule.md#complete-35-minute-schedule",
+        "docs/32-standard-wave-and-beacon-schedule.md#director-vocabulary"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Encounters.MinuteZeroBaselineTests"
+      },
+      "fixtures": [
+        "tests/verification/M3-negative-controls.md § minute-0 pulse"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-ENC-001-005",
+      "summary": "Spawn positions are deterministic and seeded: entrance bearings are drawn from the registered baseline-encounter stream family, two runs of the same seed produce byte-identical transcripts of every position, Hull, kill and ore figure over a thousand ticks, and two runs of different seeds do not.",
+      "task": "TASK-ENC-001-003",
+      "requirements": [
+        "TR-SIM-006",
+        "TR-ENC-001"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#authoritative-random-number-contract"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.World.RunDeterminismTests"
+      },
+      "fixtures": [
+        "tests/verification/M3-negative-controls.md § same-seed determinism"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "golden-text",
+        "text-diff"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-ENC-001-006",
+      "summary": "A pursuer whose Hull reaches zero is removed through phase 12's deferred removal and never mid-iteration: the record is present for the whole of the phase that killed it, absent from the next tick's population, its identity is freed for reuse, and a reference to the dead identity resolves to nothing.",
+      "task": "TASK-ENC-001-002",
+      "requirements": [
+        "TR-RUN-005",
+        "TR-SIM-001"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#system-phase-ordering",
+        "docs/technical/20-simulation-core.md#entity-identity"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.World.GameplayLoopTests"
+      },
+      "fixtures": [
+        "tests/verification/M3-negative-controls.md § deferred death removal"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    }
+  ]
+}

@@ -1,8 +1,13 @@
 using System;
+using MechaMiner.Simulation.Combat;
 using MechaMiner.Simulation.Commands;
+using MechaMiner.Simulation.Encounters;
+using MechaMiner.Simulation.Entities;
 using MechaMiner.Simulation.Events;
 using MechaMiner.Simulation.Geometry;
+using MechaMiner.Simulation.Mining;
 using MechaMiner.Simulation.Player;
+using MechaMiner.Simulation.Random;
 using MechaMiner.Simulation.Runtime;
 using MechaMiner.Simulation.Snapshots;
 using MechaMiner.Simulation.Time;
@@ -39,6 +44,45 @@ internal sealed class GameplayWorldTests
     private static RunComposition Fresh()
     {
         return RunComposition.CreateGraybox(RunSession);
+    }
+
+    /// <summary>
+    /// Constructs a world directly, so a construction-refusal case can vary one dependency.
+    /// </summary>
+    /// <remarks>
+    /// The stores, allocator, and streams are built here rather than passed, because none of the cases
+    /// below is about them: each varies the gate, the publisher, the bounds, or the deployment position
+    /// and needs everything else to be valid. <c>RunComposition</c> is what the rest of the suite drives,
+    /// and this exists only so the constructor's own guards have a caller.
+    /// </remarks>
+    private static GameplayWorld Compose(
+        CommandAdmissionGate gate,
+        SnapshotPublisher publisher,
+        IPlanarBounds? bounds,
+        PlanarVector deploymentPosition)
+    {
+        EntityIdAllocator allocator = new(
+            gate.RunSession,
+            GrayboxRunLayout.MiningSiteCount,
+            staticWorldObjectManifestCount: 0);
+
+        return new GameplayWorld(
+            gate,
+            publisher,
+            new DomainEventBuffer(1, 8),
+            new PresentationEventBuffer(1, 8),
+            PresentationCoalescingPolicy.Verbatim,
+            bounds!,
+            deploymentPosition,
+            allocator,
+            new PackedEntityStore<EnemyState>(PopulationCategory.OrdinaryEnemy, allocator),
+            new PackedEntityStore<ProjectileState>(PopulationCategory.WeaponActor, allocator),
+            new PackedEntityStore<MiningSiteState>(PopulationCategory.MiningSite, allocator),
+            new RandomStreamSet(RandomSchemaVersion.Current, gate.RunSession),
+            GrayboxRunLayout.SpawnRing(
+                PlanarVector.Zero,
+                GrayboxArenaBounds.DefaultHalfExtentMeters),
+            MinuteZeroBaseline.Row);
     }
 
     /// <summary>Submits a raw sample for whichever tick the window is open for.</summary>
@@ -279,8 +323,16 @@ internal sealed class GameplayWorldTests
             Assert.That(published.Hud.DisplayedCommonOre, Is.EqualTo(0L));
             Assert.That(published.Hud.DisplayedHyperGold, Is.EqualTo(0L));
             Assert.That(published.Hud.DisplayedExtractionPercent, Is.EqualTo(0));
-            Assert.That(published.IsTerminal, Is.False, "run termination is out of this slice's scope");
-            Assert.That(published.VisibleEntityCount, Is.EqualTo(0), "the player is not an entity entry");
+            Assert.That(
+                published.IsTerminal,
+                Is.False,
+                "the run has not ended: the mech is at full Hull and tick 0 is not the 35:00 boundary");
+            Assert.That(
+                published.VisibleEntityCount,
+                Is.EqualTo(GrayboxRunLayout.MiningSiteCount + MinuteZeroBaseline.PulseBatchSize),
+                "the player is NOT one of these entries - it is a first-class field of the snapshot. "
+                    + "These are the three seams of the graybox layout plus the two Skitterlings doc "
+                    + "32:56's minute-0 pulse admits on tick 0");
         });
     }
 
@@ -325,40 +377,42 @@ internal sealed class GameplayWorldTests
     }
 
     /// <summary>
-    /// <c>VER-PLY-001-010</c>: the provisional seams decide nothing.
+    /// <c>VER-PLY-001-013</c>: the one remaining provisional seam decides nothing.
     /// </summary>
+    /// <remarks>
+    /// The successor to the <c>BeginScheduledEvent</c> half of the retired <c>VER-PLY-001-010</c>. The
+    /// other half of that entry claimed <c>EvaluateTerminalBoundary</c> decides nothing, which is no
+    /// longer true and is now <c>VER-PRG-006-001</c>'s subject.
+    /// </remarks>
     [Test]
-    public void TheProvisionalSeamsDecideNothing()
+    public void TheScheduledEventSeamDecidesNothing()
     {
         RunComposition run = Fresh();
 
         run.World.AdvanceTick(SimulationTick.Zero);
-        PresentationSnapshot? beforeSeams = run.Snapshots.Latest;
-        PlayerState playerBeforeSeams = run.World.Player;
+        PresentationSnapshot? beforeSeam = run.Snapshots.Latest;
+        PlayerState playerBeforeSeam = run.World.Player;
 
-        run.World.EvaluateTerminalBoundary(RunClockBoundaryTick());
         run.World.BeginScheduledEvent(new SimulationTick(30), "SCHED-TEST-ROW");
 
         Expect.Multiple(() =>
         {
-            Assert.That(run.World.BoundaryEvaluationCount, Is.EqualTo(1), "the call was recorded");
             Assert.That(run.World.ScheduledEventCount, Is.EqualTo(1));
             Assert.That(run.World.LastScheduledEventId, Is.EqualTo("SCHED-TEST-ROW"));
 
             Assert.That(
                 run.World.Player,
-                Is.EqualTo(playerBeforeSeams),
-                "neither seam changed authoritative state");
+                Is.EqualTo(playerBeforeSeam),
+                "the seam changed no authoritative state");
             Assert.That(
                 run.Snapshots.Latest,
-                Is.SameAs(beforeSeams),
-                "and neither published a snapshot. The boundary tick is never executed, so it has no "
-                    + "phase 14, and staging one would invent a tick the run clock never committed");
+                Is.SameAs(beforeSeam),
+                "and published no snapshot: an admitted schedule row is not a tick");
             Assert.That(
-                run.Snapshots.Latest!.IsTerminal,
+                run.World.Terminal.IsAssigned,
                 Is.False,
-                "EvaluateTerminalBoundary proposes no terminal result: ISimulationWorld's own remarks "
-                    + "put extraction resolution in the packages that own damage and extraction");
+                "and settled nothing. ISimulationWorld's own remarks say this member 'is expected to be "
+                    + "replaced by the schedule owner's contract, not to become one'");
         });
     }
 
@@ -386,14 +440,7 @@ internal sealed class GameplayWorldTests
         SnapshotPublisher publisher = new(RunSession + 1, 1, 1, 1);
 
         ArgumentException failure = Expect.Throws<ArgumentException>(
-            () => new GameplayWorld(
-                gate,
-                publisher,
-                new DomainEventBuffer(1, 8),
-                new PresentationEventBuffer(1, 8),
-                PresentationCoalescingPolicy.Verbatim,
-                GrayboxArenaBounds.Default,
-                PlanarVector.Zero));
+            () => Compose(gate, publisher, GrayboxArenaBounds.Default, PlanarVector.Zero));
 
         Assert.That(failure.ParamName, Is.EqualTo("publisher"));
     }
@@ -405,12 +452,9 @@ internal sealed class GameplayWorldTests
         SnapshotPublisher publisher = new(RunSession, 1, 1, 1);
 
         ArgumentException failure = Expect.Throws<ArgumentException>(
-            () => new GameplayWorld(
+            () => Compose(
                 gate,
                 publisher,
-                new DomainEventBuffer(1, 8),
-                new PresentationEventBuffer(1, 8),
-                PresentationCoalescingPolicy.Verbatim,
                 new GrayboxArenaBounds(-1.0, -1.0, 1.0, 1.0),
                 PlanarVector.FromComponents(50.0, 0.0)));
 
@@ -433,14 +477,7 @@ internal sealed class GameplayWorldTests
 
         Assert.That(
             Expect.Throws<ArgumentNullException>(
-                () => new GameplayWorld(
-                    gate,
-                    publisher,
-                    new DomainEventBuffer(1, 8),
-                    new PresentationEventBuffer(1, 8),
-                    PresentationCoalescingPolicy.Verbatim,
-                    null!,
-                    PlanarVector.Zero)).ParamName,
+                () => Compose(gate, publisher, null, PlanarVector.Zero)).ParamName,
             Is.EqualTo("bounds"));
     }
 

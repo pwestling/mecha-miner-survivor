@@ -448,6 +448,12 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       that was measured, not assumed - a semantic-neighbour probe defeated
       all nine drafts of these rules before they were widened, and a probe
       chosen against the widened classes would defeat some of them too.
+      "MEASURED" THERE MEANS HAND-RUN, NOT COMPUTED, and the distinction
+      matters because every other figure in this row is one the tool just
+      computed: the out-of-word-class reintroduction reach - caught 0 of 6 -
+      is a HAND-RUN PROBE, six injections done by hand, one per family, and
+      no assertion in any run recomputes it. The note this layer prints
+      carries the same marker.
       Segments, not just the leaf key, because some families store the
       number under a generic leaf (`amount`, `minimum`, `maximum`) inside a
       specifically named parent - a leaf-key-only rule would miss
@@ -467,7 +473,12 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       removed value, no non-operand numeric leaf inside its own derivation
       site may carry that value. Exact Fractions, no tolerance. This one
       survives a rename, a relocation within the site, a different unit
-      suffix, and scalar -> [scalar]. Its RADIUS is the limit and is stated
+      suffix, and scalar -> [scalar]. THAT REINTRODUCTION REACH IS A
+      HAND-RUN PROBE TOO, not a figure any run recomputes: rename, unit
+      suffix and arity change caught 6 of 6 and a relocation OUT of the site
+      caught 0 of 6, twelve injections done by hand, six per row. The three
+      radii below are the computed figures in this paragraph; these two are
+      not. Its RADIUS is the limit and is stated
       rather than hidden: the derivation site, not the file and not the
       scope. The three radii are COMPUTED, in the generator's
       measure_search_radii(), under one definition on the pinned sweep ref,
@@ -3651,7 +3662,9 @@ def check_csv_mirror_agreement(docs: dict[Path, object]) -> list[tuple]:
     # the tree: setting the field to 1.0 in all ten files left the whole suite green,
     # 0 failures, 10 of 10 escaped, and 0.9 and 0.8000001 likewise - while the sibling
     # operand body_scale_multiplier went red, so the field was stored, mirrored in the
-    # CSV's derivation, allowlisted as authored, and read by nothing.
+    # CSV's derivation, allowlisted as authored, and read by nothing. THAT
+    # 10 of 10 IS A HAND-RUN PROBE against the old hardcoded code - three
+    # injections done by hand and reverted - and no assertion recomputes it.
     # TWO ROWS, because reading it is not enough on its own. The per-actor read makes
     # an edit to ONE file fail that actor's diameter and start-distance comparisons;
     # the population and distinct-value rows make DELETING the field, or giving one
@@ -3835,7 +3848,8 @@ def check_csv_mirror_agreement(docs: dict[Path, object]) -> list[tuple]:
         )
     # A30's own limits, on the output a green run prints. A30 caught 7 of 8
     # attacks when it was reviewed; the one that escaped went through the declared
-    # exception, which is the note below.
+    # exception, which is the note below. THAT 7 of 8 IS A HAND-RUN PROBE - eight
+    # attacks tried by hand at review time - and no assertion recomputes it.
     return rows, (
         f"WHAT IS COMPARED: {compared} value(s) - the 7 CSV columns x 14 actors that both sides "
         f"carry. 4 columns compare against an AUTHORED content field; 3 against values derived from "

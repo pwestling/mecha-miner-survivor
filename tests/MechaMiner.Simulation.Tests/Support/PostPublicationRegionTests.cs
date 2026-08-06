@@ -24,16 +24,20 @@ namespace MechaMiner.Simulation.Tests.Support;
 /// stated without qualifying when the failure arose, so it binds a failure raised inside a commit as much as
 /// one raised before it. <c>docs/technical/20-simulation-core.md</c> § Tick transaction supplies the
 /// mechanism for the pre-commit half - a failure there "invalidates the tick and ends the run through the
-/// safe technical-failure path" - and is silent on the mid-commit half, which is why this gate exists rather
-/// than a citation.
+/// safe technical-failure path" - and § Mid-commit invalidation supplies it for the half from commit to
+/// published snapshot. That clause also states where it stops: "the guarantee ends where invalidation does,
+/// since once publication has completed the snapshot is observable and the tick is closed, so that region must
+/// be throw-free by construction rather than recoverable." This fixture is the enforcement point the clause
+/// names for that region.
 /// </para>
 /// <para>
 /// <b>The property this defends, and why a remark could not defend it.</b> Recovery from a mid-commit
 /// failure is invalidating the publisher's open tick, and that is available exactly until the snapshot
 /// becomes observable and the tick closes. Everything after that instant is unrecoverable, so the statements
-/// there must not be able to throw. <c>docs/technical/20-simulation-core.md</c> § Entity identity now treats
-/// an ordered collection that appears without a named enforcement point as an omission rather than an
-/// exemption, and the same reasoning applies here: "nothing after the publication can throw" is a property
+/// there must not be able to throw. <c>docs/technical/20-simulation-core.md</c> § Entity identity now extends
+/// its enforcement-point convention past ordered collections to any normative rule in that document, so a rule
+/// naming no enforcement point is an omission rather than an exemption; that is what this fixture answers to
+/// rather than to the ordered-collection wording alone. "Nothing after the publication can throw" is a property
 /// that decays silently the first time someone adds a statement, because no existing test notices and the
 /// remark still reads as true. This is that enforcement point.
 /// </para>

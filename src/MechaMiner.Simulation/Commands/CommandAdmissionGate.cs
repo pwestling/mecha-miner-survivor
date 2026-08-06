@@ -55,11 +55,11 @@ namespace MechaMiner.Simulation.Commands;
 /// snapshot has been published, and after the state version has advanced. It turns a second application that
 /// has already completed into an exception after the fact; it refuses nothing, and an exception thrown once a
 /// state has been published is the one shape this type cannot recover from.
-/// <c>docs/technical/20-simulation-core.md</c> § Tick transaction does not settle that case: it rules on a
-/// failure "before commit" and says nothing about one raised inside a commit. What forbids it is
-/// <c>TR-RUN-007</c> in <c>docs/technical/112-normative-requirement-index.md</c> § Foundation and runtime -
-/// "A run technical failure preserves the existing profile and does not publish partial state" - stated
-/// without qualifying where in the commit the failure arose. The
+/// What forbids it is <c>docs/technical/20-simulation-core.md</c> § Mid-commit invalidation, which rules on
+/// exactly that case, together with <c>TR-RUN-007</c> in
+/// <c>docs/technical/112-normative-requirement-index.md</c> § Foundation and runtime - "A run technical
+/// failure preserves the existing profile and does not publish partial state" - stated without qualifying
+/// where in the commit the failure arose, and now citing that clause. The
 /// refusal is the idempotency check, and inside the commit it is the precondition
 /// <see cref="CommitApplied"/> is called behind; both run before anything moves. The <c>Add</c> stays
 /// because a history nothing may rewrite should not have a write that can silently rewrite it, which is a
@@ -621,14 +621,13 @@ public sealed class CommandAdmissionGate
     /// <para>
     /// <b>What "all-or-nothing" means when the commit block itself throws.</b> Every refusal happens before
     /// the first mutation, so a refused transaction changes nothing at all. A throw <em>inside</em> the commit
-    /// is a separate case, and doc 20 § Tick transaction does not settle it: that section rules on "an
-    /// exception or invariant failure before commit" and is silent on a failure raised once a commit has
-    /// begun. The requirement that governs it is <c>TR-RUN-007</c> in
+    /// is a separate case, and doc 20 § Mid-commit invalidation settles it: that clause partitions the tick at
+    /// commit, so the sentence about "an exception or invariant failure before commit" governs one side and
+    /// the clause governs the other, with nothing between them. <c>TR-RUN-007</c> in
     /// <c>docs/technical/112-normative-requirement-index.md</c> § Foundation and runtime - "A run technical
-    /// failure preserves the existing profile and does not publish partial state" - which is stated
-    /// unqualified, so it binds a mid-commit failure as much as a pre-commit one. Doc 20 gives the machinery
-    /// for the case it does cover and this method reuses it for the case it does not, which is the gap
-    /// <see cref="AbandonPartialCommit"/> closes.
+    /// failure preserves the existing profile and does not publish partial state" - is stated unqualified and
+    /// cites that clause, so it binds a mid-commit failure as much as a pre-commit one.
+    /// <see cref="AbandonPartialCommit"/> is what carries the clause out here.
     /// </para>
     /// <para>
     /// <b>The rule, exactly.</b> Any exception raised between the moment this commit opens the publisher's
@@ -929,11 +928,11 @@ public sealed class CommandAdmissionGate
     /// appended, the snapshot published, and the version advanced.
     /// </para>
     /// <para>
-    /// It is not a rollback and does not claim to be one, and the authority for that is not the one this
-    /// remark used to cite. <c>docs/technical/20-simulation-core.md</c> § Tick transaction rules on a failure
-    /// "before commit" and is silent on one raised inside a commit, so it does not fix the answer here;
-    /// <c>TR-RUN-007</c> in <c>docs/technical/112-normative-requirement-index.md</c> § Foundation and runtime
-    /// does, unqualified, and <see cref="Apply"/>'s catch is what carries it out. What this shape guarantees
+    /// It is not a rollback and does not claim to be one. The authority is
+    /// <c>docs/technical/20-simulation-core.md</c> § Mid-commit invalidation, which rules on a failure raised
+    /// inside a commit, and <c>TR-RUN-007</c> in
+    /// <c>docs/technical/112-normative-requirement-index.md</c> § Foundation and runtime, which is
+    /// unqualified and cites it; <see cref="Apply"/>'s catch is what carries it out. What this shape guarantees
     /// is the antecedent - that a duplicate is never the thing that fails inside the commit, because it cannot
     /// get in.
     /// </para>

@@ -350,9 +350,10 @@ internal sealed class PausedTransactionTests
     /// <para>
     /// <c>TR-RUN-007</c> in <c>docs/technical/112-normative-requirement-index.md</c> § Foundation and runtime
     /// states the requirement unqualified: "A run technical failure preserves the existing profile and does
-    /// not publish partial state". <c>docs/technical/20-simulation-core.md</c> § Tick transaction is the
-    /// mechanism, and rules only on a failure "before commit", so it does not settle the mid-commit case and
-    /// is not cited here as though it did.
+    /// not publish partial state". <c>docs/technical/20-simulation-core.md</c> § Mid-commit invalidation is the
+    /// mechanism for this half of the tick, and is what <c>TR-RUN-007</c> now cites: it requires the tick to be
+    /// invalidated, only the commit's own fully consumed buffers to be released, and the exception to be
+    /// rethrown unchanged, which is exactly what the two routes below assert.
     /// </para>
     /// <para>
     /// <b>Two routes, because they fail at different depths.</b> The staging callback throws with the

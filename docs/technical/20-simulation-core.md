@@ -111,7 +111,7 @@ Comparing identities from two different run sessions is a defect rather than an 
 
 The comparator is therefore not the place to detect it. A redundant session check there would only make the boundary check look unnecessary, and the leading run-session comparison exists to keep the order aligned with the identity's structure, not to police session provenance.
 
-Three ordered collections sort on the full entity ID, and each enforces this property at a different place: a packed store by construction, since every identity it holds was minted by its own allocator; a tick's event batch at the boundary that assembles it, since a batch belongs to exactly one tick and therefore to exactly one run; and presentation staging at the point an entity is staged. A fourth ordered collection appearing without an enforcement point named here is an omission rather than an exemption.
+Three ordered collections sort on the full entity ID, and each enforces this property at a different place: a packed store by construction, since every identity it holds was minted by its own allocator; a tick's event batch at the boundary that assembles it, since a batch belongs to exactly one tick and therefore to exactly one run; and presentation staging at the point an entity is staged. A fourth ordered collection appearing without an enforcement point named here is an omission rather than an exemption. The convention is not confined to ordered collections: any normative rule in this document that names no enforcement point is likewise an omission rather than an exemption, because a rule no test can fail decays silently while its prose still reads as true.
 
 The implementation uses purpose-built packed stores by population category, not a general reflection-driven ECS framework. A new generic abstraction is justified only when at least three concrete systems require the same lifecycle and query semantics.
 
@@ -146,6 +146,23 @@ Each active tick is a transaction over one prior world state.
 6. Publish the committed state, snapshot, events, and diagnostics as one tick result.
 
 An exception or invariant failure before commit invalidates the tick and ends the run through the safe technical-failure path; it never publishes a partial state.
+
+### Mid-commit invalidation
+
+The rule above governs the region before commit. This one governs the region from commit to published snapshot. The two partition the tick at commit, and there is nothing between them.
+
+Any exception raised between the moment a commit opens the publisher's tick and the moment publication completes invalidates that tick, releases only the buffers that commit itself opened and left with nothing unconsumed, and is then rethrown unchanged, so the run leaves through the safe technical-failure path with no snapshot published, no state version advanced, and no tick left open. A buffer the commit did not open, or that holds an unconsumed record, is left exactly as it is, because its records are the failure's evidence and an authoritative event may not be dropped; and the guarantee ends where invalidation does, since once publication has completed the snapshot is observable and the tick is closed, so that region must be throw-free by construction rather than recoverable.
+
+Four things the rule does not promise, stated here rather than in a footnote because a reader who does not know a guarantee's edges assumes it is total:
+
+- Nothing after publication completes. Invalidation throws there rather than retracting, so there is no recovery to promise; see the enforcement point below for how that region is held throw-free instead.
+- It cannot release a domain buffer holding an unconsumed record. `CTR-SIM-001` in the [Component, Contract, and Schema Registry](./115-component-contract-and-schema-registry.md#cross-boundary-contract-registry) forbids dropping an authoritative event, so the host owns the residue.
+- It cannot clear a buffer the commit did not open. Such a buffer belongs to another tick or another writer, and releasing it would drop records the commit never accounted for.
+- Runtime-level failures such as stack overflow or out-of-memory are outside any arrangement of statements, so no ordering of the commit can promise anything about them.
+
+Enforcement point, under the convention in [Entity identity](#entity-identity): `PostPublicationRegionTests` in `tests/MechaMiner.Simulation.Tests/Support/`. Its four cases walk the compiled bodies of the two publishing methods and assert that the region after each publication neither throws nor constructs and calls only a committed list of members: `NothingAfterThePageFlipInAPublicationCanThrow` for the snapshot page flip, `NothingAfterThePublicationInATransactionCommitCanThrow` for the paused-transaction commit, `TheScanDetectsAThrowAConstructionAndAnExtraCallAfterTheAnchor` to show the walk can fail, and `TheScanIsHonestAboutWhatItCannotSee` to record what the walk cannot reach. Registered as `VER-SIM-004-013`.
+
+The committed lists of permitted post-publication calls are an edit tax rather than evidence: adding a call to the region and to the list passes. That makes an accidental addition loud, and it does not establish that the region is throw-free.
 
 ## Boundary and tie ordering
 

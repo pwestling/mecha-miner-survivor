@@ -25,7 +25,7 @@ This index gives implementation agents stable requirement IDs for planning, comm
 | TR-RUN-004 | Authoritative external mutation enters through typed commands or atomic paused transactions. | [Runtime](./10-runtime-architecture.md#commands-and-mutations) | command/idempotency tests |
 | TR-RUN-005 | System phase order is fixed and structural mutation is deferred. | [Runtime](./10-runtime-architecture.md#system-phase-ordering) | phase/order fixtures |
 | TR-RUN-006 | Authoritative simulation begins serial on the main game thread. | [Runtime](./10-runtime-architecture.md#concurrency-baseline) | architecture and race tests |
-| TR-RUN-007 | A run technical failure preserves the existing profile and does not publish partial state. | [Simulation](./20-simulation-core.md#tick-transaction) | injected failure test |
+| TR-RUN-007 | A run technical failure preserves the existing profile and does not publish partial state. | [Simulation](./20-simulation-core.md#mid-commit-invalidation) | injected failure test |
 | TR-RUN-008 | Extraction occurs immediately at 35:00 before any event at or after that boundary. | [Simulation](./20-simulation-core.md#boundary-and-tie-ordering) | final-boundary golden fixtures |
 | TR-RUN-009 | Run content/RNG/build/version identity must be recorded for diagnostics. | [TDR-002](./decisions/TDR-002-use-seeded-reproducibility-without-lockstep-replay.md) | diagnostic header fixture |
 | TR-RUN-010 | Cross-build/platform bit-exact replay is not promised. | [TDR-002](./decisions/TDR-002-use-seeded-reproducibility-without-lockstep-replay.md) | scope/architecture review |

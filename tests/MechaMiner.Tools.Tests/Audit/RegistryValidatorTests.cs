@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
+using System.Text.Json;
 using MechaMiner.Tests.Support;
 using MechaMiner.Tools.Audit;
 using NUnit.Framework;
@@ -45,6 +46,206 @@ internal sealed class RegistryValidatorTests
             Render(findings, RegistrySeverity.Error),
             Is.Empty,
             "structural identifier or registry errors are owned by this task and must be zero");
+    }
+
+    /// <summary>
+    /// The registry population, against a literal census written down in this test.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Every other assertion in this fixture is a property of whatever registries happen to
+    /// be on disk. None of them notices a registry that is gone. Measured, before this test
+    /// existed: deleting the highest-ordinal entry from <c>FND-004</c>, <c>FND-007</c> and
+    /// <c>FND-008</c> left the whole suite green, because the remaining ordinals were still
+    /// gapless and nothing said how many entries there should be. Emptying every registry to
+    /// <c>"entries": []</c> was green. Renaming <c>tests/verification/</c> away entirely was
+    /// green, because <see cref="RegistrySources.ReadFromDisk"/> guards the scan with
+    /// <c>Directory.Exists</c> and selector resolution returns early on an empty selector
+    /// set - a satisfied registry and an absent one are the same observation.
+    /// </para>
+    /// <para>
+    /// So the expected population cannot be derived from the directory. A count taken from
+    /// the directory agrees with the directory by construction and can never report a
+    /// deletion. The census below is therefore three independent literals:
+    /// <see cref="ExpectedRegistryCensus"/> (one path and one entry count per file),
+    /// <see cref="ExpectedRegistryFileCount"/>, and
+    /// <see cref="ExpectedRegistryEntryCount"/>. The two scalars are not computed from the
+    /// census; they are asserted against it, so removing a census row to accommodate a
+    /// deleted file still fails, and decrementing a census row to accommodate a deleted entry
+    /// still fails. Legitimately adding or retiring a registry entry means editing the
+    /// literals in the same change, which is a visible edit in the diff rather than silent
+    /// drift - the same ratchet <see cref="ExpectedSpecificationDefects"/> uses.
+    /// </para>
+    /// <para>
+    /// Doc 91 § Verification registry: entries "are never renumbered", and doc 91 requires a
+    /// verification entry to exist before its implementation. Both properties are about
+    /// entries continuing to exist, which is exactly what a floor on the population asserts
+    /// and what no rule over the present contents can.
+    /// </para>
+    /// </remarks>
+    [Test]
+    public void TheRegistryPopulationMatchesItsLiteralCensus()
+    {
+        var observed = new SortedDictionary<string, int>(StringComparer.Ordinal);
+        List<string> unreadable = new();
+        foreach (RegistryDocument document in RepositorySources.Value.VerificationRegistries)
+        {
+            try
+            {
+                observed[document.Path] =
+                    ToolsJsonContextAccess.DeserializeVerificationRegistry(document.Text).Entries.Count;
+            }
+            catch (JsonException error)
+            {
+                observed[document.Path] = -1;
+                unreadable.Add(document.Path + ": " + error.Message);
+            }
+        }
+
+        var expected = new SortedDictionary<string, int>(StringComparer.Ordinal);
+        int censusEntries = 0;
+        foreach ((string path, int entries) in ExpectedRegistryCensus)
+        {
+            expected[path] = entries;
+            censusEntries += entries;
+        }
+
+        int observedEntries = 0;
+        foreach (int entries in observed.Values)
+        {
+            observedEntries += entries;
+        }
+
+        List<string> evidence = new()
+        {
+            "# Registry population against the literal census in",
+            "# RegistryValidatorTests.TheRegistryPopulationMatchesItsLiteralCensus",
+            "# (doc 91 § Verification registry). The expected column is a literal in the test,",
+            "# not a value read from tests/verification/, so a deleted registry or a deleted",
+            "# entry is a mismatch rather than a smaller agreement with itself.",
+            string.Empty,
+            "# registry\texpected entries\tobserved entries",
+        };
+        foreach (string path in Union(expected.Keys, observed.Keys))
+        {
+            evidence.Add(
+                path + "\t"
+                + Cell(expected, path) + "\t"
+                + Cell(observed, path));
+        }
+
+        evidence.Add(string.Empty);
+        evidence.Add(
+            "# files: expected " + ExpectedRegistryFileCount.ToString(CultureInfo.InvariantCulture)
+            + ", observed " + observed.Count.ToString(CultureInfo.InvariantCulture));
+        evidence.Add(
+            "# entries: expected " + ExpectedRegistryEntryCount.ToString(CultureInfo.InvariantCulture)
+            + ", observed " + observedEntries.ToString(CultureInfo.InvariantCulture));
+        string artifact = WriteEvidence("registry-population.txt", evidence);
+        TestContext.Progress.WriteLine(
+            "registry population: " + observed.Count.ToString(CultureInfo.InvariantCulture)
+            + " file(s), " + observedEntries.ToString(CultureInfo.InvariantCulture)
+            + " entry/entries; census at " + artifact);
+
+        Expect.Multiple(() =>
+        {
+            // The census against itself first. These two hold no matter what is on disk, and
+            // they are what stops a deletion from being accommodated by editing one literal:
+            // dropping a census row without lowering the file count fails here, and lowering
+            // a census row without lowering the entry count fails here.
+            Assert.That(
+                ExpectedRegistryCensus.Length,
+                Is.EqualTo(ExpectedRegistryFileCount),
+                "the census lists a different number of registries than the declared file count");
+            Assert.That(
+                censusEntries,
+                Is.EqualTo(ExpectedRegistryEntryCount),
+                "the census's per-file counts do not sum to the declared entry count");
+
+            // Then the disk against the census.
+            Assert.That(unreadable, Is.Empty, "a registry in the census could not be read");
+            Assert.That(
+                observed.Keys,
+                Is.EqualTo(expected.Keys).AsCollection,
+                () => "the set of tests/verification/*.json registries is not the census's. Census:\n"
+                    + string.Join("\n", evidence));
+            Assert.That(
+                observed.Count,
+                Is.EqualTo(ExpectedRegistryFileCount),
+                () => "tests/verification/ holds a different number of registries than the census. "
+                    + "Zero means the directory is absent or empty, which the validator otherwise "
+                    + "reports as nothing at all. Census:\n" + string.Join("\n", evidence));
+            Assert.That(
+                observed,
+                Is.EqualTo(expected),
+                () => "a registry holds a different number of entries than the census. Census:\n"
+                    + string.Join("\n", evidence));
+            Assert.That(
+                observedEntries,
+                Is.EqualTo(ExpectedRegistryEntryCount),
+                () => "the total number of verification entries is not the census total. Census:\n"
+                    + string.Join("\n", evidence));
+        });
+    }
+
+    /// <summary>
+    /// One row per <c>tests/verification/*.json</c> registry and the number of entries it
+    /// holds, as literals rather than as a count taken from the directory.
+    /// </summary>
+    /// <remarks>
+    /// Measured on the tree that landed this test. Adding an entry, retiring one, or
+    /// registering a new work package means editing the matching row here and the two scalars
+    /// below in the same change; that is the intended cost, and it is what makes a deletion
+    /// that nobody meant to make fail.
+    /// </remarks>
+    private static readonly ImmutableArray<(string Path, int Entries)> ExpectedRegistryCensus =
+        ImmutableArray.Create(
+            ("tests/verification/FND-001.json", 13),
+            ("tests/verification/FND-002.json", 18),
+            ("tests/verification/FND-003.json", 12),
+            ("tests/verification/FND-004.json", 8),
+            ("tests/verification/FND-007.json", 11),
+            ("tests/verification/FND-008.json", 7),
+            ("tests/verification/FND-009.json", 14));
+
+    /// <summary>
+    /// How many registries <c>tests/verification/</c> holds. Declared independently of
+    /// <see cref="ExpectedRegistryCensus"/> so deleting a registry and its census row
+    /// together is still a failure.
+    /// </summary>
+    private const int ExpectedRegistryFileCount = 7;
+
+    /// <summary>
+    /// How many verification entries the registries hold in total. Declared independently of
+    /// <see cref="ExpectedRegistryCensus"/> so deleting an entry and decrementing its census
+    /// row together is still a failure.
+    /// </summary>
+    private const int ExpectedRegistryEntryCount = 83;
+
+    private static string Cell(SortedDictionary<string, int> counts, string path)
+    {
+        if (!counts.TryGetValue(path, out int value))
+        {
+            return "absent";
+        }
+
+        return value < 0 ? "unreadable" : value.ToString(CultureInfo.InvariantCulture);
+    }
+
+    private static List<string> Union(IEnumerable<string> left, IEnumerable<string> right)
+    {
+        SortedSet<string> all = new(StringComparer.Ordinal);
+        foreach (string value in left)
+        {
+            all.Add(value);
+        }
+
+        foreach (string value in right)
+        {
+            all.Add(value);
+        }
+
+        return new List<string>(all);
     }
 
     /// <summary>

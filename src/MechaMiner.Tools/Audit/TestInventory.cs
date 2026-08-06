@@ -151,9 +151,27 @@ internal sealed class TestInventory
     /// </para>
     /// <para>
     /// <c>--no-build</c> is deliberate. Discovery runs from inside a test process, and a
-    /// build launched there could rewrite the assembly currently executing. An unbuilt
-    /// tree therefore discovers nothing, which fails loudly through the empty-set guard
-    /// with the child process's output attached, rather than silently rebuilding.
+    /// build launched there could rewrite the assembly currently executing.
+    /// </para>
+    /// <para>
+    /// The consequence, stated plainly because a comment here used to state the opposite:
+    /// this method reports what is in <c>bin/</c>, not what is in the tree, and it is the
+    /// caller's job to have built first. A partly built tree does not discover nothing. It
+    /// discovers the subset of projects that happen to be built, and the missing ones surface
+    /// as <c>UnresolvedTestSelector</c> findings that blame the registry entries citing them
+    /// rather than naming the build state that caused it. The empty-set guard
+    /// (<c>EmptyTestInventory</c>) only fires when <i>no</i> project discovers anything, which
+    /// is the fully unbuilt case and the explicitly-supplied-empty-inventory case that
+    /// <c>RegistryValidatorTests.AnEmptyTestInventoryFailsRatherThanPassingWithNothingToCompare</c>
+    /// controls. It is a backstop, not the path a partly stale tree takes.
+    /// </para>
+    /// <para>
+    /// <c>build/verify-registry.sh</c> is therefore responsible for building every accepted
+    /// test project before it reaches this method, and maps a build failure to exit class 5
+    /// with <c>MMT-5001</c> instead of computing a registry verdict. Its stage 0 comment
+    /// records the measurement that made this necessary: the same tree with different
+    /// <c>bin/</c> contents produced three different verdicts, including a PASS that certified
+    /// a citation to a test already deleted from source.
     /// </para>
     /// </remarks>
     internal static TestInventory Discover(string repositoryRoot)

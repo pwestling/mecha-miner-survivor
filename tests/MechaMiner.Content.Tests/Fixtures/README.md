@@ -31,6 +31,31 @@ Two of them are worth calling out because they look like ordinary mistakes:
 | `canonical/` | Files differing only in property order, indentation, and whitespace |
 | `schema/` | Broken schema documents, and the negative controls for the `x-authority` gate |
 
+## The `reach-*` schema fixtures
+
+A numeric bound is not only found under `properties`. Draft 2020-12 lets one sit
+at the root, in `$defs`, in `allOf`/`anyOf`/`oneOf`/`not`, in
+`items`/`prefixItems`, in `propertyNames`/`additionalProperties`, behind a
+`$ref`, and any number of those nested inside each other. `reach-*.schema.json`
+is one file per position, each hiding a bare bound with no `x-authority`, so
+that `SchemaAuthorityReachTests` can prove the walk arrives there rather than
+assuming it. Writing them found a real hole: a `$defs` declared on a *subschema*
+was skipped entirely by `JsonSchemaLoader`, and `reach-nested-defs.schema.json`
+loaded clean with an unattributed bound in it.
+
+Six of them — `reach-if`, `reach-then`, `reach-else`, `reach-contains`,
+`reach-pattern-properties`, `reach-dependent-schemas` — sit on keywords this
+evaluator does not implement, so the whole document is refused with `MMC-5001`
+before the bound inside is ever considered. They are kept, and asserted to fail
+for *that* reason and no other, because the day one of those keywords is
+implemented the fixture stops failing that way and says so.
+
+`no-bounds.schema.json` is the vacuous-pass control: a schema with zero bounds
+produces an empty violation list, which is exactly what an empty
+`content/schemas` produces. `SchemaAuthorityCoverageTests` asserts the walk saw
+a nonzero number of documents and bounds, and this file proves the counter is a
+count rather than a constant.
+
 ## What binds a fixture to its expectation
 
 `FixtureCorpus.cs` holds the table mapping each invalid fixture to the one

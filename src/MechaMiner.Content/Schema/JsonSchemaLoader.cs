@@ -140,6 +140,7 @@ public static class JsonSchemaLoader
         }
 
         JsonSchemaNode node = new();
+        bool atRoot = pointer.IsRoot;
         foreach (JsonProperty property in element.EnumerateObject())
         {
             JsonPointer at = pointer.AppendProperty(property.Name);
@@ -156,7 +157,7 @@ public static class JsonSchemaLoader
                 continue;
             }
 
-            if (!ApplyKeyword(node, property, at, sourcePath, bag))
+            if (!ApplyKeyword(node, property, at, atRoot, sourcePath, bag))
             {
                 return null;
             }
@@ -231,6 +232,7 @@ public static class JsonSchemaLoader
         JsonSchemaNode node,
         JsonProperty property,
         JsonPointer at,
+        bool atRoot,
         string sourcePath,
         DiagnosticBag bag)
     {
@@ -239,13 +241,23 @@ public static class JsonSchemaLoader
         {
             case "$schema":
             case "$id":
-            case "$defs":
             case "title":
             case "description":
             case "$comment":
-                // Identity and documentation: no assertion. $defs is parsed separately at
-                // the root and ignored on a subschema.
+                // Identity and documentation: no assertion.
                 return true;
+
+            case "$defs":
+                // The root's $defs is parsed by Load, which needs the resulting map to
+                // resolve $ref, so parsing it again here would report every error in it
+                // twice. A $defs on a subschema is a different matter: $ref reaches only
+                // '#' and '#/$defs/<name>' at the root, so nothing can ever evaluate it -
+                // and that is exactly why it has to be walked rather than skipped. An
+                // unreachable subschema is the one place an unattributed bound could sit
+                // and be seen by nobody: not the evaluator, which never resolves it, and
+                // not the reader, who assumes anything under $defs is checked like the
+                // rest. Skipping it was a hole in this walker, not a saving.
+                return atRoot || ParseSubschemaMapForValidation(value, at, sourcePath, bag);
 
             case SchemaAuthority.Keyword:
                 node.Authority = ReadAuthority(value, at, sourcePath, bag);
@@ -405,6 +417,42 @@ public static class JsonSchemaLoader
                 bag.Add(Malformed(sourcePath, at, "keyword '" + property.Name + "' has no parser"));
                 return false;
         }
+    }
+
+    /// <summary>
+    /// Parses every subschema in a name-to-subschema object purely so that the rules
+    /// checked at parse time - <c>x-authority</c> placement above all - reach it, and
+    /// discards the result.
+    /// </summary>
+    /// <remarks>
+    /// The nodes are discarded because nothing can evaluate them: a nested <c>$defs</c>
+    /// is unreachable by this evaluator's two <c>$ref</c> forms. Discarding the node is
+    /// not the same as not reading it, and the difference is the whole point - a bound
+    /// nobody evaluates still has to say where its number came from, because the next
+    /// person to make it reachable will not re-derive it.
+    /// </remarks>
+    private static bool ParseSubschemaMapForValidation(
+        JsonElement value,
+        JsonPointer at,
+        string sourcePath,
+        DiagnosticBag bag)
+    {
+        if (value.ValueKind != JsonValueKind.Object)
+        {
+            bag.Add(Malformed(sourcePath, at, "$defs is an object of name to subschema"));
+            return false;
+        }
+
+        foreach (JsonProperty definition in value.EnumerateObject())
+        {
+            if (ParseNode(definition.Value, at.AppendProperty(definition.Name), sourcePath, bag)
+                is null)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private static void VerifyReferencesResolve(

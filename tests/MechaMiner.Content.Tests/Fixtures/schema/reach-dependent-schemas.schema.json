@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Negative control: bare bound in dependentSchemas",
+  "description": "A bare numeric bound with no adjacent x-authority, placed in a dependentSchemas subschema, a keyword this evaluator does not implement. This file exists to prove the attribution walk reaches that position; it is never loaded as a real schema.",
+  "type": "object",
+  "dependentSchemas": {
+    "capacity": {
+      "type": "integer",
+      "maximum": 2048
+    }
+  }
+}

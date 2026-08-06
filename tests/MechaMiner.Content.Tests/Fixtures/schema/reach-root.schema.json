@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Negative control: bare bound at the root",
+  "description": "A bare numeric bound with no adjacent x-authority, placed in the root schema object itself. This file exists to prove the attribution walk reaches that position; it is never loaded as a real schema.",
+  "type": "integer",
+  "maximum": 2048
+}

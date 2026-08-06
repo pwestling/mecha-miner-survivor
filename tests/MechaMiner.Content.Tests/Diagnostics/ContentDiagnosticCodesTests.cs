@@ -167,6 +167,78 @@ internal sealed class ContentDiagnosticCodesTests
     }
 
     /// <summary>
+    /// The declared codes, written out here rather than read from the registry.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <see cref="TheCodesTheSuiteProvokesAreExactlyTheCodesDeclared"/> compares two sets
+    /// that both shrink: delete a descriptor <em>and</em> the fixture that provokes it and
+    /// the equality still holds, with one code fewer on each side and nothing naming what
+    /// went. Codes are "never reused and never renumbered", and a code that quietly stops
+    /// existing is the same loss of history as one reused.
+    /// </para>
+    /// <para>
+    /// <b>Changing this list is a deliberate change to the registry.</b> A retired code
+    /// stays declared - retirement is recorded on the descriptor, not performed with a
+    /// delete key - so a code should only ever be added here.
+    /// </para>
+    /// </remarks>
+    private static readonly string[] DeclaredCodeRoster =
+    {
+        // Codec, band 1xxx.
+        "MMC-1001", "MMC-1002", "MMC-1003", "MMC-1004", "MMC-1005", "MMC-1006", "MMC-1007",
+        "MMC-1008", "MMC-1009", "MMC-1010", "MMC-1011", "MMC-1012", "MMC-1013", "MMC-1014",
+        "MMC-1015",
+
+        // Structural, band 2xxx.
+        "MMC-2001", "MMC-2002", "MMC-2003", "MMC-2004", "MMC-2005", "MMC-2006", "MMC-2007",
+        "MMC-2008", "MMC-2009",
+
+        // Identity, band 3xxx.
+        "MMC-3001", "MMC-3002",
+
+        // Traceability, band 4xxx.
+        "MMC-4001", "MMC-4002", "MMC-4003",
+
+        // Schema infrastructure, band 5xxx.
+        "MMC-5001", "MMC-5002", "MMC-5003",
+    };
+
+    /// <summary>
+    /// The registry contains exactly the codes this test names, so a code cannot leave it
+    /// silently.
+    /// </summary>
+    [Test]
+    public void TheDeclaredCodesAreExactlyTheRosterStatedHere()
+    {
+        List<string> declared = new();
+        foreach (ContentDiagnosticDescriptor descriptor in ContentDiagnosticCodes.All)
+        {
+            declared.Add(descriptor.Code);
+        }
+
+        Expect.Multiple(() =>
+        {
+            foreach (string code in DeclaredCodeRoster)
+            {
+                Assert.That(
+                    declared,
+                    Does.Contain(code),
+                    code + " is no longer declared in ContentDiagnosticCodes. Deleting a "
+                        + "descriptor and the fixture that provokes it shrinks both sides of "
+                        + "the provoked-equals-declared check together, so that test would "
+                        + "stay green; this one names the code that went");
+            }
+
+            Assert.That(
+                declared,
+                Is.EquivalentTo(DeclaredCodeRoster),
+                "a new diagnostic code must be added to this roster in the same change, so "
+                    + "that the registry and its independent statement cannot drift");
+        });
+    }
+
+    /// <summary>
     /// The codes that cannot come from a committed <c>.json</c> fixture, each provoked
     /// here instead.
     /// </summary>

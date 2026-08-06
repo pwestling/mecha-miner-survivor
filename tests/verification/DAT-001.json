@@ -10,6 +10,7 @@
     "VER-DAT-001-021 is the mechanism doc 40 § JSON codec and schema baseline asks for by name: 'a fixture corpus proves the schema and typed validator accept/reject the same structural cases'. The typed validator stays authoritative; the draft 2020-12 schema is the interoperability mirror.",
     "VER-DAT-001-023 exists because a string field carrying a mini-language drifts unless its shape is pinned structurally. The envelope schema's source_refs pattern must reject a malformed element on its own, with the typed parser removed from the path.",
     "The size, depth, and count limits verified by VER-DAT-001-007 are injected rather than global, so a boundary fixture stays a small reviewable file instead of a megabyte of generated JSON. VER-DAT-001-007 also asserts the shipped default limit values.",
+    "VER-DAT-001-026 and VER-DAT-001-027 exist because the failure this project keeps repeating is a control that covers only the routes its author enumerated by hand. 026 attacks the walk's reach position by position; 027 attacks the two ways a list-driven control fails silently - a keyword deleted from the list, and an empty set that satisfies every emptiness assertion.",
     "TR-DAT-003's full gate is DAT-006's ('source-order permutation yields identical hash' over a compiled bundle). VER-DAT-001-010 proves the same property at the single-payload level that DAT-006 builds on."
   ],
   "entries": [
@@ -256,7 +257,7 @@
     },
     {
       "id": "VER-DAT-001-012",
-      "summary": "Diagnostic codes are declared in exactly one place, no two collide, every declared code carries a human description, and the set of codes the DAT-001 validators actually emit over the fixture corpus equals the declared set.",
+      "summary": "Diagnostic codes are declared in exactly one place, no two collide, every declared code carries a human description, and the set of codes the DAT-001 validators actually emit over the fixture corpus equals the declared set. The declared set is additionally stated as a literal roster inside the test, because deleting a descriptor together with the fixture that provokes it shrinks both sides of the provoked-equals-declared comparison at once and would otherwise leave no trace of the code that went.",
       "task": "TASK-DAT-001-001",
       "requirements": ["TR-DAT-002"],
       "technicalSources": [
@@ -580,6 +581,71 @@
         "tests/MechaMiner.Content.Tests/Fixtures/schema/unattributed-exclusive-bound.schema.json",
         "tests/MechaMiner.Content.Tests/Fixtures/schema/unattributed-length-bound.schema.json",
         "tests/MechaMiner.Content.Tests/Fixtures/schema/undelivered-derivation.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-026",
+      "summary": "The x-authority walk reaches every position in a draft 2020-12 schema document where a numeric bound can sit, not only the positions under properties: the root object, $defs (including a $defs declared on a subschema, which no $ref of this evaluator can reach), allOf, anyOf, oneOf, not, items, prefixItems, propertyNames, additionalProperties as a schema object, a subschema reached through $ref, and those applicators nested several deep. One fixture per position, each a bare bound, each asserted to fail with MMC-5003 naming x-authority. The positions whose keyword this evaluator does not implement - if, then, else, contains, patternProperties, dependentSchemas - are asserted to fail the load with MMC-5001 and nothing else, so they are unreachable by refusal rather than by oversight, and the structure-blind corpus walk is asserted to reach them regardless. The recognised keyword set and the numeric keywords deliberately left unimplemented (minProperties, maxProperties, minContains, maxContains) are stated independently, so implementing one cannot silently create a position the walk does not visit.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy",
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.SchemaAuthorityReachTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-root.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-defs.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-nested-defs.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-ref.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-all-of.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-any-of.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-one-of.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-not.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-items.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-prefix-items.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-property-names.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-additional-properties.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-deeply-nested.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-if.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-then.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-else.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-contains.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-pattern-properties.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-dependent-schemas.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-027",
+      "summary": "The x-authority gate cannot be narrowed by deletion and cannot pass vacuously. The nine bound keywords are stated in the test independently of SchemaAuthority.BoundKeywords(), so removing one - which would delete the rule and every parameterised control for it in a single edit, leaving no exemption list behind - fails a test that names the keyword removed. Every bound keyword is asserted to be one the evaluator implements, so no control can pass on the wrong diagnostic. The walk over content/schemas is asserted to have visited a nonzero number of documents, objects, and bounds; the *.schema.json glob is asserted to match every JSON file in that directory; and both counts are proved to be real counts by a bound-free schema that reports zero bounds and an empty corpus that reports zero documents, each producing the same empty violation list a clean corpus does.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy",
+        "docs/technical/40-content-data-and-validation.md#agent-content-change-workflow"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.SchemaAuthorityCoverageTests"
+      },
+      "fixtures": [
+        "content/schemas/envelope.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/no-bounds.schema.json"
       ],
       "scenarios": [],
       "evidenceKinds": ["test-output", "negative-control"],

@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Text.Json;
-using MechaMiner.Content.Codec;
 using MechaMiner.Content.Diagnostics;
 using MechaMiner.Content.Schema;
 using MechaMiner.Content.Tests.Fixtures;
@@ -290,10 +288,7 @@ internal sealed class SchemaAuthorityTests
     /// </summary>
     private static IReadOnlyList<string> FindUnattributedBounds(byte[] schemaBytes)
     {
-        List<string> unattributed = new();
-        using JsonDocument document = JsonDocument.Parse(schemaBytes);
-        Walk(document.RootElement, JsonPointer.Root, unattributed);
-        return unattributed;
+        return SchemaBoundWalk.Of(schemaBytes).Unattributed;
     }
 
     /// <summary>
@@ -302,87 +297,6 @@ internal sealed class SchemaAuthorityTests
     /// </summary>
     private static IReadOnlyList<string> FindMissingDerivations(byte[] schemaBytes)
     {
-        List<string> missing = new();
-        using JsonDocument document = JsonDocument.Parse(schemaBytes);
-        WalkDerivations(document.RootElement, JsonPointer.Root, missing);
-        return missing;
-    }
-
-    private static void WalkDerivations(JsonElement element, JsonPointer at, List<string> missing)
-    {
-        if (element.ValueKind == JsonValueKind.Object)
-        {
-            if (element.TryGetProperty(SchemaAuthority.Keyword, out JsonElement authority)
-                && authority.ValueKind == JsonValueKind.Object
-                && authority.TryGetProperty("kind", out JsonElement kind)
-                && kind.ValueKind == JsonValueKind.String
-                && kind.GetString() is "sourced" or "derived")
-            {
-                bool stated = authority.TryGetProperty("derivation", out JsonElement derivation)
-                    && derivation.ValueKind == JsonValueKind.String
-                    && !string.IsNullOrWhiteSpace(derivation.GetString());
-
-                if (!stated)
-                {
-                    foreach (string keyword in SchemaAuthority.BoundKeywords())
-                    {
-                        if (element.TryGetProperty(keyword, out _))
-                        {
-                            missing.Add(at.AppendProperty(keyword).Value);
-                            break;
-                        }
-                    }
-                }
-            }
-
-            foreach (JsonProperty property in element.EnumerateObject())
-            {
-                WalkDerivations(property.Value, at.AppendProperty(property.Name), missing);
-            }
-
-            return;
-        }
-
-        if (element.ValueKind == JsonValueKind.Array)
-        {
-            int index = 0;
-            foreach (JsonElement item in element.EnumerateArray())
-            {
-                WalkDerivations(item, at.AppendIndex(index), missing);
-                index++;
-            }
-        }
-    }
-
-    private static void Walk(JsonElement element, JsonPointer at, List<string> unattributed)
-    {
-        if (element.ValueKind == JsonValueKind.Object)
-        {
-            bool hasAuthority = element.TryGetProperty(SchemaAuthority.Keyword, out _);
-            foreach (string keyword in SchemaAuthority.BoundKeywords())
-            {
-                if (element.TryGetProperty(keyword, out _) && !hasAuthority)
-                {
-                    unattributed.Add(at.AppendProperty(keyword).Value);
-                }
-            }
-
-            foreach (JsonProperty property in element.EnumerateObject())
-            {
-                Walk(property.Value, at.AppendProperty(property.Name), unattributed);
-            }
-
-            return;
-        }
-
-        if (element.ValueKind == JsonValueKind.Array)
-        {
-            int index = 0;
-            foreach (JsonElement item in element.EnumerateArray())
-            {
-                Walk(item, at.AppendIndex(index), unattributed);
-                index++;
-            }
-        }
+        return SchemaBoundWalk.Of(schemaBytes).MissingDerivations;
     }
 }

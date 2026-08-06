@@ -223,18 +223,31 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       ("Validation derives world speeds/footprints and compares them with
       the survivability report")                                      FAILURE
 
-  A21 content/ holds exactly EXPECTED_CONTENT_JSON_FILES (139) *.json
-      files, so a file in a directory no A12 row covers is still caught,
-      AND the non-JSON files under content/ are exactly the three named in
-      EXPECTED_CONTENT_NON_JSON (README.md, quote-verification-audit.md,
-      transcription-notes.md).
+  A21 content/ holds exactly EXPECTED_CONTENT_DEFINITION_JSON_FILES (138)
+      DEFINITION *.json files, so a definition in a directory no A12 row
+      covers is still caught, AND the non-JSON files under content/ are
+      exactly the three named in EXPECTED_CONTENT_NON_JSON (README.md,
+      quote-verification-audit.md, transcription-notes.md).
+      BOTH rows exclude every directory in NON_DEFINITION_DIRS, via
+      in_non_definition_dir(), which is the population load_definitions()
+      loads. The count row used to be a bare CONTENT.rglob("*.json") that
+      never consulted NON_DEFINITION_DIRS, so content/localization/en.json
+      was counted (139) and the first file under content/schemas/ - a
+      directory this script itself declares is not a catalog of definitions
+      - failed the row with "content/ holds 140 *.json file(s), expected
+      139" on a branch that had added no definition. The expectation is
+      rebased onto the definition population rather than raised to agree
+      with the polluted one.
       The non-JSON row used to PRINT the file list next to a blank
       expectation and a hardcoded "ok" - it could not fail, so a stray file
       under content/ was reported and tolerated in the same breath. It now
       asserts the exact list.
       Negative control: an empty content/probe.txt -> FAIL, "content/ holds
       non-JSON files [... 'content/probe.txt' ...], expected exactly
-      [...]".                                                         FAILURE
+      [...]". A file under content/schemas/ -> verdict UNCHANGED, which is
+      the control that distinguishes this row from the one it replaced; a
+      definition added under a real catalog directory still FAILS with the
+      count.                                                          FAILURE
 
   A22 Every source_refs scope prefix resolves to a field that EXISTS in the
       definition it annotates. The optional "<json.path>: " prefix attributes
@@ -386,21 +399,44 @@ LOCALIZATION = CONTENT / "localization" / "en.json"
 # Directories under content/ that are not catalogs of definitions.
 NON_DEFINITION_DIRS = ("localization", "schemas")
 
-# A21 - total *.json inventory under content/. This is the sum of the A12 rows
-# plus content/localization/en.json, and it is asserted separately so that a
-# file appearing in a directory A12 does not cover is still caught.
+# A21 - the DEFINITION *.json inventory under content/. This is the sum of the
+# A12 rows, and it is asserted separately so that a definition file appearing in
+# a directory A12 does not cover is still caught.
+#
+# The population is the same one load_definitions() loads: every *.json under
+# content/ EXCEPT those beneath a NON_DEFINITION_DIRS directory. It used to be a
+# bare CONTENT.rglob("*.json") that never consulted NON_DEFINITION_DIRS, so the
+# count was definitions + localization/en.json = 139 and a directory this script
+# already declares is not a catalog of definitions still counted toward the
+# definition total. The first file authored under content/schemas/ - the
+# directory DAT-006 owns, and the one the README notes "does not exist yet" -
+# therefore reddened this row as "content/ holds 140 *.json file(s), expected
+# 139" on a branch that had added no definition at all. That is a false failure
+# charged to the wrong stream, and bumping 139 to 140 would only have laundered
+# it by agreeing with the polluted population; the expectation is instead rebased
+# onto the population the name now describes.
+#
+# So 138 rather than 139: content/localization/en.json leaves this count with
+# content/schemas/, because NON_DEFINITION_DIRS names them both. en.json loses no
+# coverage by leaving - A10/A11 assert it parses, is flat, is lexically sorted,
+# is duplicate-free, resolves every referenced key and orphans none, which is
+# strictly more than membership in a total - and A26 still scans it for nulls,
+# because "no null anywhere under content/" is deliberately a whole-tree claim
+# rather than a definition-only one.
 #
 # content/ also holds three Markdown files - README.md, transcription-notes.md
 # and quote-verification-audit.md - which are documentation, not content. So
-# `find content -type f` reports 142 while this count is 139; that difference is
+# `find content -type f` reports 142 while this count is 138; that difference is
 # correct and is not a discrepancy.
 #
 # The non-JSON files are NAMED rather than counted, and the A21 row asserts the
 # exact list. It previously printed the list beside a blank expectation and a
 # hardcoded "ok", which reported a stray file under content/ and tolerated it in
 # the same breath. Adding a documentation file here is a deliberate act and
-# updating this tuple is the record of it.
-EXPECTED_CONTENT_JSON_FILES = 139
+# updating this tuple is the record of it. That row is scoped to definition
+# directories for the same reason the count is: a README beside a schema is the
+# schema directory's business, not a stray file under a catalog.
+EXPECTED_CONTENT_DEFINITION_JSON_FILES = 138
 EXPECTED_CONTENT_NON_JSON = (
     "content/README.md",
     "content/quote-verification-audit.md",
@@ -971,6 +1007,19 @@ def load_json(path: Path):
         return None
 
 
+def in_non_definition_dir(path: Path) -> bool:
+    """True when path sits beneath one of the NON_DEFINITION_DIRS.
+
+    The single place that decides whether a path under content/ belongs to the
+    definition population. It exists because that decision was previously made
+    inline here and NOT made at all in check_file_inventory(), which enumerated
+    content/ bare and so counted a non-definition directory toward the definition
+    total. Every enumeration that means "the definitions" goes through this.
+    """
+    parts = path.relative_to(CONTENT).parts
+    return bool(parts) and parts[0] in NON_DEFINITION_DIRS
+
+
 def load_definitions() -> dict[Path, object]:
     """All *.json under content/ except the non-definition directories."""
     docs: dict[Path, object] = {}
@@ -978,8 +1027,7 @@ def load_definitions() -> dict[Path, object]:
         fail(f"content/ directory not found at {CONTENT}")
         return docs
     for path in sorted(CONTENT.rglob("*.json")):
-        parts = path.relative_to(CONTENT).parts
-        if parts and parts[0] in NON_DEFINITION_DIRS:
+        if in_non_definition_dir(path):
             continue
         doc = load_json(path)
         if doc is not None:
@@ -1856,16 +1904,29 @@ DEPLOYMENT_INTERVAL_KEY = re.compile(r"(?i)deploy.*(?:interval|cadence|seconds|p
 
 
 def check_file_inventory() -> list[tuple]:
-    """A21 - the total *.json inventory under content/."""
-    json_files = sorted(CONTENT.rglob("*.json"))
-    other_files = sorted(p for p in CONTENT.rglob("*") if p.is_file() and p.suffix != ".json")
-    actual = len(json_files)
+    """A21 - the definition *.json inventory under content/.
+
+    Both rows are scoped to the definition population by in_non_definition_dir(),
+    the same rule load_definitions() uses. Neither may go back to enumerating
+    content/ bare: NON_DEFINITION_DIRS names directories this script has already
+    decided are not catalogs of definitions, and a count that ignores that
+    decision charges the next branch to author content/schemas/ with a definition
+    it never added.
+    """
+    definitions = sorted(p for p in CONTENT.rglob("*.json") if not in_non_definition_dir(p))
+    other_files = sorted(
+        p
+        for p in CONTENT.rglob("*")
+        if p.is_file() and p.suffix != ".json" and not in_non_definition_dir(p)
+    )
+    actual = len(definitions)
     rows = [
         (
-            "*.json files under content/",
-            EXPECTED_CONTENT_JSON_FILES,
+            "definition *.json files under content/ (excluding "
+            f"{', '.join(NON_DEFINITION_DIRS)})",
+            EXPECTED_CONTENT_DEFINITION_JSON_FILES,
             actual,
-            "ok" if actual == EXPECTED_CONTENT_JSON_FILES else "FAIL",
+            "ok" if actual == EXPECTED_CONTENT_DEFINITION_JSON_FILES else "FAIL",
         ),
         (
             "non-JSON files (documentation, not content)",
@@ -1882,12 +1943,14 @@ def check_file_inventory() -> list[tuple]:
             f"content/ was reported and tolerated in the same breath. It is now an expectation: a "
             f"new documentation file is added here deliberately, and anything else is a finding."
         )
-    if actual != EXPECTED_CONTENT_JSON_FILES:
+    if actual != EXPECTED_CONTENT_DEFINITION_JSON_FILES:
         fail(
-            f"content/ holds {actual} *.json file(s), expected "
-            f"{EXPECTED_CONTENT_JSON_FILES}. Either a definition was added or removed without "
-            f"updating EXPECTED_CONTENT_JSON_FILES and the matching A12 row, or a file is in a "
-            f"directory no A12 row covers."
+            f"content/ holds {actual} definition *.json file(s), expected "
+            f"{EXPECTED_CONTENT_DEFINITION_JSON_FILES}. Either a definition was added or removed "
+            f"without updating EXPECTED_CONTENT_DEFINITION_JSON_FILES and the matching A12 row, or "
+            f"a file is in a directory no A12 row covers. Files under "
+            f"content/{{{','.join(NON_DEFINITION_DIRS)}}}/ are NOT in this count and cannot cause "
+            f"this failure."
         )
     return rows
 
@@ -2393,7 +2456,23 @@ def null_paths(obj, path="$"):
 
 
 def check_no_nulls() -> list[tuple]:
-    """A26 - no null anywhere under content/, with no declared exceptions."""
+    """A26 - no null anywhere under content/, with no declared exceptions.
+
+    This rglob is deliberately NOT filtered by in_non_definition_dir(). "No null
+    anywhere under content/" is a whole-tree claim, and localization/en.json - which
+    the definition loader skips - is named in the README as covered here on purpose.
+    Do not "fix" it to match A21: A21 counts a population, A26 scans a directory.
+
+    Known consequence for DAT-006, recorded rather than pre-solved: JSON Schema
+    authors nulls legally, so the first content/schemas/*.json carrying
+    "default": null or null inside an enum will fail this assertion. Measured, not
+    predicted - a probe file with {"properties":{"presentation_id":{"default":null}}}
+    fails as `...probe.schema.json.properties.presentation_id.default`. The mandate
+    behind A26 (40:90) is about absent optional fields in DEFINITIONS, so the
+    resolution is a scope decision that belongs to whoever lands the schemas; it is
+    not this assertion silently acquiring an exception set, which is the one thing
+    A26's docstring rules out.
+    """
     hits: list[str] = []
     scanned = 0
     for path in sorted(CONTENT.rglob("*.json")):

@@ -1,0 +1,41 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "DAT-007",
+  "workPackageTitle": "Import accepted gameplay catalogs into initial JSON definitions",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91 § Verification registry).",
+    "DAT-007 has no implementation. content/README.md states it plainly: the tree is JSON transcribed by hand ahead of DAT-007, DAT-001 through DAT-006 do not exist, and 'this tree cannot be its completion'. This file therefore registers what is verifiable about that prepared tree TODAY, by the one thing that exists to verify it - the stdlib-only checker at src/MechaMiner.Tools/ContentImport/verify_content.py - and not the package's own gate, which is 'totals/mappings/numbers match GDD/CSV reports' over an importer that has not been written (docs/technical/110-implementation-plan-for-ai-agents.md:216).",
+    "The selector is a Python script rather than a test ID because no test project exists on this branch. When the importer lands, these entries are superseded by importer coverage rather than deleted, and the checker's assertion keeps its VER ID: doc 91 forbids renumbering, and an interim gate that was real is not a tombstone just because a better one replaced it.",
+    "VER-DAT-007-001 exists because the assertion it covers was FALSE for a population nobody chose. A21 counted every *.json under content/ and compared it to 139, while NON_DEFINITION_DIRS in the same file already named 'localization' and 'schemas' as directories that are not catalogs of definitions. The two halves of that contradiction were never reconciled, so the row was correct only for as long as content/schemas/ stayed absent - and it is doc 40 § Accepted content repository layout's first declared directory. The defect surfaced as a false failure charged to another branch, which is the shape this registry exists to make expensive.",
+    "What the control set is chosen to exclude, stated because a single injection would have looked adequate: the excluded-directory injection alone is satisfied by deleting the assertion outright, and the catalog-directory injection alone is satisfied by the bare enumeration that was already there. Only the pair distinguishes 'counts the right population' from 'counts' and from 'does not count'. The third injection is the regression guard on the fix itself - narrowing a population is the obvious way to also narrow a row's reach by accident, so a definition in a declared directory that no A12 row covers must still fail.",
+    "One enumeration under content/ deliberately does NOT honour NON_DEFINITION_DIRS and is not a defect: A26 (check_no_nulls). 'No null anywhere under content/' is a whole-tree claim, and content/localization/en.json is named in the ContentImport README as covered there on purpose. It carries a measured consequence for DAT-006 rather than a predicted one: a probe schema containing {\"properties\":{\"presentation_id\":{\"default\":null}}} fails A26 as '...probe.schema.json.properties.presentation_id.default'. JSON Schema authors nulls legally, so the first content/schemas/*.json to use one will redden A26, and the resolution is a scope decision for whoever lands the schemas. It is recorded here, and in a docstring at the assertion, so that it is not discovered as a surprise and not silently absorbed into an exception set - which is the one remedy A26's own docstring rules out."
+  ],
+  "entries": [
+    {
+      "id": "VER-DAT-007-001",
+      "summary": "A21's file inventory counts the definition population - every *.json under content/ except those beneath a NON_DEFINITION_DIRS directory - and what establishes that is a pair of opposite injections, not the green run. Adding content/schemas/envelope.schema.json together with a content/schemas/README.md leaves the verdict at PASS and exit 0; adding one definition under content/relics/ moves it to FAIL and exit 1 with 'content/ holds 139 definition *.json file(s), expected 138'. Neither half proves anything alone. The first is satisfied by an assertion that was deleted, and the second is satisfied by the bare CONTENT.rglob('*.json') this replaced, which counted content/localization/en.json into the definition total and so reported 'content/ holds 140 *.json file(s), expected 139' for the first schema authored under a directory the checker itself already classified as not a catalog of definitions. A third injection guards the fix rather than the original defect: a definition under content/presentation/, a directory doc 40 declares and no A12 row covers, must still FAIL with the count, because narrowing the population is the obvious way to accidentally narrow the row's reach at the same time. The expectation was rebased from 139 onto the definition population's true size (138) rather than raised to 140, which would have made the row green by agreeing with the polluted population.",
+      "task": "TASK-DAT-007-001",
+      "requirements": ["TR-DAT-002", "TR-DAT-005"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#accepted-content-repository-layout",
+        "docs/technical/40-content-data-and-validation.md#agent-content-change-workflow"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "src/MechaMiner.Tools/ContentImport/verify_content.py"
+      },
+      "fixtures": [
+        "working-tree injection: content/schemas/envelope.schema.json plus content/schemas/README.md - the verdict must NOT change",
+        "working-tree injection: content/relics/REL-11.json, a copy of REL-01.json with id REL-11 - must FAIL with the inventory count",
+        "working-tree injection: content/presentation/PRS-01.json, a definition in a declared directory no A12 row covers - must FAIL with the inventory count"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["command-exit-code", "command-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    }
+  ]
+}

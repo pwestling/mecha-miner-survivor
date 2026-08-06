@@ -114,13 +114,53 @@ readonly ALLOWED_INTERMEDIATE_MSBUILD_FILES=(
   "build/policy-fixtures/Directory.Build.props"
 )
 
-# "<property>|<required evaluated value>" - the compiler policies doc 100
-# § C# project standards requires, as they must evaluate for every project.
+# "<property>|<required evaluated value>" - every property a fixture below relies
+# on, because a fixture proves only that the policy holds where the fixture sits.
+# The list is derived by asking, per fixture, "which evaluated properties must
+# hold for this diagnostic to appear at all", not by picking the properties that
+# felt important:
+#
+#   nullable      CS8600 as error   Nullable, TreatWarningsAsErrors
+#   analyzer      CA2200 as error   EnableNETAnalyzers, AnalysisLevel,
+#                                   AnalysisMode, TreatWarningsAsErrors
+#   naming        IDE1006 as error  EnforceCodeStyleInBuild (+ .editorconfig,
+#                                   see the gap noted below)
+#   langversion   CS9202            LangVersion
+#   unsafe        CS0227            AllowUnsafeBlocks
+#   deterministic byte-identical    Deterministic
+#   all of them   "error", not      WarningsNotAsErrors and NoWarn must stay
+#                 "warning"         empty, as Directory.Build.targets declares
+#
+# EnableNETAnalyzers, AnalysisLevel, AnalysisMode, EnforceCodeStyleInBuild and
+# Deterministic were previously absent, and that reopened the exact defect the
+# inheritance guards exist to close: the permitted intermediate file imported the
+# root policy honestly and then set EnableNETAnalyzers and EnforceCodeStyleInBuild
+# back to true locally, while the root file had both switched off. All three
+# guards were green, VER-FND-001-007 and -008 reported ok off the fixtures, and a
+# product file with a CA2200 rethrow and an IDE1006 field name compiled at
+# 0 warnings. WarningsNotAsErrors and NoWarn are here for the same reason: a root
+# NoWarn covering CS8600/CA2200/IDE1006 is invisible to a fixture that has a local
+# empty NoWarn.
+#
+# KNOWN GAP, not closed here: the naming fixture also depends on the root
+# .editorconfig's `dotnet_diagnostic.IDE1006.severity = error`. That is not an
+# MSBuild property and is not reachable through an evaluated item either - the
+# EditorConfigFiles item holds only the SDK-generated file, because Roslyn, not
+# MSBuild, walks the .editorconfig chain and applies `root = true`. A project-local
+# `.editorconfig` with `root = true` therefore still decouples that half of
+# VER-FND-001-008. Closing it needs an .editorconfig shadowing guard of its own.
 readonly EVALUATED_POLICIES=(
   "TreatWarningsAsErrors|true"
+  "WarningsNotAsErrors|"
+  "NoWarn|"
   "Nullable|enable"
   "AllowUnsafeBlocks|false"
   "LangVersion|12.0"
+  "EnableNETAnalyzers|true"
+  "AnalysisLevel|8.0"
+  "AnalysisMode|Default"
+  "EnforceCodeStyleInBuild|true"
+  "Deterministic|true"
 )
 
 echo "=== policy inheritance: repository-root policy files exist"

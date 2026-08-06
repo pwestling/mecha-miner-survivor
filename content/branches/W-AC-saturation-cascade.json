@@ -1,0 +1,61 @@
+{
+  "id": "W-AC-saturation-cascade",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-AC-saturation-cascade.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#saturation-cascade--amplification--2-cinderglass",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#saturation-cascade--amplification--2-cinderglass",
+    "prerequisites: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches"
+  ],
+  "weapon_id": "W-AC",
+  "weapon_name": "Cluster Mortar",
+  "branch_class": "Amplification",
+  "cost": {
+    "resource": "Cinderglass",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-AC-interdiction-payload",
+      "W-AC-danger-close-protocol"
+    ],
+    "irreversible": true
+  },
+  "effects": {
+    "secondary_blasts_per_primary_victim": 1,
+    "secondary_blast_delay_seconds": 0.4,
+    "secondary_blast_position": "that enemy's original hit position",
+    "secondary_blast_damage_percent_of_current_damage": 40,
+    "secondary_blast_radius_percent_of_current_radius": 60,
+    "secondary_blasts_seed_further_blasts": false,
+    "maximum_secondary_blast_hits_per_target_per_primary_shell": 2
+  },
+  "expected_effect": {
+    "approximate": true,
+    "horde_throughput_percent": {
+      "minimum": 40,
+      "maximum": 100
+    },
+    "scales_with": "how well the primary impact catches a cluster"
+  },
+  "rules": [
+    {
+      "text": "Each enemy hit by the primary blast seeds a secondary blast 0.40 s later at that enemy's original hit position."
+    },
+    {
+      "text": "Each secondary blast deals 40% current Damage and has 60% current blast radius."
+    },
+    {
+      "text": "Secondary blasts do not seed more blasts. A target can take no more than two secondary-blast hits from one primary shell."
+    },
+    {
+      "text": "Expected effect: approximately +40–100% horde throughput, scaling with how well the primary impact catches a cluster."
+    }
+  ]
+}

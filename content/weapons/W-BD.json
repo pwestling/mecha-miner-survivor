@@ -1,0 +1,143 @@
+{
+  "id": "W-BD",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "weapon.W-BD.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#rank-zero-values-and-ore-stat-increments",
+    "recipe_pair: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "fabrication_cost: GDD-PROGRESSION#base-weapon-availability",
+    "base_automatic_attack: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "base_behavior: GDD-WEAPON-NUMERIC-CATALOG#w-bd--mine-layer",
+    "ore_upgradeable_stat_labels: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "damage_model: GDD-WEAPON-NUMERIC-CATALOG#base-weapon-summary",
+    "global_attack_rate_mapping: GDD-WEAPON-NUMERIC-CATALOG#global-weapon-attack-rate-mapping",
+    "branches.amplification.cost: GDD-WEAPON-NUMERIC-CATALOG#seed-charges--amplification--2-barysteel",
+    "branches.amplification.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.amplification: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.amplification: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.functional.cost: GDD-WEAPON-NUMERIC-CATALOG#selective-detonators--functional--2-driftmetal",
+    "branches.functional.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.functional: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.functional: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.conversion.cost: GDD-WEAPON-NUMERIC-CATALOG#hunter-mines--conversion--2-flux-amber",
+    "branches.conversion.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.conversion: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.conversion: GDD-WEAPON-INDEX#catalog-lookup"
+  ],
+  "recipe_pair": {
+    "notation": "B + D",
+    "material_codes": [
+      "B",
+      "D"
+    ],
+    "material_names": [
+      "Barysteel",
+      "Driftmetal"
+    ]
+  },
+  "fabrication_cost": {
+    "materials": [
+      {
+        "material_code": "B",
+        "material": "Barysteel",
+        "units": 1
+      },
+      {
+        "material_code": "D",
+        "material": "Driftmetal",
+        "units": 1
+      }
+    ],
+    "signature_weapon_begins_equipped_without_paying_cost": true,
+    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost."
+  },
+  "base_automatic_attack": {
+    "text": "Places mines at distance intervals along the mech's route"
+  },
+  "base_behavior": {
+    "text": "while the mech moves, it places a mine after each base-travel-second of distance. Mines arm after 0.5 s, trigger on the first valid enemy entering their radius, and expire after 18 s. Placing above current parent capacity removes the oldest parent mine without detonating it."
+  },
+  "ore_upgradeable_stat_labels": {
+    "labels": [
+      "Damage",
+      "blast radius",
+      "active-mine capacity"
+    ]
+  },
+  "ore_upgradeable_stats": [
+    {
+      "slot": 1,
+      "name": "Damage",
+      "rank_zero": 27,
+      "increment_per_rank": 2.7,
+      "unit": "damage",
+      "discrete": false
+    },
+    {
+      "slot": 2,
+      "name": "Blast radius",
+      "rank_zero": 1.8,
+      "increment_per_rank": 0.15,
+      "unit": "M",
+      "discrete": false
+    },
+    {
+      "slot": 3,
+      "name": "Parent capacity",
+      "rank_zero": 6,
+      "increment_per_rank": 1,
+      "unit": "count",
+      "discrete": true
+    }
+  ],
+  "fixed_properties": {
+    "placement_interval_base_travel_seconds": 1,
+    "arm_seconds": 0.5,
+    "mine_life_seconds": 18,
+    "over_capacity_removes_oldest_without_detonation": true,
+    "raw": "Places one mine per base-travel second, 0.5 s arm, 18 s life"
+  },
+  "damage_model": {
+    "rank_zero_damage_model": "27 per mine, at most one mine per base-travel second",
+    "burst_10_dps": 24.3,
+    "sustained_30_dps": 27.0,
+    "favorable_horde_dps": 135,
+    "primary_limitation": "Requires movement, arming, and enemies crossing the trail"
+  },
+  "global_attack_rate_mapping": {
+    "affected_timing": "None",
+    "unaffected_timing": "Distance-based placement, arm time, pursuit speed, and mine life"
+  },
+  "branches": {
+    "amplification": {
+      "name": "Seed Charges",
+      "funding_material_code": "B",
+      "funding_material": "Barysteel",
+      "cost": {
+        "material": "Barysteel",
+        "units": 2
+      }
+    },
+    "functional": {
+      "name": "Selective Detonators",
+      "funding_material_code": "D",
+      "funding_material": "Driftmetal",
+      "cost": {
+        "material": "Driftmetal",
+        "units": 2
+      }
+    },
+    "conversion": {
+      "name": "Hunter Mines",
+      "funding_material_code": "F",
+      "funding_material": "Flux Amber",
+      "cost": {
+        "material": "Flux Amber",
+        "units": 2
+      }
+    }
+  }
+}

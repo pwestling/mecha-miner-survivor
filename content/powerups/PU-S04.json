@@ -1,0 +1,80 @@
+{
+  "id": "PU-S04",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "powerup.PU-S04.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-PERMANENT-POWERUP-CATALOG#pu-s04--emergency-reboot",
+    "GDD-PERMANENT-POWERUP-CATALOG#catalog-overview",
+    "currency: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "ui_grouping: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "fresh_profile_purchasable: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "ranks_must_be_bought_sequentially: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "prices_fixed: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "applies_account_wide: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "refundable: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "purchasable_during_run: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "active_rank_policy: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "total_cost_hyper_gold: DEC-120#decision",
+    "maximum_effect: GDD-PROGRESSION#progression-layers",
+    "revival: DEC-120#consequences"
+  ],
+  "domain": "Survivability",
+  "per_rank_effect": {
+    "text": "One revival per run",
+    "statistic": "revival charges",
+    "revival_charges_per_run": 1
+  },
+  "maximum": 1,
+  "maximum_effect": {
+    "text": "One revival",
+    "statistic": "revival charges",
+    "revival_charges_per_run": 1
+  },
+  "total_cost_hyper_gold": 500,
+  "currency": "Hyper Gold",
+  "ui_grouping": "Survivability",
+  "fresh_profile_purchasable": true,
+  "ranks_must_be_bought_sequentially": true,
+  "prices_fixed": true,
+  "applies_account_wide": true,
+  "refundable": true,
+  "purchasable_during_run": false,
+  "active_rank_policy": {
+    "minimum_active_rank": 0,
+    "maximum_active_rank_equals_purchased_rank": true,
+    "change_cost_hyper_gold": 0,
+    "changeable_between_runs": true,
+    "changeable_during_run": false
+  },
+  "rank_effect_column": "Revival charges",
+  "ranks": [
+    {
+      "rank": 1,
+      "total_effect": {
+        "text": "1 per run",
+        "revival_charges_per_run": 1
+      },
+      "price_hyper_gold": 500
+    }
+  ],
+  "revival": {
+    "charges_per_run": 1,
+    "hull_restored_fraction_of_current_maximum": 0.4,
+    "invulnerability_active_simulation_seconds": 2,
+    "automatic": true,
+    "pauses_timer_or_simulation": false,
+    "rechargeable_during_run": false,
+    "displacement": "Non-damaging radial displacement that clears ordinary enemies from immediate overlap; elites and bosses receive their normal displacement resistance."
+  },
+  "rules": [
+    "The first time the mech would reach zero Hull Integrity, it instead restores 40% of its current maximum Hull and gains two active-simulation seconds of invulnerability.",
+    "Reboot emits a non-damaging radial displacement that clears ordinary enemies from immediate overlap. Elites and bosses receive their normal displacement resistance.",
+    "It activates automatically, consumes its one charge, does not pause the timer or simulation, and preserves current mining, weapons, resources, bosses, beacon thresholds, and run state.",
+    "It cannot restore a charge during the run and does not bank Hyper Gold by itself. A second lethal event causes ordinary death unless another explicitly equipped revival exists.",
+    "The HUD displays the unused or spent charge. If several revival effects ever coexist, the pre-run and active details show their fixed consumption order."
+  ]
+}

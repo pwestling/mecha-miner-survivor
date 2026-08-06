@@ -1,0 +1,66 @@
+{
+  "id": "W-BE-battery-overclock",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-BE-battery-overclock.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#battery-overclock--amplification--2-eidolon-coral",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#battery-overclock--amplification--2-eidolon-coral"
+  ],
+  "weapon_id": "W-BE",
+  "weapon_name": "Sentry Pod",
+  "class": "Amplification",
+  "cost": {
+    "resource": "Eidolon Coral",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-BE-guardian-firmware",
+      "W-BE-forward-bastion"
+    ],
+    "irreversible_within_run": true,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run."
+  },
+  "availability": {
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite."
+  },
+  "effects": {
+    "attack_rate_bonus_per_active_pod_beyond_the_first": {
+      "percent": 25
+    },
+    "attack_rate_bonus_maximum": {
+      "percent": 50
+    },
+    "active_pod_count_at_maximum": 3,
+    "bonus_applies_to": "all active pods",
+    "bonus_update_timing": "immediately as pods deploy or expire",
+    "pod_damage_changed": false
+  },
+  "favorable_scene_effect": {
+    "magnitude": {
+      "damage_throughput_increase_percent": {
+        "percent": 50
+      }
+    },
+    "qualitative": "requires full setup, that is three active pods"
+  },
+  "rules": [
+    {
+      "text": "Every active pod beyond the first gives all active pods +25% attack rate, capped at +50% with three pods."
+    },
+    {
+      "text": "The bonus updates immediately as pods deploy or expire."
+    },
+    {
+      "text": "At full setup this is a direct +50% damage-throughput increase without changing each pod's Damage value."
+    }
+  ]
+}

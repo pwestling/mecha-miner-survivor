@@ -1,0 +1,64 @@
+{
+  "id": "W-AB-unbounded-bore",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-AB-unbounded-bore.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#unbounded-bore--amplification--2-asterite",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#unbounded-bore--amplification--2-asterite",
+    "prerequisites: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches"
+  ],
+  "weapon_id": "W-AB",
+  "weapon_name": "Rail Lance",
+  "branch_class": "Amplification",
+  "cost": {
+    "resource": "Asterite",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-AB-fracture-lance",
+      "W-AB-kinetic-capacitor"
+    ],
+    "irreversible": true
+  },
+  "effects": {
+    "removes_pierce_target_limit": true,
+    "base_pierce_target_limit": 4,
+    "unlimited_pierce": true,
+    "limited_by_current_maximum_range": true,
+    "may_damage_every_enemy_crossed": true,
+    "unchanged_stats": [
+      "damage",
+      "beamWidth",
+      "range",
+      "cadence",
+      "projectileSpeed"
+    ]
+  },
+  "expected_effect": {
+    "approximate": true,
+    "horde_throughput_percent": {
+      "minimum": 35,
+      "maximum": 70
+    },
+    "scene": "dense aligned stream",
+    "direct_single_target_increase": false
+  },
+  "rules": [
+    {
+      "text": "Removes the four-target pierce limit. The lance continues to its current maximum range and may damage every enemy it crosses."
+    },
+    {
+      "text": "Damage, width, range, cadence, and projectile speed are otherwise unchanged."
+    },
+    {
+      "text": "Expected effect: approximately +35–70% horde throughput in a dense aligned stream and no direct single-target increase."
+    }
+  ]
+}

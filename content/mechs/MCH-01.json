@@ -1,0 +1,58 @@
+{
+  "id": "MCH-01",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "mech.MCH-01.name",
+  "summary_key": "mech.MCH-01.summary",
+  "tags": [],
+  "source_refs": [
+    "GDD-INITIAL-MECH-CATALOG#catalog-overview",
+    "signature_weapon_id: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "trait_stacking: GDD-INITIAL-MECH-CATALOG#trait-comparison-and-stacking",
+    "initial_availability: GDD-INITIAL-MECH-CATALOG#initial-availability",
+    "player_facing_identity: GDD-INITIAL-MECH-CATALOG#player-facing-identity",
+    "top_down_silhouette[]: GDD-INITIAL-MECH-CATALOG#top-down-silhouette",
+    "trait_notes[]: GDD-INITIAL-MECH-CATALOG#signature-and-trait"
+  ],
+  "signature": "Pulse Repeater",
+  "signature_weapon_id": "W-BC",
+  "inherent_trait": {
+    "name": "Accelerated Feed",
+    "effect": "+15% weapon attack rate",
+    "affected_statistic": "weapon attack rate",
+    "modifier": {
+      "percent": 15
+    }
+  },
+  "selection_role": "Approachable rapid-fire skirmisher",
+  "player_facing_identity": "Kestrel is the recommended first deployment. Its rapid nearest-target fire requires little facing expertise, while its trait makes every later automatic weapon activate more frequently where applicable.",
+  "trait_notes": [
+    "Attack rate means 1.15 times the ordinary activation frequency, not 15% cooldown subtraction.",
+    "It uses the same affected-timing boundaries as Cycle Capacitor: primary weapon activations accelerate, while projectile travel, damage ticks, delayed echoes, arming delays, and non-weapon timers do not unless a weapon specification explicitly maps them to attack rate."
+  ],
+  "top_down_silhouette": [
+    "Compact central chassis with two swept lateral weapon housings.",
+    "Broad rear taper and short forward nose create a clear movement-facing axis.",
+    "Low, agile proportions distinguish it from Bastion's square mass and Razorback's heavy wedge.",
+    "Pulse Repeater emitters flash alternately from the two side housings without changing the weapon's mechanical firing sequence."
+  ],
+  "trait_stacking": {
+    "changed_baseline": {
+      "text": "115% attack rate",
+      "statistic": "weapon attack rate",
+      "percent": 115
+    },
+    "with_matching_utility_rank_3_before_power_ups": {
+      "text": "135% with Cycle Capacitor",
+      "utility": "Cycle Capacitor",
+      "percent": 135
+    }
+  },
+  "initial_availability": {
+    "text": "Available; recommended default",
+    "available": true,
+    "recommended_default": true
+  },
+  "cross_doc_notes": []
+}

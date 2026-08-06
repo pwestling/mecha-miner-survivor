@@ -1,0 +1,84 @@
+{
+  "id": "W-AD-singularity-forge",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-AD-singularity-forge.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#singularity-forge--conversion--2-barysteel",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#singularity-forge--conversion--2-barysteel",
+    "prerequisites: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches"
+  ],
+  "weapon_id": "W-AD",
+  "weapon_name": "Gravity Projector",
+  "branch_class": "Conversion",
+  "cost": {
+    "resource": "Barysteel",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-AD-echo-well",
+      "W-AD-gravity-slingshot"
+    ],
+    "irreversible": true
+  },
+  "effects": {
+    "replaces_normal_cadence": true,
+    "cycle_seconds": 7.0,
+    "collection_seconds": 4.0,
+    "collection_field_radius": "current radius",
+    "collection_field_pull": "current pull",
+    "collection_field_damage_percent_of_current_damage_per_second": 60,
+    "hull_per_mass_point": 50,
+    "mass_hull_source": "non-boss enemy Hull drawn into the inner half of the field",
+    "mass_rounding_per_enemy": "up",
+    "elite_minimum_mass_contribution": 2,
+    "boss_mass_contribution": 4,
+    "mass_maximum": 12,
+    "contributions_per_enemy_per_collection_cycle": 1,
+    "contribution_trigger": "the first time it enters the inner half",
+    "contribution_uses_maximum_hull": true,
+    "round_targeting_range_m": 12,
+    "round_target_priority": "strongest enemy",
+    "singularity_duration": "current field duration",
+    "singularity_radius_percent_of_current_radius": 150,
+    "singularity_damage_per_second_formula": "current field Damage × (4 + 0.25 × mass)",
+    "singularity_damage_multiplier_at_maximum_mass": 7,
+    "no_target_wait_seconds": 2.0,
+    "no_target_fallback": "detonates at the collection point"
+  },
+  "expected_effect": {
+    "narrative": "deliberately infrequent and devastating: even a low-mass shot improves boss output, while a well-fed shot can erase a dense zone"
+  },
+  "rules": [
+    {
+      "text": "Replaces the normal cadence with a fixed 7.0 s cycle: a 4.0 s collection field followed by a fired singularity round."
+    },
+    {
+      "text": "The collection field uses current radius and pull but deals only 60% current field Damage per second."
+    },
+    {
+      "text": "It gains one mass point per 50 points of non-boss enemy Hull drawn into the inner half of the field, rounded up per enemy; elites contribute at least two and bosses contribute four. Mass caps at 12."
+    },
+    {
+      "text": "An enemy contributes only once per collection cycle, the first time it enters the inner half; the calculation uses its maximum Hull rather than remaining Hull."
+    },
+    {
+      "text": "At the end of collection, a round targets the strongest enemy in 12M and creates a singularity lasting current field duration with 150% current radius."
+    },
+    {
+      "text": "The singularity deals `current field Damage × (4 + 0.25 × mass)` per second. At maximum mass this is 7× current field Damage per second."
+    },
+    {
+      "text": "If no target exists when collection ends, the round waits up to 2.0 s and then detonates at the collection point."
+    },
+    {
+      "text": "This is deliberately infrequent and devastating: even a low-mass shot improves boss output, while a well-fed shot can erase a dense zone."
+    }
+  ]
+}

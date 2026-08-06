@@ -1,0 +1,96 @@
+{
+  "id": "UNL-01",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "unlock.UNL-01.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-PERMANENT-OPTION-UNLOCK-CATALOG#unl-01--advanced-utility-suite",
+    "GDD-PERMANENT-OPTION-UNLOCK-CATALOG#catalog-overview",
+    "currency: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
+    "GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
+    "fresh_profile_purchasable: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
+    "prices_fixed: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
+    "permanent: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
+    "refundable: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
+    "disableable: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
+    "purchasable_during_run: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
+    "grants_account_access_only: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
+    "unlocks.utilities[].utility_id: GDD-UTILITY-CATALOG#catalog-overview",
+    "cost_hyper_gold: DEC-121#decision",
+    "GDD-UTILITY-CATALOG#fresh-profile-and-unlocked-availability"
+  ],
+  "category": "Utilities",
+  "effect": "Adds the six alternate material utilities",
+  "cost_hyper_gold": 600,
+  "currency": "Hyper Gold",
+  "fresh_profile_purchasable": true,
+  "prices_fixed": true,
+  "permanent": true,
+  "refundable": false,
+  "disableable": false,
+  "purchasable_during_run": false,
+  "grants_account_access_only": true,
+  "unlocks": {
+    "kind": "utilityBlueprints",
+    "count": 6,
+    "grants_blueprints_only": true,
+    "utilities": [
+      {
+        "material": "Asterite",
+        "utility": "Survey Aperture",
+        "utility_id": "UTL-A2",
+        "fresh_profile_utility": "Harmonic Calibrator",
+        "fresh_profile_utility_id": "UTL-A1"
+      },
+      {
+        "material": "Barysteel",
+        "utility": "Reinforced Bulkhead",
+        "utility_id": "UTL-B1",
+        "fresh_profile_utility": "Extraction Accelerator",
+        "fresh_profile_utility_id": "UTL-B2"
+      },
+      {
+        "material": "Cinderglass",
+        "utility": "Capacitor Screen",
+        "utility_id": "UTL-C2",
+        "fresh_profile_utility": "Cycle Capacitor",
+        "fresh_profile_utility_id": "UTL-C1"
+      },
+      {
+        "material": "Driftmetal",
+        "utility": "Extraction Tether",
+        "utility_id": "UTL-D2",
+        "fresh_profile_utility": "Vector Thrusters",
+        "fresh_profile_utility_id": "UTL-D1"
+      },
+      {
+        "material": "Eidolon Coral",
+        "utility": "Priority Uplink",
+        "utility_id": "UTL-E2",
+        "fresh_profile_utility": "Repair Swarm",
+        "fresh_profile_utility_id": "UTL-E1"
+      },
+      {
+        "material": "Flux Amber",
+        "utility": "Field Expander",
+        "utility_id": "UTL-F2",
+        "fresh_profile_utility": "Ore Catalyzer",
+        "fresh_profile_utility_id": "UTL-F1"
+      }
+    ]
+  },
+  "rules": [
+    "The fresh profile begins with one basic material utility per specialized resource.",
+    "Buying the suite simultaneously and permanently unlocks the alternate utility for all six materials.",
+    "The six are bundled so unlocking does not temporarily bias the material system toward one repeatedly favored resource. Before the purchase, any four-material profile offers four non-radar utilities plus the resource radar. After the purchase, the same profile offers eight non-radar utilities plus the radar.",
+    "The purchase grants blueprints, not fabricated equipment. Every unlocked utility still costs one unit of its assigned present material, occupies one of three utility slots, obeys the irreversible run-local commitment rule, and uses the three ore ranks specified in the Utility Catalog.",
+    "Unlocking a utility makes its blueprint permanently available whenever its required material occurs."
+  ],
+  "non_radar_utilities_per_four_material_profile": {
+    "before_purchase": 4,
+    "after_purchase": 8,
+    "resource_radar_always_available": true
+  }
+}

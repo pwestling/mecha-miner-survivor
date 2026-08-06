@@ -1,0 +1,142 @@
+{
+  "id": "W-AC",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "weapon.W-AC.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#rank-zero-values-and-ore-stat-increments",
+    "recipe_pair: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "fabrication_cost: GDD-PROGRESSION#base-weapon-availability",
+    "base_automatic_attack: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "base_behavior: GDD-WEAPON-NUMERIC-CATALOG#w-ac--cluster-mortar",
+    "ore_upgradeable_stat_labels: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "damage_model: GDD-WEAPON-NUMERIC-CATALOG#base-weapon-summary",
+    "global_attack_rate_mapping: GDD-WEAPON-NUMERIC-CATALOG#global-weapon-attack-rate-mapping",
+    "branches.amplification.cost: GDD-WEAPON-NUMERIC-CATALOG#saturation-cascade--amplification--2-cinderglass",
+    "branches.amplification.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.amplification: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.amplification: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.functional.cost: GDD-WEAPON-NUMERIC-CATALOG#interdiction-payload--functional--2-asterite",
+    "branches.functional.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.functional: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.functional: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.conversion.cost: GDD-WEAPON-NUMERIC-CATALOG#danger-close-protocol--conversion--2-flux-amber",
+    "branches.conversion.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.conversion: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.conversion: GDD-WEAPON-INDEX#catalog-lookup"
+  ],
+  "recipe_pair": {
+    "notation": "A + C",
+    "material_codes": [
+      "A",
+      "C"
+    ],
+    "material_names": [
+      "Asterite",
+      "Cinderglass"
+    ]
+  },
+  "fabrication_cost": {
+    "materials": [
+      {
+        "material_code": "A",
+        "material": "Asterite",
+        "units": 1
+      },
+      {
+        "material_code": "C",
+        "material": "Cinderglass",
+        "units": 1
+      }
+    ],
+    "signature_weapon_begins_equipped_without_paying_cost": true,
+    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost."
+  },
+  "base_automatic_attack": {
+    "text": "Fires at a telegraphed, committed ground position selected from the densest enemy concentration, then explodes there after a delay"
+  },
+  "base_behavior": {
+    "text": "selects the densest enemy concentration within 12M when ready and locks its current ground position. A warning marker remains at that committed point for the fixed 1.2 s shell delay; the explosion then damages every enemy in its current radius."
+  },
+  "ore_upgradeable_stat_labels": {
+    "labels": [
+      "Damage",
+      "blast radius",
+      "attack rate"
+    ]
+  },
+  "ore_upgradeable_stats": [
+    {
+      "slot": 1,
+      "name": "Damage",
+      "rank_zero": 128,
+      "increment_per_rank": 12.8,
+      "unit": "damage",
+      "discrete": false
+    },
+    {
+      "slot": 2,
+      "name": "Blast radius",
+      "rank_zero": 2.4,
+      "increment_per_rank": 0.2,
+      "unit": "M",
+      "discrete": false
+    },
+    {
+      "slot": 3,
+      "name": "Attack rate",
+      "rank_zero": 0.25,
+      "increment_per_rank": 0.025,
+      "unit": "activations per second",
+      "discrete": false
+    }
+  ],
+  "fixed_properties": {
+    "targeting_range_m": 12,
+    "impact_delay_seconds": 1.2,
+    "impact_position_locks_at_launch": true,
+    "raw": "12M targeting range, 1.2 s impact delay"
+  },
+  "damage_model": {
+    "rank_zero_damage_model": "128 every 4.0 s",
+    "burst_10_dps": 38.4,
+    "sustained_30_dps": 32.0,
+    "favorable_horde_dps": 160,
+    "primary_limitation": "Delayed impact at a committed ground marker"
+  },
+  "global_attack_rate_mapping": {
+    "affected_timing": "Shell launch rate",
+    "unaffected_timing": "1.2 s travel delay, marker duration, and payload-field ticks"
+  },
+  "branches": {
+    "amplification": {
+      "name": "Saturation Cascade",
+      "funding_material_code": "C",
+      "funding_material": "Cinderglass",
+      "cost": {
+        "material": "Cinderglass",
+        "units": 2
+      }
+    },
+    "functional": {
+      "name": "Interdiction Payload",
+      "funding_material_code": "A",
+      "funding_material": "Asterite",
+      "cost": {
+        "material": "Asterite",
+        "units": 2
+      }
+    },
+    "conversion": {
+      "name": "Danger-Close Protocol",
+      "funding_material_code": "F",
+      "funding_material": "Flux Amber",
+      "cost": {
+        "material": "Flux Amber",
+        "units": 2
+      }
+    }
+  }
+}

@@ -105,7 +105,7 @@ internal sealed class EventBufferNegativeControlTests
 
         Assert.That(
             failure.Message,
-            Does.Contain("tick, then system phase, then emission sequence, and by nothing further"),
+            Does.Contain("tick, then emission sequence, and by nothing further"),
             "the ordering gate must be the assertion that failed");
     }
 
@@ -184,18 +184,39 @@ internal sealed class EventBufferNegativeControlTests
 
         Assert.That(allocator.TryAllocate(PopulationCategory.Pickup, out EntityId subject), Is.True);
 
-        int[] phases = [11, 3, 8, 10, 3, 11, 8, 10, 5];
+        // Two constraints pull in opposite directions here and both matter.
+        //
+        // The phase must not decrease as the emission sequence rises: the sequence is issued at
+        // emission and emission happens in phase order, so a decreasing phase is an input the
+        // simulation cannot produce and EventOrdering.AssertPhaseAgreesWithSequenceWithinTick rejects
+        // it. A control needs the *stub* to be wrong, not its input - an illegal fixture would make
+        // the real buffer throw and the control would be proving the wrong thing.
+        //
+        // But the append order must also differ from the documented order, or the hash-ordered stub
+        // has nothing to disagree with and the control proves nothing either. Assigning sequence =
+        // loop index satisfies the first and breaks the second, and the control's own precondition
+        // catches that - so the sequences are appended out of order while the phase stays a
+        // non-decreasing function of the sequence rather than of the append position.
+        int[] appendSequences = [4, 0, 7, 2, 8, 1, 5, 3, 6];
+        int[] phaseOfSequence = [3, 3, 5, 8, 8, 10, 10, 11, 11];
+        Assert.That(
+            count,
+            Is.LessThanOrEqualTo(appendSequences.Length),
+            "the append ladder must cover every requested record, or the sequences would have to wrap "
+                + "and the fixture would stop being a legal input");
+
         List<DomainEvent> records = new(count);
         for (int index = 0; index < count; index++)
         {
+            int sequence = appendSequences[index];
             records.Add(EventFixture.Domain(
-                index % 2 == 0 ? EventFixture.EntityDefeated : EventFixture.ResourceAwarded,
+                sequence % 2 == 0 ? EventFixture.EntityDefeated : EventFixture.ResourceAwarded,
                 tick: 2,
-                systemPhase: phases[index % phases.Length],
-                sequence: index,
-                emitter: emitters[index % emitters.Length],
+                systemPhase: phaseOfSequence[sequence],
+                sequence: sequence,
+                emitter: emitters[sequence % emitters.Length],
                 subject: subject,
-                quantity: index + 1));
+                quantity: sequence + 1));
         }
 
         return records;

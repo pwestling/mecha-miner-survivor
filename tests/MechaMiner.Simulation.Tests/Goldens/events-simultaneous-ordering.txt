@@ -2,29 +2,48 @@
 #
 # Rule under test: doc 10 § System phase ordering - "Simultaneous outcomes use
 # documented stable ordering rather than collection or thread timing." For an
-# event batch the keys are: tick, then emitting system phase, then explicit
-# emission sequence. There is no fourth key.
+# event batch the keys are: tick, then explicit emission sequence. That is all
+# of them.
 #
-# There is no fourth key because the emission sequence is per-tick global:
-# CMP-SIM-003 issues it monotonically across the whole tick regardless of phase
-# or emitter, so (tick, sequence) is already a total order. A duplicate sequence
-# within a tick is therefore an impossible input - a defect in the issuer, not a
-# tie - and a comparator that fell through to a further key on a duplicate would
-# silently order it and hide the bug that produced it. The former fourth key, the
-# full emitting entity ID, has been replaced by a live invariant: sequence is
-# unique within a tick, and a duplicate fails loudly. See
-# EventOrdering.AssertSequenceUniqueWithinTick.
+# Two keys, because the emission sequence is per-tick global: CMP-SIM-003 issues
+# it monotonically across the whole tick regardless of phase or emitter, so
+# (tick, sequence) is a total order on its own. Neither the emitting system phase
+# nor the emitting entity ID can discriminate any legal pair, so neither is a
+# sort key. Both survive as recorded provenance, and the two facts that made them
+# redundant are now checked instead of assumed:
+#
+#   1. Sequence is unique within a tick. A duplicate is an impossible input - a
+#      defect in the issuer, not a tie - so it fails loudly rather than falling
+#      through to a further key that would silently order it and hide the bug.
+#      Enforced by EventOrdering.AssertTotalOrder: with a two-key comparator two
+#      records sharing a tick and a sequence compare equal, so the adjacency scan
+#      is itself the uniqueness check.
+#   2. Phase agrees with sequence. Sequence is assigned at emission and emission
+#      happens in phase order, so along ascending sequence within one tick the
+#      phase must be non-decreasing. This is precisely what makes phase redundant
+#      as a sort key, so removing the key without checking the fact would have
+#      thrown the fact away. A system emitting out of phase order is a real
+#      defect and this names it. Enforced by
+#      EventOrdering.AssertPhaseAgreesWithSequenceWithinTick.
 #
 # This scoping is events only. Doc 20 § Boundary and tie ordering defines a
 # separate five-key sort for damage instances - system phase, explicit attack
 # sequence, target ID, source ID, then insertion sequence - and that is untouched
 # by the rule above.
 #
-# Fixture: run session 0xE7E00001, tick 7, eight domain events emitted by four
-# system phases (3, 8, 10, 11) with explicit emission sequences that deliberately
-# disagree with phase order, so sorting cannot be a no-op. The same eight events
-# are appended in two different orders - ascending and reversed - and both batches
-# must equal the text below.
+# Fixture: run session 0xE7E00001, tick 7, eight domain events across four system
+# phases (3, 8, 10, 11), two emissions per phase. Sequence ascends 0 to 7 and
+# phase is non-decreasing with it, so the fixture is a legal input. The events
+# are appended in sequence order 5,0,3,6,1,7,2,4 - and that batch is also
+# published reversed - so neither append order is the documented order and the
+# sort cannot be a no-op.
+#
+# The previous fixture achieved that same non-no-op property by pairing phase 11
+# with sequence 0 and phase 3 with sequence 1, deliberately disagreeing with
+# phase order. Under the contract above that is an input the system cannot
+# produce, so the old golden pinned an impossible state. Every observable field
+# here is now a function of the sequence rather than of the append position, so
+# the rows stay derivable once append order stops matching them.
 #
 # The stored phase numerals are correct by contract, not by coincidence: doc 10 §
 # System phase ordering numbers a fixed fourteen phases and those numerals are
@@ -38,21 +57,20 @@
 # entity exists until terminal resolution", so the OrdinaryEnemy offset is 1 by
 # simulation invariant and no doc 22 § Performance and capacity combat ceiling
 # precedes it. The fixture asserts that computed containment rather than assuming
-# it. The previous fixture drew its subject from Pickup, which sits after all
-# three doc 22 ceilings, which is why the literal 3830 was baked in here and
-# would have made this ordering golden fail when the enemy-projectile ceiling
-# moved.
+# it. An earlier fixture drew its subject from Pickup, which sits after all three
+# doc 22 ceilings, which is why the literal 3830 was baked in here and would have
+# made this ordering golden fail when the enemy-projectile ceiling moved.
 #
 # Derived by: the documented rule read off doc 10 and doc 20, computed in an
 # independent Python reference before any C# ran, and cross-checked against an
 # independent list sort in EventOrderingTests. Not by accepting whatever the
 # buffer emitted.
 #
-  0  domain tick=7 phase= 3 seq=   1 from=entity:2/g1@run3890216961 source=E-FIXTURE kind=resource-awarded#1002 subject=entity:5/g1@run3890216961 at=(3,-0.5) payload=v1 quantity=2 magnitude=1 content=none
-  1  domain tick=7 phase= 3 seq=   4 from=entity:1/g1@run3890216961 source=E-FIXTURE kind=entity-defeated#1001 subject=entity:5/g1@run3890216961 at=(7.5,-1.25) payload=v1 quantity=5 magnitude=2.5 content=none
+  0  domain tick=7 phase= 3 seq=   0 from=entity:1/g1@run3890216961 source=E-FIXTURE kind=entity-defeated#1001 subject=entity:5/g1@run3890216961 at=(1.5,-0.25) payload=v1 quantity=1 magnitude=0.5 content=none
+  1  domain tick=7 phase= 3 seq=   1 from=entity:2/g1@run3890216961 source=E-FIXTURE kind=resource-awarded#1002 subject=entity:5/g1@run3890216961 at=(3,-0.5) payload=v1 quantity=2 magnitude=1 content=none
   2  domain tick=7 phase= 8 seq=   2 from=entity:3/g1@run3890216961 source=E-FIXTURE kind=entity-defeated#1001 subject=entity:5/g1@run3890216961 at=(4.5,-0.75) payload=v1 quantity=3 magnitude=1.5 content=none
-  3  domain tick=7 phase= 8 seq=   6 from=entity:3/g1@run3890216961 source=E-FIXTURE kind=entity-defeated#1001 subject=entity:5/g1@run3890216961 at=(10.5,-1.75) payload=v1 quantity=7 magnitude=3.5 content=none
-  4  domain tick=7 phase=10 seq=   3 from=entity:4/g1@run3890216961 source=E-FIXTURE kind=resource-awarded#1002 subject=entity:5/g1@run3890216961 at=(6,-1) payload=v1 quantity=4 magnitude=2 content=none
-  5  domain tick=7 phase=10 seq=   7 from=entity:4/g1@run3890216961 source=E-FIXTURE kind=resource-awarded#1002 subject=entity:5/g1@run3890216961 at=(12,-2) payload=v1 quantity=8 magnitude=4 content=none
-  6  domain tick=7 phase=11 seq=   0 from=entity:1/g1@run3890216961 source=E-FIXTURE kind=entity-defeated#1001 subject=entity:5/g1@run3890216961 at=(1.5,-0.25) payload=v1 quantity=1 magnitude=0.5 content=none
-  7  domain tick=7 phase=11 seq=   5 from=entity:2/g1@run3890216961 source=E-FIXTURE kind=resource-awarded#1002 subject=entity:5/g1@run3890216961 at=(9,-1.5) payload=v1 quantity=6 magnitude=3 content=none
+  3  domain tick=7 phase= 8 seq=   3 from=entity:4/g1@run3890216961 source=E-FIXTURE kind=resource-awarded#1002 subject=entity:5/g1@run3890216961 at=(6,-1) payload=v1 quantity=4 magnitude=2 content=none
+  4  domain tick=7 phase=10 seq=   4 from=entity:1/g1@run3890216961 source=E-FIXTURE kind=entity-defeated#1001 subject=entity:5/g1@run3890216961 at=(7.5,-1.25) payload=v1 quantity=5 magnitude=2.5 content=none
+  5  domain tick=7 phase=10 seq=   5 from=entity:2/g1@run3890216961 source=E-FIXTURE kind=resource-awarded#1002 subject=entity:5/g1@run3890216961 at=(9,-1.5) payload=v1 quantity=6 magnitude=3 content=none
+  6  domain tick=7 phase=11 seq=   6 from=entity:3/g1@run3890216961 source=E-FIXTURE kind=entity-defeated#1001 subject=entity:5/g1@run3890216961 at=(10.5,-1.75) payload=v1 quantity=7 magnitude=3.5 content=none
+  7  domain tick=7 phase=11 seq=   7 from=entity:4/g1@run3890216961 source=E-FIXTURE kind=resource-awarded#1002 subject=entity:5/g1@run3890216961 at=(12,-2) payload=v1 quantity=8 magnitude=4 content=none

@@ -9,7 +9,11 @@
     "Status is current status: every entry is 'registered' because no implementing task has landed. A later commit flips an entry to 'implemented' only when its selector actually runs and passes, as tests/verification/FND-002.json and tests/verification/FND-003.json do.",
     "Every nunit selector is a fully qualified 'Namespace.Class.Method' so one entry names exactly one test method. Test namespaces mirror production namespaces per doc 114 \u00a7 Naming and file-placement defaults; the full type and method layout the implementation must produce is fixed in the W1-SIM design contract handed to the implementation tasks.",
     "doc 110 registers the SIM work packages but not their task IDs. SIM-006 does not split: the domain buffer, the presentation buffer, provenance, and the shared ordering rule are one contract - CTR-SIM-001 and CTR-SIM-002 differ precisely in their loss behaviour, which cannot be asserted for one without the other - so every entry belongs to TASK-SIM-006-001.",
-    "The event kinds themselves are not enumerated here. doc 20 \u00a7 Domain and presentation events gives examples, not a closed set, and each authoritative system registers the kinds it emits. This package proves the buffer, provenance, ordering, and loss contract that every later kind inherits."
+    "The event kinds themselves are not enumerated here. doc 20 \u00a7 Domain and presentation events gives examples, not a closed set, and each authoritative system registers the kinds it emits. This package proves the buffer, provenance, ordering, and loss contract that every later kind inherits.",
+    "'retired' is a new status value, used here for the first time in any registry in this repository. It means the entry's stated contract no longer exists and a named successor verifies the contract that replaced it. A retired entry is not a deleted entry: its id, summary and task are left exactly as committed, because the summary is the historical record of what was once verified and rewording it would erase the fact that the contract changed. A retired entry is also not an implemented entry, so it is excluded from the check that every 'implemented' selector names a test that ran and passed.",
+    "VER-SIM-006-003 was retired rather than reworded because its summary enumerates the comparator it verifies - \"system phase, then explicit emission sequence, then the full entity ID\" - and that three-key comparator no longer exists. The emission sequence is per-tick global (doc 20 \u00a7 Domain and presentation events; CMP-SIM-003 owns the sequence per doc 115 \u00a7 Component registry), so (tick, sequence) is a total order by itself and neither the phase nor the emitting entity ID could discriminate any legal pair. Those were different comparators, not the same behaviour described differently, so a reader checking the entry against the code needs to see that the contract moved. VER-SIM-006-011 states the two-key comparator and the two invariants that replaced the dead keys.",
+    "'successor' on VER-SIM-006-003 names a VER-* id. Elsewhere the key names a TASK-* id (tests/verification/FND-001.json, FND-002.json, FND-003.json, SIM-001.json) or a work package (QUA-005 in SIM-003.json and SIM-007.json), meaning 'the later work that will finish this'. Both forms now exist and they mean different things: a TASK-*/work-package successor defers unfinished verification, whereas a VER-* successor redirects to the entry that verifies the contract this one used to. TASK-FND-009-002 owns the structural validator for these files and has to accept both. Note also that the key's position differs across existing files - SIM-003.json and SIM-007.json place it before 'status', FND-001.json after - and this file follows the SIM-family placement.",
+    "SIM-006 does not split into two implementation tasks for its original contract, as the note above records. TASK-SIM-006-002 is nonetheless a real second task: it is the independently landable change that reduced the event comparator to (tick, sequence) and added the uniqueness and phase-agreement invariants, per the TASK-SIM-00N-002 convention in tests/verification/SIM-001.json's notes."
   ],
   "entries": [
     {
@@ -107,7 +111,8 @@
         "osx-arm64"
       ],
       "tier": "fast",
-      "status": "implemented"
+      "successor": "VER-SIM-006-011",
+      "status": "retired"
     },
     {
       "id": "VER-SIM-006-004",
@@ -317,6 +322,42 @@
       "evidenceKinds": [
         "test-counts",
         "test-output",
+        "negative-control"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-006-011",
+      "summary": "Simultaneous events order by tick, then explicit emission sequence, and by nothing further: two runs that emit the same events in different collection order produce identical batches, so no observable order can come from collection or thread timing. The emission sequence is per-tick global, so the two facts that make a phase key and an entity-ID key unreachable are asserted instead of being encoded as dead comparator keys - a duplicate sequence within a tick fails loudly, and the system phase must not decrease as the emission sequence rises.",
+      "task": "TASK-SIM-006-002",
+      "requirements": [
+        "TR-RUN-005",
+        "TR-RUN-006"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#system-phase-ordering",
+        "docs/technical/20-simulation-core.md#domain-and-presentation-events",
+        "docs/technical/10-runtime-architecture.md#concurrency-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Events.EventOrderingTests.SimultaneousEventsUseDocumentedStableOrdering"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Simulation.Tests/Goldens/events-simultaneous-ordering.txt"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "golden-text",
+        "text-diff",
         "negative-control"
       ],
       "platforms": [

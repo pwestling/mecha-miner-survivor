@@ -126,6 +126,15 @@ internal static class EventContractAssertions
     {
         Expect.Multiple(() =>
         {
+            // NoDomainEventWasLost above guards its empty case explicitly; this one did not, and three
+            // empty strings would have satisfied both assertions below. An empty batch is a legal tick
+            // but it is not evidence about ordering, so a caller that produced one must say so rather
+            // than collect a free pass.
+            Assert.That(
+                firstRendering,
+                Is.Not.Empty,
+                subject + ": the batch must contain at least one record, or this assertion compares "
+                    + "nothing and passes whatever the ordering rule does");
             Assert.That(
                 secondRendering,
                 Is.EqualTo(firstRendering),
@@ -134,8 +143,8 @@ internal static class EventContractAssertions
             Assert.That(
                 firstRendering,
                 Is.EqualTo(expectedRendering),
-                subject + ": the batch must be ordered by tick, then system phase, then emission "
-                    + "sequence, and by nothing further");
+                subject + ": the batch must be ordered by tick, then emission sequence, and by "
+                    + "nothing further");
         });
     }
 

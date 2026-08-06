@@ -4,8 +4,8 @@ using System.Globalization;
 namespace MechaMiner.Simulation.Events;
 
 /// <summary>
-/// The single comparison and the single sort used for every event batch: tick, then system phase,
-/// then emission sequence.
+/// The single comparison and the single sort used for every event batch: tick, then emission
+/// sequence.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -20,13 +20,22 @@ namespace MechaMiner.Simulation.Events;
 /// steady-state managed allocation").
 /// </para>
 /// <para>
-/// <b>Three keys, not four.</b> The emission sequence is per-tick global - <c>CMP-SIM-003</c>
-/// issues it monotonically across the whole tick regardless of phase or emitter - so
-/// <c>(tick, sequence)</c> is a total order by itself and no identity tiebreak can be reached by a
-/// legal input. An earlier revision ended the comparison with the full emitting entity ID; that key
-/// was unreachable, and worse, it meant a duplicate sequence quietly received an order instead of
-/// being reported. The uniqueness it presupposed is now checked instead of assumed, by
-/// <see cref="AssertSequenceUniqueWithinTick(DomainEvent[], int)"/>.
+/// <b>Two keys.</b> The emission sequence is per-tick global - <c>CMP-SIM-003</c> issues it
+/// monotonically across the whole tick regardless of phase or emitter - so <c>(tick, sequence)</c>
+/// is a total order by itself and nothing after it can discriminate a legal pair. Earlier revisions
+/// carried a phase key and then an entity-ID key after the sequence; both were unreachable for every
+/// legal input, and the entity-ID key was actively harmful because it meant a duplicate sequence
+/// quietly received an order instead of being reported.
+/// </para>
+/// <para>
+/// <b>Each removed key left a fact behind, and each fact is now checked.</b> The entity-ID key was
+/// redundant because the sequence is unique within a tick, and with a two-key comparator two records
+/// sharing a tick and a sequence compare equal, so
+/// <see cref="AssertTotalOrder(DomainEvent[], int)"/>'s adjacency scan <em>is</em> that uniqueness
+/// check. The phase key was redundant because phase never decreases as the sequence rises, and
+/// <see cref="AssertPhaseAgreesWithSequenceWithinTick(DomainEvent[], int)"/> is that one. Removing a
+/// key while keeping the reason it was removable is the whole point; deleting both together would
+/// have thrown away two real invariants.
 /// </para>
 /// <para>
 /// <b>This is the event rule only.</b> <c>docs/technical/20-simulation-core.md</c> § Boundary and
@@ -44,18 +53,6 @@ namespace MechaMiner.Simulation.Events;
 /// </remarks>
 public static class EventOrdering
 {
-    /// <summary>
-    /// How many contiguous same-phase runs one tick's sorted batch can contain.
-    /// </summary>
-    /// <remarks>
-    /// doc 10 § System phase ordering numbers a fixed fourteen phases, and those numerals are stable
-    /// normative identifiers: renumbering is forbidden, a new phase takes the next unused number,
-    /// and a subdivision keeps its parent's. Fourteen is therefore a contract bound rather than a
-    /// guess, which is what lets the uniqueness check size its cursors on the stack and allocate
-    /// nothing.
-    /// </remarks>
-    private const int MaximumPhaseRuns = EventProvenance.LastSystemPhase - EventProvenance.FirstSystemPhase + 1;
-
     /// <summary>The documented comparison for two domain events.</summary>
     public static int Compare(DomainEvent left, DomainEvent right)
     {
@@ -134,9 +131,11 @@ public static class EventOrdering
     /// Checked rather than assumed, and checked on the resulting batch rather than at the call that
     /// appended: a duplicate sequence is exactly the defect that would let collection order decide
     /// an outcome, and it is invisible until two records land next to each other. Linear, so it is
-    /// affordable every tick. Delegates to
-    /// <see cref="AssertSequenceUniqueWithinTick(DomainEvent[], int)"/> for the duplicates the
-    /// adjacency scan cannot see, because the batch is a total order only if that holds.
+    /// affordable every tick. With a two-key comparator this adjacency scan is the complete
+    /// uniqueness check: two records sharing a tick and a sequence compare equal and therefore land
+    /// next to each other, whatever their phases or emitters. Then delegates to
+    /// <see cref="AssertPhaseAgreesWithSequenceWithinTick(DomainEvent[], int)"/>, the other invariant
+    /// the batch's order depends on.
     /// </remarks>
     public static void AssertTotalOrder(DomainEvent[] events, int count)
     {
@@ -152,114 +151,65 @@ public static class EventOrdering
             }
         }
 
-        AssertSequenceUniqueWithinTick(events, count);
+        AssertPhaseAgreesWithSequenceWithinTick(events, count);
     }
 
     /// <summary>
-    /// Asserts that no two records in a sorted batch share a tick and an emission sequence.
+    /// Asserts that within each tick the system phase is non-decreasing along ascending emission
+    /// sequence.
     /// </summary>
     /// <param name="events">The already-sorted buffer.</param>
     /// <param name="count">How many leading elements are live.</param>
     /// <exception cref="ArgumentNullException"><paramref name="events"/> is null.</exception>
     /// <exception cref="InvalidOperationException">
-    /// Two records in one tick carry the same emission sequence, so <c>CMP-SIM-003</c> issued one
-    /// sequence twice.
+    /// A later-sequenced event carries an earlier phase than one before it in the same tick, so some
+    /// system emitted out of phase order.
     /// </exception>
     /// <remarks>
     /// <para>
-    /// This is the invariant that replaced the old fourth ordering key. The sequence being per-tick
-    /// global is what makes three keys a total order, so it has to be checked somewhere; leaving it
-    /// as an assumption is what made the removed key look necessary while being unreachable.
+    /// <b>This is the fact that lets the phase leave the comparator, so it is checked rather than
+    /// assumed.</b> The sequence is issued at emission and emission happens in phase order, so a
+    /// lower phase in one tick always carries a lower sequence. That is exactly why sorting by
+    /// <c>(tick, sequence)</c> already produces phase order and why a phase key would be dead. Drop
+    /// the key without checking the fact and the fact is simply gone - which is how a comparator ends
+    /// up with keys nobody can explain.
     /// </para>
     /// <para>
-    /// <b>Why the adjacency scan in <see cref="AssertTotalOrder(DomainEvent[], int)"/> is not
-    /// enough.</b> The batch is sorted by tick, then phase, then sequence, so two records sharing a
-    /// tick and a sequence are adjacent only when they also share a phase. A duplicate issued to two
-    /// different phases lands in two different blocks and the adjacency scan walks straight past it.
-    /// That is the whole failure mode: a check that only intercepts the routes someone enumerated.
+    /// It is also a useful check in its own right, not merely bookkeeping: a system that emits during
+    /// a phase it does not belong to, or that caches a sequence across a phase boundary and emits it
+    /// later, produces exactly this shape. doc 10 § System phase ordering fixes the phase order and
+    /// says "observable ordering changes require regression tests", and this is what notices.
     /// </para>
     /// <para>
-    /// <b>Method.</b> Within one tick the sorted batch is at most
-    /// <see cref="MaximumPhaseRuns"/> contiguous same-phase blocks, each with strictly increasing
-    /// sequences. Merging those blocks by sequence yields every sequence in the tick in ascending
-    /// order, and equal values necessarily come out consecutively, so one comparison against the
-    /// previous emitted value finds any duplicate wherever it came from. The cursors are a
-    /// <see langword="stackalloc"/> span bounded by a documented constant, so this allocates nothing
-    /// on the managed heap and stays inside the tick's allocation budget.
+    /// One linear pass with two variables over a batch already sorted by <c>(tick, sequence)</c>, so
+    /// it allocates nothing and costs a comparison per record.
     /// </para>
     /// </remarks>
-    public static void AssertSequenceUniqueWithinTick(DomainEvent[] events, int count)
+    public static void AssertPhaseAgreesWithSequenceWithinTick(DomainEvent[] events, int count)
     {
         ArgumentNullException.ThrowIfNull(events);
         ArgumentOutOfRangeException.ThrowIfNegative(count);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(count, events.Length);
 
-        Span<int> cursors = stackalloc int[MaximumPhaseRuns];
-        Span<int> ends = stackalloc int[MaximumPhaseRuns];
-
-        int tickStart = 0;
-        while (tickStart < count)
+        for (int index = 1; index < count; index++)
         {
-            long tick = events[tickStart].Provenance.Tick;
-            int tickEnd = tickStart;
-            while (tickEnd < count && events[tickEnd].Provenance.Tick == tick)
+            EventProvenance previous = events[index - 1].Provenance;
+            EventProvenance current = events[index].Provenance;
+            if (previous.Tick != current.Tick)
             {
-                tickEnd++;
+                continue;
             }
 
-            int runs = 0;
-            int runStart = tickStart;
-            for (int index = tickStart + 1; index <= tickEnd; index++)
+            if (current.SystemPhase < previous.SystemPhase)
             {
-                if (index < tickEnd
-                    && events[index].Provenance.SystemPhase == events[runStart].Provenance.SystemPhase)
-                {
-                    continue;
-                }
-
-                if (runs == MaximumPhaseRuns)
-                {
-                    throw new InvalidOperationException(BuildPhaseRunMessage(tick, "domain"));
-                }
-
-                cursors[runs] = runStart;
-                ends[runs] = index;
-                runs++;
-                runStart = index;
+                throw new InvalidOperationException(BuildPhaseDisagreementMessage(
+                    current.Tick,
+                    previous.SystemPhase,
+                    previous.Sequence,
+                    current.SystemPhase,
+                    current.Sequence,
+                    "domain"));
             }
-
-            long previous = 0;
-            bool hasPrevious = false;
-            for (int emitted = tickStart; emitted < tickEnd; emitted++)
-            {
-                int chosen = -1;
-                long smallest = 0;
-                for (int run = 0; run < runs; run++)
-                {
-                    if (cursors[run] >= ends[run])
-                    {
-                        continue;
-                    }
-
-                    long candidate = events[cursors[run]].Provenance.Sequence;
-                    if (chosen < 0 || candidate < smallest)
-                    {
-                        chosen = run;
-                        smallest = candidate;
-                    }
-                }
-
-                if (hasPrevious && smallest == previous)
-                {
-                    throw new InvalidOperationException(BuildTieMessage(tick, smallest, "domain"));
-                }
-
-                previous = smallest;
-                hasPrevious = true;
-                cursors[chosen]++;
-            }
-
-            tickStart = tickEnd;
         }
     }
 
@@ -285,108 +235,76 @@ public static class EventOrdering
             }
         }
 
-        AssertSequenceUniqueWithinTick(events, count);
+        AssertPhaseAgreesWithSequenceWithinTick(events, count);
     }
 
     /// <summary>
-    /// Asserts that no two records in a sorted presentation batch share a tick and an emission
+    /// Asserts that within each tick the system phase is non-decreasing along ascending emission
     /// sequence.
     /// </summary>
     /// <param name="events">The already-sorted buffer.</param>
     /// <param name="count">How many leading elements are live.</param>
     /// <exception cref="ArgumentNullException"><paramref name="events"/> is null.</exception>
-    /// <exception cref="InvalidOperationException">Two records in one tick share an emission sequence.</exception>
+    /// <exception cref="InvalidOperationException">Some system emitted out of phase order.</exception>
     /// <remarks>
-    /// The same check as <see cref="AssertSequenceUniqueWithinTick(DomainEvent[], int)"/>, whose
-    /// remarks give the method and the reason. Duplicated per event type rather than unified behind
-    /// an interface for the same reason <see cref="Sort(DomainEvent[], int)"/> is: an indirect call
-    /// per comparison is not affordable on this path.
+    /// The same check as
+    /// <see cref="AssertPhaseAgreesWithSequenceWithinTick(DomainEvent[], int)"/>, whose remarks give
+    /// the reason. Duplicated per event type rather than unified behind an interface for the same
+    /// reason <see cref="Sort(DomainEvent[], int)"/> is: an indirect call per comparison is not
+    /// affordable on this path.
     /// </remarks>
-    public static void AssertSequenceUniqueWithinTick(PresentationEvent[] events, int count)
+    public static void AssertPhaseAgreesWithSequenceWithinTick(PresentationEvent[] events, int count)
     {
         ArgumentNullException.ThrowIfNull(events);
         ArgumentOutOfRangeException.ThrowIfNegative(count);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(count, events.Length);
 
-        Span<int> cursors = stackalloc int[MaximumPhaseRuns];
-        Span<int> ends = stackalloc int[MaximumPhaseRuns];
-
-        int tickStart = 0;
-        while (tickStart < count)
+        for (int index = 1; index < count; index++)
         {
-            long tick = events[tickStart].Provenance.Tick;
-            int tickEnd = tickStart;
-            while (tickEnd < count && events[tickEnd].Provenance.Tick == tick)
+            EventProvenance previous = events[index - 1].Provenance;
+            EventProvenance current = events[index].Provenance;
+            if (previous.Tick != current.Tick)
             {
-                tickEnd++;
+                continue;
             }
 
-            int runs = 0;
-            int runStart = tickStart;
-            for (int index = tickStart + 1; index <= tickEnd; index++)
+            if (current.SystemPhase < previous.SystemPhase)
             {
-                if (index < tickEnd
-                    && events[index].Provenance.SystemPhase == events[runStart].Provenance.SystemPhase)
-                {
-                    continue;
-                }
-
-                if (runs == MaximumPhaseRuns)
-                {
-                    throw new InvalidOperationException(BuildPhaseRunMessage(tick, "presentation"));
-                }
-
-                cursors[runs] = runStart;
-                ends[runs] = index;
-                runs++;
-                runStart = index;
+                throw new InvalidOperationException(BuildPhaseDisagreementMessage(
+                    current.Tick,
+                    previous.SystemPhase,
+                    previous.Sequence,
+                    current.SystemPhase,
+                    current.Sequence,
+                    "presentation"));
             }
-
-            long previous = 0;
-            bool hasPrevious = false;
-            for (int emitted = tickStart; emitted < tickEnd; emitted++)
-            {
-                int chosen = -1;
-                long smallest = 0;
-                for (int run = 0; run < runs; run++)
-                {
-                    if (cursors[run] >= ends[run])
-                    {
-                        continue;
-                    }
-
-                    long candidate = events[cursors[run]].Provenance.Sequence;
-                    if (chosen < 0 || candidate < smallest)
-                    {
-                        chosen = run;
-                        smallest = candidate;
-                    }
-                }
-
-                if (hasPrevious && smallest == previous)
-                {
-                    throw new InvalidOperationException(BuildTieMessage(tick, smallest, "presentation"));
-                }
-
-                previous = smallest;
-                hasPrevious = true;
-                cursors[chosen]++;
-            }
-
-            tickStart = tickEnd;
         }
     }
 
-    private static string BuildPhaseRunMessage(long tick, string channel)
+    private static string BuildPhaseDisagreementMessage(
+        long tick,
+        int previousPhase,
+        long previousSequence,
+        int currentPhase,
+        long currentSequence,
+        string channel)
     {
-        return "the "
-            + channel
-            + " batch for tick "
+        return "in tick "
             + tick.ToString(CultureInfo.InvariantCulture)
-            + " contains more than "
-            + MaximumPhaseRuns.ToString(CultureInfo.InvariantCulture)
-            + " contiguous same-phase runs, so either the batch is not sorted by phase or a record "
-            + "carries a phase outside doc 10 § System phase ordering's fourteen stable numerals.";
+            + " a "
+            + channel
+            + " event from system phase "
+            + currentPhase.ToString(CultureInfo.InvariantCulture)
+            + " carries emission sequence "
+            + currentSequence.ToString(CultureInfo.InvariantCulture)
+            + ", which is later than sequence "
+            + previousSequence.ToString(CultureInfo.InvariantCulture)
+            + " from phase "
+            + previousPhase.ToString(CultureInfo.InvariantCulture)
+            + ". The sequence is issued at emission and emission happens in phase order, so phase "
+            + "must not decrease as the sequence rises; doc 10 § System phase ordering fixes that "
+            + "order. Either a system emitted outside its phase or it held a sequence across a "
+            + "phase boundary before emitting.";
     }
 
     private static string BuildTieMessage(long tick, long sequence, string channel)

@@ -109,6 +109,15 @@ internal static class StoreContractAssertions
     {
         Expect.Multiple(() =>
         {
+            // Without this, three empty strings satisfy both assertions below and the gate passes
+            // having compared nothing: a store that iterated zero records would agree with a
+            // reference that sorted zero records. doc 91 § Acceptance evidence wants a gate that can
+            // fail, and a gate that is vacuous on empty input cannot.
+            Assert.That(
+                firstRendering,
+                Is.Not.Empty,
+                subject + ": the fixture must render at least one record, or this assertion compares "
+                    + "nothing and passes whatever the ordering rule does");
             Assert.That(
                 secondRendering,
                 Is.EqualTo(firstRendering),

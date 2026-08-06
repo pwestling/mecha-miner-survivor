@@ -124,6 +124,72 @@ internal sealed class SimulationAssemblyDeterminismTests
     ];
 
     /// <summary>
+    /// The assembly this gate is about. Read from metadata, not from the file name.
+    /// </summary>
+    private const string ExpectedAssemblyName = "MechaMiner.Simulation";
+
+    /// <summary>
+    /// Types the simulation assembly must <b>define</b>, proving the definition walk ran and ran over
+    /// the right assembly.
+    /// </summary>
+    /// <remarks>
+    /// These are the two types the event and entity ordering contracts live in, so they cannot quietly
+    /// disappear while this assembly still means anything. A reader pointed at some other assembly -
+    /// the test assembly, a stale copy, a reference assembly - fails here rather than reporting a clean
+    /// bill of health for a file nobody meant to check.
+    /// </remarks>
+    private static readonly string[] RequiredTypeDefinitions =
+    [
+        "MechaMiner.Simulation.Entities.EntityId",
+        "MechaMiner.Simulation.Events.EventOrdering",
+    ];
+
+    /// <summary>
+    /// Types the simulation assembly must <b>reference</b>, proving the TypeReference walk ran.
+    /// </summary>
+    /// <remarks>
+    /// Each is guaranteed by a rule rather than by accident, which is what makes it a usable anchor.
+    /// <c>CultureInfo</c> is forced by the repository's <c>CA1305</c>/<c>CA1310</c> build errors and by
+    /// doc 91 § Determinism and fixture policy requiring canonical invariant rendering.
+    /// <c>ArgumentOutOfRangeException</c> is forced by doc 20 § Entity identity's fail-closed
+    /// validation. <c>InvalidOperationException</c> is forced by the loud-failure invariants in
+    /// <c>EventOrdering</c>. If any of the three is genuinely gone, the assembly has changed enough
+    /// that this gate deserves re-reading.
+    /// </remarks>
+    private static readonly string[] RequiredTypeReferences =
+    [
+        "System.Globalization.CultureInfo",
+        "System.ArgumentOutOfRangeException",
+        "System.InvalidOperationException",
+    ];
+
+    /// <summary>
+    /// Members the simulation assembly must reference, proving the MemberReference walk ran.
+    /// </summary>
+    /// <remarks>
+    /// <b>The member walk needs its own anchor.</b> Half the denylist - <c>Guid.NewGuid</c>,
+    /// <c>Environment.TickCount</c>, <c>TickCount64</c> - is enforced only through MemberReference
+    /// rows, on types that are otherwise permitted. A member walk that silently stopped yielding would
+    /// therefore keep the type half working and stop catching those three, and a positive control over
+    /// types alone would not notice. This is that separate control.
+    /// </remarks>
+    private static readonly string[] RequiredMemberReferences =
+    [
+        "System.Globalization.CultureInfo::get_InvariantCulture",
+    ];
+
+    /// <summary>
+    /// The smallest row count in each table that is consistent with a real assembly of this size.
+    /// </summary>
+    /// <remarks>
+    /// A floor, not a measurement: the observed counts are far above it, so ordinary growth never trips
+    /// it, while a reader that found an empty or truncated table does. This is the weakest of the
+    /// positive controls and deliberately the last - a count only proves the walk saw <em>something</em>,
+    /// which the named anchors above prove far more sharply.
+    /// </remarks>
+    private const int MinimumPlausibleRowCount = 20;
+
+    /// <summary>
     /// Verification: <c>VER-SIM-001-014</c>.
     ///
     /// The compiled simulation assembly references none of the forbidden wall-clock, nondeterministic,
@@ -137,10 +203,16 @@ internal sealed class SimulationAssemblyDeterminismTests
     [Test]
     public void TheCompiledAssemblyReferencesNoForbiddenDeterminismApi()
     {
-        List<string> violations = ScanForForbiddenReferences(SimulationAssemblyPath());
+        ScanResult scan = ScanForForbiddenReferences(SimulationAssemblyPath());
+
+        // The positive control runs first and unconditionally. A scan that read nothing reports no
+        // forbidden reference, because there is no forbidden reference in zero rows - so "no
+        // violations" is only evidence once the walk is known to have happened. This is the same
+        // failure the Job 1 goldens had: a check that is correct and proves nothing.
+        AssertTheScanActuallyReadTheAssembly(scan);
 
         Assert.That(
-            violations,
+            scan.Violations,
             Is.Empty,
             "the compiled MechaMiner.Simulation assembly references APIs doc 20 § Scope and "
                 + "invariants excludes from the simulation - it is "
@@ -148,7 +220,83 @@ internal sealed class SimulationAssemblyDeterminismTests
                 + "wall time, or mutable global services\". Each line below is a metadata row, so the "
                 + "reference is real regardless of how the source spelled it: "
                 + Environment.NewLine
-                + string.Join(Environment.NewLine, violations));
+                + string.Join(Environment.NewLine, scan.Violations));
+    }
+
+    /// <summary>
+    /// Asserts the scan found things it certainly should, so that an empty violation list means "clean"
+    /// rather than "read nothing".
+    /// </summary>
+    /// <param name="scan">The completed scan.</param>
+    /// <remarks>
+    /// <para>
+    /// Resolving the assembly by path is the fragile step: an output-layout change, a configuration
+    /// change, a rename, or a single-file host can all leave the reader pointed somewhere with no rows
+    /// in it, and every assertion of the form "no forbidden reference is present" then passes forever.
+    /// That is the most common way a gate of this shape dies, and it dies silently.
+    /// </para>
+    /// <para>
+    /// The anchors are named types and a named member rather than only a row count, because a count is
+    /// satisfiable by the wrong things - any assembly at all has rows. A specific full type name that
+    /// must be present, plus the assembly's own identity from metadata, plus a type this assembly must
+    /// define, is much harder to satisfy by accident: the wrong file fails on identity, an unrelated
+    /// assembly fails on the required definitions, and a truncated table fails on the references.
+    /// </para>
+    /// </remarks>
+    private static void AssertTheScanActuallyReadTheAssembly(ScanResult scan)
+    {
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                scan.AssemblyName,
+                Is.EqualTo(ExpectedAssemblyName),
+                "the metadata reader must have opened the simulation assembly itself; a different "
+                    + "assembly would be scanned clean and prove nothing about this one");
+
+            foreach (string required in RequiredTypeDefinitions)
+            {
+                Assert.That(
+                    scan.TypeDefinitionNames,
+                    Does.Contain(required),
+                    "the TypeDefinition walk must find " + required
+                        + "; if it does not, either the walk is broken or this is not the simulation "
+                        + "assembly, and the Godot-namespace definition rule silently stops working");
+            }
+
+            foreach (string required in RequiredTypeReferences)
+            {
+                Assert.That(
+                    scan.TypeReferenceNames,
+                    Does.Contain(required),
+                    "the TypeReference walk must find " + required
+                        + ", which this assembly certainly references; a walk that cannot find a type "
+                        + "that is certainly there is broken, and every forbidden-type rule rests on it");
+            }
+
+            foreach (string required in RequiredMemberReferences)
+            {
+                Assert.That(
+                    scan.MemberReferenceNames,
+                    Does.Contain(required),
+                    "the MemberReference walk must find " + required
+                        + "; the Guid.NewGuid and Environment.TickCount rules are enforced only through "
+                        + "member rows, so a dead member walk disables them while leaving the type "
+                        + "rules working");
+            }
+
+            Assert.That(
+                scan.TypeReferenceNames,
+                Has.Count.GreaterThanOrEqualTo(MinimumPlausibleRowCount),
+                "the TypeReference table is implausibly small for this assembly");
+            Assert.That(
+                scan.MemberReferenceNames,
+                Has.Count.GreaterThanOrEqualTo(MinimumPlausibleRowCount),
+                "the MemberReference table is implausibly small for this assembly");
+            Assert.That(
+                scan.TypeDefinitionNames,
+                Has.Count.GreaterThanOrEqualTo(MinimumPlausibleRowCount),
+                "the TypeDefinition table is implausibly small for this assembly");
+        });
     }
 
     /// <summary>
@@ -206,18 +354,17 @@ internal sealed class SimulationAssemblyDeterminismTests
     [Test]
     public void TheForbiddenApiScanIsHonestAboutWhatItCannotSee()
     {
-        string assemblyPath = SimulationAssemblyPath();
-        HashSet<string> referencedTypes = ReadTypeReferenceNames(assemblyPath);
+        ScanResult scan = ScanForForbiddenReferences(SimulationAssemblyPath());
 
         Expect.Multiple(() =>
         {
             Assert.That(
-                referencedTypes,
+                scan.TypeReferenceNames,
                 Is.Not.Empty,
                 "the scan must actually read TypeReference rows, or every gate built on it passes "
                     + "vacuously");
             Assert.That(
-                referencedTypes,
+                scan.TypeReferenceNames,
                 Does.Contain("System.Int32"),
                 "a type used only in method bodies and signatures must appear as a TypeReference row, "
                     + "which is what makes the method-body and generic-instantiation routes reachable");
@@ -256,25 +403,6 @@ internal sealed class SimulationAssemblyDeterminismTests
         return location;
     }
 
-    /// <summary>Reads every <c>TypeReference</c> row as a full type name.</summary>
-    private static HashSet<string> ReadTypeReferenceNames(string assemblyPath)
-    {
-        HashSet<string> names = new(StringComparer.Ordinal);
-        using FileStream stream = File.OpenRead(assemblyPath);
-        using PEReader peReader = new(stream);
-        MetadataReader reader = peReader.GetMetadataReader();
-
-        foreach (TypeReferenceHandle handle in reader.TypeReferences)
-        {
-            TypeReference reference = reader.GetTypeReference(handle);
-            names.Add(FullName(
-                reader.GetString(reference.Namespace),
-                reader.GetString(reference.Name)));
-        }
-
-        return names;
-    }
-
     /// <summary>
     /// Scans an assembly's <c>TypeReference</c> and <c>MemberReference</c> rows and returns one line
     /// per forbidden reference found.
@@ -285,18 +413,23 @@ internal sealed class SimulationAssemblyDeterminismTests
     /// signature, a local-variable signature, a generic instantiation, or a member reference's parent,
     /// so the route the source took to reach the API is not something this has to enumerate.
     /// </remarks>
-    private static List<string> ScanForForbiddenReferences(string assemblyPath)
+    private static ScanResult ScanForForbiddenReferences(string assemblyPath)
     {
         List<string> violations = new();
+        HashSet<string> typeReferenceNames = new(StringComparer.Ordinal);
+        HashSet<string> memberReferenceNames = new(StringComparer.Ordinal);
+        HashSet<string> typeDefinitionNames = new(StringComparer.Ordinal);
         using FileStream stream = File.OpenRead(assemblyPath);
         using PEReader peReader = new(stream);
         MetadataReader reader = peReader.GetMetadataReader();
+        string assemblyName = reader.GetString(reader.GetAssemblyDefinition().Name);
 
         foreach (TypeReferenceHandle handle in reader.TypeReferences)
         {
             TypeReference reference = reader.GetTypeReference(handle);
             string typeNamespace = reader.GetString(reference.Namespace);
             string typeName = reader.GetString(reference.Name);
+            typeReferenceNames.Add(FullName(typeNamespace, typeName));
 
             if (IsForbiddenNamespace(typeNamespace))
             {
@@ -305,7 +438,6 @@ internal sealed class SimulationAssemblyDeterminismTests
                         + FullName(typeNamespace, typeName)
                         + " - the engine namespace, which doc 20 § Scope and invariants excludes from "
                         + "the simulation");
-                continue;
             }
 
             foreach (ForbiddenType forbidden in ForbiddenTypes)
@@ -330,6 +462,7 @@ internal sealed class SimulationAssemblyDeterminismTests
         {
             TypeDefinition definition = reader.GetTypeDefinition(handle);
             string definedNamespace = reader.GetString(definition.Namespace);
+            typeDefinitionNames.Add(FullName(definedNamespace, reader.GetString(definition.Name)));
             if (IsForbiddenNamespace(definedNamespace))
             {
                 violations.Add(
@@ -354,6 +487,7 @@ internal sealed class SimulationAssemblyDeterminismTests
             string parentNamespace = reader.GetString(parent.Namespace);
             string parentName = reader.GetString(parent.Name);
             string memberName = reader.GetString(reference.Name);
+            memberReferenceNames.Add(FullName(parentNamespace, parentName) + "::" + memberName);
 
             foreach (ForbiddenMember forbidden in ForbiddenMembers)
             {
@@ -373,7 +507,12 @@ internal sealed class SimulationAssemblyDeterminismTests
         }
 
         violations.Sort(StringComparer.Ordinal);
-        return violations;
+        return new ScanResult(
+            assemblyName,
+            violations,
+            typeReferenceNames,
+            memberReferenceNames,
+            typeDefinitionNames);
     }
 
     /// <summary>
@@ -397,6 +536,24 @@ internal sealed class SimulationAssemblyDeterminismTests
                 CultureInfo.InvariantCulture,
                 $"{typeNamespace}.{typeName}");
     }
+
+    /// <summary>Everything one metadata scan observed.</summary>
+    /// <param name="AssemblyName">The assembly's own name, from its metadata rather than its path.</param>
+    /// <param name="Violations">One line per forbidden reference found, in ordinal order.</param>
+    /// <param name="TypeReferenceNames">Every referenced type, for the positive control.</param>
+    /// <param name="MemberReferenceNames">Every referenced member with a type-reference parent.</param>
+    /// <param name="TypeDefinitionNames">Every type this assembly defines.</param>
+    /// <remarks>
+    /// The scan returns what it saw, not only what it objected to, so the test can prove the walk
+    /// happened. A scan that reported violations alone could not distinguish "clean" from "read
+    /// nothing".
+    /// </remarks>
+    private readonly record struct ScanResult(
+        string AssemblyName,
+        List<string> Violations,
+        HashSet<string> TypeReferenceNames,
+        HashSet<string> MemberReferenceNames,
+        HashSet<string> TypeDefinitionNames);
 
     /// <summary>A whole type the simulation may not reference.</summary>
     /// <param name="Namespace">The type's namespace.</param>

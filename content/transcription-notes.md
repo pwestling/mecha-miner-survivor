@@ -4869,6 +4869,10 @@ header records, and the same absence `40:125` runs into when it cites two `conte
 per-ref fact rather than a property of the vocabulary being granted, so decision material that quotes one
 goes stale the moment an id migration merges; where the material needed to point at a resource it names
 that resource's own field instead, and the six geode rows below are identified by their `effect_name`.
+**The one apparent counterexample is not one:** `common-ore-yield-amplifier` (assignment 11 below) contains
+`common-ore` because it is a proposed behavior token slugged from `UTL-F1`'s own `effect.stat_names` value
+`["Mined common ore"]`, which is byte-identical at `3016fbc` and at `c503db1` — across the very id migration
+that renamed the resources — so it is a behavior token and not a resource reference.
 
 **Citation shorthand.** `40:NNN` is `docs/technical/40-content-data-and-validation.md:NNN`, as everywhere
 above in this file. `22:NNN` is `docs/technical/22-combat-and-weapon-runtime.md:NNN`, used here for the

@@ -52,6 +52,47 @@ internal sealed class ProjectGraph
     private readonly List<string> _godotImportsOutsideGame = new();
     private readonly List<string> _gdScriptFiles = new();
 
+    /// <summary>
+    /// The <c>Godot</c> namespace as a token in any position.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This exact expression is also spelled out as <c>GODOT_TOKEN</c> in
+    /// <c>build/verify-architecture.sh</c> § 6. <b>The two are deliberately two readers
+    /// of the same rule, not a redundancy to be collapsed.</b> One is a C# rule over a
+    /// <see cref="ProjectGraph"/> that a test can construct, and it runs in
+    /// <c>test-fast</c>; the other is a text scan the shell gate runs with no build at
+    /// all, so a defect in the C# audit assembly cannot hide the violation from both.
+    /// Deleting either leaves the rule with one reader and no cross-check. If this
+    /// expression changes, change it in both places, and keep
+    /// <c>TheGodotImportRuleCatchesEveryWayOfNamingTheNamespace</c> passing, which is
+    /// the control that measures what the expression actually catches.
+    /// </para>
+    /// <para>
+    /// The predecessor was <c>^\s*using\s+Godot\s*(;|\.)</c>, which tested for one
+    /// import spelling while the rule it feeds is named
+    /// <see cref="ArchitectureRule.GodotTypeOutsideGame"/>. Five of six ways of naming
+    /// the namespace evaded it: <c>using static Godot.GD;</c>,
+    /// <c>global using Godot;</c>, <c>using GD = Godot.GD;</c>,
+    /// <c>using GodotAlias = Godot;</c>, and a fully-qualified <c>Godot.GD.Print</c>
+    /// with no <c>using</c> at all. Matching <c>Godot[.]</c> alone is not sufficient
+    /// either: the alias form <c>using GodotAlias = Godot;</c> has no dot after the
+    /// token. The trailing class is therefore "any non-identifier character or end of
+    /// line", and the leading class excludes <c>.</c> and identifier characters so that
+    /// <c>MechaMiner.GodotLike</c> and <c>NotGodotish</c> do not match.
+    /// </para>
+    /// </remarks>
+    internal const string GodotNamespaceToken = "(^|[^A-Za-z0-9_.])Godot([^A-Za-z0-9_]|$)";
+
+    /// <summary>A <c>using</c> directive line, including the <c>global using</c> form.</summary>
+    private const string UsingDirectiveLine = "^\\s*(global\\s+)?using\\s";
+
+    /// <summary>
+    /// <c>Godot</c> in namespace-qualifier position, which is the only place the token
+    /// can appear outside a <c>using</c> directive and still name an engine type.
+    /// </summary>
+    private const string GodotQualifier = "(^|[^A-Za-z0-9_.])Godot\\s*\\.";
+
     /// <summary>Every project the graph knows about.</summary>
     internal IReadOnlyList<ObservedProject> Projects => _projects;
 
@@ -334,11 +375,7 @@ internal sealed class ProjectGraph
                     continue;
                 }
 
-                if (Regex.IsMatch(
-                    File.ReadAllText(file),
-                    "^\\s*using\\s+Godot\\s*(;|\\.)",
-                    RegexOptions.Multiline,
-                    TimeSpan.FromSeconds(10)))
+                if (NamesGodotNamespace(File.ReadAllText(file)))
                 {
                     _godotImportsOutsideGame.Add(relative);
                 }
@@ -360,5 +397,206 @@ internal sealed class ProjectGraph
 
         _godotImportsOutsideGame.Sort(StringComparer.Ordinal);
         _gdScriptFiles.Sort(StringComparer.Ordinal);
+    }
+
+    /// <summary>
+    /// Whether a C# source file names the <c>Godot</c> namespace, in any of the ways
+    /// C# allows.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Two contexts, both decided by <see cref="GodotNamespaceToken"/>:
+    /// </para>
+    /// <list type="number">
+    /// <item>
+    /// the token on a <c>using</c> directive line, which covers <c>using Godot;</c>,
+    /// <c>global using Godot;</c>, <c>using static Godot.GD;</c>,
+    /// <c>using GD = Godot.GD;</c> and <c>using GodotAlias = Godot;</c>; and
+    /// </item>
+    /// <item>
+    /// the token in namespace-qualifier position anywhere at all, which covers a
+    /// fully-qualified <c>Godot.GD.Print</c> with no import.
+    /// </item>
+    /// </list>
+    /// <para>
+    /// The two contexts exist because the token alone, matched against raw file text,
+    /// is not a usable rule on this repository: 96 lines under <c>src/</c> and
+    /// <c>tests/</c> spell <c>Godot</c> as a bare English word in a comment or a
+    /// diagnostic string, and most of them are prose explaining why this very boundary
+    /// exists. Rewording those to satisfy a text scan would make the code worse and
+    /// prove nothing. Comments and string literals are therefore removed before the
+    /// scan, and the one remaining collision — <c>ToolchainPins.Godot</c>, a property
+    /// whose name is bound to the <c>godot</c> key of <c>build/toolchain.json</c> and
+    /// is not a namespace reference — is excluded by requiring qualifier position
+    /// rather than by an allowlist entry, because an allowlist entry is a hole and a
+    /// context requirement is a rule.
+    /// </para>
+    /// <para>
+    /// The shell reader in <c>build/verify-architecture.sh</c> § 6 asks the same two
+    /// questions with the same token, over a cruder <c>sed</c> stripper. It can lose a
+    /// token to an awkwardly quoted line where this reader would not; it cannot invent
+    /// one. The C# reader is the precise one, the shell reader is the one that needs no
+    /// build, and § 6 carries the same six-form control so a divergence shows up as a
+    /// failing control rather than as a silent disagreement.
+    /// </para>
+    /// </remarks>
+    internal static bool NamesGodotNamespace(string sourceText)
+    {
+        ArgumentNullException.ThrowIfNull(sourceText);
+
+        foreach (string line in StripCommentsAndStringLiterals(sourceText)
+            .Split('\n'))
+        {
+            if (Regex.IsMatch(line, GodotQualifier, RegexOptions.None, TimeSpan.FromSeconds(10)))
+            {
+                return true;
+            }
+
+            if (Regex.IsMatch(line, UsingDirectiveLine, RegexOptions.None, TimeSpan.FromSeconds(10))
+                && Regex.IsMatch(line, GodotNamespaceToken, RegexOptions.None, TimeSpan.FromSeconds(10)))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Replaces comment and string-literal content with spaces, preserving line
+    /// structure so the caller can still reason per line.
+    /// </summary>
+    /// <remarks>
+    /// A character scanner rather than a regex, because the cases that matter are
+    /// exactly the ones a regex gets wrong: an escaped quote inside a literal
+    /// (<c>"\""</c>), a <c>//</c> inside a literal (<c>"https://..."</c>), and a quote
+    /// inside a comment. Handles line comments, block comments, ordinary literals,
+    /// verbatim literals and raw string literals. Character literals are left alone;
+    /// a <c>char</c> cannot hold an identifier.
+    /// </remarks>
+    private static string StripCommentsAndStringLiterals(string sourceText)
+    {
+        char[] output = sourceText.ToCharArray();
+        int index = 0;
+
+        void Blank(int from, int toExclusive)
+        {
+            for (int i = from; i < toExclusive && i < output.Length; i++)
+            {
+                if (output[i] != '\n' && output[i] != '\r')
+                {
+                    output[i] = ' ';
+                }
+            }
+        }
+
+        while (index < sourceText.Length)
+        {
+            char current = sourceText[index];
+
+            if (current == '/' && index + 1 < sourceText.Length && sourceText[index + 1] == '/')
+            {
+                int end = sourceText.IndexOf('\n', index);
+                end = end < 0 ? sourceText.Length : end;
+                Blank(index, end);
+                index = end;
+                continue;
+            }
+
+            if (current == '/' && index + 1 < sourceText.Length && sourceText[index + 1] == '*')
+            {
+                int end = sourceText.IndexOf("*/", index + 2, StringComparison.Ordinal);
+                end = end < 0 ? sourceText.Length : end + 2;
+                Blank(index, end);
+                index = end;
+                continue;
+            }
+
+            if (current == '"')
+            {
+                index = BlankLiteral(sourceText, index, Blank);
+                continue;
+            }
+
+            if (current == '@' && index + 1 < sourceText.Length && sourceText[index + 1] == '"')
+            {
+                index = BlankLiteral(sourceText, index, Blank);
+                continue;
+            }
+
+            index++;
+        }
+
+        return new string(output);
+    }
+
+    /// <summary>Blanks one string literal starting at <paramref name="start"/> and returns the index after it.</summary>
+    private static int BlankLiteral(string text, int start, Action<int, int> blank)
+    {
+        int index = start;
+        bool verbatim = text[index] == '@';
+        if (verbatim)
+        {
+            index++;
+        }
+
+        // A raw string literal opens with three or more quotes and closes with the same
+        // count, and backslash is not an escape inside it.
+        int quotes = 0;
+        while (index < text.Length && text[index] == '"')
+        {
+            quotes++;
+            index++;
+        }
+
+        if (quotes >= 3)
+        {
+            string terminator = new('"', quotes);
+            int rawEnd = text.IndexOf(terminator, index, StringComparison.Ordinal);
+            rawEnd = rawEnd < 0 ? text.Length : rawEnd + quotes;
+            blank(start, rawEnd);
+            return rawEnd;
+        }
+
+        if (quotes == 2)
+        {
+            // An empty literal: both quotes were consumed.
+            blank(start, index);
+            return index;
+        }
+
+        while (index < text.Length)
+        {
+            char current = text[index];
+            if (!verbatim && current == '\\' && index + 1 < text.Length)
+            {
+                index += 2;
+                continue;
+            }
+
+            if (current == '"')
+            {
+                if (verbatim && index + 1 < text.Length && text[index + 1] == '"')
+                {
+                    index += 2;
+                    continue;
+                }
+
+                index++;
+                break;
+            }
+
+            if (!verbatim && current == '\n')
+            {
+                // An unterminated ordinary literal cannot span a line; stop rather than
+                // swallowing the rest of the file.
+                break;
+            }
+
+            index++;
+        }
+
+        blank(start, index);
+        return index;
     }
 }

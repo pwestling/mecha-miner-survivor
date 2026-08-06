@@ -343,11 +343,124 @@ assert_absent_pattern \
 
 echo
 echo "=== 6. no Godot types outside game/ (VER-FND-001-004)"
-assert_absent_pattern \
-  "no C# file under src/ or tests/ imports Godot" \
-  '(^|[^A-Za-z.])using[[:space:]]+Godot([;.]|$)' \
-  '*.cs' \
-  src tests
+#
+# The Godot namespace as a token in any position, not only after `using`.
+#
+# The previous expression was `(^|[^A-Za-z.])using[[:space:]]+Godot([;.]|$)`, which
+# required the literal token `using` followed by whitespace followed by `Godot`. It
+# caught two of the six ways C# offers of naming a namespace - `using Godot;` and
+# `global using Godot;` - and missed `using static Godot.GD;`,
+# `using GD = Godot.GD;`, `using GodotAlias = Godot;` and a fully-qualified
+# `Godot.GD.Print` with no import at all.
+#
+# GODOT_TOKEN below is character-for-character the same expression as
+# ProjectGraph.GodotNamespaceToken in src/MechaMiner.Tools/Audit/ProjectGraph.cs.
+# THE TWO ARE DELIBERATELY TWO READERS OF THE SAME RULE, NOT A REDUNDANCY. That one
+# is a C# rule over a constructible graph and runs in test-fast; this one is a text
+# scan that needs no build and no audit assembly, so a defect in the audit code
+# cannot hide a violation from both. Do not delete either as duplicated work. If the
+# expression changes, change it in both files, and keep both six-form controls green.
+#
+# Matching `Godot[.]` alone would not be sufficient: `using GodotAlias = Godot;` has
+# no dot after the token. The trailing class is therefore "any non-identifier
+# character or end of line", and the leading class excludes `.` and identifier
+# characters so `MechaMiner.GodotLike` and `NotGodotish` do not match.
+readonly GODOT_TOKEN='(^|[^A-Za-z0-9_.])Godot([^A-Za-z0-9_]|$)'
+
+# Where the token may legitimately appear if the file names the namespace: on a
+# `using` directive line (which covers all five import spellings), or in
+# namespace-qualifier position anywhere (which covers the fully-qualified form).
+readonly GODOT_USING_LINE='^[[:space:]]*(global[[:space:]]+)?using[[:space:]]'
+readonly GODOT_QUALIFIER='(^|[^A-Za-z0-9_.])Godot[[:space:]]*\.'
+
+# Comments and string literals are removed before the scan, for the same reason the
+# C# reader removes them: 96 lines under src/ and tests/ spell `Godot` as a bare
+# English word in a comment or a diagnostic message, and most of them are prose
+# explaining why this boundary exists. Rewording those to satisfy a text scan would
+# make the code worse and prove nothing about the boundary. This sed is cruder than
+# the C# reader's character scanner - it can lose a token to an awkwardly quoted
+# line - but it cannot invent one, so its error direction is a false negative that
+# the C# reader catches, never a false accusation.
+godot_strip_comments_and_strings() {
+  sed -E -e 's,//.*,,' -e 's/"([^"\\]|\\.)*"//g' "$1"
+}
+
+# Prints the files under the given roots that name the Godot namespace.
+godot_namespace_hits() {
+  local root file stripped
+  for root in "$@"; do
+    while IFS= read -r file; do
+      stripped="$(godot_strip_comments_and_strings "${file}")"
+      if printf '%s\n' "${stripped}" | grep -qE "${GODOT_QUALIFIER}"; then
+        printf '%s\n' "${file}"
+      elif printf '%s\n' "${stripped}" \
+        | grep -E "${GODOT_USING_LINE}" \
+        | grep -qE "${GODOT_TOKEN}"; then
+        printf '%s\n' "${file}"
+      fi
+    done < <(find "${root}" -name '*.cs' -not -path '*/obj/*' -not -path '*/bin/*' -print | sort)
+  done
+}
+
+godot_scan_roots_present=1
+for root in src tests; do
+  if [[ ! -d "${REPO_ROOT}/${root}" ]]; then
+    # A moved scan root would make the search cover nothing, and an empty search is
+    # not a satisfied prohibition.
+    fail "Godot source scan root is missing: ${root}/, so this prohibition was not searched for"
+    godot_scan_roots_present=0
+  fi
+done
+
+if [[ "${godot_scan_roots_present}" -eq 1 ]]; then
+  stray_godot="$(cd "${REPO_ROOT}" && godot_namespace_hits src tests)"
+  if [[ -z "${stray_godot}" ]]; then
+    pass "no C# file under src/ or tests/ names the Godot namespace"
+  else
+    fail "Godot namespace named outside game/: $(printf '%s' "${stray_godot}" | paste -sd' ' -)"
+  fi
+fi
+
+# Control. The scan above has only ever run against a compliant tree, so on its own it
+# is indistinguishable from a scan that matches nothing. These six probes are the same
+# six forms ArchitectureRuleTests.GodotNamingForms feeds the C# reader; keeping one list
+# in two places is what makes a divergence between the two readers a failing control
+# rather than a silent disagreement. The three lookalikes must be accepted, or a scan
+# that flagged every file would pass the six above.
+godot_probe_dir="$(mktemp -d)"
+mkdir -p "${godot_probe_dir}/probe"
+printf 'using Godot;\ninternal static class P { internal static int R() => 1; }\n' \
+  > "${godot_probe_dir}/probe/f1-using.cs"
+printf 'global using Godot;\ninternal static class P { internal static int R() => 1; }\n' \
+  > "${godot_probe_dir}/probe/f2-global-using.cs"
+printf 'using static Godot.GD;\ninternal static class P { internal static int R() => 1; }\n' \
+  > "${godot_probe_dir}/probe/f3-using-static.cs"
+printf 'using GD = Godot.GD;\ninternal static class P { internal static int R() => 1; }\n' \
+  > "${godot_probe_dir}/probe/f4-alias-type.cs"
+printf 'using GodotAlias = Godot;\ninternal static class P { internal static int R() => 1; }\n' \
+  > "${godot_probe_dir}/probe/f5-alias-namespace.cs"
+printf 'internal static class P { internal static void R() => Godot.GD.Print("x"); }\n' \
+  > "${godot_probe_dir}/probe/f6-fully-qualified.cs"
+printf 'using MechaMiner.GodotLike;\ninternal static class N { internal static void R() => GodotLike.Do(); }\n' \
+  > "${godot_probe_dir}/probe/n1-qualified-lookalike.cs"
+printf 'internal static class N { internal static string R() => "NotGodotish"; }\n' \
+  > "${godot_probe_dir}/probe/n2-embedded-token.cs"
+printf '// Only game/ may reference Godot.\ninternal sealed class N { public int Godot { get; set; } }\n' \
+  > "${godot_probe_dir}/probe/n3-comment-and-member.cs"
+
+readonly EXPECTED_GODOT_PROBES=6
+godot_probe_hits="$(godot_namespace_hits "${godot_probe_dir}/probe")"
+godot_probe_caught="$(printf '%s' "${godot_probe_hits}" | grep -c '/f[1-6]-' || true)"
+godot_probe_false="$(printf '%s' "${godot_probe_hits}" | grep -c '/n[1-3]-' || true)"
+
+if [[ "${godot_probe_caught}" -ne "${EXPECTED_GODOT_PROBES}" ]]; then
+  fail "control: the Godot scan caught ${godot_probe_caught} of ${EXPECTED_GODOT_PROBES} naming forms; missed $(cd "${godot_probe_dir}/probe" && ls f*.cs | while read -r f; do printf '%s\n' "${godot_probe_hits}" | grep -q "/${f}\$" || printf '%s ' "${f}"; done)"
+elif [[ "${godot_probe_false}" -ne 0 ]]; then
+  fail "control: the Godot scan flagged $(printf '%s' "${godot_probe_hits}" | grep '/n[1-3]-' | paste -sd' ' -), which do not name the Godot namespace"
+else
+  pass "control: all ${EXPECTED_GODOT_PROBES} ways of naming the Godot namespace are caught, and 3 lookalikes are not"
+fi
+rm -rf "${godot_probe_dir}"
 
 echo
 echo "=== 7. no GDScript in the repository (VER-FND-001-005)"

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
+using System.IO;
 using MechaMiner.Tests.Support;
 using MechaMiner.Tools.Audit;
 using NUnit.Framework;
@@ -217,7 +218,13 @@ internal sealed class ArchitectureRuleTests
             Render(findings));
     }
 
-    /// <summary>A Godot import outside <c>game/</c> is rejected.</summary>
+    /// <summary>
+    /// A Godot import outside <c>game/</c> is rejected. This controls the
+    /// <em>aggregation</em> step only: the import is handed to the rules as a recorded
+    /// value, so the scan that decides what counts as an import never runs. See
+    /// <see cref="TheGodotImportRuleCatchesEveryWayOfNamingTheNamespace"/> for the
+    /// control over the scan itself.
+    /// </summary>
     [Test]
     public void AGodotImportOutsideTheGodotProjectIsRejected()
     {
@@ -231,7 +238,10 @@ internal sealed class ArchitectureRuleTests
             Render(findings));
     }
 
-    /// <summary>A GDScript file is rejected (<c>TR-FND-002</c>).</summary>
+    /// <summary>
+    /// A GDScript file is rejected (<c>TR-FND-002</c>). Aggregation only, as above; see
+    /// <see cref="TheGdScriptRuleFiresOnARealFileOnDisk"/> for the glob.
+    /// </summary>
     [Test]
     public void AGdScriptFileIsRejected()
     {
@@ -242,6 +252,153 @@ internal sealed class ArchitectureRuleTests
             Contains(findings, ArchitectureRule.GdScriptPresent, "game/scenes/Boot.gd"),
             Is.True,
             Render(findings));
+    }
+
+    /// <summary>
+    /// Every way C# offers of naming the <c>Godot</c> namespace, written into a real
+    /// file that <see cref="ProjectGraph.ReadFromDisk"/> then discovers and scans.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This is the control the rule did not have. <see cref="GodotNamingForms"/> is the
+    /// list of forms, and the test is parameterised over it, so a form added to the list
+    /// is controlled by construction rather than by someone remembering to write a
+    /// seventh test. When it was added, five of the six entries below failed: the scan
+    /// tested for <c>using Godot;</c> only, while the rule it feeds is called
+    /// <see cref="ArchitectureRule.GodotTypeOutsideGame"/>.
+    /// </para>
+    /// <para>
+    /// The file is written to disk on purpose. Every other control for this rule injects
+    /// a recorded path with <see cref="ProjectGraph.WithGodotImportOutsideGame"/>, which
+    /// exercises the aggregation and skips the enumeration entirely — so the regex that
+    /// decides what gets recorded had no control at all, and could have been anything.
+    /// </para>
+    /// </remarks>
+    [TestCaseSource(nameof(GodotNamingForms))]
+    public void TheGodotImportRuleCatchesEveryWayOfNamingTheNamespace(string form, string source)
+    {
+        string root = CreateScratchTree();
+        try
+        {
+            string relative = "src/MechaMiner.Probe/Probe.cs";
+            WriteScratchFile(root, relative, source);
+
+            ImmutableArray<ArchitectureFinding> findings =
+                ArchitectureRules.Evaluate(ProjectGraph.ReadFromDisk(root));
+
+            Assert.That(
+                Contains(findings, ArchitectureRule.GodotTypeOutsideGame, relative),
+                Is.True,
+                "the naming form '" + form + "' evaded the scan:\n" + source);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// Spellings that look like the namespace and are not it must not fire, so the
+    /// six-form control above is measuring the token rather than a scan that flags any
+    /// file containing the letters.
+    /// </summary>
+    [TestCaseSource(nameof(GodotLookalikeForms))]
+    public void TheGodotImportRuleDoesNotFireOnSpellingsThatAreNotTheNamespace(string form, string source)
+    {
+        string root = CreateScratchTree();
+        try
+        {
+            string relative = "src/MechaMiner.Probe/Probe.cs";
+            WriteScratchFile(root, relative, source);
+
+            ImmutableArray<ArchitectureFinding> findings =
+                ArchitectureRules.Evaluate(ProjectGraph.ReadFromDisk(root));
+
+            Assert.That(
+                Contains(findings, ArchitectureRule.GodotTypeOutsideGame, relative),
+                Is.False,
+                "'" + form + "' is not the Godot namespace but the scan flagged it:\n" + source);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// The <c>*.gd</c> glob fires on a real file on disk, not only on a path handed to
+    /// the rules as a value.
+    /// </summary>
+    /// <remarks>
+    /// Same defect shape as the Godot import control: <c>WithGdScript</c> records the
+    /// path directly, so the glob that finds GDScript had no control. Parameterised over
+    /// the placements that matter, because a glob rooted at the wrong directory or an
+    /// exclusion list that grew one entry too many would pass a single-case test.
+    /// </remarks>
+    [TestCase("game/scenes/Boot.gd")]
+    [TestCase("src/MechaMiner.Probe/Smuggled.gd")]
+    [TestCase("tools/Helper.gd")]
+    [TestCase("Root.gd")]
+    public void TheGdScriptRuleFiresOnARealFileOnDisk(string relative)
+    {
+        string root = CreateScratchTree();
+        try
+        {
+            WriteScratchFile(root, relative, "extends Node\n\nfunc _ready():\n    pass\n");
+
+            ImmutableArray<ArchitectureFinding> findings =
+                ArchitectureRules.Evaluate(ProjectGraph.ReadFromDisk(root));
+
+            Assert.That(
+                Contains(findings, ArchitectureRule.GdScriptPresent, relative),
+                Is.True,
+                "a real .gd file at " + relative + " was not found by the glob");
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// A scratch tree with no <c>.gd</c> file and no Godot-naming C# file produces
+    /// neither finding, so the two controls above measure what they wrote rather than a
+    /// scan that fires on any tree.
+    /// </summary>
+    [Test]
+    public void AScratchTreeWithNoGodotEvidenceProducesNeitherScanFinding()
+    {
+        string root = CreateScratchTree();
+        try
+        {
+            WriteScratchFile(
+                root,
+                "src/MechaMiner.Probe/Probe.cs",
+                "namespace MechaMiner.Probe;\n\ninternal static class Probe\n{\n"
+                + "    internal static int Run() => 1;\n}\n");
+
+            ImmutableArray<ArchitectureFinding> findings =
+                ArchitectureRules.Evaluate(ProjectGraph.ReadFromDisk(root));
+
+            Expect.Multiple(() =>
+            {
+                Assert.That(
+                    Contains(findings, ArchitectureRule.GodotTypeOutsideGame, "src/MechaMiner.Probe/Probe.cs"),
+                    Is.False,
+                    Render(findings));
+                foreach (ArchitectureFinding finding in findings)
+                {
+                    Assert.That(
+                        finding.Rule,
+                        Is.Not.EqualTo(ArchitectureRule.GdScriptPresent),
+                        "a tree with no .gd file reported GDScript: " + finding.ToLine());
+                }
+            });
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
     }
 
     /// <summary>Every prescribed layout path is individually load-bearing.</summary>
@@ -300,6 +457,94 @@ internal sealed class ArchitectureRuleTests
     public void TheAcceptedBoundaryItselfProducesNoFindings()
     {
         Assert.That(Render(ArchitectureRules.Evaluate(ProjectGraph.FromAcceptedBoundary())), Is.Empty);
+    }
+
+    /// <summary>
+    /// Every way C# offers of naming a namespace, each of which names <c>Godot</c>.
+    /// </summary>
+    /// <remarks>
+    /// Add a form here and
+    /// <see cref="TheGodotImportRuleCatchesEveryWayOfNamingTheNamespace"/> covers it
+    /// without a new test being written. The same six forms are the control set in
+    /// <c>build/verify-architecture.sh</c> § 6, so the two readers of this rule are
+    /// measured against one list.
+    /// </remarks>
+    private static IEnumerable<TestCaseData> GodotNamingForms
+    {
+        get
+        {
+            yield return Form("using Godot;", "using Godot;");
+            yield return Form("global using Godot;", "global using Godot;");
+            yield return Form("using static Godot.GD;", "using static Godot.GD;");
+            yield return Form("using GD = Godot.GD;", "using GD = Godot.GD;");
+            yield return Form("using GodotAlias = Godot;", "using GodotAlias = Godot;");
+            yield return new TestCaseData(
+                "fully qualified, no using",
+                "namespace MechaMiner.Probe;\n\ninternal static class Probe\n{\n"
+                + "    internal static void Run() => Godot.GD.Print(\"x\");\n}\n");
+        }
+    }
+
+    /// <summary>
+    /// Spellings a token-anywhere scan gets wrong if its boundaries are loose, plus the
+    /// two contexts that separate a namespace reference from an identifier that happens
+    /// to be spelled <c>Godot</c>.
+    /// </summary>
+    private static IEnumerable<TestCaseData> GodotLookalikeForms
+    {
+        get
+        {
+            yield return Form("MechaMiner.GodotLike (qualified lookalike)", "using MechaMiner.GodotLike;");
+            yield return new TestCaseData(
+                "NotGodotish (identifier with the token embedded)",
+                "namespace MechaMiner.Probe;\n\ninternal static class Probe\n{\n"
+                + "    private const string Name = \"NotGodotish\";\n\n"
+                + "    internal static string Run() => Name;\n}\n");
+            yield return new TestCaseData(
+                "bare GodotLike (unqualified lookalike)",
+                "namespace MechaMiner.Probe;\n\ninternal static class Probe\n{\n"
+                + "    internal static void Run() => GodotLike.Do();\n}\n");
+            yield return new TestCaseData(
+                "a member named Godot, which is not a namespace reference",
+                "namespace MechaMiner.Probe;\n\ninternal sealed class Pins\n{\n"
+                + "    public int Godot { get; set; }\n}\n");
+            yield return new TestCaseData(
+                "the word Godot in a comment and in a diagnostic string",
+                "namespace MechaMiner.Probe;\n\n"
+                + "// Only game/ may reference Godot, which is why this project does not.\n"
+                + "internal static class Probe\n{\n"
+                + "    internal static string Run() => \"the pure tier launched no Godot process\";\n}\n");
+        }
+    }
+
+    /// <summary>A <c>using</c>-directive probe: the directive plus a body that uses it.</summary>
+    private static TestCaseData Form(string name, string directive)
+    {
+        return new TestCaseData(
+            name,
+            directive + "\n\nnamespace MechaMiner.Probe;\n\ninternal static class Probe\n{\n"
+            + "    internal static int Run() => 1;\n}\n");
+    }
+
+    /// <summary>
+    /// An empty scratch repository root, so a scan can be run against real files without
+    /// writing anything into the repository under test.
+    /// </summary>
+    private static string CreateScratchTree()
+    {
+        string root = Path.Combine(
+            Path.GetTempPath(),
+            "mecha-architecture-scan-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        return root;
+    }
+
+    /// <summary>Writes one file into a scratch tree, creating its directories.</summary>
+    private static void WriteScratchFile(string root, string relative, string content)
+    {
+        string absolute = Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar));
+        Directory.CreateDirectory(Path.GetDirectoryName(absolute)!);
+        File.WriteAllText(absolute, content);
     }
 
     /// <summary>

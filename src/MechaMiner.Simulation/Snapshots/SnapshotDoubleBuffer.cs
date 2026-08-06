@@ -106,13 +106,27 @@ public sealed class SnapshotDoubleBuffer
     public PresentationSnapshot? Previous => _publishedCount >= 2 ? _pages[1 - _frontPage] : null;
 
     /// <summary>
-    /// Writes the back page and flips, so the newly written page becomes <see cref="Latest"/>.
+    /// Writes the back page and flips, so the newly written page becomes <see cref="Latest"/>, and
+    /// returns that page.
     /// </summary>
+    /// <returns>
+    /// The page just written, which is also <see cref="Latest"/>. Its <c>Version</c> is the version this
+    /// publication minted.
+    /// </returns>
     /// <remarks>
     /// <para>
     /// Allocation-free: both pages and both entity arrays exist from construction, the entity span is
     /// copied into the back page's own array, and the snapshot's view is a
     /// <see cref="ReadOnlyMemory{T}"/> struct over it.
+    /// </para>
+    /// <para>
+    /// <b>The page, not the version.</b> Returning the written page rather than the minted
+    /// <see cref="SnapshotVersion"/> is what lets <c>SnapshotPublisher.Publish</c> take the published
+    /// snapshot and its version from one value. When this returned the version, the publisher had to read
+    /// <see cref="Latest"/> back and reconcile the two - a check that could only run <em>after</em> the
+    /// flip, which is the one point in a tick at which
+    /// <c>SnapshotPublisher.InvalidateTick</c> is no longer available. One value cannot disagree with
+    /// itself, so there is nothing left to reconcile and nothing left to throw there.
     /// </para>
     /// <para>
     /// <b>GEO-001:</b> the <paramref name="playerPositionX"/> and <paramref name="playerPositionY"/>
@@ -125,7 +139,7 @@ public sealed class SnapshotDoubleBuffer
     /// within precision bounds", and that confirmation does not exist.
     /// </para>
     /// </remarks>
-    internal SnapshotVersion Publish(
+    internal PresentationSnapshot Publish(
         long tick,
         double playerPositionX,
         double playerPositionY,
@@ -167,6 +181,6 @@ public sealed class SnapshotDoubleBuffer
             _publishedCount++;
         }
 
-        return version;
+        return _pages[backPage];
     }
 }

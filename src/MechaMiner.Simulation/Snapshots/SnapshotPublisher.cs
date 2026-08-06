@@ -293,6 +293,26 @@ public sealed class SnapshotPublisher
     /// <c>EventOrdering.AssertTotalOrder</c> deliberately checks the batch rather than each append, because a
     /// defect of this kind is invisible until the records are assembled together.
     /// </para>
+    /// <para>
+    /// <b>Every check runs before the page flip, and that is a hard rule rather than a preference.</b>
+    /// <see cref="InvalidateTick"/> is available up to the moment <c>SnapshotDoubleBuffer.Publish</c> flips
+    /// the page and this method closes the tick, and unavailable from then on: the snapshot is observable
+    /// through <see cref="Buffer"/> and there is nothing left to invalidate. A throw before the flip is
+    /// therefore the case <c>docs/technical/20-simulation-core.md</c> § Tick transaction settles - "an
+    /// exception or invariant failure before commit invalidates the tick ... it never publishes a partial
+    /// state" - while a throw after it would leave a published snapshot the run cannot retract. So both
+    /// run-session fences and both capacity checks are hoisted above the flip, as are the two batch views
+    /// and the policy name the result carries, and nothing below the flip can throw. That last claim is
+    /// checked by <c>PostPublicationRegionTests</c> rather than left as a reading of this method.
+    /// </para>
+    /// <para>
+    /// <b>The version reconciliation that used to sit below the flip is gone, not relocated.</b> It
+    /// compared the version <c>SnapshotDoubleBuffer.Publish</c> returned against the version on the page it
+    /// read back from <see cref="Latest"/>, which is a comparison that cannot be made before the write it
+    /// is about. It is unnecessary now for a structural reason rather than a probabilistic one: that method
+    /// returns the page it wrote, so the published snapshot and its version are one value and cannot
+    /// disagree.
+    /// </para>
     /// </remarks>
     public TickPublication Publish(
         DomainEventBuffer domainEvents,
@@ -327,7 +347,25 @@ public sealed class SnapshotPublisher
         RequireDomainBatchIsOwnRunSession(domainCount);
         RequirePresentationBatchIsOwnRunSession(presentationCount);
 
-        SnapshotVersion version = _buffer.Publish(
+        // Everything the result needs that does not depend on the publication is built here, above the page
+        // flip, so that the region below it holds no construction and no bounds check. Both batch views
+        // validate their offsets in a constructor that can throw; both are over this publisher's own arrays
+        // at counts already established above, so they cannot throw here - and here is where a throw is
+        // still recoverable.
+        ReadOnlyMemory<DomainEvent> domainBatch = new(_domainBatch, 0, domainCount);
+        ReadOnlyMemory<PresentationEvent> presentationBatch = new(_presentationBatch, 0, presentationCount);
+        string coalescingPolicyName = coalescingPolicy.Name;
+
+        // ---- the point of no return ----
+        // Everything above is a refusal, a copy into this publisher's own arrays, or a value built from them:
+        // nothing outside is observable and InvalidateTick is still available, so a throw above ends the run
+        // through the technical-failure path with no partial state published. The page flip below makes the
+        // snapshot observable through Buffer.Latest and closes the tick, after which InvalidateTick would be
+        // a lie rather than a retraction. Nothing below it can throw, and that is enforced rather than
+        // promised: PostPublicationRegionTests reads this method's compiled body and fails if a statement
+        // after this call site constructs an object, throws, or calls any simulation member beyond the two
+        // named there.
+        PresentationSnapshot published = _buffer.Publish(
             _tick,
             _playerPositionX,
             _playerPositionY,
@@ -339,22 +377,12 @@ public sealed class SnapshotPublisher
         domainEvents.RecordAllConsumed();
         _isTickOpen = false;
 
-        PresentationSnapshot published = _buffer.Latest!;
-        if (published.Version != version)
-        {
-            throw new InvalidOperationException(
-                "the double buffer published version "
-                    + published.Version.ToString()
-                    + " but reported "
-                    + version.ToString());
-        }
-
         return TickPublication.Published(
             published,
-            new ReadOnlyMemory<DomainEvent>(_domainBatch, 0, domainCount),
-            new ReadOnlyMemory<PresentationEvent>(_presentationBatch, 0, presentationCount),
+            domainBatch,
+            presentationBatch,
             presentationSourceCount,
-            coalescingPolicy.Name);
+            coalescingPolicyName);
     }
 
     /// <summary>

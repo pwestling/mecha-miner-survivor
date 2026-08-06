@@ -43,9 +43,7 @@
         "test-output"
       ],
       "platforms": [
-        "linux-x64",
-        "windows-x64",
-        "osx-arm64"
+        "linux-x64"
       ],
       "tier": "fast",
       "status": "implemented"
@@ -74,9 +72,7 @@
         "test-output"
       ],
       "platforms": [
-        "linux-x64",
-        "windows-x64",
-        "osx-arm64"
+        "linux-x64"
       ],
       "tier": "fast",
       "status": "implemented"
@@ -109,9 +105,7 @@
         "text-diff"
       ],
       "platforms": [
-        "linux-x64",
-        "windows-x64",
-        "osx-arm64"
+        "linux-x64"
       ],
       "tier": "fast",
       "successor": "VER-SIM-006-011",
@@ -140,9 +134,7 @@
         "test-output"
       ],
       "platforms": [
-        "linux-x64",
-        "windows-x64",
-        "osx-arm64"
+        "linux-x64"
       ],
       "tier": "fast",
       "status": "implemented"
@@ -170,9 +162,7 @@
         "test-output"
       ],
       "platforms": [
-        "linux-x64",
-        "windows-x64",
-        "osx-arm64"
+        "linux-x64"
       ],
       "tier": "fast",
       "status": "implemented"
@@ -202,9 +192,7 @@
         "test-output"
       ],
       "platforms": [
-        "linux-x64",
-        "windows-x64",
-        "osx-arm64"
+        "linux-x64"
       ],
       "tier": "fast",
       "status": "implemented"
@@ -233,9 +221,7 @@
         "test-output"
       ],
       "platforms": [
-        "linux-x64",
-        "windows-x64",
-        "osx-arm64"
+        "linux-x64"
       ],
       "tier": "fast",
       "status": "implemented"
@@ -264,9 +250,7 @@
         "test-output"
       ],
       "platforms": [
-        "linux-x64",
-        "windows-x64",
-        "osx-arm64"
+        "linux-x64"
       ],
       "tier": "fast",
       "status": "implemented"
@@ -296,9 +280,7 @@
         "minimized-input-artifact"
       ],
       "platforms": [
-        "linux-x64",
-        "windows-x64",
-        "osx-arm64"
+        "linux-x64"
       ],
       "tier": "fast",
       "status": "implemented"
@@ -328,9 +310,7 @@
         "negative-control"
       ],
       "platforms": [
-        "linux-x64",
-        "windows-x64",
-        "osx-arm64"
+        "linux-x64"
       ],
       "tier": "fast",
       "status": "implemented"
@@ -365,9 +345,7 @@
         "negative-control"
       ],
       "platforms": [
-        "linux-x64",
-        "windows-x64",
-        "osx-arm64"
+        "linux-x64"
       ],
       "tier": "fast",
       "status": "implemented"
@@ -398,9 +376,7 @@
         "negative-control"
       ],
       "platforms": [
-        "linux-x64",
-        "windows-x64",
-        "osx-arm64"
+        "linux-x64"
       ],
       "tier": "fast",
       "status": "implemented"

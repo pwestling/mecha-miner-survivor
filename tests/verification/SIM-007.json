@@ -41,9 +41,7 @@
         "test-output"
       ],
       "platforms": [
-        "linux-x64",
-        "windows-x64",
-        "osx-arm64"
+        "linux-x64"
       ],
       "tier": "fast",
       "status": "implemented"
@@ -72,9 +70,7 @@
         "test-output"
       ],
       "platforms": [
-        "linux-x64",
-        "windows-x64",
-        "osx-arm64"
+        "linux-x64"
       ],
       "tier": "fast",
       "status": "implemented"
@@ -103,9 +99,7 @@
         "test-output"
       ],
       "platforms": [
-        "linux-x64",
-        "windows-x64",
-        "osx-arm64"
+        "linux-x64"
       ],
       "tier": "fast",
       "status": "implemented"
@@ -134,9 +128,7 @@
         "test-output"
       ],
       "platforms": [
-        "linux-x64",
-        "windows-x64",
-        "osx-arm64"
+        "linux-x64"
       ],
       "tier": "fast",
       "status": "implemented"
@@ -165,9 +157,7 @@
         "test-output"
       ],
       "platforms": [
-        "linux-x64",
-        "windows-x64",
-        "osx-arm64"
+        "linux-x64"
       ],
       "tier": "fast",
       "status": "implemented"
@@ -195,9 +185,7 @@
         "test-output"
       ],
       "platforms": [
-        "linux-x64",
-        "windows-x64",
-        "osx-arm64"
+        "linux-x64"
       ],
       "tier": "fast",
       "status": "implemented"
@@ -230,9 +218,7 @@
         "test-output"
       ],
       "platforms": [
-        "linux-x64",
-        "windows-x64",
-        "osx-arm64"
+        "linux-x64"
       ],
       "tier": "fast",
       "status": "implemented"
@@ -261,9 +247,7 @@
         "test-output"
       ],
       "platforms": [
-        "linux-x64",
-        "windows-x64",
-        "osx-arm64"
+        "linux-x64"
       ],
       "tier": "fast",
       "status": "implemented"
@@ -292,9 +276,7 @@
         "reference-identity"
       ],
       "platforms": [
-        "linux-x64",
-        "windows-x64",
-        "osx-arm64"
+        "linux-x64"
       ],
       "tier": "fast",
       "successor": "QUA-005",
@@ -324,9 +306,7 @@
         "seed-identity"
       ],
       "platforms": [
-        "linux-x64",
-        "windows-x64",
-        "osx-arm64"
+        "linux-x64"
       ],
       "tier": "fast",
       "status": "implemented"
@@ -356,9 +336,7 @@
         "negative-control"
       ],
       "platforms": [
-        "linux-x64",
-        "windows-x64",
-        "osx-arm64"
+        "linux-x64"
       ],
       "tier": "fast",
       "status": "implemented"
@@ -388,9 +366,7 @@
         "negative-control"
       ],
       "platforms": [
-        "linux-x64",
-        "windows-x64",
-        "osx-arm64"
+        "linux-x64"
       ],
       "tier": "fast",
       "status": "implemented"

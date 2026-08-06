@@ -290,10 +290,15 @@ it, and `FND-010` owns the `SCH-OBS-003` bundle without which no M0 task can rea
 Done. Three things they inherit rather than invent:
 
 - `FND-005`'s CI job calls `./build.sh` verbs, never a script directly. The fast
-  pull-request path is `bootstrap`, `format-check`, `build`, `test-fast`; the main path
-  adds `test-main`. The `content` verb belongs in the fast path as soon as `DAT-006`
-  lands, and until then it exits 2 naming `DAT-006`, which is a legible CI failure rather
-  than a silent gap.
+  pull-request path is `bootstrap`, `format-check`, `build`, `test-fast`, `godot-import`;
+  the main path adds `test-main`. This list previously omitted `godot-import`, which
+  contradicted doc 91 § Fast pull-request suite ("Godot headless import and focused
+  integration tests"); doc 91 is the authority and this document is non-normative
+  coordination, so the omission was a defect here and is corrected rather than being
+  read as narrowing the tier. The `content` verb belongs in the fast path as soon as
+  `DAT-006` lands, and until then it exits 2 naming `DAT-006`, which is a legible CI
+  failure rather than a silent gap. The focused integration tests doc 91 names alongside
+  the import are still main-path only, because `test-main` is the verb that runs them.
 - `FND-006` implements `export` and `run`, and inherits Decision 4's mapping: `development`
   builds `ExportDebug` and `release` builds `ExportRelease`. It also owns the export-preset
   exclusion for `game/tests/`, whose compile-time exclusion under `ExportRelease` already

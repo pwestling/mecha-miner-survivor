@@ -105,15 +105,33 @@ readonly EXPECTED_PROJECTS=(
   "game/MechaMiner.Game.csproj|MechaMiner.Content,MechaMiner.Diagnostics,MechaMiner.Persistence,MechaMiner.Simulation|yes"
 )
 
+# The one value that can never be a legitimate item identity, printed when MSBuild could
+# not be asked. Without it, a failed evaluation is indistinguishable from a project that
+# genuinely declares nothing: the exit status would be discarded by the pipeline, every
+# comparison would run against an empty set, and a project with a forbidden edge would be
+# reported as compliant. Emitting a value that matches no accepted set instead turns a
+# discarded status into a visible failure.
+readonly EVALUATION_FAILED="MSBUILD-EVALUATION-FAILED"
+
 msbuild_items() {
   # $1 project, $2 item name. Prints one Identity per line, sorted.
-  dotnet msbuild "${REPO_ROOT}/$1" -nologo "-getItem:$2" 2>/dev/null | python3 -c '
+  local document status
+  document="$(dotnet msbuild "${REPO_ROOT}/$1" -nologo "-getItem:$2" 2>/dev/null)"
+  status=$?
+  if [[ "${status}" -ne 0 || -z "${document}" ]]; then
+    printf '%s\n' "${EVALUATION_FAILED}"
+    return 0
+  fi
+
+  if ! printf '%s' "${document}" | python3 -c '
 import json, sys
 document = json.load(sys.stdin)
 for identity in sorted(item["Identity"] for item in document.get("Items", {}).get(sys.argv[1], [])):
     if identity.strip():
         sys.stdout.write(identity + "\n")
-' "$2"
+' "$2"; then
+    printf '%s\n' "${EVALUATION_FAILED}"
+  fi
 }
 
 project_name() {
@@ -146,7 +164,10 @@ godot_matches() {
   local directory="${REPO_ROOT}/$(dirname "${project}")"
   local lock_file="${directory}/packages.lock.json"
 
-  GODOT_EVALUATED="$(msbuild_items "${project}" PackageReference | grep -i '^Godot' || true)"
+  # The sentinel is matched deliberately: a project whose items could not be evaluated must
+  # not read as "has no Godot dependency".
+  GODOT_EVALUATED="$(msbuild_items "${project}" PackageReference \
+    | grep -iE "^(Godot|${EVALUATION_FAILED})" || true)"
   GODOT_LOCKED=""
   if [[ -f "${lock_file}" ]]; then
     GODOT_LOCKED="$(grep -oE '"Godot[A-Za-z.]*"' "${lock_file}" | sort -u | tr -d '"' | paste -sd, - || true)"
@@ -274,12 +295,21 @@ echo "=== 8. the boundary comparisons above can actually fail (VER-FND-009-013)"
 readonly DIAGNOSTICS_PROJECT="src/MechaMiner.Diagnostics/MechaMiner.Diagnostics.csproj"
 readonly CONTROL_ROOT="build/policy-fixtures/architecture"
 
-# "<fixture directory>|<what it injects>"
+# "<fixture directory>|<the project the fixture references>|<what it injects>"
+#
+# The middle field is the evaluated reference set the fixture must produce. Asserting it
+# closes a both-sides-absent comparison: the compliant control below compares "" against
+# an accepted set that is also "" today, so it would pass against an msbuild_items that
+# had broken into returning nothing for every input. Requiring each edge fixture to come
+# back naming the project it references proves the evaluation actually happened.
 readonly EDGE_CONTROLS=(
-  "edge-content|a reference to MechaMiner.Content"
-  "edge-simulation|a reference to MechaMiner.Simulation"
-  "edge-game|a reference to MechaMiner.Game (the reverse Godot edge)"
+  "edge-content|MechaMiner.Content|a reference to MechaMiner.Content"
+  "edge-simulation|MechaMiner.Simulation|a reference to MechaMiner.Simulation"
+  "edge-game|MechaMiner.Game|a reference to MechaMiner.Game (the reverse Godot edge)"
 )
+# Guards against an empty control set silently proving nothing, the way an unquoted or
+# mistyped array expansion would. The loop must run this many times.
+readonly EXPECTED_EDGE_CONTROLS=3
 
 if ! diagnostics_accepted_refs="$(accepted_field "${DIAGNOSTICS_PROJECT}" refs)"; then
   fail "negative control cannot run: ${DIAGNOSTICS_PROJECT} has no EXPECTED_PROJECTS row"
@@ -298,19 +328,31 @@ else
     fail "control: a compliant Diagnostics project reported [${EDGES_ACTUAL}]; the comparison reports a difference for compliant input, so every negative control below is meaningless"
   fi
 
+  edge_controls_run=0
   for entry in "${EDGE_CONTROLS[@]}"; do
-    IFS='|' read -r fixture injected <<<"${entry}"
+    IFS='|' read -r fixture referenced injected <<<"${entry}"
     control="${CONTROL_ROOT}/${fixture}/MechaMiner.Diagnostics.csproj"
     if [[ ! -f "${REPO_ROOT}/${control}" ]]; then
       fail "negative-control fixture missing: ${control}"
       continue
     fi
+    edge_controls_run=$((edge_controls_run + 1))
     if edges_match "${control}" "${diagnostics_accepted_refs}"; then
       fail "control: Diagnostics with ${injected} was NOT rejected; § 3 accepted [${EDGES_ACTUAL}] against [${diagnostics_accepted_refs}]"
+    elif [[ "${EDGES_ACTUAL}" != "${referenced}" ]]; then
+      # It was rejected, but not for the reason the control exists to prove. An empty
+      # evaluated set would also be "rejected", and would mean MSBuild evaluated nothing.
+      fail "control: Diagnostics with ${injected} was rejected, but § 3 evaluated [${EDGES_ACTUAL}] instead of [${referenced}]; the rejection does not prove the injected edge was seen"
     else
       pass "control: Diagnostics with ${injected} is rejected (§ 3 saw [${EDGES_ACTUAL}])"
     fi
   done
+
+  if [[ "${edge_controls_run}" -eq "${EXPECTED_EDGE_CONTROLS}" ]]; then
+    pass "control: all ${EXPECTED_EDGE_CONTROLS} forbidden-edge controls ran"
+  else
+    fail "control: ${edge_controls_run} of ${EXPECTED_EDGE_CONTROLS} forbidden-edge controls ran; a control set that shrank proves less than it claims"
+  fi
 
   control="${CONTROL_ROOT}/godot/MechaMiner.Diagnostics.csproj"
   if [[ ! -f "${REPO_ROOT}/${control}" ]]; then

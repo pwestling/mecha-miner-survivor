@@ -483,41 +483,69 @@ done
 
 # --- VER-FND-001-011: deterministic build -----------------------------------
 #
-# The positive case (policy value Deterministic=true) must produce byte-identical
-# assemblies across two independent clean builds. The negative control
-# (Deterministic=false) must NOT, otherwise the assertion above would be
-# vacuously true regardless of the policy.
+# The positive case must produce byte-identical assemblies across two independent
+# clean builds USING THE REPOSITORY'S OWN Deterministic VALUE. It previously
+# passed "-p:Deterministic=true" on the command line, which made the assertion
+# blind to the thing it claims to verify: with Deterministic=false in the root
+# Directory.Build.props, this section still reported "two clean builds are
+# byte-identical" because the command line had overridden the repository. So the
+# positive case now passes no override at all - that is the whole point of it.
+#
+# The negative control is the only place an override appears, and it must NOT
+# produce identical output, otherwise the positive assertion would be vacuously
+# true regardless of the policy.
+#
+# Both hashes are required to look like SHA-256 before they are compared. The
+# comparison used to be between two `sha256sum | cut` results, which are both the
+# empty string when the assembly path is wrong - two absent values compared equal
+# and the positive assertion passed, printing "byte-identical: sha256 " with
+# nothing after it. A check whose two sides can both be absent must reject absence
+# before comparing.
 
-echo "=== VER-FND-001-011: Deterministic=true"
+echo "=== VER-FND-001-011: Deterministic=true (the repository's own value)"
 readonly DETERMINISTIC_ASSEMBLY="${FIXTURE_ROOT}/deterministic/bin/Debug/net8.0/deterministic.dll"
+readonly SHA256_TEXT='^[0-9a-f]{64}$'
 
 hash_deterministic_build() {
-  # $1 = value for the Deterministic property. Prints the SHA-256 of the output.
+  # "$@" = extra MSBuild arguments, deliberately empty for the positive case so
+  # the Deterministic value under test is the repository's. Prints the SHA-256 of
+  # the produced assembly, or a BUILD-FAILED / NO-OUTPUT / NO-HASH marker that
+  # will not satisfy SHA256_TEXT.
   clean_fixture deterministic
   if ! dotnet build "${FIXTURE_ROOT}/deterministic/deterministic.csproj" \
-      --nologo -v q "-p:Deterministic=$1" >/dev/null 2>&1; then
+      --nologo -v q "$@" >/dev/null 2>&1; then
     printf 'BUILD-FAILED'
     return
   fi
-  sha256sum "${DETERMINISTIC_ASSEMBLY}" | cut -d' ' -f1
+  if [[ ! -f "${DETERMINISTIC_ASSEMBLY}" ]]; then
+    printf 'NO-OUTPUT'
+    return
+  fi
+  local hash
+  hash="$(sha256sum "${DETERMINISTIC_ASSEMBLY}" | cut -d' ' -f1)"
+  if [[ -z "${hash}" ]]; then
+    printf 'NO-HASH'
+    return
+  fi
+  printf '%s' "${hash}"
 }
 
-first_hash="$(hash_deterministic_build true)"
-second_hash="$(hash_deterministic_build true)"
-if [[ "${first_hash}" == "BUILD-FAILED" || "${second_hash}" == "BUILD-FAILED" ]]; then
-  fail "VER-FND-001-011: the deterministic fixture must compile but did not"
+first_hash="$(hash_deterministic_build)"
+second_hash="$(hash_deterministic_build)"
+if [[ ! "${first_hash}" =~ ${SHA256_TEXT} || ! "${second_hash}" =~ ${SHA256_TEXT} ]]; then
+  fail "VER-FND-001-011: the deterministic fixture must compile to a hashable assembly; got '${first_hash}' and '${second_hash}'"
 elif [[ "${first_hash}" == "${second_hash}" ]]; then
-  pass "two clean builds are byte-identical: sha256 ${first_hash}"
+  pass "two clean builds at the repository's Deterministic value are byte-identical: sha256 ${first_hash}"
 else
-  fail "VER-FND-001-011: rebuild differed (${first_hash} vs ${second_hash})"
+  fail "VER-FND-001-011: rebuild differed at the repository's Deterministic value (${first_hash} vs ${second_hash}); either the policy is not true or something else is nondeterministic"
 fi
 
 echo
-echo "=== VER-FND-001-011 negative control: Deterministic=false"
-third_hash="$(hash_deterministic_build false)"
-fourth_hash="$(hash_deterministic_build false)"
-if [[ "${third_hash}" == "BUILD-FAILED" || "${fourth_hash}" == "BUILD-FAILED" ]]; then
-  fail "VER-FND-001-011: negative-control build failed"
+echo "=== VER-FND-001-011 negative control: -p:Deterministic=false forced"
+third_hash="$(hash_deterministic_build -p:Deterministic=false)"
+fourth_hash="$(hash_deterministic_build -p:Deterministic=false)"
+if [[ ! "${third_hash}" =~ ${SHA256_TEXT} || ! "${fourth_hash}" =~ ${SHA256_TEXT} ]]; then
+  fail "VER-FND-001-011: negative-control build produced no hashable assembly; got '${third_hash}' and '${fourth_hash}'"
 elif [[ "${third_hash}" != "${fourth_hash}" ]]; then
   pass "nondeterministic builds differ as expected (${third_hash:0:16}... vs ${fourth_hash:0:16}...)"
 else

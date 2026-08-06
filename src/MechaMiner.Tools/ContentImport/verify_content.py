@@ -347,13 +347,16 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       present-and-null field asks runtime to guess. Absence is spelled by
       omitting the key.
       275 nulls across 101 of 138 definition files were disposed of in the
-      pass that added this: 246 keys omitted, 20 relic rarity/weighting
-      fields and 4 boss armor fields REMOVED as fields no schema will
-      declare, 3 external_numerics[n].value keys removed as shape defects,
-      and 2 nested id keys removed because the objects holding them are not
-      independently addressable. The two nested ids were briefly planned as
-      declared exceptions; removing the key instead made the assertion
-      unconditional.
+      pass that added this, and that tally was counted as that pass
+      finished: 246 keys omitted, 20 relic rarity/weighting fields and 4
+      boss armor fields REMOVED as fields no schema will declare, 3
+      external_numerics[n].value keys removed as shape defects, and 2
+      nested id keys removed because the objects holding them are not
+      independently addressable. It is the record of that one disposal and
+      no assertion recomputes it - what a green run asserts is zero nulls
+      today, which says nothing about how many there once were. The two
+      nested ids were briefly planned as declared exceptions; removing the
+      key instead made the assertion unconditional.
       Negative control: `"probe_null": null` injected at the top level of
       content/enemies/EN-01.json -> FAIL, "1 null(s) under content/ ...
       ['content/enemies/EN-01.json.probe_null']".
@@ -448,6 +451,12 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       that was measured, not assumed - a semantic-neighbour probe defeated
       all nine drafts of these rules before they were widened, and a probe
       chosen against the widened classes would defeat some of them too.
+      "MEASURED" THERE MEANS HAND-RUN, NOT COMPUTED, and the distinction
+      matters because every other figure in this row is one the tool just
+      computed: the out-of-word-class reintroduction reach - caught 0 of 6 -
+      is a HAND-RUN PROBE, six injections done by hand, one per family, and
+      no assertion in any run recomputes it. The note this layer prints
+      carries the same marker.
       Segments, not just the leaf key, because some families store the
       number under a generic leaf (`amount`, `minimum`, `maximum`) inside a
       specifically named parent - a leaf-key-only rule would miss
@@ -467,7 +476,12 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       removed value, no non-operand numeric leaf inside its own derivation
       site may carry that value. Exact Fractions, no tolerance. This one
       survives a rename, a relocation within the site, a different unit
-      suffix, and scalar -> [scalar]. Its RADIUS is the limit and is stated
+      suffix, and scalar -> [scalar]. THAT REINTRODUCTION REACH IS A
+      HAND-RUN PROBE TOO, not a figure any run recomputes: rename, unit
+      suffix and arity change caught 6 of 6 and a relocation OUT of the site
+      caught 0 of 6, twelve injections done by hand, six per row. The three
+      radii below are the computed figures in this paragraph; these two are
+      not. Its RADIUS is the limit and is stated
       rather than hidden: the derivation site, not the file and not the
       scope. The three radii are COMPUTED, in the generator's
       measure_search_radii(), under one definition on the pinned sweep ref,
@@ -3651,7 +3665,10 @@ def check_csv_mirror_agreement(docs: dict[Path, object]) -> list[tuple]:
     # the tree: setting the field to 1.0 in all ten files left the whole suite green,
     # 0 failures, 10 of 10 escaped, and 0.9 and 0.8000001 likewise - while the sibling
     # operand body_scale_multiplier went red, so the field was stored, mirrored in the
-    # CSV's derivation, allowlisted as authored, and read by nothing.
+    # CSV's derivation, allowlisted as authored, and read by nothing. THAT
+    # 10-of-10 ESCAPE FIGURE IS A HAND-RUN PROBE against the old hardcoded code -
+    # ten files rewritten per injection, three injections in all (1.0, 0.9,
+    # 0.8000001), each done by hand and reverted - and no assertion recomputes it.
     # TWO ROWS, because reading it is not enough on its own. The per-actor read makes
     # an edit to ONE file fail that actor's diameter and start-distance comparisons;
     # the population and distinct-value rows make DELETING the field, or giving one
@@ -3835,7 +3852,8 @@ def check_csv_mirror_agreement(docs: dict[Path, object]) -> list[tuple]:
         )
     # A30's own limits, on the output a green run prints. A30 caught 7 of 8
     # attacks when it was reviewed; the one that escaped went through the declared
-    # exception, which is the note below.
+    # exception, which is the note below. THAT 7 of 8 IS A HAND-RUN PROBE - eight
+    # attacks tried by hand at review time - and no assertion recomputes it.
     return rows, (
         f"WHAT IS COMPARED: {compared} value(s) - the 7 CSV columns x 14 actors that both sides "
         f"carry. 4 columns compare against an AUTHORED content field; 3 against values derived from "
@@ -4464,11 +4482,14 @@ def check_no_doc_paths_in_values(docs: dict[Path, object]) -> list[tuple]:
 # default; a present-and-null one asks runtime to guess, which is what that line
 # forbids. So absence is spelled by omitting the key.
 #
-# 275 nulls across 101 of the 138 definition files were disposed of in one pass:
-# 246 keys omitted, 20 relic rarity/weighting fields removed as fields no schema
-# will declare, 4 boss armor fields removed for the same reason, 3
+# 275 nulls across 101 of the 138 definition files were disposed of in the pass
+# that added this rule, and that tally was counted as that pass finished: 246 keys
+# omitted, 20 relic rarity/weighting fields removed as fields no schema will
+# declare, 4 boss armor fields removed for the same reason, 3
 # external_numerics[n].value keys removed as shape defects, and 2 nested id keys
-# removed because the objects they sat on are not independently addressable.
+# removed because the objects they sat on are not independently addressable. It is
+# the record of that one disposal and no assertion recomputes it; a green run
+# asserts zero nulls today and says nothing about how many there once were.
 #
 # THERE IS NO EXCEPTION SET, deliberately. An earlier plan declared the two nested
 # `id` nulls in content/maps/standard-map-generation-contract.json as tolerated

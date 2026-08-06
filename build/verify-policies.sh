@@ -681,7 +681,19 @@ echo "=== policy inheritance guard 2: MSBuild actually imports the root policy p
 # "MSBuild told us the root policy was not imported", which is the caller's finding
 # and has its own message. The two used to share one exit code and one message, and
 # a single non-reproducing failure in roughly 600 evaluations could not be
-# attributed to either. Fail-closed either way; no retry.
+# attributed to either. Fail-closed either way; no retry: a gate that retries its
+# way to green is worse than one that is occasionally loud.
+#
+# A second occurrence was observed while verifying this change, again on one project
+# out of fifteen and again not reproducing across three immediate re-runs of the
+# identical tree. It is still not diagnosed. The leading hypothesis is that a
+# `dotnet msbuild` invocation picked up a reused MSBuild node belonging to a
+# concurrent build of a DIFFERENT checkout of this repository, so the graph it
+# returned carried that checkout's absolute paths and none of them matched
+# ${REPO_ROOT}. That is why the caller's message now names the files it imported
+# under each missing filename: had it done so the first time, "imported
+# /some/other/checkout/Directory.Build.props" would have said this immediately,
+# where "never imported Directory.Build.props" said nothing at all.
 import_graph_failure=""
 
 imported_msbuild_files() {
@@ -782,16 +794,39 @@ for project in "${policy_projects[@]}"; do
 
   imported_count="$(printf '%s\n' "${imported}" | grep -c .)"
   missing=()
+  imported_lookalikes=()
   for root_file in "${ROOT_MSBUILD_FILES[@]}"; do
-    if ! printf '%s\n' "${imported}" | grep -qxF "${REPO_ROOT}/${root_file}"; then
+    # A here-string, NOT `printf ... | grep -q`. This is the diagnosed cause of the
+    # non-reproducing failure described above imported_msbuild_files, and it was in
+    # this gate's own plumbing rather than in MSBuild: under `set -o pipefail`,
+    # `grep -q` exits the moment it matches, printf is then killed by SIGPIPE, and
+    # the PIPELINE status becomes 141 even though grep found the line. The larger
+    # the left-hand side the likelier it is - at 200000 lines it happens on every
+    # attempt, at the ~116 lines of a real import graph it is a rare race - and it
+    # turns a match into a reported miss. A here-string is not a pipeline, so there
+    # is no writer to kill and no status to misread.
+    if ! grep -qxF "${REPO_ROOT}/${root_file}" <<<"${imported}"; then
       missing+=("${root_file}")
+      # What WAS imported under that filename, if anything. A file of the right
+      # name at the wrong absolute path is a different finding from no such file
+      # at all - it means the graph belongs to another checkout, or that a
+      # shadowing file was imported in place of the root one - and reporting the
+      # path is what makes the two distinguishable without a second run.
+      while IFS= read -r candidate; do
+        [[ -n "${candidate}" ]] && imported_lookalikes+=("${candidate}")
+      done < <(printf '%s\n' "${imported}" | grep -E "/${root_file}\$" || true)
     fi
   done
 
   if [[ "${#missing[@]}" -eq 0 ]]; then
     pass "$(basename "${project}" .csproj) imports the root policy pair"
   else
-    fail "${project}: MSBuild's import graph was READ (${imported_count} imported file(s)) and does not contain $(printf '%s ' "${missing[@]}")- the policy this gate proves is not the policy this project builds under"
+    if [[ "${#imported_lookalikes[@]}" -eq 0 ]]; then
+      lookalike_note="and imported no file of that name at any path"
+    else
+      lookalike_note="and imported these files of that name instead: $(printf '%s ' "${imported_lookalikes[@]}")"
+    fi
+    fail "${project}: MSBuild's import graph was READ (${imported_count} imported file(s)) and does not contain $(printf '%s ' "${missing[@]}")${lookalike_note} - the policy this gate proves is not the policy this project builds under"
   fi
 done
 

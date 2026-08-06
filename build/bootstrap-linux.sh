@@ -102,7 +102,11 @@ verify() {
   log "verifying pinned versions"
   local sdks
   sdks="$(/usr/local/bin/dotnet --list-sdks)"
-  printf '%s\n' "${sdks}" | grep -q "^${DOTNET_SDK_VERSION} " \
+  # A here-string, not `printf | grep -q`: under `set -o pipefail` grep -q exits on
+  # the first match, printf is killed by SIGPIPE, and the pipeline status becomes
+  # 141 even though the line was found - which would report a correctly pinned SDK
+  # as missing. build/verify-policies.sh hit exactly that race.
+  grep -q "^${DOTNET_SDK_VERSION} " <<<"${sdks}" \
     || fail "SDK ${DOTNET_SDK_VERSION} not reported by dotnet --list-sdks" "$EXIT_ENVIRONMENT"
   local godot_version
   godot_version="$(/usr/local/bin/godot --headless --version)"

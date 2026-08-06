@@ -92,7 +92,11 @@ if [[ "${launch_status}" -ne 0 ]]; then
 else
   pass "headless launch exited 0"
 fi
-if printf '%s\n' "${launch_log}" | grep -qF "${STARTUP_LINE}"; then
+# A here-string, not `printf | grep -q`: under `set -o pipefail` grep -q exits on
+# the first match, printf is killed by SIGPIPE, and the pipeline status becomes 141
+# even though the line was found - which would report a launch that DID print the
+# startup line as one that did not. The longer the log the likelier the race.
+if grep -qF "${STARTUP_LINE}" <<<"${launch_log}"; then
   pass "composition root printed its stable startup line"
 else
   fail "startup line not found; the boot scene did not reach managed code"

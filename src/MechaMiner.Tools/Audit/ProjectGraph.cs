@@ -433,23 +433,62 @@ internal sealed class ProjectGraph
     /// </para>
     /// <para>
     /// The shell reader in <c>build/verify-architecture.sh</c> § 6 asks the same two
-    /// questions with the same token, over a cruder <c>sed</c> stripper. It can lose a
-    /// token to a literal that spans lines or to a block comment where this reader would
-    /// not; it cannot invent one. The C# reader is the precise one, the shell reader is
-    /// the one that needs no build, and § 6 carries the same control list so a divergence
-    /// shows up as a failing control rather than as a silent disagreement.
+    /// questions with the same token, over a <c>sed</c> stripper. THE PAIR IS NOT TWO
+    /// EQUAL READERS, and the previous wording of this paragraph — that the shell reader
+    /// "cannot invent" a token, so its error direction is "never a false accusation" —
+    /// was measured false. Over the 46-file corpus both readers now share, compiled
+    /// against a Godot shim so every positive is a resolvable reference and every
+    /// lookalike genuinely is not, the shell reader makes four false accusations that
+    /// this reader correctly clears: a single-line <c>/* Godot.GD is engine-only */</c>,
+    /// the same text in a multi-line block comment, a multi-line <c>@"</c> string
+    /// containing <c>Godot.GD.Print(x);</c>, and a multi-line <c>"""</c> raw string
+    /// containing <c>Godot.</c>. Its <c>sed</c> strips <c>//</c> and never <c>/* */</c>
+    /// in any form, and the single-line block comment is not covered by any caveat about
+    /// constructs spanning lines. Scored over the same corpus: this reader catches 36 of
+    /// 41 references with 0 false accusations; the shell reader catches 36 of 41 with 4.
     /// </para>
     /// <para>
-    /// KNOWN LIMITATION, stated because an implied one is a false claim. C# permits
-    /// Unicode escapes inside identifiers, so <c>using \u0047odot;</c> and
-    /// <c>\u0047odot.GD.Print()</c> are both valid C# that the compiler resolves to
-    /// <c>Godot</c>, and neither reader sees the token: after stripping, the text still
-    /// reads <c>\u0047odot</c>. Decoding identifier escapes needs identifier position told
-    /// apart from literal position, which is a parser rather than a text scan, and doing
-    /// it in one reader and not the other would reintroduce exactly the divergence the
-    /// pair exists to prevent. So this scan does not cover it, the control set does not
-    /// claim to, and <c>VER-FND-001-004</c> records it as a named gap. An analyzer over
-    /// the syntax tree is what would close it.
+    /// So this is the authoritative reader and the shell one is a build-free
+    /// approximation whose verdict is not independent confirmation of this one. The
+    /// design intent behind having two is real — a rule enforced in one place can be
+    /// changed in one place and silently diverge from doc 115 — and one exact reader
+    /// would serve that intent better than two inexact ones that disagree. See the
+    /// escalation in the next paragraph for why there is not one yet. Until there is,
+    /// § 6 carries the same corpus in the same four classes so a divergence is a failing
+    /// control rather than a silent disagreement.
+    /// </para>
+    /// <para>
+    /// WHAT NEITHER READER COVERS, measured rather than implied, and recorded as the
+    /// <c>k*</c> class of the shared corpus so it is asserted rather than forgotten:
+    /// </para>
+    /// <list type="bullet">
+    /// <item>
+    /// a reference split across two physical lines. <c>global using</c> then
+    /// <c>    Godot;</c>, <c>using</c> then <c>    Godot;</c>, and <c>Godot</c> then
+    /// <c>    .GD.Print("y");</c> all compile and none is seen, because both readers
+    /// decide per line. <c>using static</c> then <c>    Godot.GD;</c> IS caught, because
+    /// its second line still holds <c>Godot.</c> — a hole with a narrow, non-obvious
+    /// edge, which is what a hand-written scan produces.
+    /// </item>
+    /// <item>
+    /// an identifier written with a Unicode escape. <c>using \u0047odot;</c> and
+    /// <c>\u0047odot.GD.Print()</c> both bind to <c>Godot</c>; after stripping, the text
+    /// still reads <c>\u0047odot</c>.
+    /// </item>
+    /// </list>
+    /// <para>
+    /// Both classes need identifier position told apart from literal position and logical
+    /// lines told apart from physical ones. That is a parser, and the correct fix is to
+    /// read the reference graph from a C# syntax tree
+    /// (<c>Microsoft.CodeAnalysis.CSharp</c>) rather than from text, which makes comments,
+    /// literals of every kind, line splits and identifier escapes stop being cases at
+    /// all. That is a new third-party dependency: doc 114 § Default mandate withholds
+    /// agent autonomy where one is introduced, and doc 100 § Dependency policy requires a
+    /// recorded dependency request. It is therefore escalated rather than approximated
+    /// further, and <c>VER-FND-001-004</c> records the gap. Do not close it by adding more
+    /// text-matching passes — the two most recent defects in the shell reader were both
+    /// introduced that way, one of them by the change that closed the character-literal
+    /// hole below.
     /// </para>
     /// </remarks>
     internal static bool NamesGodotNamespace(string sourceText)

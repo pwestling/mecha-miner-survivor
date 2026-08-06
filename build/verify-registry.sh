@@ -127,12 +127,31 @@ readonly EXPECTATIONS="${REPO_ROOT}/build/audit-expectations.env"
 # value is absent or unparseable, the stage that needs it fails rather than resuming the
 # number it used to hardcode. Whatever this script now reports about these values, it read.
 #
+# THE KEY-MATCHING RULE, which is now the same rule the C# reader uses. It is stated in
+# build/audit-expectations.env's own header: a key matches when the text before the first
+# `=`, trimmed at both ends, equals the key exactly; the value is the rest of the line,
+# trimmed; a `#` first non-space character is a comment; a blank line is nothing.
+#
+# The two readers disagreed about it. This sed allowed `[[:space:]]*=`, so it read
+# `FORBIDDEN_EDGE_CONTROLS =112` and printed 112. AuditExpectations compared
+# `trimmed[..separator]`, which for that line is "FORBIDDEN_EDGE_CONTROLS " with the
+# trailing space, so it matched nothing and threw "declares 0 value(s)". One space before
+# the `=` and the two readers of a single-owner value disagreed about whether the value
+# existed. That failed closed, which is the right direction and not the point: a mechanism
+# whose entire purpose is that one value has one owner is not single-owner while its readers
+# disagree about where the value is. `# KEY=value` is also excluded here now - the old
+# pattern's leading `[[:space:]]*` did not exclude a comment marker, so a commented-out
+# declaration was readable.
+#
+# $1 key, $2 optional file (defaults to EXPECTATIONS, so stage 6's variant controls can
+# drive this exact function over spellings instead of a second implementation of it).
 expectation() {
-  # $1 key. Prints the value, or nothing when the file or the key is unusable.
+  local key="$1"
+  local file="${2:-${EXPECTATIONS}}"
   local value
-  [[ -f "${EXPECTATIONS}" ]] || return 0
-  value="$(sed -n -E "s/^[[:space:]]*$1[[:space:]]*=[[:space:]]*(.*[^[:space:]])[[:space:]]*\$/\1/p" \
-    "${EXPECTATIONS}")"
+  [[ -f "${file}" ]] || return 0
+  value="$(sed -n -E "s/^[[:space:]]*${key}[[:space:]]*=[[:space:]]*(.*[^[:space:]])[[:space:]]*\$/\1/p" \
+    "${file}")"
   # Exactly one declaration, or none: two lines for one key has no single answer.
   [[ "$(printf '%s' "${value}" | grep -c .)" == "1" ]] || return 0
   printf '%s' "${value}"
@@ -554,6 +573,77 @@ control "stage 4: rows and no total" check_defect_inventory "${control_root}/def
 control "stage 4: an empty total" check_defect_inventory "${control_root}/defects-empty-total.txt"
 control "stage 4: a non-numeric total" check_defect_inventory "${control_root}/defects-word-total.txt"
 control "stage 4: a total that disagrees with its rows" check_defect_inventory "${control_root}/defects-total-disagrees.txt"
+
+echo
+echo "=== 6. the expectations file's key-matching rule, over the same spellings the C# reader uses"
+#
+# build/audit-expectations.env is a single-owner mechanism with two readers, and until this
+# stage existed neither reader's key matching had a control. They disagreed: `KEY =value`
+# read as 112 here and as "declares 0 value(s)" in AuditExpectations. The list below is the
+# same list AuditExpectationsTests.KeyVariants drives through
+# AuditExpectations.ReadFrom - one list in two places, so a divergence is a failing control
+# rather than a discovery. Each row is `<expected>|<line>`; `-` means the key must NOT be
+# found, and the value 112 is arbitrary.
+#
+# The accepted spellings are the ones the header commits to. The rejected ones are the
+# shapes that must not be mistaken for a declaration: a comment, a longer key with this key
+# as a suffix or a prefix, and a key with an interior space, which is not this key.
+
+readonly EXPECTATION_KEY_VARIANTS=(
+  "112|PROBE_KEY=112"
+  "112|PROBE_KEY =112"
+  "112|PROBE_KEY= 112"
+  "112|PROBE_KEY = 112"
+  "112|  PROBE_KEY=112"
+  "112|PROBE_KEY=112  "
+  "112|PROBE_KEY	=	112"
+  "-|# PROBE_KEY=112"
+  "-|#PROBE_KEY=112"
+  "-|PREFIX_PROBE_KEY=112"
+  "-|PROBE_KEY_SUFFIX=112"
+  "-|PROBE KEY=112"
+  "-|PROBE_KEY"
+  "-|=112"
+  "-|"
+)
+
+variant_root="$(mktemp -d)"
+variant_failures=0
+variant_index=0
+for variant in "${EXPECTATION_KEY_VARIANTS[@]}"; do
+  variant_index=$((variant_index + 1))
+  variant_expected="${variant%%|*}"
+  variant_line="${variant#*|}"
+  variant_file="${variant_root}/variant-${variant_index}.env"
+  printf '%s\n' "${variant_line}" >"${variant_file}"
+
+  variant_actual="$(expectation PROBE_KEY "${variant_file}")"
+  [[ -n "${variant_actual}" ]] || variant_actual="-"
+  if [[ "${variant_actual}" != "${variant_expected}" ]]; then
+    fail "stage 6: the line [${variant_line}] read as '${variant_actual}', expected '${variant_expected}'; this reader and AuditExpectations.ReadFrom must agree on every spelling"
+    variant_failures=$((variant_failures + 1))
+  fi
+done
+
+# Two declarations of one key has no single answer, and that is a separate rule from the
+# spelling of one declaration.
+printf 'PROBE_KEY=112\nPROBE_KEY=113\n' >"${variant_root}/duplicate.env"
+if [[ -n "$(expectation PROBE_KEY "${variant_root}/duplicate.env")" ]]; then
+  fail "stage 6: two declarations of one key produced a value; there is no single answer to give"
+  variant_failures=$((variant_failures + 1))
+fi
+
+# The control on the control: the accepted spellings must not all be passing because the
+# reader returns nothing for everything.
+if [[ "$(expectation PROBE_KEY "${variant_root}/variant-1.env")" != "112" ]]; then
+  fail "stage 6: the plain KEY=value spelling did not read, so the rejections above prove nothing"
+  variant_failures=$((variant_failures + 1))
+fi
+
+rm -rf "${variant_root}"
+if [[ "${variant_failures}" -eq 0 ]]; then
+  pass "stage 6: ${#EXPECTATION_KEY_VARIANTS[@]} key spellings read the same here as in AuditExpectations.ReadFrom, plus the duplicate-declaration and plain-spelling controls"
+fi
 
 echo
 if [[ "${failures}" -eq 0 ]]; then

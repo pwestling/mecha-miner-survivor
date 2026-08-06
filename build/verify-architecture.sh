@@ -348,30 +348,50 @@ echo "=== 6. no Godot types outside game/ (VER-FND-001-004)"
 #
 # The previous expression was `(^|[^A-Za-z.])using[[:space:]]+Godot([;.]|$)`, which
 # required the literal token `using` followed by whitespace followed by `Godot`. It
-# caught two of the six ways C# offers of naming a namespace - `using Godot;` and
-# `global using Godot;` - and missed `using static Godot.GD;`,
+# caught `using Godot;` and `global using Godot;` and missed `using static Godot.GD;`,
 # `using GD = Godot.GD;`, `using GodotAlias = Godot;` and a fully-qualified
 # `Godot.GD.Print` with no import at all.
 #
-# GODOT_TOKEN below is character-for-character the same expression as
-# ProjectGraph.GodotNamespaceToken in src/MechaMiner.Tools/Audit/ProjectGraph.cs.
-# THE TWO ARE DELIBERATELY TWO READERS OF THE SAME RULE, NOT A REDUNDANCY. That one
-# is a C# rule over a constructible graph and runs in test-fast; this one is a text
-# scan that needs no build and no audit assembly, so a defect in the audit code
-# cannot hide a violation from both. Do not delete either as duplicated work. If the
-# expression changes, change it in both files, and keep both controls green.
+# WHAT THIS SCAN IS NOT: A COMPLETE ACCOUNT OF THE WAYS C# CAN NAME A NAMESPACE. This
+# comment used to call those five imports plus the qualified form "the six ways C# offers
+# of naming a namespace". That is a completeness claim, and it is false. Measured
+# counterexamples, each a real reference that resolves to `Godot`, none of them caught
+# here:
 #
-# KNOWN LIMITATION, stated rather than implied. C# permits Unicode escapes inside
-# identifiers, so `using \u0047odot;` and `\u0047odot.GD.Print()` both compile to a
-# reference to `Godot`, and neither reader sees the token: after comment and literal
-# stripping the text still reads `\u0047odot`. Decoding identifier escapes would mean
-# either two independent decoders (the divergence this pair of readers exists to
-# prevent) or a shared one that has to know identifier position from string position -
-# which is a parser, not a text scan. So this is not covered, and the control below
-# says "the naming forms it covers" rather than "all six ways", because a stated
-# limitation is a limitation and an implied one is a false claim. VER-FND-001-004
-# records it. A compiler-backed reader (an analyzer over the syntax tree) is what would
-# close it; nothing in this gate can.
+#   - a reference split across two physical lines: `global using` newline `    Godot;`,
+#     `using` newline `    Godot;`, and `Godot` newline `    .GD.Print("y");`. Both
+#     readers decide per line, so neither sees any of the three. `using static` newline
+#     `    Godot.GD;` IS caught, because its second line still contains `Godot.` - a
+#     line-splitting hole with a narrow, non-obvious edge, which is the shape a
+#     hand-written scan produces.
+#   - an identifier written with a Unicode escape: `using \u0047odot;` and
+#     `\u0047odot.GD.Print()` both bind to `Godot`, and after stripping the text still
+#     reads `\u0047odot`.
+#
+# So this scan covers the naming forms its corpus names and no more. The corpus below now
+# records the uncovered ones as `k*` probes rather than leaving them unmeasured. Closing
+# them means deciding C# lexical and syntactic context, which is a parser: the class of
+# defect disappears if the reference graph is read from a C# syntax tree
+# (Microsoft.CodeAnalysis.CSharp) rather than from text. That is a new third-party
+# dependency, which doc 114 § Default mandate withholds agent autonomy for and doc 100
+# § Dependency policy requires a recorded dependency request for, so it is escalated
+# rather than approximated further. Do not close these by adding more substitution passes;
+# the two most recent defects in this scan were both introduced by doing that.
+#
+# GODOT_TOKEN below is character-for-character the same expression as
+# ProjectGraph.GodotNamespaceToken in src/MechaMiner.Tools/Audit/ProjectGraph.cs. The two
+# are two readers of one rule, and the design intent is real: a rule enforced in one place
+# can be changed in one place and silently diverge from the documented boundary. But be
+# accurate about what the pair currently buys, because the previous wording oversold it.
+# Over the 46-file corpus described below the two readers DISAGREE on nine files - the C#
+# reader catches four positives this one misses, and clears four lookalikes this one
+# flags. This is not two views of one rule; it is one precise reader and one approximate
+# one. The approximate one keeps the property that matters for a prohibition, in that a
+# violation it cannot see is one the C# reader can - but it is not authoritative, and
+# § 6's `ok` is not an independent confirmation of test-fast's. ONE exact reader would
+# serve the single-owner intent better than two inexact ones that disagree; the escalation
+# above is why there is not one yet. Until there is, if the expression changes, change it
+# in both files and keep both controls green.
 #
 # Matching `Godot[.]` alone would not be sufficient: `using GodotAlias = Godot;` has
 # no dot after the token. The trailing class is therefore "any non-identifier
@@ -389,21 +409,47 @@ readonly GODOT_QUALIFIER='(^|[^A-Za-z0-9_.])Godot[[:space:]]*\.'
 # C# reader removes them: 96 lines under src/ and tests/ spell `Godot` as a bare
 # English word in a comment or a diagnostic message, and most of them are prose
 # explaining why this boundary exists. Rewording those to satisfy a text scan would
-# make the code worse and prove nothing about the boundary. This sed is cruder than
-# the C# reader's character scanner - block comments and literals that span lines are
-# not tracked - but it cannot invent a token, so its error direction is a false
-# negative that the C# reader catches, never a false accusation.
+# make the code worse and prove nothing about the boundary.
+#
+# WHAT THIS STRIPPER IS AND IS NOT. Sequential regular-expression substitutions cannot
+# decide C# lexical context: each pass is blind to what the others did, so a construct
+# only one of them understands can be cut in half by another. It therefore errs in BOTH
+# directions, and the previously stated claim that its "error direction is a false
+# negative ... never a false accusation" was measured false. Over a 46-file corpus, each
+# member compiled against a Godot shim so every positive is a resolvable reference and
+# every lookalike genuinely is not, this stripper causes four false accusations that the
+# C# reader correctly clears:
+#
+#   - a single-line block comment, `/* Godot.GD is engine-only */`;
+#   - the same text inside a multi-line block comment;
+#   - a multi-line `@"` string containing `Godot.GD.Print(x);`; and
+#   - a multi-line `"""` raw string containing `Godot.`.
+#
+# `sed` strips `//` to end of line and never `/* */` in any form, and it has no state
+# across lines, so a literal that spans lines is not tracked. The block-comment cases are
+# not covered by any "constructs spanning lines" caveat: the first is on one line. Those
+# four are the reason this pass must not be the authority on this rule; they are recorded
+# in the corpus below as `k*` probes, which assert the CURRENT verdict rather than the
+# correct one so that a change here shows up rather than passing unremarked.
 #
 # The three substitutions run in this order for three separate reasons, two of which
 # were holes:
 #
-#   1. Character literals go first. Without this pass the `"` inside `'"'` was read as
-#      a string opener, so the scan ran on to the next `"` and deleted everything
-#      between - and on the line `char q = '"'; Godot.GD.Print("y");` that is the
-#      reference itself. One line therefore defeated both readers of this rule with
-#      both controls green, because every control probe put its reference on a line of
-#      its own. The C# reader's remark said a `char` "cannot hold an identifier", which
-#      is true and was not the point: a char can hold a quote.
+#   1. Character literals go first, and the content is exactly one character or one
+#      escape - `'([^'\\]|\\.)'` and not `'([^'\\]|\\.)*'`. Without this pass at all,
+#      the `"` inside `'"'` was read as a string opener, so the scan ran on to the next
+#      `"` and deleted everything between - which on `char q = '"'; Godot.GD.Print("y");`
+#      is the reference itself. But the unbounded `*` form that closed that hole opened a
+#      commoner one: run before the string pass, it happily pairs apostrophes belonging to
+#      two DIFFERENT string literals and deletes everything between them, so
+#      `var s = "don't"; Godot.GD.Print("won't");` became `var s =  );` and
+#      `/* it's */ Godot.GD.Print("won't");` became `/* it t");`. English prose in
+#      diagnostic strings is the commonest shape in this repository, and both of those
+#      lines are references this gate reported `ok` on. A C# character literal holds one
+#      character or one escape, so requiring exactly that costs nothing and cannot span
+#      two literals. This is a bound on the damage the pass can do, not a claim that
+#      substitution passes can decide lexical context - they cannot, and the false
+#      accusations above are the standing proof.
 #   2. Strings go before comments. The previous order deleted from the first `//` to end
 #      of line first, so `string u = "http://example.invalid"; Godot.GD.Print(x);` lost
 #      its reference to a `//` that was inside a literal. A URL beside a Godot call is
@@ -415,23 +461,64 @@ readonly GODOT_QUALIFIER='(^|[^A-Za-z0-9_.])Godot[[:space:]]*\.'
 # two identifiers into a token nobody wrote.
 godot_strip_comments_and_strings() {
   sed -E \
-    -e "s/'([^'\\\\]|\\\\.)*'/ /g" \
+    -e "s/'([^'\\\\]|\\\\.)'/ /g" \
     -e 's/@?"([^"\\]|\\.)*"/ /g' \
     -e 's,//.*,,' \
     "$1"
 }
 
 # Prints the files under the given roots that name the Godot namespace.
+#
+# NEVER PUT AN EARLY-EXITING READER ON THE RIGHT OF A PIPE IN THIS FILE. `grep -q` and
+# `head` stop reading the moment they have their answer; the writer on the left then dies
+# of SIGPIPE, and under `set -o pipefail` the pipeline's status is 141. Inside an `if`
+# condition 141 reads as "no match", so the file is not emitted, `stray_godot` comes back
+# empty and § 6 prints `ok` over a real violation.
+#
+# That was live at 4859a90, in both branches below, written as
+# `printf '%s\n' "${stripped}" | grep -qE ...`, and its miss rate rises with file size,
+# because the writer only dies once it has more to write than the 64 KiB pipe buffer
+# holds. Measured against a file that names `Godot.GD` early with the bulk after it:
+#
+#     88 B (the size the f1-f9 probe fixtures used to be)     0 of 100 missed
+#     26 KB                                                   0 of 100 missed
+#     84 KB                                                  78 of 100 missed
+#    371 KB                                                 100 of 100 missed
+#
+# and through the using-line branch: 13 of 100 at 21 KB, 49 of 100 at 70 KB, 100 of 100
+# at 306 KB. Every probe fixture was a single short line, so the control could not fail:
+# the stripped text fitted inside the pipe buffer, the writer never blocked, and no
+# SIGPIPE was reachable. A one-line fixture is not a control for this class of defect, it
+# is a control that structurally cannot see it - which is why several rounds of attacking
+# this scan did not find it. The corpus below therefore carries two production-sized
+# probes, one per branch.
+#
+# Note the direction of the size dependency: a reference LATE in a large file survives,
+# because grep has to read to the end before it can match and the writer finishes first.
+# The broken case is an early reference in a large file, which is where `using` directives
+# and a type's first statements actually live - so the failing shape is the ordinary one.
+#
+# The fix is a here-string, not a pipe: `<<<` has no left-hand process to signal. The
+# using-line branch captures its intermediate result in a variable rather than piping
+# grep into grep, so neither reader can be killed. This prohibition was safe when it was a
+# `grep -lE` over file arguments; it broke when that was rewritten into a `printf | grep -q`
+# pipe. Two rewrites of this scan have now introduced a false pass.
 godot_namespace_hits() {
-  local root file stripped
+  local root file stripped using_lines
   for root in "$@"; do
     while IFS= read -r file; do
       stripped="$(godot_strip_comments_and_strings "${file}")"
-      if printf '%s\n' "${stripped}" | grep -qE "${GODOT_QUALIFIER}"; then
+      if grep -qE "${GODOT_QUALIFIER}" <<<"${stripped}"; then
         printf '%s\n' "${file}"
-      elif printf '%s\n' "${stripped}" \
-        | grep -E "${GODOT_USING_LINE}" \
-        | grep -qE "${GODOT_TOKEN}"; then
+        continue
+      fi
+
+      # grep's exit 1 here means "this file declares no using directives", which is an
+      # ordinary outcome rather than a failure, so this is the one place `|| true` is
+      # right. The result is held in a variable so the token test below reads a
+      # here-string instead of the far end of a pipe.
+      using_lines="$(grep -E "${GODOT_USING_LINE}" <<<"${stripped}" || true)"
+      if [[ -n "${using_lines}" ]] && grep -qE "${GODOT_TOKEN}" <<<"${using_lines}"; then
         printf '%s\n' "${file}"
       fi
     done < <(find "${root}" -name '*.cs' -not -path '*/obj/*' -not -path '*/bin/*' -print | sort)
@@ -457,72 +544,291 @@ if [[ "${godot_scan_roots_present}" -eq 1 ]]; then
   fi
 fi
 
-# Control. The scan above has only ever run against a compliant tree, so on its own it
-# is indistinguishable from a scan that matches nothing. These probes are the same forms
-# ArchitectureRuleTests.GodotNamingForms feeds the C# reader; keeping one list in two
-# places is what makes a divergence between the two readers a failing control rather
-# than a silent disagreement. The lookalikes must be accepted, or a scan that flagged
-# every file would pass the positive probes.
+# --- § 6 control corpus ----------------------------------------------------------------
 #
-# f1-f6 are the six ways C# offers of naming a namespace, each on a line of its own -
-# and that is exactly why they were not enough. A stripper defect that swallows the rest
-# of a line cannot be seen by a probe whose line holds nothing else, so all six stayed
-# green while `char q = '"'; Godot.GD.Print("y");` passed the real scan. f7-f9 are
-# therefore same-line probes: a decoy the stripper has to get right, followed on the
-# same line by a reference it has to keep. They are not contrived - a URL or a quote
-# character beside a Godot call is ordinary code - and f9 is the one the shell reader
-# failed while the C# reader passed, which is the divergence this shared list exists to
-# surface.
+# The scan above has only ever run against a compliant tree, so on its own it is
+# indistinguishable from a scan that matches nothing. This corpus is the same 46 files
+# ArchitectureRuleTests feeds the C# reader, in the same four classes, so a divergence
+# between the two readers is a failing control rather than a silent disagreement. Every
+# member has been compiled against a Godot shim: each `f*` and `k*` file fails to compile
+# without the shim, so every positive is a reference that really resolves to `Godot`, and
+# each `n*` and `x*` file compiles without it, so no lookalike is secretly a reference.
+#
+#   f*  a real reference this reader MUST catch.
+#   n*  not a reference; this reader must NOT flag it.
+#   k*  a real reference this reader CANNOT see. Asserted as missed, so the gap is
+#       measured instead of unmeasured. If one starts being caught, this control fails and
+#       tells you to move it to `f*` - a gap closing is a visible edit in the diff, which
+#       is the same ratchet the audit-expectations census uses.
+#   x*  not a reference, and this reader flags it anyway. Asserted as flagged, for the same
+#       reason. The C# reader clears all four; see the header above.
+#
+# WHY THE PROBES ARE NOT ALL ONE SHORT LINE, which is what they used to be. Two whole
+# classes of defect are invisible to a single-line fixture:
+#
+#   - a stripper defect that swallows the rest of a line cannot be seen by a probe whose
+#     line holds nothing else. All six original spellings stayed green while
+#     `char q = '"'; Godot.GD.Print("y");` passed the real scan. f07-f12 and f14-f17
+#     are therefore same-line probes: a decoy the stripper has to get right, followed on
+#     the same line by a reference it has to keep. None is contrived - a URL, a quote
+#     character, or an apostrophe in English prose beside a Godot call is ordinary code.
+#   - a SIGPIPE defect in the scan pipeline only fires once the writer has more to write
+#     than the 64 KiB pipe buffer holds. Every fixture was ~75 bytes, so the writer never
+#     blocked and the false pass documented on godot_namespace_hits was structurally
+#     unreachable by this control. f30 and f31 are therefore PRODUCTION-SIZED - a few
+#     hundred KiB each, one per scan branch, with the reference near the top and the bulk
+#     after it, because that is the shape that breaks and it is also the shape a real
+#     source file has. Do not shrink them: at fixture size they prove nothing.
+
+readonly PROBE_AP="'"
+
 godot_probe_dir="$(mktemp -d)"
-mkdir -p "${godot_probe_dir}/probe"
-printf 'using Godot;\ninternal static class P { internal static int R() => 1; }\n' \
-  > "${godot_probe_dir}/probe/f1-using.cs"
-printf 'global using Godot;\ninternal static class P { internal static int R() => 1; }\n' \
-  > "${godot_probe_dir}/probe/f2-global-using.cs"
-printf 'using static Godot.GD;\ninternal static class P { internal static int R() => 1; }\n' \
-  > "${godot_probe_dir}/probe/f3-using-static.cs"
-printf 'using GD = Godot.GD;\ninternal static class P { internal static int R() => 1; }\n' \
-  > "${godot_probe_dir}/probe/f4-alias-type.cs"
-printf 'using GodotAlias = Godot;\ninternal static class P { internal static int R() => 1; }\n' \
-  > "${godot_probe_dir}/probe/f5-alias-namespace.cs"
-printf 'internal static class P { internal static void R() => Godot.GD.Print("x"); }\n' \
-  > "${godot_probe_dir}/probe/f6-fully-qualified.cs"
-# f7-f9: the decoy and the reference on ONE line. Each decoy is what defeated a
-# stripper: a quote held in a char literal, a `//` inside a string, and a URL inside a
-# string.
-printf 'internal static class P { internal static void R() { char q = %s"%s; Godot.GD.Print("y"); } }\n' "'" "'" \
-  > "${godot_probe_dir}/probe/f7-char-literal-quote.cs"
-printf 'internal static class P { internal static void R() { string s = "// not a comment"; Godot.GD.Print("y"); } }\n' \
-  > "${godot_probe_dir}/probe/f8-comment-in-string.cs"
-printf 'internal static class P { internal static void R() { string u = "http://example.invalid/x"; Godot.GD.Print("y"); } }\n' \
-  > "${godot_probe_dir}/probe/f9-url-in-string.cs"
-printf 'using MechaMiner.GodotLike;\ninternal static class N { internal static void R() => GodotLike.Do(); }\n' \
-  > "${godot_probe_dir}/probe/n1-qualified-lookalike.cs"
-printf 'internal static class N { internal static string R() => "NotGodotish"; }\n' \
-  > "${godot_probe_dir}/probe/n2-embedded-token.cs"
-printf '// Only game/ may reference Godot.\ninternal sealed class N { public int Godot { get; set; } }\n' \
-  > "${godot_probe_dir}/probe/n3-comment-and-member.cs"
-# n4 is the other half of f8/f9: reordering the stripper so literals go before comments
-# must not stop it removing literals. A file whose only Godot text is inside a string is
-# not a reference, and if this one starts firing the stripper has stopped stripping.
-printf 'internal static class N { internal static string R() => "call Godot.GD.Print here"; }\n' \
-  > "${godot_probe_dir}/probe/n4-qualifier-in-string.cs"
+godot_probe="${godot_probe_dir}/probe"
+mkdir -p "${godot_probe}"
 
-readonly EXPECTED_GODOT_PROBES=9
-readonly EXPECTED_GODOT_LOOKALIKES=4
-godot_probe_hits="$(godot_namespace_hits "${godot_probe_dir}/probe")"
-godot_probe_caught="$(printf '%s' "${godot_probe_hits}" | grep -c '/f[0-9][0-9]*-' || true)"
-godot_probe_false="$(printf '%s' "${godot_probe_hits}" | grep -c '/n[0-9][0-9]*-' || true)"
+# $1 file name, $2.. the lines of the file.
+probe_file() {
+  local name="$1"
+  shift
+  printf '%s\n' "$@" >"${godot_probe}/${name}"
+}
 
-if [[ "${godot_probe_caught}" -ne "${EXPECTED_GODOT_PROBES}" ]]; then
-  fail "control: the Godot scan caught ${godot_probe_caught} of ${EXPECTED_GODOT_PROBES} naming forms; missed $(cd "${godot_probe_dir}/probe" && ls f*.cs | while read -r f; do printf '%s\n' "${godot_probe_hits}" | grep -q "/${f}\$" || printf '%s ' "${f}"; done)"
-elif [[ "${godot_probe_false}" -ne 0 ]]; then
-  fail "control: the Godot scan flagged $(printf '%s' "${godot_probe_hits}" | grep '/n[0-9][0-9]*-' | paste -sd' ' -), which do not name the Godot namespace"
+# --- f*: real references this reader must catch ---
+probe_file 'f01-using.cs' \
+  'using Godot;' \
+  'internal static class P { internal static int R() => 1; }'
+probe_file 'f02-global-using.cs' \
+  'global using Godot;' \
+  'internal static class P { internal static int R() => 1; }'
+probe_file 'f03-using-static.cs' \
+  'using static Godot.GD;' \
+  'internal static class P { internal static int R() => 1; }'
+probe_file 'f04-alias-type.cs' \
+  'using GD = Godot.GD;' \
+  'internal static class P { internal static int R() => 1; }'
+probe_file 'f05-alias-namespace.cs' \
+  'using GodotAlias = Godot;' \
+  'internal static class P { internal static int R() => 1; }'
+probe_file 'f06-fully-qualified.cs' \
+  'internal static class P { internal static void R() {' \
+  'Godot.GD.Print("x");' \
+  '} }'
+probe_file 'f07-char-literal-quote.cs' \
+  'internal static class P { internal static void R() {' \
+  "char q = ${PROBE_AP}\"${PROBE_AP}; Godot.GD.Print(q);" \
+  '} }'
+probe_file 'f08-comment-in-string.cs' \
+  'internal static class P { internal static void R() {' \
+  'string s = "// not a comment"; Godot.GD.Print(s);' \
+  '} }'
+probe_file 'f09-url-in-string.cs' \
+  'internal static class P { internal static void R() {' \
+  'string u = "http://example.invalid/x"; Godot.GD.Print(u);' \
+  '} }'
+probe_file 'f10-two-apostrophes.cs' \
+  'internal static class P { internal static void R() {' \
+  "string s = \"don${PROBE_AP}t\"; Godot.GD.Print(\"won${PROBE_AP}t\");" \
+  '} }'
+probe_file 'f11-apostrophe-in-block-comment.cs' \
+  'internal static class P { internal static void R() {' \
+  "/* it${PROBE_AP}s fine */ Godot.GD.Print(\"won${PROBE_AP}t\");" \
+  '} }'
+probe_file 'f12-apostrophe-in-line-comment.cs' \
+  'internal static class P { internal static void R() {' \
+  "// it${PROBE_AP}s fine" \
+  "Godot.GD.Print(\"won${PROBE_AP}t\");" \
+  '} }'
+probe_file 'f13-linesplit-using-static.cs' \
+  'using static' \
+  '    Godot.GD;' \
+  'internal static class P { internal static int R() => 1; }'
+probe_file 'f14-escaped-quote-in-string.cs' \
+  'internal static class P { internal static void R() {' \
+  'string s = "a\"b"; Godot.GD.Print(s);' \
+  '} }'
+probe_file 'f15-verbatim-doubled-quote.cs' \
+  'internal static class P { internal static void R() {' \
+  'string s = @"a""b"; Godot.GD.Print(s);' \
+  '} }'
+probe_file 'f16-raw-string.cs' \
+  'internal static class P { internal static void R() {' \
+  'string s = """x"""; Godot.GD.Print(s);' \
+  '} }'
+probe_file 'f17-interpolated-apostrophe.cs' \
+  'internal static class P { internal static void R() {' \
+  "int x = 1; string s = $\"it${PROBE_AP}s {x}\"; Godot.GD.Print(s);" \
+  '} }'
+probe_file 'f18-attribute.cs' \
+  '[Godot.GlobalClass]' \
+  'internal sealed class P { internal int R() => 1; }'
+probe_file 'f19-typeof.cs' \
+  'internal static class P { internal static void R() {' \
+  'System.Type t = typeof(Godot.Node); Godot.GD.Print(t);' \
+  '} }'
+probe_file 'f20-field-type.cs' \
+  'internal sealed class P { private Godot.Node? _n; internal object? R() => _n; }'
+probe_file 'f21-base-type.cs' \
+  'internal sealed class P : Godot.Node { internal int R() => 1; }'
+probe_file 'f22-using-subnamespace.cs' \
+  'using Godot.Collections;' \
+  'internal static class P { internal static int R() => 1; }'
+probe_file 'f23-generic-argument.cs' \
+  'internal static class P { internal static void R() {' \
+  'var l = new System.Collections.Generic.List<Godot.Node>(); Godot.GD.Print(l.Count);' \
+  '} }'
+probe_file 'f24-space-before-semicolon.cs' \
+  'using Godot ;' \
+  'internal static class P { internal static int R() => 1; }'
+probe_file 'f25-space-around-dot.cs' \
+  'internal static class P { internal static void R() {' \
+  'Godot . GD.Print("x");' \
+  '} }'
+probe_file 'f26-block-comment-close-then-reference.cs' \
+  'internal static class P { internal static void R() {' \
+  '/* a comment that' \
+  '   spans lines and ends here */ Godot.GD.Print("y");' \
+  '} }'
+probe_file 'f27-escaped-apostrophe-char.cs' \
+  'internal static class P { internal static void R() {' \
+  "char q = ${PROBE_AP}\\${PROBE_AP}${PROBE_AP}; Godot.GD.Print(q);" \
+  '} }'
+probe_file 'f28-conditional-compilation.cs' \
+  'internal static class P { internal static void R() {' \
+  '#if DEBUG' \
+  'Godot.GD.Print("d");' \
+  '#else' \
+  'Godot.GD.Print("r");' \
+  '#endif' \
+  '} }'
+probe_file 'f29-nested-namespace-type.cs' \
+  'internal static class P { internal static void R() {' \
+  'var a = new Godot.Collections.Array(); Godot.GD.Print(a.Count);' \
+  '} }'
+
+# f30/f31: production-sized, one per branch of godot_namespace_hits, reference first and
+# bulk after. See the SIGPIPE note on that function for the measured miss rates by size.
+{
+  printf '%s\n' 'internal static class P { internal static void R() {' 'Godot.GD.Print("early");'
+  seq 1 12000 | sed 's/.*/    System.GC.KeepAlive(&);/'
+  printf '%s\n' '} }'
+} >"${godot_probe}/f30-production-size-qualifier.cs"
+{
+  printf '%s\n' 'using Godot;'
+  seq 1 14000 | sed 's/.*/using Filler.N&;/'
+  printf '%s\n' 'internal static class P { internal static int R() => 1; }'
+} >"${godot_probe}/f31-production-size-using.cs"
+
+# --- n*: not references; must not be flagged ---
+probe_file 'n1-qualified-lookalike.cs' \
+  'using MechaMiner.GodotLike;' \
+  'internal static class P { internal static int R() => 1; }'
+probe_file 'n2-embedded-token.cs' \
+  'internal static class N { internal static string R() => "NotGodotish"; }'
+probe_file 'n3-bare-lookalike.cs' \
+  'using MechaMiner.GodotLike;' \
+  'internal static class N { internal static void R() => GodotLike.Do(); }'
+probe_file 'n4-member-named-godot.cs' \
+  '// Only game/ may reference Godot.' \
+  'internal sealed class N { public int Godot { get; set; } }'
+probe_file 'n5-comment-and-diagnostic.cs' \
+  '// Only game/ may reference Godot, which is why this project does not.' \
+  'internal static class N { internal static string R() => "launched no Godot process"; }'
+probe_file 'n6-qualifier-in-string.cs' \
+  'internal static class N { internal static string R() => "call Godot.GD.Print here"; }'
+
+# --- k*: real references beyond this reader, asserted as missed ---
+probe_file 'k1-linesplit-global-using.cs' \
+  'global using' \
+  '    Godot;' \
+  'internal static class P { internal static int R() => 1; }'
+probe_file 'k2-linesplit-using.cs' \
+  'using' \
+  '    Godot;' \
+  'internal static class P { internal static int R() => 1; }'
+probe_file 'k3-linesplit-qualifier.cs' \
+  'internal static class P { internal static void R() {' \
+  'Godot' \
+  '    .GD.Print("y");' \
+  '} }'
+probe_file 'k4-unicode-escape-using.cs' \
+  'using \u0047odot;' \
+  'internal static class P { internal static int R() => 1; }'
+probe_file 'k5-unicode-escape-qualifier.cs' \
+  'internal static class P { internal static void R() {' \
+  '\u0047odot.GD.Print("x");' \
+  '} }'
+
+# --- x*: non-references this reader accuses, asserted as flagged ---
+probe_file 'x1-block-comment-one-line.cs' \
+  'internal static class N {' \
+  '    /* Godot.GD is engine-only, so nothing here calls it. */' \
+  '    internal static int R() => 1; }'
+probe_file 'x2-block-comment-multi-line.cs' \
+  'internal static class N {' \
+  '    /*' \
+  '     * Godot.GD is engine-only.' \
+  '     * game/ owns every call to Godot.GD.Print.' \
+  '     */' \
+  '    internal static int R() => 1; }'
+probe_file 'x3-verbatim-string-multi-line.cs' \
+  'internal static class N {' \
+  '    private const string S = @"' \
+  'Godot.GD.Print(x);' \
+  '";' \
+  '    internal static string R() => S; }'
+probe_file 'x4-raw-string-multi-line.cs' \
+  'internal static class N {' \
+  '    private const string S = """' \
+  '        Godot.GD.Print(x);' \
+  '        """;' \
+  '    internal static string R() => S; }'
+
+godot_probe_hits="$(godot_namespace_hits "${godot_probe}")"
+
+# Exact whole-line match through a here-string. Not `printf ... | grep -q`: that is the
+# pipeline whose SIGPIPE status silently reported caught probes as missed inside the very
+# message that listed them.
+probe_hit() {
+  grep -qxF "${godot_probe}/$1" <<<"${godot_probe_hits}"
+}
+
+# The four classes, asserted per file rather than by a count. A count can agree with a
+# corpus that lost a member; a per-file assertion cannot.
+probe_missed=()
+probe_falsely_flagged=()
+probe_gap_closed=()
+probe_accusation_gone=()
+for probe_name in $(cd "${godot_probe}" && ls *.cs | sort); do
+  case "${probe_name}" in
+    f*) probe_hit "${probe_name}" || probe_missed+=("${probe_name}") ;;
+    n*) ! probe_hit "${probe_name}" || probe_falsely_flagged+=("${probe_name}") ;;
+    k*) ! probe_hit "${probe_name}" || probe_gap_closed+=("${probe_name}") ;;
+    x*) probe_hit "${probe_name}" || probe_accusation_gone+=("${probe_name}") ;;
+  esac
+done
+
+probe_count() {
+  # $1 class prefix. Counts files, not hits.
+  local n
+  n="$(cd "${godot_probe}" && ls -1 "$1"*.cs)"
+  grep -c . <<<"${n}"
+}
+
+if [[ "${#probe_missed[@]}" -ne 0 ]]; then
+  fail "control: the Godot scan missed real references it must catch: ${probe_missed[*]}"
+elif [[ "${#probe_falsely_flagged[@]}" -ne 0 ]]; then
+  fail "control: the Godot scan flagged ${probe_falsely_flagged[*]}, which do not name the Godot namespace"
+elif [[ "${#probe_gap_closed[@]}" -ne 0 ]]; then
+  fail "control: ${probe_gap_closed[*]} is recorded as beyond this reader and was caught; that is an improvement, so move it from the k* class to f* in this file AND in ArchitectureRuleTests, and update the two readers' scores in both headers"
+elif [[ "${#probe_accusation_gone[@]}" -ne 0 ]]; then
+  fail "control: ${probe_accusation_gone[*]} is recorded as a false accusation this reader makes and it no longer makes it; that is an improvement, so move it from the x* class to n* in this file AND in ArchitectureRuleTests"
 else
-  # Deliberately not "all ways": identifiers written with Unicode escapes are the stated
-  # limitation above, and this control does not measure them.
-  pass "control: all ${EXPECTED_GODOT_PROBES} naming forms this scan covers are caught (6 spellings plus 3 same-line decoys), and ${EXPECTED_GODOT_LOOKALIKES} lookalikes are not; identifier Unicode escapes are out of reach and untested"
+  # Deliberately not "every way C# can name the namespace". The k* class is the measured
+  # list of ways it cannot, and the x* class is the measured list of non-references it
+  # accuses; both are stated in the header with why.
+  pass "control: $(probe_count f) real references are caught (including two production-sized files, several hundred KiB each, one per scan branch - at fixture size the pipeline defect this scan carried was unreachable), $(probe_count n) lookalikes are cleared, $(probe_count k) references are recorded as beyond a text scan and confirmed missed, and $(probe_count x) non-references are recorded as accused by this reader and cleared by the C# one"
 fi
+
 rm -rf "${godot_probe_dir}"
 
 echo

@@ -166,23 +166,46 @@ echo "=== 6. an unobtainable file set fails instead of passing vacuously (VER-FN
 # route the defect was found through, and it leaves the real repository untouched.
 readonly STALE_GIT_DIR="/nonexistent/verify-format-stale.git"
 
+# THREE OUTCOMES, NOT TWO. The check used to be `grep -qE 'FAIL ... owned-text-file-set'
+# || problems+=("no owned-text-file-set failure was recorded")`, which appends that same
+# sentence whether the verb printed a report that lacks the line or printed nothing at all.
+# Driving the logic with both inputs produced byte-identical messages, so the message could
+# not say which had happened - and the two are different findings. A report without the
+# line is the gate failing to record the failure, which is a defect in the gate. No output
+# at all means the verb never got far enough to report anything, so the failure could not be
+# looked for and the run establishes nothing about the gate in either direction; reading
+# that as an absent failure line is a false accusation against working code.
+#
+# Compounding it, `${status}` was interpolated into the pass line and not the fail line, so
+# the one signal that separates "exit 4, a real report" from "exit 137, killed" printed only
+# when nothing was wrong. It is in every branch below.
+#
+# No retry is added. The empty capture did not reproduce - 0 of 40 invocations under heavy
+# load - so there is no flake here that is known to be fixed. The defect being fixed is an
+# unattributable message, which is a defect whether or not the empty capture ever recurs.
 for verb in format-check format; do
   output="$(GIT_DIR="${STALE_GIT_DIR}" "${WRAPPER}" "${verb}" 2>&1)"
   status=$?
+  output_lines="$(grep -c . <<<"${output}" || true)"
+
+  if [[ -z "${output}" ]]; then
+    fail "${verb} with an unreadable git: exit ${status} and NO OUTPUT AT ALL. The owned-text-file-set failure could not be looked for, so this run establishes nothing about the gate - it is not evidence that the failure line is absent, and it is not evidence that it is present. Rerun; if it repeats, the verb is dying before it reports."
+    continue
+  fi
 
   problems=()
   [[ "${status}" -ne 0 ]] || problems+=("exit 0; an unreadable tree must not pass")
-  printf '%s' "${output}" | grep -qE 'FAIL[[:space:]]+owned-text-file-set' \
-    || problems+=("no owned-text-file-set failure was recorded")
+  grep -qE 'FAIL[[:space:]]+owned-text-file-set' <<<"${output}" \
+    || problems+=("the verb printed ${output_lines} line(s) and none matched 'FAIL owned-text-file-set', so the gate ran and did not record the failure")
   # The specific vacuous-success string that used to appear must not appear.
-  printf '%s' "${output}" | grep -qE 'ok[[:space:]]+owned-text-rules' \
+  grep -qE 'ok[[:space:]]+owned-text-rules' <<<"${output}" \
     && problems+=("owned-text-rules still reported ok on a set it never obtained")
 
   if [[ "${#problems[@]}" -eq 0 ]]; then
-    pass "${verb} with an unreadable git: exit ${status}, and the file set is reported as not obtained"
+    pass "${verb} with an unreadable git: exit ${status}, ${output_lines} line(s) of output, and the file set is reported as not obtained"
   else
-    fail "${verb} with an unreadable git: $(printf '%s; ' "${problems[@]}")"
-    printf '%s\n' "${output}" | grep -E 'owned-text|MMT-' | sed 's/^/      /'
+    fail "${verb} with an unreadable git: exit ${status}, ${output_lines} line(s) of output: $(printf '%s; ' "${problems[@]}")"
+    printf '%s\n' "${output}" | sed 's/^/      /'
   fi
 done
 

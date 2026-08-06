@@ -92,8 +92,33 @@ internal static class AuditExpectations
                 FilePath);
         }
 
+        return ReadFrom(File.ReadAllLines(FilePath), key, FilePath);
+    }
+
+    /// <summary>
+    /// The key-matching rule, over lines supplied by the caller so the variant controls in
+    /// <see cref="AuditExpectationsTests"/> can drive the same code the real reader uses.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The rule is stated in <c>build/audit-expectations.env</c>'s own header and both
+    /// readers implement it: a key matches when the text before the first <c>=</c>, trimmed
+    /// at both ends, equals the key exactly; the value is the remainder, trimmed; a line
+    /// whose first non-space character is <c>#</c> is a comment; a blank line is nothing.
+    /// </para>
+    /// <para>
+    /// The trim on the KEY side is the fix, not a convenience. This method used to compare
+    /// <c>trimmed[..separator]</c> raw, so <c>KEY =value</c> - one space before the <c>=</c> -
+    /// produced <c>"KEY "</c>, matched nothing and threw "declares 0 value(s)", while the
+    /// shell's <c>sed</c> pattern allowed <c>[[:space:]]*=</c> and read the value fine. Two
+    /// readers of a single-owner value disagreeing about whether the value exists is not
+    /// single ownership, whichever way each one fails.
+    /// </para>
+    /// </remarks>
+    internal static string ReadFrom(IEnumerable<string> lines, string key, string source)
+    {
         List<string> matches = new();
-        foreach (string line in File.ReadAllLines(FilePath))
+        foreach (string line in lines)
         {
             string trimmed = line.Trim();
             if (trimmed.Length == 0 || trimmed.StartsWith('#'))
@@ -102,7 +127,8 @@ internal static class AuditExpectations
             }
 
             int separator = trimmed.IndexOf('=', StringComparison.Ordinal);
-            if (separator > 0 && string.Equals(trimmed[..separator], key, StringComparison.Ordinal))
+            if (separator > 0
+                && string.Equals(trimmed[..separator].Trim(), key, StringComparison.Ordinal))
             {
                 matches.Add(trimmed[(separator + 1)..].Trim());
             }
@@ -111,7 +137,7 @@ internal static class AuditExpectations
         if (matches.Count != 1)
         {
             throw new InvalidDataException(
-                FilePath + " declares " + matches.Count.ToString(CultureInfo.InvariantCulture)
+                source + " declares " + matches.Count.ToString(CultureInfo.InvariantCulture)
                 + " value(s) for '" + key + "'; exactly one is required");
         }
 

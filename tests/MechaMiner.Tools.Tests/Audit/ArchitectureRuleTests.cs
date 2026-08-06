@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
+using System.Text;
 using MechaMiner.Tests.Support;
 using MechaMiner.Tools.Audit;
 using NUnit.Framework;
@@ -266,15 +267,17 @@ internal sealed class ArchitectureRuleTests
     }
 
     /// <summary>
-    /// Every way C# offers of naming the <c>Godot</c> namespace, written into a real
-    /// file that <see cref="ProjectGraph.ReadFromDisk"/> then discovers and scans.
+    /// Every naming form the shared corpus covers, written into a real file that
+    /// <see cref="ProjectGraph.ReadFromDisk"/> then discovers and scans. Deliberately not
+    /// "every way C# offers": see <see cref="GodotFormsNeitherReaderCovers"/> for the ways
+    /// it does not, which are asserted rather than left implied.
     /// </summary>
     /// <remarks>
     /// <para>
     /// This is the control the rule did not have. <see cref="GodotNamingForms"/> is the
     /// list of forms, and the test is parameterised over it, so a form added to the list
     /// is controlled by construction rather than by someone remembering to write a
-    /// seventh test. When it was added, five of the six entries below failed: the scan
+    /// seventh test. When it was added, five of the six entries then present failed: the scan
     /// tested for <c>using Godot;</c> only, while the rule it feeds is called
     /// <see cref="ArchitectureRule.GodotTypeOutsideGame"/>.
     /// </para>
@@ -309,9 +312,10 @@ internal sealed class ArchitectureRuleTests
     }
 
     /// <summary>
-    /// Spellings that look like the namespace and are not it must not fire, so the
-    /// six-form control above is measuring the token rather than a scan that flags any
-    /// file containing the letters.
+    /// Text that looks like the namespace and is not it must not fire, so the positive
+    /// control above is measuring the token in context rather than a scan that flags any
+    /// file containing the letters. Four of these - the <c>x*</c> class - are the ones the
+    /// shell reader in § 6 accuses and this reader clears.
     /// </summary>
     [TestCaseSource(nameof(GodotLookalikeForms))]
     public void TheGodotImportRuleDoesNotFireOnSpellingsThatAreNotTheNamespace(string form, string source)
@@ -329,6 +333,46 @@ internal sealed class ArchitectureRuleTests
                 Contains(findings, ArchitectureRule.GodotTypeOutsideGame, relative),
                 Is.False,
                 "'" + form + "' is not the Godot namespace but the scan flagged it:\n" + source);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// The recorded gap, asserted rather than assumed: each of these is a real reference to
+    /// <c>Godot</c> and this reader does not see it.
+    /// </summary>
+    /// <remarks>
+    /// A gap nothing measures is indistinguishable from a gap nobody has yet found, and the
+    /// header on <see cref="GodotNamingForms"/> used to claim six forms were "every way C#
+    /// offers", which was false. This test is the measurement. It fails when a form here
+    /// starts being caught, which is an improvement, and the failure message says to move
+    /// the form into <see cref="GodotNamingForms"/> in this file AND into § 6's <c>f*</c>
+    /// class in <c>build/verify-architecture.sh</c>, so the corpus stays one list and the
+    /// improvement is a visible edit rather than a silently loosened control.
+    /// </remarks>
+    [TestCaseSource(nameof(GodotFormsNeitherReaderCovers))]
+    public void TheRecordedGapInTheGodotImportRuleIsStillExactlyThatGap(string form, string source)
+    {
+        string root = CreateScratchTree();
+        try
+        {
+            string relative = "src/MechaMiner.Probe/Probe.cs";
+            WriteScratchFile(root, relative, source);
+
+            ImmutableArray<ArchitectureFinding> findings =
+                ArchitectureRules.Evaluate(ProjectGraph.ReadFromDisk(root));
+
+            Assert.That(
+                Contains(findings, ArchitectureRule.GodotTypeOutsideGame, relative),
+                Is.False,
+                "'" + form + "' is recorded as beyond this reader and was caught. That is an"
+                + " improvement: move it from GodotFormsNeitherReaderCovers into"
+                + " GodotNamingForms here, move the matching k* probe into the f* class in"
+                + " build/verify-architecture.sh, and update the scores in both readers'"
+                + " headers.\n" + source);
         }
         finally
         {
@@ -471,105 +515,285 @@ internal sealed class ArchitectureRuleTests
     }
 
     /// <summary>
-    /// Every way C# offers of naming a namespace, each of which names <c>Godot</c>, plus
-    /// the same-line decoys a comment/literal stripper has to get right.
+    /// The shared probe corpus: 46 files in four classes, the same list
+    /// <c>build/verify-architecture.sh</c> § 6 writes, so a divergence between the two
+    /// readers of this rule is a failing control rather than a silent disagreement.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Add a form here and
-    /// <see cref="TheGodotImportRuleCatchesEveryWayOfNamingTheNamespace"/> covers it
-    /// without a new test being written. The same forms are the control set in
-    /// <c>build/verify-architecture.sh</c> § 6, so the two readers of this rule are
-    /// measured against one list.
+    /// <see cref="GodotNamingForms"/> is the <c>f*</c> class: real references this reader
+    /// must catch. <see cref="GodotLookalikeForms"/> is the <c>n*</c> and <c>x*</c>
+    /// classes: text that is not a reference and must not fire.
+    /// <see cref="GodotFormsNeitherReaderCovers"/> is the <c>k*</c> class: real references
+    /// NEITHER reader sees, asserted as missed so the gap is measured instead of
+    /// unmeasured. Add a form to a list and the parameterised test covers it without a new
+    /// test being written.
     /// </para>
     /// <para>
-    /// The first six forms each occupy a line of their own, and that is exactly why they
-    /// were not enough: a stripper defect that swallows the rest of a line is invisible to
-    /// a probe whose line holds nothing else. All six stayed green while the single line
-    /// <c>char q = '"'; Godot.GD.Print("y");</c> passed both readers, because the quote
-    /// held in the character literal opened a string state neither stripper knew how to
-    /// leave. The last three forms are therefore same-line probes - decoy first, reference
-    /// after it on the same line - one per stripper hazard: a quote in a character
-    /// literal, a <c>//</c> inside a string, and a URL inside a string. The URL case is
-    /// the one the shell reader failed while this reader passed, which is the divergence a
-    /// shared control list exists to surface.
+    /// Every member has been compiled against a Godot shim: each <c>f*</c> and <c>k*</c>
+    /// source fails to compile without it, so every positive is a reference that really
+    /// resolves to <c>Godot</c>, and each <c>n*</c> and <c>x*</c> source compiles without
+    /// it, so no lookalike is secretly a reference. A corpus whose positives were not
+    /// verified that way measures a scan against an opinion.
     /// </para>
     /// <para>
-    /// KNOWN LIMITATION, recorded here, in <c>VER-FND-001-004</c>, and in
-    /// <c>build/verify-architecture.sh</c> § 6: C# allows Unicode escapes inside
-    /// identifiers, so <c>using \u0047odot;</c> and <c>\u0047odot.GD.Print()</c> both bind
-    /// to <c>Godot</c> and neither reader sees the token. Covering that means decoding
-    /// identifier escapes, which requires telling identifier position from literal
-    /// position - a parser, not a text scan. It is out of reach for both readers and is
-    /// deliberately absent from this list, so nothing here claims to be exhaustive over
-    /// what the compiler accepts. An analyzer over the syntax tree is what would close it.
+    /// WHY THE PROBES ARE NOT ALL ONE SHORT LINE. The original six each occupied a line of
+    /// its own, and that is why they were not enough: a stripper defect that swallows the
+    /// rest of a line is invisible to a probe whose line holds nothing else. All six stayed
+    /// green while the single line <c>char q = '"'; Godot.GD.Print("y");</c> passed both
+    /// readers, because the quote held in the character literal opened a string state
+    /// neither stripper knew how to leave. Most of the corpus is therefore same-line
+    /// probes - decoy first, reference after it on the same line. None is contrived: a URL,
+    /// a quote character, or an apostrophe in English prose beside a Godot call is ordinary
+    /// code, and English prose in diagnostic strings is the commonest shape here.
+    /// </para>
+    /// <para>
+    /// Two members are production-sized, a few hundred KiB each with the reference near the
+    /// top and the bulk after it. For the shell reader they are load-bearing: its scan
+    /// carried a SIGPIPE false pass whose miss rate rose with file size, and at ~75-byte
+    /// fixture size that defect was structurally unreachable by any control. For this
+    /// reader they are a size and position control rather than a pipeline one. They are in
+    /// both lists because the lists are one list.
+    /// </para>
+    /// <para>
+    /// The four <c>x*</c> members are lookalikes THIS reader clears and the shell reader
+    /// flags; see <see cref="ProjectGraph.NamesGodotNamespace"/> for the measured scores
+    /// and for why the pair is one precise reader plus one approximation.
     /// </para>
     /// </remarks>
     private static IEnumerable<TestCaseData> GodotNamingForms
     {
         get
         {
-            yield return Form("using Godot;", "using Godot;");
-            yield return Form("global using Godot;", "global using Godot;");
-            yield return Form("using static Godot.GD;", "using static Godot.GD;");
-            yield return Form("using GD = Godot.GD;", "using GD = Godot.GD;");
-            yield return Form("using GodotAlias = Godot;", "using GodotAlias = Godot;");
+            yield return Form("f01 using Godot;", "using Godot;");
+            yield return Form("f02 global using Godot;", "global using Godot;");
+            yield return Form("f03 using static Godot.GD;", "using static Godot.GD;");
+            yield return Form("f04 using GD = Godot.GD;", "using GD = Godot.GD;");
+            yield return Form("f05 using GodotAlias = Godot;", "using GodotAlias = Godot;");
+            yield return SameLineForm("f06 fully qualified, no using", "Godot.GD.Print(\"x\");");
+            yield return SameLineForm(
+                "f07 a quote held in a char literal, then a reference on the same line",
+                "char q = '\"'; Godot.GD.Print(q);");
+            yield return SameLineForm(
+                "f08 a // inside a string, then a reference on the same line",
+                "string s = \"// not a comment\"; Godot.GD.Print(s);");
+            yield return SameLineForm(
+                "f09 a URL inside a string, then a reference on the same line",
+                "string u = \"http://example.invalid/x\"; Godot.GD.Print(u);");
+
+            // f10 and f11 are the round-four regression in the shell reader's character
+            // literal pass: written as `'([^'\\]|\\.)*'` and run before the string pass,
+            // it paired apostrophes belonging to two DIFFERENT string literals and deleted
+            // everything between them, so both of these lines lost their reference. This
+            // reader always got them right; they are here because the lists are one list
+            // and because English prose in a diagnostic string is the commonest shape in
+            // this repository.
+            yield return SameLineForm(
+                "f10 apostrophes in two different string literals, then a reference",
+                "string s = \"don't\"; Godot.GD.Print(\"won't\");");
+            yield return SameLineForm(
+                "f11 an apostrophe in a block comment, then a reference on the same line",
+                "/* it's fine */ Godot.GD.Print(\"won't\");");
+            yield return SameLineForm(
+                "f12 an apostrophe in a line comment, then a reference on the next line",
+                "// it's fine\n        Godot.GD.Print(\"won't\");");
+
+            // Caught only because line two still holds `Godot.`; its three siblings in
+            // GodotFormsNeitherReaderCovers are not. The pair is the evidence that a
+            // per-line scan's boundary is arbitrary rather than principled.
+            yield return Form("f13 using static split across two lines", "using static\n    Godot.GD;");
+
+            yield return SameLineForm(
+                "f14 an escaped quote inside a string, then a reference",
+                "string s = \"a\\\"b\"; Godot.GD.Print(s);");
+            yield return SameLineForm(
+                "f15 a doubled quote inside a verbatim string, then a reference",
+                "string s = @\"a\"\"b\"; Godot.GD.Print(s);");
+            yield return SameLineForm(
+                "f16 a raw string literal, then a reference",
+                "string s = \"\"\"x\"\"\"; Godot.GD.Print(s);");
+            yield return SameLineForm(
+                "f17 an apostrophe inside an interpolated string, then a reference",
+                "int x = 1; string s = $\"it's {x}\"; Godot.GD.Print(s);");
             yield return new TestCaseData(
-                "fully qualified, no using",
-                "namespace MechaMiner.Probe;\n\ninternal static class Probe\n{\n"
-                + "    internal static void Run() => Godot.GD.Print(\"x\");\n}\n");
+                "f18 an attribute in qualifier position",
+                "namespace MechaMiner.Probe;\n\n[Godot.GlobalClass]\n"
+                + "internal sealed class Probe\n{\n    internal int Run() => 1;\n}\n");
             yield return SameLineForm(
-                "a quote held in a char literal, then a reference on the same line",
-                "char q = '\"'; Godot.GD.Print(\"y\");");
+                "f19 typeof in qualifier position",
+                "System.Type t = typeof(Godot.Node); Godot.GD.Print(t);");
+            yield return new TestCaseData(
+                "f20 a field whose type is qualified",
+                "namespace MechaMiner.Probe;\n\ninternal sealed class Probe\n{\n"
+                + "    private Godot.Node? _node;\n\n    internal object? Run() => _node;\n}\n");
+            yield return new TestCaseData(
+                "f21 a qualified base type",
+                "namespace MechaMiner.Probe;\n\ninternal sealed class Probe : Godot.Node\n{\n"
+                + "    internal int Run() => 1;\n}\n");
+            yield return Form("f22 using Godot.Collections;", "using Godot.Collections;");
             yield return SameLineForm(
-                "a // inside a string, then a reference on the same line",
-                "string s = \"// not a comment\"; Godot.GD.Print(\"y\");");
+                "f23 a qualified generic argument",
+                "var l = new System.Collections.Generic.List<Godot.Node>(); Godot.GD.Print(l.Count);");
+            yield return Form("f24 using Godot ; with a space before the semicolon", "using Godot ;");
+            yield return SameLineForm("f25 whitespace around the qualifier dot", "Godot . GD.Print(\"x\");");
             yield return SameLineForm(
-                "a URL inside a string, then a reference on the same line",
-                "string u = \"http://example.invalid/x\"; Godot.GD.Print(\"y\");");
+                "f26 a block comment that ends on the reference's own line",
+                "/* a comment that\n           spans lines and ends here */ Godot.GD.Print(\"y\");");
+            yield return SameLineForm(
+                "f27 an escaped apostrophe in a char literal, then a reference",
+                "char q = '\\''; Godot.GD.Print(q);");
+            yield return SameLineForm(
+                "f28 a reference inside a conditional-compilation block",
+                "#if DEBUG\n        Godot.GD.Print(\"d\");\n#else\n        Godot.GD.Print(\"r\");\n#endif");
+            yield return SameLineForm(
+                "f29 a nested namespace's type",
+                "var a = new Godot.Collections.Array(); Godot.GD.Print(a.Count);");
+            yield return new TestCaseData(
+                "f30 production-sized, reference early, qualifier branch",
+                ProductionSizedQualifierProbe());
+            yield return new TestCaseData(
+                "f31 production-sized, reference early, using branch",
+                ProductionSizedUsingProbe());
+        }
+    }
+
+    /// <summary>
+    /// Real references NEITHER reader sees, asserted as missed. A recorded gap is
+    /// measured; an unrecorded one is a false claim of completeness.
+    /// </summary>
+    /// <remarks>
+    /// Three are one reference split across two physical lines, which both readers miss
+    /// because both decide per line - and <c>using static</c> split the same way IS caught
+    /// (<c>f13</c>) because its second line still holds <c>Godot.</c>, so the boundary is
+    /// arbitrary. Two are identifiers written with a Unicode escape, which the compiler
+    /// binds to <c>Godot</c> and no amount of text stripping reveals. Closing either class
+    /// needs a parser; see <see cref="ProjectGraph.NamesGodotNamespace"/> for the
+    /// escalation. If one of these starts being caught, this test fails and says to move it
+    /// into <see cref="GodotNamingForms"/> - a gap closing should be a visible edit in the
+    /// diff, the same ratchet the audit-expectations census uses.
+    /// </remarks>
+    private static IEnumerable<TestCaseData> GodotFormsNeitherReaderCovers
+    {
+        get
+        {
+            yield return Form("k1 global using split across two lines", "global using\n    Godot;");
+            yield return Form("k2 using split across two lines", "using\n    Godot;");
+            yield return SameLineForm(
+                "k3 a qualifier split across two lines",
+                "Godot\n            .GD.Print(\"y\");");
+            yield return Form("k4 a Unicode-escaped identifier in a using", "using \\u0047odot;");
+            yield return SameLineForm(
+                "k5 a Unicode-escaped identifier in qualifier position",
+                "\\u0047odot.GD.Print(\"x\");");
         }
     }
 
     /// <summary>
     /// Spellings a token-anywhere scan gets wrong if its boundaries are loose, plus the
-    /// two contexts that separate a namespace reference from an identifier that happens
-    /// to be spelled <c>Godot</c>.
+    /// contexts that separate a namespace reference from an identifier that happens to be
+    /// spelled <c>Godot</c>, plus the four the shell reader accuses and this one clears.
     /// </summary>
     private static IEnumerable<TestCaseData> GodotLookalikeForms
     {
         get
         {
-            yield return Form("MechaMiner.GodotLike (qualified lookalike)", "using MechaMiner.GodotLike;");
+            yield return Form("n1 MechaMiner.GodotLike (qualified lookalike)", "using MechaMiner.GodotLike;");
             yield return new TestCaseData(
-                "NotGodotish (identifier with the token embedded)",
+                "n2 NotGodotish (identifier with the token embedded)",
                 "namespace MechaMiner.Probe;\n\ninternal static class Probe\n{\n"
                 + "    private const string Name = \"NotGodotish\";\n\n"
                 + "    internal static string Run() => Name;\n}\n");
             yield return new TestCaseData(
-                "bare GodotLike (unqualified lookalike)",
-                "namespace MechaMiner.Probe;\n\ninternal static class Probe\n{\n"
-                + "    internal static void Run() => GodotLike.Do();\n}\n");
+                "n3 bare GodotLike (unqualified lookalike)",
+                "using MechaMiner.GodotLike;\n\nnamespace MechaMiner.Probe;\n\n"
+                + "internal static class Probe\n{\n    internal static void Run() => GodotLike.Do();\n}\n");
             yield return new TestCaseData(
-                "a member named Godot, which is not a namespace reference",
+                "n4 a member named Godot, which is not a namespace reference",
                 "namespace MechaMiner.Probe;\n\ninternal sealed class Pins\n{\n"
                 + "    public int Godot { get; set; }\n}\n");
             yield return new TestCaseData(
-                "the word Godot in a comment and in a diagnostic string",
+                "n5 the word Godot in a comment and in a diagnostic string",
                 "namespace MechaMiner.Probe;\n\n"
                 + "// Only game/ may reference Godot, which is why this project does not.\n"
                 + "internal static class Probe\n{\n"
                 + "    internal static string Run() => \"the pure tier launched no Godot process\";\n}\n");
 
-            // The other half of the two same-line string probes above. Reordering the
-            // strippers so literals are removed before comments must not stop them
-            // removing literals: a file whose only qualifier-position text sits inside a
-            // string is not a reference, and if this case starts firing, the stripper has
-            // stopped stripping and the same-line probes are passing for the wrong reason.
+            // The other half of the same-line string probes. Reordering the strippers so
+            // literals are removed before comments must not stop them removing literals: a
+            // file whose only qualifier-position text sits inside a string is not a
+            // reference, and if this case starts firing, the stripper has stopped stripping
+            // and the same-line probes are passing for the wrong reason.
             yield return new TestCaseData(
-                "a qualifier spelled inside a string literal, which is not a reference",
+                "n6 a qualifier spelled inside a string literal, which is not a reference",
                 "namespace MechaMiner.Probe;\n\ninternal static class Probe\n{\n"
                 + "    internal static string Run() => \"call Godot.GD.Print here\";\n}\n");
+
+            // x1-x4: the shell reader flags all four and this reader clears all four. They
+            // are the measured refutation of the claim that a sed stripper's only error
+            // direction is a false negative. Its sed strips `//` and never `/* */` in any
+            // form, and it has no state across lines. Recorded here as lookalikes because
+            // that is what they are; recorded there as the x* class because that reader
+            // gets them wrong.
+            yield return new TestCaseData(
+                "x1 a single-line block comment naming the qualifier",
+                "namespace MechaMiner.Probe;\n\ninternal static class Probe\n{\n"
+                + "    /* Godot.GD is engine-only, so nothing here calls it. */\n"
+                + "    internal static int Run() => 1;\n}\n");
+            yield return new TestCaseData(
+                "x2 a multi-line block comment naming the qualifier",
+                "namespace MechaMiner.Probe;\n\ninternal static class Probe\n{\n"
+                + "    /*\n     * Godot.GD is engine-only.\n"
+                + "     * game/ owns every call to Godot.GD.Print.\n     */\n"
+                + "    internal static int Run() => 1;\n}\n");
+            yield return new TestCaseData(
+                "x3 a multi-line verbatim string containing a call",
+                "namespace MechaMiner.Probe;\n\ninternal static class Probe\n{\n"
+                + "    private const string Snippet = @\"\nGodot.GD.Print(x);\n\";\n\n"
+                + "    internal static string Run() => Snippet;\n}\n");
+            yield return new TestCaseData(
+                "x4 a multi-line raw string containing the qualifier",
+                "namespace MechaMiner.Probe;\n\ninternal static class Probe\n{\n"
+                + "    private const string Snippet = \"\"\"\n"
+                + "        Godot.GD.Print(x);\n        \"\"\";\n\n"
+                + "    internal static string Run() => Snippet;\n}\n");
         }
+    }
+
+    /// <summary>
+    /// A few hundred KiB with the reference on the second line and the bulk after it,
+    /// through the qualifier branch. The size and the position both matter: see
+    /// <see cref="GodotNamingForms"/>.
+    /// </summary>
+    private static string ProductionSizedQualifierProbe()
+    {
+        StringBuilder builder = new();
+        builder.Append("namespace MechaMiner.Probe;\n\ninternal static class Probe\n{\n")
+            .Append("    internal static void Run()\n    {\n")
+            .Append("        Godot.GD.Print(\"early\");\n");
+        for (int i = 0; i < 12000; i++)
+        {
+            builder.Append("        System.GC.KeepAlive(")
+                .Append(i.ToString(CultureInfo.InvariantCulture))
+                .Append(");\n");
+        }
+
+        return builder.Append("    }\n}\n").ToString();
+    }
+
+    /// <summary>The same idea through the using-directive branch.</summary>
+    private static string ProductionSizedUsingProbe()
+    {
+        StringBuilder builder = new();
+        builder.Append("using Godot;\n");
+        for (int i = 0; i < 14000; i++)
+        {
+            builder.Append("using Filler.N")
+                .Append(i.ToString(CultureInfo.InvariantCulture))
+                .Append(";\n");
+        }
+
+        return builder.Append("\nnamespace MechaMiner.Probe;\n\ninternal static class Probe\n{\n")
+            .Append("    internal static int Run() => 1;\n}\n").ToString();
     }
 
     /// <summary>A <c>using</c>-directive probe: the directive plus a body that uses it.</summary>

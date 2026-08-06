@@ -2,7 +2,7 @@
   "schema": "SCH-QUA-001",
   "schemaVersion": 1,
   "workPackage": "FND-005",
-  "workPackageTitle": "Initial CI fast suite with locked restore and artifact summaries",
+  "workPackageTitle": "Initial CI fast suite with locked restore and artifact summaries", 
   "notes": [
     "Entries are added before implementation and are never renumbered (docs/technical/91 § Verification registry).",
     "The subject of this registry is a GitHub Actions workflow, .github/workflows/fast.yml, whose only job invokes ./build.sh verbs. selector.kind is therefore 'command' for the verb a given entry is about and 'script' for the two files the job runs as files; there is no 'workflow' selector kind and this registry does not invent one. What the workflow itself contributes is reachability: the entries below assert that the named gate is reached from a clean hosted checkout and that its exit class survives to the job result.",

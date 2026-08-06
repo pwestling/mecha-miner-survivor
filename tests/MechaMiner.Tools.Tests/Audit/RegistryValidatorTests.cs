@@ -82,6 +82,16 @@ internal sealed class RegistryValidatorTests
     /// entries continuing to exist, which is exactly what a floor on the population asserts
     /// and what no rule over the present contents can.
     /// </para>
+    /// <para>
+    /// The ceiling on what this proves, stated so the next reader does not over-trust it:
+    /// the census is a three-place edit tax that makes an accidental deletion loud, not
+    /// evidence that an entry exists. Three consistent literal edits in this one file - the
+    /// census row, <see cref="ExpectedRegistryFileCount"/> and
+    /// <see cref="ExpectedRegistryEntryCount"/> - delete an entry with the suite green.
+    /// That was ruled acceptable rather than fixed: nothing cheaper does better, and the
+    /// alternative considered and rejected was a committed per-entry baseline, which is a
+    /// second registry to keep in step with the first.
+    /// </para>
     /// </remarks>
     [Test]
     public void TheRegistryPopulationMatchesItsLiteralCensus()

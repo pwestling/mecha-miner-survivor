@@ -9,14 +9,28 @@ namespace MechaMiner.Content.Ids;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Every grammar below is derived from an ID that an accepted document already mints.
+/// <b>Most of these prefixes come from an accepted document; five were minted here.</b>
 /// <c>docs/technical/40-content-data-and-validation.md</c> § Stable ID policy requires
-/// reusing accepted gameplay IDs "exactly", so nothing here invents a prefix: the
-/// gameplay catalogs mint <c>MCH-</c>, <c>EN-</c>, <c>BOSS-</c>, <c>W-</c>,
-/// <c>REL-</c>, <c>PU-</c>, <c>UNL-</c>, and <c>UTL-</c>; doc 40 § Utilities mints
-/// <c>UTL-R1</c>; doc 40 § Encounter schedule and § Map generation mint <c>WAV-01</c>
-/// and <c>MGC-01</c>; and the integration owner minted <c>RSC-</c>, <c>SITE-</c>,
-/// <c>ELT-</c>, and <c>PLAYER-</c>.
+/// reusing accepted gameplay IDs "exactly", and the list below says which prefixes that
+/// covers and which it does not, because "derived from an accepted document" and "minted
+/// by this file" are not the same standing and a reader has to be able to tell them apart
+/// without opening every catalog.
+/// </para>
+/// <para>
+/// <b>From an accepted document.</b> The gameplay catalogs mint <c>MCH-</c>,
+/// <c>EN-</c>, <c>BOSS-</c>, <c>W-</c>, <c>REL-</c>, <c>PU-</c>, <c>UNL-</c>, and
+/// <c>UTL-</c>; doc 40 § Utilities mints <c>UTL-R1</c> by name; doc 40 § Encounter
+/// schedule and § Map generation mint <c>WAV-01</c> and <c>MGC-01</c>.
+/// </para>
+/// <para>
+/// <b>Minted by this implementation, with no accepted document behind them.</b>
+/// <c>RSC-</c>, <c>SITE-</c>, <c>ELT-</c>, and <c>PLAYER-</c> were minted by decision of
+/// the integration owner because the definitions exist and every schema references other
+/// definitions by stable ID; <c>FORMULA-</c> was minted by <c>DAT-002</c> for the weapon
+/// stat price curve, whose authored stem matched no grammar at all. Document minting
+/// statements for all five are in flight, and until they land these grammars are this
+/// file's own claim rather than a restatement of somebody else's. A prefix here is not
+/// evidence that a document mints it; this paragraph is the list of the ones it does not.
 /// </para>
 /// <para>
 /// Two things this registry deliberately does not do. It does not bound a grammar to

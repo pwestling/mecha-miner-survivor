@@ -1,0 +1,64 @@
+{
+  "id": "MCH-06",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "mech.MCH-06.name",
+  "summary_key": "mech.MCH-06.summary",
+  "tags": [],
+  "source_refs": [
+    "GDD-INITIAL-MECH-CATALOG#catalog-overview",
+    "signature_weapon_id: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "trait_stacking: GDD-INITIAL-MECH-CATALOG#trait-comparison-and-stacking",
+    "initial_availability: GDD-INITIAL-MECH-CATALOG#initial-availability",
+    "cross_doc_notes[]: GDD-PLAYER-SURVIVABILITY-BASELINE#movement-and-speed-modifiers"
+  ],
+  "signature": "Ram Field",
+  "signature_weapon_id": "W-DF",
+  "inherent_trait": {
+    "name": "Overdrive Treads",
+    "effect": "+10% movement speed",
+    "affected_statistic": "movement speed",
+    "modifier": {
+      "percent": 10
+    }
+  },
+  "selection_role": "Aggressive movement-driven breaker",
+  "player_facing_identity": "Razorback is an aggressive movement chassis. Its wedge-like Ram Field turns forward travel into damage and space, while increased movement speed remains useful for exploration, mining defense, and every later weapon build.",
+  "trait_notes": [
+    "Applies equally in every direction without adding acceleration, momentum, drift, reverse penalties, or a turn radius.",
+    "It does not change enemy movement, weapon projectile speed, Ram Field's activation threshold, or mining extraction rate.",
+    "Combines with Vector Thrusters and other explicit movement modifiers under the shared additive percentage rule."
+  ],
+  "top_down_silhouette": [
+    "Wide triangular prow with two forward ramming prongs and a narrow rear body.",
+    "Strong front-heavy wedge makes facing readable even without a separate arrow.",
+    "Rear track or thruster housings flare outward behind the collision footprint.",
+    "Ram Field projects just ahead of the prow so the weapon boundary does not disappear beneath the model."
+  ],
+  "trait_stacking": {
+    "changed_baseline": {
+      "text": "110% movement speed",
+      "statistic": "movement speed",
+      "percent": 110
+    },
+    "with_matching_utility_rank_3_before_power_ups": {
+      "text": "125% with Vector Thrusters",
+      "utility": "Vector Thrusters",
+      "percent": 125
+    }
+  },
+  "initial_availability": {
+    "text": "Available",
+    "available": true,
+    "recommended_default": false
+  },
+  "cross_doc_notes": [
+    {
+      "movement_speed_m_per_s": 3.3
+    },
+    {
+      "movement_speed_m_per_s": 4.05
+    }
+  ]
+}

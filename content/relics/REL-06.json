@@ -1,0 +1,121 @@
+{
+  "id": "REL-06",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "relic.REL-06.name",
+  "summary_key": "relic.REL-06.summary",
+  "tags": [],
+  "source_refs": [
+    "GDD-INITIAL-RELIC-CATALOG#rel-06--event-horizon-coupler",
+    "acquisition: GDD-INITIAL-RELIC-CATALOG#fresh-profile-and-unlocked-availability",
+    "acquisition: GDD-INITIAL-RELIC-CATALOG",
+    "acquisition: GDD-MECH-RELICS#acquisition",
+    "acquisition: GDD-MECH-RELICS#install-or-sell-choice",
+    "acquisition: GDD-MAP-GENERATION#relic-caches",
+    "acquisition: GDD-MAPS#relics-as-exploration-rewards",
+    "acquisition: GDD-PROGRESSION#relic-sale",
+    "acquisition: GDD-INTERFACE-FLOW#relic-cache-discovery-and-resolution",
+    "acquisition: TDD-MINING-PROGRESSION#relic-cache-transaction",
+    "rarity_and_weighting: GDD-INITIAL-RELIC-CATALOG#fresh-profile-and-unlocked-availability",
+    "rarity_and_weighting: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#relic-pool-behavior",
+    "rarity_and_weighting: GDD-INTERFACE-FLOW#cache-selection-and-signaling",
+    "stacking_and_exclusivity: GDD-INITIAL-RELIC-CATALOG#shared-interaction-and-preview-rules",
+    "stacking_and_exclusivity: GDD-INITIAL-RELIC-CATALOG#catalog-principles",
+    "stacking_and_exclusivity: GDD-MECH-RELICS#replacement-and-interaction-rules",
+    "stacking_and_exclusivity: GDD-COMBAT-ECONOMY-BALANCE-FRAMEWORK#stacking-and-comparison-order",
+    "behavior_registration: TDD-COMBAT-RUNTIME#relic-integration",
+    "cross_document_rules[]: TDD-COMBAT-RUNTIME",
+    "summary_key: GDD-INITIAL-RELIC-CATALOG#rel-06--event-horizon-coupler",
+    "trigger: GDD-INITIAL-RELIC-CATALOG#rel-06--event-horizon-coupler",
+    "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-06--event-horizon-coupler"
+  ],
+  "primary_transformation": "Pull and cluster amplification",
+  "core_tradeoff": "Attacks compact the horde around their geometry",
+  "affected_scope": "all equipped weapons",
+  "trigger": {
+    "condition": "pull applies on every damaging weapon hit; clustered-damage bonus applies while an enemy is within the displayed clustering distance of at least one other living enemy"
+  },
+  "effects": {
+    "pull_on_every_damaging_weapon_hit": true,
+    "weapon_authored_knockback_reversed_into_pull": true,
+    "non_displacement_control_changed": false,
+    "clustered_enemy_weapon_damage_bonus": {
+      "percent": 50
+    },
+    "minimum_other_living_enemies_for_clustering": 1,
+    "pull_resistance_scales_for_elites_and_bosses": true
+  },
+  "acquisition": {
+    "method": "found in a relic cache through map exploration",
+    "fabricable": false,
+    "minable": false,
+    "listed_in_geological_survey": false,
+    "pool_availability": "fresh-profile",
+    "caches_per_standard_map": 3,
+    "cache_opening": "automatic on mech contact; freezes the complete gameplay simulation",
+    "relics_drawn_per_run": 3,
+    "draw_without_replacement": true,
+    "duplicates_within_one_run": false,
+    "resolution": "immediate install-or-sell; no relic inventory or deferred decision",
+    "sale_value_common_ore": 150,
+    "displaced_relic_auto_sale_common_ore": 150,
+    "sale_value_varies_by_identity_order_duration_or_progress": false
+  },
+  "rarity_and_weighting": {
+    "selection_model": "three distinct relics drawn without replacement from the currently unlocked pool and assigned to the three caches during generation",
+    "fresh_profile_pool_count": 5,
+    "fully_unlocked_pool_count": 10,
+    "in_fresh_profile_pool": true,
+    "guaranteed_to_appear": false
+  },
+  "stacking_and_exclusivity": {
+    "relic_slots": 1,
+    "simultaneously_active_relics": 1,
+    "stacks_with_other_relics": false,
+    "install_replaces_active_relic": true,
+    "run_local": true,
+    "persists_after_run": false,
+    "combines_with": [
+      "weapon branches",
+      "weapon stat ranks",
+      "utilities",
+      "mech traits",
+      "PowerUps"
+    ],
+    "modifier_order": "Relic-specific multipliers apply after the additive percentage modifiers supplied by mech traits, utilities, and PowerUps unless the relic explicitly replaces targeting or cadence.",
+    "applies_to_every_damaging_component_derived_from_an_equipped_weapon": true,
+    "already_created_finite_instances_retain_creation_time_relic_state": true,
+    "overrides_or_replaces": [
+      "weapon-authored knockback direction"
+    ]
+  },
+  "behavior_registration": {
+    "hook": "per-hit pull and clustered target multiplier",
+    "registration_model": "Relics are cross-cutting policies registered by stable relic ID. They modify well-defined hook points rather than scattering ID checks through every weapon.",
+    "per_weapon_compatibility_manifest": "produced from tests; states fully affected, partially affected with disclosed reason, or invalid. The initial design expects no invalid pairing."
+  },
+  "rules": [
+    {
+      "text": "Every damaging weapon hit applies an inward displacement toward the nearest meaningful centerline, impact point, field center, projectile path, or other visible center of that attack's geometry."
+    },
+    {
+      "text": "Existing weapon-authored knockback reverses into pull instead of applying both directions. Non-displacement control such as slow or stun remains unchanged."
+    },
+    {
+      "text": "An enemy within the displayed clustering distance of at least one other living enemy takes 50% more weapon damage."
+    },
+    {
+      "text": "Pull resistance continues to scale for elites and bosses, but the clustered-damage rule applies whenever their spatial condition is satisfied."
+    },
+    {
+      "text": "The relic makes piercing, area, and persistent attacks exceptionally effective while intentionally compacting pursuers into more dangerous concentrations."
+    }
+  ],
+  "cross_document_rules": [
+    {
+      "rule": "Apply target-state multipliers such as Barysteel resonance or Event-Horizon clustering.",
+      "meaning": "clustered-damage bonus resolves at step 3 of the enemy/rock damage pipeline, after source-side relic reductions or amplification"
+    }
+  ]
+}

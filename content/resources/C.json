@@ -1,0 +1,33 @@
+{
+  "id": "C",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "resource.C.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-SPECIALIZED-RESOURCE-IDENTITIES#accepted-identity-map",
+    "resonance_behavior: GDD-MINING#geode-resonance-fields",
+    "resonance_behavior.short_modifier: GDD-SPECIALIZED-RESOURCE-IDENTITIES#geode-resonance-behavior"
+  ],
+  "material_character": "Dark glass with energetic internal fractures",
+  "loose_association": "Charge, conduction, propagation, controlled release",
+  "primary_color": "Deep violet",
+  "icon_and_silhouette_cue": "Split diamond with a lightning fissure",
+  "audio_character": "Brittle crack followed by an electric snap",
+  "resource_class": "specialized ordinary resource",
+  "inventory_scope": "run-local",
+  "persistence": "Run-local; unspent units are lost when the run ends",
+  "shared_economy_tier": true,
+  "resonance_effect_name": "Charged Payloads",
+  "resonance_behavior": {
+    "effect_name": "Charged Payloads",
+    "resonance_effect": "enemy projectile damage is 20% higher",
+    "modifier": {
+      "percent": 20,
+      "direction": "increase"
+    },
+    "short_modifier": "Enemy projectile damage +20%",
+    "edge_case_rule": "Bonus projectile damage is determined when the empowered enemy creates the projectile; that projectile retains the decided damage after crossing the boundary."
+  }
+}

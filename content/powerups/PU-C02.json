@@ -1,0 +1,105 @@
+{
+  "id": "PU-C02",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "powerup.PU-C02.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-PERMANENT-POWERUP-CATALOG#pu-c02--cycle-optimizer",
+    "GDD-PERMANENT-POWERUP-CATALOG#catalog-overview",
+    "currency: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "ui_grouping: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "fresh_profile_purchasable: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "ranks_must_be_bought_sequentially: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "prices_fixed: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "applies_account_wide: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "refundable: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "purchasable_during_run: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "active_rank_policy: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "total_cost_hyper_gold: DEC-120#decision",
+    "maximum_effect: GDD-PROGRESSION#progression-layers"
+  ],
+  "domain": "Combat",
+  "per_rank_effect": {
+    "text": "+2% weapon Attack Rate",
+    "statistic": "weapon Attack Rate",
+    "percent": 2
+  },
+  "maximum": 5,
+  "maximum_effect": {
+    "text": "+10%",
+    "statistic": "weapon Attack Rate",
+    "percent": 10
+  },
+  "total_cost_hyper_gold": 975,
+  "currency": "Hyper Gold",
+  "ui_grouping": "Combat",
+  "fresh_profile_purchasable": true,
+  "ranks_must_be_bought_sequentially": true,
+  "prices_fixed": true,
+  "applies_account_wide": true,
+  "refundable": true,
+  "purchasable_during_run": false,
+  "active_rank_policy": {
+    "minimum_active_rank": 0,
+    "maximum_active_rank_equals_purchased_rank": true,
+    "change_cost_hyper_gold": 0,
+    "changeable_between_runs": true,
+    "changeable_during_run": false
+  },
+  "rank_effect_column": "Total weapon Attack Rate",
+  "ranks": [
+    {
+      "rank": 1,
+      "total_effect": {
+        "text": "+2%",
+        "percent": 2
+      },
+      "price_hyper_gold": 75,
+      "cumulative_cost_hyper_gold": 75
+    },
+    {
+      "rank": 2,
+      "total_effect": {
+        "text": "+4%",
+        "percent": 4
+      },
+      "price_hyper_gold": 125,
+      "cumulative_cost_hyper_gold": 200
+    },
+    {
+      "rank": 3,
+      "total_effect": {
+        "text": "+6%",
+        "percent": 6
+      },
+      "price_hyper_gold": 175,
+      "cumulative_cost_hyper_gold": 375
+    },
+    {
+      "rank": 4,
+      "total_effect": {
+        "text": "+8%",
+        "percent": 8
+      },
+      "price_hyper_gold": 250,
+      "cumulative_cost_hyper_gold": 625
+    },
+    {
+      "rank": 5,
+      "total_effect": {
+        "text": "+10%",
+        "percent": 10
+      },
+      "price_hyper_gold": 350,
+      "cumulative_cost_hyper_gold": 975
+    }
+  ],
+  "rules": [
+    "Applies to primary weapon activation frequency using the same boundaries as Cycle Capacitor and Kestrel's Accelerated Feed.",
+    "Does not accelerate projectile travel, damage ticks inside an existing effect, delayed echoes, mine arming, autonomous movement, relic cycles, mining, Recovery, or enemy timers unless a weapon explicitly classifies that schedule as Attack Rate.",
+    "The displayed value is increased attacks per second, not percentage cooldown subtraction."
+  ]
+}

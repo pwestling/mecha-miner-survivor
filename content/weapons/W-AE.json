@@ -1,0 +1,142 @@
+{
+  "id": "W-AE",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "weapon.W-AE.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#rank-zero-values-and-ore-stat-increments",
+    "recipe_pair: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "fabrication_cost: GDD-PROGRESSION#base-weapon-availability",
+    "base_automatic_attack: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "base_behavior: GDD-WEAPON-NUMERIC-CATALOG#w-ae--attack-drones",
+    "ore_upgradeable_stat_labels: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "damage_model: GDD-WEAPON-NUMERIC-CATALOG#base-weapon-summary",
+    "global_attack_rate_mapping: GDD-WEAPON-NUMERIC-CATALOG#global-weapon-attack-rate-mapping",
+    "branches.amplification.cost: GDD-WEAPON-NUMERIC-CATALOG#replicator-swarm--amplification--2-eidolon-coral",
+    "branches.amplification.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.amplification: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.amplification: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.functional.cost: GDD-WEAPON-NUMERIC-CATALOG#wolfpack-protocol--functional--2-asterite",
+    "branches.functional.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.functional: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.functional: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.conversion.cost: GDD-WEAPON-NUMERIC-CATALOG#containment-lattice--conversion--2-driftmetal",
+    "branches.conversion.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.conversion: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.conversion: GDD-WEAPON-INDEX#catalog-lookup"
+  ],
+  "recipe_pair": {
+    "notation": "A + E",
+    "material_codes": [
+      "A",
+      "E"
+    ],
+    "material_names": [
+      "Asterite",
+      "Eidolon Coral"
+    ]
+  },
+  "fabrication_cost": {
+    "materials": [
+      {
+        "material_code": "A",
+        "material": "Asterite",
+        "units": 1
+      },
+      {
+        "material_code": "E",
+        "material": "Eidolon Coral",
+        "units": 1
+      }
+    ],
+    "signature_weapon_begins_equipped_without_paying_cost": true,
+    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost."
+  },
+  "base_automatic_attack": {
+    "text": "Maintains an indestructible autonomous squad that independently strafes nearby targets with short-range fire"
+  },
+  "base_behavior": {
+    "text": "three permanent drones stay within operational range, acquire targets independently, and reposition as needed. Several drones may choose the same target."
+  },
+  "ore_upgradeable_stat_labels": {
+    "labels": [
+      "Damage",
+      "attack rate",
+      "operational range"
+    ]
+  },
+  "ore_upgradeable_stats": [
+    {
+      "slot": 1,
+      "name": "Shot damage",
+      "rank_zero": 8,
+      "increment_per_rank": 0.8,
+      "unit": "damage",
+      "discrete": false
+    },
+    {
+      "slot": 2,
+      "name": "Attack rate",
+      "rank_zero": 1.333,
+      "increment_per_rank": 0.133,
+      "unit": "activations per second",
+      "discrete": false
+    },
+    {
+      "slot": 3,
+      "name": "Operational range",
+      "rank_zero": 8,
+      "increment_per_rank": 0.8,
+      "unit": "M",
+      "discrete": false
+    }
+  ],
+  "fixed_properties": {
+    "permanent_drone_count": 3,
+    "repositioning_speed_m_per_s": 6,
+    "drones_destructible": false,
+    "raw": "Three permanent drones, 6M/s repositioning speed"
+  },
+  "damage_model": {
+    "rank_zero_damage_model": "3 × 8 every 0.75 s",
+    "burst_10_dps": 32.0,
+    "sustained_30_dps": 32.0,
+    "favorable_horde_dps": 32,
+    "primary_limitation": "Total output is split rather than multiplied by crowds"
+  },
+  "global_attack_rate_mapping": {
+    "affected_timing": "Drone shot rate; Containment Lattice damage rate",
+    "unaffected_timing": "Drone movement and temporary-drone lifetime"
+  },
+  "branches": {
+    "amplification": {
+      "name": "Replicator Swarm",
+      "funding_material_code": "E",
+      "funding_material": "Eidolon Coral",
+      "cost": {
+        "material": "Eidolon Coral",
+        "units": 2
+      }
+    },
+    "functional": {
+      "name": "Wolfpack Protocol",
+      "funding_material_code": "A",
+      "funding_material": "Asterite",
+      "cost": {
+        "material": "Asterite",
+        "units": 2
+      }
+    },
+    "conversion": {
+      "name": "Containment Lattice",
+      "funding_material_code": "D",
+      "funding_material": "Driftmetal",
+      "cost": {
+        "material": "Driftmetal",
+        "units": 2
+      }
+    }
+  }
+}

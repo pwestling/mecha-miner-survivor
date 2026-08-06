@@ -1,0 +1,62 @@
+{
+  "id": "W-AD-echo-well",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-AD-echo-well.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#echo-well--amplification--2-asterite",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#echo-well--amplification--2-asterite",
+    "prerequisites: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches"
+  ],
+  "weapon_id": "W-AD",
+  "weapon_name": "Gravity Projector",
+  "branch_class": "Amplification",
+  "cost": {
+    "resource": "Asterite",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-AD-gravity-slingshot",
+      "W-AD-singularity-forge"
+    ],
+    "irreversible": true
+  },
+  "effects": {
+    "echoes_per_field": 1,
+    "echo_location": "same location",
+    "echo_delay_after_original_ends_seconds": 1.25,
+    "echo_uses_full_strength_current_values": [
+      "damage",
+      "radius",
+      "duration",
+      "pull"
+    ],
+    "echoes_can_create_echoes": false,
+    "new_original_field_may_coexist_with_older_echo": true
+  },
+  "expected_effect": {
+    "maximum_damage_increase_percent": 100,
+    "condition": "player keeps enemies in the location",
+    "materially_less_benefit_against_moving_boss": true
+  },
+  "rules": [
+    {
+      "text": "Every field repeats once in the same location 1.25 s after the original ends."
+    },
+    {
+      "text": "The echo uses the current field Damage, radius, duration, and pull values at full strength."
+    },
+    {
+      "text": "Echoes cannot create more echoes. A new original field may coexist with an older echo."
+    },
+    {
+      "text": "Expected effect: up to +100% damage when the player keeps enemies in the location, with materially less benefit against a moving boss."
+    }
+  ]
+}

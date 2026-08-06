@@ -1,0 +1,324 @@
+{
+  "id": "MGC-01",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "tags": [],
+  "source_refs": [
+    "GDD-MAP-GENERATION#standard-map-generation-contract",
+    "destructible_rock_rules.destructible_rock: GDD-PLAYER-SURVIVABILITY-BASELINE#health-packs-and-destructible-rocks",
+    "destructible_rock_rules.health_pack: GDD-PLAYER-SURVIVABILITY-BASELINE#health-packs-and-destructible-rocks"
+  ],
+  "mode": "standard",
+  "distance_language": "Map distances are expressed as base-travel time: the time the shared unmodified mech would need to follow the shortest valid route between two points with no enemies or stops. Account PowerUps, mech traits, utilities, relics, and temporary effects do not change which distance band a location occupies during generation. These bands express route distance through traversable ground, not straight-line distance through obstacles.",
+  "reference_mech_speed_m_per_s": 3.0,
+  "distance_bands": [
+    {
+      "band": "Near",
+      "base_travel_time_from_deployment": {
+        "maximum_seconds_inclusive": 45
+      },
+      "route_distance_m": {
+        "maximum_inclusive": 135
+      },
+      "source_text": "Up to 45 seconds | Up to 135M"
+    },
+    {
+      "band": "Middle",
+      "base_travel_time_from_deployment": {
+        "minimum_seconds_exclusive": 45,
+        "maximum_seconds_inclusive": 90
+      },
+      "route_distance_m": {
+        "minimum_exclusive": 135,
+        "maximum_inclusive": 270
+      },
+      "source_text": "More than 45 and up to 90 seconds | More than 135M and up to 270M"
+    },
+    {
+      "band": "Far",
+      "base_travel_time_from_deployment": {
+        "minimum_seconds_exclusive": 90,
+        "maximum_seconds_inclusive": 150
+      },
+      "route_distance_m": {
+        "minimum_exclusive": 270,
+        "maximum_inclusive": 450
+      },
+      "source_text": "More than 90 and up to 150 seconds | More than 270M and up to 450M"
+    }
+  ],
+  "world_scale": {
+    "major_region_count": {
+      "minimum": 6,
+      "maximum": 8,
+      "initial_target": 7
+    },
+    "traversable_diameter_base_travel_seconds": {
+      "minimum": 240,
+      "maximum": 300,
+      "target": 270
+    },
+    "traversable_diameter_m": {
+      "minimum": 720,
+      "maximum": 900,
+      "target": 810
+    },
+    "maximum_base_travel_from_deployment_to_important_location_seconds": 150,
+    "deployment_placement": "an interior portion of a randomly selected major region",
+    "region_size_rule": "Regions are large enough to support normal survivor-like circling, hundreds of pursuing enemies, and a complete mining circle without forcing the mech into a connector.",
+    "region_boundary_rule": "Region boundaries may be visual, topographic, or loosely implied. They do not need to be rooms enclosed by walls.",
+    "landmark_per_region": "Each region has one prominent navigational landmark or terrain composition that is distinguishable at normal gameplay zoom. No two regions use the same primary landmark in one seed."
+  },
+  "topology": {
+    "redundant_major_routes": {
+      "minimum_connected_major_regions_per_region": 2,
+      "single_connector_removal_cannot_isolate": true,
+      "multiple_loops_required": true,
+      "compulsory_narrow_bridge_allowed": false,
+      "primary_connector_width_in_mining_zone_diameters": {
+        "minimum": 1,
+        "target": 1.5
+      }
+    },
+    "open_combat_ground": {
+      "solid_obstacle_coverage_per_major_region": {
+        "minimum_initial_target_percent": 8,
+        "maximum_initial_target_percent": 12,
+        "maximum_percent": 15,
+        "excludes": "the outer world boundary"
+      },
+      "clustering_rule": "Obstacles form sparse local clusters rather than continuous maze walls.",
+      "obstacle_detour_target_seconds": 6,
+      "long_barrier_rule": "A longer barrier requires multiple broad openings.",
+      "weapon_pattern_rule": "Terrain cannot routinely invalidate radial, orbiting, backward-firing, ground-targeting, or movement-dependent weapon patterns."
+    },
+    "optional_pockets": {
+      "count_per_map": {
+        "minimum": 0,
+        "maximum": 2
+      },
+      "maximum_one_way_depth_seconds": 20,
+      "terminal_area_rule": "Its terminal area provides enough open ground for the complete mining zone plus an additional maneuvering band around it if a mining point can appear there.",
+      "exit_readable_from_terminal_area": true,
+      "maximum_hyper_gold_sites_across_all_pockets": 1,
+      "maximum_relic_caches_across_all_pockets": 1,
+      "near_band_guarantees_depend_on_pockets": false
+    }
+  },
+  "deployment_and_opening_fairness": {
+    "changes_every_run": true,
+    "not_inside_spur_pocket": true,
+    "not_against_world_boundary": true,
+    "not_inside_narrow_connector": true,
+    "obstacle_free_radius_in_mining_zone_diameters": 1,
+    "minimum_distinct_broad_departure_routes": 2,
+    "minimum_offscreen_enemy_entry_directions": 3,
+    "excluded_from_initial_camera_view": [
+      "Hyper Gold site",
+      "material geode",
+      "relic cache",
+      "damaging hazard",
+      "automatic-contact choice"
+    ],
+    "nearest_standard_ore_seam_base_travel_seconds": {
+      "minimum": 10,
+      "maximum": 20
+    },
+    "near_band_guarantees": {
+      "standard_ore_seams_minimum": 2,
+      "rich_ore_seams_minimum": 1,
+      "geodes_per_present_material_minimum": 1
+    },
+    "directions_revealed_to_player": false
+  },
+  "shared_important_site_placement_contract": [
+    "It is reachable from deployment through terrain that accommodates the mech's full collision footprint.",
+    "The player can approach and leave it without crossing collision geometry or the world boundary.",
+    "A mining point's entire extraction circle is clear of solid terrain, with an additional one-mech-width maneuvering band outside the circle.",
+    "Extraction circles never overlap one another. Material-geode resonance fields also never overlap.",
+    "A site is not visually hidden under a landmark, tall prop, boundary treatment, or another interactable from the fixed top-down camera.",
+    "Sites do not stack so tightly that their interaction zones or identity cues become ambiguous.",
+    "Random dressing cannot reduce the validated clearance after important sites are placed."
+  ],
+  "visible_mining_opportunities_in_normal_view": {
+    "target_minimum": 1,
+    "target_maximum": 3,
+    "hard_maximum": 4
+  },
+  "site_placement": {
+    "specialized_material_geodes": {
+      "geodes_per_present_material": {
+        "minimum": 8,
+        "maximum": 10
+      },
+      "present_materials": 4,
+      "minimum_in_near_band_per_material": 1,
+      "minimum_major_regions_represented_per_material": 5,
+      "maximum_same_material_geodes_per_major_region": 2,
+      "maximum_share_of_all_geodes_per_major_region": {
+        "percent": 30
+      },
+      "single_directional_cluster_allowed": false,
+      "resonance_field_separation_evaluated_on": "the full field, not only the extraction circle"
+    },
+    "common_ore_seams": {
+      "standard_seam_count": 20,
+      "rich_seam_count": 8,
+      "minimum_standard_seams_per_major_region": 2,
+      "near_band_minimum_standard_seams": 2,
+      "near_band_minimum_rich_seams": 1,
+      "minimum_major_regions_with_rich_seams": 4,
+      "maximum_rich_seams_per_major_region": 2,
+      "maximum_share_of_all_ore_seams_per_major_region": {
+        "percent": 25
+      },
+      "dominant_cluster_allowed": false
+    },
+    "hyper_gold_sites": {
+      "count": 3,
+      "distinct_major_regions": 3,
+      "minimum_separation_base_travel_seconds": 60,
+      "minimum_middle_band_sites": 1,
+      "minimum_far_band_sites": 1,
+      "allowed_in_initial_camera_view": false,
+      "maximum_in_optional_spur_pocket": 1,
+      "total_site_based_hyper_gold": 300
+    },
+    "relic_caches": {
+      "count": 3,
+      "distinct_major_regions": 3,
+      "minimum_separation_base_travel_seconds": 45,
+      "minimum_middle_band_caches": 1,
+      "minimum_far_band_caches": 1,
+      "allowed_in_initial_camera_view": false,
+      "maximum_in_optional_spur_pocket": 1,
+      "relic_assignment": "The run assigns three distinct relics without replacement from the unlocked pool after these cache locations are valid.",
+      "dedicated_guard_package": false,
+      "global_through_fog_bearing": false,
+      "discovery_rule": "Presentation becomes discoverable only when it enters the gameplay view."
+    }
+  },
+  "destructible_rock_rules": {
+    "active_maximum": 16,
+    "initial_count": 16,
+    "initial_placement": "valid offscreen positions around deployment",
+    "replenishment_attempt_interval_seconds": 1,
+    "replenishment_success_chance": {
+      "percent": 10
+    },
+    "success_behavior": "A successful attempt fills an empty slot or replaces the farthest eligible offscreen rock at the cap. If no valid new position and eligible replacement exist, the attempt produces nothing and leaves current rocks unchanged.",
+    "valid_position_distance_from_mech_m": {
+      "minimum": 18,
+      "maximum": 45
+    },
+    "minimum_meters_beyond_visible_camera_rectangle": 2,
+    "position_constraints": [
+      "lies on valid traversable ground and never inside blocking terrain",
+      "does not intersect a mining zone, resonance-field source, relic interaction area, boundary, required connector, landmark focal footprint, deployed pickup, or another important object",
+      "cannot appear or disappear while visible",
+      "favors nearby unexplored or recently entered space without becoming a persistent map marker or exploration-completion item"
+    ],
+    "destructible_rock": {
+      "prop": "Destructible rock",
+      "hull": 100,
+      "armor": 0,
+      "damage_footprint_diameter_m": 0.8,
+      "movement_collision": "Non-solid to mech and enemies",
+      "control_response": "Immune; displacement and status are ignored",
+      "health_pack_chance": {
+        "percent": 20,
+        "detail": "independently per destroyed rock"
+      },
+      "valid_spawn_distance_from_mech_m": {
+        "minimum": 18,
+        "maximum": 45
+      },
+      "extra_visible_screen_margin_m": 2,
+      "rules": [
+        "A valid position must satisfy both the 18–45M annulus and the offscreen-plus-2M condition. If no position does, the successful attempt produces nothing.",
+        "Enemy-selecting weapons consider a rock only when no valid enemy is inside that weapon's acquisition range. Facing, radial, trail, field, orbit, contact, and explosion attacks may damage rocks incidentally under their ordinary geometry.",
+        "A weapon attack may damage enemies and a rock in the same event if its normal area or pierce permits. Rocks do not count toward enemy target caps or chain routing unless a branch explicitly names world objects.",
+        "A non-piercing projectile that directly hits a rock deals damage and ends normally; piercing attacks may continue according to their ordinary rule. \"Non-solid\" refers to movement, not immunity to weapon collision.",
+        "Rocks never receive enemy damage, resonance modifiers, elite or boss multipliers, control, kill effects, or ordinary-enemy defeat credit.",
+        "Damaging or destroying a rock never builds weapon focus, momentum, mass, charge, replication, exposure, or another enemy-hit or enemy-kill counter. It may still satisfy the basic requirement for an automatic weapon to launch an attack when no enemy is available."
+      ]
+    },
+    "health_pack": {
+      "prop": "Health pack",
+      "repair_hull": 25,
+      "can_exceed_maximum_hull": false,
+      "pickup_radius_m": 0.25,
+      "movement_collision": "Non-solid",
+      "persistence": "persists until collected or run end",
+      "attraction": "none beyond contact",
+      "map_or_radar_marker": false,
+      "rules": [
+        "One pack repairs 25 Hull immediately and cannot exceed current maximum Hull.",
+        "A pack is consumed at full Hull and wastes all excess repair above maximum.",
+        "Repair amount is unaffected by Armor, Recovery, maximum-Hull modifiers, PowerUps, utilities, relics, current health, elapsed time, or hidden difficulty adjustment."
+      ],
+      "source": "destroyed destructible rock, 20% chance independently per rock"
+    }
+  },
+  "landmarks_and_repetition": {
+    "biomes_per_seed": 1,
+    "landmark_independent_of_rewards": true,
+    "landmark_guarantees_adjacent_resource": false,
+    "maximum_appearances_of_one_authored_structure_per_map": 2,
+    "adjacent_region_repetition_allowed": false,
+    "orientation_variation_allowed": true,
+    "structure_recognition_reveals_global_position": false,
+    "mandatory_environmental_damage_hazards": false
+  },
+  "variation_independence": [
+    "Resource profile, topology, deployment region, landmarks, mining sites, relic caches, and Hyper Gold sites vary independently except where the validity contract requires distance, clearance, or distribution corrections. Dynamic rocks are selected during play from currently valid offscreen ground.",
+    "Recognizing a topology, chunk, landmark, or biome motif never predicts a particular reward, material, cache, or Hyper Gold site.",
+    "Specialized materials have no preferred region type, landmark, compass direction, or biome subtheme in the initial baseline.",
+    "The same resource profile can occur across substantially different layouts, and a familiar broad layout can host different profiles and reward routes.",
+    "The map does not make the authored horde schedule easier or harder in response to its resource abundance or the selected mech. It supplies valid spawn and re-entry ground for the unchanged director."
+  ],
+  "boundary_and_fog_presentation": [
+    "The finite boundary is solid, non-damaging, and visually unmistakable before the mech contacts it.",
+    "Boundary art cannot resemble an unexplored opening or hide a traversable route.",
+    "The complete world outline is not revealed at deployment. The minimap records boundary segments as the player discovers them under the ordinary fog rules.",
+    "The boundary contains no narrow peninsula holding required Near-band content.",
+    "Offscreen spawn and boss re-entry logic always has valid ground when the camera is clamped near an edge; enemies never appear between the mech and the visible boundary merely because exterior ground is unavailable."
+  ],
+  "valid_seed_contract": {
+    "invalid_if_violated": [
+      "exact resource, relic, or Hyper Gold counts",
+      "mech-sized reachability from deployment",
+      "major-region route redundancy or connector width",
+      "deployment clearance, opening routes, or offscreen entry ground",
+      "mining-zone or resonance-field clearance and non-overlap",
+      "Near-, Middle-, or Far-band placement guarantees",
+      "per-region distribution and anti-clustering limits",
+      "relic-cache or Hyper Gold separation",
+      "dead-end depth, exit, capacity, or content limits",
+      "landmark and authored-structure repetition limits",
+      "clear finite-boundary presentation"
+    ],
+    "validation_distance_metric": "navigable route distance rather than straight-line proximity"
+  },
+  "playtest_targets": [
+    "At least 90% of blind first-run players who begin exploring should discover a mining opportunity within 45 seconds without radar guidance.",
+    "During purposeful travel through non-exhausted regions, the median time between newly visible mining opportunities should be 15–30 seconds and rarely exceed 60 seconds.",
+    "A successful player who explores naturally should reveal roughly 45–70% of the traversable world.",
+    "Before the 7:00 boss, a geology-prioritizing route should plausibly produce either one additional weapon or one branch for the signature weapon, plus some common-ore stat investment.",
+    "A normal successful run should commonly discover one or two relic caches. Finding all three should be possible through exploration focus rather than routine.",
+    "One Hyper Gold site should be a plausible incidental discovery. Completing all three should remain an explicit routing priority.",
+    "No clockwise perimeter route, center sweep, landmark sequence, or other repeated pattern should dominate across seeds.",
+    "Profiles may be tactically lopsided, but placement alone should not make a valid recipe or advertised material feel practically absent."
+  ],
+  "initial_tuning_variables": [
+    "six-to-eight region count and 4:00–5:00 traversable diameter",
+    "the 45/90/150-second distance bands",
+    "8–12% obstacle coverage and six-second obstacle-detour target",
+    "connector widths relative to the mining zone",
+    "two-pocket maximum and 20-second pocket depth",
+    "per-region distribution caps and site-separation times",
+    "the 16-rock active cap, offscreen spawn validity, one-second attempt interval, 10% spawn chance, and 20% health-pack chance",
+    "expected exploration share and encounter cadence"
+  ]
+}

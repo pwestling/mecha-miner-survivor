@@ -1,0 +1,56 @@
+{
+  "id": "MCH-03",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "mech.MCH-03.name",
+  "summary_key": "mech.MCH-03.summary",
+  "tags": [],
+  "source_refs": [
+    "GDD-INITIAL-MECH-CATALOG#catalog-overview",
+    "signature_weapon_id: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "trait_stacking: GDD-INITIAL-MECH-CATALOG#trait-comparison-and-stacking",
+    "initial_availability: GDD-INITIAL-MECH-CATALOG#initial-availability"
+  ],
+  "signature": "Missile Rack",
+  "signature_weapon_id": "W-EF",
+  "inherent_trait": {
+    "name": "Industrial Extractors",
+    "effect": "+15% mining extraction rate",
+    "affected_statistic": "mining extraction rate",
+    "modifier": {
+      "percent": 15
+    }
+  },
+  "selection_role": "Resource-routing expedition frame",
+  "player_facing_identity": "Prospector is an expedition and mining chassis protected by an automatic missile system. Its faster extraction shortens every ordinary-resource and Hyper Gold commitment without determining which weapons or branches the player should pursue.",
+  "trait_notes": [
+    "Applies to standard seams, rich seams, material geodes, and Hyper Gold sites.",
+    "Mining decay remains four times Prospector's current forward extraction rate, preserving the normal leave-and-decay ratio.",
+    "A nominal 15-second seam takes about 13.0 seconds, a 20-second geode about 17.4 seconds, and a 45-second Hyper Gold site about 39.1 seconds before interruption.",
+    "Does not change payouts, beacon thresholds, resonance fields, grace, or completed checkpoints."
+  ],
+  "top_down_silhouette": [
+    "Asymmetric industrial chassis with a visible sensor mast or survey dish on one shoulder and a block missile rack on the other.",
+    "Rear equipment deck and external extraction arms create a work-platform profile rather than a military wedge.",
+    "Missile doors and mining apparatus use separate silhouettes and animations so weapon readiness cannot be confused with active extraction."
+  ],
+  "trait_stacking": {
+    "changed_baseline": {
+      "text": "115% extraction rate",
+      "statistic": "mining extraction rate",
+      "percent": 115
+    },
+    "with_matching_utility_rank_3_before_power_ups": {
+      "text": "135% with Extraction Accelerator",
+      "utility": "Extraction Accelerator",
+      "percent": 135
+    }
+  },
+  "initial_availability": {
+    "text": "Available",
+    "available": true,
+    "recommended_default": false
+  },
+  "cross_doc_notes": []
+}

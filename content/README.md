@@ -147,12 +147,12 @@ independently addressable definition. The literal values this tree carries today
 
 | Field | Mandate | In this tree |
 | --- | --- | --- |
-| `id` | `40:80` — stable category-valid ID | present on every definition, no exceptions; aggregates carry doc-assigned IDs (`WAV-01`, `MGC-01`) |
+| `id` | `40:80` — stable category-valid ID | present on 133 of 139 definitions, including the aggregates that have doc-assigned IDs (`WAV-01`, `MGC-01`). Six carry `"id": null` because **no design document assigns them one**: the resource radar (`docs/50-maps-resources-and-navigation.md:106` makes it the thirteenth utility but never gives it a `UTL-*` token), the four prose-only mining-site classes (`docs/40-mining-and-extraction.md:58-132`), and `elite-modifier-profile`. Minting IDs here would be inventing content |
 | `schema_version` | `40:81` — integer version of its definition schema | `1` everywhere; no schema exists to version yet |
 | `content_version` | `40:82` — monotonic revision | `1` everywhere; this is the first authored revision |
 | `status` | `40:83` — exactly one of `development`, `enabled`, `disabled`, `retired` | `"enabled"` everywhere; nothing here is gated or retired |
-| `name_key` | `40:84` — localization key, never literal player-facing text | present on every definition, resolving into `content/localization/en.json` |
-| `summary_key` | `40:85` — "concise player-facing summary key **where relevant**" | conditional, so it is present only where a summary exists; its absence is never an error |
+| `name_key` | `40:84` — localization key, never literal player-facing text | **conditional**, like `presentation_id`: required only where a definition has a genuinely player-facing name, with the compiler supplying the default otherwise (`40:90`). Present on 135 of 139, always resolving into `content/localization/en.json`. The four omissions — `WAV-01`, `MGC-01`, `elite-modifier-profile`, `geode-resonance-effects` — are authoring contracts and internal aggregates; naming them in the localization catalog would imply a UI surface that does not exist |
+| `summary_key` | `40:85` — "concise player-facing summary key **where relevant**" | conditional, so it is present only where a summary exists (29 definitions); its absence is never an error |
 | `tags` | `40:86` — closed or validated vocabulary, never hidden behavior | present as an array on every definition, currently empty: no tag vocabulary has been minted, and inventing one here would be hidden behavior |
 | `source_refs` | `40:87` — gameplay document IDs/anchors and decision IDs implemented | present and non-empty on every definition; see below |
 | `presentation_id` | `40:88` — logical presentation entry | **omitted entirely**, not set to `null`. `content/presentation/` (`40:52`) does not exist, so there is no logical presentation entry to name; the presentation stream adds the field with its value |
@@ -181,11 +181,12 @@ tree. It lives in the required `source_refs` envelope field
 ### Localization
 
 Player-facing text is not authored in definition files
-(`docs/technical/40-content-data-and-validation.md:211`). Every `name_key` and `summary_key` resolves
-into `content/localization/en.json`, a flat, lexically sorted, duplicate-free map of key to English
-string. Missing release strings are build errors
+(`docs/technical/40-content-data-and-validation.md:211`). Every `name_key` and `summary_key` that is
+present resolves into `content/localization/en.json` — 164 strings today — a flat, lexically sorted,
+duplicate-free map of key to English string. Missing release strings are build errors
 (`docs/technical/40-content-data-and-validation.md:216`), so an unresolved key and an orphaned string
-are both failures, not warnings.
+are both failures, not warnings. An *omitted* conditional key is not an unresolved key: the compiler
+materializes its default (`docs/technical/40-content-data-and-validation.md:90`).
 
 ## Known gaps, contradictions, and transcription decisions
 
@@ -217,9 +218,13 @@ file, and `src/MechaMiner.Tools/ContentImport/README.md`):
 - every file parses, with no duplicate object properties (`40:26`);
 - the full envelope above, including `status` from exactly the four accepted literals (`40:83`) and
   `presentation_id` being absent rather than null;
+- the two exception sets, so drift stays visible: the definitions carrying a null `id` and the
+  definitions omitting `name_key` must each match a list declared at the top of the verifier. A new
+  member is a failure; a member that no longer belongs is a warning to shrink the list;
 - `snake_case` property names everywhere, keys only, so ID/enum tokens in values keep their case
   (`40:26`);
-- no stale extraction metadata keys survive anywhere at any depth;
+- no stale extraction metadata keys survive anywhere at any depth, including the retired
+  `shared_rule_refs`, whose content now lives in `source_refs`;
 - every `source_refs` document ID and `#anchor` resolves against `docs/` front matter (`40:87`);
 - `content/localization/en.json` is flat, sorted, duplicate-free, fully referenced, and has no
   orphaned strings (`40:216`);

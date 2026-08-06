@@ -20,14 +20,17 @@ with the `docs/technical/40-content-data-and-validation.md` line behind each cla
 checks:
 
 - every `*.json` under `content/` parses as UTF-8 with no duplicate object properties;
-- the common definition envelope on every definition — `id`, `schema_version`, `content_version`,
-  `status` from exactly `development | enabled | disabled | retired`, `name_key`, `tags`, and a
-  non-empty `source_refs`; `summary_key` is conditional and never required; `presentation_id` must be
-  absent rather than null;
+- the common definition envelope on every definition — `schema_version`, `content_version`,
+  `status` from exactly `development | enabled | disabled | retired`, `tags`, and a non-empty
+  `source_refs`. `name_key` and `summary_key` are conditional: required only where the definition has
+  a player-facing name or summary, and never an error when omitted. `presentation_id` must be absent
+  rather than null;
+- the two exception sets, against `ID_NULL_EXPECTED` and `NAME_KEY_OMITTED` declared at the top of the
+  script, so a new null `id` or a new `name_key` omission is a failure rather than one more warning;
 - `snake_case` property names at every depth, checked on keys only, so stable ID/enum/kind tokens in
   values keep their exact case;
-- that no stale extraction metadata key (`_provenance`, `_source`, `notes`, `refs`, `lines`, `line`)
-  survives anywhere at any depth;
+- that no stale extraction metadata key (`_provenance`, `_source`, `notes`, `refs`, `lines`, `line`,
+  `shared_rule_refs`) survives anywhere at any depth;
 - that every `source_refs` element resolves — the document ID against `doc_id` front matter under
   `docs/`, and any `#anchor` against a real heading slug in that document;
 - `content/localization/en.json`: parses, flat, lexically sorted, duplicate-free, every referenced
@@ -46,8 +49,9 @@ settle them: percentages carried on a property not named `*_percent` (`40:95`), 
 strings rather than a registered formula kind plus parameters (`40:99`). Both are grouped by property
 name so the list stays actionable.
 
-A definition whose `id` is present but `null` is a warning, not a failure. A **missing** `id` is always
-a failure — there are no exceptions.
+A definition whose `id` is absent or `null` is a warning, not a failure: six definitions have no ID
+assigned by any design document, and minting one would be inventing content. The `ID_NULL_EXPECTED`
+guard is what keeps that from becoming a place to hide a real mistake.
 
 It performs no JSON Schema validation: `content/schemas/` does not exist yet, so domain field names
 outside the envelope are unvalidated and will need one reconciliation pass when the schemas land.

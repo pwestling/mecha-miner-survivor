@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using MechaMiner.Simulation.Entities;
 using MechaMiner.Simulation.Events;
 
 namespace MechaMiner.Simulation.Snapshots;
@@ -214,7 +215,18 @@ public sealed class SnapshotPublisher
     /// <summary>Stages one visible entity for the open tick.</summary>
     /// <param name="entity">The entity record.</param>
     /// <exception cref="InvalidOperationException">No tick is open, or the visible-entity capacity is exhausted.</exception>
-    /// <exception cref="ArgumentException">The record was defaulted rather than constructed.</exception>
+    /// <exception cref="ArgumentException">
+    /// The record was defaulted rather than constructed, or its identity is fenced to a different run session.
+    /// </exception>
+    /// <remarks>
+    /// <b>Two refusals, not one.</b> <see cref="SnapshotEntity.IsPresent"/> catches only a defaulted record,
+    /// whose run session is zero. A record built from a well-formed identity belonging to <em>another</em> run
+    /// is present, so it passes that test while naming nothing in this run: doc 20 § Entity identity says "IDs
+    /// are unique only within one run session", which makes a leaked cross-run reference indistinguishable
+    /// from a live one on index and generation alone. <c>PackedEntityStore</c> needs no such check because it
+    /// mints every identity it holds from its own allocator; this collection accepts records from a caller, so
+    /// the fence has to be checked here or it is not checked at all.
+    /// </remarks>
     public void StageVisibleEntity(in SnapshotEntity entity)
     {
         RequireOpenTick();
@@ -222,6 +234,20 @@ public sealed class SnapshotPublisher
         {
             throw new ArgumentException(
                 "a defaulted snapshot entity cannot be staged; use SnapshotEntity.Create",
+                nameof(entity));
+        }
+
+        if (entity.Id.RunSession != _runSession)
+        {
+            throw new ArgumentException(
+                "the staged entity "
+                    + entity.Id.ToString()
+                    + " is fenced to run session "
+                    + entity.Id.RunSession.ToString(CultureInfo.InvariantCulture)
+                    + " but this publisher publishes run session "
+                    + _runSession.ToString(CultureInfo.InvariantCulture)
+                    + ". doc 20 § Entity identity scopes identities to one run session, so a reference from "
+                    + "another run names nothing here and must not be published as live",
                 nameof(entity));
         }
 
@@ -251,11 +277,22 @@ public sealed class SnapshotPublisher
     /// <exception cref="ArgumentException">A buffer is closed or open for a different tick.</exception>
     /// <exception cref="InvalidOperationException">No tick is open, or a batch exceeds its capacity.</exception>
     /// <remarks>
+    /// <para>
     /// The domain batch is copied first and in full: doc 20 § Domain and presentation events forbids
     /// dropping a domain event, so a domain batch that does not fit is a failed invariant rather than a
     /// truncation. The domain records are marked consumed only after they are in the published batch, which
     /// is the order doc 20 requires - "Statistics consume domain/damage records before their buffers are
     /// released."
+    /// </para>
+    /// <para>
+    /// <b>The run-session fence is checked on the assembled batch, not at each append.</b> Neither event
+    /// buffer carries a run session, and neither should: doc 115 § Mutable-state ownership matrix requires
+    /// "each mutable datum has exactly one row owner", and this publisher already owns the run session, so a
+    /// copy on each buffer would be a second owner of the same fact and would change every construction site
+    /// to say something the publisher already knows. Checking here also matches how ordering is handled:
+    /// <c>EventOrdering.AssertTotalOrder</c> deliberately checks the batch rather than each append, because a
+    /// defect of this kind is invisible until the records are assembled together.
+    /// </para>
     /// </remarks>
     public TickPublication Publish(
         DomainEventBuffer domainEvents,
@@ -286,6 +323,9 @@ public sealed class SnapshotPublisher
 
         int presentationSourceCount = presentationEvents.Count;
         int presentationCount = presentationEvents.PublishOrderedTo(coalescingPolicy, _presentationBatch);
+
+        RequireDomainBatchIsOwnRunSession(domainCount);
+        RequirePresentationBatchIsOwnRunSession(presentationCount);
 
         SnapshotVersion version = _buffer.Publish(
             _tick,
@@ -390,6 +430,93 @@ public sealed class SnapshotPublisher
                     + "; a tick result is assembled from one tick's buffers only",
                 parameterName);
         }
+    }
+
+    /// <summary>Requires every record of the assembled domain batch to be fenced to this run session.</summary>
+    /// <param name="count">How many leading records of the batch are live.</param>
+    /// <remarks>
+    /// One linear pass over the assembled domain batch, checking the two identities every event carries: the
+    /// emitting entity of its provenance and its subject. Duplicated per event type rather than unified behind
+    /// an interface for the same reason <c>EventOrdering</c>'s checks are: an indirect call per record is not
+    /// affordable on the publication path.
+    /// </remarks>
+    private void RequireDomainBatchIsOwnRunSession(int count)
+    {
+        for (int index = 0; index < count; index++)
+        {
+            EventProvenance provenance = _domainBatch[index].Provenance;
+            if (provenance.EmittingEntityId.RunSession != _runSession)
+            {
+                throw new InvalidOperationException(BuildForeignSessionMessage(
+                    "domain", "emitting entity", provenance.EmittingEntityId, provenance));
+            }
+
+            EntityId subjectId = _domainBatch[index].SubjectId;
+            if (subjectId.RunSession != _runSession)
+            {
+                throw new InvalidOperationException(BuildForeignSessionMessage(
+                    "domain", "subject", subjectId, provenance));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Requires every record of the assembled presentation batch to be fenced to this run session.
+    /// </summary>
+    /// <param name="count">How many leading records of the batch are live.</param>
+    /// <remarks>
+    /// The same check as <see cref="RequireDomainBatchIsOwnRunSession(int)"/>, whose remarks give the reason.
+    /// It runs over the coalesced batch, so a policy that merged a foreign record into a local one is caught
+    /// through whichever identity survived the merge.
+    /// </remarks>
+    private void RequirePresentationBatchIsOwnRunSession(int count)
+    {
+        for (int index = 0; index < count; index++)
+        {
+            EventProvenance provenance = _presentationBatch[index].Provenance;
+            if (provenance.EmittingEntityId.RunSession != _runSession)
+            {
+                throw new InvalidOperationException(BuildForeignSessionMessage(
+                    "presentation", "emitting entity", provenance.EmittingEntityId, provenance));
+            }
+
+            EntityId subjectId = _presentationBatch[index].SubjectId;
+            if (subjectId.RunSession != _runSession)
+            {
+                throw new InvalidOperationException(BuildForeignSessionMessage(
+                    "presentation", "subject", subjectId, provenance));
+            }
+        }
+    }
+
+    /// <summary>Builds the failed-invariant message naming the record and the identity that is foreign.</summary>
+    /// <param name="channel">Which batch the record came from, for the message.</param>
+    /// <param name="role">Which of the record's two identities is foreign, for the message.</param>
+    /// <param name="offender">The foreign identity.</param>
+    /// <param name="provenance">The offending record's provenance, which locates it in the batch.</param>
+    private string BuildForeignSessionMessage(
+        string channel,
+        string role,
+        EntityId offender,
+        EventProvenance provenance)
+    {
+        return "the "
+            + channel
+            + " event at tick "
+            + provenance.Tick.ToString(CultureInfo.InvariantCulture)
+            + " sequence "
+            + provenance.Sequence.ToString(CultureInfo.InvariantCulture)
+            + " names "
+            + offender.ToString()
+            + " as its "
+            + role
+            + ", which is fenced to run session "
+            + offender.RunSession.ToString(CultureInfo.InvariantCulture)
+            + " rather than to this publisher's run session "
+            + _runSession.ToString(CultureInfo.InvariantCulture)
+            + ". doc 20 § Entity identity scopes identities to one run session, so the batch would carry a "
+            + "reference that resolves to nothing; doc 20 § Tick transaction makes that a failed invariant "
+            + "rather than something to publish.";
     }
 
     private static void RequireFinite(double component, string parameterName)

@@ -13,7 +13,8 @@
     "'retired' is a new status value, used here for the first time in any registry in this repository. It means the entry's stated contract no longer exists and a named successor verifies the contract that replaced it. A retired entry is not a deleted entry: its id, summary and task are left exactly as committed, because the summary is the historical record of what was once verified and rewording it would erase the fact that the contract changed. A retired entry is also not an implemented entry, so it is excluded from the check that every 'implemented' selector names a test that ran and passed.",
     "VER-SIM-006-003 was retired rather than reworded because its summary enumerates the comparator it verifies - \"system phase, then explicit emission sequence, then the full entity ID\" - and that three-key comparator no longer exists. The emission sequence is per-tick global (doc 20 \u00a7 Domain and presentation events; CMP-SIM-003 owns the sequence per doc 115 \u00a7 Component registry), so (tick, sequence) is a total order by itself and neither the phase nor the emitting entity ID could discriminate any legal pair. Those were different comparators, not the same behaviour described differently, so a reader checking the entry against the code needs to see that the contract moved. VER-SIM-006-011 states the two-key comparator and the two invariants that replaced the dead keys.",
     "'successor' on VER-SIM-006-003 names a VER-* id. Elsewhere the key names a TASK-* id (tests/verification/FND-001.json, FND-002.json, FND-003.json, SIM-001.json) or a work package (QUA-005 in SIM-003.json and SIM-007.json), meaning 'the later work that will finish this'. Both forms now exist and they mean different things: a TASK-*/work-package successor defers unfinished verification, whereas a VER-* successor redirects to the entry that verifies the contract this one used to. TASK-FND-009-002 owns the structural validator for these files and has to accept both. Note also that the key's position differs across existing files - SIM-003.json and SIM-007.json place it before 'status', FND-001.json after - and this file follows the SIM-family placement.",
-    "SIM-006 does not split into two implementation tasks for its original contract, as the note above records. TASK-SIM-006-002 is nonetheless a real second task: it is the independently landable change that reduced the event comparator to (tick, sequence) and added the uniqueness and phase-agreement invariants, per the TASK-SIM-00N-002 convention in tests/verification/SIM-001.json's notes."
+    "SIM-006 does not split into two implementation tasks for its original contract, as the note above records. TASK-SIM-006-002 is nonetheless a real second task: it is the independently landable change that reduced the event comparator to (tick, sequence) and added the uniqueness and phase-agreement invariants, per the TASK-SIM-00N-002 convention in tests/verification/SIM-001.json's notes.",
+    "TASK-SIM-006-003 is the third independently landable task on this package: it fences the assembled event batch to the publishing run session. The guard lives in SnapshotPublisher rather than in either buffer, so VER-SIM-006-012's selector names a test under MechaMiner.Simulation.Tests.Snapshots even though the entry belongs to SIM-006. That is deliberate and matches how the ordering invariant is placed: CMP-SIM-003 owns the assembled batch, and a buffer that carried a run session of its own would give that fact a second owner. Test namespaces mirror production namespaces, so a guard in the Snapshots namespace is tested from the Snapshots test namespace whichever package registers it."
   ],
   "entries": [
     {
@@ -358,6 +359,39 @@
         "test-counts",
         "golden-text",
         "text-diff",
+        "negative-control"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-006-012",
+      "summary": "The assembled event batch is fenced to the publishing run session: after the ordered batches are filled, a domain or presentation event whose emitting entity or whose subject carries a different run session fails the tick invariant and publishes nothing. Checked on the batch rather than at each append, for the same reason the total-order check is: the publisher is the one component that knows the run session, and giving a buffer a second copy of that fact would give it a second owner. The foreign identity is minted by a second EntityIdAllocator on a different run session.",
+      "task": "TASK-SIM-006-003",
+      "requirements": [
+        "TR-CTR-004",
+        "TR-SIM-001"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#entity-identity",
+        "docs/technical/20-simulation-core.md#domain-and-presentation-events",
+        "docs/technical/20-simulation-core.md#tick-transaction"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Snapshots.SnapshotRunSessionFenceTests.AForeignRunSessionEventCannotBePublished"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output",
         "negative-control"
       ],
       "platforms": [

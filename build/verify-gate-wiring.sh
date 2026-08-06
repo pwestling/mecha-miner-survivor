@@ -264,11 +264,45 @@ readonly EXIT_VALIDATION=4
 # files arriving from master set it, and they do not agree on a spelling: --verify and
 # --check.
 #
-# ON MERGE FROM master: ADD THE EIGHT LINES BELOW, VERIFIED RATHER THAN PROPOSED.
+# ON MERGE FROM master INTO THIS CHAIN, AND ONLY THAT DIRECTION: ADD THE LINES BELOW
+# THAT THE MERGED TREE ACTUALLY CONTAINS, VERIFIED RATHER THAN PROPOSED.
+#
+# READ THE DIRECTION BEFORE READING THE LINES. This block is an instruction for exactly
+# one merge: master merged INTO this fnd-002 chain, which is the fnd-002 -> master
+# reconcile this file's header describes. It is NOT an instruction for any other merge
+# direction, and in particular it is NOT one for merging fnd-002, or any branch of this
+# chain, INTO somewhere else. It is not a checklist that travels with this file, and
+# nothing about it fires just because this file appeared in a merge.
+#
+#   That is not a hypothetical either. A sibling stream merged fnd-002 into its own
+#   branch, read this heading as unconditional, and following it would have added lines
+#   naming TWO files that branch's enumerators cannot find - its ContentImport/ holds
+#   THREE .py scripts where master holds four, derive_derived_value_expectations.py being
+#   on master and not there. The result would have been the red gate two paragraphs down,
+#   in place of the one the resolver was trying to clear.
+#
+# AND THE FILE SET IS WHATEVER THE REF BEING MERGED IN CARRIES AT MERGE TIME, NOT THE
+# COUNT WRITTEN HERE. Four .py files under src/MechaMiner.Tools/ContentImport/ is what
+# master carried when these lines were verified, at master 76ef7a1; it was still four at
+# 3b4703b, re-measured rather than assumed. That is a per-ref measurement of a directory
+# that grows, not a constant, and this comment cannot be re-measured on your behalf. So
+# RE-ENUMERATE THAT DIRECTORY ON THE REF BEING MERGED IN - `git ls-tree -r <ref>
+# --name-only -- src/MechaMiner.Tools/ContentImport/` - and take from below only the
+# lines whose file that enumeration returns. If it returns a .py file no line below
+# covers, classify that one too, by reading its main() the way these four were read; § 2
+# direction 2 on the merged tree names exactly which files are outstanding.
+#
+# CLASSIFYING A FILE THE MERGED TREE DOES NOT CONTAIN IS A SECOND FAILURE, NOT A PARTIAL
+# FIX. An entry naming a file no enumerator found is red by § 2 direction 1 ("stale
+# classification"), and the same path's EXEMPT line is red again by § 3 ("stale
+# exemption"), because check_exemptions tests -f on every exempt path too. So pasting
+# these lines onto a tree holding fewer of these four files does not half-fix anything:
+# it trades unclassified-script findings for up to eight stale ones, in two sections
+# instead of one. The last row of the table below is that failure measured.
 #
 # These are not a suggestion for the merge resolver to compose. They were written, run
 # and measured before being written down here, on a throwaway worktree holding
-# fnd-002 + master (union-resolved conflicts, never pushed):
+# fnd-002 + master at 76ef7a1 (union-resolved conflicts, never pushed):
 #
 #   with all eight lines live on the merged tree   bash build/verify-gate-wiring.sh -> 0,
 #                                                 18 scripts, both enumerators agreeing,
@@ -283,7 +317,11 @@ readonly EXIT_VALIDATION=4
 #   with one of the four INVENTORY lines removed   -> exit 4, FAILING SECTION 2, naming
 #                                                 exactly the file that was dropped
 #   all eight live on THIS ref, without the files  -> exit 4, FAILING SECTIONS 2 and 3,
-#                                                 eight findings. Hence a comment here.
+#                                                 eight findings. Not a peculiarity of
+#                                                 this ref: ANY tree missing those four
+#                                                 files fails this way, in proportion to
+#                                                 how many of them it is missing. Hence a
+#                                                 comment here rather than entries.
 #
 # All four are `gate`, and deliberately so. Filing any of them as `provisioning` or
 # `launcher` would make §§ 3 and 4 skip them and would turn a measured "nothing dispatches
@@ -295,8 +333,13 @@ readonly EXIT_VALIDATION=4
 # workflow reaches it" - and that wiring them means writing a content-tier verb, which is
 # DAT-006's work package and not this gate's decision to make.
 #
-# Strip the leading "#   " from each line. The first four go in INVENTORY, the last four
-# in EXEMPT.
+# Strip the leading "#   " from each line. The first four are INVENTORY entries; the last
+# four are their matching EXEMPT entries, one per path, in the same order. They come in
+# pairs and go in pairs: an INVENTORY line added without its EXEMPT line is the § 4
+# failure in the table's second row, and either one added for a file the merged tree does
+# not hold is the § 2 / § 3 failure in its last row. Add a pair only for a path the
+# re-enumeration above actually returned - which, on a merge from master, has so far been
+# all four, and on any other ref is a question this comment does not answer.
 #
 #     "src/MechaMiner.Tools/ContentImport/check_quote_mismatch_evidence.py|gate||re-runs the anti-golden measurement behind content/quote-verification-audit.md § 5 - all 378 quote mismatches re-tested under maximal normalisation - and exits non-zero if any record moves or any frozen normalised form fails to reproduce from its stored value. A gate with no other mode: the file registers no arguments at all, so field 3 is empty. It is the first of the two files the header names as the reason the name glob had to go - 'check' matches no glob spelled 'verify'"
 #     "src/MechaMiner.Tools/ContentImport/derive_citation_pass_expectations.py|gate|--verify|a generator when invoked bare and a gate when invoked with --verify, which is the case field 3 was built for and says so. Bare it WRITES expected_citation_deltas.json; with --verify it measures the pass's own pinned range against that committed expectation and returns 1 on any disagreement. Read at main(): --ref, --previous-ref, --verify, --after-ref. Without field 3 a reachable bare call site would satisfy § 4 while running the generator and not the gate"

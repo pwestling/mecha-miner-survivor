@@ -7,7 +7,8 @@
     "Entries are added before implementation and are never renumbered (docs/technical/91 § Verification registry).",
     "The structural validator for this file is owned by TASK-FND-009-002; until it lands, the shape here is the FND-001 integration owner's declaration of the required fields listed in doc 91.",
     "Selectors are repository scripts and commands because the pure NUnit harness does not exist until TASK-FND-003-001. TASK-FND-009-001 replaces the architecture selector with an architecture test.",
-    "VER-FND-001-012 and VER-FND-001-013 use build/verify-godot.sh rather than the bare godot commands: a headless Godot launch exits 0 even when the boot script fails to load, so the exit code alone is not a gate. The script also asserts the stable startup line and the absence of engine ERROR lines."
+    "VER-FND-001-012 and VER-FND-001-013 use build/verify-godot.sh rather than the bare godot commands: a headless Godot launch exits 0 even when the boot script fails to load, so the exit code alone is not a gate. The script also asserts the stable startup line and the absence of engine ERROR lines.",
+    "platforms lists only the platforms on which an entry has actually been exercised. Every entry here has been run on linux-x64 only. pendingPlatforms records platforms that the requirement covers but on which nothing has been executed yet; an entry must not claim one until it has been run there."
   ],
   "entries": [
     {
@@ -27,7 +28,8 @@
       "fixtures": [],
       "scenarios": [],
       "evidenceKinds": ["command-exit-code", "command-output"],
-      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "platforms": ["linux-x64"],
+      "pendingPlatforms": ["windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
     },
@@ -48,7 +50,8 @@
       "fixtures": [],
       "scenarios": [],
       "evidenceKinds": ["command-exit-code", "command-output", "warning-count"],
-      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "platforms": ["linux-x64"],
+      "pendingPlatforms": ["windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
     },

@@ -25,7 +25,9 @@
 # FORWARD-COMPATIBLE HALF
 #
 #   build/toolchain.json is NOT present on master; it belongs to the FND-002
-#   branch chain (14 of 23 remote heads carry it, master is not one of them). So
+#   branch chain (14 remote heads carried it when this was written, and master was
+#   not one of them; the total head count moves as branches are pushed, so the
+#   denominator is deliberately not recorded here). So
 #   the macOS artifact hashes this repository now knows live in
 #   build/bootstrap-macos.sh, and nothing else on master can hold them.
 #

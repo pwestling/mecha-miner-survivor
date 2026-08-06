@@ -1,0 +1,206 @@
+# The pull-request-equivalent fast suite.
+#
+# Authority: docs/technical/100-build-dependencies-and-release-operations.md
+#              § Continuous integration (Pull request), § Standard command surface
+#            docs/technical/91-verification-strategy.md § Fast pull-request suite
+#            docs/technical/delivery-waves.md § Step 4: "FND-005's CI job calls
+#              ./build.sh verbs, never a script directly. The fast pull-request path
+#              is bootstrap, format-check, build, test-fast; the main path adds
+#              test-main."
+#            AGENTS.md § Standard workflow surface: "CI uses the same verbs. Do not
+#              create competing workflow entrypoints."
+# Requirements: TR-BLD-001, TR-BLD-002, TR-BLD-005, TR-QUA-001, TR-QUA-003
+# Verification: tests/verification/FND-005.json
+#
+# Three properties this file is responsible for, each stated because losing it
+# quietly is the failure mode:
+#
+#  1. No workflow logic. Every gate is reached by invoking ./build.sh <verb>. There
+#     is no `dotnet` command, no build/verify-*.sh call, and no reimplementation of a
+#     verb's stages here. What CI runs is what a developer runs.
+#  2. Nothing is cached. Doc 100 § Continuous integration: "CI jobs start from clean
+#     checkouts and cannot depend on a developer's Godot import cache, global NuGet
+#     cache contents, uncommitted generated files, or editor state." The absence of
+#     actions/cache is deliberate and load-bearing; do not add one to make this job
+#     faster. `build` restores with --locked-mode, so a lock file that would change is
+#     a failure rather than a regeneration.
+#  3. Exit classes survive to the job result. Doc 100 defines eight classes and
+#     deliberately no class 1. A step that collapsed them into pass/fail would delete
+#     the only signal that distinguishes "this environment is not the pinned one"
+#     (3) from "a gate rejected the tree" (4) from "it did not compile" (5). Every
+#     step below records the class it saw and re-exits with it, and the final step
+#     fails when the recorded evidence does not account for every step.
+#
+# Two documented gaps rather than silent ones:
+#
+#  * doc 91 § Fast pull-request suite also names JSON schema/content/localization/
+#    asset-manifest/license validation. That is the `content` verb, which is
+#    registered and owned by DAT-006 and today returns exit class 2. It joins this
+#    job when DAT-006 lands; it is not in the job now because FND-005's completion
+#    gate is "pull-request-equivalent job passes cleanly", and a required step that
+#    can only return 2 would make every pull request red without telling anyone
+#    anything new.
+#  * doc 91 also names Godot headless import and focused integration tests. No verb
+#    exposes those without the whole engine tier: `test-main` is "fast suite plus
+#    Godot integration", and delivery-waves § Step 4 assigns test-main to the main
+#    path. So no engine job exists here. Closing that gap needs either the main-branch
+#    suite (OPS-001) or a verb that runs import plus focused integration alone; it is
+#    not closed by running test-main on pull requests.
+
+name: fast suite
+
+on:
+  pull_request:
+  # Unfiltered on purpose. Every branch push gets the same pull-request-equivalent
+  # run, so a branch is already proven (or already red) before a pull request exists,
+  # and so the suite's redness is demonstrable without opening one. The concurrency
+  # group below collapses the push and pull_request runs of the same branch.
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fast-suite-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  fast:
+    name: fast (bootstrap, format-check, build, test-fast)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: clean checkout
+        uses: actions/checkout@v4
+        with:
+          # A shallow clone of exactly the commit under test. The verb host reads
+          # HEAD and the porcelain status for its evidence record and needs nothing
+          # else from history.
+          fetch-depth: 1
+
+      - name: provision the pinned toolchain
+        # The one place this job runs a script instead of a verb, for the reason
+        # build/bootstrap-linux.sh states about itself: "invoke this script directly
+        # in exactly one situation: .NET itself is absent, and a .NET process
+        # therefore cannot install .NET." A GitHub-hosted runner has neither the
+        # pinned SDK nor Godot, so every verb would exit 3 until this runs. `sudo`
+        # is required because the script installs into /usr/share/dotnet (hostfxr's
+        # default probe path, which Godot's runtime host requires) and /opt/godot.
+        # It is idempotent and its exit classes are doc 100's: 0, 3, or 8.
+        run: |
+          class=0
+          sudo bash build/bootstrap-linux.sh || class=$?
+          printf 'provision-pinned-toolchain\t%s\n' "$class" >> "$RUNNER_TEMP/exit-classes.tsv"
+          exit "$class"
+
+      - name: build.sh bootstrap
+        run: |
+          class=0
+          ./build.sh bootstrap || class=$?
+          printf 'bootstrap\t%s\n' "$class" >> "$RUNNER_TEMP/exit-classes.tsv"
+          exit "$class"
+
+      - name: build.sh format-check
+        run: |
+          class=0
+          ./build.sh format-check || class=$?
+          printf 'format-check\t%s\n' "$class" >> "$RUNNER_TEMP/exit-classes.tsv"
+          exit "$class"
+
+      - name: build.sh build
+        run: |
+          class=0
+          ./build.sh build || class=$?
+          printf 'build\t%s\n' "$class" >> "$RUNNER_TEMP/exit-classes.tsv"
+          exit "$class"
+
+      - name: build.sh test-fast
+        run: |
+          class=0
+          ./build.sh test-fast || class=$?
+          printf 'test-fast\t%s\n' "$class" >> "$RUNNER_TEMP/exit-classes.tsv"
+          exit "$class"
+
+      - name: retain the verb evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fast-suite-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          # Every verb writes artifacts/verbs/<verb>/<invocation>/result.json with its
+          # exit class, diagnostic code, step logs, and named artifacts. That tree is
+          # the retained concise summary TASK-FND-005-001 asks for. `error` on an
+          # empty set is deliberate: "nothing was uploaded" must not read as
+          # "evidence was retained".
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: report exit classes
+        if: always()
+        run: |
+          log="$RUNNER_TEMP/exit-classes.tsv"
+          expected='provision-pinned-toolchain bootstrap format-check build test-fast'
+
+          {
+            echo '### Fast suite exit classes'
+            echo
+            echo 'doc 100 § Standard command surface: 0 success, 2 invalid verb or arguments,'
+            echo '3 missing or mismatched pinned environment, 4 validation/test failure,'
+            echo '5 build/import/export/package failure, 6 performance/budget failure,'
+            echo '7 authorization/credential/external state, 8 unexpected tool-internal'
+            echo 'failure. There is deliberately no class 1.'
+            echo
+            echo '| step | exit class |'
+            echo '| --- | --- |'
+          } >>"$GITHUB_STEP_SUMMARY"
+
+          # An absent record is not a clean run. Without this branch a job whose every
+          # step was skipped would reach here with nothing to disagree with and report
+          # success, which is the shape of gate this repository keeps finding.
+          if [[ ! -f "${log}" ]]; then
+            echo '| (none) | no step recorded an exit class |' >>"$GITHUB_STEP_SUMMARY"
+            echo 'FAILED no fast-suite step recorded an exit class, so this run is evidence of nothing.' >&2
+            echo '       Reporting exit class 8 (unexpected tool-internal failure).' >&2
+            exit 8
+          fi
+
+          result=0
+          unrun=0
+          for step in ${expected}; do
+            class="$(awk -F'\t' -v want="${step}" '$1 == want { print $2 }' "${log}" | tail -n 1)"
+            if [[ -z "${class}" ]]; then
+              printf '| `%s` | not run |\n' "${step}" >>"$GITHUB_STEP_SUMMARY"
+              printf '%-26s not run\n' "${step}"
+              unrun=1
+              continue
+            fi
+            printf '| `%s` | %s |\n' "${step}" "${class}" >>"$GITHUB_STEP_SUMMARY"
+            printf '%-26s exit class %s\n' "${step}" "${class}"
+            if [[ "${class}" -ne 0 && "${result}" -eq 0 ]]; then
+              result="${class}"
+            fi
+          done
+
+          if [[ "${result}" -ne 0 ]]; then
+            echo
+            echo "FAILED the fast suite failed with exit class ${result}." >&2
+            echo '       The step that returned it is named above and its result.json is in the' >&2
+            echo '       retained fast-suite-evidence artifact.' >&2
+            exit "${result}"
+          fi
+
+          if [[ "${unrun}" -ne 0 ]]; then
+            echo
+            echo 'FAILED a fast-suite step never ran even though no step reported a failing class,' >&2
+            echo '       so the suite did not cover what it claims to cover.' >&2
+            echo '       Reporting exit class 8 (unexpected tool-internal failure).' >&2
+            exit 8
+          fi
+
+          echo
+          echo 'the fast suite passed: every step above returned exit class 0'

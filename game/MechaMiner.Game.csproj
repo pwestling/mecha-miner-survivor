@@ -43,8 +43,10 @@
       exported, self-hosted build reads; it is not a claim about the editor's
       process.
 
-      Do not consolidate this property. Moving it to Directory.Build.props or
-      onto a library silently disables it in every host - full rule, and the
+      Do not move this property onto a plain library such as those under src/:
+      those emit no runtimeconfig.json, so the switch goes silently dead in every
+      host (measured). A shared props file that each host imports - such as the
+      root Directory.Build.props - does bind and is allowed. Full rule, and the
       runtime assertion the test hosts owe, in
       tests/MechaMiner.Content.Tests/MechaMiner.Content.Tests.csproj.
     -->

@@ -25,9 +25,11 @@
     under `dotnet test` and throws only in the real host - the exact defect class
     the suite exists to catch.
 
-    Do not consolidate this property. Moving it to Directory.Build.props or onto
-    a library silently disables it, and this host owes a runtime assertion that
-    the switch is live - full rule in
+    Do not move this property onto a library: a plain library emits no
+    runtimeconfig.json, so the switch goes silently dead in every host
+    (measured). A shared props file that each host imports - such as the root
+    Directory.Build.props - does bind and is allowed. Either way this host owes a
+    runtime assertion that the switch is live - full rule in
     tests/MechaMiner.Content.Tests/MechaMiner.Content.Tests.csproj.
   -->
   <PropertyGroup>

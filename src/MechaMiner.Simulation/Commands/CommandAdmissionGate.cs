@@ -619,6 +619,16 @@ public sealed class CommandAdmissionGate
     /// view is old.
     /// </para>
     /// <para>
+    /// <b>The idempotency check compares the action, not only the key.</b> A spent key carrying a different
+    /// action identity is refused as <see cref="TransactionRejectionReason.SequenceRegression"/> rather than
+    /// replayed. Replaying it would answer with the earlier application's result, including the earlier
+    /// <see cref="PausedTransactionResult.ActionId"/>, and would set
+    /// <see cref="PausedTransactionResult.WasApplied"/> - the property <c>CMP-UI-001</c> in doc 115
+    /// § Cross-boundary contract registry reads to decide whether its action happened - for an action that
+    /// did not happen. <see cref="TryAdmit"/> already refuses exactly this reuse by exactly that name, so
+    /// the two halves of one gate now answer one ambiguity the same way.
+    /// </para>
+    /// <para>
     /// <b>What "all-or-nothing" means when the commit block itself throws.</b> Every refusal happens before
     /// the first mutation, so a refused transaction changes nothing at all. A throw <em>inside</em> the commit
     /// is a separate case, and doc 20 § Mid-commit invalidation settles it: that clause partitions the tick at
@@ -722,6 +732,29 @@ public sealed class CommandAdmissionGate
             request.ClientCommandSequence,
             out PausedTransactionResult applied))
         {
+            // A replay is a resubmission of the same action under the same key. A different action
+            // under a spent key is not a replay at all, and answering it with the earlier result
+            // would report - through PausedTransactionResult.WasApplied, which doc 115's
+            // CMP-UI-001 reads to decide whether its action happened - that an action nobody
+            // submitted had been applied, and hand back the earlier ActionId as though it were
+            // this request's. The active half of this same gate already refuses the identical
+            // reuse by name, so the paused half uses the same name.
+            if (!string.Equals(applied.ActionId, request.ActionId, StringComparison.Ordinal))
+            {
+                return RejectTransaction(
+                    TransactionRejectionReason.SequenceRegression,
+                    request,
+                    "client command sequence "
+                        + request.ClientCommandSequence.ToString(CultureInfo.InvariantCulture)
+                        + " was already spent applying action '"
+                        + applied.ActionId
+                        + "', so reusing it for action '"
+                        + request.ActionId
+                        + "' would make the run's command sequence ambiguous; the applied-transaction "
+                        + "history is never evicted, so this intent needs a fresh sequence rather than a "
+                        + "refreshed view");
+            }
+
             _transactionRejectionCounts[(int)TransactionRejectionReason.AlreadyApplied]++;
             return PausedTransactionResult.Replayed(applied);
         }

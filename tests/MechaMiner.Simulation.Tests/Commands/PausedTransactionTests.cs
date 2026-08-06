@@ -239,6 +239,142 @@ internal sealed class PausedTransactionTests
     }
 
     /// <summary>
+    /// Verification: <c>VER-SIM-004-009</c>.
+    ///
+    /// A spent idempotency key carrying a <em>different</em> action is refused as
+    /// <see cref="TransactionRejectionReason.SequenceRegression"/> and reports that nothing was applied,
+    /// rather than being answered with the earlier application's result.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>What the replay path answers, and what it must not.</b>
+    /// <see cref="PausedTransactionResult.WasApplied"/> is documented as "the property a caller uses to
+    /// decide whether the action happened", and <c>CMP-UI-001</c> in
+    /// <c>docs/technical/115-component-contract-and-schema-registry.md</c> § Cross-boundary contract
+    /// registry is the caller that reads it. A replay built for a submission naming another action answered
+    /// that question yes about an action nobody submitted, and handed back the earlier submission's
+    /// <see cref="PausedTransactionResult.ActionId"/> as though it were this one's.
+    /// </para>
+    /// <para>
+    /// <b>The asymmetry was inside one type.</b> <c>TryAdmit</c> already refuses the identical reuse -
+    /// a sequence "already spent" on another tick - as
+    /// <see cref="CommandRejectionReason.SequenceRegression"/>, on the grounds that reusing it "would make
+    /// the run's command sequence ambiguous". <c>CMP-SIM-002</c> is one component with one row of admitted
+    /// sequence and idempotency history, so both halves now answer the ambiguity the same way and by the
+    /// same name.
+    /// </para>
+    /// </remarks>
+    [Test]
+    public void ASpentIdempotencyKeyCarryingADifferentActionIsRefusedRatherThanReplayed()
+    {
+        CommandFixture fixture = new();
+        OpenAPauseAfterOneTick(fixture);
+
+        const long sharedSequence = 55L;
+        PausedTransactionResult installed = fixture.Apply(
+            CommandFixture.InstallRequest(fixture.Gate.TransactionStateVersion, sharedSequence));
+        Assert.That(installed.IsAccepted, Is.True, "the install applies and spends the sequence");
+
+        // The same key, the same current state version, a different action: nothing about this submission
+        // says "stale view", and everything about it says "this key is not yours".
+        PausedTransactionRequest differentAction = CommandFixture
+            .UnconfirmedAbandonRequest(fixture.Gate.TransactionStateVersion, sharedSequence)
+            .WithConfirmationToken(CommandFixture.ConfirmationToken);
+
+        string before = fixture.Gate.RenderAuthoritative();
+        SnapshotVersion snapshotBefore = fixture.Publisher.LatestVersion;
+        long appendedBefore = fixture.DomainEvents.AppendedInRun;
+        int validatorCallsBefore = fixture.DomainValidatorInvocations;
+
+        PausedTransactionResult refused = fixture.Apply(differentAction);
+
+        string after = fixture.Gate.RenderAuthoritative();
+
+        CommandContractAssertions.NothingAuthoritativeChanged(
+            "a spent client command sequence reused for a different action",
+            before,
+            after);
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(refused.IsRejected, Is.True, "the reuse is refused");
+            Assert.That(
+                refused.Reason,
+                Is.EqualTo(TransactionRejectionReason.SequenceRegression),
+                "by the same name the active half of this gate gives the same reuse");
+            Assert.That(
+                refused.WasApplied,
+                Is.False,
+                "and it reports that this action did not happen, which is the whole point: WasApplied is "
+                    + "what CMP-UI-001 reads to decide whether its action was carried out");
+            Assert.That(
+                refused.ActionId,
+                Is.EqualTo(CommandFixture.AbandonActionId),
+                "the result names the action that was submitted, not the one that was applied earlier");
+            Assert.That(
+                refused.HasAppliedEvent,
+                Is.False,
+                "and carries no domain event, unlike a replay, which carries the earlier one");
+            Assert.That(
+                refused.Detail,
+                Does.Contain(CommandFixture.InstallActionId),
+                "the detail names the action the sequence was spent on, so a caller can see the collision");
+            Assert.That(
+                refused.Detail,
+                Does.Contain("fresh sequence"),
+                "and says what to do instead, because the history is never evicted and refreshing the view "
+                    + "cannot help");
+            Assert.That(
+                fixture.Gate.TransactionRejectionCount(TransactionRejectionReason.AlreadyApplied),
+                Is.Zero,
+                "it is not counted as a replay");
+            Assert.That(
+                fixture.Gate.TransactionRejectionCount(TransactionRejectionReason.SequenceRegression),
+                Is.EqualTo(1L),
+                "it is counted as the regression it is");
+            Assert.That(
+                fixture.Publisher.LatestVersion,
+                Is.EqualTo(snapshotBefore),
+                "nothing was published");
+            Assert.That(
+                fixture.DomainEvents.AppendedInRun,
+                Is.EqualTo(appendedBefore),
+                "and no domain event was emitted");
+            Assert.That(
+                fixture.DomainValidatorInvocations,
+                Is.EqualTo(validatorCallsBefore),
+                "the domain rule was not consulted: the refusal precedes registration and confirmation");
+        });
+
+        // The contrast that keeps the refusal specific: the same key with the same action is still a replay,
+        // and the same different action under a fresh key is applied.
+        PausedTransactionResult replay = fixture.Apply(
+            CommandFixture.InstallRequest(fixture.Gate.TransactionStateVersion, sharedSequence));
+        PausedTransactionResult freshKey = fixture.Apply(
+            CommandFixture
+                .UnconfirmedAbandonRequest(fixture.Gate.TransactionStateVersion, sharedSequence + 1)
+                .WithConfirmationToken(CommandFixture.ConfirmationToken));
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                replay.Reason,
+                Is.EqualTo(TransactionRejectionReason.AlreadyApplied),
+                "the same action under the spent key is still the replay VER-SIM-004-009 requires");
+            Assert.That(replay.WasApplied, Is.True, "and still reports that the action happened");
+            Assert.That(
+                replay.ReportsTheSameApplicationAs(installed),
+                Is.True,
+                "carrying the first result through unchanged");
+            Assert.That(
+                freshKey.IsAccepted,
+                Is.True,
+                "and the refused action applies under a fresh sequence, so the refusal was about the key "
+                    + "rather than about the action");
+        });
+    }
+
+    /// <summary>
     /// Verification: <c>VER-SIM-004-010</c>.
     ///
     /// An accepted transaction publishes its replacement snapshot inside the call, before the caller can clear
@@ -368,6 +504,100 @@ internal sealed class PausedTransactionTests
     {
         AssertAThrowingStagingCallbackInvalidatesTheTick();
         AssertADomainBufferOpenForAnotherTickInvalidatesTheTick();
+    }
+
+    /// <summary>
+    /// Verification: <c>VER-SIM-004-013</c>.
+    ///
+    /// A commit that fails after it has opened the presentation buffer discards that buffer, releases the
+    /// domain buffer it opened and left empty, invalidates its tick, and leaves the run able to continue.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The third mid-commit route, and the only one that reaches the recovery's presentation-buffer branch.
+    /// The other two fail before <c>PresentationEventBuffer.BeginTick</c> is ever called, so the buffer is
+    /// closed either way and deleting the discard changed nothing they assert. Here the commit opens it and
+    /// then fails, which is the case doc 20 § Mid-commit invalidation rules on: the buffers this commit
+    /// "itself opened and left with nothing unconsumed" are released, and presentation records are
+    /// disposable, so this one is discarded outright rather than kept as evidence.
+    /// </para>
+    /// <para>
+    /// The failure is injected through the staging callback - the one outward call a commit makes - opening
+    /// the presentation buffer for another tick. That is a caller defect, which is what the recovery path
+    /// exists for; nothing internal is reached for and no production type is stubbed.
+    /// </para>
+    /// </remarks>
+    [Test]
+    public void AFailedCommitDiscardsThePresentationBufferItOpened()
+    {
+        CommandFixture fixture = new();
+        OpenAPauseAfterOneTick(fixture);
+
+        string before = fixture.Gate.RenderAuthoritative();
+        SnapshotVersion snapshotBefore = fixture.Publisher.LatestVersion;
+        long versionBefore = fixture.Gate.TransactionStateVersion;
+        long appendedBefore = fixture.DomainEvents.AppendedInRun;
+        long invalidatedBefore = fixture.Publisher.InvalidatedTickCount;
+
+        PausedTransactionRequest request = CommandFixture.InstallRequest(
+            versionBefore,
+            clientCommandSequence: 302);
+
+        fixture.StagingOpensThePresentationBuffer = true;
+        InvalidOperationException failure = Expect.Throws<InvalidOperationException>(
+            () => fixture.Apply(request));
+        fixture.StagingOpensThePresentationBuffer = false;
+
+        string after = fixture.Gate.RenderAuthoritative();
+
+        CommandContractAssertions.NothingAuthoritativeChanged(
+            "a commit that failed after opening the presentation buffer",
+            before,
+            after);
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                failure.Message,
+                Does.Contain(CommandFixture.StrayPresentationTick.ToString(
+                    System.Globalization.CultureInfo.InvariantCulture)),
+                "the presentation buffer must be what refused, so the failure is the one this route injects");
+            Assert.That(
+                fixture.PresentationEvents.IsOpenForTick,
+                Is.False,
+                "the presentation buffer this commit opened must be discarded, or the next tick cannot open "
+                    + "one and the run wedges on a buffer nobody owns");
+            Assert.That(
+                fixture.DomainEvents.IsOpenForTick,
+                Is.False,
+                "and the domain buffer this commit opened and left empty is released");
+            Assert.That(
+                fixture.Publisher.IsTickOpen,
+                Is.False,
+                "the tick the commit opened must not be left open");
+            Assert.That(
+                fixture.Publisher.InvalidatedTickCount,
+                Is.EqualTo(invalidatedBefore + 1),
+                "it must be invalidated and counted");
+            Assert.That(
+                fixture.Publisher.LatestVersion,
+                Is.EqualTo(snapshotBefore),
+                "nothing was published");
+            Assert.That(
+                fixture.Gate.TransactionStateVersion,
+                Is.EqualTo(versionBefore),
+                "the authoritative state version did not advance");
+            Assert.That(
+                fixture.DomainEvents.AppendedInRun,
+                Is.EqualTo(appendedBefore),
+                "and no domain event reached the buffer, because the failure preceded the append");
+            Assert.That(
+                fixture.Gate.AbandonedCommitCount,
+                Is.EqualTo(1L),
+                "and the gate recorded the abandoned commit");
+        });
+
+        AssertTheRunCanContinueAfterTheAbandonedCommit(fixture, request, expectedAbandonedCommits: 1L);
     }
 
     /// <summary>

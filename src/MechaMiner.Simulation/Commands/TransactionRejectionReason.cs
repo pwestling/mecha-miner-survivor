@@ -66,4 +66,35 @@ public enum TransactionRejectionReason
     /// The last check before any mutation, so a domain refusal is still a rejection with no mutation.
     /// </remarks>
     DomainRefused = 5,
+
+    /// <summary>
+    /// The client command sequence was already spent applying a <em>different</em> action, so reusing it
+    /// here would make the run's command sequence ambiguous.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Named after the active half's refusal for the same ambiguity, deliberately.</b>
+    /// <see cref="CommandRejectionReason.SequenceRegression"/> already refuses an envelope whose sequence
+    /// "was already spent" on another tick, on the grounds that reusing it "would make the run's command
+    /// sequence ambiguous". <c>CMP-SIM-002</c> is one component with one sequence space
+    /// (<c>docs/technical/115-component-contract-and-schema-registry.md</c> § Component registry gives it
+    /// one row of "admitted sequence/idempotency history"), so the same reuse gets the same name on the
+    /// paused side.
+    /// </para>
+    /// <para>
+    /// <b>Not <see cref="AlreadyApplied"/>.</b> That reason reports a result that <em>was</em> applied and
+    /// makes <see cref="PausedTransactionResult.WasApplied"/> true, which doc 115 § Cross-boundary contract
+    /// registry's <c>CMP-UI-001</c> reads to decide whether its action happened. The action this request
+    /// names did not happen, so answering with the earlier action's result would tell the caller that a
+    /// thing it never submitted had been done.
+    /// </para>
+    /// <para>
+    /// <b>Not <see cref="StaleExpectedStateVersion"/>.</b> That reason means "refresh your view and
+    /// resubmit", and it is the caller's remedy. Refreshing the view does not help here: the sequence is
+    /// spent for the whole run, because the applied-transaction history is never evicted, so the intent has
+    /// to be resubmitted under a fresh sequence. Reporting a version problem would send the caller round a
+    /// loop that cannot terminate.
+    /// </para>
+    /// </remarks>
+    SequenceRegression = 6,
 }

@@ -56,6 +56,18 @@ internal sealed class CommandFixture
     internal const string StagingFailureMessage =
         "the staging callback refused to stage the replacement state";
 
+    /// <summary>
+    /// The tick <see cref="StageReplacementState"/> opens the presentation buffer for while
+    /// <see cref="StagingOpensThePresentationBuffer"/> is set.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately not the tick a transaction commits over, so the commit's own
+    /// <c>PresentationEventBuffer.BeginTick</c> refuses and the failure lands after the buffer has been
+    /// opened during the commit. That is the only position from which the recovery's presentation-buffer
+    /// branch is reachable at all.
+    /// </remarks>
+    internal const long StrayPresentationTick = 41L;
+
     private HudViewModel _hud;
     private int _stagedStep;
 
@@ -135,6 +147,17 @@ internal sealed class CommandFixture
     /// open and nothing has been staged into it.
     /// </remarks>
     internal bool StagingThrows { get; set; }
+
+    /// <summary>
+    /// Whether <see cref="StageReplacementState"/> opens the presentation buffer for
+    /// <see cref="StrayPresentationTick"/> instead of leaving it alone.
+    /// </summary>
+    /// <remarks>
+    /// A caller defect, injected through the one outward call a commit makes, so that the commit fails
+    /// after it has opened the presentation buffer itself. Every other injected failure fails earlier and
+    /// leaves that buffer untouched, which is why the recovery's presentation branch had no test.
+    /// </remarks>
+    internal bool StagingOpensThePresentationBuffer { get; set; }
 
     /// <summary>Builds an envelope for this run session.</summary>
     /// <param name="targetTick">The tick the intent is for.</param>
@@ -234,6 +257,11 @@ internal sealed class CommandFixture
         if (StagingThrows)
         {
             throw new InvalidOperationException(StagingFailureMessage);
+        }
+
+        if (StagingOpensThePresentationBuffer)
+        {
+            PresentationEvents.BeginTick(StrayPresentationTick);
         }
 
         _stagedStep++;

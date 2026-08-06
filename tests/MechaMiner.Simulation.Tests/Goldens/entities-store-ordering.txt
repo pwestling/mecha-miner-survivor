@@ -2,24 +2,78 @@
 #
 # Rule under test: doc 20 § Entity identity - "Stable ordering uses the full
 # entity ID after a system's authored priority keys." Ordering is therefore
-# authored priority key ascending, then run session, then storage index, then
-# generation.
+# authored priority key ascending, then storage index, then generation, within
+# one run session.
 #
-# Fixture: PopulationCategory.Pickup, run session 0x9F0C0001, map manifest of 63
-# mining sites and 40 static world objects, so the Pickup slot partition begins at
-# index 3885. Eight records are admitted with priority keys
-# 30,10,20,10,30,10,20,20 in that order, then the third-admitted record is removed.
-# The removal is a swap-remove, so the dense storage order afterwards is neither
-# admission order nor key order; the order below can only come from the comparison.
+# Storage index precedes generation because it is the only component that
+# discriminates among simultaneously-live entities; generation exists to order
+# records that share a recycled slot. Doc 20 § Entity identity gives the ID two
+# components - "a reusable storage index and a generation" - and treats the run
+# session as the uniqueness scope: "IDs are unique only within one run session".
+# Every case below holds the session constant, so no comparison here crosses
+# sessions.
 #
-# Derived by: the documented rule read off doc 20, cross-checked against an
-# independent list sort in PackedEntityStoreTests, not by accepting whatever the
-# store emitted.
+# Storage indices are rendered partition-relative as pickup+N, where N is the
+# offset from the first slot of the Pickup partition. The partition offset itself
+# is computed by the fixture from the doc 20 § Authoritative population
+# categories capacity table, never written down as a literal. Three rows above
+# Pickup - enemy projectile, weapon actor, damage zone - are doc 22 §
+# Performance and capacity ceilings and move whenever doc 22 moves, so an
+# absolute index here would make this ordering golden fail for a capacity reason
+# that has nothing to do with ordering.
 #
-  0  priority=    10  entity:3886/g1@run2668363777
-  1  priority=    10  entity:3888/g1@run2668363777
-  2  priority=    10  entity:3890/g1@run2668363777
-  3  priority=    20  entity:3891/g1@run2668363777
-  4  priority=    20  entity:3892/g1@run2668363777
-  5  priority=    30  entity:3885/g1@run2668363777
-  6  priority=    30  entity:3889/g1@run2668363777
+# Three cases, so that each component is the sole discriminator in at least one
+# of them and no component is dead:
+#
+# 1. live-store-tied-priority-keys - sole discriminator: storage index.
+#    PopulationCategory.Pickup, run session 0x9F0C0001, map manifest of 63 mining
+#    sites and 40 static world objects. Eight records are admitted with priority
+#    keys 30,10,20,10,30,10,20,20 in that order, then the third-admitted record
+#    is removed. The removal is a swap-remove, so the dense storage order
+#    afterwards is neither admission order nor key order. Every survivor is
+#    simultaneously live, so every survivor has a distinct storage index and all
+#    share generation 1: within a tied priority band the storage index is the
+#    only component that can decide anything. This case is therefore blind to a
+#    comparator that orders generation before storage index - case 2 exists to
+#    catch that, and the negative control asserts this blindness rather than
+#    leaving it implied.
+#
+# 2. retained-recycled-slot - sole discriminator: generation.
+#    A retained record set, not a live store: a live store cannot produce this
+#    shape, because two simultaneously-live entities have distinct storage
+#    indices by construction. The record sets that legitimately hold a slot's
+#    earlier occupant alongside the occupant that recycled it are recovery
+#    snapshots, persisted history, and retained diagnostic or statistics
+#    records. Slot 4 carries three generations at one priority key, so generation
+#    is the only component that can order them. Slot 2 carries generation 7,
+#    higher than any of them, and still sorts first: that is the direct proof
+#    that storage index precedes generation rather than the other way round.
+#
+# 3. retained-tied-priority-keys - sole discriminator: storage index, with the
+#    priority key shown to lead. All three records share generation 4, so
+#    generation can decide nothing. Two share priority key 5 and differ only in
+#    storage index. The third has priority key 42 and storage index 3, which
+#    falls between the other two, so it sorts last despite its middle index.
+#
+# Derived by: the documented rule read off doc 20, computed in an independent
+# Python reference before any C# ran, and cross-checked against an independent
+# list sort in PackedEntityStoreTests. Not by accepting whatever the store
+# emitted.
+#
+## case live-store-tied-priority-keys: sole discriminator = storage index
+  0  priority=    10  pickup+1/g1@run2668363777
+  1  priority=    10  pickup+3/g1@run2668363777
+  2  priority=    10  pickup+5/g1@run2668363777
+  3  priority=    20  pickup+6/g1@run2668363777
+  4  priority=    20  pickup+7/g1@run2668363777
+  5  priority=    30  pickup+0/g1@run2668363777
+  6  priority=    30  pickup+4/g1@run2668363777
+## case retained-recycled-slot: sole discriminator = generation
+  0  priority=    10  pickup+2/g7@run2668363777
+  1  priority=    10  pickup+4/g1@run2668363777
+  2  priority=    10  pickup+4/g2@run2668363777
+  3  priority=    10  pickup+4/g3@run2668363777
+## case retained-tied-priority-keys: sole discriminator = storage index
+  0  priority=     5  pickup+2/g4@run2668363777
+  1  priority=     5  pickup+9/g4@run2668363777
+  2  priority=    42  pickup+3/g4@run2668363777

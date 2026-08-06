@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using MechaMiner.Simulation.Entities;
@@ -67,10 +68,24 @@ internal sealed class EventOrderingPropertyTests
         DomainEventBuffer buffer = new(initialCapacity: 2, hardMaximumCapacity: 512);
         buffer.BeginTick(3);
 
+        // The emitting phases are sorted before sequences are assigned, because the sequence is
+        // issued at emission and emission happens in phase order: a batch whose phase decreases as
+        // the sequence rises is an input the simulation cannot produce, and
+        // EventOrdering.AssertPhaseAgreesWithSequenceWithinTick rejects it by design. Randomizing the
+        // multiset of phases and emitters is the part that carries information; randomizing their
+        // pairing with the sequence would only generate illegal inputs.
+        int[] phases = new int[emissions.Length];
+        for (int index = 0; index < emissions.Length; index++)
+        {
+            phases[index] = 1 + (emissions[index] % EventProvenance.LastSystemPhase);
+        }
+
+        Array.Sort(phases);
+
         List<DomainEvent> emitted = new(emissions.Length);
         for (int index = 0; index < emissions.Length; index++)
         {
-            int phase = 1 + (emissions[index] % EventProvenance.LastSystemPhase);
+            int phase = phases[index];
             EntityId emitter = emitters[(emissions[index] / EventProvenance.LastSystemPhase) % emitters.Length];
             DomainEvent record = EventFixture.Domain(
                 emissions[index] % 2 == 0 ? EventFixture.EntityDefeated : EventFixture.ResourceAwarded,
@@ -140,38 +155,16 @@ internal sealed class EventOrderingPropertyTests
     /// <summary>
     /// A deliberately simple comparison over the documented keys, independent of <c>EventOrdering</c>.
     /// </summary>
+    /// <remarks>
+    /// Two keys: tick then sequence. The emission sequence is per-tick global, so nothing after it
+    /// can discriminate a legal pair - see <c>EventProvenance.Compare</c> for why a phase key or an
+    /// identity key would be unreachable rather than merely redundant.
+    /// </remarks>
     private static int CompareByDocumentedKeys(DomainEvent left, DomainEvent right)
     {
         int byTick = left.Provenance.Tick.CompareTo(right.Provenance.Tick);
-        if (byTick != 0)
-        {
-            return byTick;
-        }
-
-        int byPhase = left.Provenance.SystemPhase.CompareTo(right.Provenance.SystemPhase);
-        if (byPhase != 0)
-        {
-            return byPhase;
-        }
-
-        int bySequence = left.Provenance.Sequence.CompareTo(right.Provenance.Sequence);
-        if (bySequence != 0)
-        {
-            return bySequence;
-        }
-
-        int bySession = left.Provenance.EmittingEntityId.RunSession.CompareTo(
-            right.Provenance.EmittingEntityId.RunSession);
-        if (bySession != 0)
-        {
-            return bySession;
-        }
-
-        int byIndex = left.Provenance.EmittingEntityId.Index.CompareTo(
-            right.Provenance.EmittingEntityId.Index);
-        return byIndex != 0
-            ? byIndex
-            : left.Provenance.EmittingEntityId.Generation.CompareTo(
-                right.Provenance.EmittingEntityId.Generation);
+        return byTick != 0
+            ? byTick
+            : left.Provenance.Sequence.CompareTo(right.Provenance.Sequence);
     }
 }

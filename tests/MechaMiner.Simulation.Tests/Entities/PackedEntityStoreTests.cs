@@ -44,20 +44,67 @@ internal sealed class PackedEntityStoreTests
         + "#\n"
         + "# Rule under test: doc 20 § Entity identity - \"Stable ordering uses the full\n"
         + "# entity ID after a system's authored priority keys.\" Ordering is therefore\n"
-        + "# authored priority key ascending, then run session, then storage index, then\n"
-        + "# generation.\n"
+        + "# authored priority key ascending, then storage index, then generation, within\n"
+        + "# one run session.\n"
         + "#\n"
-        + "# Fixture: PopulationCategory.Pickup, run session 0x9F0C0001, map manifest of 63\n"
-        + "# mining sites and 40 static world objects, so the Pickup slot partition begins at\n"
-        + "# index 3885. Eight records are admitted with priority keys\n"
-        + "# 30,10,20,10,30,10,20,20 in that order, then the third-admitted record is removed.\n"
-        + "# The removal is a swap-remove, so the dense storage order afterwards is neither\n"
-        + "# admission order nor key order; the order below can only come from the comparison.\n"
+        + "# Storage index precedes generation because it is the only component that\n"
+        + "# discriminates among simultaneously-live entities; generation exists to order\n"
+        + "# records that share a recycled slot. Doc 20 § Entity identity gives the ID two\n"
+        + "# components - \"a reusable storage index and a generation\" - and treats the run\n"
+        + "# session as the uniqueness scope: \"IDs are unique only within one run session\".\n"
+        + "# Every case below holds the session constant, so no comparison here crosses\n"
+        + "# sessions.\n"
         + "#\n"
-        + "# Derived by: the documented rule read off doc 20, cross-checked against an\n"
-        + "# independent list sort in PackedEntityStoreTests, not by accepting whatever the\n"
-        + "# store emitted.\n"
+        + "# Storage indices are rendered partition-relative as pickup+N, where N is the\n"
+        + "# offset from the first slot of the Pickup partition. The partition offset itself\n"
+        + "# is computed by the fixture from the doc 20 § Authoritative population\n"
+        + "# categories capacity table, never written down as a literal. Three rows above\n"
+        + "# Pickup - enemy projectile, weapon actor, damage zone - are doc 22 §\n"
+        + "# Performance and capacity ceilings and move whenever doc 22 moves, so an\n"
+        + "# absolute index here would make this ordering golden fail for a capacity reason\n"
+        + "# that has nothing to do with ordering.\n"
+        + "#\n"
+        + "# Three cases, so that each component is the sole discriminator in at least one\n"
+        + "# of them and no component is dead:\n"
+        + "#\n"
+        + "# 1. live-store-tied-priority-keys - sole discriminator: storage index.\n"
+        + "#    PopulationCategory.Pickup, run session 0x9F0C0001, map manifest of 63 mining\n"
+        + "#    sites and 40 static world objects. Eight records are admitted with priority\n"
+        + "#    keys 30,10,20,10,30,10,20,20 in that order, then the third-admitted record\n"
+        + "#    is removed. The removal is a swap-remove, so the dense storage order\n"
+        + "#    afterwards is neither admission order nor key order. Every survivor is\n"
+        + "#    simultaneously live, so every survivor has a distinct storage index and all\n"
+        + "#    share generation 1: within a tied priority band the storage index is the\n"
+        + "#    only component that can decide anything. This case is therefore blind to a\n"
+        + "#    comparator that orders generation before storage index - case 2 exists to\n"
+        + "#    catch that, and the negative control asserts this blindness rather than\n"
+        + "#    leaving it implied.\n"
+        + "#\n"
+        + "# 2. retained-recycled-slot - sole discriminator: generation.\n"
+        + "#    A retained record set, not a live store: a live store cannot produce this\n"
+        + "#    shape, because two simultaneously-live entities have distinct storage\n"
+        + "#    indices by construction. The record sets that legitimately hold a slot's\n"
+        + "#    earlier occupant alongside the occupant that recycled it are recovery\n"
+        + "#    snapshots, persisted history, and retained diagnostic or statistics\n"
+        + "#    records. Slot 4 carries three generations at one priority key, so generation\n"
+        + "#    is the only component that can order them. Slot 2 carries generation 7,\n"
+        + "#    higher than any of them, and still sorts first: that is the direct proof\n"
+        + "#    that storage index precedes generation rather than the other way round.\n"
+        + "#\n"
+        + "# 3. retained-tied-priority-keys - sole discriminator: storage index, with the\n"
+        + "#    priority key shown to lead. All three records share generation 4, so\n"
+        + "#    generation can decide nothing. Two share priority key 5 and differ only in\n"
+        + "#    storage index. The third has priority key 42 and storage index 3, which\n"
+        + "#    falls between the other two, so it sorts last despite its middle index.\n"
+        + "#\n"
+        + "# Derived by: the documented rule read off doc 20, computed in an independent\n"
+        + "# Python reference before any C# ran, and cross-checked against an independent\n"
+        + "# list sort in PackedEntityStoreTests. Not by accepting whatever the store\n"
+        + "# emitted.\n"
         + "#\n";
+
+    /// <summary>The name of the golden's first case, the one a live store can produce.</summary>
+    private const string LiveStoreCaseName = "live-store-tied-priority-keys";
 
     /// <summary>The twelve categories doc 20 § Authoritative population categories tabulates, in table order.</summary>
     private static readonly string[] DocumentedCategoryNames =
@@ -226,7 +273,179 @@ internal sealed class PackedEntityStoreTests
                 "the fixture must actually contain tied priority keys");
         });
 
-        GoldenText.Matches("entities-store-ordering.txt", GoldenHeader + fixture.IteratedRendering);
+        GoldenText.Matches(
+            "entities-store-ordering.txt",
+            GoldenHeader
+                + EntityOrderingCases.RenderCase(
+                    LiveStoreCaseName,
+                    "storage index",
+                    fixture.OrderedRecords,
+                    PickupPartitionOffset())
+                + RenderRetainedCases());
+    }
+
+    /// <summary>
+    /// Renders the two golden cases a live store cannot produce, each after checking that its shape
+    /// is what makes its component reachable.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A live store's records are all simultaneously live, so they have distinct storage indices, and
+    /// storage index sorts before generation - so no store fixture of any size reaches the generation
+    /// key. These two cases are retained record sets, where a slot's earlier occupant sits alongside
+    /// the occupant that recycled it: recovery snapshots, persisted history, and retained diagnostic or
+    /// statistics records.
+    /// </para>
+    /// <para>
+    /// Both orders come from the documented comparison over production
+    /// <see cref="EntityId.Compare"/>, and both are asserted to be independent of the arrival order
+    /// they were built in, so the golden records the rule rather than the order the fixture happened to
+    /// list.
+    /// </para>
+    /// </remarks>
+    private static string RenderRetainedCases()
+    {
+        int partitionOffset = PickupPartitionOffset();
+
+        List<EntityOrderingCases.OrderedRecord> recycled =
+            EntityOrderingCases.RetainedRecycledSlot(RunSession, partitionOffset);
+        List<EntityOrderingCases.OrderedRecord> tied =
+            EntityOrderingCases.RetainedTiedPriorityKeys(RunSession, partitionOffset);
+
+        AssertRetainedShape(
+            "retained-recycled-slot",
+            recycled,
+            expectedSharedSlotGenerations: 3,
+            requireDistinctGenerationsOnOneSlot: true);
+        AssertRetainedShape(
+            "retained-tied-priority-keys",
+            tied,
+            expectedSharedSlotGenerations: 1,
+            requireDistinctGenerationsOnOneSlot: false);
+
+        return RenderPermutationIndependentCase("retained-recycled-slot", "generation", recycled, partitionOffset)
+            + RenderPermutationIndependentCase("retained-tied-priority-keys", "storage index", tied, partitionOffset);
+    }
+
+    /// <summary>
+    /// Sorts a retained record set by the documented comparison, asserts a reversed arrival order
+    /// produces the same rendering, and returns it.
+    /// </summary>
+    private static string RenderPermutationIndependentCase(
+        string caseName,
+        string soleDiscriminator,
+        List<EntityOrderingCases.OrderedRecord> records,
+        int partitionOffset)
+    {
+        List<EntityOrderingCases.OrderedRecord> reversed = new(records);
+        reversed.Reverse();
+
+        string rendering = EntityOrderingCases.RenderCase(
+            caseName,
+            soleDiscriminator,
+            EntityOrderingCases.DocumentedSort(records),
+            partitionOffset);
+        string reversedRendering = EntityOrderingCases.RenderCase(
+            caseName,
+            soleDiscriminator,
+            EntityOrderingCases.DocumentedSort(reversed),
+            partitionOffset);
+
+        Assert.That(
+            reversedRendering,
+            Is.EqualTo(rendering),
+            caseName + ": the documented comparison must be a total order over this set, so a "
+                + "reversed arrival order produces the identical result");
+
+        return rendering;
+    }
+
+    /// <summary>
+    /// Asserts that a retained record set really has the shape its case depends on, so the case cannot
+    /// pass vacuously.
+    /// </summary>
+    /// <param name="caseName">The case's name, for failure messages.</param>
+    /// <param name="records">The record set.</param>
+    /// <param name="expectedSharedSlotGenerations">How many generations the most-shared slot must carry.</param>
+    /// <param name="requireDistinctGenerationsOnOneSlot">
+    /// Whether one slot must carry several generations, which is what makes the generation key
+    /// reachable at all.
+    /// </param>
+    private static void AssertRetainedShape(
+        string caseName,
+        List<EntityOrderingCases.OrderedRecord> records,
+        int expectedSharedSlotGenerations,
+        bool requireDistinctGenerationsOnOneSlot)
+    {
+        Dictionary<int, HashSet<uint>> generationsBySlot = new();
+        HashSet<ulong> sessions = new();
+        foreach (EntityOrderingCases.OrderedRecord record in records)
+        {
+            if (!generationsBySlot.TryGetValue(record.Id.Index, out HashSet<uint>? generations))
+            {
+                generations = new HashSet<uint>();
+                generationsBySlot[record.Id.Index] = generations;
+            }
+
+            generations.Add(record.Id.Generation);
+            sessions.Add(record.Id.RunSession);
+        }
+
+        int mostSharedSlot = 0;
+        foreach (KeyValuePair<int, HashSet<uint>> entry in generationsBySlot)
+        {
+            if (entry.Value.Count > mostSharedSlot)
+            {
+                mostSharedSlot = entry.Value.Count;
+            }
+        }
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                sessions,
+                Has.Count.EqualTo(1),
+                caseName + ": every record must share one run session, because doc 20 § Entity "
+                    + "identity makes the session the scope IDs are unique within, not something to "
+                    + "sort by");
+            Assert.That(
+                mostSharedSlot,
+                Is.EqualTo(expectedSharedSlotGenerations),
+                caseName + ": the most-shared storage index must carry exactly this many "
+                    + "generations, or the case is not the shape it claims to be");
+            if (requireDistinctGenerationsOnOneSlot)
+            {
+                Assert.That(
+                    mostSharedSlot,
+                    Is.GreaterThan(1),
+                    caseName + ": one storage index must carry several generations, or the "
+                        + "generation key is unreachable and this case is as vacuous as a live-store "
+                        + "fixture");
+            }
+        });
+    }
+
+    /// <summary>
+    /// The Pickup partition's first slot index, cross-checked between the allocator and an independent
+    /// walk of the capacity table.
+    /// </summary>
+    /// <remarks>
+    /// The golden renders storage indices against this base, so it must be derived and not written
+    /// down: three of the rows summed into it are doc 22 § Performance and capacity ceilings that doc
+    /// 22 reserves the right to move.
+    /// </remarks>
+    private static int PickupPartitionOffset()
+    {
+        EntityIdAllocator allocator = NewAllocator();
+        int computed = EntityOrderingCases.ComputePickupOffsetFromCapacityTable(allocator);
+
+        Assert.That(
+            allocator.SlotOffsetFor(PopulationCategory.Pickup),
+            Is.EqualTo(computed),
+            "the Pickup partition offset must be the running sum of the hard capacities above it in "
+                + "doc 20 § Authoritative population categories order");
+
+        return computed;
     }
 
     /// <summary>
@@ -565,11 +784,22 @@ internal sealed class PackedEntityStoreTests
             }
         }
 
+        int partitionOffset = allocator.SlotOffsetFor(PopulationCategory.Pickup);
+        List<EntityOrderingCases.OrderedRecord> orderedRecords = new(iterated.Count);
+        foreach (EntityId identity in iterated)
+        {
+            orderedRecords.Add(new EntityOrderingCases.OrderedRecord(PriorityKeyOf(identity), identity));
+        }
+
         return new TieFixture(
-            StoreContractAssertions.RenderOrder(iterated, PriorityKeyOf),
-            StoreContractAssertions.RenderOrder(reference, PriorityKeyOf),
-            StoreContractAssertions.RenderOrder(storageOrder, PriorityKeyOf),
-            tiedKeyCount);
+            StoreContractAssertions.RenderOrder(
+                iterated, PriorityKeyOf, EntityOrderingCases.PickupPartitionLabel, partitionOffset),
+            StoreContractAssertions.RenderOrder(
+                reference, PriorityKeyOf, EntityOrderingCases.PickupPartitionLabel, partitionOffset),
+            StoreContractAssertions.RenderOrder(
+                storageOrder, PriorityKeyOf, EntityOrderingCases.PickupPartitionLabel, partitionOffset),
+            tiedKeyCount,
+            orderedRecords);
     }
 
     /// <summary>The three renderings of one tie fixture, plus how many adjacent ties it contains.</summary>
@@ -577,11 +807,16 @@ internal sealed class PackedEntityStoreTests
     /// <param name="ReferenceRendering">What the independent comparison produced.</param>
     /// <param name="StorageRendering">The dense storage order, which must differ from both.</param>
     /// <param name="TiedKeyCount">How many adjacent pairs in the iterated order share a priority key.</param>
+    /// <param name="OrderedRecords">
+    /// The iterated order as key-and-identity pairs, so the golden's first case and the negative
+    /// control's degradation matrix judge the same records the store produced.
+    /// </param>
     private readonly record struct TieFixture(
         string IteratedRendering,
         string ReferenceRendering,
         string StorageRendering,
-        int TiedKeyCount);
+        int TiedKeyCount,
+        List<EntityOrderingCases.OrderedRecord> OrderedRecords);
 
     private static EntityIdAllocator NewAllocator()
     {

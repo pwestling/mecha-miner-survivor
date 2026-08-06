@@ -168,32 +168,44 @@ public readonly struct EventProvenance : IEquatable<EventProvenance>
     }
 
     /// <summary>
-    /// The documented stable order: system phase, then emission sequence, then the full entity ID.
+    /// The documented stable order: tick, then emission sequence. Those are all the keys.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// doc 10 § System phase ordering: "Simultaneous outcomes use documented stable ordering rather
-    /// than collection or thread timing." doc 20 § Entity identity: "Stable ordering uses the full
-    /// entity ID after a system's authored priority keys." The tick leads because a buffer that
-    /// somehow held two ticks must still order them, even though a tick-local buffer never does.
+    /// than collection or thread timing." The tick leads because a buffer that somehow held two
+    /// ticks must still order them, even though a tick-local buffer never does.
+    /// </para>
+    /// <para>
+    /// <b>Why neither the system phase nor the emitting entity ID is a key.</b> The emission
+    /// sequence is per-tick global: <c>CMP-SIM-003</c> issues it monotonically across the whole tick
+    /// regardless of phase or emitter, so <c>(tick, sequence)</c> is a total order by itself. No
+    /// further key can discriminate a legal pair - two events in one tick sharing a sequence is not
+    /// a tie to be broken but an impossible input, a defect in the issuer, and a comparator that
+    /// fell through to a further key would silently give it an order and hide the bug. An earlier
+    /// revision carried both a phase key and an entity-ID key here; both were unreachable for every
+    /// legal input.
+    /// </para>
+    /// <para>
+    /// <b>Removing a key does not mean discarding what made it redundant.</b> Each was redundant for
+    /// a specific reason, and each reason is now a live check rather than an assumption:
+    /// <see cref="EventOrdering.AssertTotalOrder(DomainEvent[], int)"/> fails loudly on a duplicate
+    /// sequence within a tick, and
+    /// <see cref="EventOrdering.AssertPhaseAgreesWithSequenceWithinTick(DomainEvent[], int)"/> fails
+    /// loudly when a phase is out of order against ascending sequence, which is the fact that made
+    /// the phase key redundant in the first place.
+    /// </para>
+    /// <para>
+    /// <b>Scoped to events.</b> doc 20 § Boundary and tie ordering defines a separate five-key sort
+    /// for damage instances - "resolve by system phase, explicit attack sequence, target ID, source
+    /// ID, then insertion sequence" - which does carry phase and identity keys and is untouched by
+    /// the reasoning above. Do not generalise this comparison beyond the event buffers.
+    /// </para>
     /// </remarks>
     public static int Compare(EventProvenance left, EventProvenance right)
     {
         int byTick = left._tick.CompareTo(right._tick);
-        if (byTick != 0)
-        {
-            return byTick;
-        }
-
-        int byPhase = left._systemPhase.CompareTo(right._systemPhase);
-        if (byPhase != 0)
-        {
-            return byPhase;
-        }
-
-        int bySequence = left._sequence.CompareTo(right._sequence);
-        return bySequence != 0
-            ? bySequence
-            : EntityId.Compare(left._emittingEntityId, right._emittingEntityId);
+        return byTick != 0 ? byTick : left._sequence.CompareTo(right._sequence);
     }
 
     /// <summary>Compares two provenances for equality of every component.</summary>

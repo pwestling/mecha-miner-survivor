@@ -109,6 +109,15 @@ internal static class StoreContractAssertions
     {
         Expect.Multiple(() =>
         {
+            // Without this, three empty strings satisfy both assertions below and the gate passes
+            // having compared nothing: a store that iterated zero records would agree with a
+            // reference that sorted zero records. doc 91 § Acceptance evidence wants a gate that can
+            // fail, and a gate that is vacuous on empty input cannot.
+            Assert.That(
+                firstRendering,
+                Is.Not.Empty,
+                subject + ": the fixture must render at least one record, or this assertion compares "
+                    + "nothing and passes whatever the ordering rule does");
             Assert.That(
                 secondRendering,
                 Is.EqualTo(firstRendering),
@@ -124,31 +133,64 @@ internal static class StoreContractAssertions
     }
 
     /// <summary>
-    /// Renders an ordered identity sequence as canonical invariant text.
+    /// Renders an ordered identity sequence as canonical invariant text, with storage indices
+    /// relative to their partition.
     /// </summary>
     /// <param name="identifiers">The identities in the order observed.</param>
     /// <param name="priorityKeyOf">Reads the authored priority key an identity was admitted with.</param>
+    /// <param name="partitionLabel">The partition's short name, such as <c>pickup</c>.</param>
+    /// <param name="partitionOffset">
+    /// The partition's first slot index, computed from the capacity table by the caller.
+    /// </param>
+    /// <exception cref="ArgumentOutOfRangeException">An identity lies below <paramref name="partitionOffset"/>.</exception>
     /// <remarks>
+    /// <para>
     /// Includes the priority key so a golden diff shows <em>why</em> an order changed rather
     /// than only that it did, which doc 91 § Determinism and fixture policy means by
     /// "reviewable".
+    /// </para>
+    /// <para>
+    /// <b>Partition-relative, not absolute.</b> A partition offset is the running sum of the hard
+    /// capacities above it in doc 20 § Authoritative population categories order, and three of
+    /// those rows - enemy projectile, weapon actor, damage zone - are
+    /// <c>docs/technical/22-combat-and-weapon-runtime.md</c> § Performance and capacity ceilings that
+    /// section reserves the right to move: "Profiling and legal maximum-output analysis must tighten
+    /// or expand them before content complete." An absolute index in an <em>ordering</em> golden
+    /// therefore fails whenever a combat capacity moves, which is an uninformative failure about
+    /// something the golden does not test - and an uninformative golden failure is what gets a
+    /// golden regenerated instead of investigated. Rendering <c>pickup+1</c> makes the file depend on
+    /// the ordering rule alone.
+    /// </para>
     /// </remarks>
     internal static string RenderOrder(
         System.Collections.Generic.IReadOnlyList<EntityId> identifiers,
-        Func<EntityId, long> priorityKeyOf)
+        Func<EntityId, long> priorityKeyOf,
+        string partitionLabel,
+        int partitionOffset)
     {
         ArgumentNullException.ThrowIfNull(identifiers);
         ArgumentNullException.ThrowIfNull(priorityKeyOf);
+        ArgumentException.ThrowIfNullOrWhiteSpace(partitionLabel);
 
         System.Text.StringBuilder builder = new();
         for (int index = 0; index < identifiers.Count; index++)
         {
+            EntityId identity = identifiers[index];
+            int relative = identity.Index - partitionOffset;
+            ArgumentOutOfRangeException.ThrowIfNegative(relative, nameof(identifiers));
+
             builder
                 .Append(index.ToString(CultureInfo.InvariantCulture).PadLeft(3))
                 .Append("  priority=")
-                .Append(priorityKeyOf(identifiers[index]).ToString(CultureInfo.InvariantCulture).PadLeft(6))
+                .Append(priorityKeyOf(identity).ToString(CultureInfo.InvariantCulture).PadLeft(6))
                 .Append("  ")
-                .Append(identifiers[index].ToString())
+                .Append(partitionLabel)
+                .Append('+')
+                .Append(relative.ToString(CultureInfo.InvariantCulture))
+                .Append("/g")
+                .Append(identity.Generation.ToString(CultureInfo.InvariantCulture))
+                .Append("@run")
+                .Append(identity.RunSession.ToString(CultureInfo.InvariantCulture))
                 .Append('\n');
         }
 

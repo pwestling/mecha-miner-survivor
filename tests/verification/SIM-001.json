@@ -432,6 +432,40 @@
       ],
       "tier": "main",
       "status": "registered"
+    },
+    {
+      "id": "VER-SIM-001-014",
+      "summary": "The compiled MechaMiner.Simulation assembly's metadata references no wall-clock, nondeterministic-source, or engine API: a TypeReference and MemberReference scan of the built assembly fails on System.DateTime (including get_Now and get_UtcNow), System.DateTimeOffset, System.Diagnostics.Stopwatch, System.Environment.TickCount and TickCount64, System.Random, System.Guid.NewGuid, or any type in a Godot* namespace, so the check is over what the assembly actually references rather than over source text and the route used to reach the API is irrelevant.",
+      "task": "TASK-SIM-001-001",
+      "requirements": [
+        "TR-RUN-002",
+        "TR-CTR-001",
+        "TR-QUA-001"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#scope-and-invariants",
+        "docs/technical/10-runtime-architecture.md#clock-domains",
+        "docs/technical/91-verification-strategy.md#acceptance-evidence"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Support.SimulationAssemblyDeterminismTests.TheCompiledAssemblyReferencesNoForbiddenDeterminismApi"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output",
+        "negative-control"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
     }
   ]
 }

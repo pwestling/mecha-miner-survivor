@@ -317,7 +317,8 @@
       },
       "fixtures": [
         "tests/MechaMiner.Content.Tests/Fixtures/categories/enemies/valid-enemy.json",
-        "tests/MechaMiner.Content.Tests/Fixtures/categories/enemies/invalid-derived-contact-diameter.json"
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/enemies/invalid-derived-contact-diameter.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/enemies/invalid-derived-center-distance.json"
       ],
       "scenarios": [],
       "evidenceKinds": [
@@ -423,7 +424,8 @@
       },
       "fixtures": [
         "tests/MechaMiner.Content.Tests/Fixtures/categories/enemies/valid-elite-modifiers.json",
-        "tests/MechaMiner.Content.Tests/Fixtures/categories/enemies/invalid-elite-field-on-enemy.json"
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/enemies/invalid-elite-field-on-enemy.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/enemies/invalid-enemy-field-on-elite.json"
       ],
       "scenarios": [],
       "evidenceKinds": [
@@ -618,7 +620,7 @@
     },
     {
       "id": "VER-DAT-002-018",
-      "summary": "WAV-01 carries exactly 35 minute rows whose minute values are the contiguous integers 0 through 34. The route compares the parsed minute field of each row against its array index, so a row out of order, a duplicated minute, and a gap are all caught; an array of the right length with the right values in the wrong array order fails, because the canonical writer emits semantically ordered arrays in authored order.",
+      "summary": "WAV-01 holds one minute row per minute of the run and their minute values are the contiguous integers from zero. The route compares the row count against the schedule's own duration_minutes rather than against the constant 35, so raising one without the other fails from both directions; and it compares each row's parsed minute against its array index, so a row out of order, a duplicated minute, and a gap are all caught. A correct row count with the rows in the wrong array order fails, because the canonical writer emits semantically ordered arrays in authored order.",
       "task": "TASK-DAT-002-001",
       "requirements": [
         "TR-DAT-001",
@@ -725,7 +727,7 @@
     },
     {
       "id": "VER-DAT-002-021",
-      "summary": "MGC-01's internal feasibility is checked before any map is sampled: every authored range has its lower bound no greater than its upper bound, and every three-valued target range has target within min and max. The route walks the declared range fields by name, so a range shape that is added without being registered is not covered; the schema's additionalProperties:false is what prevents that from happening silently.",
+      "summary": "MGC-01's internal feasibility is checked before any map is sampled. The route walks the range fields the typed model reads by name - the world scale's region count and its two traversable-diameter target ranges, the three distance bands in both units, the nearest-seam travel band, and the visible-opportunity target band - and requires each lower bound to be no greater than its upper, each three-valued range's target to lie between its bounds, and the target ceiling on visible opportunities to be no greater than the hard ceiling. What the route does not cover is a range the typed model does not read: the optional-pocket count, the obstacle-coverage target band, and the rock spawn-distance band are structurally validated but their bounds are not compared to each other, and closing that gap means surfacing them on the model.",
       "task": "TASK-DAT-002-001",
       "requirements": [
         "TR-DAT-001",

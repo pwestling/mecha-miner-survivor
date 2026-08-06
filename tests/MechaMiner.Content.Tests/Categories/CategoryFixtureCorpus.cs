@@ -97,11 +97,15 @@ internal static class CategoryFixtureCorpus
             ContentDiagnosticCodes.UnknownField),
         Bad("enemies/invalid-derived-contact-diameter.json", DefinitionKind.Enemy,
             ContentDiagnosticCodes.DerivedValueAuthored),
+        Bad("enemies/invalid-derived-center-distance.json", DefinitionKind.Enemy,
+            ContentDiagnosticCodes.DerivedValueAuthored),
         Bad("enemies/invalid-derived-world-speed.json", DefinitionKind.Enemy,
             ContentDiagnosticCodes.DerivedValueAuthored),
         Bad("enemies/invalid-behavior-kind-prose.json", DefinitionKind.Enemy,
             ContentDiagnosticCodes.BehaviorTokenMalformed),
         Bad("enemies/invalid-elite-field-on-enemy.json", DefinitionKind.Enemy,
+            ContentDiagnosticCodes.UnknownField),
+        Bad("enemies/invalid-enemy-field-on-elite.json", DefinitionKind.EliteModifiers,
             ContentDiagnosticCodes.UnknownField),
 
         // --- bosses ---------------------------------------------------------

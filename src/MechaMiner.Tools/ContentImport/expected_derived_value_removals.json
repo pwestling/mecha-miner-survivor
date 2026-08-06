@@ -1836,7 +1836,7 @@
         "content/bosses/"
       ],
       "count_restored": 32,
-      "pulled_because": "THREE WRITERS ON ONE REPORT AND NO SETTLED AUTHORITY, so deleting a copy would silently decide which survivor is authoritative - a decision nobody has made, taken as a side effect of a deduplication pass. The three are docs/data/contact-damage-pressure.csv, the content block, and the compiler that 40:19 and 40:114 say derives the report. All 32 restored. Removing a redundant copy and choosing an authority are different acts and only the first was authorised. NOTE the earlier argument here - that removal would make 40:114's comparison a tautology - is WITHDRAWN: the CSV supplies an independent comparand regardless, all 28 overlapping values agreeing exactly, and A30 now asserts that agreement. The withdrawn version depended on no other mirror existing; this one does not."
+      "pulled_because": "THREE WRITERS ON ONE REPORT AND NO SETTLED AUTHORITY, so deleting a copy would silently decide which survivor is authoritative - a decision nobody has made, taken as a side effect of a deduplication pass. The three are docs/data/contact-damage-pressure.csv, the content block, and the compiler that docs/40 sections 'Source-of-truth boundary' and 'Enemies and bosses' say derives the report. All 32 restored. Removing a redundant copy and choosing an authority are different acts and only the first was authorised. NOTE the earlier argument here - that removal would make the docs/40 section 'Enemies and bosses' comparison a tautology - is WITHDRAWN: the CSV supplies an independent comparand regardless, all 28 overlapping values agreeing exactly, and A30 now asserts that agreement. The withdrawn version depended on no other mirror existing; this one does not."
     },
     {
       "name": "resonant-value hit count",
@@ -1845,7 +1845,7 @@
         "content/bosses/"
       ],
       "count_restored": 5,
-      "pulled_because": "Same reason as the damage-pressure block: these five are rows of the same survivability report, which 72:167 also states in full, so removing them would decide an unsettled authority question by side effect. All 5 restored."
+      "pulled_because": "Same reason as the damage-pressure block: these five are rows of the same survivability report, which docs/72 section 'Damage Pressure Reference' also states in full, so removing them would decide an unsettled authority question by side effect. All 5 restored."
     },
     {
       "name": "stat upgrade price curve",
@@ -1856,6 +1856,14 @@
       "pulled_because": "MOVES CHECKABLE NUMBERS INTO AN UNCHECKED STRING, which is strictly worse than leaving them. All 14 values are still stated in the same file, in prose: `defining_prose` reads 'The first ten prices are 10, 30, 60, 100, 150, 210, 280, 360, 450, and 550 ore. Cumulative cost reaches 100 after three purchases, 200 after four, 350 after five, and 2,200 after ten.' A28 matches numeric leaves, so removing the leaves moved 14 checkable numbers somewhere no assertion looks. Editing the prose is NOT the fix and was not done: that sentence is a verified doc quotation in the quote-evidence artifact, so rewriting its numerals would falsify the citation while every validator stayed green. Whether the prose should stop restating derived numbers is a separate decision and not one to take inside a removal pass. All 14 restored."
     }
   ],
+  "search_radius_measurement": {
+    "definition": "A (removed value, numeric leaf) pair counts when the leaf holds the removed value EXACTLY, is not the removed leaf itself, and is not one of that value's own operands in that file. One definition, three radii, measured on fefb7a359041 - so the three numbers are comparable and reproduce from this file. Earlier revisions quoted 55 at file radius and 400 at scope radius; neither reproduced, because no code computed them.",
+    "site_radius_pairs": 1,
+    "file_radius_pairs": 40,
+    "scope_radius_pairs": 668,
+    "declared_exceptions": 1,
+    "conclusion": "Ratio 1 : 40 : 668. Widening the radius to the file would need 39 more hand-written exceptions and to the scope 667 more, almost all magnitude coincidences between unrelated quantities. That is the reason the radius is the derivation site, and the reason relocation OUT of the site is a stated limit rather than a fixable one."
+  },
   "value_collision_exceptions": [
     {
       "file": "content/utilities/UTL-R1.json",
@@ -2443,7 +2451,7 @@
   ],
   "retained_because_operand": {
     "content/powerups/*::total_cost_hyper_gold": "Derived (it is the last cumulative cost, and the sum of the rank prices) but RETAINED. It carries its own citation - `total_cost_hyper_gold: DEC-120#decision` - and it is the operand A14's second row checks when it sums the 13 per-entry totals to the doc-stated 9,450. Removing it would delete an assertion's input to delete a redundancy.",
-    "content/enemies|bosses/*::resonant_damage_reference.resonant_damage": "Reproduces for all 5 as ceil(base_damage x 1.20), and RETAINED because it is the operand the removed fresh_mech_hits_to_defeat_at_resonant_value derives from. CORRECTION to this note's earlier claim that 'no line in docs/ states the rounding': the rounding IS stated. docs/72 section 'Incoming Damage Resolution' step 3 says 'Round the result up to the next whole Hull point', immediately after step 2 'Multiply listed base damage by current attacker-side damage modifiers' - that is exactly ceil(base x modifier). 72:126 shows it worked (38 x 1.20 = 45.6, rounded up to 46) and docs/61 section 'Geode resonance behavior' states the 20% modifier. ceil is also the ONLY rounding that reproduces all five: 32.4 -> 33 and 43.2 -> 44 rule out both floor and round-half. So resonant_damage is fully documented arithmetic, and whether it is removable turns only on whether a docs/ line assigns ITS recomputation to the compiler - not on a missing rounding clause.",
+    "content/enemies|bosses/*::resonant_damage_reference.resonant_damage": "Reproduces for all 5 as ceil(base_damage x 1.20), and RETAINED because it is the operand the removed fresh_mech_hits_to_defeat_at_resonant_value derives from. CORRECTION to this note's earlier claim that 'no line in docs/ states the rounding': the rounding IS stated. docs/72 section 'Incoming Damage Resolution' step 3 says 'Round the result up to the next whole Hull point', immediately after step 2 'Multiply listed base damage by current attacker-side damage modifiers' - that is exactly ceil(base x modifier). The same section shows it worked (38 x 1.20 = 45.6, rounded up to 46) and docs/61 section 'Geode resonance behavior' states the 20% modifier. ceil is also the ONLY rounding that reproduces all five: 32.4 -> 33 and 43.2 -> 44 rule out both floor and round-half. So resonant_damage is fully documented arithmetic, and whether it is removable turns only on whether a docs/ line assigns ITS recomputation to the compiler - not on a missing rounding clause.",
     "content/mining-sites/*::abundance_states[].geodes_on_map": "Authored survey states (Scarce 8 / Moderate 9 / Rich 10) and the operand range the removed geodes_per_standard_map bounds are built from. Retained.",
     "content/enemies|bosses/*::movement_speed.percent_of_mech_base_speed.percent": "The authored half of the world speed. Retained - it is the operand.",
     "content/utilities/*::acquisition.rank_ore_costs[]": "The authored per-rank ore prices. Retained - they are the operands of the removed total.",

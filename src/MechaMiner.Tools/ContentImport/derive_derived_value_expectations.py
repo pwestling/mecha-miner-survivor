@@ -99,7 +99,8 @@ RETAINED_BECAUSE_OPERAND = {
         "note's earlier claim that 'no line in docs/ states the rounding': the rounding IS stated. "
         "docs/72 section 'Incoming Damage Resolution' step 3 says 'Round the result up to the next whole "
         "Hull point', immediately after step 2 'Multiply listed base damage by current "
-        "attacker-side damage modifiers' - that is exactly ceil(base x modifier). 72:126 shows it "
+        "attacker-side damage modifiers' - that is exactly ceil(base x modifier). The same section "
+        "shows it "
         "worked (38 x 1.20 = 45.6, rounded up to 46) and docs/61 section 'Geode resonance behavior' "
         "states the 20% modifier. ceil "
         "is also the ONLY rounding that reproduces all five: 32.4 -> 33 and 43.2 -> 44 rule out "
@@ -857,8 +858,14 @@ def fam_map_site_hyper_gold(tree: Tree):
 
 
 # Each family's ASSERTION is a rule over pointer SEGMENT NAMES, in the shape A20
-# established: a broad semantic pattern plus a named allowlist, so a rename
-# inside the covered scope cannot reintroduce the field under a new spelling.
+# established: a broad semantic pattern plus a named allowlist. IT CATCHES A
+# RENAME ONLY INTO A NAME THE PATTERN STILL MATCHES. An earlier revision of this
+# comment said "so a rename inside the covered scope cannot reintroduce the field
+# under a new spelling", which is false in the same way three other copies of that
+# claim were, and this one survived the pass that corrected them - the correction
+# grepped the files it had in hand rather than the claim. A rename to a name
+# outside the word class passes; the VALUE layer is what covers that case, and it
+# is the reason there are two layers.
 #   scopes  - the content/ directories the rule covers. A20's two rules have two
 #             different scopes for a reason, and the same applies here: three of
 #             these patterns would flag legitimately authored fields in a
@@ -884,7 +891,7 @@ def fam_map_site_hyper_gold(tree: Tree):
 #
 # A single global aggregate rule would therefore flag 71 authored fields and be
 # unlandable. That is why PowerUp cumulative cost uses AGGREGATE_WORDS_NO_TOTAL
-# and why the nine rules are NOT consolidated into one. Consolidating them
+# and why the six rules are NOT consolidated into one. Consolidating them
 # reintroduces that collision. The same per-scope reasoning is why the
 # world-speed rule does not cover content/weapons/, and why the map rule spells
 # `from_all` rather than `all` (content/maps/ authors
@@ -892,10 +899,12 @@ def fam_map_site_hyper_gold(tree: Tree):
 # `maximum_share_of_all_geodes_per_major_region`, which are authored BOUNDS on
 # counts, not sums).
 #
-# Each class is a WORD CLASS, not a name list. Every one of these nine rules was
-# first drafted as a short name list, and a negative-control probe - a field
-# semantically inside the family but spelled with a word the list happened to
-# omit - passed all nine. The lists below are what those probes forced.
+# Each class is a WORD CLASS, not a name list. Every one of the NINE rules of the
+# earlier draft - six survive, three families were pulled - was first drafted as a
+# short name list, and a negative-control probe (a field semantically inside the
+# family but spelled with a word the list happened to omit) passed all nine. The
+# lists below are what those probes forced. The nine-guard counts here and in the
+# notes are HISTORY: they describe the draft the probes were run against.
 AGGREGATE_WORDS = (
     r"total|sum|aggregate|combined|overall|grand|cumulative|accru|accumulat"
     r"|running_(total|sum|cost)|rolled?_up|to_date|so_far|thus_far|subtotal|tally"
@@ -1033,14 +1042,16 @@ FAMILIES = [
 # reproduce exactly.
 #
 # AN EARLIER DRAFT OF THIS COMMENT ARGUED THAT REMOVING THE REPORT WOULD MAKE
-# 40:114's COMPARISON A TAUTOLOGY. THAT ARGUMENT IS WITHDRAWN. It was wrong on
+# THE COMPARISON IN docs/40 section 'Enemies and bosses' A TAUTOLOGY. THAT
+# ARGUMENT IS WITHDRAWN. It was wrong on
 # this tree: docs/data/contact-damage-pressure.csv carries the same report, so
 # an independent comparand survives the removal either way, and A30 now asserts
 # the two mirrors agree.
 #
 # THE REASON THAT IS ACTUALLY TRUE, and which holds whether or not another mirror
 # happens to exist: there are THREE WRITERS on this report - the docs table, the
-# content block, and the compiler that 40:19 and 40:114 say derives it - and NO
+# content block, and the compiler that docs/40 sections 'Source-of-truth
+# boundary' and 'Enemies and bosses' say derives it - and NO
 # SETTLED AUTHORITY among them. Deleting any one copy silently DECIDES which of
 # the survivors is authoritative. That is a decision nobody has made, and this
 # pass would have taken it as a side effect of a commit whose stated purpose was
@@ -1061,10 +1072,12 @@ PULLED_FROM_THIS_PASS = [
             "THREE WRITERS ON ONE REPORT AND NO SETTLED AUTHORITY, so deleting a copy would "
             "silently decide which survivor is authoritative - a decision nobody has made, taken as "
             "a side effect of a deduplication pass. The three are docs/data/"
-            "contact-damage-pressure.csv, the content block, and the compiler that 40:19 and 40:114 "
-            "say derives the report. All 32 restored. Removing a redundant copy and choosing an "
+            "contact-damage-pressure.csv, the content block, and the compiler that docs/40 sections "
+            "'Source-of-truth boundary' and 'Enemies and bosses' say derives the report. All 32 "
+            "restored. Removing a redundant copy and choosing an "
             "authority are different acts and only the first was authorised. NOTE the earlier "
-            "argument here - that removal would make 40:114's comparison a tautology - is WITHDRAWN: "
+            "argument here - that removal would make the docs/40 section 'Enemies and bosses' "
+            "comparison a tautology - is WITHDRAWN: "
             "the CSV supplies an independent comparand regardless, all 28 overlapping values "
             "agreeing exactly, and A30 now asserts that agreement. The withdrawn version depended on "
             "no other mirror existing; this one does not."
@@ -1076,7 +1089,8 @@ PULLED_FROM_THIS_PASS = [
         scopes=["enemies", "bosses"],
         pulled_because=(
             "Same reason as the damage-pressure block: these five are rows of the same "
-            "survivability report, which 72:167 also states in full, so removing them would decide "
+            "survivability report, which docs/72 section 'Damage Pressure Reference' also states "
+            "in full, so removing them would decide "
             "an unsettled authority question by side effect. All 5 restored."
         ),
     ),
@@ -1103,8 +1117,16 @@ PULLED_FROM_THIS_PASS = [
 # Coincidental value recurrences the VALUE-KEYED gate finds and that are NOT
 # second writers. Enumerated, not thresholded: the gate has no tolerance, no
 # rounding and no scope shortcut that could shrink this list silently. Every
-# entry is one line of justification, and the gate fails if an entry here stops
-# colliding (a stale exception is as much a defect as a missing one).
+# entry is one line of justification.
+#
+# STALENESS IS CHECKED AGAINST THE CURRENT WORKTREE, NOT AGAINST SWEEP_REF. An
+# earlier revision checked it against Tree(SWEEP_REF), where the colliding value
+# collides by construction - so an entry here was "still colliding" forever no
+# matter what the tree did, and the sentence claiming a stale exception fails was
+# false. Changing content/utilities/UTL-R1.json acquisition.rank_count from 0 to 1
+# ends the only declared collision and neither tool noticed. Both halves are now
+# asserted: unused on the sweep ref (the gate never consulted it) AND no longer
+# colliding on the current tree (the justification stopped being true).
 # --------------------------------------------------------------------------
 VALUE_COLLISION_EXCEPTIONS = {
     ("content/utilities/UTL-R1.json", "acquisition.total_rank_ore_cost",
@@ -1172,7 +1194,36 @@ def operand_pointers(record: dict) -> list[str]:
     return out
 
 
-def value_collision_hits(family: dict, records: list[dict], tree: Tree) -> list[tuple]:
+def derivation_site(pointer: str) -> str:
+    """The pointer of the object that HELD the removed leaf.
+
+    A trailing `[i]` means the container is the list, so drop the index; otherwise
+    drop the last dotted segment. A ROOT-LEVEL leaf has neither, and its container
+    is the DOCUMENT ITSELF - returned as "" and read by is_in_site() as the whole
+    document, not as "no site".
+
+    That last case was a hole, not a subtlety: an earlier revision returned "" and
+    then filtered with `if not (site and ...)`, so a falsy site skipped EVERY leaf
+    and the value layer searched nothing at all for the six root-level records
+    (common-ore seam_total_per_map, hyper-gold run_ceiling, and total_depletion_
+    seconds / total_uninterrupted_extraction_per_map_seconds on both ore-seam
+    files). They could not fire on anything, including on themselves reinjected.
+    """
+    if pointer.endswith("]"):
+        return pointer[: pointer.rindex("[")]
+    return pointer.rsplit(".", 1)[0] if "." in pointer else ""
+
+
+def is_in_site(leaf: str, site: str) -> bool:
+    """Is `leaf` the site itself or inside its subtree? "" is the document root."""
+    if site == "":
+        return True
+    return leaf == site or leaf.startswith(site + ".") or leaf.startswith(site + "[")
+
+
+def value_collision_hits(
+    family: dict, records: list[dict], tree: Tree
+) -> tuple[list[tuple], set]:
     """A28's VALUE-KEYED gate, measured on the sweep-ref tree.
 
     Asks the question the name rules cannot: is there a numeric leaf AT THE
@@ -1184,34 +1235,105 @@ def value_collision_hits(family: dict, records: list[dict], tree: Tree) -> list[
     NO TOLERANCE AND NO SHORTCUT. Values compare exactly, as Fractions. The only
     exclusions are (a) the record's own declared operands and (b) the entries in
     VALUE_COLLISION_EXCEPTIONS, which are enumerated and individually justified.
-    The radius is the derivation site rather than the file or the scope, and that
-    is a real limit, measured rather than assumed: at file radius this tree has
-    55 coincidental recurrences and at scope radius 400, almost all of them
-    magnitude coincidences between unrelated quantities (a 1.5 m/s world speed
-    against a 1.5 s control-immunity window, a hit count of 4 against
-    maximum_simultaneous_bosses). An exception list that size could not be
-    justified entry by entry, so the radius is narrow AND SAID TO BE NARROW.
+
+    THE RADIUS IS THE LIMIT AND IT IS MEASURED, NOT ASSERTED - see
+    measure_search_radii(), whose three counts go into the expectation file so the
+    ratio a reader is shown reproduces from the artifact instead of from a
+    docstring. Widening to file or scope radius costs coincidental recurrences by
+    the dozen and by the hundred respectively, almost all magnitude coincidences
+    between unrelated quantities (a 1.5 m/s world speed against a 1.5 s
+    control-immunity window, a hit count of 4 against maximum_simultaneous_bosses).
+    An exception list that size could not be justified entry by entry, so the
+    radius is narrow AND SAID TO BE NARROW.
+
+    Returns (hits, exceptions_used). The second value is what makes a declared
+    exception the gate never consulted a failure rather than dead weight.
     """
     hits = []
+    used: set = set()
     for record in records:
         pointer = record["pointer"]
-        site = (pointer[: pointer.rindex("[")] if pointer.endswith("]")
-                else (pointer.rsplit(".", 1)[0] if "." in pointer else ""))
+        site = derivation_site(pointer)
         own_operands = {p.split("::", 1)[1] for p in record["operand_pointers"]
                         if p.split("::", 1)[0] == record["file"]}
         target = exact(record["value"])
         for leaf, value in numeric_leaves(tree.load(record["file"])):
             if leaf == pointer or exact(value) != target:
                 continue
-            if not (site and (leaf == site or leaf.startswith(site + ".")
-                              or leaf.startswith(site + "["))):
+            if not is_in_site(leaf, site):
                 continue
             if leaf in own_operands:
                 continue
             if (record["file"], pointer, leaf) in VALUE_COLLISION_EXCEPTIONS:
+                used.add((record["file"], pointer, leaf))
                 continue
             hits.append((record["file"], pointer, leaf, value))
-    return hits
+    return hits, used
+
+
+def still_colliding_in_worktree(records: list[dict]) -> set:
+    """Which declared exceptions STILL collide in the CURRENT worktree.
+
+    This is the check the previous revision claimed to have and did not: it read
+    the file out of Tree(SWEEP_REF), where the colliding leaf holds the colliding
+    value by construction, so no tree state could ever make an entry stale. Read
+    from disk instead, at the same radius the live gate uses.
+    """
+    by_key = {(r["file"], r["pointer"]): r for r in records}
+    live: set = set()
+    for key in VALUE_COLLISION_EXCEPTIONS:
+        file_path, pointer, colliding = key
+        record = by_key.get((file_path, pointer))
+        if record is None:
+            continue
+        path = REPO / file_path
+        if not path.exists():
+            continue
+        target = exact(record["value"])
+        site = derivation_site(pointer)
+        for leaf, value in numeric_leaves(json.loads(path.read_text())):
+            if leaf == colliding and is_in_site(leaf, site) and exact(value) == target:
+                live.add(key)
+    return live
+
+
+def measure_search_radii(families: list[dict], tree: Tree) -> dict:
+    """Count the coincidental recurrences three candidate radii would flag.
+
+    ONE DEFINITION, APPLIED THREE TIMES, so the three numbers are comparable and
+    reproduce: a (removed value, numeric leaf) pair counts when the leaf holds the
+    removed value exactly, is not the removed leaf itself, and is not one of that
+    value's own operands in that file. Only the RADIUS varies - the derivation
+    site, the whole file, or every file in the family's scopes.
+
+    Earlier revisions printed 55 at file radius and 400 at scope radius. Neither
+    reproduced: no code computed them, and a hand count varies with which
+    exclusions it applies. These are computed on SWEEP_REF, carried in the
+    expectation file, and printed from there.
+    """
+    counts = {"site": 0, "file": 0, "scope": 0}
+    for family in families:
+        scope_index: dict[Fraction, list[tuple[str, str]]] = {}
+        for scope in family["scopes"]:
+            for path in tree.files(scope.rstrip("/")):
+                for leaf, value in numeric_leaves(tree.load(path)):
+                    scope_index.setdefault(exact(value), []).append((path, leaf))
+        for record in family["records"]:
+            pointer = record["pointer"]
+            site = derivation_site(pointer)
+            own = {p.split("::", 1)[1] for p in record["operand_pointers"]
+                   if p.split("::", 1)[0] == record["file"]}
+            target = exact(record["value"])
+            for path, leaf in scope_index.get(target, ()):
+                if path == record["file"] and (leaf == pointer or leaf in own):
+                    continue
+                counts["scope"] += 1
+                if path != record["file"]:
+                    continue
+                counts["file"] += 1
+                if is_in_site(leaf, site):
+                    counts["site"] += 1
+    return counts
 
 
 def build(sweep_ref: str) -> dict:
@@ -1219,6 +1341,7 @@ def build(sweep_ref: str) -> dict:
     failures: list[str] = []
     families = []
     all_records = []
+    exceptions_used: set = set()
 
     for family in FAMILIES:
         records = family["builder"](tree)
@@ -1278,7 +1401,8 @@ def build(sweep_ref: str) -> dict:
         family["corpus_numeric_leaves"] = corpus
 
         # The VALUE-KEYED gate. Names can be renamed; the number cannot.
-        collisions = value_collision_hits(family, emitted, tree)
+        collisions, used = value_collision_hits(family, emitted, tree)
+        exceptions_used |= used
         if collisions:
             failures.append(
                 f"family '{family['name']}' value-keyed gate: {len(collisions)} derived value(s) "
@@ -1313,21 +1437,30 @@ def build(sweep_ref: str) -> dict:
         all_records.extend(emitted)
 
     # A stale exception is as much a defect as a missing one: if a declared
-    # coincidence stops colliding, the justification is no longer true.
+    # coincidence stops colliding, the justification is no longer true. TWO
+    # HALVES, and the previous revision had neither working.
+    #
+    # (a) UNUSED ON THE SWEEP REF - the gate walked the site and never consulted
+    #     this entry, so it is suppressing nothing. This is the pattern A30 uses
+    #     (`set(CSV_MIRROR_ROUNDED) - declared_used`) and the reason it is worth
+    #     copying is that it cannot be satisfied by an assumption: only an entry
+    #     the scan actually reached counts as used.
+    # (b) NO LONGER COLLIDING IN THE WORKTREE - read from disk, not from
+    #     Tree(sweep_ref). Against the pinned ref the colliding value collides by
+    #     construction, which is why the old check could not fail: it asserted a
+    #     property of a frozen blob and called it a property of the tree.
     declared = set(VALUE_COLLISION_EXCEPTIONS)
-    still_colliding = set()
-    for family in FAMILIES:
-        for record in next(f for f in families if f["name"] == family["name"])["records"]:
-            for key in declared:
-                if key[0] == record["file"] and key[1] == record["pointer"]:
-                    doc = tree.load(record["file"])
-                    for leaf, value in numeric_leaves(doc):
-                        if leaf == key[2] and exact(value) == exact(record["value"]):
-                            still_colliding.add(key)
-    for key in sorted(declared - still_colliding):
+    for key in sorted(declared - exceptions_used):
         failures.append(
-            f"VALUE_COLLISION_EXCEPTIONS entry {key} no longer collides on {sweep_ref[:12]}. "
-            f"A stale exception silently widens the gate - delete it."
+            f"VALUE_COLLISION_EXCEPTIONS entry {key} was never consulted by the value gate on "
+            f"{sweep_ref[:12]} - it suppresses nothing. Delete it."
+        )
+    live = still_colliding_in_worktree(all_records)
+    for key in sorted(declared - live):
+        failures.append(
+            f"VALUE_COLLISION_EXCEPTIONS entry {key} no longer collides in the CURRENT worktree. "
+            f"The justification recorded for it is no longer true, and a stale exception silently "
+            f"widens the gate - delete it."
         )
 
     if not families:
@@ -1354,6 +1487,8 @@ def build(sweep_ref: str) -> dict:
             f"{len(failures)} candidate(s) failed the exact-reproduction or rule-coverage gate; "
             f"nothing was written"
         )
+
+    radii = measure_search_radii(families, tree)
 
     multiset = sorted(
         [record["file"], record["pointer"], record["value"]] for record in all_records
@@ -1384,6 +1519,28 @@ def build(sweep_ref: str) -> dict:
             )
             for pulled in PULLED_FROM_THIS_PASS
         ],
+        search_radius_measurement=dict(
+            definition=(
+                "A (removed value, numeric leaf) pair counts when the leaf holds the removed "
+                "value EXACTLY, is not the removed leaf itself, and is not one of that value's "
+                "own operands in that file. One definition, three radii, measured on "
+                f"{sweep_ref[:12]} - so the three numbers are comparable and reproduce from this "
+                "file. Earlier revisions quoted 55 at file radius and 400 at scope radius; "
+                "neither reproduced, because no code computed them."
+            ),
+            site_radius_pairs=radii["site"],
+            file_radius_pairs=radii["file"],
+            scope_radius_pairs=radii["scope"],
+            declared_exceptions=len(VALUE_COLLISION_EXCEPTIONS),
+            conclusion=(
+                f"Ratio {radii['site']} : {radii['file']} : {radii['scope']}. Widening the radius "
+                f"to the file would need {radii['file'] - radii['site']} more hand-written "
+                f"exceptions and to the scope {radii['scope'] - radii['site']} more, almost all "
+                "magnitude coincidences between unrelated quantities. That is the reason the "
+                "radius is the derivation site, and the reason relocation OUT of the site is a "
+                "stated limit rather than a fixable one."
+            ),
+        ),
         value_collision_exceptions=[
             dict(file=k[0], derived_pointer=k[1], colliding_pointer=k[2], why_not_a_second_writer=v)
             for k, v in sorted(VALUE_COLLISION_EXCEPTIONS.items())

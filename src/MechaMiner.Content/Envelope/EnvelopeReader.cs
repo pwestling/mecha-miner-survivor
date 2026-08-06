@@ -90,6 +90,15 @@ public static class EnvelopeReader
                 continue;
             }
 
+            // A domain field belongs to the owning category's field table, which the
+            // category reader walks straight after this. Reporting it here would make
+            // every category definition fail with one unknown-field diagnostic per
+            // domain field, drowning the real fault.
+            if (context.DeclaresDomainField(name))
+            {
+                continue;
+            }
+
             // doc 40 § Common definition envelope: "Unknown fields are errors rather
             // than silently ignored."
             bag.Add(ContentDiagnostic.CreateError(

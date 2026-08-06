@@ -43,6 +43,7 @@
         { "title": "shared elite modifiers", "pattern": "^ELT-[0-9]{2}$" },
         { "title": "boss", "pattern": "^BOSS-[0-9]{2}$" },
         { "title": "weapon", "pattern": "^W-[A-F]{2}$" },
+        { "title": "weapon stat price formula", "pattern": "^FORMULA-[0-9]{2}$" },
         { "title": "branch", "pattern": "^W-[A-F]{2}(-[a-z0-9]+)+$" },
         { "title": "utility", "pattern": "^UTL-[A-FR][1-9]$" },
         { "title": "relic", "pattern": "^REL-[0-9]{2}$" },

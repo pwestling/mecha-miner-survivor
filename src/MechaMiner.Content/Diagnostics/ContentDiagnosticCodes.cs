@@ -158,6 +158,82 @@ public static class ContentDiagnosticCodes
     /// <summary>A schema document cannot be read as a draft 2020-12 schema.</summary>
     public const string SchemaMalformed = "MMC-5003";
 
+    // --- Semantic, band 6xxx ------------------------------------------------
+
+    /// <summary>A token-valued field carries a token its closed vocabulary does not contain.</summary>
+    public const string TokenOutsideVocabulary = "MMC-6001";
+
+    /// <summary>A behavior, formation, or effect token is not <c>lower-kebab-case</c>.</summary>
+    public const string BehaviorTokenMalformed = "MMC-6002";
+
+    /// <summary>A value the compiler derives has been authored into a source definition.</summary>
+    public const string DerivedValueAuthored = "MMC-6003";
+
+    /// <summary>A field a discriminator makes required is absent.</summary>
+    public const string ConditionalFieldMissing = "MMC-6004";
+
+    /// <summary>A field a discriminator makes illegal is present.</summary>
+    public const string ConditionalFieldForbidden = "MMC-6005";
+
+    /// <summary>An array's element count is not the count the category accepts.</summary>
+    public const string ArrayCardinalityWrong = "MMC-6006";
+
+    /// <summary>An ordinal sequence is not contiguous from its declared first value.</summary>
+    public const string SequenceNotContiguous = "MMC-6007";
+
+    /// <summary>A numeric value falls outside the bound its category declares.</summary>
+    public const string ValueOutOfRange = "MMC-6008";
+
+    /// <summary>A range's lower bound exceeds its upper bound, or its target falls outside both.</summary>
+    public const string RangeInfeasible = "MMC-6009";
+
+    /// <summary>A sum recomputed from a definition's own parts does not equal the accepted total.</summary>
+    public const string SumMismatch = "MMC-6010";
+
+    /// <summary>A value required to be unique within one definition appears twice.</summary>
+    public const string DuplicateValueInDefinition = "MMC-6011";
+
+    /// <summary>A cross-reference does not match the ID grammar of the category it names.</summary>
+    public const string ReferenceGrammarMismatch = "MMC-6012";
+
+    /// <summary>A named statistic does not resolve to a track the definition declares.</summary>
+    public const string StatTrackNotDeclared = "MMC-6013";
+
+    /// <summary>A parameter belongs to a different arm of a discriminated union.</summary>
+    public const string DiscriminatorArmMismatch = "MMC-6014";
+
+    // --- Relational, band 7xxx ----------------------------------------------
+
+    /// <summary>A catalog holds a different number of distinct definitions than it accepts.</summary>
+    public const string CatalogCardinalityWrong = "MMC-7001";
+
+    /// <summary>Two definitions in one catalog claim the same identity.</summary>
+    public const string CatalogDuplicateIdentity = "MMC-7002";
+
+    /// <summary>A catalog's closed token set is not covered exactly once by its definitions.</summary>
+    public const string CatalogSetNotCoveredExactly = "MMC-7003";
+
+    /// <summary>A total recomputed across a catalog does not equal the accepted total.</summary>
+    public const string CatalogTotalMismatch = "MMC-7004";
+
+    /// <summary>
+    /// A weapon's recipe resources, resolved to their canonical letters, do not
+    /// concatenate to the weapon ID's own two-letter suffix.
+    /// </summary>
+    public const string RecipeLettersMismatch = "MMC-7005";
+
+    /// <summary>A weapon's branches are not exactly one amplification, one functional, and one conversion.</summary>
+    public const string BranchClassDistributionWrong = "MMC-7006";
+
+    /// <summary>A declared relation between two cross-definition operands does not hold.</summary>
+    public const string RelationViolated = "MMC-7007";
+
+    /// <summary>
+    /// A relational constraint was asked to evaluate before one of its operand
+    /// definitions was loaded.
+    /// </summary>
+    public const string RelationOperandMissing = "MMC-7008";
+
     private static readonly ContentDiagnosticDescriptor[] Declared =
     {
         Describe(Comment, nameof(Comment), ContentValidationStage.Codec,
@@ -228,6 +304,72 @@ public static class ContentDiagnosticCodes
             "a schema $ref does not resolve"),
         Describe(SchemaMalformed, nameof(SchemaMalformed), ContentValidationStage.SchemaInfrastructure,
             "a schema document cannot be read as a draft 2020-12 schema"),
+
+        Describe(TokenOutsideVocabulary, nameof(TokenOutsideVocabulary), ContentValidationStage.Semantic,
+            "a token-valued field carries a token its closed vocabulary does not contain; the comparison is exact "
+                + "case-sensitive ASCII, so a near-miss spelling is rejected rather than read as a future token"),
+        Describe(BehaviorTokenMalformed, nameof(BehaviorTokenMalformed), ContentValidationStage.Semantic,
+            "a behavior, formation, or effect token does not match ^[a-z0-9]+(-[a-z0-9]+)*$; this checks the token's "
+                + "grammar only, and never that a registered descriptor exists for it, which is the behavior "
+                + "registry's own check"),
+        Describe(DerivedValueAuthored, nameof(DerivedValueAuthored), ContentValidationStage.Semantic,
+            "a value the compiler derives has been authored into source, creating a second writer that disagrees "
+                + "with the first the moment either operand changes; the match is on the field's JSON pointer, so a "
+                + "derived value authored under a different field name is not caught by this code"),
+        Describe(ConditionalFieldMissing, nameof(ConditionalFieldMissing), ContentValidationStage.Semantic,
+            "a field that this definition's discriminator makes required is absent"),
+        Describe(ConditionalFieldForbidden, nameof(ConditionalFieldForbidden), ContentValidationStage.Semantic,
+            "a field that this definition's discriminator makes illegal is present"),
+        Describe(ArrayCardinalityWrong, nameof(ArrayCardinalityWrong), ContentValidationStage.Semantic,
+            "an array holds a different number of elements than its category accepts"),
+        Describe(SequenceNotContiguous, nameof(SequenceNotContiguous), ContentValidationStage.Semantic,
+            "an ordinal sequence is not the contiguous integers from its declared first value; the check compares "
+                + "each element's authored ordinal against its array index, so a correct length with a repeated or "
+                + "reordered ordinal still fails"),
+        Describe(ValueOutOfRange, nameof(ValueOutOfRange), ContentValidationStage.Semantic,
+            "a numeric value falls outside the bound its category declares"),
+        Describe(RangeInfeasible, nameof(RangeInfeasible), ContentValidationStage.Semantic,
+            "a range's lower bound exceeds its upper bound, or a three-valued range's target falls outside them; "
+                + "checked before any sampling, so an infeasible contract fails at compile time rather than at the "
+                + "first generation attempt"),
+        Describe(SumMismatch, nameof(SumMismatch), ContentValidationStage.Semantic,
+            "a sum recomputed from a definition's own parts does not equal the accepted total"),
+        Describe(DuplicateValueInDefinition, nameof(DuplicateValueInDefinition), ContentValidationStage.Semantic,
+            "a value required to be unique within one definition appears twice"),
+        Describe(ReferenceGrammarMismatch, nameof(ReferenceGrammarMismatch), ContentValidationStage.Semantic,
+            "a cross-reference does not match the ID grammar of the category it names; this checks grammar only, "
+                + "and never that the referenced definition exists, which is a relational check"),
+        Describe(StatTrackNotDeclared, nameof(StatTrackNotDeclared), ContentValidationStage.Semantic,
+            "a named statistic does not resolve to a stat track the owning definition declares"),
+        Describe(DiscriminatorArmMismatch, nameof(DiscriminatorArmMismatch), ContentValidationStage.Semantic,
+            "a parameter belongs to a different arm of a discriminated union than the one the discriminator selects"),
+
+        Describe(CatalogCardinalityWrong, nameof(CatalogCardinalityWrong), ContentValidationStage.Relational,
+            "a catalog holds a different number of distinct definitions than it accepts; the count is of distinct "
+                + "identities rather than of files, so two files claiming one identity do not make up the number"),
+        Describe(CatalogDuplicateIdentity, nameof(CatalogDuplicateIdentity), ContentValidationStage.Relational,
+            "two definitions in one catalog claim the same identity; the match is on parsed field values rather than "
+                + "on the stable ID, so minting a new ID for a duplicate does not evade it"),
+        Describe(CatalogSetNotCoveredExactly, nameof(CatalogSetNotCoveredExactly), ContentValidationStage.Relational,
+            "a catalog's closed token set is not covered exactly once by its definitions; a missing token, a "
+                + "duplicated token, and an unknown token are three distinct faults and this code reports which"),
+        Describe(CatalogTotalMismatch, nameof(CatalogTotalMismatch), ContentValidationStage.Relational,
+            "a total recomputed across a catalog does not equal the accepted total; the total is recomputed from the "
+                + "parts rather than compared against an authored copy of itself"),
+        Describe(RecipeLettersMismatch, nameof(RecipeLettersMismatch), ContentValidationStage.Relational,
+            "a weapon's recipe resources, resolved in authored order to their canonical letters, do not concatenate "
+                + "to the weapon ID's own two-letter suffix; this is what keeps a recipe of opaque resource IDs "
+                + "checkable after it stopped being human-legible"),
+        Describe(BranchClassDistributionWrong, nameof(BranchClassDistributionWrong), ContentValidationStage.Relational,
+            "a weapon's branches are not exactly one amplification, one functional, and one conversion; a weapon "
+                + "with three branches of two classes fails even though its branch count is right"),
+        Describe(RelationViolated, nameof(RelationViolated), ContentValidationStage.Relational,
+            "a declared relation between operands in different definitions does not hold; the diagnostic names every "
+                + "operand with its pointer, because the fix could be to any of them"),
+        Describe(RelationOperandMissing, nameof(RelationOperandMissing), ContentValidationStage.Relational,
+            "a relational constraint was evaluated before one of its operand definitions was loaded; the constraint "
+                + "reports the gap rather than skipping silently, because a skipped relational check is "
+                + "indistinguishable from a passing one"),
     };
 
     private static readonly Dictionary<string, ContentDiagnosticDescriptor> ByCode = BuildIndex();

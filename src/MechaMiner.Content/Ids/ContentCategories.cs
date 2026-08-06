@@ -42,7 +42,14 @@ public static class ContentCategories
         Declare(ContentCategory.Boss, "bosses", "^BOSS-[0-9]{2}$"),
 
         // A weapon ID is its unordered material pair, so the two letters are the ID.
-        Declare(ContentCategory.Weapon, "weapons", "^W-[A-F]{2}$"),
+        // The second grammar is the weapons catalog's own aggregate: the stat price
+        // curve, FORMULA-01. Its authored stem matched no grammar at all, and it needs
+        // one for the same reason WAV-01 and MGC-01 do - every schema references other
+        // definitions by stable ID. It stays in content/weapons/ because the price
+        // curve is a shared rule *within* the weapon domain, which is the reasoning
+        // that already keeps ELT-01 in content/enemies/ rather than in a constants
+        // directory.
+        Declare(ContentCategory.Weapon, "weapons", "^W-[A-F]{2}$", "^FORMULA-[0-9]{2}$"),
 
         // A branch ID is its parent weapon plus a kebab-case name, which is what makes
         // a branch reference unambiguous about which weapon it belongs to.

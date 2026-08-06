@@ -12,10 +12,9 @@ namespace MechaMiner.Content.Diagnostics;
 /// exit class in its numeric part.
 /// </para>
 /// <para>
-/// Later DAT packages own the stages this enum does not yet declare: semantic
-/// (<c>DAT-002</c>, <c>DAT-003</c>), relational (<c>DAT-005</c>), and analytical
-/// (<c>DAT-008</c>). Their code bands are reserved in
-/// <see cref="ContentDiagnosticCodes"/> and are deliberately not declared here, so
+/// Later DAT packages own the stages this enum does not yet declare: analytical
+/// (<c>DAT-008</c>). Its code band is reserved in
+/// <see cref="ContentDiagnosticCodes"/> and is deliberately not declared here, so
 /// that the enum lists only stages that exist.
 /// </para>
 /// </remarks>
@@ -42,4 +41,29 @@ public enum ContentValidationStage
     /// 5xxx.
     /// </summary>
     SchemaInfrastructure = 5,
+
+    /// <summary>
+    /// Rules <em>within</em> one definition, in doc 40 § Semantic's words: positive
+    /// cadence, branch class, three stats, increasing rank costs, valid geometry, exact
+    /// reward totals, compatible behavior parameters. Band 6xxx.
+    /// </summary>
+    /// <remarks>
+    /// The boundary against <see cref="Relational"/> is the number of definitions a
+    /// check has to read. A rule one file can decide is semantic; a rule needing a
+    /// second file is relational, even when it looks like a range check.
+    /// </remarks>
+    Semantic = 6,
+
+    /// <summary>
+    /// Rules <em>across</em> definitions: references, uniqueness, graph coverage,
+    /// catalog cardinality and totals, and the declared cross-definition relations.
+    /// Band 7xxx.
+    /// </summary>
+    /// <remarks>
+    /// These run only after every definition is loaded. A relational check evaluated
+    /// during the per-file pass would see whichever operands happened to be read first,
+    /// which makes its verdict depend on source enumeration order - the one thing doc
+    /// 40 § JSON codec and schema baseline forbids of the pipeline.
+    /// </remarks>
+    Relational = 7,
 }

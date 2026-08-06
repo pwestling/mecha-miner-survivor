@@ -1,5 +1,5 @@
 {
-  "id": "D",
+  "id": "RSC-04",
   "schema_version": 1,
   "content_version": 1,
   "status": "enabled",
@@ -9,7 +9,8 @@
     "GDD-SPECIALIZED-RESOURCE-IDENTITIES#accepted-identity-map",
     "canonical_letter: TDD-CONTENT-DATA#resources",
     "resonance_behavior: GDD-MINING#geode-resonance-fields",
-    "resonance_behavior.short_modifier: GDD-SPECIALIZED-RESOURCE-IDENTITIES#geode-resonance-behavior"
+    "resonance_behavior.short_modifier: GDD-SPECIALIZED-RESOURCE-IDENTITIES#geode-resonance-behavior",
+    "resource_class: TDD-CONTENT-DATA#minted-value-vocabularies"
   ],
   "canonical_letter": "D",
   "material_character": "Polarized metallic fins that continually realign",
@@ -17,7 +18,7 @@
   "primary_color": "Vermilion red",
   "icon_and_silhouette_cue": "Paired chevrons or compass fins",
   "audio_character": "Directional whir with a Doppler shift",
-  "resource_class": "specialized ordinary resource",
+  "resource_class": "specialized-material",
   "inventory_scope": "run-local",
   "persistence": "Run-local; unspent units are lost when the run ends",
   "shared_economy_tier": true,

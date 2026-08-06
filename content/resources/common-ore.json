@@ -1,5 +1,5 @@
 {
-  "id": "common-ore",
+  "id": "RSC-07",
   "schema_version": 1,
   "content_version": 1,
   "status": "enabled",
@@ -7,6 +7,7 @@
   "tags": [],
   "source_refs": [
     "GDD-PROGRESSION#progression-layers",
+    "resource_class: TDD-CONTENT-DATA#minted-value-vocabularies",
     "sources[]: GDD-MINING#standard-ore-seams",
     "sources[]: GDD-MINING#rich-ore-seams",
     "sources[]: GDD-MINING#specialized-material-geodes",
@@ -17,7 +18,7 @@
   "availability": "Found primarily in finite deposits through map exploration; common ore also comes from selling relics",
   "primary_purpose": "Craft weapons, utilities, individual stat upgrades, and major weapon branches for the current run",
   "persistence": "Retained after collection for the rest of the run; discarded when the run ends",
-  "resource_class": "ordinary crafting resource",
+  "resource_class": "common-ore",
   "inventory_scope": "run-local",
   "sources": [
     {

@@ -1,0 +1,82 @@
+{
+  "id": "W-CE-supernova-cycle",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-CE-supernova-cycle.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#supernova-cycle--conversion--2-flux-amber",
+    "global_attack_rate_interaction: GDD-WEAPON-NUMERIC-CATALOG#global-weapon-attack-rate-mapping",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#supernova-cycle--conversion--2-flux-amber"
+  ],
+  "weapon_id": "W-CE",
+  "weapon_name": "Reactor Pulse",
+  "class": "Conversion",
+  "cost": {
+    "resource": "Flux Amber",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-CE-critical-mass-cycle",
+      "W-CE-kinetic-vent"
+    ],
+    "irreversible_within_run": true,
+    "existing_common_ore_stat_tracks_still_apply": true,
+    "adds_new_stat_track": false,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run."
+  },
+  "availability": {
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite.",
+    "purchase": "Installing one is a single deterministic purchase costing exactly two units of its assigned specialized material."
+  },
+  "effects": {
+    "pulse_rate_multiplier": 0.25,
+    "rank_zero_pulse_interval_seconds": {
+      "before": 1.5,
+      "after": 6.0
+    },
+    "supernova_damage_of_current_damage": {
+      "percent": 500
+    },
+    "supernova_radius_of_current_pulse_radius": {
+      "percent": 250
+    },
+    "charge_tell_seconds": 2.0,
+    "charge_tell_channels": [
+      "visible",
+      "audible"
+    ],
+    "movement_restricted_during_charge_tell": false,
+    "rank_zero_sustained_single_target_dps": {
+      "before": 18,
+      "after": 22.5
+    }
+  },
+  "global_attack_rate_interaction": {
+    "branch_named_in_mapping": true,
+    "affected_timing": "Pulse or supernova activation rate",
+    "unaffected_timing": "Charge tell and status durations"
+  },
+  "expected_effect": null,
+  "rules": [
+    {
+      "text": "Pulse rate is multiplied by 0.25; rank zero therefore changes from one pulse every 1.5 s to one every 6.0 s."
+    },
+    {
+      "text": "Each supernova deals 500% current Damage and has 250% current pulse radius."
+    },
+    {
+      "text": "A visible and audible charge builds during the final 2.0 s, but movement remains unrestricted."
+    },
+    {
+      "text": "Rank-zero steady single-target DPS rises from 18 to 22.5 while each event becomes a map-clearing spike rather than constant protection."
+    }
+  ]
+}

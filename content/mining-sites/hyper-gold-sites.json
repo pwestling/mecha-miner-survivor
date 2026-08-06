@@ -1,0 +1,75 @@
+{
+  "id": null,
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "mining_site.hyper-gold-sites.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-MINING#hyper-gold-sites"
+  ],
+  "site_class": "hyper-gold-site",
+  "count_per_standard_map": 3,
+  "placement": "randomized locations",
+  "extraction_duration_seconds": 45,
+  "completion_only_reward": true,
+  "completion_payout": {
+    "resource": "Hyper Gold",
+    "amount": 100
+  },
+  "partial_payout": "none; no partial Hyper Gold is granted merely for building progress",
+  "total_payout_per_map": {
+    "resource": "Hyper Gold",
+    "amount": 300
+  },
+  "extraction_zone_radius_m": null,
+  "progress_decay": {
+    "grace_seconds": 0.5,
+    "decay_rate_multiplier_of_forward_rate": 4,
+    "secured_checkpoint": null,
+    "rule": "Leaving the area puts the entire pending reward at risk because unfinished progress decays rapidly."
+  },
+  "resonance_field": null,
+  "beacon_thresholds": [
+    {
+      "trigger": "Activation",
+      "progress": null,
+      "at_uninterrupted_seconds_from_zero": null,
+      "detail": "The first extraction progress on a Hyper Gold site activates its threat beacon and begins a focused alien response."
+    },
+    {
+      "trigger": "25%",
+      "progress": {
+        "percent": 25
+      },
+      "at_uninterrupted_seconds_from_zero": 11.25,
+      "detail": null
+    },
+    {
+      "trigger": "50%",
+      "progress": {
+        "percent": 50
+      },
+      "at_uninterrupted_seconds_from_zero": 22.5,
+      "detail": null
+    },
+    {
+      "trigger": "75%",
+      "progress": {
+        "percent": 75
+      },
+      "at_uninterrupted_seconds_from_zero": 33.75,
+      "detail": null
+    }
+  ],
+  "beacon_rules": [
+    "Each threshold can trigger only once for that site, even if decay later pulls progress below it.",
+    "Beacon enemies enter from valid navigable ground outside the camera using the horde director's normal readable-spawn rule.",
+    "Leaving the zone stops further beacon escalation while the player is absent, but every summoned enemy remains active.",
+    "Returning resumes extraction and permits any not-yet-triggered thresholds to fire.",
+    "Completion stops all new beacon-generated responses; surviving summoned enemies remain."
+  ],
+  "beacon_response_source": "docs/32-standard-wave-and-beacon-schedule.md#hyper-gold-threat-beacon-response",
+  "depleted_state": "non-interactive mapped landmark for the rest of the run",
+  "persistence": "Completing the site places its resource in an unsecured state for the remainder of the level; it is kept permanently only by surviving until the time limit and completing mission extraction. Dying before the time limit forfeits it."
+}

@@ -1,0 +1,57 @@
+{
+  "id": "W-AE-containment-lattice",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-AE-containment-lattice.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#containment-lattice--conversion--2-driftmetal",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#containment-lattice--conversion--2-driftmetal",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches"
+  ],
+  "weapon_id": "W-AE",
+  "weapon_name": "Attack Drones",
+  "branch_class": "Conversion",
+  "cost": {
+    "resource": "Driftmetal",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-AE-replicator-swarm",
+      "W-AE-wolfpack-protocol"
+    ],
+    "irreversible": true
+  },
+  "effects": {
+    "drones_stop_firing_projectiles": true,
+    "formation": "rotating triangle around the mech",
+    "link_count": 3,
+    "link_damage_per_second_percent_of_one_drone_shot_dps": 200,
+    "link_damage_per_second_formula": "current shot Damage × current attack rate × 2",
+    "max_links_damaging_one_enemy_simultaneously": 2,
+    "link_length_and_formation_size_scale_with": "current operational range",
+    "triangle_point_follows_mech_facing": true
+  },
+  "expected_effect": {
+    "narrative": "rewards sweeping and enclosing crowds rather than target selection"
+  },
+  "rules": [
+    {
+      "text": "The three drones stop firing projectiles and form a rotating triangle around the mech."
+    },
+    {
+      "text": "Each of the three links deals damage per second equal to 200% of one drone's current shot DPS: `current shot Damage × current attack rate × 2`."
+    },
+    {
+      "text": "An enemy may be damaged by at most two links at once. Link length and formation size scale with current operational range."
+    },
+    {
+      "text": "Drones continuously adjust the triangle so one point follows mech facing; the lattice therefore rewards sweeping and enclosing crowds rather than target selection."
+    }
+  ]
+}

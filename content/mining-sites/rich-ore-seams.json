@@ -1,0 +1,48 @@
+{
+  "id": null,
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "mining_site.rich-ore-seams.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-MINING#rich-ore-seams"
+  ],
+  "site_class": "rich-ore-seam",
+  "count_per_standard_map": 8,
+  "placement": "randomized locations",
+  "rarity": "less common world finds than standard seams",
+  "completion_only_reward": false,
+  "payout_per_installment": {
+    "resource": "common ore",
+    "amount": 40
+  },
+  "installment_duration_seconds": 3,
+  "installment_count": 5,
+  "total_depletion_seconds": 15,
+  "total_payout_per_seam": {
+    "resource": "common ore",
+    "amount": 200
+  },
+  "total_payout_per_map": {
+    "resource": "common ore",
+    "amount": 1600
+  },
+  "total_uninterrupted_extraction_per_map_seconds": 120,
+  "relative_to_standard_seam": {
+    "common_ore_per_second_multiplier": 2,
+    "total_seam_payout_multiplier": 2,
+    "exposure_per_secured_payout_multiplier": 2
+  },
+  "extraction_zone_radius_m": null,
+  "progress_decay": {
+    "grace_seconds": 0.5,
+    "decay_rate_multiplier_of_forward_rate": 4,
+    "secured_checkpoint": "each completed installment",
+    "rule": "A completed 40-ore installment is retained, while only the unfinished current 3-second interval can decay."
+  },
+  "resonance_field": null,
+  "beacon_thresholds": null,
+  "depleted_state": "non-interactive mapped landmark for the rest of the run",
+  "persistence": "run-local; unspent common ore is lost when the run ends"
+}

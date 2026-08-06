@@ -1,0 +1,62 @@
+{
+  "id": "W-CF-circuit-closure",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-CF-circuit-closure.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#circuit-closure--conversion--2-driftmetal",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#circuit-closure--conversion--2-driftmetal"
+  ],
+  "weapon_id": "W-CF",
+  "weapon_name": "Wake Projector",
+  "class": "Conversion",
+  "cost": {
+    "resource": "Driftmetal",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-CF-runaway-wake",
+      "W-CF-carrier-ignition"
+    ],
+    "irreversible_within_run": true,
+    "existing_common_ore_stat_tracks_still_apply": true,
+    "adds_new_stat_track": false,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run."
+  },
+  "availability": {
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite.",
+    "purchase": "Installing one is a single deterministic purchase costing exactly two units of its assigned specialized material."
+  },
+  "effects": {
+    "closure_condition": "The current wake intersects a segment from the same continuous path and encloses at least the minimum area.",
+    "minimum_enclosed_area_m2": 4,
+    "maximum_claimed_interior_area_m2": 40,
+    "eruption_damage_as_seconds_of_current_segment_damage": 6,
+    "oversized_loop_behavior": "A larger loop still erupts but only enemies in the 40M² nearest the closure point are hit.",
+    "loop_segments_consumed": true,
+    "per_path_closure_cooldown_seconds": 1.0
+  },
+  "expected_effect": null,
+  "rules": [
+    {
+      "text": "When the current wake intersects a segment from the same continuous path and encloses at least 4M², the loop closes and all enclosed enemies take an eruption hit equal to six seconds of current segment Damage."
+    },
+    {
+      "text": "A loop may claim at most 40M² of interior area; a larger loop still erupts but only enemies in the 40M² nearest the closure point are hit."
+    },
+    {
+      "text": "The segments forming the loop are consumed. The same continuous path cannot close another loop for 1.0 s."
+    },
+    {
+      "text": "This turns the wake from passive pursuit damage into deliberate lasso-like route drawing."
+    }
+  ]
+}

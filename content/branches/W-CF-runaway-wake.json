@@ -1,0 +1,80 @@
+{
+  "id": "W-CF-runaway-wake",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-CF-runaway-wake.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#runaway-wake--amplification--2-cinderglass",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#runaway-wake--amplification--2-cinderglass"
+  ],
+  "weapon_id": "W-CF",
+  "weapon_name": "Wake Projector",
+  "class": "Amplification",
+  "cost": {
+    "resource": "Cinderglass",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-CF-carrier-ignition",
+      "W-CF-circuit-closure"
+    ],
+    "irreversible_within_run": true,
+    "existing_common_ore_stat_tracks_still_apply": true,
+    "adds_new_stat_track": false,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run."
+  },
+  "availability": {
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite.",
+    "purchase": "Installing one is a single deterministic purchase costing exactly two units of its assigned specialized material."
+  },
+  "effects": {
+    "ramp_starts_after_continuous_movement_seconds": 2.0,
+    "per_additional_movement_second_damage_bonus": {
+      "percent": 10
+    },
+    "per_additional_movement_second_width_bonus": {
+      "percent": 5
+    },
+    "maximum_damage_bonus": {
+      "percent": 50
+    },
+    "maximum_width_bonus": {
+      "percent": 25
+    },
+    "maximum_reached_at_continuous_movement_seconds": 7.0,
+    "segment_snapshots_bonuses_until_it_expires": true,
+    "bonus_clear": {
+      "below_base_movement_speed": {
+        "percent": 20
+      },
+      "for_seconds": 1.0,
+      "turning_clears_bonus": false
+    },
+    "unchanged_stats": [
+      "segment duration"
+    ]
+  },
+  "expected_effect": null,
+  "rules": [
+    {
+      "text": "After 2.0 s of continuous movement, the wake gains +10% Damage and +5% width for each additional second of movement."
+    },
+    {
+      "text": "Bonuses cap at +50% Damage and +25% width after 7.0 total seconds of continuous movement. Each newly laid segment snapshots the current bonuses until that segment expires."
+    },
+    {
+      "text": "Dropping below 20% of base movement speed for 1.0 s clears the bonus; turning does not."
+    },
+    {
+      "text": "Segment duration is unchanged, so the branch rewards sustained traversal without encouraging a stationary hold."
+    }
+  ]
+}

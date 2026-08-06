@@ -1,0 +1,67 @@
+{
+  "id": "W-BF-deflection-ring",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-BF-deflection-ring.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#deflection-ring--functional--2-barysteel",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#deflection-ring--functional--2-barysteel"
+  ],
+  "weapon_id": "W-BF",
+  "weapon_name": "Orbital Cutters",
+  "class": "Functional",
+  "cost": {
+    "resource": "Barysteel",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-BF-kinetic-flywheel",
+      "W-BF-tethered-reaper"
+    ],
+    "irreversible_within_run": true,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run."
+  },
+  "availability": {
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite."
+  },
+  "effects": {
+    "intercepts_ordinary_interceptable_enemy_projectiles": true,
+    "interception_trigger": "contact with a cutter",
+    "shards_per_interception": 6,
+    "shard_direction": "outward",
+    "shard_damage_percent_of_current_cutter_damage": {
+      "percent": 50
+    },
+    "shard_travel_m": 4,
+    "shard_ends_on_first_enemy": true,
+    "max_shards_per_enemy_per_interception_burst": 2,
+    "per_cutter_interception_cooldown_seconds": 0.5,
+    "undeflectable_boss_attacks": "remain visually distinct"
+  },
+  "favorable_scene_effect": {
+    "magnitude": null,
+    "qualitative": "converts projectile pressure into retaliatory offense rather than simply deleting every threat"
+  },
+  "rules": [
+    {
+      "text": "Cutters destroy ordinary interceptable enemy projectiles on contact."
+    },
+    {
+      "text": "Each interception emits six outward shards. A shard deals 50% current cutter Damage, travels 4M, and ends on its first enemy."
+    },
+    {
+      "text": "One enemy can take at most two shards from a single interception burst. Each cutter has a 0.5 s interception cooldown."
+    },
+    {
+      "text": "Undeflectable boss attacks remain visually distinct. The branch converts projectile pressure into retaliatory offense rather than simply deleting every threat."
+    }
+  ]
+}

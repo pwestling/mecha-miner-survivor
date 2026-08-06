@@ -1,0 +1,56 @@
+{
+  "id": "W-AF-coherence-memory",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-AF-coherence-memory.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#coherence-memory--amplification--2-asterite",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#coherence-memory--amplification--2-asterite",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches"
+  ],
+  "weapon_id": "W-AF",
+  "weapon_name": "Tracking Laser",
+  "branch_class": "Amplification",
+  "cost": {
+    "resource": "Asterite",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-AF-target-designator",
+      "W-AF-cutting-vector"
+    ],
+    "irreversible": true
+  },
+  "effects": {
+    "focus_resets_on_target_death_or_range_break": false,
+    "focus_decay_percentage_points_per_second_while_unlocked": 10,
+    "resumes_from_remaining_value_on_new_lock": true,
+    "changes_focus_cap_multiplier": false,
+    "focus_cap_multiplier": 2
+  },
+  "expected_effect": {
+    "approximate": true,
+    "realized_damage_percent": {
+      "min": 35,
+      "max": 55
+    },
+    "scene": "target-rich movement scenes"
+  },
+  "rules": [
+    {
+      "text": "Focus no longer resets immediately when the target dies or breaks line of range."
+    },
+    {
+      "text": "While no valid target is locked, the focus meter decays by 10 percentage points per second; locking any new target resumes from the remaining value."
+    },
+    {
+      "text": "This changes reliability rather than the 2× cap and is expected to add roughly 35–55% realized damage in target-rich movement scenes."
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "id": "W-AD-gravity-slingshot",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-AD-gravity-slingshot.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#gravity-slingshot--functional--2-driftmetal",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#gravity-slingshot--functional--2-driftmetal",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches"
+  ],
+  "weapon_id": "W-AD",
+  "weapon_name": "Gravity Projector",
+  "branch_class": "Functional",
+  "cost": {
+    "resource": "Driftmetal",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-AD-echo-well",
+      "W-AD-singularity-forge"
+    ],
+    "irreversible": true
+  },
+  "effects": {
+    "end_of_field_burst": true,
+    "burst_damage_percent_of_full_duration_damage_budget": 75,
+    "burst_damage_formula": "current Damage per second × current duration × 0.75",
+    "burst_radius": "current field radius",
+    "burst_hits_per_target": 1,
+    "ordinary_enemy_launch_distance_m": 4,
+    "launch_direction": "directly away from the mech position sampled when the field ends",
+    "boss_displacement_form": "resisted"
+  },
+  "expected_effect": {
+    "full_stay_damage_percent_of_base_field": 175,
+    "narrative": "the launch turning grouping into deliberate dispersal"
+  },
+  "rules": [
+    {
+      "text": "When a field ends, it emits a burst dealing 75% of that field's full-duration damage budget: `current Damage per second × current duration × 0.75`."
+    },
+    {
+      "text": "Ordinary survivors are launched 4M directly away from the mech's position sampled when the field ends; bosses receive resisted displacement."
+    },
+    {
+      "text": "The burst has the current field radius and can damage each target once."
+    },
+    {
+      "text": "Expected full-stay damage is 175% of the base field, with the launch turning grouping into deliberate dispersal."
+    }
+  ]
+}

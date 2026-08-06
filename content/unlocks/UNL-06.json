@@ -1,0 +1,51 @@
+{
+  "id": "UNL-06",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "unlock.UNL-06.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-PERMANENT-OPTION-UNLOCK-CATALOG#unl-06--sequential-reactor",
+    "catalog_overview_row: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#catalog-overview",
+    "currency: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
+    "prerequisite: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
+    "fresh_profile_purchasable: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
+    "prices_fixed: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
+    "permanent: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
+    "refundable: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
+    "disableable: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
+    "purchasable_during_run: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
+    "grants_account_access_only: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
+    "unlocks.relic_id: GDD-INITIAL-RELIC-CATALOG#catalog-overview",
+    "cost_hyper_gold: GDD-INITIAL-RELIC-CATALOG#fresh-profile-and-unlocked-availability",
+    "rules[2..3]: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#relic-pool-behavior"
+  ],
+  "category": "Relic",
+  "effect": "Adds Sequential Reactor to relic caches",
+  "cost_hyper_gold": 400,
+  "currency": "Hyper Gold",
+  "prerequisite": null,
+  "fresh_profile_purchasable": true,
+  "prices_fixed": true,
+  "permanent": true,
+  "refundable": false,
+  "disableable": false,
+  "purchasable_during_run": false,
+  "grants_account_access_only": true,
+  "unlocks": {
+    "kind": "relicCachePoolEntry",
+    "count": 1,
+    "relic": "Sequential Reactor",
+    "relic_id": "REL-10",
+    "adds_to_random_relic_cache_pool": true,
+    "guarantees_discovery": false,
+    "grants_starting_relic": false
+  },
+  "rules": [
+    "Permanently adds **Sequential Reactor** to the random relic-cache selection pool. Finding it remains unguaranteed, and installing or selling it uses the ordinary relic discovery rules.",
+    "Unlocking a relic permanently adds it to the random relic-cache selection pool.",
+    "Each purchased relic unlock permanently joins that pool; the player cannot disable an owned relic to narrow future random results.",
+    "An unlocked relic retains its full normal run-local rules: it must be found, its blocking choice must be resolved immediately, it occupies the single mech relic slot when installed, it may be sold for 150 common ore, and replacing an installed relic sells the displaced relic for 150. Ownership does not grant a starting relic."
+  ]
+}

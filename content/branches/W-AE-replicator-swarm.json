@@ -1,0 +1,63 @@
+{
+  "id": "W-AE-replicator-swarm",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-AE-replicator-swarm.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#replicator-swarm--amplification--2-eidolon-coral",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#replicator-swarm--amplification--2-eidolon-coral",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches"
+  ],
+  "weapon_id": "W-AE",
+  "weapon_name": "Attack Drones",
+  "branch_class": "Amplification",
+  "cost": {
+    "resource": "Eidolon Coral",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-AE-wolfpack-protocol",
+      "W-AE-containment-lattice"
+    ],
+    "irreversible": true
+  },
+  "effects": {
+    "trigger": "a permanent-drone kill",
+    "clones_per_trigger": 1,
+    "clone_kind": "temporary exact clone of that drone",
+    "clone_lifetime_seconds": 8.0,
+    "clone_inherits_current": [
+      "damage",
+      "attackRate",
+      "operationalRange"
+    ],
+    "clones_can_create_clones": false,
+    "max_temporary_drones": 6,
+    "overflow_rule": "creating a seventh replaces the temporary drone with the least remaining life"
+  },
+  "expected_effect": {
+    "benefit_against_lone_durable_target": 0,
+    "max_total_squad_size_multiplier": 3,
+    "condition": "while kills arrive quickly"
+  },
+  "rules": [
+    {
+      "text": "A permanent-drone kill creates a temporary exact clone of that drone for 8.0 s."
+    },
+    {
+      "text": "Temporary drones inherit current Damage, attack rate, and operational range but cannot create more clones."
+    },
+    {
+      "text": "At most six temporary drones may exist. Creating a seventh replaces the temporary drone with the least remaining life."
+    },
+    {
+      "text": "Expected effect: no benefit against a lone durable target but up to 3× total squad size while kills arrive quickly."
+    }
+  ]
+}

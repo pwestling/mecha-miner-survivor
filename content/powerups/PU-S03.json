@@ -1,0 +1,106 @@
+{
+  "id": "PU-S03",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "powerup.PU-S03.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-PERMANENT-POWERUP-CATALOG#pu-s03--repair-nanites",
+    "catalog_overview_row: GDD-PERMANENT-POWERUP-CATALOG#catalog-overview",
+    "currency: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "ui_grouping: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "prerequisite: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "fresh_profile_purchasable: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "ranks_must_be_bought_sequentially: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "prices_fixed: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "applies_account_wide: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "refundable: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "purchasable_during_run: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "active_rank_policy: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "total_cost_hyper_gold: DEC-120#decision",
+    "maximum_effect: GDD-PROGRESSION#progression-layers"
+  ],
+  "domain": "Survivability",
+  "per_rank_effect": {
+    "text": "+0.03 Hull/s Recovery",
+    "statistic": "Recovery",
+    "hull_per_second": 0.03
+  },
+  "cap": 5,
+  "maximum_effect": {
+    "text": "+0.15 Hull/s",
+    "statistic": "Recovery",
+    "hull_per_second": 0.15
+  },
+  "total_cost_hyper_gold": 825,
+  "currency": "Hyper Gold",
+  "ui_grouping": "Survivability",
+  "prerequisite": null,
+  "fresh_profile_purchasable": true,
+  "ranks_must_be_bought_sequentially": true,
+  "prices_fixed": true,
+  "applies_account_wide": true,
+  "refundable": true,
+  "purchasable_during_run": false,
+  "active_rank_policy": {
+    "minimum_active_rank": 0,
+    "maximum_active_rank_equals_purchased_rank": true,
+    "change_cost_hyper_gold": 0,
+    "changeable_between_runs": true,
+    "changeable_during_run": false
+  },
+  "rank_effect_column": "Total Recovery",
+  "ranks": [
+    {
+      "rank": 1,
+      "total_effect": {
+        "text": "+0.03 Hull/s",
+        "hull_per_second": 0.03
+      },
+      "price_hyper_gold": 50,
+      "cumulative_cost_hyper_gold": 50
+    },
+    {
+      "rank": 2,
+      "total_effect": {
+        "text": "+0.06 Hull/s",
+        "hull_per_second": 0.06
+      },
+      "price_hyper_gold": 100,
+      "cumulative_cost_hyper_gold": 150
+    },
+    {
+      "rank": 3,
+      "total_effect": {
+        "text": "+0.09 Hull/s",
+        "hull_per_second": 0.09
+      },
+      "price_hyper_gold": 150,
+      "cumulative_cost_hyper_gold": 300
+    },
+    {
+      "rank": 4,
+      "total_effect": {
+        "text": "+0.12 Hull/s",
+        "hull_per_second": 0.12
+      },
+      "price_hyper_gold": 225,
+      "cumulative_cost_hyper_gold": 525
+    },
+    {
+      "rank": 5,
+      "total_effect": {
+        "text": "+0.15 Hull/s",
+        "hull_per_second": 0.15
+      },
+      "price_hyper_gold": 300,
+      "cumulative_cost_hyper_gold": 825
+    }
+  ],
+  "rules": [
+    "Adds continuous passive Recovery to the account baseline and stacks additively with Repair Swarm and any future explicit Recovery source.",
+    "Cannot exceed maximum Hull and freezes during full-simulation pauses.",
+    "Does not increase the value of health packs or restore Hull after run end."
+  ]
+}

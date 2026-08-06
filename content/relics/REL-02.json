@@ -1,0 +1,142 @@
+{
+  "id": "REL-02",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "relic.REL-02.name",
+  "summary_key": "relic.REL-02.summary",
+  "tags": [],
+  "source_refs": [
+    "GDD-INITIAL-RELIC-CATALOG#rel-02--ghostline-chassis",
+    "acquisition.unlock: GDD-INITIAL-RELIC-CATALOG#fresh-profile-and-unlocked-availability",
+    "acquisition.unlock: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#catalog-overview",
+    "acquisition.unlock: DEC-121",
+    "acquisition: GDD-INITIAL-RELIC-CATALOG#fresh-profile-and-unlocked-availability",
+    "acquisition: GDD-INITIAL-RELIC-CATALOG",
+    "acquisition: GDD-MECH-RELICS#acquisition",
+    "acquisition: GDD-MECH-RELICS#install-or-sell-choice",
+    "acquisition: GDD-MAP-GENERATION#relic-caches",
+    "acquisition: GDD-MAPS#relics-as-exploration-rewards",
+    "acquisition: GDD-PROGRESSION#relic-sale",
+    "acquisition: GDD-INTERFACE-FLOW#relic-cache-discovery-and-resolution",
+    "acquisition: TDD-MINING-PROGRESSION#relic-cache-transaction",
+    "rarity_and_weighting: GDD-INITIAL-RELIC-CATALOG#fresh-profile-and-unlocked-availability",
+    "rarity_and_weighting: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#relic-pool-behavior",
+    "rarity_and_weighting: GDD-INTERFACE-FLOW#cache-selection-and-signaling",
+    "stacking_and_exclusivity: GDD-INITIAL-RELIC-CATALOG#shared-interaction-and-preview-rules",
+    "stacking_and_exclusivity: GDD-INITIAL-RELIC-CATALOG#catalog-principles",
+    "stacking_and_exclusivity: GDD-MECH-RELICS#replacement-and-interaction-rules",
+    "stacking_and_exclusivity: GDD-COMBAT-ECONOMY-BALANCE-FRAMEWORK#stacking-and-comparison-order",
+    "behavior_registration: TDD-COMBAT-RUNTIME#relic-integration",
+    "cross_document_rules[]: TDD-COMBAT-RUNTIME",
+    "discovery_sentence: GDD-INITIAL-RELIC-CATALOG#rel-02--ghostline-chassis",
+    "trigger: GDD-INITIAL-RELIC-CATALOG#rel-02--ghostline-chassis",
+    "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-02--ghostline-chassis"
+  ],
+  "primary_transformation": "Delayed duplicate arsenal",
+  "core_tradeoff": "Original weapon damage is reduced",
+  "affected_scope": "all equipped weapons",
+  "trigger": {
+    "condition": "continuous while installed"
+  },
+  "effects": {
+    "ghost_delay_seconds": 1.5,
+    "original_weapon_damage": {
+      "percent": 80
+    },
+    "ghost_weapon_damage": {
+      "percent": 60
+    },
+    "ghost_occupies_weapon_slot": false,
+    "ghost_collides_mines_collects_opens_or_takes_damage": false,
+    "values_are_initial_tuning": true
+  },
+  "pause_behavior": null,
+  "live_state_meter": null,
+  "acquisition": {
+    "method": "found in a relic cache through map exploration",
+    "fabricable": false,
+    "minable": false,
+    "listed_in_geological_survey": false,
+    "pool_availability": "hyper-gold-unlock",
+    "unlock": {
+      "unlock_id": "UNL-02",
+      "cost_hyper_gold": 250,
+      "currency": "Hyper Gold",
+      "permanent": true,
+      "refundable": false,
+      "can_be_disabled": false,
+      "effect": "Permanently adds the relic to the random relic-cache selection pool; it neither equips nor guarantees that relic."
+    },
+    "caches_per_standard_map": 3,
+    "cache_opening": "automatic on mech contact; freezes the complete gameplay simulation",
+    "relics_drawn_per_run": 3,
+    "draw_without_replacement": true,
+    "duplicates_within_one_run": false,
+    "resolution": "immediate install-or-sell; no relic inventory or deferred decision",
+    "sale_value_common_ore": 150,
+    "displaced_relic_auto_sale_common_ore": 150,
+    "sale_value_varies_by_identity_order_duration_or_progress": false
+  },
+  "rarity_and_weighting": {
+    "rarity_tier": null,
+    "cache_selection_weight": null,
+    "selection_model": "three distinct relics drawn without replacement from the currently unlocked pool and assigned to the three caches during generation",
+    "fresh_profile_pool_size": 5,
+    "fully_unlocked_pool_size": 10,
+    "in_fresh_profile_pool": false,
+    "guaranteed_to_appear": false
+  },
+  "stacking_and_exclusivity": {
+    "relic_slots": 1,
+    "simultaneously_active_relics": 1,
+    "stacks_with_other_relics": false,
+    "install_replaces_active_relic": true,
+    "run_local": true,
+    "persists_after_run": false,
+    "combines_with": [
+      "weapon branches",
+      "weapon stat ranks",
+      "utilities",
+      "mech traits",
+      "PowerUps"
+    ],
+    "modifier_order": "Relic-specific multipliers apply after the additive percentage modifiers supplied by mech traits, utilities, and PowerUps unless the relic explicitly replaces targeting or cadence.",
+    "applies_to_every_damaging_component_derived_from_an_equipped_weapon": true,
+    "already_created_finite_instances_retain_creation_time_relic_state": true,
+    "overrides_or_replaces": [
+      "weapon damage attribution between mech and ghost origin"
+    ]
+  },
+  "behavior_registration": {
+    "hook": "delayed transform history and attack duplication",
+    "registration_model": "Relics are cross-cutting policies registered by stable relic ID. They modify well-defined hook points rather than scattering ID checks through every weapon.",
+    "per_weapon_compatibility_manifest": "produced from tests; states fully affected, partially affected with disclosed reason, or invalid. The initial design expects no invalid pairing."
+  },
+  "rules": [
+    {
+      "text": "The ghost continuously retraces the mech's recorded position and persistent facing from 1.5 active-simulation seconds earlier."
+    },
+    {
+      "text": "Every equipped weapon's ordinary output is attributed either to the mech at 80% damage or to its ghost copy at 60% damage. Both inherit the original weapon's stats, branch, targeting rules, cadence, geometry, and non-damage effects."
+    },
+    {
+      "text": "The ghost supplies a delayed second origin for projectiles, fields, pulses, orbiting or contact weapons, movement paths, and autonomous attack events. It does not occupy a weapon slot, collide with enemies, mine, collect pickups, open caches, or take damage."
+    },
+    {
+      "text": "Movement-shaped attacks reproduce the ghost's delayed route, making loops, reversals, and passes strategically different from standing near the same location."
+    },
+    {
+      "text": "The maximum overlapping damage is intentionally greater than the original arsenal, but delayed spatial separation makes that power conditional on pathing and enemy movement."
+    },
+    {
+      "text": "The 1.5-second delay and 80%/60% damage factors are initial tuning values."
+    }
+  ],
+  "cross_document_rules": [
+    {
+      "rule": "The simulation retains at least two seconds of player position/facing history at tick resolution for Ghostline and path-based effects. History is a fixed-capacity ring and freezes with simulation time.",
+      "position_history_minimum_seconds": 2
+    }
+  ]
+}

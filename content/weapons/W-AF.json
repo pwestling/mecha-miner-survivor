@@ -1,0 +1,144 @@
+{
+  "id": "W-AF",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "weapon.W-AF.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#rank-zero-values-and-ore-stat-increments",
+    "recipe_pair: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "fabrication_cost: GDD-PROGRESSION#base-weapon-availability",
+    "base_automatic_attack: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "base_behavior: GDD-WEAPON-NUMERIC-CATALOG#w-af--tracking-laser",
+    "ore_upgradeable_stat_labels: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "damage_model: GDD-WEAPON-NUMERIC-CATALOG#base-weapon-summary",
+    "global_attack_rate_mapping: GDD-WEAPON-NUMERIC-CATALOG#global-weapon-attack-rate-mapping",
+    "branches.amplification.cost: GDD-WEAPON-NUMERIC-CATALOG#coherence-memory--amplification--2-asterite",
+    "branches.amplification.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.amplification: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.amplification: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.functional.cost: GDD-WEAPON-NUMERIC-CATALOG#target-designator--functional--2-flux-amber",
+    "branches.functional.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.functional: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.functional: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.conversion.cost: GDD-WEAPON-NUMERIC-CATALOG#cutting-vector--conversion--2-barysteel",
+    "branches.conversion.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.conversion: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.conversion: GDD-WEAPON-INDEX#catalog-lookup"
+  ],
+  "recipe_pair": {
+    "notation": "A + F",
+    "material_codes": [
+      "A",
+      "F"
+    ],
+    "material_names": [
+      "Asterite",
+      "Flux Amber"
+    ]
+  },
+  "signature_mech": null,
+  "fabrication_cost": {
+    "materials": [
+      {
+        "material_code": "A",
+        "material": "Asterite",
+        "units": 1
+      },
+      {
+        "material_code": "F",
+        "material": "Flux Amber",
+        "units": 1
+      }
+    ],
+    "signature_weapon_begins_equipped_without_paying_cost": true,
+    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost."
+  },
+  "base_automatic_attack": {
+    "text": "Maintains a focus-building beam on one target"
+  },
+  "base_behavior": {
+    "text": "locks to one target in range and deals continuous damage. Its multiplier rises linearly from 1× to 2× as the focus meter fills, taking 5.0 s at rank zero. Losing the target normally resets focus."
+  },
+  "ore_upgradeable_stat_labels": {
+    "labels": [
+      "Damage",
+      "range",
+      "focus rate"
+    ]
+  },
+  "ore_upgradeable_stats": [
+    {
+      "slot": 1,
+      "name": "Base damage rate",
+      "rank_zero": 18,
+      "increment_per_rank": 1.8,
+      "unit": "damage per second",
+      "discrete": false
+    },
+    {
+      "slot": 2,
+      "name": "Range",
+      "rank_zero": 9,
+      "increment_per_rank": 0.9,
+      "unit": "M",
+      "discrete": false
+    },
+    {
+      "slot": 3,
+      "name": "Focus gain",
+      "rank_zero": 20,
+      "increment_per_rank": 2,
+      "unit": "percentage points per second",
+      "discrete": false
+    }
+  ],
+  "fixed_properties": {
+    "focus_multiplier_minimum": 1,
+    "focus_multiplier_maximum": 2,
+    "focus_fill_seconds_at_rank_zero": 5.0,
+    "focus_resets_on_target_loss": true,
+    "raw": "Focus multiplier rises linearly from 1× to 2× and resets on target loss"
+  },
+  "damage_model": {
+    "rank_zero_damage_model": "18/s, focusing to 36/s",
+    "burst_10_dps": 31.5,
+    "sustained_30_dps": 36.0,
+    "favorable_horde_dps": 36,
+    "primary_limitation": "Requires uninterrupted focus on one target"
+  },
+  "global_attack_rate_mapping": {
+    "affected_timing": "None",
+    "unaffected_timing": "Continuous damage tick and focus gain"
+  },
+  "branches": {
+    "amplification": {
+      "name": "Coherence Memory",
+      "funding_material_code": "A",
+      "funding_material": "Asterite",
+      "cost": {
+        "material": "Asterite",
+        "units": 2
+      }
+    },
+    "functional": {
+      "name": "Target Designator",
+      "funding_material_code": "F",
+      "funding_material": "Flux Amber",
+      "cost": {
+        "material": "Flux Amber",
+        "units": 2
+      }
+    },
+    "conversion": {
+      "name": "Cutting Vector",
+      "funding_material_code": "B",
+      "funding_material": "Barysteel",
+      "cost": {
+        "material": "Barysteel",
+        "units": 2
+      }
+    }
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "id": "W-DF-momentum-cascade",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-DF-momentum-cascade.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#momentum-cascade--amplification--2-driftmetal",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#momentum-cascade--amplification--2-driftmetal"
+  ],
+  "weapon_id": "W-DF",
+  "weapon_name": "Ram Field",
+  "class": "Amplification",
+  "cost": {
+    "resource": "Driftmetal",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-DF-impact-transfer",
+      "W-DF-siege-anchor"
+    ],
+    "irreversible_within_run": true,
+    "existing_common_ore_stat_tracks_still_apply": true,
+    "adds_new_stat_track": false,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run."
+  },
+  "availability": {
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite.",
+    "purchase": "Installing one is a single deterministic purchase costing exactly two units of its assigned specialized material."
+  },
+  "effects": {
+    "stack_name": "Momentum",
+    "stack_gain_movement_speed_threshold": {
+      "percent": 80,
+      "of": "base movement speed"
+    },
+    "stacks_per_full_second_above_threshold": 1,
+    "stacks_per_valid_impact": 1,
+    "maximum_impact_granted_stacks_per_second": 1,
+    "per_stack_damage_bonus": {
+      "percent": 10
+    },
+    "per_stack_ram_width_bonus": {
+      "percent": 5
+    },
+    "stack_cap": 6,
+    "maximum_damage_bonus": {
+      "percent": 60
+    },
+    "maximum_ram_width_bonus": {
+      "percent": 30
+    },
+    "stack_clear": {
+      "below_base_movement_speed": {
+        "percent": 20
+      },
+      "for_seconds": 1.0,
+      "collisions_clear_stacks": false,
+      "turning_clears_stacks": false
+    }
+  },
+  "expected_effect": null,
+  "rules": [
+    {
+      "text": "Each full second above 80% of base movement speed gives one Momentum stack. A valid impact also grants one stack, but no more than one impact-granted stack per second."
+    },
+    {
+      "text": "Each stack gives +10% Damage and +5% ram width. Six stacks cap the bonuses at +60% Damage and +30% width."
+    },
+    {
+      "text": "Falling below 20% base speed for 1.0 s clears all stacks; collisions and turns do not."
+    },
+    {
+      "text": "The branch makes long committed charges visibly stronger without requiring a straight line."
+    }
+  ]
+}

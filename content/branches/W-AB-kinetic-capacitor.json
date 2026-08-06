@@ -1,0 +1,68 @@
+{
+  "id": "W-AB-kinetic-capacitor",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-AB-kinetic-capacitor.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#kinetic-capacitor--conversion--2-cinderglass",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#kinetic-capacitor--conversion--2-cinderglass",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches"
+  ],
+  "weapon_id": "W-AB",
+  "weapon_name": "Rail Lance",
+  "branch_class": "Conversion",
+  "cost": {
+    "resource": "Cinderglass",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-AB-unbounded-bore",
+      "W-AB-fracture-lance"
+    ],
+    "irreversible": true
+  },
+  "effects": {
+    "replaces_regular_shot": true,
+    "charge_tied_to_mech_movement": true,
+    "charge_time_stationary_seconds": 9.0,
+    "charge_rate_multiplier_at_full_unmodified_movement_speed": 2,
+    "charge_time_at_full_movement_speed_seconds": 4.5,
+    "intermediate_movement_speed_interpolation": "linear",
+    "charged_shot_damage_percent_of_current_damage": 175,
+    "charged_shot_width_percent_of_current_width": 200,
+    "unlimited_pierce": true,
+    "retains_current_range": true,
+    "projectile_speed_m_per_s": 30,
+    "base_lance_cadence_seconds_for_comparison": 3.0,
+    "always_fires_less_often_than_base_cadence": true,
+    "charge_retained_while_briefly_changing_direction": true,
+    "charge_lost_only_by_firing": true,
+    "stopping_slows_remaining_charge": true
+  },
+  "expected_effect": {
+    "narrative": "much stronger mobile lane-clearing weapon whose stationary boss DPS is substantially worse"
+  },
+  "rules": [
+    {
+      "text": "Replaces the regular shot with a charge tied to mech movement."
+    },
+    {
+      "text": "The charge takes 9.0 s while stationary. At full unmodified movement speed it builds twice as fast and fires every 4.5 s; intermediate movement speeds interpolate linearly."
+    },
+    {
+      "text": "The charged lance deals 175% current Damage, has 200% current width, and has unlimited pierce. It retains current range and 30M/s projectile speed. Even at full movement it fires less often than the 3.0 s base lance."
+    },
+    {
+      "text": "The charge is retained while briefly changing direction and is lost only by firing; stopping merely slows the remaining charge."
+    },
+    {
+      "text": "This creates a much stronger mobile lane-clearing weapon whose stationary boss DPS is substantially worse."
+    }
+  ]
+}

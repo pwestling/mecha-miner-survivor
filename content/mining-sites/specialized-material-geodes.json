@@ -1,0 +1,101 @@
+{
+  "id": null,
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "mining_site.specialized-material-geodes.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-MINING#specialized-material-geodes",
+    "resonance_field: GDD-MINING#geode-resonance-fields",
+    "resonance_field.modifier_named_in_geode_label_or_contextual_hud: GDD-SPECIALIZED-RESOURCE-IDENTITIES#geode-resonance-behavior"
+  ],
+  "site_class": "specialized-material-geode",
+  "present_materials_per_run": 4,
+  "eligible_materials": [
+    "Asterite",
+    "Barysteel",
+    "Cinderglass",
+    "Driftmetal",
+    "Eidolon Coral",
+    "Flux Amber"
+  ],
+  "material_units_per_geode": 1,
+  "geodes_per_present_material": {
+    "min": 8,
+    "max": 10
+  },
+  "geodes_per_standard_map": {
+    "min": 32,
+    "max": 40
+  },
+  "abundance_states": [
+    {
+      "survey_state": "Scarce",
+      "geodes_on_map": 8,
+      "meaning": "Lowest accepted supply; still broadly plentiful"
+    },
+    {
+      "survey_state": "Moderate",
+      "geodes_on_map": 9,
+      "meaning": "Middle supply"
+    },
+    {
+      "survey_state": "Rich",
+      "geodes_on_map": 10,
+      "meaning": "Highest standard supply"
+    }
+  ],
+  "survey_disclosure": "The geological survey reports both the abundance label and detected geode count, but not their locations.",
+  "common_ore_from_completion_jackpots_per_map": {
+    "min": 1600,
+    "max": 2000
+  },
+  "extraction_duration_seconds": 20,
+  "completion_only_reward": true,
+  "completion_payout": [
+    {
+      "resource": "specialized material",
+      "amount": 1,
+      "detail": "exactly one unit of the geode's own material"
+    },
+    {
+      "resource": "common ore",
+      "amount": 50
+    }
+  ],
+  "partial_payout": "none; no partial material or ore payout",
+  "extraction_zone_radius_m": null,
+  "progress_decay": {
+    "grace_seconds": 0.5,
+    "decay_rate_multiplier_of_forward_rate": 4,
+    "secured_checkpoint": null,
+    "rule": "The reward is withheld until the Complete transition, so an incomplete attempt pays nothing."
+  },
+  "resonance_field": {
+    "shape": "circular",
+    "radius_m": null,
+    "larger_than_extraction_zone": true,
+    "modifier_magnitude": {
+      "percent": 20
+    },
+    "active_while_unopened": true,
+    "active_before_extraction_begins": true,
+    "active_during_interruptions": true,
+    "collapses_on_open": true,
+    "applies_to": [
+      "ordinary enemies",
+      "elites",
+      "bosses"
+    ],
+    "retained_after_leaving_field": false,
+    "generation_constraint": "Standard map generation separates unopened geodes far enough that their resonance fields do not overlap.",
+    "fields_overlap_on_standard_maps": false,
+    "summons_enemies": false,
+    "uses_progress_thresholds": false,
+    "modifier_named_in_geode_label_or_contextual_hud": true
+  },
+  "beacon_thresholds": null,
+  "depleted_state": "non-interactive mapped landmark for the rest of the run; cannot be reactivated",
+  "persistence": "run-local; the specialized material and 50 common ore are lost if unspent when the run ends"
+}

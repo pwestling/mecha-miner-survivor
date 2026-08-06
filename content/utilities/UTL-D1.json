@@ -1,0 +1,126 @@
+{
+  "id": "UTL-D1",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "utility.UTL-D1.name",
+  "summary_key": "utility.UTL-D1.summary",
+  "tags": [],
+  "source_refs": [
+    "GDD-UTILITY-CATALOG#utl-d1--vector-thrusters",
+    "external_numerics[]: GDD-INITIAL-MECH-CATALOG",
+    "external_numerics[]: GDD-PLAYER-SURVIVABILITY-BASELINE"
+  ],
+  "material": "Driftmetal",
+  "primary_role": "Mobility",
+  "installed_to_rank_3": "+6% → +15% movement speed",
+  "effect": {
+    "stat_names": [
+      "Movement speed"
+    ],
+    "value_kind": "additive-percent",
+    "stacking_classification": "Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative. (docs/68-utility-catalog.md:253)"
+  },
+  "ranks": [
+    {
+      "state": "Installed",
+      "movement_speed": {
+        "percent": 6
+      }
+    },
+    {
+      "state": "Rank 1",
+      "movement_speed": {
+        "percent": 9
+      }
+    },
+    {
+      "state": "Rank 2",
+      "movement_speed": {
+        "percent": 12
+      }
+    },
+    {
+      "state": "Rank 3",
+      "movement_speed": {
+        "percent": 15
+      }
+    }
+  ],
+  "acquisition": {
+    "material_unit_cost": 1,
+    "utility_slots_filled": 1,
+    "rank_count": 3,
+    "rank_ore_costs": [
+      50,
+      100,
+      150
+    ],
+    "total_rank_ore_cost": 300,
+    "rank_values_are_totals_not_cumulative_additions": true,
+    "unique_in_loadout": true,
+    "has_branches": false,
+    "has_alternative_recipes": false,
+    "replaceable": false,
+    "dismantlable": false,
+    "sellable": false,
+    "refundable_during_run": false,
+    "requires_manual_activation": false,
+    "previews_all_four_effect_tiers": true
+  },
+  "availability": {
+    "fresh_profile": true,
+    "coverage_role": "Mobility",
+    "unlock_id": null,
+    "unlock_name": null,
+    "unlock_cost_hyper_gold": null
+  },
+  "effect_rules": [
+    "Applies to direct movement in every direction without changing acceleration, stopping, facing, collision, mining progress, or enemy speed.",
+    "Combines with mech, PowerUp, relic, and temporary movement modifiers and appears in the displayed final movement statistic."
+  ],
+  "catalog_wide_rules": {
+    "shared_acquisition_and_rank_rules": [
+      "Every non-radar utility costs one unit of its assigned specialized material and permanently fills one of three utility slots.",
+      "Each begins at its listed Installed effect and has three common-ore ranks costing 50, 100, and 150 ore.",
+      "The four values shown for a utility are its Installed, Rank 1, Rank 2, and Rank 3 totals—not cumulative additions.",
+      "A utility is unique within the loadout and cannot be fabricated twice.",
+      "Utilities have no branches, alternative recipes, replacement, dismantling, sale, or refund during a run.",
+      "Fabrication previews all four effect tiers, the current build's affected systems, and any equipped weapon that receives no benefit from a weapon-support utility.",
+      "The resource radar remains outside the material table: it costs 300 common ore, has no ranks, and retains its accepted seven-category directional behavior."
+    ],
+    "modifier_and_timing_rules": [
+      "Flat statistic changes apply before percentage modifiers. Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative.",
+      "Attack rate is represented as attacks per second or equivalent frequency; a +20% attack-rate total produces 1.2 times the unmodified activation frequency.",
+      "Recovery sources add in Hull Integrity per second.",
+      "Already-created finite projectiles, zones, mines, and similar weapon instances retain the damage, geometry, and lifetime with which they were created. New instances use the newly fabricated or ranked utility values.",
+      "Persistent autonomous units remain in place and use new utility values for attacks they perform after play resumes.",
+      "Fabrication and utility ranking occur during a complete-simulation pause, so no duration, cooldown, Recovery, or mining state advances while the purchase is reviewed.",
+      "If a later relic explicitly replaces a statistic or rule, its description must state whether it overrides or combines with these utilities. Silent exceptions are not allowed."
+    ]
+  },
+  "external_numerics": [
+    {
+      "statement": "Razorback's inherent 110% movement speed reaches 125% with Rank 3 Vector Thrusters.",
+      "value": {
+        "percent": 125
+      },
+      "quote": "| Razorback | 110% movement speed | 125% with Vector Thrusters |"
+    },
+    {
+      "statement": "Percentage movement bonuses add by percentage points and apply once to the 3.0M/s baseline.",
+      "value": 3.0,
+      "quote": "- Percentage movement bonuses add by percentage points and apply once to the 3.0M/s baseline."
+    },
+    {
+      "statement": "A non-Razorback with maximum Servo Overdrive and Rank-3 Vector Thrusters moves at 3.75M/s.",
+      "value": 3.75,
+      "quote": "- A non-Razorback with maximum Servo Overdrive and Rank-3 Vector Thrusters moves at 3.75M/s."
+    },
+    {
+      "statement": "Razorback with both maximum Servo Overdrive and Rank-3 Vector Thrusters moves at 4.05M/s.",
+      "value": 4.05,
+      "quote": "- Razorback with both moves at 4.05M/s: `3.0 × (1 + 0.10 + 0.10 + 0.15)`."
+    }
+  ]
+}

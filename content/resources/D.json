@@ -1,0 +1,34 @@
+{
+  "id": "D",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "resource.D.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-SPECIALIZED-RESOURCE-IDENTITIES#accepted-identity-map",
+    "resonance_behavior: GDD-MINING#geode-resonance-fields",
+    "resonance_behavior.short_modifier: GDD-SPECIALIZED-RESOURCE-IDENTITIES#geode-resonance-behavior"
+  ],
+  "material_character": "Polarized metallic fins that continually realign",
+  "loose_association": "Direction, momentum, displacement, geometry",
+  "primary_color": "Vermilion red",
+  "icon_and_silhouette_cue": "Paired chevrons or compass fins",
+  "audio_character": "Directional whir with a Doppler shift",
+  "resource_class": "specialized ordinary resource",
+  "inventory_scope": "run-local",
+  "persistence": "Run-local; unspent units are lost when the run ends",
+  "shared_economy_tier": true,
+  "maximum_safe_count": null,
+  "resonance_effect_name": "Vector Lock",
+  "resonance_behavior": {
+    "effect_name": "Vector Lock",
+    "resonance_effect": "player-imposed displacement magnitude and control-effect duration are 20% lower",
+    "modifier": {
+      "percent": 20,
+      "direction": "decrease"
+    },
+    "short_modifier": "Player-imposed displacement and control duration −20%",
+    "edge_case_rule": "Reduces both forced-movement magnitude and timed control duration without granting immunity."
+  }
+}

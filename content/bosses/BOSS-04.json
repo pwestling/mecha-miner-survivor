@@ -1,0 +1,138 @@
+{
+  "id": "BOSS-04",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "boss.BOSS-04.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-INITIAL-ALIEN-ROSTER#interval-boss-overview",
+    "arrival: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
+    "movement_speed: GDD-PLAYER-SURVIVABILITY-BASELINE#movement-and-speed-modifiers",
+    "contact_footprint: GDD-PLAYER-SURVIVABILITY-BASELINE#collision-and-contact-footprints",
+    "contact_cadence: GDD-INITIAL-ALIEN-ROSTER#interval-boss-overview",
+    "damage_pressure: GDD-PLAYER-SURVIVABILITY-BASELINE#damage-pressure-reference",
+    "required_realized_build_dps: GDD-COMBAT-ECONOMY-BALANCE-FRAMEWORK#build-milestone-boss-dps-budgets",
+    "milestone_reach_target_probability: GDD-PLAYER-SURVIVABILITY-BASELINE#run-level-margins",
+    "ability.resonant_damage_reference: GDD-PLAYER-SURVIVABILITY-BASELINE#damage-pressure-reference",
+    "ability: GDD-INITIAL-ALIEN-ROSTER#boss-04--skybreaker-apex",
+    "ability: TDD-ENCOUNTERS#boss-behavior-state-machines",
+    "persistence.reentry: TDD-ENCOUNTERS#boss-re-entry",
+    "persistence: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
+    "resonance: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
+    "defeat_reward: GDD-RUN-STRUCTURE#boss-defeat-reward",
+    "description: GDD-INITIAL-ALIEN-ROSTER#boss-04--skybreaker-apex"
+  ],
+  "arrival": {
+    "timecode": "28:00",
+    "active_seconds_into_run": 1680,
+    "warning_lead_seconds": 15
+  },
+  "initial_hull": 45000,
+  "movement_speed": {
+    "percent_of_mech_base_speed": {
+      "percent": 50
+    },
+    "world_speed_m_per_s": 1.5
+  },
+  "contact_damage": 38,
+  "control_resistance": {
+    "percent": 95
+  },
+  "defining_behavior": "Leaps onto a locked ground marker",
+  "armor": null,
+  "behavior_kind": "persistent giant pursuer with exactly one additional behavior",
+  "contact_footprint": {
+    "contact_and_weapon_hurt_diameter_m": 1.9,
+    "center_distance_that_begins_contact_m": 1.45,
+    "shape": "Circle",
+    "appendages_outside_footprint": "may pass over the mech harmlessly",
+    "attack_geometry_uses_separate_display": "charge lanes, projectile shapes, and landing circles use their separately displayed attack geometry rather than the boss contact circle"
+  },
+  "contact_cadence": {
+    "matches_shared_ordinary_cadence": true,
+    "same_enemy_repeat_interval_seconds": 0.75,
+    "global_contact_grace_after_resolved_contact_seconds": 0.2,
+    "added_attack_defines_own_damage_event": true
+  },
+  "damage_pressure": {
+    "contact_damage": 38,
+    "hits_to_defeat_100_hull": 3,
+    "continuous_overlap_time_to_defeat_seconds": 1.5,
+    "assumptions": "100 Hull, zero Armor, no healing, no resonance, uninterrupted overlap with one attacker"
+  },
+  "target_time_to_kill_seconds": {
+    "min": 90,
+    "max": 120
+  },
+  "required_realized_build_dps": {
+    "min": 375,
+    "max": 500
+  },
+  "milestone_reach_target_probability": {
+    "percent": {
+      "min": 40,
+      "max": 65
+    },
+    "cohort": "players who understand movement and fabrication but have no permanent PowerUps"
+  },
+  "ability": {
+    "kind": "locked-marker leap",
+    "cadence_seconds": 9,
+    "crouch_duration_seconds": 1.5,
+    "landing_damage": 35,
+    "marker_shape": "Circle",
+    "marker_diameter_m": null,
+    "marker_placement": "a circular area centered on the mech's sampled position",
+    "marker_tracks_after_appearing": false,
+    "marker_visibility": "its boundary plus countdown remain visible beneath player and enemy effects",
+    "airborne_deals_contact_damage": false,
+    "airborne_remains_targetable": true,
+    "invalid_landing_resolution": "the landing cannot place the boss in solid terrain; an invalid point moves to the nearest valid ground without moving the marker closer to the mech",
+    "resumes_pursuit_immediately_after_landing": true,
+    "resonant_damage_reference": {
+      "base_damage": 35,
+      "resonant_damage": 42,
+      "resonance_source": "Asterite",
+      "fresh_mech_hits_to_defeat_at_resonant_value": 3
+    },
+    "design_role": "provides the boss's anti-distance pressure without adding a second ability"
+  },
+  "post_hard_control_immunity_seconds": 1.5,
+  "ability_timeline_cancellable_by_player_control": false,
+  "persistence": {
+    "never_despawns": true,
+    "counts_toward_ordinary_population": false,
+    "max_simultaneous_bosses": 4,
+    "persists_until_killed": true,
+    "later_bosses_may_overlap": true,
+    "required_for_extraction": false,
+    "disposed_without_reward_if_run_extracts_while_alive": true,
+    "spawn_rule": "enters from valid navigable ground outside the camera; never on the mech, inside an active mining zone, or in an unavoidable collision path",
+    "reentry": {
+      "trigger": "remains far outside the combat area",
+      "behavior": "re-enters from a telegraphed valid off-screen approach",
+      "ability_cooldown_restarts_after_reentry": true,
+      "non_damaging_while_pending": true
+    }
+  },
+  "arrival_warning_presentation": [
+    "15-second HUD warning",
+    "directional boss icon",
+    "distinctive distant cry",
+    "edge treatment"
+  ],
+  "resonance": {
+    "receives_same_geode_resonance_modifiers_as_ordinary_enemies": true,
+    "control_resistance_combines_with_driftmetal": "without reaching complete immunity unless a later rule says so"
+  },
+  "defeat_reward": {
+    "common_ore": 300,
+    "unsecured_hyper_gold": 25,
+    "specialized_material_units": 2,
+    "material_selection": "each unit independently selects one of the four materials present in the geological profile, with duplicates allowed and absent materials excluded",
+    "delivery": "non-modal physical loot burst scattered onto valid nearby ground, contact-collected, persisting until collected or run end, with an immediate minimap marker",
+    "pauses_timer_or_opens_ui": false
+  },
+  "description": "Skybreaker Apex is a towering four-limbed predator with folded dorsal membranes that open only for its leap."
+}

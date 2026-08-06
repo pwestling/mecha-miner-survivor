@@ -1,0 +1,150 @@
+{
+  "id": "W-DF",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "weapon.W-DF.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#rank-zero-values-and-ore-stat-increments",
+    "recipe_pair: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "signature_mech: GDD-INITIAL-MECH-CATALOG#catalog-overview",
+    "fabrication_cost: GDD-PROGRESSION#base-weapon-availability",
+    "base_automatic_attack: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "base_behavior: GDD-WEAPON-NUMERIC-CATALOG#w-df--ram-field",
+    "ore_upgradeable_stat_labels: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "damage_model: GDD-WEAPON-NUMERIC-CATALOG#base-weapon-summary",
+    "global_attack_rate_mapping: GDD-WEAPON-NUMERIC-CATALOG#global-weapon-attack-rate-mapping",
+    "branches.amplification.cost: GDD-WEAPON-NUMERIC-CATALOG#momentum-cascade--amplification--2-driftmetal",
+    "branches.amplification.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.amplification: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.amplification: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.functional.cost: GDD-WEAPON-NUMERIC-CATALOG#impact-transfer--functional--2-flux-amber",
+    "branches.functional.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.functional: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.functional: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.conversion.cost: GDD-WEAPON-NUMERIC-CATALOG#siege-anchor--conversion--2-asterite",
+    "branches.conversion.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.conversion: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.conversion: GDD-WEAPON-INDEX#catalog-lookup"
+  ],
+  "recipe_pair": {
+    "notation": "D + F",
+    "material_codes": [
+      "D",
+      "F"
+    ],
+    "material_names": [
+      "Driftmetal",
+      "Flux Amber"
+    ]
+  },
+  "signature_mech": {
+    "mech_id": "MCH-06",
+    "mech": "Razorback",
+    "is_initial_signature": true
+  },
+  "fabrication_cost": {
+    "materials": [
+      {
+        "material_code": "D",
+        "material": "Driftmetal",
+        "units": 1
+      },
+      {
+        "material_code": "F",
+        "material": "Flux Amber",
+        "units": 1
+      }
+    ],
+    "signature_weapon_begins_equipped_without_paying_cost": true,
+    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost."
+  },
+  "base_automatic_attack": {
+    "text": "Maintains a damaging forward ram while the mech moves"
+  },
+  "base_behavior": {
+    "text": "while movement speed is at least 20% of base speed, projects a short damaging field in front of the mech. An enemy overlapping it may be hit every 0.5 s and is pushed along the mech's facing direction. The field is inactive below that threshold."
+  },
+  "ore_upgradeable_stat_labels": {
+    "labels": [
+      "Damage",
+      "ram width",
+      "knockback distance"
+    ]
+  },
+  "ore_upgradeable_stats": [
+    {
+      "slot": 1,
+      "name": "Contact damage",
+      "rank_zero": 16,
+      "increment_per_rank": 1.6,
+      "unit": "damage",
+      "discrete": false
+    },
+    {
+      "slot": 2,
+      "name": "Ram width",
+      "rank_zero": 1.5,
+      "increment_per_rank": 0.12,
+      "unit": "M",
+      "discrete": false
+    },
+    {
+      "slot": 3,
+      "name": "Knockback",
+      "rank_zero": 0.6,
+      "increment_per_rank": 0.06,
+      "unit": "M",
+      "discrete": false
+    }
+  ],
+  "fixed_properties": {
+    "forward_reach_m": 1.2,
+    "per_target_repeat_interval_seconds": 0.5,
+    "activation_movement_speed_threshold_of_base": {
+      "percent": 20
+    },
+    "raw": "1.2M forward reach, 0.5 s per-target repeat interval"
+  },
+  "damage_model": {
+    "rank_zero_damage_model": "16 per target every 0.5 s",
+    "burst_10_dps": 32.0,
+    "sustained_30_dps": 32.0,
+    "favorable_horde_dps": 128,
+    "primary_limitation": "Requires movement directly through danger"
+  },
+  "global_attack_rate_mapping": {
+    "affected_timing": "Per-enemy contact-repeat rate",
+    "unaffected_timing": "Movement threshold and Siege Anchor setup"
+  },
+  "branches": {
+    "amplification": {
+      "name": "Momentum Cascade",
+      "funding_material_code": "D",
+      "funding_material": "Driftmetal",
+      "cost": {
+        "material": "Driftmetal",
+        "units": 2
+      }
+    },
+    "functional": {
+      "name": "Impact Transfer",
+      "funding_material_code": "F",
+      "funding_material": "Flux Amber",
+      "cost": {
+        "material": "Flux Amber",
+        "units": 2
+      }
+    },
+    "conversion": {
+      "name": "Siege Anchor",
+      "funding_material_code": "A",
+      "funding_material": "Asterite",
+      "cost": {
+        "material": "Asterite",
+        "units": 2
+      }
+    }
+  }
+}

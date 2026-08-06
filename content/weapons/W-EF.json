@@ -1,0 +1,150 @@
+{
+  "id": "W-EF",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "weapon.W-EF.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#rank-zero-values-and-ore-stat-increments",
+    "recipe_pair: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "signature_mech: GDD-INITIAL-MECH-CATALOG#catalog-overview",
+    "fabrication_cost: GDD-PROGRESSION#base-weapon-availability",
+    "base_automatic_attack: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "base_behavior: GDD-WEAPON-NUMERIC-CATALOG#w-ef--missile-rack",
+    "ore_upgradeable_stat_labels: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "damage_model: GDD-WEAPON-NUMERIC-CATALOG#base-weapon-summary",
+    "global_attack_rate_mapping: GDD-WEAPON-NUMERIC-CATALOG#global-weapon-attack-rate-mapping",
+    "branches.amplification.cost: GDD-WEAPON-NUMERIC-CATALOG#mirv-saturation--amplification--2-flux-amber",
+    "branches.amplification.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.amplification: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.amplification: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.functional.cost: GDD-WEAPON-NUMERIC-CATALOG#guardian-reserve--functional--2-eidolon-coral",
+    "branches.functional.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.functional: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.functional: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.conversion.cost: GDD-WEAPON-NUMERIC-CATALOG#spiral-barrage--conversion--2-driftmetal",
+    "branches.conversion.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.conversion: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.conversion: GDD-WEAPON-INDEX#catalog-lookup"
+  ],
+  "recipe_pair": {
+    "notation": "E + F",
+    "material_codes": [
+      "E",
+      "F"
+    ],
+    "material_names": [
+      "Eidolon Coral",
+      "Flux Amber"
+    ]
+  },
+  "signature_mech": {
+    "mech_id": "MCH-03",
+    "mech": "Prospector",
+    "is_initial_signature": true
+  },
+  "fabrication_cost": {
+    "materials": [
+      {
+        "material_code": "E",
+        "material": "Eidolon Coral",
+        "units": 1
+      },
+      {
+        "material_code": "F",
+        "material": "Flux Amber",
+        "units": 1
+      }
+    ],
+    "signature_weapon_begins_equipped_without_paying_cost": true,
+    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost."
+  },
+  "base_automatic_attack": {
+    "text": "Distributes a homing missile salvo among nearby targets"
+  },
+  "base_behavior": {
+    "text": "each salvo launches four homing missiles, dividing them across valid targets when possible. A missile can retarget if its target dies and explodes on contact or at the end of its five-second life."
+  },
+  "ore_upgradeable_stat_labels": {
+    "labels": [
+      "Damage",
+      "blast radius",
+      "launch rate"
+    ]
+  },
+  "ore_upgradeable_stats": [
+    {
+      "slot": 1,
+      "name": "Missile damage",
+      "rank_zero": 26,
+      "increment_per_rank": 2.6,
+      "unit": "damage",
+      "discrete": false
+    },
+    {
+      "slot": 2,
+      "name": "Blast radius",
+      "rank_zero": 1,
+      "increment_per_rank": 0.1,
+      "unit": "M",
+      "discrete": false
+    },
+    {
+      "slot": 3,
+      "name": "Salvo rate",
+      "rank_zero": 0.333,
+      "increment_per_rank": 0.033,
+      "unit": "activations per second",
+      "discrete": false
+    }
+  ],
+  "fixed_properties": {
+    "missiles_per_salvo": 4,
+    "acquire_range_m": 12,
+    "missile_speed_m_per_s": 8,
+    "missile_life_seconds": 5,
+    "turn_rate_degrees_per_second": 180,
+    "raw": "Four missiles per salvo, 12M acquire range, 8M/s speed, 5 s life, 180°/s turn rate"
+  },
+  "damage_model": {
+    "rank_zero_damage_model": "4 × 26 every 3.0 s",
+    "burst_10_dps": 41.6,
+    "sustained_30_dps": 34.7,
+    "favorable_horde_dps": 69,
+    "primary_limitation": "Slow missiles can waste travel on dead or obscured targets"
+  },
+  "global_attack_rate_mapping": {
+    "affected_timing": "Salvo production rate",
+    "unaffected_timing": "Missile movement, reserve life, and targeting"
+  },
+  "branches": {
+    "amplification": {
+      "name": "MIRV Saturation",
+      "funding_material_code": "F",
+      "funding_material": "Flux Amber",
+      "cost": {
+        "material": "Flux Amber",
+        "units": 2
+      }
+    },
+    "functional": {
+      "name": "Guardian Reserve",
+      "funding_material_code": "E",
+      "funding_material": "Eidolon Coral",
+      "cost": {
+        "material": "Eidolon Coral",
+        "units": 2
+      }
+    },
+    "conversion": {
+      "name": "Spiral Barrage",
+      "funding_material_code": "D",
+      "funding_material": "Driftmetal",
+      "cost": {
+        "material": "Driftmetal",
+        "units": 2
+      }
+    }
+  }
+}

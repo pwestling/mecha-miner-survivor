@@ -1,0 +1,55 @@
+{
+  "id": "W-AC-interdiction-payload",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-AC-interdiction-payload.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#interdiction-payload--functional--2-asterite",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#interdiction-payload--functional--2-asterite",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches"
+  ],
+  "weapon_id": "W-AC",
+  "weapon_name": "Cluster Mortar",
+  "branch_class": "Functional",
+  "cost": {
+    "resource": "Asterite",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-AC-saturation-cascade",
+      "W-AC-danger-close-protocol"
+    ],
+    "irreversible": true
+  },
+  "effects": {
+    "hazard_field_duration_seconds": 3.0,
+    "hazard_field_position": "primary explosion impact point",
+    "hazard_field_tick_damage_percent_of_current_damage": 12,
+    "hazard_field_tick_interval_seconds": 0.5,
+    "additional_damage_percent_for_full_duration_stay": 72,
+    "slow_percent": 30,
+    "boss_slow_form": "globally resisted",
+    "fields_may_overlap_and_damage_independently": true
+  },
+  "expected_effect": null,
+  "rules": [
+    {
+      "text": "The primary explosion leaves a 3.0 s hazard field at its impact point."
+    },
+    {
+      "text": "The field deals 12% current Damage every 0.5 s, for 72% additional damage to an enemy that remains for the full duration."
+    },
+    {
+      "text": "Enemies inside are slowed by 30%; bosses receive the globally resisted form of the slow."
+    },
+    {
+      "text": "Repeated fields may overlap and damage independently."
+    }
+  ]
+}

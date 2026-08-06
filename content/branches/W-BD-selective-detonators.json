@@ -1,0 +1,69 @@
+{
+  "id": "W-BD-selective-detonators",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-BD-selective-detonators.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#selective-detonators--functional--2-driftmetal",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#selective-detonators--functional--2-driftmetal"
+  ],
+  "weapon_id": "W-BD",
+  "weapon_name": "Mine Layer",
+  "class": "Functional",
+  "cost": {
+    "resource": "Driftmetal",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-BD-seed-charges",
+      "W-BD-hunter-mines"
+    ],
+    "irreversible_within_run": true,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run."
+  },
+  "availability": {
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite."
+  },
+  "effects": {
+    "trigger_ordinary_equivalent_threshold": 3,
+    "trigger_immediately_on_elite_or_boss": true,
+    "damage_multiplier_formula": "1 + 0.15 × (ordinary-equivalent count − 1)",
+    "damage_multiplier_per_additional_ordinary_equivalent": 0.15,
+    "damage_multiplier_cap": 2,
+    "ordinary_equivalent_weights": {
+      "boss": 3,
+      "elite": 4
+    },
+    "expiry_detonation_minimum_multiplier": 1.3,
+    "expiry_with_enemy_in_radius": "detonates",
+    "expiry_with_no_enemy_in_radius": "disappears harmlessly"
+  },
+  "favorable_scene_effect": {
+    "magnitude": {
+      "damage_multiplier_max": 2
+    },
+    "qualitative": "improves payload efficiency but can leave holes against scattered weak enemies"
+  },
+  "rules": [
+    {
+      "text": "A mine waits until at least three ordinary-equivalent enemies are in radius, or until an elite or boss enters."
+    },
+    {
+      "text": "Its damage multiplier is `1 + 0.15 × (ordinary-equivalent count − 1)`, capped at 2×. A boss counts as three and an elite as four for this calculation."
+    },
+    {
+      "text": "An expiring mine detonates with a minimum 1.30× multiplier if any enemy is in radius; otherwise it disappears harmlessly."
+    },
+    {
+      "text": "This improves payload efficiency but can leave holes against scattered weak enemies."
+    }
+  ]
+}

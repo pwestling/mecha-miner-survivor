@@ -1,0 +1,60 @@
+{
+  "id": "W-AE-wolfpack-protocol",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-AE-wolfpack-protocol.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#wolfpack-protocol--functional--2-asterite",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#wolfpack-protocol--functional--2-asterite",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches"
+  ],
+  "weapon_id": "W-AE",
+  "weapon_name": "Attack Drones",
+  "branch_class": "Functional",
+  "cost": {
+    "resource": "Asterite",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-AE-replicator-swarm",
+      "W-AE-containment-lattice"
+    ],
+    "irreversible": true
+  },
+  "effects": {
+    "all_drones_focus_same_target": true,
+    "drones_focused": 3,
+    "target_priority": "strongest valid enemy",
+    "switches_target_only": [
+      "target dies",
+      "target leaves operational range"
+    ],
+    "damage_bonus_percent_per_other_permanent_drone_locked_to_target": 15,
+    "damage_bonus_percent_with_all_three_locked": 30,
+    "temporary_drones_count_toward_bonus": false
+  },
+  "expected_effect": {
+    "single_target_output_percent": 30,
+    "narrative": "much less target waste, paid for with poor crowd distribution"
+  },
+  "rules": [
+    {
+      "text": "All three drones focus the same target, prioritizing the strongest valid enemy and switching only when it dies or leaves operational range."
+    },
+    {
+      "text": "Each drone gains +15% damage for every other permanent drone currently locked to that target. With all three locked, each deals +30% damage."
+    },
+    {
+      "text": "The bonus does not count temporary drones from any external effect."
+    },
+    {
+      "text": "Expected effect: +30% single-target output and much less target waste, paid for with poor crowd distribution."
+    }
+  ]
+}

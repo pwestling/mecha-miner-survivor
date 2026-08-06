@@ -1,0 +1,74 @@
+{
+  "id": "W-DE-saturation-choke",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-DE-saturation-choke.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#saturation-choke--amplification--2-driftmetal",
+    "global_attack_rate_interaction: GDD-WEAPON-NUMERIC-CATALOG#global-weapon-attack-rate-mapping",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#saturation-choke--amplification--2-driftmetal"
+  ],
+  "weapon_id": "W-DE",
+  "weapon_name": "Scatter Array",
+  "class": "Amplification",
+  "cost": {
+    "resource": "Driftmetal",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-DE-concussive-fan",
+      "W-DE-focal-array"
+    ],
+    "irreversible_within_run": true,
+    "existing_common_ore_stat_tracks_still_apply": true,
+    "adds_new_stat_track": false,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run."
+  },
+  "availability": {
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite.",
+    "purchase": "Installing one is a single deterministic purchase costing exactly two units of its assigned specialized material."
+  },
+  "effects": {
+    "replaces_pellet_count": 5,
+    "waves_per_normal_attack_activation": 1,
+    "cone_degrees": 60,
+    "hits_per_enemy_per_wave": 1,
+    "wave_damage_of_current_pellet_damage": {
+      "percent": 400
+    },
+    "rank_zero_shot_damage_against_full_volley_target": {
+      "before": 45,
+      "after": 36
+    },
+    "wave_is_instantaneous": true,
+    "pierces_terrain_that_blocks_player_attacks": false
+  },
+  "global_attack_rate_interaction": {
+    "branch_named_in_mapping": true,
+    "affected_timing": "Volley or cone-wave activation rate",
+    "unaffected_timing": "Projectile travel"
+  },
+  "expected_effect": null,
+  "rules": [
+    {
+      "text": "Replaces the five pellets with one continuous-looking cone wave per normal attack activation."
+    },
+    {
+      "text": "Every enemy in the current 60° cone and range is hit once for 400% current pellet Damage."
+    },
+    {
+      "text": "Against a target that would take all five base pellets, rank-zero shot damage changes from 45 to 36; against two or more enemies the branch is an immediate throughput increase."
+    },
+    {
+      "text": "The wave is instantaneous and does not pierce terrain that explicitly blocks player attacks."
+    }
+  ]
+}

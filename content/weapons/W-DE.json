@@ -1,0 +1,144 @@
+{
+  "id": "W-DE",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "weapon.W-DE.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#rank-zero-values-and-ore-stat-increments",
+    "recipe_pair: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "fabrication_cost: GDD-PROGRESSION#base-weapon-availability",
+    "base_automatic_attack: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "base_behavior: GDD-WEAPON-NUMERIC-CATALOG#w-de--scatter-array",
+    "ore_upgradeable_stat_labels: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "damage_model: GDD-WEAPON-NUMERIC-CATALOG#base-weapon-summary",
+    "global_attack_rate_mapping: GDD-WEAPON-NUMERIC-CATALOG#global-weapon-attack-rate-mapping",
+    "branches.amplification.cost: GDD-WEAPON-NUMERIC-CATALOG#saturation-choke--amplification--2-driftmetal",
+    "branches.amplification.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.amplification: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.amplification: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.functional.cost: GDD-WEAPON-NUMERIC-CATALOG#concussive-fan--functional--2-eidolon-coral",
+    "branches.functional.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.functional: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.functional: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.conversion.cost: GDD-WEAPON-NUMERIC-CATALOG#focal-array--conversion--2-cinderglass",
+    "branches.conversion.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.conversion: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.conversion: GDD-WEAPON-INDEX#catalog-lookup"
+  ],
+  "recipe_pair": {
+    "notation": "D + E",
+    "material_codes": [
+      "D",
+      "E"
+    ],
+    "material_names": [
+      "Driftmetal",
+      "Eidolon Coral"
+    ]
+  },
+  "signature_mech": null,
+  "fabrication_cost": {
+    "materials": [
+      {
+        "material_code": "D",
+        "material": "Driftmetal",
+        "units": 1
+      },
+      {
+        "material_code": "E",
+        "material": "Eidolon Coral",
+        "units": 1
+      }
+    ],
+    "signature_weapon_begins_equipped_without_paying_cost": true,
+    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost."
+  },
+  "base_automatic_attack": {
+    "text": "Fires a fixed short-range projectile cone along persistent facing"
+  },
+  "base_behavior": {
+    "text": "fires five pellets across a 60° facing cone. Each pellet ends on its first target, so all five hit one enemy only at close range or when the target is large enough to cover the spread."
+  },
+  "ore_upgradeable_stat_labels": {
+    "labels": [
+      "Damage",
+      "attack rate",
+      "range"
+    ]
+  },
+  "ore_upgradeable_stats": [
+    {
+      "slot": 1,
+      "name": "Pellet damage",
+      "rank_zero": 9,
+      "increment_per_rank": 0.9,
+      "unit": "damage",
+      "discrete": false
+    },
+    {
+      "slot": 2,
+      "name": "Attack rate",
+      "rank_zero": 1.0,
+      "increment_per_rank": 0.1,
+      "unit": "activations per second",
+      "discrete": false
+    },
+    {
+      "slot": 3,
+      "name": "Range",
+      "rank_zero": 5,
+      "increment_per_rank": 0.5,
+      "unit": "M",
+      "discrete": false
+    }
+  ],
+  "fixed_properties": {
+    "pellet_count": 5,
+    "cone_angle_degrees": 60,
+    "projectile_speed_m_per_s": 18,
+    "pellet_pierces": false,
+    "raw": "Five pellets, 60° cone, 18M/s projectile"
+  },
+  "damage_model": {
+    "rank_zero_damage_model": "5 × 9 every 1.0 s",
+    "burst_10_dps": 45.0,
+    "sustained_30_dps": 45.0,
+    "favorable_horde_dps": 45,
+    "primary_limitation": "All pellets land only at close range or on large targets"
+  },
+  "global_attack_rate_mapping": {
+    "affected_timing": "Volley or cone-wave activation rate",
+    "unaffected_timing": "Projectile travel"
+  },
+  "branches": {
+    "amplification": {
+      "name": "Saturation Choke",
+      "funding_material_code": "D",
+      "funding_material": "Driftmetal",
+      "cost": {
+        "material": "Driftmetal",
+        "units": 2
+      }
+    },
+    "functional": {
+      "name": "Concussive Fan",
+      "funding_material_code": "E",
+      "funding_material": "Eidolon Coral",
+      "cost": {
+        "material": "Eidolon Coral",
+        "units": 2
+      }
+    },
+    "conversion": {
+      "name": "Focal Array",
+      "funding_material_code": "C",
+      "funding_material": "Cinderglass",
+      "cost": {
+        "material": "Cinderglass",
+        "units": 2
+      }
+    }
+  }
+}

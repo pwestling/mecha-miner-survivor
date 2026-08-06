@@ -1,0 +1,62 @@
+{
+  "id": "W-AB-fracture-lance",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-AB-fracture-lance.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#fracture-lance--functional--2-barysteel",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#fracture-lance--functional--2-barysteel",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches"
+  ],
+  "weapon_id": "W-AB",
+  "weapon_name": "Rail Lance",
+  "branch_class": "Functional",
+  "cost": {
+    "resource": "Barysteel",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-AB-unbounded-bore",
+      "W-AB-kinetic-capacitor"
+    ],
+    "irreversible": true
+  },
+  "effects": {
+    "shockwaves_per_enemy_struck": 1,
+    "shockwave_orientation": "perpendicular",
+    "shockwave_delay_seconds": 0.1,
+    "shockwave_damage_percent_of_current_damage": 45,
+    "shockwave_width": "current beam width",
+    "shockwave_reach_per_side_m": 2.5,
+    "source_enemy_immune_to_own_shockwave": true,
+    "max_shockwave_hits_per_other_enemy_per_shot": 2
+  },
+  "expected_effect": {
+    "approximate": true,
+    "favorable_horde_damage_percent": {
+      "min": 40,
+      "max": 80
+    },
+    "preserves_main_beam_pierce_target_cap": 4
+  },
+  "rules": [
+    {
+      "text": "Every enemy struck emits one perpendicular shockwave after 0.10 s."
+    },
+    {
+      "text": "Each shockwave deals 45% of current Rail Lance Damage, has the current beam width, and reaches 2.5M to each side of its source."
+    },
+    {
+      "text": "The source enemy cannot be hit by its own shockwave. Any other enemy can take at most two shockwave hits from one Rail Lance shot."
+    },
+    {
+      "text": "Expected effect: approximately +40–80% favorable-horde damage while preserving the four-target main-beam cap."
+    }
+  ]
+}

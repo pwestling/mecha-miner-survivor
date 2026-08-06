@@ -1,0 +1,56 @@
+{
+  "id": "W-AF-target-designator",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-AF-target-designator.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#target-designator--functional--2-flux-amber",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#target-designator--functional--2-flux-amber",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches"
+  ],
+  "weapon_id": "W-AF",
+  "weapon_name": "Tracking Laser",
+  "branch_class": "Functional",
+  "cost": {
+    "resource": "Flux Amber",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-AF-coherence-memory",
+      "W-AF-cutting-vector"
+    ],
+    "irreversible": true
+  },
+  "effects": {
+    "exposed_focus_threshold_percent": 75,
+    "exposed_damage_taken_increase_percent": 25,
+    "exposed_applies_to": "every player weapon, including Tracking Laser",
+    "exposed_duration_seconds": 4.0,
+    "duration_refreshes_while_at_or_above_threshold": true,
+    "max_exposed_targets_from_this_weapon": 1,
+    "old_exposure_on_target_change": "expires normally",
+    "stacks_with_second_copy": false,
+    "modifier_kind": "weapon-specific damage-taken multiplier"
+  },
+  "expected_effect": null,
+  "rules": [
+    {
+      "text": "At 75% focus or higher, the locked target becomes Exposed."
+    },
+    {
+      "text": "An Exposed target takes +25% damage from every player weapon, including Tracking Laser, for 4.0 s. The duration refreshes while focus remains at or above the threshold."
+    },
+    {
+      "text": "Only one target may be Exposed by this weapon at once; changing targets lets the old exposure expire normally."
+    },
+    {
+      "text": "Exposure is a weapon-specific damage-taken multiplier and does not stack with a second copy, which duplicate-weapon rules already forbid."
+    }
+  ]
+}

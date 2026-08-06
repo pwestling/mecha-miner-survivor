@@ -1,0 +1,144 @@
+{
+  "id": "BOSS-01",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "boss.BOSS-01.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-INITIAL-ALIEN-ROSTER#interval-boss-overview",
+    "arrival: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
+    "movement_speed: GDD-PLAYER-SURVIVABILITY-BASELINE#movement-and-speed-modifiers",
+    "contact_footprint: GDD-PLAYER-SURVIVABILITY-BASELINE#collision-and-contact-footprints",
+    "contact_cadence: GDD-INITIAL-ALIEN-ROSTER#interval-boss-overview",
+    "damage_pressure: GDD-PLAYER-SURVIVABILITY-BASELINE#damage-pressure-reference",
+    "required_realized_build_dps: GDD-COMBAT-ECONOMY-BALANCE-FRAMEWORK#build-milestone-boss-dps-budgets",
+    "milestone_reach_target_probability: GDD-PLAYER-SURVIVABILITY-BASELINE#run-level-margins",
+    "ability.resonant_damage_reference: GDD-PLAYER-SURVIVABILITY-BASELINE#damage-pressure-reference",
+    "ability: GDD-INITIAL-ALIEN-ROSTER#boss-01--riftjaw",
+    "ability: TDD-ENCOUNTERS#boss-behavior-state-machines",
+    "persistence.reentry: TDD-ENCOUNTERS#boss-re-entry",
+    "persistence: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
+    "resonance: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
+    "defeat_reward: GDD-RUN-STRUCTURE#boss-defeat-reward",
+    "description: GDD-INITIAL-ALIEN-ROSTER#boss-01--riftjaw"
+  ],
+  "arrival": {
+    "timecode": "7:00",
+    "active_seconds_into_run": 420,
+    "warning_lead_seconds": 15
+  },
+  "initial_hull": 6000,
+  "movement_speed": {
+    "percent_of_mech_base_speed": {
+      "percent": 42
+    },
+    "world_speed_m_per_s": 1.26
+  },
+  "contact_damage": 18,
+  "control_resistance": {
+    "percent": 85
+  },
+  "defining_behavior": "Telegraphs and performs a straight charge",
+  "armor": null,
+  "behavior_kind": "persistent giant pursuer with exactly one additional behavior",
+  "contact_footprint": {
+    "contact_and_weapon_hurt_diameter_m": 1.5,
+    "center_distance_that_begins_contact_m": 1.25,
+    "shape": "Circle",
+    "appendages_outside_footprint": "may pass over the mech harmlessly",
+    "attack_geometry_uses_separate_display": "charge lanes, projectile shapes, and landing circles use their separately displayed attack geometry rather than the boss contact circle"
+  },
+  "contact_cadence": {
+    "matches_shared_ordinary_cadence": true,
+    "same_enemy_repeat_interval_seconds": 0.75,
+    "global_contact_grace_after_resolved_contact_seconds": 0.2,
+    "added_attack_defines_own_damage_event": true
+  },
+  "damage_pressure": {
+    "contact_damage": 18,
+    "hits_to_defeat_100_hull": 6,
+    "continuous_overlap_time_to_defeat_seconds": 3.75,
+    "assumptions": "100 Hull, zero Armor, no healing, no resonance, uninterrupted overlap with one attacker"
+  },
+  "target_time_to_kill_seconds": {
+    "min": 45,
+    "max": 75
+  },
+  "required_realized_build_dps": {
+    "min": 80,
+    "max": 133
+  },
+  "milestone_reach_target_probability": {
+    "percent": {
+      "min": 85,
+      "max": 95
+    },
+    "cohort": "players who understand movement and fabrication but have no permanent PowerUps"
+  },
+  "ability": {
+    "kind": "straight charge",
+    "cadence_seconds": 8,
+    "stop_and_telegraph_duration_seconds": 1,
+    "charge_duration_seconds": 1.5,
+    "charge_speed": {
+      "percent_of_mech_base_speed": {
+        "percent": 180
+      },
+      "world_speed_m_per_s": 5.4
+    },
+    "charge_contact_damage": 27,
+    "ordinary_contact_damage_replaced_during_charge": 18,
+    "turns_during_charge": false,
+    "targeting": "displays a wide straight charge lane toward the mech's sampled position",
+    "lane_width_m": null,
+    "lane_validation": "the lane never knowingly selects a route that immediately collides with terrain before covering one body length",
+    "terrain_interaction": "terrain stops the charge without stunning or damaging the boss",
+    "miss_consequence": "missing carries Riftjaw past the player and creates a brief damage opportunity before pursuit resumes",
+    "hit_rule": "a dedicated per-ability hit rule rather than the ordinary 18 contact",
+    "resonant_damage_reference": {
+      "base_damage": 27,
+      "resonant_damage": 33,
+      "resonance_source": "Asterite",
+      "fresh_mech_hits_to_defeat_at_resonant_value": 4
+    },
+    "design_role": "checks movement, facing awareness, and early single-target damage without adding projectiles or summons"
+  },
+  "post_hard_control_immunity_seconds": 1.5,
+  "ability_timeline_cancellable_by_player_control": false,
+  "persistence": {
+    "never_despawns": true,
+    "counts_toward_ordinary_population": false,
+    "max_simultaneous_bosses": 4,
+    "persists_until_killed": true,
+    "later_bosses_may_overlap": true,
+    "required_for_extraction": false,
+    "disposed_without_reward_if_run_extracts_while_alive": true,
+    "spawn_rule": "enters from valid navigable ground outside the camera; never on the mech, inside an active mining zone, or in an unavoidable collision path",
+    "reentry": {
+      "trigger": "remains far outside the combat area",
+      "behavior": "re-enters from a telegraphed valid off-screen approach",
+      "ability_cooldown_restarts_after_reentry": true,
+      "non_damaging_while_pending": true
+    }
+  },
+  "arrival_warning_presentation": [
+    "15-second HUD warning",
+    "directional boss icon",
+    "distinctive distant cry",
+    "edge treatment"
+  ],
+  "resonance": {
+    "receives_same_geode_resonance_modifiers_as_ordinary_enemies": true,
+    "control_resistance_combines_with_driftmetal": "without reaching complete immunity unless a later rule says so"
+  },
+  "defeat_reward": {
+    "common_ore": 300,
+    "unsecured_hyper_gold": 25,
+    "specialized_material_units": 1,
+    "material_selection": "each unit independently selects one of the four materials present in the geological profile, with duplicates allowed and absent materials excluded",
+    "delivery": "non-modal physical loot burst scattered onto valid nearby ground, contact-collected, persisting until collected or run end, with an immediate minimap marker",
+    "pauses_timer_or_opens_ui": false
+  },
+  "description": "Riftjaw is a long burrowing predator with an armored wedge head and a segmented body that remains fully visible above ground during ordinary pursuit."
+}

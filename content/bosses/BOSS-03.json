@@ -1,0 +1,147 @@
+{
+  "id": "BOSS-03",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "boss.BOSS-03.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-INITIAL-ALIEN-ROSTER#interval-boss-overview",
+    "arrival: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
+    "movement_speed: GDD-PLAYER-SURVIVABILITY-BASELINE#movement-and-speed-modifiers",
+    "contact_footprint: GDD-PLAYER-SURVIVABILITY-BASELINE#collision-and-contact-footprints",
+    "contact_cadence: GDD-INITIAL-ALIEN-ROSTER#interval-boss-overview",
+    "damage_pressure: GDD-PLAYER-SURVIVABILITY-BASELINE#damage-pressure-reference",
+    "required_realized_build_dps: GDD-COMBAT-ECONOMY-BALANCE-FRAMEWORK#build-milestone-boss-dps-budgets",
+    "milestone_reach_target_probability: GDD-PLAYER-SURVIVABILITY-BASELINE#run-level-margins",
+    "ability.resonant_damage_reference: GDD-PLAYER-SURVIVABILITY-BASELINE#damage-pressure-reference",
+    "ability: GDD-INITIAL-ALIEN-ROSTER#boss-03--prism-crown",
+    "ability: TDD-ENCOUNTERS#boss-behavior-state-machines",
+    "persistence.reentry: TDD-ENCOUNTERS#boss-re-entry",
+    "persistence: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
+    "resonance: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
+    "defeat_reward: GDD-RUN-STRUCTURE#boss-defeat-reward",
+    "description: GDD-INITIAL-ALIEN-ROSTER#boss-03--prism-crown"
+  ],
+  "arrival": {
+    "timecode": "21:00",
+    "active_seconds_into_run": 1260,
+    "warning_lead_seconds": 15
+  },
+  "initial_hull": 30000,
+  "movement_speed": {
+    "percent_of_mech_base_speed": {
+      "percent": 45
+    },
+    "world_speed_m_per_s": 1.35
+  },
+  "contact_damage": 30,
+  "control_resistance": {
+    "percent": 92
+  },
+  "defining_behavior": "Fires a radial needle burst",
+  "armor": null,
+  "behavior_kind": "persistent giant pursuer with exactly one additional behavior",
+  "contact_footprint": {
+    "contact_and_weapon_hurt_diameter_m": 1.6,
+    "center_distance_that_begins_contact_m": 1.3,
+    "shape": "Circle",
+    "appendages_outside_footprint": "may pass over the mech harmlessly",
+    "attack_geometry_uses_separate_display": "charge lanes, projectile shapes, and landing circles use their separately displayed attack geometry rather than the boss contact circle"
+  },
+  "contact_cadence": {
+    "matches_shared_ordinary_cadence": true,
+    "same_enemy_repeat_interval_seconds": 0.75,
+    "global_contact_grace_after_resolved_contact_seconds": 0.2,
+    "added_attack_defines_own_damage_event": true
+  },
+  "damage_pressure": {
+    "contact_damage": 30,
+    "hits_to_defeat_100_hull": 4,
+    "continuous_overlap_time_to_defeat_seconds": 2.25,
+    "assumptions": "100 Hull, zero Armor, no healing, no resonance, uninterrupted overlap with one attacker"
+  },
+  "target_time_to_kill_seconds": {
+    "min": 75,
+    "max": 105
+  },
+  "required_realized_build_dps": {
+    "min": 286,
+    "max": 400
+  },
+  "milestone_reach_target_probability": {
+    "percent": {
+      "min": 55,
+      "max": 75
+    },
+    "cohort": "players who understand movement and fabrication but have no permanent PowerUps"
+  },
+  "ability": {
+    "kind": "radial projectile burst",
+    "cadence_seconds": 7,
+    "stop_and_charge_duration_seconds": 1.2,
+    "projectile_count": 12,
+    "projectile_spacing": "twelve evenly spaced straight projectiles in every direction",
+    "radial_offset_alternation_degrees": 15,
+    "projectile": {
+      "damage": 18,
+      "speed": {
+        "percent_of_mech_base_speed": {
+          "percent": 75
+        },
+        "world_speed_m_per_s": 2.25
+      },
+      "homing": false,
+      "lifetime_seconds": null,
+      "lifetime_description": "disappears after crossing slightly more than one screen width or hitting solid terrain"
+    },
+    "resonance_interactions": {
+      "cinderglass": "increases projectile damage while the boss is inside the relevant field",
+      "eidolon_coral": "increases burst frequency while the boss is inside the relevant field"
+    },
+    "resonant_damage_reference": {
+      "base_damage": 18,
+      "resonant_damage": 22,
+      "resonance_source": "Cinderglass",
+      "fresh_mech_hits_to_defeat_at_resonant_value": 5
+    },
+    "design_role": "one radial-burst behavior, not twelve independently targeted attacks"
+  },
+  "post_hard_control_immunity_seconds": 1.5,
+  "ability_timeline_cancellable_by_player_control": false,
+  "persistence": {
+    "never_despawns": true,
+    "counts_toward_ordinary_population": false,
+    "max_simultaneous_bosses": 4,
+    "persists_until_killed": true,
+    "later_bosses_may_overlap": true,
+    "required_for_extraction": false,
+    "disposed_without_reward_if_run_extracts_while_alive": true,
+    "spawn_rule": "enters from valid navigable ground outside the camera; never on the mech, inside an active mining zone, or in an unavoidable collision path",
+    "reentry": {
+      "trigger": "remains far outside the combat area",
+      "behavior": "re-enters from a telegraphed valid off-screen approach",
+      "ability_cooldown_restarts_after_reentry": true,
+      "non_damaging_while_pending": true
+    }
+  },
+  "arrival_warning_presentation": [
+    "15-second HUD warning",
+    "directional boss icon",
+    "distinctive distant cry",
+    "edge treatment"
+  ],
+  "resonance": {
+    "receives_same_geode_resonance_modifiers_as_ordinary_enemies": true,
+    "control_resistance_combines_with_driftmetal": "without reaching complete immunity unless a later rule says so"
+  },
+  "defeat_reward": {
+    "common_ore": 300,
+    "unsecured_hyper_gold": 25,
+    "specialized_material_units": 2,
+    "material_selection": "each unit independently selects one of the four materials present in the geological profile, with duplicates allowed and absent materials excluded",
+    "delivery": "non-modal physical loot burst scattered onto valid nearby ground, contact-collected, persisting until collected or run end, with an immediate minimap marker",
+    "pauses_timer_or_opens_ui": false
+  },
+  "description": "Prism Crown is a tall radial organism whose twelve mineral spines flare before discharging."
+}

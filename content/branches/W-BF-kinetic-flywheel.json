@@ -1,0 +1,81 @@
+{
+  "id": "W-BF-kinetic-flywheel",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-BF-kinetic-flywheel.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#kinetic-flywheel--amplification--2-flux-amber",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#kinetic-flywheel--amplification--2-flux-amber"
+  ],
+  "weapon_id": "W-BF",
+  "weapon_name": "Orbital Cutters",
+  "class": "Amplification",
+  "cost": {
+    "resource": "Flux Amber",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-BF-deflection-ring",
+      "W-BF-tethered-reaper"
+    ],
+    "irreversible_within_run": true,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run."
+  },
+  "availability": {
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite."
+  },
+  "effects": {
+    "stack_gain_trigger": "every valid cutter hit",
+    "stacks_per_trigger": 1,
+    "cutter_damage_per_stack": {
+      "percent": 4
+    },
+    "orbit_speed_per_stack": {
+      "percent": 4
+    },
+    "stack_cap": 10,
+    "cutter_damage_at_cap": {
+      "percent": 40
+    },
+    "orbit_speed_at_cap": {
+      "percent": 40
+    },
+    "decay_delay_seconds_without_cutter_hit": 2.0,
+    "decay_interval_seconds": 0.5,
+    "stacks_lost_per_decay_interval": 1,
+    "decay_stops_on": "another valid hit"
+  },
+  "favorable_scene_effect": {
+    "magnitude": {
+      "cutter_damage_percent": {
+        "percent": 40
+      },
+      "orbit_speed_percent": {
+        "percent": 40
+      }
+    },
+    "qualitative": "rewards remaining close to a crowd without requiring the mech to remain still"
+  },
+  "rules": [
+    {
+      "text": "Every valid cutter hit grants one Flywheel stack, giving +4% cutter Damage and +4% orbit speed per stack."
+    },
+    {
+      "text": "Stacks cap at 10, for +40% Damage and +40% orbit speed."
+    },
+    {
+      "text": "After 2.0 s without any cutter hit, one stack decays every 0.5 s until another valid hit lands."
+    },
+    {
+      "text": "The branch rewards remaining close to a crowd without requiring the mech to remain still."
+    }
+  ]
+}

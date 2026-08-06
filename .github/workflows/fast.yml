@@ -49,6 +49,19 @@
 #    them is `test-main` ("fast suite plus Godot integration"), which delivery-waves
 #    § Step 4 assigns to the main path. That half is OPS-001's, and it is not closed by
 #    running test-main on pull requests.
+#  * doc 91 § Fast pull-request suite also names "generated-artifact staleness/diff
+#    check". No verb produces or compares generated artifacts yet; delivery-waves
+#    assigns that to DAT-008, whose completion gate is "generated artifacts stable and
+#    stale detection works", and which depends on DAT-006. Until DAT-008 lands there is
+#    nothing here for this job to run. It was absent from this list rather than
+#    declared, which made the gap accounting itself read as complete.
+#  * doc 91 § Fast pull-request suite also names "changed UI/render captures where
+#    applicable". This job could not run one even if a verb exposed it: delivery-waves
+#    § Decision 2's CI note records that `--headless` "uses the dummy driver and cannot
+#    capture screenshots, so visual verification needs `xvfb-run` plus lavapipe. Two
+#    distinct CI tiers, not one." The second tier is OPS-001's; the screenshot and focus
+#    matrices themselves belong to UI-001 through UI-010. Also absent rather than
+#    declared.
 
 name: fast suite
 
@@ -56,16 +69,31 @@ on:
   pull_request:
   # Unfiltered on purpose. Every branch push gets the same pull-request-equivalent
   # run, so a branch is already proven (or already red) before a pull request exists,
-  # and so the suite's redness is demonstrable without opening one. The concurrency
-  # group below collapses the push and pull_request runs of the same branch.
+  # and so the suite's redness is demonstrable without opening one.
   push:
   workflow_dispatch:
 
 permissions:
   contents: read
 
+# One group per event per branch: a new push supersedes the previous push run of the
+# same branch, and a new pull_request synchronize supersedes the previous one, but a
+# push run and a pull_request run of the same branch coexist.
+#
+# This header used to claim the group "collapses the push and pull_request runs of the
+# same branch". It never did, and could not have: `github.head_ref` is empty on push,
+# so `github.head_ref || github.ref` evaluated to `fast-suite-<branch>` for a pull
+# request and `fast-suite-refs/heads/<branch>` for a push - two groups. Runs 10 and 11
+# of this workflow are the evidence: the same commit d8a5b53, one push and one
+# pull_request, both ran to completion and neither cancelled the other.
+#
+# Keeping them separate is now deliberate rather than accidental, because they are not
+# the same test. A push run checks out the branch commit; a pull_request run checks out
+# the merge of that commit into the base, which is the tree that would actually land.
+# Collapsing the two would have discarded one of those results at random - and on this
+# branch the pull_request run was the only run of the merged tree there has ever been.
 concurrency:
-  group: fast-suite-${{ github.head_ref || github.ref }}
+  group: fast-suite-${{ github.event_name }}-${{ github.event.pull_request.head.ref || github.ref_name }}
   cancel-in-progress: true
 
 defaults:
@@ -75,11 +103,23 @@ defaults:
 jobs:
   fast:
     name: fast (bootstrap, format-check, build, test-fast, godot-import)
-    runs-on: ubuntu-latest
+    # Pinned, not `ubuntu-latest`. Doc 100 § Toolchain pinning requires pinning
+    # "container/runner image identity where CI uses one" in version-controlled files,
+    # and `ubuntu-latest` is the one identity that is guaranteed to change without a
+    # commit: GitHub moves the label to a new major image, which is exactly the
+    # unpinned-environment class doc 100 defines exit class 3 for. Bumping this label
+    # is a commit with its own run, like every other pin in this repository.
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
       - name: clean checkout
-        uses: actions/checkout@v4
+        # Pinned to a commit, not a tag. `@v4` is a moving branch-like ref the action's
+        # owner can repoint at any time, so it is a version claim this repository cannot
+        # check; doc 00 § Version policy requires third-party packages to be
+        # exact-version locked, and an action that runs with the repository checked out
+        # has more reach than most packages. The trailing comment records which release
+        # the digest was, because a bare digest is unreadable.
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
         with:
           # A shallow clone of exactly the commit under test. The verb host reads
           # HEAD and the porcelain status for its evidence record and needs nothing
@@ -142,7 +182,7 @@ jobs:
 
       - name: retain the verb evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
           name: fast-suite-evidence-${{ github.run_id }}-${{ github.run_attempt }}
           # Every verb writes artifacts/verbs/<verb>/<invocation>/result.json with its
@@ -156,9 +196,15 @@ jobs:
 
       - name: report exit classes
         if: always()
+        # The roster of steps this record must account for is derived from the recorder
+        # lines above, never written out here. A list would reproduce, one level up, the
+        # defect build/verify-gate-wiring.sh § 1 rejects: a step absent from the list
+        # would pass by not being looked at, which is what happened - an extra row for a
+        # step this workflow does not have was accepted and the suite still reported
+        # that it had passed.
         run: |
           log="$RUNNER_TEMP/exit-classes.tsv"
-          expected='provision-pinned-toolchain bootstrap format-check build test-fast godot-import'
+          workflow='.github/workflows/fast.yml'
 
           {
             echo '### Fast suite exit classes'
@@ -173,34 +219,108 @@ jobs:
             echo '| --- | --- |'
           } >>"$GITHUB_STEP_SUMMARY"
 
-          # An absent record is not a clean run. Without this branch a job whose every
-          # step was skipped would reach here with nothing to disagree with and report
-          # success, which is the shape of gate this repository keeps finding.
+          fatal() {
+            echo
+            printf 'FAILED %s\n' "$1" >&2
+            shift
+            for line in "$@"; do printf '       %s\n' "$line" >&2; done
+            exit 8
+          }
+
+          # The expected roster is derived from this workflow's own recorder lines and is
+          # never written out here. A list would reproduce, one level up, the defect
+          # build/verify-gate-wiring.sh § 1 rejects: a step absent from the list would pass by
+          # not being looked at, which is exactly what happened before this comment existed.
+          if [[ ! -s "${workflow}" ]]; then
+            fatal "${workflow} is missing or empty, so the expected step roster cannot be derived." \
+              'Reporting exit class 8 (unexpected tool-internal failure).'
+          fi
+
+          mapfile -t expected < <(
+            sed -n "s/^ *printf '\\([a-z][a-z0-9-]*\\)\\\\t%s\\\\n'.*/\\1/p" "${workflow}" | sort -u
+          )
+          if [[ "${#expected[@]}" -eq 0 ]]; then
+            fatal 'no step in this workflow records an exit class, so nothing can be accounted for.' \
+              'Reporting exit class 8 (unexpected tool-internal failure).'
+          fi
+
+          # A step that records nothing is invisible to both directions of the comparison
+          # below, so the roster is only as complete as the recording is. Every step that runs
+          # a command must therefore record, and exactly one - this reporter, which has no
+          # class of its own to record - may not.
+          run_steps="$(grep -cE '^ *run: \|?$' "${workflow}")"
+          if [[ "$((run_steps - ${#expected[@]}))" -ne 1 ]]; then
+            fatal "this workflow has ${run_steps} step(s) that run a command and ${#expected[@]} that record an exit class." \
+              'Exactly one step (this reporter) may omit a recorder. A step that runs a command' \
+              'without recording its class is accounted for by neither direction of the check below.' \
+              'Reporting exit class 8 (unexpected tool-internal failure).'
+          fi
+
+          # An absent record is not a clean run. Without this branch a job whose every step was
+          # skipped would reach here with nothing to disagree with and report success, which is
+          # the shape of gate this repository keeps finding.
           if [[ ! -f "${log}" ]]; then
             echo '| (none) | no step recorded an exit class |' >>"$GITHUB_STEP_SUMMARY"
-            echo 'FAILED no fast-suite step recorded an exit class, so this run is evidence of nothing.' >&2
-            echo '       Reporting exit class 8 (unexpected tool-internal failure).' >&2
-            exit 8
+            fatal 'no fast-suite step recorded an exit class, so this run is evidence of nothing.' \
+              'Reporting exit class 8 (unexpected tool-internal failure).'
           fi
 
           result=0
           unrun=0
-          for step in ${expected}; do
-            class="$(awk -F'\t' -v want="${step}" '$1 == want { print $2 }' "${log}" | tail -n 1)"
-            if [[ -z "${class}" ]]; then
+          malformed=0
+          for step in "${expected[@]}"; do
+            # Every row for this step, not the last one: `| tail -n 1` let a duplicate later
+            # `0` mask an earlier nonzero, so a step that failed and was re-recorded read as a
+            # pass.
+            mapfile -t classes < <(awk -F'\t' -v want="${step}" '$1 == want { print $2 }' "${log}")
+
+            if [[ "${#classes[@]}" -eq 0 ]]; then
               printf '| `%s` | not run |\n' "${step}" >>"$GITHUB_STEP_SUMMARY"
               printf '%-26s not run\n' "${step}"
               unrun=1
               continue
             fi
-            printf '| `%s` | %s |\n' "${step}" "${class}" >>"$GITHUB_STEP_SUMMARY"
-            printf '%-26s exit class %s\n' "${step}" "${class}"
-            if [[ "${class}" -ne 0 && "${result}" -eq 0 ]]; then
-              result="${class}"
-            fi
+
+            for class in "${classes[@]}"; do
+              # String comparison against the classes doc 100 defines, never arithmetic: `-ne`
+              # coerced a non-numeric class to 0, so rows reading `FAILED`, `4x` and `00` all
+              # reported a pass. Class 1 is malformed too - doc 100 defines eight classes and
+              # deliberately not that one - so a tool leaking 1 is surfaced rather than ranked.
+              if [[ ! "${class}" =~ ^[02-8]$ ]]; then
+                printf '| `%s` | malformed: `%s` |\n' "${step}" "${class}" >>"$GITHUB_STEP_SUMMARY"
+                printf '%-26s malformed exit class %s\n' "${step}" "${class}"
+                malformed=1
+                continue
+              fi
+              printf '| `%s` | %s |\n' "${step}" "${class}" >>"$GITHUB_STEP_SUMMARY"
+              printf '%-26s exit class %s\n' "${step}" "${class}"
+              if [[ "${class}" != 0 && "${result}" == 0 ]]; then
+                result="${class}"
+              fi
+            done
           done
 
-          if [[ "${result}" -ne 0 ]]; then
+          # The other direction. `expected` was a subset check only, so a row for a step this
+          # workflow does not have - a leftover recorder, a renamed step, a hand-written row -
+          # was silently ignored and the suite still reported that it had passed.
+          while IFS= read -r name; do
+            [[ -z "${name}" ]] && continue
+            for step in "${expected[@]}"; do
+              [[ "${step}" == "${name}" ]] && continue 2
+            done
+            printf '| `%s` | recorded but not a step of this workflow |\n' "${name}" >>"$GITHUB_STEP_SUMMARY"
+            printf '%-26s recorded a class but is not a step of this workflow\n' "${name}"
+            malformed=1
+          done < <(cut -f1 "${log}" | sort -u)
+
+          if [[ "${malformed}" -ne 0 ]]; then
+            fatal 'the exit-class record does not describe this workflow: a class was unreadable, or a' \
+              'row named a step this workflow does not have. Either way the record cannot account for' \
+              'the run, so a green result would be a claim about nothing.' \
+              'Reporting exit class 8 (unexpected tool-internal failure).'
+          fi
+
+          if [[ "${result}" != 0 ]]; then
             echo
             echo "FAILED the fast suite failed with exit class ${result}." >&2
             echo '       The step that returned it is named above and its result.json is in the' >&2
@@ -209,11 +329,9 @@ jobs:
           fi
 
           if [[ "${unrun}" -ne 0 ]]; then
-            echo
-            echo 'FAILED a fast-suite step never ran even though no step reported a failing class,' >&2
-            echo '       so the suite did not cover what it claims to cover.' >&2
-            echo '       Reporting exit class 8 (unexpected tool-internal failure).' >&2
-            exit 8
+            fatal 'a fast-suite step never ran even though no step reported a failing class,' \
+              'so the suite did not cover what it claims to cover.' \
+              'Reporting exit class 8 (unexpected tool-internal failure).'
           fi
 
           echo

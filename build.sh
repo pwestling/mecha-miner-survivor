@@ -25,8 +25,13 @@
 #                                 8 unexpected tool-internal failure
 #
 # The launcher itself can produce only two of those: 3 when the pinned .NET SDK is
-# not runnable at all, and 8 when the verb host does not build. Everything else is
-# the owning tool's class, returned unchanged.
+# not usable - absent from PATH, or present but pinned by global.json to a version no
+# installed SDK satisfies - and 8 when the verb host does not build. Everything else
+# is the owning tool's class, returned unchanged.
+#
+# Those two cases are deliberately separated below. "dotnet is on PATH" is not the
+# same claim as "the pinned SDK resolves", and doc 100 defines class 3 as a "missing
+# or mismatched pinned environment", so a mismatched pin is class 3 and never class 8.
 
 set -uo pipefail
 
@@ -62,6 +67,57 @@ this wrapper:
 INSTRUCTIONS
   exit "${EXIT_ENVIRONMENT}"
 fi
+
+# MISMATCH-PROBE-BEGIN
+#
+# dotnet being on PATH does not mean the pinned SDK is usable. global.json pins an
+# exact version, and hostfxr resolves that pin from the repository root rather than
+# taking the newest install; a pin no installed SDK satisfies makes every SDK command
+# fail, including the verb host's own build.
+#
+# `dotnet --version` is the cheapest invocation that performs exactly that
+# resolution: it prints the resolved SDK version when the pin is satisfiable and
+# fails with the SDK-resolution error when it is not. It is run from REPO_ROOT
+# because that is the directory whose global.json governs the resolution.
+#
+# Without this probe the mismatch surfaced one step later, as a failed `dotnet build`
+# of the verb host, and was therefore reported as class 8 / MMT-8001 "unexpected
+# tool-internal failure". That is the wrong class and an actively misleading
+# diagnosis: nothing in this repository is broken when an operator pins an SDK they
+# have not installed. Doc 100 § Standard command surface defines class 3 as a
+# "missing or mismatched pinned environment", so a mismatched pin is class 3, exactly
+# like an absent SDK, and MMT-3001 is already documented as "a pinned tool or version
+# is missing or mismatched".
+#
+# The gate for this classification is build/verify-verbs.sh § 10, whose negative
+# control deletes the block between these two markers to prove the assertion fails
+# when the wrapper misclassifies.
+sdk_resolution=""
+if ! sdk_resolution="$(cd -- "${REPO_ROOT}" && dotnet --version 2>&1)"; then
+  {
+    echo "FAILED [MMT-3001] global.json pins a .NET SDK version that is not installed here."
+    echo "        Exit class 3 (missing or mismatched pinned environment)."
+    echo "        dotnet is on PATH, so this is a version mismatch and not an absent SDK."
+    echo "        It is not a repository fault: nothing in src/ is broken."
+    echo
+    echo "        Resolution attempt (cd \"${REPO_ROOT}\" && dotnet --version):"
+    printf '%s\n' "${sdk_resolution}" | sed 's/^/          /'
+    echo
+    echo "        Installed SDKs:"
+    dotnet --list-sdks 2>&1 | sed 's/^/          /'
+    echo
+    echo "        Either install the pinned SDK, exactly:"
+    echo
+    echo "            sudo build/bootstrap-linux.sh"
+    echo
+    echo "        (idempotent; installs the version global.json pins into"
+    echo "        /usr/share/dotnet), or correct the pin in global.json. Do not"
+    echo "        silently widen rollForward to make an unpinned SDK resolve:"
+    echo "        doc 100 § Toolchain pinning requires the exact SDK to be pinned."
+  } >&2
+  exit "${EXIT_ENVIRONMENT}"
+fi
+# MISMATCH-PROBE-END
 
 mkdir -p "${LAUNCHER_LOG_DIR}"
 

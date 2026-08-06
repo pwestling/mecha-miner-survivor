@@ -149,6 +149,57 @@ else
 fi
 
 echo
+echo "=== 6. an unobtainable file set fails instead of passing vacuously (VER-FND-002-018)"
+#
+# format and format-check derive their owned-text candidate set from `git ls-files`. That
+# enumeration used to return an empty list on failure and record no failure of its own,
+# so violations.Count == 0 fired the success assertion: with a real trailing-whitespace
+# violation on disk and nothing but a stale GIT_DIR, format-check printed
+# "ok owned-text-rules: every owned text file satisfies ..." and exited 0, and format
+# printed "the formatted tree satisfies every gate" while leaving the violation in place.
+#
+# Doc 100 requires format to "fail if the resulting tree still violates policy". A gate
+# that inspected nothing has established nothing about the tree, so an unobtained set is
+# now a failure and never an empty one.
+#
+# GIT_DIR is used rather than removing anything: it is nondestructive, it is exactly the
+# route the defect was found through, and it leaves the real repository untouched.
+readonly STALE_GIT_DIR="/nonexistent/verify-format-stale.git"
+
+for verb in format-check format; do
+  output="$(GIT_DIR="${STALE_GIT_DIR}" "${WRAPPER}" "${verb}" 2>&1)"
+  status=$?
+
+  problems=()
+  [[ "${status}" -ne 0 ]] || problems+=("exit 0; an unreadable tree must not pass")
+  printf '%s' "${output}" | grep -qE 'FAIL[[:space:]]+owned-text-file-set' \
+    || problems+=("no owned-text-file-set failure was recorded")
+  # The specific vacuous-success string that used to appear must not appear.
+  printf '%s' "${output}" | grep -qE 'ok[[:space:]]+owned-text-rules' \
+    && problems+=("owned-text-rules still reported ok on a set it never obtained")
+
+  if [[ "${#problems[@]}" -eq 0 ]]; then
+    pass "${verb} with an unreadable git: exit ${status}, and the file set is reported as not obtained"
+  else
+    fail "${verb} with an unreadable git: $(printf '%s; ' "${problems[@]}")"
+    printf '%s\n' "${output}" | grep -E 'owned-text|MMT-' | sed 's/^/      /'
+  fi
+done
+
+# Negative control: the same two verbs, same tree, healthy git. They must pass. Without
+# this, § 6 would also be satisfied by a verb that had simply been made to fail always.
+for verb in format-check format; do
+  output="$("${WRAPPER}" "${verb}" 2>&1)"
+  status=$?
+  if [[ "${status}" -eq 0 ]] && printf '%s' "${output}" | grep -qE 'ok[[:space:]]+owned-text-file-set'; then
+    pass "negative control: ${verb} passes on the same tree with a healthy git, so § 6 failed on the unreadable set and not unconditionally"
+  else
+    fail "negative control: ${verb} exited ${status} with a healthy git (expected 0); § 6 may be failing unconditionally"
+    printf '%s\n' "${output}" | grep -E 'owned-text|MMT-' | sed 's/^/      /'
+  fi
+done
+
+echo
 if [[ "${failures}" -eq 0 ]]; then
   echo "verify-format: PASS"
   exit 0

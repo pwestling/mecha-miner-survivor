@@ -4679,16 +4679,103 @@ notice, and that is the fact the marker preserves.
 anywhere and name it nowhere. One is retired and points at nothing. That accounts for all
 89 entries across the seven files. All seven packages' permanent negative-control entries now
 have a section that shows the entry's own test failing, `VER-SIM-005-016`'s being the last of
-the seven to be run, so no entry's only credit here is a qualified cross-reference.
+the seven to be run, so no entry's only credit here is a qualified cross-reference. Two entries'
+only credit is *second test of the claim*, which that sentence does not cover and does not
+contradict, because the third marker is not a cross-reference: § Which entry each section
+controls says why the distinction is kept.
 
 The 18 without a control are not a backlog with a plan attached, and this file does not
 pretend otherwise. They are what the perturbation work did not reach. Seven of them are in
 SIM-005, the package whose gates lean hardest on committed goldens and an independent
 reference implementation, so the shape of its evidence is agreement with an external oracle
-rather than a demonstration that a gate can fail. Two entries left the list in the third review
-pass, `VER-SIM-003-001` and `VER-SIM-003-003`, and both did so on a *second test of the claim*
-credit rather than on their own selectors reddening, which their rows say. That is a different kind of assurance, not a
-substitute for this one, and doc 91 § Acceptance evidence asks for this one.
+rather than a demonstration that a gate can fail. That is a different kind of assurance, not a
+substitute for this one, and doc 91 § Acceptance evidence asks for this one. Two entries left
+the list in the third review pass, `VER-SIM-003-001` and `VER-SIM-003-003`, and both did so on a
+*second test of the claim* credit rather than on their own selectors reddening, which their rows
+say.
+
+### The uncovered list, and what makes the two lists a partition
+
+The two numbers above were accurate when they were written and rotted the moment anyone added
+an entry, because nothing forced a new entry onto either list. A document that enumerates its
+own gaps is still a curated list, and a curated list of gaps is exactly the artifact that goes
+stale silently: adding a registry entry with no control changed nothing here and no gate
+noticed.
+
+So the gap list is machine-readable and the partition is asserted.
+`MechaMiner.Simulation.Tests.Support.NegativeControlCoverageTests` reads the seven
+`SIM-00*.json` files and this document on every `./build.sh test-fast`, and requires that every
+non-`retired` `VER-SIM-*` entry is either **controlled**, meaning its `fixtures` name a section
+of this document and every section it names resolves to a real heading here, or **uncovered**,
+meaning it appears in the block below. Nothing in neither, nothing in both. Adding an entry
+without a control now fails closed, and the block is a ratchet: an entry leaves it by gaining a
+control, and an entry can only join it by someone writing its ID into a committed file, which is
+a reviewable act rather than an omission.
+
+The covered side is deliberately not parsed out of the table above. The table's third column is
+prose, and prose cannot be read mechanically without guessing: `VER-SIM-003-003`'s row names a
+section it is explicitly *not* credited with, so any rule keyed on "the cell mentions a section"
+would credit it wrongly. The registry's own `fixtures` pointers are the machine-readable
+statement of coverage, and this document's headings are the machine-readable statement of what
+exists, so the covered set is the intersection of two things that are already structured. The
+table stays what it is for: the human-readable reason, which is why the gate also requires every
+ID in the block below to appear in it.
+
+The list lives here rather than in a new file for three reasons. It is a statement about this
+document, so a reader who is told what the document records should be told what it does not
+record in the same place. Keeping it here means one file to edit when a control lands, rather
+than two that can disagree. And `tests/verification/` gains a `SCH-QUA-001` registry file per
+work package, so a new `.json` or `.txt` beside them invites a future structural validator to
+glob it as one.
+
+The block is delimited by the two markers below and nothing outside them is read. Its grammar is
+exact: a first line `uncovered-count: <n>`, then exactly *n* lines each holding one
+`VER-SIM-000-000`-shaped ID, ascending, no blanks, no comments, no trailing text. Every
+departure from that is a **malformed document**, which is a different and louder failure than a
+coverage failure: the gate reports what it could not parse and refuses to compute a partition
+verdict at all, rather than treating an unparseable block as an empty one. A missing marker, a
+count that disagrees with the rows, a duplicate, an out-of-order ID, a malformed ID, and a
+reworded totals sentence in the paragraph above are all in that class. So is a renamed heading:
+a `fixtures` pointer that names a section this document does not have fails by name rather than
+quietly dropping its entry from the covered set, which would otherwise make the entry appear
+uncovered and the partition appear satisfied for the wrong reason.
+
+Failing to *read* a file is a third class, separate from both, because a gate that reports the
+same failure for a missing transcript and an unreadable one teaches people to re-run it until it
+passes. If this document or a registry file cannot be opened or decoded, the gate throws with
+the operating system's or the parser's own error as the inner exception and says which file and
+which operation failed. It never reports that as "no entry has a control".
+
+<!-- SIM-UNCOVERED-BEGIN -->
+```text
+uncovered-count: 18
+VER-SIM-001-013
+VER-SIM-001-014
+VER-SIM-002-006
+VER-SIM-003-004
+VER-SIM-003-007
+VER-SIM-005-003
+VER-SIM-005-006
+VER-SIM-005-007
+VER-SIM-005-008
+VER-SIM-005-012
+VER-SIM-005-014
+VER-SIM-005-015
+VER-SIM-006-004
+VER-SIM-006-005
+VER-SIM-006-007
+VER-SIM-007-002
+VER-SIM-007-004
+VER-SIM-007-010
+```
+<!-- SIM-UNCOVERED-END -->
+
+The gate is not a registry entry and deliberately has none. It verifies no `TR-*` requirement:
+it verifies this document against the registries, which is the structural-validator work
+`TASK-FND-009-002` owns and which no `SIM-*` package may claim by writing an entry for it.
+Registering it under a SIM package would be the same category error as a technique in
+`evidenceKinds`. When that validator lands it should absorb these assertions, and the five test
+methods here are the specification of what it owes.
 
 ## What these transcripts do not establish
 

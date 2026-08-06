@@ -646,6 +646,134 @@ if [[ "${variant_failures}" -eq 0 ]]; then
 fi
 
 echo
+echo "=== 7. doc 40's minted content-ID prefixes: the row set, and one minting authority each"
+#
+# THE READER build/doc40-minted-content-prefixes.expected DID NOT HAVE. That file was
+# committed as merge evidence and documented itself, at its own lines 39-41, as wired into
+# no gate - and a `git grep` over build/, .github/, scripts/, tests/ and src/ found nothing
+# reading it by name. An expectation with no reader is a gate that cannot fail in the most
+# literal sense: it could not have caught a row-set change, and it could not have caught the
+# defect it was sitting next to.
+#
+# That defect: `WAV-01` was claimed as "minted here" by BOTH `### Encounter schedule` and
+# the omnibus sentence under `### Map generation`, while its table row named only the first.
+# A row-set check structurally cannot see it, because both sides of that disagreement leave
+# the row set intact. So this stage asserts three things, not one.
+#
+# It reads the real document. A fixture would be the wrong control here for the reason
+# measured elsewhere in this repository this round: a small input clears the very pipe that
+# production input breaks, so a probe built at fixture size can pass while the real thing
+# fails. doc 40 is ~400 lines and is the subject; there is no reason to substitute a smaller
+# stand-in for it.
+readonly DOC40="${REPO_ROOT}/docs/technical/40-content-data-and-validation.md"
+readonly DOC40_EXPECTED="${REPO_ROOT}/build/doc40-minted-content-prefixes.expected"
+
+doc40_problems() {
+  # $1 document, $2 expected-prefix file. One problem per line; nothing when all three
+  # assertions hold. A missing input is a problem rather than an empty pass.
+  local document="$1" expected_file="$2"
+  [[ -f "${document}" ]] || { printf '%s\n' "the document is absent: ${document}"; return 0; }
+  [[ -f "${expected_file}" ]] || { printf '%s\n' "the expected-prefix file is absent: ${expected_file}"; return 0; }
+  python3 - "${document}" "${expected_file}" <<'DOC40PY'
+import re, sys
+
+document, expected_file = sys.argv[1], sys.argv[2]
+lines = open(document, encoding="utf-8").read().split("\n")
+
+# 1. The row set. `| `PFX-` | grammar | category | dir | Minted in |`
+rows = {}
+for number, line in enumerate(lines, 1):
+    match = re.match(r"^\|\s*`([A-Z]+-)`\s*\|(.*)\|\s*$", line)
+    if match:
+        cells = [cell.strip() for cell in match.group(2).split("|")]
+        rows[match.group(1)] = (number, cells)
+
+expected = set()
+for line in open(expected_file, encoding="utf-8"):
+    line = line.strip()
+    if line and not line.startswith("#"):
+        expected.add(line)
+
+for prefix in sorted(expected - set(rows)):
+    print("%s is declared in the expected-prefix file and has no table row" % prefix)
+for prefix in sorted(set(rows) - expected):
+    print("%s has a table row and is not in the expected-prefix file" % prefix)
+
+# Headings, by their GitHub anchor slug, so a "Minted in" link can be resolved.
+def slug(text):
+    text = re.sub(r"`", "", text).strip().lower()
+    text = re.sub(r"[^a-z0-9 -]", "", text)
+    return text.replace(" ", "-")
+
+headings = {slug(l.lstrip("#").strip()): l.lstrip("#").strip()
+            for l in lines if l.startswith("#")}
+
+# 2. Each row's "Minted in" cell names a section that exists. The cell is either a link
+#    `[Text](#anchor)` or the words "this section", which means the table's own section.
+minted_in_section = {}
+for prefix, (number, cells) in sorted(rows.items()):
+    cell = cells[-1] if cells else ""
+    link = re.match(r"^\[[^\]]*\]\(#([a-z0-9-]+)\)$", cell)
+    if link:
+        anchor = link.group(1)
+        if anchor not in headings:
+            print("%s (row at line %d) names Minted in '%s', and no heading in this document has that anchor"
+                  % (prefix, number, anchor))
+            continue
+        minted_in_section[prefix] = headings[anchor]
+    elif cell == "this section":
+        minted_in_section[prefix] = "Minted content-ID grammars"
+    else:
+        print("%s (row at line %d) has a Minted in cell of '%s', which is neither a #anchor link nor 'this section'"
+              % (prefix, number, cell))
+
+# 3. No other section claims to mint the prefix. A claim is a sentence containing
+#    "minted here"; the section it belongs to is the nearest preceding heading. A sentence
+#    that says the prefix is explicitly NOT minted here is not a claim.
+section_of_line, current = {}, None
+for number, line in enumerate(lines, 1):
+    if line.startswith("#"):
+        current = line.lstrip("#").strip()
+    section_of_line[number] = current
+
+claims = {}
+for number, line in enumerate(lines, 1):
+    if "minted here" not in line:
+        continue
+    for sentence in re.split(r"(?<=[.])\s+", line):
+        if "minted here" not in sentence:
+            continue
+        for prefix in {m + "-" for m in re.findall(r"`([A-Z]+)-[0-9A-Z]", sentence)}:
+            # "`WAV-01` is **not**: it is minted under ..." disclaims rather than claims.
+            disclaimer = re.search(re.escape("`" + prefix) + r"[0-9A-Z]*`\s+is\s+\*\*not\*\*", sentence)
+            if disclaimer:
+                continue
+            claims.setdefault(prefix, set()).add(section_of_line[number])
+
+for prefix in sorted(rows):
+    claiming = claims.get(prefix, set())
+    if len(claiming) > 1:
+        print("%s is claimed as minted by %d sections - %s - and a prefix has exactly one minting authority"
+              % (prefix, len(claiming), "; ".join(sorted(claiming))))
+        continue
+    if not claiming:
+        continue
+    owner = minted_in_section.get(prefix)
+    claimed = next(iter(claiming))
+    if owner is not None and owner != claimed:
+        print("%s: its row names Minted in '%s' but the section claiming to mint it is '%s'"
+              % (prefix, owner, claimed))
+DOC40PY
+}
+
+mapfile -t doc40_findings < <(doc40_problems "${DOC40}" "${DOC40_EXPECTED}")
+if [[ "${#doc40_findings[@]}" -eq 0 ]]; then
+  pass "stage 7: doc 40's $(grep -vc '^#\|^$' "${DOC40_EXPECTED}" || true) minted prefixes each have a table row in build/doc40-minted-content-prefixes.expected, a Minted in cell resolving to a heading that exists, and exactly one section claiming to mint them"
+else
+  fail "stage 7: doc 40's minted-prefix declarations are inconsistent: $(printf '%s; ' "${doc40_findings[@]}")"
+fi
+
+echo
 if [[ "${failures}" -eq 0 ]]; then
   echo "verify-registry: PASS"
   exit 0

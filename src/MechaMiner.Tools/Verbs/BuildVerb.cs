@@ -71,13 +71,39 @@ internal static class BuildVerb
             context.Layout.Root,
             TimeSpan.FromMinutes(20));
 
-        int warnings = CountReported(build.Output, "Warning(s)");
-        int errors = CountReported(build.Output, "Error(s)");
+        int warnings = CountReported(build.Output, "Warning(s)", out bool sawWarningSummary);
+        int errors = CountReported(build.Output, "Error(s)", out bool sawErrorSummary);
+
+        // The counts are read out of MSBuild's own localized summary lines, so "no
+        // summary line was found" and "the summary line said zero" are different facts
+        // and must not both read as clean. Absence would otherwise make the
+        // warnings-as-errors claim vacuous the moment MSBuild changed its output or ran
+        // in another language - which is exactly why the wrappers pin
+        // DOTNET_CLI_UI_LANGUAGE=en-US. An empty candidate set never satisfies a gate.
+        bool summaryFound = sawWarningSummary && sawErrorSummary;
+        context.Runner.RecordAssertion(
+            "build-summary-present",
+            summaryFound,
+            summaryFound
+                ? "MSBuild reported both its Warning(s) and Error(s) summary lines"
+                : "MSBuild printed no "
+                    + (sawWarningSummary ? "Error(s)" : sawErrorSummary ? "Warning(s)" : "Warning(s)/Error(s)")
+                    + " summary line, so the reported counts below are not evidence of anything");
+
         context.Runner.RecordAssertion(
             "zero-warnings",
-            build.Succeeded && warnings == 0 && errors == 0,
-            "reported " + warnings.ToString(CultureInfo.InvariantCulture) + " warning(s) and "
-                + errors.ToString(CultureInfo.InvariantCulture) + " error(s)");
+            summaryFound && build.Succeeded && warnings == 0 && errors == 0,
+            summaryFound
+                ? "reported " + warnings.ToString(CultureInfo.InvariantCulture) + " warning(s) and "
+                    + errors.ToString(CultureInfo.InvariantCulture) + " error(s)"
+                : "not evaluated: MSBuild's warning/error summary was absent from the build output");
+
+        if (!summaryFound)
+        {
+            return VerbOutcome.Build(
+                "the build produced no MSBuild warning/error summary, so a zero-warning tree"
+                + " cannot be asserted; see the dotnet-build step log");
+        }
 
         if (!build.Succeeded || errors > 0)
         {
@@ -114,9 +140,18 @@ internal static class BuildVerb
     /// Reads MSBuild's own "<c>N Warning(s)</c>" / "<c>N Error(s)</c>" summary lines.
     /// Returns the largest reported count so a multi-project summary cannot hide one.
     /// </summary>
-    private static int CountReported(string output, string suffix)
+    /// <param name="output">The captured build output.</param>
+    /// <param name="suffix">The summary-line suffix to read.</param>
+    /// <param name="found">
+    /// Set when at least one parseable summary line was present. The caller must check
+    /// this: a return of <c>0</c> means "the summary said zero" only when
+    /// <paramref name="found"/> is true, and otherwise means "no summary was printed",
+    /// which is not evidence of a clean build.
+    /// </param>
+    private static int CountReported(string output, string suffix, out bool found)
     {
         int highest = 0;
+        found = false;
         foreach (string line in output.Split('\n'))
         {
             string trimmed = line.Trim();
@@ -126,10 +161,13 @@ internal static class BuildVerb
             }
 
             string number = trimmed[..^suffix.Length].Trim();
-            if (int.TryParse(number, NumberStyles.Integer, CultureInfo.InvariantCulture, out int value)
-                && value > highest)
+            if (int.TryParse(number, NumberStyles.Integer, CultureInfo.InvariantCulture, out int value))
             {
-                highest = value;
+                found = true;
+                if (value > highest)
+                {
+                    highest = value;
+                }
             }
         }
 

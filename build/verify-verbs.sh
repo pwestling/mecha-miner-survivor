@@ -5,11 +5,22 @@
 # their owning work package, invalid invocations exit 2 with usage, and a
 # deliberately broken environment exits 3.
 #
+# Exit class 3 has two halves, and both are asserted separately, because asserting
+# only one is how a misclassification survived. § 6 covers the *absent* half (a pinned
+# tool that is not there) and § 10 covers the *mismatched* half (a pinned tool that is
+# there in the wrong version). Doc 100 defines the class as "missing or mismatched
+# pinned environment", so neither half is optional.
+#
 # Authority: docs/technical/100-build-dependencies-and-release-operations.md
 #              § Standard command surface
 # Requirements: TR-BLD-005, TR-BLD-001, TR-BLD-002
 # Verification: VER-FND-002-002, VER-FND-002-003, VER-FND-002-004,
-#               VER-FND-002-006, VER-FND-002-007, VER-FND-002-009, VER-FND-002-013
+#               VER-FND-002-006, VER-FND-002-007, VER-FND-002-009, VER-FND-002-013,
+#               VER-FND-002-016, VER-FND-002-017
+#
+# Every environment assertion here carries a negative control that must be rejected by
+# the same predicate. A gate exercised only against a good environment records an
+# opinion, not a result.
 #
 # This script deliberately does NOT run implemented verbs that do slow real work as
 # part of the matrix; each has its own gate and its own verification entry. What the
@@ -221,6 +232,110 @@ else
 fi
 
 echo
+echo "=== 6a. a SUBSTITUTED godot binary is detected by hash (VER-FND-002-017)"
+#
+# § 6 only points MECHAMINER_GODOT at a path that does not exist, where the version
+# probe fails first and the hash probe is never reached on its interesting path. That
+# is why the following survived: the hash probe resolved the pinned install path in
+# preference to the command it was given, so a substituted binary produced
+# "resolved as '<substitute>'" and "sha256 of /opt/godot/... matches the pin" on
+# adjacent report lines, and doctor exited 0 with "0 mismatches" - a pin match reported
+# for a file that was never opened.
+#
+# The fixture is a two-line shell script that prints a version string matching the
+# pinned prefix, so the version probe passes and the hash probe is the only thing that
+# can catch it. That is the point: this asserts the hash probe specifically.
+#
+readonly GODOT_FIXTURE_DIR="$(mktemp -d)"
+readonly GODOT_SUBSTITUTE="${GODOT_FIXTURE_DIR}/godot"
+readonly GODOT_SAME_CONTENT_LINK="${GODOT_FIXTURE_DIR}/godot-via-other-path"
+
+remove_godot_fixtures() {
+  rm -rf "${GODOT_FIXTURE_DIR}"
+}
+
+cleanup_fixtures_and_godot() {
+  cleanup_fixtures
+  remove_godot_fixtures
+}
+trap cleanup_fixtures_and_godot EXIT
+
+pinned_version_prefix="$(python3 -c '
+import json, sys
+print(json.load(open(sys.argv[1]))["godot"]["expected_version_prefix"])
+' "${REPO_ROOT}/build/toolchain.json")"
+
+cat >"${GODOT_SUBSTITUTE}" <<SUBSTITUTE
+#!/usr/bin/env bash
+# Deliberately substituted godot, written by build/verify-verbs.sh. Prints a version
+# string the version probe accepts, so only the hash probe can reject it.
+echo "${pinned_version_prefix}.deadbeef"
+SUBSTITUTE
+chmod +x "${GODOT_SUBSTITUTE}"
+
+substitute_sha="$(python3 -c '
+import hashlib, sys
+print(hashlib.sha256(open(sys.argv[1], "rb").read()).hexdigest())
+' "${GODOT_SUBSTITUTE}")"
+pinned_sha="$(python3 -c '
+import json, sys
+platform = json.load(open(sys.argv[1]))["godot"]["platforms"]
+print(platform["linux-x64"]["executable_sha256"])
+' "${REPO_ROOT}/build/toolchain.json")"
+
+output="$(MECHAMINER_GODOT="${GODOT_SUBSTITUTE}" "${WRAPPER}" doctor 2>&1)"
+status=$?
+
+problems=()
+[[ "${status}" -eq 3 ]] || problems+=("exit ${status}, expected 3")
+printf '%s' "${output}" | grep -q 'MMT-3001' || problems+=("MMT-3001 not printed")
+printf '%s' "${output}" | grep -qE 'MISMATCH.*godot executable hash' \
+  || problems+=("the godot executable hash row is not MISMATCH")
+# The decisive assertion: the report must show the SUBSTITUTE's hash as observed. The
+# old defect showed the pinned hash as observed, which is how it read as a match.
+printf '%s' "${output}" | grep -q "${substitute_sha}" \
+  || problems+=("the report does not contain the substitute's own sha256 ${substitute_sha}")
+printf '%s' "${output}" | grep -q "sha256 of ${GODOT_SUBSTITUTE}" \
+  || problems+=("the report does not say it hashed ${GODOT_SUBSTITUTE}")
+
+if [[ "${#problems[@]}" -eq 0 ]]; then
+  pass "a substituted godot with an acceptable version string is rejected by hash: exit 3, MMT-3001, substitute's own sha256 reported"
+else
+  fail "substituted godot: $(printf '%s; ' "${problems[@]}")"
+  printf '%s\n' "${output}" | grep -E 'godot' | sed 's/^/      /'
+fi
+
+# Negative control 1. Without this, § 6a could pass for the wrong reason: a probe that
+# simply failed on any non-canonical path would satisfy every assertion above while
+# still not hashing anything. A different path holding the SAME bytes must pass, which
+# is only possible if the probe hashes what the command resolves to.
+resolved_pinned="$(readlink -f "$(command -v godot 2>/dev/null || true)" 2>/dev/null || true)"
+if [[ -n "${resolved_pinned}" && -f "${resolved_pinned}" ]]; then
+  ln -s "${resolved_pinned}" "${GODOT_SAME_CONTENT_LINK}"
+  output="$(MECHAMINER_GODOT="${GODOT_SAME_CONTENT_LINK}" "${WRAPPER}" doctor 2>&1)"
+  status=$?
+  if [[ "${status}" -eq 0 ]] && printf '%s' "${output}" | grep -q "${pinned_sha}"; then
+    pass "negative control: a different path with the pinned bytes still passes, so § 6a rejected content and not merely an unusual path"
+  else
+    fail "negative control: the pinned binary reached through another path exited ${status} (expected 0); § 6a may be rejecting the path rather than the content"
+    printf '%s\n' "${output}" | grep -E 'godot' | sed 's/^/      /'
+  fi
+else
+  fail "negative control could not run: no godot on PATH to reach by a second path"
+fi
+
+# Negative control 2. The substitute and the pin must genuinely differ, or § 6a's
+# central assertion would be trivially satisfiable.
+if [[ "${substitute_sha}" != "${pinned_sha}" ]]; then
+  pass "negative control: the substitute's sha256 differs from the pin, so the mismatch above was a real content difference"
+else
+  fail "negative control: the substitute hashes to the pinned value, which makes § 6a vacuous"
+fi
+
+remove_godot_fixtures
+trap cleanup_fixtures EXIT
+
+echo
 echo "=== 7. a correct environment exits 0 (VER-FND-002-001)"
 output="$("${WRAPPER}" doctor 2>&1)"
 status=$?
@@ -289,6 +404,125 @@ if "${WRAPPER}" doctor >/dev/null 2>&1; then
   pass "the tree builds again after both fixtures were removed"
 else
   fail "the repository did not return to a buildable state after the fixtures"
+fi
+
+echo
+echo "=== 10. a global.json pinning an uninstalled SDK exits 3, not 8 (VER-FND-002-016)"
+#
+# Section 6 above only ever proved the *absent* half of exit class 3: it points
+# MECHAMINER_GODOT at a nonexistent editor. The mismatched half was unproved, and the
+# wrapper got it wrong - it gated class 3 on `command -v dotnet` alone, so a
+# global.json pinning an installed-but-absent SDK version fell through to the verb
+# host's build failure and was reported as class 8 / MMT-8001 "unexpected
+# tool-internal failure". Doc 100 § Standard command surface defines class 3 as a
+# "missing or mismatched pinned environment", so a version mismatch is class 3 and
+# blaming an internal tool bug is wrong.
+#
+# 9.9.999 is used because no such .NET SDK exists or will exist, so the fixture cannot
+# accidentally resolve on a machine with more SDKs installed than this one.
+#
+readonly PINNED_SDK_FILE="${REPO_ROOT}/global.json"
+readonly PINNED_SDK_BACKUP="${REPO_ROOT}/artifacts/wrapper/global.json.verify-verbs-backup"
+readonly UNINSTALLABLE_SDK_VERSION="9.9.999"
+readonly NEGATIVE_CONTROL_WRAPPER="${REPO_ROOT}/DeliberatelyUnprobedWrapperFixture.sh"
+
+restore_pinned_sdk() {
+  # Restoring the repository's real pin matters more than any assertion below, so it
+  # is unconditional and idempotent.
+  if [[ -f "${PINNED_SDK_BACKUP}" ]]; then
+    cp -f "${PINNED_SDK_BACKUP}" "${PINNED_SDK_FILE}"
+    rm -f "${PINNED_SDK_BACKUP}"
+  fi
+  rm -f "${NEGATIVE_CONTROL_WRAPPER}"
+}
+
+cleanup_fixtures_and_pin() {
+  cleanup_fixtures
+  restore_pinned_sdk
+}
+trap cleanup_fixtures_and_pin EXIT
+
+mkdir -p "${REPO_ROOT}/artifacts/wrapper"
+cp -f "${PINNED_SDK_FILE}" "${PINNED_SDK_BACKUP}"
+
+# The negative control is the pre-fix wrapper: build.sh with its pinned-SDK
+# resolution probe deleted. It must misclassify, and the assertion below must reject
+# it. Without this control, section 10 would still pass against a wrapper that had
+# never gained the probe, because a mismatched pin is nonzero either way.
+if ! sed '/^# MISMATCH-PROBE-BEGIN$/,/^# MISMATCH-PROBE-END$/d' "${WRAPPER}" \
+      >"${NEGATIVE_CONTROL_WRAPPER}"; then
+  fail "could not write the negative-control wrapper"
+fi
+chmod +x "${NEGATIVE_CONTROL_WRAPPER}"
+
+if ! grep -q '^# MISMATCH-PROBE-BEGIN$' "${WRAPPER}"; then
+  fail "build.sh has no MISMATCH-PROBE markers, so the negative control below is vacuous"
+elif grep -q 'MISMATCH-PROBE' "${NEGATIVE_CONTROL_WRAPPER}"; then
+  fail "the negative-control wrapper still contains the probe it was supposed to lose"
+else
+  pass "negative control built: build.sh with the pinned-SDK resolution probe removed"
+fi
+
+python3 - "${PINNED_SDK_FILE}" "${UNINSTALLABLE_SDK_VERSION}" <<'PY'
+import json, sys
+path, version = sys.argv[1:3]
+with open(path, encoding="utf-8") as handle:
+    document = json.load(handle)
+document["sdk"]["version"] = version
+with open(path, "w", encoding="utf-8") as handle:
+    json.dump(document, handle, indent=2)
+    handle.write("\n")
+PY
+
+assert_mismatch_classification() {
+  # "<wrapper path>|<human name>"
+  local wrapper_path="$1"
+  local wrapper_name="$2"
+  local expect_correct="$3"
+  local wrapper_output wrapper_status
+
+  wrapper_output="$("${wrapper_path}" doctor 2>&1)"
+  wrapper_status=$?
+
+  local classified_correctly=0
+  if [[ "${wrapper_status}" -eq 3 ]] \
+      && printf '%s' "${wrapper_output}" | grep -q 'MMT-3001' \
+      && printf '%s' "${wrapper_output}" | grep -qi 'mismatch'; then
+    classified_correctly=1
+  fi
+
+  if [[ "${expect_correct}" -eq 1 ]]; then
+    if [[ "${classified_correctly}" -eq 1 ]]; then
+      pass "${wrapper_name}: a pin on SDK ${UNINSTALLABLE_SDK_VERSION} exits 3 with MMT-3001 and says mismatch"
+    else
+      fail "${wrapper_name}: a pin on SDK ${UNINSTALLABLE_SDK_VERSION} exited ${wrapper_status} (expected 3 with MMT-3001)"
+      printf '%s\n' "${wrapper_output}" | tail -6 | sed 's/^/      /'
+    fi
+    return
+  fi
+
+  # Negative control: the misclassifying wrapper must be rejected by the very same
+  # predicate, and must specifically be the class-8 answer this fix replaced.
+  if [[ "${classified_correctly}" -eq 1 ]]; then
+    fail "${wrapper_name}: the probe-less wrapper still classified correctly, so section 10 proves nothing"
+  elif [[ "${wrapper_status}" -eq 8 ]] && printf '%s' "${wrapper_output}" | grep -q 'MMT-8001'; then
+    pass "${wrapper_name}: rejected, and reproduces the original defect exactly (exit 8, MMT-8001)"
+  else
+    pass "${wrapper_name}: rejected by the same predicate (exit ${wrapper_status}, not 3/MMT-3001)"
+  fi
+}
+
+assert_mismatch_classification "${NEGATIVE_CONTROL_WRAPPER}" "negative control (probe removed)" 0
+assert_mismatch_classification "${WRAPPER}" "build.sh" 1
+
+restore_pinned_sdk
+trap cleanup_fixtures EXIT
+
+if [[ "$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["sdk"]["version"])' "${PINNED_SDK_FILE}")" \
+      != "${UNINSTALLABLE_SDK_VERSION}" ]] && "${WRAPPER}" doctor >/dev/null 2>&1; then
+  pass "global.json was restored and doctor exits 0 again"
+else
+  fail "global.json was not restored to its real pin"
 fi
 
 echo

@@ -96,7 +96,7 @@
     },
     {
       "id": "VER-FND-001-005",
-      "summary": "No GDScript source file exists outside documentation, so no runtime logic can use a second language.",
+      "summary": "No GDScript source file exists outside documentation, tracked or untracked, so no runtime logic can use a second language. The candidate set is tracked plus untracked-but-not-ignored, and a failed enumeration fails the gate rather than emptying it. Both halves are stated because neither used to hold: the check consulted only tracked paths, so an untracked .gd file passed, and it discarded git's exit status with a trailing '|| true', so under a broken or absent git an empty result took the pass branch and this hard prohibition was silently unenforceable. Two negative controls run in the same invocation: an untracked .gd fixture must be reported as a violation, and the same probe under a broken GIT_DIR must report that it could not tell rather than reporting a clean tree.",
       "task": "TASK-FND-001-001",
       "requirements": ["TR-FND-002"],
       "technicalSources": [
@@ -107,7 +107,10 @@
         "kind": "script",
         "value": "build/verify-architecture.sh"
       },
-      "fixtures": [],
+      "fixtures": [
+        "build/verify-architecture.sh untracked-gdscript fixture",
+        "build/verify-architecture.sh broken-GIT_DIR negative control"
+      ],
       "scenarios": [],
       "evidenceKinds": ["command-exit-code", "command-output"],
       "platforms": ["linux-x64"],

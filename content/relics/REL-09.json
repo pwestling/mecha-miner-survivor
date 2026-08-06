@@ -29,7 +29,7 @@
     "cross_document_rules[]: TDD-ENCOUNTERS",
     "cross_document_rules[]: GDD-PERMANENT-POWERUP-CATALOG",
     "cross_document_rules[]: TDD-MINING-PROGRESSION",
-    "discovery_sentence: GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core",
+    "summary_key: GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core",
     "trigger: GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core",
     "pause_behavior: GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core",
     "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core"

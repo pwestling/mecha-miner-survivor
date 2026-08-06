@@ -1,9 +1,9 @@
 {
-  "id": null,
+  "id": "SITE-04",
   "schema_version": 1,
   "content_version": 1,
   "status": "enabled",
-  "name_key": "mining_site.specialized-material-geodes.name",
+  "name_key": "mining_site.SITE-04.name",
   "tags": [],
   "source_refs": [
     "GDD-MINING#specialized-material-geodes",

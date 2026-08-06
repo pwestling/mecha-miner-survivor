@@ -341,11 +341,17 @@ contradiction:
   - `content/mining-sites/hyper-gold-sites.json` → `mining_site.hyper-gold-sites.name`
   - `content/mining-sites/specialized-material-geodes.json` →
     `mining_site.specialized-material-geodes.name`
+
+  **→ Superseded by Ruling 11.** The four IDs were minted (`SITE-01`–`SITE-04`) and the four
+  provisional stem keys were rewritten, exactly as this entry said they would have to be.
 - No `id` field **at all**, because the file is not a definition and therefore has nothing to
   identify: `content/enemies/shared-elite-modifiers.json` (Ruling 3). This is a different case from
   `"id": null` — null means “a definition whose ID has not been minted yet”, absent means “not a
   definition”, the same treatment the deleted `content/mechs/shared-baseline.json` had. It carries
   no localized string and no stem-based key.
+
+  **→ Superseded by Ruling 11.** The file is `ELT-01` and is an ordinary addressable definition.
+  It still carries no localized string and no `name_key`; that half of this entry stands.
 - Gone entirely, so no ID was ever needed: `content/enemies/elite-modifier-profile.json`
   (Ruling 3) and `content/resources/geode-resonance-effects.json` (Ruling 4).
 
@@ -424,9 +430,11 @@ choices the ruling did **not** determine, which are mine and are open to revisio
 removed except the ones named as removed below.
 
 A **second integration-owner pass** then ruled on four of the choices Rulings 1, 3 and 4 had left
-to me. Those are Rulings 6–9, in their own section after Ruling 5. Where a second-pass ruling
-reverses a first-pass choice, the first-pass entry is left as written and carries a
-**superseded-by** pointer — the record of what was decided when is part of the point.
+to me. Those are Rulings 6–9, in their own section after Ruling 5. A **third pass** followed, minting
+the last five stable IDs and reversing the scope of Ruling 6; those are Rulings 11–13, in their own
+section after Ruling 10. Where a later ruling reverses an earlier choice, the earlier entry is left as
+written and carries a **superseded-by** pointer — the record of what was decided when is part of the
+point.
 
 #### Ruling 1 — enemies store a body scale, not a derived collision diameter
 
@@ -584,6 +592,20 @@ byte-identically: `adds_behavior`, `adds_attacks_phases_aura_or_support_ai`, `ad
 > the schema stream's own shared-values file. Treat the path
 > `content/enemies/shared-elite-modifiers.json` as provisional. The same caveat applies to the
 > file's *stem*, which no document supplies either.
+>
+> **→ Superseded in part by Ruling 11, on the “no `id`” half only.** The FLAG's subject — where the
+> file lives — is untouched: it stays exactly where it is, in `content/enemies/`, with the same stem
+> (Ruling 10 already confirmed the path, and Ruling 11 does not revisit it). What Ruling 11 reverses
+> is this entry's ruling that the file is “not a definition” and therefore needs no ID. It has one:
+> **`ELT-01`**. **The reason is the bundle ordering.** `40:185` — “The canonical bundle is ordered by
+> category and stable ID” — leaves no slot in that ordering for a file without a stable ID, so an
+> ID-less file cannot be placed deterministically in the artifact every consumer reads. That is also
+> what stops the kebab-case file name looking wrong now that the file has an ID: the ordering keys on
+> the `id` field, and `40:185` requires the bundle to hash “identically for identical semantic input
+> regardless of source file enumeration order”, so the stem is not load-bearing and no rename is
+> owed. The FLAG text above is left verbatim, including the “not a definition” framing that Ruling 11
+> reverses — the reasoning trail is the point, and the argument it makes about *placement* is still
+> the live one.
 
 **What else the ruling did not determine, and I chose:**
 
@@ -777,6 +799,12 @@ ordinary enemy definitions (`content/enemies/EN-01.json` … `EN-10.json`). `con
 surviving fields still come from `docs/72`. Bosses are untouched: the ruling named the enemy
 definitions, and a boss's circle is authored directly rather than scaled from the Ripper.
 
+**→ The last sentence is superseded in half by Ruling 12.** A boss *diameter* is authored, exactly as
+written here, and stays. The boss *centre distance* is not: it is the same
+`diameter ÷ 2 + 0.50 M` derivation, it reproduces exactly for all four bosses, and it has now been
+removed from `content/bosses/` as well. This entry's scope — “the ruling named the enemy definitions”
+— is what left the defect in place one catalog over.
+
 The removed values were re-verified against the “Center distance that begins contact” column at
 `docs/72:88-99` before deletion, and every one reproduces from the surviving
 `body_scale_multiplier`:
@@ -898,6 +926,188 @@ Neither of these is a change; both were reviewed in the second pass and left as 
    `content/mining-sites/specialized-material-geodes.json` before a citation exists for
    `source_refs` to point at. Ruling 4's gap flag on `resonance_field.radius_m` therefore stands
    unchanged.
+
+### Integration-owner rulings applied — third pass
+
+Two further items were ruled on after the second pass, plus one audit this pass ran on its own
+initiative and fixed. As before, each entry gives the citations, exactly what changed, and separately
+what the ruling left to me. Rulings 11 and 12 each reverse a scope decision recorded above, and both
+earlier entries carry a **superseded-by** pointer rather than being rewritten.
+
+**The deliberate-removal list grows by one.** The paragraph above Ruling 6 names five fields that are
+absent from `content/` by decision rather than for want of a source. A sixth joins them:
+`contact_footprint.center_distance_that_begins_contact_m` on the **four bosses** (Ruling 12). As with
+the other five, a reviewer should not read it as missing data, and a later transcription pass that
+finds the four values at `docs/72:105-110` must not re-add them.
+
+#### Ruling 11 — the last five stable IDs are minted: `SITE-01`–`SITE-04` and `ELT-01`
+
+**Citations.** `40:80` requires a stable category-valid `id` on every independently addressable
+definition. `40:185` is what makes an ID-less file untenable rather than merely untidy: “The canonical
+bundle is ordered by category and stable ID, uses normalized numeric formatting, includes
+schema/generation versions, and hashes identically for identical semantic input regardless of source
+file enumeration order.” There is no slot in that ordering for a file with no stable ID, so an ID-less
+file cannot be deterministically placed in the artifact every consumer reads. `40:67` (“Reuse accepted
+gameplay IDs exactly”) still forbids *inventing* IDs during transcription, which is why this pass did
+not mint them and the integration owner did.
+
+**Change — the four mining-site classes.** `"id": null` becomes a minted token, in the document order
+of `docs/40-mining-and-extraction.md:58-132`, and each definition's `name_key` moves off the
+provisional filename stem:
+
+| File | `id` | `name_key` before | `name_key` after |
+| --- | --- | --- | --- |
+| `content/mining-sites/standard-ore-seams.json` | `SITE-01` | `mining_site.standard-ore-seams.name` | `mining_site.SITE-01.name` |
+| `content/mining-sites/rich-ore-seams.json` | `SITE-02` | `mining_site.rich-ore-seams.name` | `mining_site.SITE-02.name` |
+| `content/mining-sites/hyper-gold-sites.json` | `SITE-03` | `mining_site.hyper-gold-sites.name` | `mining_site.SITE-03.name` |
+| `content/mining-sites/specialized-material-geodes.json` | `SITE-04` | `mining_site.specialized-material-geodes.name` | `mining_site.SITE-04.name` |
+
+The four keys were renamed in place in `content/localization/en.json`, which stays flat, lexically
+sorted, duplicate-free and orphan-free at 164 strings. **The four English values are unchanged** —
+“Standard ore seams”, “Rich ore seams”, “Hyper Gold sites”, “Specialized-material geodes” — and no
+string was added or removed. The key grammar `<category>.<stable_id>.<role>` is unchanged; only the
+`<stable_id>` segment stopped being provisional. This discharges the “must be rewritten when IDs are
+minted” obligation the Stable IDs section above recorded.
+
+**Change — the shared elite modifiers.** `content/enemies/shared-elite-modifiers.json` gains
+`"id": "ELT-01"` as the first envelope field, and becomes an ordinary addressable definition rather
+than an ID-less constants block. Three things it does **not** gain, each for its own reason:
+
+- **No `name_key`.** `name_key` is conditional on a definition having a genuinely player-facing name
+  (`40:84` with `40:90`), and this one has none — it is a block of multipliers the UI never names.
+  Having a stable ID and having a name are independent properties, so `ELT-01` stays in the verifier's
+  `NAME_KEY_OMITTED` list beside `WAV-01` and `MGC-01`, and the list is unchanged at three members.
+  Nothing was added to `en.json` for it.
+- **No rename.** The file stays at `content/enemies/shared-elite-modifiers.json`, the path Ruling 10
+  confirmed. The bundle orders by the `id` field and hashes independently of source file enumeration
+  order (`40:185`), so the stem is not load-bearing; renaming would churn every `content/README.md`
+  and verifier reference for no gain. The file's stem remains unsourced, as Rulings 3 and 10 noted.
+- **No new `source_refs` entry.** No document assigns either `ELT-01` or `SITE-01`–`SITE-04`, so there
+  is nothing to cite: a `id: <DOC>#<anchor>` prefix here would attribute a minted token to a document
+  that does not contain it. (`UTL-R1` got such refs under Ruling 2 because `40:128` and `docs/68:31`
+  genuinely argue for putting the radar in the utility catalog; nothing comparable exists here.)
+
+**What the ruling did not determine, and I chose:**
+
+1. **Which mining-site file gets which number.** The ruling supplied the five tokens and the mapping;
+   the ordering rationale recorded above — document order in `docs/40:58-132` — is the reading I
+   applied when writing them, and it matches the mapping given.
+2. **Placing `id` first in the elite block's envelope**, ahead of `schema_version`, matching every
+   other definition in the tree.
+
+#### Ruling 12 — the boss centre distance is derived too, and comes out
+
+**Citations.** `docs/72:86` states one derivation for every contact circle in the game: “Contact begins
+when the enemy contact circle and the mech's 0.50M-radius collision circle overlap.” So the centre
+distance is `contact diameter ÷ 2 + 0.50 M` for a boss exactly as for an enemy, and
+`docs/technical/40-content-data-and-validation.md:114` assigns producing it to the compiler
+(“Validation derives world speeds/footprints and compares them with the survivability report”).
+Ruling 6 removed it from the ten enemies and stopped there, because the ruling it applied “named the
+enemy definitions”. The defect it was removing did not stop there.
+
+**The two halves of a boss footprint have opposite provenance, and the investigation established the
+split before anything was deleted:**
+
+- **Boss diameters are AUTHORED and stay.** The interval-boss overview table at
+  `docs/31-initial-alien-roster.md:121-128` has **no body-scale column at all** — unlike the ordinary
+  roster overview at `docs/31:37-48`, which is where the ten enemy `body_scale_multiplier` values come
+  from. The scales the four boss diameters would imply against the `0.80 M` Ripper reference
+  (`1.875×`, `2.5×`, `2.0×`, `2.375×`) appear **nowhere** in `docs/`; a search for them returns
+  nothing. And `docs/72-player-survivability-and-damage-baseline.md:105` states the four diameters
+  flat (rows at `:107-110`), in its own table introduced by “Bosses use simple circular gameplay footprints even when their
+  meshes are elongated or irregular”. There is no operand to derive them from, so the diameter *is*
+  the authored quantity for a boss — the role `body_scale_multiplier` plays for an enemy.
+  `contact_footprint.contact_and_weapon_hurt_diameter_m` therefore **stays** on all four bosses.
+- **Boss centre distances are DERIVED and come out.** Re-verified against the “Center distance that
+  begins contact” column of the boss table at `docs/72:105-110` before deletion, arithmetic recomputed
+  from the authored diameter rather than taken from the ruling's restatement:
+
+| ID | Boss | Authored diameter (`docs/72:105`) | `diameter ÷ 2 + 0.50 M` | Removed stored value | Reproduces |
+| --- | --- | ---: | ---: | ---: | --- |
+| `BOSS-01` | Riftjaw | 1.50 M | 1.50 ÷ 2 + 0.50 = **1.25** | 1.25 M | exactly |
+| `BOSS-02` | Brood Titan | 2.00 M | 2.00 ÷ 2 + 0.50 = **1.50** | 1.50 M | exactly |
+| `BOSS-03` | Prism Crown | 1.60 M | 1.60 ÷ 2 + 0.50 = **1.30** | 1.30 M | exactly |
+| `BOSS-04` | Skybreaker Apex | 1.90 M | 1.90 ÷ 2 + 0.50 = **1.45** | 1.45 M | exactly |
+
+All four reproduce exactly — no rounding artefact of the C-1 kind anywhere in this column — so nothing
+was lost that the compiler cannot reproduce from the surviving authored diameter and the player's
+collision radius.
+
+**Change.** `contact_footprint.center_distance_that_begins_contact_m` is **removed** from
+`content/bosses/BOSS-01.json` … `BOSS-04.json`. Each `contact_footprint` keeps
+`contact_and_weapon_hurt_diameter_m`, `shape`, `appendages_outside_footprint` and
+`attack_geometry_uses_separate_display`, and its `contact_footprint:` `source_refs` prefix is retained
+because those four surviving fields still come from `docs/72`. Nothing else in any boss file changed.
+
+**Why this is the same defect A20 already existed to prevent.** The `0.50 M` term is the **player's**
+collision radius. Storing the sum in `content/bosses/` hardcoded a player-baseline constant into the
+boss catalog, so a change to the mech's collision radius would silently invalidate four boss files with
+no validator to notice — two owners on one value, in two different catalogs. That is word for word the
+argument Ruling 6 made about the ten enemies. A20 was simply under-scoped to enemies.
+
+**Verifier.** `A20` in `src/MechaMiner.Tools/ContentImport/verify_content.py` is now **two rules with
+two scopes**, not one rule over one directory:
+
+- the contact-**diameter** rule stays `content/enemies/` **only**, because a boss diameter is authored.
+  Widening it would fail the four authored diameters, and `ring_radius_m` on `BOSS-02`'s minion ring
+  with them;
+- the **centre-distance** rule covers `content/enemies/` **and** `content/bosses/`.
+
+Both still match on key names, so a rename cannot slip past either, and `reference_diameter_m` stays
+allowlisted for the reason Ruling 6 gave.
+
+**What the ruling did not determine, and I chose:** leaving `contact_footprint` on the bosses as an
+object with four remaining fields rather than flattening it, matching the choice Ruling 6 recorded for
+the enemies.
+
+#### Ruling 13 — `source_refs` scope prefixes are audited, and a dangling one is now a failure
+
+Not an integration-owner ruling: an audit this pass ran and fixed, recorded here with the rest.
+
+**The defect class.** A `source_refs` element may carry an optional `<json.path>: ` prefix attributing
+a single property to a document (`40:87`, and the shape documented in `content/README.md`). A prefix
+naming a field that does not exist in the definition is a **dangling citation** — it claims to
+document something that is not there. It is the same defect class as an `#anchor` pointing at a heading
+that does not exist, which `A9` has always failed on, and it had no check at all.
+
+**The audit.** Every one of the **1,131** prefixed `source_refs` elements in `content/` was parsed and
+resolved against its own definition. **50 did not resolve.** None of them turned out to be caused by
+the removed fields this pass expected to find — the rulings that removed
+`contact_diameter_m`, `center_distance_that_begins_contact_m`, `behavior_kind`,
+`behavior_kind_registration_pending` and `exclusion_reason`, and the
+`body_scale_factor` → `body_scale_multiplier` rename, all correctly updated or dropped their own
+prefixes at the time. Every dangling prefix instead came from the provenance fold in commit `5becb39`,
+which converted `_provenance` blocks into prefixed `source_refs` and, in five places, minted a prefix
+that names something other than a field of the definition. Each fix below either follows the field or
+drops the prefix; **no citation was deleted.**
+
+| Prefix | Count | Where | Why it dangles | Fix and reason |
+| --- | ---: | --- | --- | --- |
+| `catalog_overview_row:` | 19 | 13 PowerUps, 6 unlocks | Never a JSON field. It names a **row of a table in the source document** — the `Catalog overview` table — not a property of the definition | **Prefix dropped, citation kept file-level.** The row is the source of `id`, `domain`/`category`, the per-rank or unlock effect, `cap`, `maximum_effect` and the cost — six or seven fields, not one, so no single-property prefix is correct. It supports the definition generally, which is exactly what a bare ref means. It is the only citation for several of those values and must not be deleted |
+| `availability:` | 15 | the 15 `W-AB`/`W-AC`/`W-AD`/`W-AE`/`W-AF` branches | These 15 branch files have **no `availability` object**; the other 30 do. The prefix was applied uniformly to all 45 when the refs were folded, so on 15 of them it names a field that was never transcribed | **Re-pointed at `prerequisites:`.** The cited passage is the branch-availability rule — branches “appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite”. On these 15 files the surviving field that records that fact is `prerequisites: []`. The 30 files that *do* have an `availability` object keep their `availability:` prefix untouched |
+| `discovery_sentence:` | 10 | all 10 relics | The field was **deleted**: once its line number was stripped the object held nothing but its string, so the string became the relic's `summary_key` and the wrapper went (see “Localization keys” above) | **Re-pointed at `summary_key:`.** The citation is the only support for the English summary now living in `en.json` as `relic.REL-nn.summary`, so dropping it would strip provenance from a value still shipped. `summary_key` is precisely the surviving field it documents |
+| `corroboration:` | 1 | `UNL-01` | Never a JSON field. It is a **role word** describing what the citation does, not a path | **Prefix dropped, citation kept file-level.** `docs/68` independently restates the 600-Hyper-Gold suite *and* the same six unlocked utilities, so it corroborates two fields at once and cannot name one. It stays as a bare corroborating ref |
+| `rules[2..3]:` | 5 | `UNL-02`…`UNL-06` | **Not dangling.** `rules` exists with four elements, so indices 2 and 3 both resolve; only the `[2..3]` **range** notation was unsupported by the first draft of the checker | **Content unchanged.** The range form is now part of the asserted path grammar. Rewriting it to `rules[]:` would have been a real loss of precision: the citation covers the two shared pool-behavior bullets, not all four |
+
+**Change in `content/`.** 45 `source_refs` elements across 45 files: 15 branches, 13 PowerUps, 10
+relics, 6 unlocks (`UNL-01` twice). **No element was removed and no document ID or `#anchor` was
+altered** — only the prefix, and only in the direction of naming a field that exists. Every array
+stays the same length; the `rules[2..3]:` files are untouched.
+
+**Verifier.** New assertion **`A22`**: every `source_refs` scope prefix must resolve to a field that
+exists in the definition it annotates. The path grammar it asserts is dot-separated `snake_case`
+segments, each optionally suffixed with `[]` (every element), `[N]` (one element) or `[N..M]` (a
+range), which is the union of the forms already in use — `rules[]`,
+`minute_rows[33].formation_events[].timestamps_reconstructed`, `unlocks.utilities[].utility_id`,
+`rules[2..3]`. An unindexed array is transparent, so `unlocks.utilities.utility_id` would resolve too.
+The failure message names the surviving-field and drop-the-prefix options explicitly, and says not to
+delete a citation that is the only support for a value still present.
+
+**What no ruling determined, and I chose:** the five fixes above, one per row, with the reason in the
+table. Two are judgement calls worth flagging for a reviewer: re-pointing the 15 branch refs at
+`prerequisites` rather than adding the missing `availability` object to those 15 files (adding it would
+be authoring content this pass has no ruling for), and keeping `catalog_overview_row:` /
+`corroboration:` as **file-level** refs rather than picking one of the several fields each supports.
 
 ### Per-definition notes, by catalog
 

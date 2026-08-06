@@ -1,9 +1,9 @@
 {
-  "id": null,
+  "id": "SITE-03",
   "schema_version": 1,
   "content_version": 1,
   "status": "enabled",
-  "name_key": "mining_site.hyper-gold-sites.name",
+  "name_key": "mining_site.SITE-03.name",
   "tags": [],
   "source_refs": [
     "GDD-MINING#hyper-gold-sites"

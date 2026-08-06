@@ -7,7 +7,7 @@
   "tags": [],
   "source_refs": [
     "GDD-PERMANENT-OPTION-UNLOCK-CATALOG#unl-04--war-drum-oscillator",
-    "catalog_overview_row: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#catalog-overview",
+    "GDD-PERMANENT-OPTION-UNLOCK-CATALOG#catalog-overview",
     "currency: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
     "prerequisite: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
     "fresh_profile_purchasable: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",

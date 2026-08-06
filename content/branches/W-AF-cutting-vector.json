@@ -8,7 +8,7 @@
   "source_refs": [
     "GDD-WEAPON-NUMERIC-CATALOG#cutting-vector--conversion--2-barysteel",
     "rules[]: GDD-WEAPON-NUMERIC-CATALOG#cutting-vector--conversion--2-barysteel",
-    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "prerequisites: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
     "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches"
   ],
   "weapon_id": "W-AF",

@@ -7,7 +7,7 @@
   "tags": [],
   "source_refs": [
     "GDD-PERMANENT-OPTION-UNLOCK-CATALOG#unl-01--advanced-utility-suite",
-    "catalog_overview_row: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#catalog-overview",
+    "GDD-PERMANENT-OPTION-UNLOCK-CATALOG#catalog-overview",
     "currency: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
     "prerequisite: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
     "fresh_profile_purchasable: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
@@ -19,7 +19,7 @@
     "grants_account_access_only: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#shared-purchase-rules",
     "unlocks.utilities[].utility_id: GDD-UTILITY-CATALOG#catalog-overview",
     "cost_hyper_gold: DEC-121#decision",
-    "corroboration: GDD-UTILITY-CATALOG#fresh-profile-and-unlocked-availability"
+    "GDD-UTILITY-CATALOG#fresh-profile-and-unlocked-availability"
   ],
   "category": "Utilities",
   "effect": "Adds the six alternate material utilities",

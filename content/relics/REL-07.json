@@ -26,7 +26,7 @@
     "stacking_and_exclusivity: GDD-COMBAT-ECONOMY-BALANCE-FRAMEWORK#stacking-and-comparison-order",
     "behavior_registration: TDD-COMBAT-RUNTIME#relic-integration",
     "cross_document_rules[]: TDD-COMBAT-RUNTIME",
-    "discovery_sentence: GDD-INITIAL-RELIC-CATALOG#rel-07--fission-seed",
+    "summary_key: GDD-INITIAL-RELIC-CATALOG#rel-07--fission-seed",
     "trigger: GDD-INITIAL-RELIC-CATALOG#rel-07--fission-seed",
     "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-07--fission-seed"
   ],

@@ -57,7 +57,7 @@ above.
 | --- | --- | --- |
 | `resources/` (8 files: `A`–`F`, `common-ore`, `hyper-gold`) | catalog transcription (CAT) | authored |
 | `mechs/` (6: `MCH-01`–`MCH-06`) | CAT | authored |
-| `enemies/` (11: `EN-01`–`EN-10`, `shared-elite-modifiers`) | CAT | authored |
+| `enemies/` (11: `EN-01`–`EN-10`, `shared-elite-modifiers` = `ELT-01`) | CAT | authored |
 | `bosses/` (4: `BOSS-01`–`BOSS-04`) | CAT | authored |
 | `weapons/` (16: `W-AB`…`W-EF`, `stat-price-formula`) | CAT | authored |
 | `branches/` (45: `<weapon-id>-<branch-name>`) | CAT | authored |
@@ -65,7 +65,7 @@ above.
 | `relics/` (10: `REL-01`–`REL-10`) | CAT | authored |
 | `powerups/` (13: `PU-*`) | CAT | authored |
 | `unlocks/` (6: `UNL-01`–`UNL-06`) | CAT | authored |
-| `mining-sites/` (4 prose-derived site classes) | CAT | authored |
+| `mining-sites/` (4 prose-derived site classes, `SITE-01`–`SITE-04`) | CAT | authored |
 | `encounters/` (1: `standard-encounter-schedule`, `WAV-01`) | CAT | authored |
 | `maps/` (1: `standard-map-generation-contract`, `MGC-01`) | CAT | authored |
 | `localization/` (`en.json`) | localization stream (`DAT-009`, `docs/technical/110-implementation-plan-for-ai-agents.md:218`) | authored |
@@ -119,8 +119,14 @@ list, and the verifier under
 - **Kebab-case file names for cohesive aggregates** — `shared-elite-modifiers.json`,
   `stat-price-formula.json`, `standard-encounter-schedule.json` (`WAV-01`),
   `standard-map-generation-contract.json` (`MGC-01`), and the four `*-seams`/`*-geodes`/`*-sites`
-  mining-site files. A file only carries a kebab-case name because no doc assigns it an ID; once one
-  is assigned the file is renamed to it, as the resource radar was to `UTL-R1.json`.
+  mining-site files (`SITE-01`–`SITE-04`). A file carries a kebab-case name because no *document*
+  assigns it an ID token; **minting an ID does not force a rename.** The four mining-site files and
+  `enemies/shared-elite-modifiers.json` (`ELT-01`) keep their kebab-case names while carrying stable
+  IDs, because the canonical bundle is ordered by category and stable ID and "hashes identically for
+  identical semantic input regardless of source file enumeration order"
+  (`docs/technical/40-content-data-and-validation.md:185`) — the `id` field is load-bearing, the file
+  stem is not. The resource radar *was* renamed to `UTL-R1.json`, but that was a choice about matching
+  its twelve sibling utility files, not a rule.
 - **Branch files** are named `<weapon-id>-<branch-name-kebab-case>.json` (e.g.
   `W-AD-singularity-forge.json`) because no doc assigns branch IDs.
 - **Formatting:** 2-space indent, LF line endings, one trailing newline, UTF-8 without BOM.
@@ -168,11 +174,11 @@ independently addressable definition. The literal values this tree carries today
 
 | Field | Mandate | In this tree |
 | --- | --- | --- |
-| `id` | `40:80` — stable category-valid ID | present as a non-empty string on 133 of the 138 definitions, including the aggregates that have doc-assigned IDs (`WAV-01`, `MGC-01`). Five definitions have no stable ID. Four carry `"id": null` — the prose-only mining-site classes (`docs/40-mining-and-extraction.md:58-132`), which no table gives an ID token, so minting one would be inventing content. On the fifth, `enemies/shared-elite-modifiers.json`, the field is **absent** rather than null: a constants block has nothing to be referenced *by*, so it needs no ID at all |
+| `id` | `40:80` — stable category-valid ID | present as a non-empty string on **all 138** definitions, including the aggregates (`WAV-01`, `MGC-01`) and the five IDs the integration owner minted rather than transcribed: the four prose-only mining-site classes (`docs/40-mining-and-extraction.md:58-132`) are `SITE-01`–`SITE-04` in document order, and `enemies/shared-elite-modifiers.json` is `ELT-01`. Nothing here carries `"id": null` or omits the field, so the verifier treats a missing or null `id` as an unconditional failure |
 | `schema_version` | `40:81` — integer version of its definition schema | `1` everywhere; no schema exists to version yet |
 | `content_version` | `40:82` — monotonic revision | `1` everywhere; this is the first authored revision |
 | `status` | `40:83` — exactly one of `development`, `enabled`, `disabled`, `retired` | `"enabled"` everywhere; nothing here is gated or retired |
-| `name_key` | `40:84` — localization key, never literal player-facing text | **conditional**, like `presentation_id`: required only where a definition has a genuinely player-facing name, with the compiler supplying the default otherwise (`40:90`). Present on 135 of the 138 definitions, always resolving into `content/localization/en.json`. The three omissions — `WAV-01`, `MGC-01`, and `shared-elite-modifiers` — are authoring contracts and a constants block; naming them in the localization catalog would imply a UI surface that does not exist |
+| `name_key` | `40:84` — localization key, never literal player-facing text | **conditional**, like `presentation_id`: required only where a definition has a genuinely player-facing name, with the compiler supplying the default otherwise (`40:90`). Present on 135 of the 138 definitions, always resolving into `content/localization/en.json`. The three omissions — `WAV-01`, `MGC-01`, and `ELT-01` — are authoring contracts and a constants block; naming them in the localization catalog would imply a UI surface that does not exist. Having a stable ID and having a player-facing name are independent: `ELT-01` is addressable without being named |
 | `summary_key` | `40:85` — "concise player-facing summary key **where relevant**" | conditional, so it is present only where a summary exists (29 definitions); its absence is never an error |
 | `tags` | `40:86` — closed or validated vocabulary, never hidden behavior | present as an array on every definition, currently empty: no tag vocabulary has been minted, and inventing one here would be hidden behavior |
 | `source_refs` | `40:87` — gameplay document IDs/anchors and decision IDs implemented | present and non-empty on every definition; see below |
@@ -239,14 +245,20 @@ file, and `src/MechaMiner.Tools/ContentImport/README.md`):
 - every file parses, with no duplicate object properties (`40:26`);
 - the full envelope above, including `status` from exactly the four accepted literals (`40:83`) and
   `presentation_id` being absent rather than null;
-- the two exception sets, so drift stays visible: the definitions carrying a null *or absent* `id` and
-  the definitions omitting `name_key` must each match a list declared at the top of the verifier. A new
-  member is a failure; a member that no longer belongs is a warning to shrink the list;
+- a non-empty string `id` on every definition — a missing or null `id` is an unconditional failure,
+  because the exception list is now empty;
+- the two exception sets, so drift stays visible: the definitions carrying a null *or absent* `id`
+  (currently none) and the definitions omitting `name_key` (currently three) must each match a list
+  declared at the top of the verifier. A new member is a failure; a member that no longer belongs is a
+  warning to shrink the list;
 - `snake_case` property names everywhere, keys only, so ID/enum tokens in values keep their case
   (`40:26`);
 - no stale extraction metadata keys survive anywhere at any depth, including the retired
   `shared_rule_refs`, whose content now lives in `source_refs`;
-- every `source_refs` document ID and `#anchor` resolves against `docs/` front matter (`40:87`);
+- every `source_refs` document ID and `#anchor` resolves against `docs/` front matter (`40:87`), and
+  every `source_refs` scope prefix names a field that actually exists in the definition it annotates —
+  a citation pointing at a removed or renamed field is as dangling as an anchor pointing at a missing
+  heading;
 - `content/localization/en.json` is flat, sorted, duplicate-free, fully referenced, and has no
   orphaned strings (`40:216`);
 - per-catalog entry counts and aggregate row counts, each row citing its own source `doc:line`;
@@ -256,11 +268,16 @@ file, and `src/MechaMiner.Tools/ContentImport/README.md`):
 - two derived-value guards. The first is a regression guard on the one known transcription bug: the
   Sentry Pod deployment interval is the authored 6.0 s
   (`docs/71-initial-weapon-numeric-catalog.md:83`), and the derived 12 s must not appear as an
-  authored deployment or ramp value. The second is a second-writer guard on enemy footprints: an
-  enemy authors `body_scale_multiplier` and no enemy definition may carry a contact diameter or the
-  centre distance that begins contact, because the compiler derives both from it
-  (`40:114`); `reference_diameter_m` is allowlisted because 0.80 M is the Ripper's authored rank-zero
-  diameter, the shared reference the scale multiplies; and
+  authored deployment or ramp value. The second is a second-writer guard on footprints, with two
+  scopes. No definition under `enemies/` may carry a contact **diameter**, because an enemy authors
+  `body_scale_multiplier` and the diameter is `scale × 0.80 M`; and no definition under `enemies/`
+  **or** `bosses/` may carry the **centre distance that begins contact**, which for both is
+  `diameter ÷ 2 + the player's 0.50 M collision radius` (`40:114`). The diameter rule deliberately
+  stops at enemies: a boss diameter is *authored*, since the boss roster gives bosses no body-scale
+  column to derive one from (`docs/31-initial-alien-roster.md:121-128`) and
+  `docs/72-player-survivability-and-damage-baseline.md:105-110` states the four boss diameters flat.
+  `reference_diameter_m` is allowlisted because 0.80 M is the Ripper's authored rank-zero diameter,
+  the shared reference the scale multiplies; and
 - the total `*.json` inventory under `content/`, so a file in a directory no per-catalog row covers is
   still caught.
 

@@ -28,7 +28,7 @@
     "stacking_and_exclusivity: GDD-MECH-RELICS#replacement-and-interaction-rules",
     "stacking_and_exclusivity: GDD-COMBAT-ECONOMY-BALANCE-FRAMEWORK#stacking-and-comparison-order",
     "behavior_registration: TDD-COMBAT-RUNTIME#relic-integration",
-    "discovery_sentence: GDD-INITIAL-RELIC-CATALOG#rel-05--war-drum-oscillator",
+    "summary_key: GDD-INITIAL-RELIC-CATALOG#rel-05--war-drum-oscillator",
     "trigger: GDD-INITIAL-RELIC-CATALOG#rel-05--war-drum-oscillator",
     "pause_behavior: GDD-INITIAL-RELIC-CATALOG#rel-05--war-drum-oscillator",
     "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-05--war-drum-oscillator"

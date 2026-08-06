@@ -8,7 +8,7 @@
   "source_refs": [
     "GDD-WEAPON-NUMERIC-CATALOG#replicator-swarm--amplification--2-eidolon-coral",
     "rules[]: GDD-WEAPON-NUMERIC-CATALOG#replicator-swarm--amplification--2-eidolon-coral",
-    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "prerequisites: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
     "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches"
   ],
   "weapon_id": "W-AE",

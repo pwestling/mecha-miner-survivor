@@ -7,7 +7,7 @@
   "tags": [],
   "source_refs": [
     "GDD-PERMANENT-POWERUP-CATALOG#pu-s03--repair-nanites",
-    "catalog_overview_row: GDD-PERMANENT-POWERUP-CATALOG#catalog-overview",
+    "GDD-PERMANENT-POWERUP-CATALOG#catalog-overview",
     "currency: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
     "ui_grouping: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
     "prerequisite: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",

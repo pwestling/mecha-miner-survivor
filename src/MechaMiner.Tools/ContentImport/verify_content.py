@@ -39,11 +39,15 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
 
   A5  id must be present and a non-empty string, EXCEPT on the definitions
       listed in ID_NULL_EXPECTED below, where no design document assigns a
-      stable ID and minting one would be inventing content.
+      stable ID and minting one would be inventing content. That list is now
+      EMPTY - every definition in this tree carries a minted stable ID - so
+      the exception has no members and A5 is unconditional.
       Mandate: docs/technical/40-content-data-and-validation.md:80     FAILURE
 
-  A6  An absent or null id is reported as a warning with its path, never as
-      a failure, so an unminted ID never reddens the build.            WARNING
+  A6  An absent or null id is a FAILURE, with its path, unless the definition
+      is listed in ID_NULL_EXPECTED. With that list empty, a missing or null
+      id always reddens the build; it used to be a warning only while IDs
+      were genuinely unminted.                                         FAILURE
 
   A19 Expected-set guards, so a change in either set is visible rather than
       silently absorbed into the warning list: the set of definitions with a
@@ -128,14 +132,22 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       A missing deployment field is only a warning, because the field name
       is unvalidated until content/schemas/ exists.                    WARNING
 
-  A20 No enemy definition carries a compiler-derived footprint value. An
-      enemy authors body_scale_multiplier; both the contact diameter
-      (scale x 0.80 M) and the centre distance that begins contact
-      (diameter / 2 + the player's 0.50 M collision radius) are products of
-      it and belong to the compiler. Checked on KEY NAMES across
-      content/enemies/, with reference_diameter_m allowlisted because
-      0.80 M is the Ripper's authored rank-zero diameter, not a per-enemy
-      derived value.
+  A20 No definition carries a compiler-derived footprint value. Two rules
+      with two different scopes, because bosses and enemies author different
+      halves of their footprint:
+        - the contact DIAMETER rule covers content/enemies/ only. An enemy
+          authors body_scale_multiplier and its diameter is scale x 0.80 M,
+          so storing the diameter puts a second writer on it.
+          reference_diameter_m is allowlisted: 0.80 M is the Ripper's
+          authored rank-zero diameter, not a per-enemy derived value. A BOSS
+          diameter is AUTHORED and must stay - the boss roster gives bosses
+          no body-scale column (docs/31:121-128, unlike docs/31:37-48) and
+          docs/72:105-110 states the four diameters flat.
+        - the CENTRE DISTANCE rule covers content/enemies/ AND
+          content/bosses/. It is diameter / 2 + the player's 0.50 M
+          collision radius for both, so storing it hardcodes a player
+          baseline constant into an enemy or boss catalog.
+      Checked on KEY NAMES so a rename cannot slip past it.
       Mandate: docs/technical/40-content-data-and-validation.md:114
       ("Validation derives world speeds/footprints and compares them with
       the survivability report")                                      FAILURE
@@ -143,6 +155,19 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
   A21 content/ holds exactly EXPECTED_CONTENT_JSON_FILES (139) *.json
       files, so a file in a directory no A12 row covers is still caught.
       The two Markdown files under content/ are listed, not counted.   FAILURE
+
+  A22 Every source_refs scope prefix resolves to a field that EXISTS in the
+      definition it annotates. The optional "<json.path>: " prefix attributes
+      one property to a document, so a prefix naming a field that no longer
+      exists - removed by a ruling, renamed, or never present - is a dangling
+      citation, the same defect class as an #anchor pointing at a missing
+      heading (A9). The path grammar is dot-separated snake_case segments,
+      each optionally suffixed with [] (every element), [N] (one element), or
+      [N..M] (a range of elements).
+      Mandate: docs/technical/40-content-data-and-validation.md:87
+      (source_refs carries "gameplay document IDs/anchors ... implemented"),
+      with 40:90 ("Unknown fields are errors") for why a prefix may not name
+      a field the definition does not have                            FAILURE
 
 Not asserted here: no structural JSON Schema validation happens, because
 content/schemas/ (40:36) does not exist yet. Domain field names outside the
@@ -194,18 +219,28 @@ STATUS_VOCABULARY = ("development", "enabled", "disabled", "retired")
 #     now fields of the MGC-01 definition. A18 asserts both prop families still
 #     appear inside MGC-01.
 #
-# The members below are expected, for two different reasons:
-#   - The four mining-site classes have NO doc-assigned ID at all: they are
-#     prose-only (docs/40-mining-and-extraction.md:58-132) with no table to
-#     carry an ID, so minting one here would be inventing content.
-#   - shared-elite-modifiers.json is not a definition. The rulings pass settled
-#     that elite treatment is not its own entity: elite ELIGIBILITY is a
-#     validated field on each enemy, which is where the enemy schema puts it
-#     (40:114, "elite eligibility"), and the shared multipliers
-#     (docs/31-initial-alien-roster.md:104) are a constants block those enemies
-#     read. A constants block has nothing to be referenced BY, so it carries no
-#     stable ID and no name_key. It is deliberately not in EXPECTATIONS as an
-#     item either - it is the enemies directory's one aggregate file.
+# THIS LIST IS NOW EMPTY, and a missing or null id is therefore an
+# unconditional failure (A5/A6). The integration owner minted the last five
+# IDs, so nothing in this tree is waiting on one:
+#   - the four prose-only mining-site classes
+#     (docs/40-mining-and-extraction.md:58-132) are SITE-01..SITE-04, in
+#     document order: standard ore seams, rich ore seams, Hyper Gold sites,
+#     specialized-material geodes;
+#   - content/enemies/shared-elite-modifiers.json is ELT-01. It was previously
+#     ID-less on the reading that a constants block "has nothing to be
+#     referenced BY". That is superseded: the canonical bundle is ordered by
+#     category and stable ID, so a file with no ID has no slot in that
+#     ordering. It is now an ordinary addressable definition. It keeps NO
+#     name_key - name_key is conditional on a player-facing name (40:84, 40:90)
+#     and this block has none - so it stays in NAME_KEY_OMITTED below. Its
+#     FILENAME is deliberately unchanged: the bundle orders by the id field,
+#     not by the file stem. It is still not an EXPECTATIONS item; it is the
+#     enemies directory's one aggregate file, and its id does not match the
+#     ^EN-\d{2}$ item selector.
+#
+# The list is kept, rather than deleted, as the declared place to record a
+# future genuinely-unminted ID together with its reason. Adding a member is a
+# deliberate act; A19 makes an undeclared one a failure either way.
 #
 # Three files that used to be listed here are gone from this list:
 #   - enemies/elite-modifier-profile.json was DELETED, superseded by the
@@ -219,24 +254,22 @@ STATUS_VOCABULARY = ("development", "enabled", "disabled", "retired")
 #     (docs/50-maps-resources-and-navigation.md:106) and the rulings pass gave
 #     it the stable ID UTL-R1 and the player-facing name "Resource radar", so
 #     it is an ordinary item in the utilities count and belongs in neither list.
-ID_NULL_EXPECTED = frozenset(
-    {
-        "content/enemies/shared-elite-modifiers.json",
-        "content/mining-sites/hyper-gold-sites.json",
-        "content/mining-sites/rich-ore-seams.json",
-        "content/mining-sites/specialized-material-geodes.json",
-        "content/mining-sites/standard-ore-seams.json",
-    }
-)
+ID_NULL_EXPECTED: frozenset[str] = frozenset()
 
 # A3/A19 - definitions that legitimately omit name_key.
 #
 # name_key is required only where a definition has a genuinely player-facing
 # name. None of these three is player-facing: WAV-01 and MGC-01 are authoring
-# contracts, and shared-elite-modifiers is a constants block, not an entity the
-# UI ever names. Putting their titles in the localization catalog would imply a
-# UI surface that does not exist, so the compiler supplies the default instead
-# (40:90).
+# contracts, and shared-elite-modifiers (now ELT-01) is a constants block, not
+# an entity the UI ever names. Putting their titles in the localization catalog
+# would imply a UI surface that does not exist, so the compiler supplies the
+# default instead (40:90).
+#
+# Minting ELT-01 did not change this set. Having a stable ID and having a
+# player-facing name are independent: the ID makes the block addressable and
+# orderable in the canonical bundle, while name_key stays conditional on there
+# being a name to localize. ELT-01 is the same path that was already listed
+# here, so the set is unchanged at three members.
 #
 # The two files removed from this list are the same deletions and the same
 # rename described above ID_NULL_EXPECTED: elite-modifier-profile.json and
@@ -657,6 +690,122 @@ def split_source_ref(ref: str) -> tuple[str, str | None]:
     return target, None
 
 
+def source_ref_scope_prefix(ref: str) -> str | None:
+    """'field.path: DOC-ID#anchor' -> 'field.path'; a bare ref -> None."""
+    if ": " not in ref:
+        return None
+    prefix = ref.split(": ", 1)[0].strip()
+    return prefix or None
+
+
+# --------------------------------------------------------------------------
+# A22 - a scope prefix must name a field that exists in the definition
+#
+# The prefix grammar is dot-separated snake_case segments, each optionally
+# suffixed with one or more selectors:
+#   name       a property
+#   name[]     every element of an array property
+#   name[3]    one element by index
+#   name[2..3] a range of elements by index
+# Descending through an array without a selector is also accepted, so
+# "unlocks.utilities[].utility_id" and "unlocks.utilities.utility_id" both
+# resolve: the segment then has to exist on at least one element.
+# --------------------------------------------------------------------------
+
+SCOPE_SEGMENT = re.compile(r"([a-z0-9_]+)((?:\[(?:\d+(?:\.\.\d+)?)?\])*)$")
+SCOPE_SELECTOR = re.compile(r"\[(\d+)?(?:\.\.(\d+))?\]")
+
+
+def split_scope_prefix(prefix: str) -> list[str]:
+    """Split on '.' separators only, so the '..' inside 'rules[2..3]' survives."""
+    segments: list[str] = [""]
+    depth = 0
+    for char in prefix:
+        if char == "[":
+            depth += 1
+        elif char == "]":
+            depth -= 1
+        if char == "." and depth == 0:
+            segments.append("")
+            continue
+        segments[-1] += char
+    return segments
+
+
+def resolve_scope_prefix(doc, prefix: str) -> tuple[bool, str]:
+    """Does `prefix` name a field present in `doc`? -> (ok, reason)."""
+    current = [doc]
+    for segment in split_scope_prefix(prefix):
+        match = SCOPE_SEGMENT.fullmatch(segment)
+        if not match:
+            return False, f"segment {segment!r} is not a snake_case path segment"
+        name, selectors = match.group(1), match.group(2)
+        holders = [n for n in current if isinstance(n, dict)]
+        # An unselected array is transparent: look for the name on its elements.
+        for node in current:
+            if isinstance(node, list):
+                holders.extend(e for e in node if isinstance(e, dict))
+        if not holders:
+            return False, f"nothing to hold {name!r} (reached a non-object)"
+        found = [h[name] for h in holders if name in h]
+        if not found:
+            return False, f"{name!r} is not a field of the definition"
+        for selector in SCOPE_SELECTOR.finditer(selectors):
+            arrays = [n for n in found if isinstance(n, list)]
+            if not arrays:
+                return False, f"{name}{selectors} indexes {name!r}, which is not an array"
+            start, end = selector.group(1), selector.group(2)
+            if start is None:
+                found = [e for a in arrays for e in a]
+                if not found:
+                    return False, f"{name}[] indexes an empty array"
+                continue
+            lo = int(start)
+            hi = int(end) if end is not None else lo
+            if hi < lo:
+                return False, f"{name}[{lo}..{hi}] is an inverted range"
+            picked = [a[i] for a in arrays for i in range(lo, hi + 1) if i < len(a)]
+            if len(picked) != len(arrays) * (hi - lo + 1):
+                return False, f"{name}[{lo}..{hi}] is out of range for {name!r}"
+            found = picked
+        current = found
+    return True, "ok"
+
+
+def check_scope_prefixes(docs: dict[Path, object]) -> list[tuple]:
+    """A22 - every source_refs scope prefix resolves in its own definition."""
+    prefixed = 0
+    dangling: list[str] = []
+    for path, doc in sorted(docs.items()):
+        if not isinstance(doc, dict) or not isinstance(doc.get("source_refs"), list):
+            continue
+        for ref in doc["source_refs"]:
+            if not isinstance(ref, str):
+                continue
+            prefix = source_ref_scope_prefix(ref)
+            if prefix is None:
+                continue
+            prefixed += 1
+            ok, reason = resolve_scope_prefix(doc, prefix)
+            if not ok:
+                dangling.append(f"{rel(path)}: {ref!r} - {reason}")
+                fail(
+                    f"{rel(path)}: source_refs {ref!r} has scope prefix {prefix!r}, which does "
+                    f"not resolve in this definition ({reason}). A citation must annotate a field "
+                    f"that exists: re-point it at the surviving field it documents, or drop the "
+                    f"prefix and keep it file-level - never delete a citation that is the only "
+                    f"support for a value still present (40:87, 40:90)"
+                )
+    return [
+        (
+            "source_refs scope prefixes resolve to an existing field",
+            prefixed,
+            f"{len(dangling)} dangling",
+            "ok" if not dangling else "FAIL",
+        )
+    ]
+
+
 # --------------------------------------------------------------------------
 # A2-A9 - per-definition checks
 # --------------------------------------------------------------------------
@@ -682,15 +831,20 @@ def check_definitions(docs: dict[Path, object], doc_index: dict[str, dict]) -> d
             continue
         stats["checked"] += 1
 
-        # ---- A5/A6 id: absent or null is a warning, never a failure ----
-        if "id" not in doc:
-            stats["missing_id"].append(name)
+        # ---- A5/A6 id: absent or null fails unless declared in
+        #      ID_NULL_EXPECTED, which is now empty ----
+        if "id" not in doc or doc["id"] is None:
+            (stats["missing_id"] if "id" not in doc else stats["null_id"]).append(name)
             stats["no_id"].add(name)
-            warn(f"{name}: no top-level 'id' (no stable ID assigned by any document, 40:80)")
-        elif doc["id"] is None:
-            stats["null_id"].append(name)
-            stats["no_id"].add(name)
-            warn(f"{name}: top-level 'id' is null (no stable ID assigned by any document, 40:80)")
+            state = "no top-level 'id'" if "id" not in doc else "top-level 'id' is null"
+            if name in ID_NULL_EXPECTED:
+                warn(f"{name}: {state}; declared in ID_NULL_EXPECTED (40:80)")
+            else:
+                fail(
+                    f"{name}: {state}; every definition must carry a stable category-valid ID "
+                    f"(40:80). Add the minted ID, or list the file in ID_NULL_EXPECTED with the "
+                    f"reason no document assigns one"
+                )
         elif not isinstance(doc["id"], str) or not doc["id"].strip():
             fail(f"{name}: 'id' is {doc['id']!r}, expected a non-empty string (40:80)")
 
@@ -1165,33 +1319,52 @@ def check_totals(docs: dict[Path, object]) -> list[tuple]:
 # every 6 s". A generic derived-value detector is not possible without schemas.
 # --------------------------------------------------------------------------
 
-# A20 - the two compiler-derived enemy footprint values, which no enemy
-# definition may carry. Both are derived under
-# docs/technical/40-content-data-and-validation.md:114 ("Validation derives
-# world speeds/footprints and compares them with the survivability report"), so
-# storing either alongside the authored body scale puts a second writer on a
+# A20 - the compiler-derived footprint values, which no definition may carry.
+# Both are derived under docs/technical/40-content-data-and-validation.md:114
+# ("Validation derives world speeds/footprints and compares them with the
+# survivability report"), so storing either puts a second writer on a
 # compiler-owned value - exactly the 0.004 M disagreement that started this.
 #
-# What the enemy DOES author is body_scale_multiplier. Everything below is a
-# product of it:
+# The two rules have DIFFERENT scopes, because enemies and bosses author
+# different halves of their footprint.
+#
+# Enemies author body_scale_multiplier, and both of these are products of it:
 #   contact diameter  = body_scale_multiplier x 0.80 M   (docs/72:86)
 #   centre distance   = contact diameter / 2 + 0.50 M    (docs/72:86)
-# The 0.50 M in the second is the PLAYER's collision radius, so storing the
-# centre distance on an enemy encodes a player-baseline constant into the enemy
-# catalog - a worse coupling than the diameter was.
+#
+# BOSS DIAMETERS ARE AUTHORED, so the diameter rule must NOT cover
+# content/bosses/. The boss roster at docs/31:121-128 has no body-scale column
+# at all - unlike the ordinary roster overview at docs/31:37-48, which is where
+# the ten enemy scales come from - and the scales the four boss diameters would
+# imply (1.875, 2.5, 2.0, 2.375) appear nowhere in docs/. docs/72:105 states the
+# four diameters flat: Riftjaw 1.50M, Brood Titan 2.00M, Prism Crown 1.60M,
+# Skybreaker Apex 1.90M. There is nothing to derive them from, so they are the
+# authored quantity, exactly as body_scale_multiplier is for an enemy.
+#
+# THE CENTRE DISTANCE IS DERIVED FOR BOSSES TOO, so that rule covers
+# content/bosses/ as well as content/enemies/. docs/72:86 gives one derivation
+# for both: contact begins when the enemy circle and the mech's 0.50M-radius
+# collision circle overlap. It reproduces exactly for all four bosses -
+# 1.50/2+0.50=1.25, 2.00/2+0.50=1.50, 1.60/2+0.50=1.30, 1.90/2+0.50=1.45 - each
+# matching the value content/bosses/ used to store. The 0.50 M term is the
+# PLAYER's collision radius, so storing the sum in a boss or enemy catalog
+# hardcodes a player-baseline constant into it: change the mech's collision
+# radius and those files are silently wrong, with no validator to notice.
 #
 # reference_diameter_m is allowlisted and must stay: 0.80 M is the Ripper's
 # authored rank-zero contact diameter (docs/72:86), the shared reference the
 # scale multiplies. It is an authored constant, not a per-enemy derived value.
-ENEMY_DERIVED_FIELD_ALLOWED = frozenset({"reference_diameter_m"})
-ENEMY_DERIVED_FIELDS = (
+DERIVED_FOOTPRINT_FIELD_ALLOWED = frozenset({"reference_diameter_m"})
+DERIVED_FOOTPRINT_RULES = (
     (
         "collision/contact diameter",
+        ("enemies",),
         re.compile(r"(?i)(?:diameter|radius)"),
         "body_scale_multiplier x 0.80 M",
     ),
     (
         "centre distance that begins contact",
+        ("enemies", "bosses"),
         re.compile(r"(?i)cent(?:er|re)_distance|distance_that_begins_contact"),
         "contact diameter / 2 + the player's 0.50 M collision radius",
     ),
@@ -1233,20 +1406,27 @@ def check_file_inventory() -> list[tuple]:
     return rows
 
 
-def check_enemy_derived_fields(docs: dict[Path, object]) -> list[tuple]:
-    """A20 - no enemy definition may carry a compiler-derived footprint value."""
+def check_derived_footprint_fields(docs: dict[Path, object]) -> list[tuple]:
+    """A20 - no definition may carry a compiler-derived footprint value.
+
+    The diameter rule is enemies-only, because boss diameters are authored; the
+    centre-distance rule covers enemies and bosses, because it is derived for
+    both. See DERIVED_FOOTPRINT_RULES for the citations.
+    """
     rows = []
-    for label, rx, derivation in ENEMY_DERIVED_FIELDS:
+    for label, directories, rx, derivation in DERIVED_FOOTPRINT_RULES:
         hits: list[str] = []
-        for path, doc in sorted(files_in("enemies", docs).items()):
-            for jpath, key, value in walk(doc):
-                if not key or key in ENEMY_DERIVED_FIELD_ALLOWED:
-                    continue
-                if rx.search(key):
-                    hits.append(f"{rel(path)}{jpath[1:]} = {value!r}")
+        for directory in directories:
+            for path, doc in sorted(files_in(directory, docs).items()):
+                for jpath, key, value in walk(doc):
+                    if not key or key in DERIVED_FOOTPRINT_FIELD_ALLOWED:
+                        continue
+                    if rx.search(key):
+                        hits.append(f"{rel(path)}{jpath[1:]} = {value!r}")
+        scope = " + ".join(f"content/{d}/" for d in directories)
         rows.append(
             (
-                f"no enemy carries a {label} field",
+                f"no {label} field in {scope}",
                 0,
                 len(hits),
                 "ok" if not hits else "FAIL",
@@ -1254,9 +1434,8 @@ def check_enemy_derived_fields(docs: dict[Path, object]) -> list[tuple]:
         )
         if hits:
             fail(
-                f"{len(hits)} enemy field(s) hold a {label}, which the compiler derives as "
-                f"{derivation} (40:114, 40:100); the enemy authors body_scale_multiplier only: "
-                f"{hits[:10]}"
+                f"{len(hits)} field(s) under {scope} hold a {label}, which the compiler derives "
+                f"as {derivation} (40:114, 40:100): {hits[:10]}"
             )
     return rows
 
@@ -1472,7 +1651,8 @@ def main() -> int:
     total_rows = check_totals(docs)
     ref_rows = check_references(docs)
     derived_rows = check_derived_values(docs)
-    enemy_derived_rows = check_enemy_derived_fields(docs)
+    footprint_rows = check_derived_footprint_fields(docs)
+    prefix_rows = check_scope_prefixes(docs)
     inventory_rows = check_file_inventory()
     loc_rows = check_localization(stats)
 
@@ -1486,9 +1666,14 @@ def main() -> int:
     table("A15 Referential integrity", ("check", "refs", "dangling", "status"), ref_rows)
     table("A18 Derived-vs-authored guard", ("check", "expected", "actual", "status"), derived_rows)
     table(
-        "A20 Enemy footprint fields the compiler owns",
+        "A20 Footprint fields the compiler owns",
         ("check", "expected", "actual", "status"),
-        enemy_derived_rows,
+        footprint_rows,
+    )
+    table(
+        "A22 source_refs scope prefixes",
+        ("check", "prefixed refs", "dangling", "status"),
+        prefix_rows,
     )
     table("A10/A11 Localization", ("check", "expected", "actual", "status"), loc_rows)
     table("A19 Expected exception sets", ("set", "expected", "actual", "status"), set_rows)

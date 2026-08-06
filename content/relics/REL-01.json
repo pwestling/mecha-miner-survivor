@@ -25,7 +25,7 @@
     "stacking_and_exclusivity: GDD-MECH-RELICS#replacement-and-interaction-rules",
     "stacking_and_exclusivity: GDD-COMBAT-ECONOMY-BALANCE-FRAMEWORK#stacking-and-comparison-order",
     "behavior_registration: TDD-COMBAT-RUNTIME#relic-integration",
-    "discovery_sentence: GDD-INITIAL-RELIC-CATALOG#rel-01--retrograde-engine",
+    "summary_key: GDD-INITIAL-RELIC-CATALOG#rel-01--retrograde-engine",
     "trigger: GDD-INITIAL-RELIC-CATALOG#rel-01--retrograde-engine",
     "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-01--retrograde-engine"
   ],

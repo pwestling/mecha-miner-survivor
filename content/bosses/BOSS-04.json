@@ -44,7 +44,6 @@
   "behavior_kind": "persistent giant pursuer with exactly one additional behavior",
   "contact_footprint": {
     "contact_and_weapon_hurt_diameter_m": 1.9,
-    "center_distance_that_begins_contact_m": 1.45,
     "shape": "Circle",
     "appendages_outside_footprint": "may pass over the mech harmlessly",
     "attack_geometry_uses_separate_display": "charge lanes, projectile shapes, and landing circles use their separately displayed attack geometry rather than the boss contact circle"

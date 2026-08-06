@@ -30,7 +30,7 @@
     "stacking_and_exclusivity: GDD-MECH-RELICS#replacement-and-interaction-rules",
     "stacking_and_exclusivity: GDD-COMBAT-ECONOMY-BALANCE-FRAMEWORK#stacking-and-comparison-order",
     "behavior_registration: TDD-COMBAT-RUNTIME#relic-integration",
-    "discovery_sentence: GDD-INITIAL-RELIC-CATALOG#rel-10--sequential-reactor",
+    "summary_key: GDD-INITIAL-RELIC-CATALOG#rel-10--sequential-reactor",
     "trigger: GDD-INITIAL-RELIC-CATALOG#rel-10--sequential-reactor",
     "pause_behavior: GDD-INITIAL-RELIC-CATALOG#rel-10--sequential-reactor",
     "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-10--sequential-reactor"

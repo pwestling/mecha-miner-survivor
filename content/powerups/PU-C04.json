@@ -7,7 +7,7 @@
   "tags": [],
   "source_refs": [
     "GDD-PERMANENT-POWERUP-CATALOG#pu-c04--persistence-lattice",
-    "catalog_overview_row: GDD-PERMANENT-POWERUP-CATALOG#catalog-overview",
+    "GDD-PERMANENT-POWERUP-CATALOG#catalog-overview",
     "currency: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
     "ui_grouping: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
     "prerequisite: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",

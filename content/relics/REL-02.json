@@ -29,7 +29,7 @@
     "stacking_and_exclusivity: GDD-COMBAT-ECONOMY-BALANCE-FRAMEWORK#stacking-and-comparison-order",
     "behavior_registration: TDD-COMBAT-RUNTIME#relic-integration",
     "cross_document_rules[]: TDD-COMBAT-RUNTIME",
-    "discovery_sentence: GDD-INITIAL-RELIC-CATALOG#rel-02--ghostline-chassis",
+    "summary_key: GDD-INITIAL-RELIC-CATALOG#rel-02--ghostline-chassis",
     "trigger: GDD-INITIAL-RELIC-CATALOG#rel-02--ghostline-chassis",
     "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-02--ghostline-chassis"
   ],

@@ -56,4 +56,30 @@ gates green.
 
 If a policy the fixtures rely on is not expressible as a `.csproj` property, say
 so in `EVALUATED_POLICIES`' comment instead of leaving it implied - the
-`.editorconfig` half of `VER-FND-001-008` is recorded there as an open gap.
+`.editorconfig` half of `VER-FND-001-008` is recorded there, and in
+`tests/verification/FND-001.json`, as a partly open gap.
+
+## Nothing here may declare a build property
+
+Neither `build/policy-fixtures/Directory.Build.props` nor any fixture `.csproj`
+may set a property, an `ItemGroup`, a `Target`, or an `Import` of anything but the
+repository-root policy. `build/verify-policies.sh` guard 1b asserts that against a
+whitelist, and today that whitelist is two properties in the intermediate file
+(`RestorePackagesWithLockFile`, which is load-bearing because the root sets it
+`true` and the fixtures must not leave lock files behind, and `IsPackable`) and
+none at all in a fixture project.
+
+This is not tidiness. A suppression switch takes **two** edits to hide: switch it
+off at the root, then switch it back on locally so the fixtures keep failing with
+the diagnostics they expect. Root `RunAnalyzers=false` plus `RunAnalyzers=true`
+here compiled a `CA2200` rethrow and an `IDE1006` field name at zero warnings
+while the whole gate printed `PASS`. The first edit alone is caught by the
+fixtures themselves - their expected diagnostics simply stop appearing - so
+closing the second edit closes the family, including switches nobody has thought
+of yet. Adding a property here therefore needs an argument, written into guard
+1b's comment, for why it cannot change which diagnostics appear.
+
+There is also no non-root `.editorconfig` anywhere in this repository, and guard 1
+fails on one. A copy of the root file placed in `naming/` decoupled that fixture
+from the root `dotnet_diagnostic.IDE1006.severity`, which could then be flipped to
+`none` over a real violation with the gate still green.

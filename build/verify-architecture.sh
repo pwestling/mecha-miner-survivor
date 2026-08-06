@@ -516,11 +516,34 @@ fi
 # outside the repository's source directories entirely.
 #
 # The two readers deliberately share one rule (GODOT_TOKEN, matched against raw
-# file text). Only the file set differs. NOTE for integration: the FND-004 branch
-# strips comments and string literals before applying this same token, and
-# requires it in `using` or qualifier position. That is a change to the RULE and
-# belongs in one place; when the branches meet, both readers here must take it
-# together, not one of them.
+# file text). Only the file set differs.
+#
+# NOTE for integration - the SHARED RULE CHANGES AT FND-004, and three known
+# defeats of the current rule ride on that one change. The FND-004 branch strips
+# comments and string literals before applying this same token, and requires it in
+# `using` or qualifier position. That is a change to the RULE, which belongs in one
+# place; when the branches meet, both readers here must take it together, not one
+# of them. The change must also cover these, all of which defeat BOTH readers
+# today and none of which is fixed here, because fixing them in one reader while
+# the rule is about to move would put the rule in two places:
+#
+#   1. A using directive written with a UNICODE-ESCAPED IDENTIFIER. C# allows
+#      \uXXXX escapes inside identifiers, so `using \u0047odot;` is the very same
+#      using directive as `using Godot;` to the compiler, while the file contains
+#      no occurrence of the token either reader matches. Whatever normalization
+#      FND-004's rule applies must decode identifier escapes before matching.
+#   2. Source that names no Godot type at all because the type comes from a
+#      RENAMED ASSEMBLY. GodotSharp.dll's identity lives in its `#Strings` heap,
+#      and it ships with PublicKeyToken=null, so a 10-byte patch renames the
+#      assembly with nothing to re-sign; the reference then resolves under a name
+#      the assembly-identity reader does not recognise and the source names types
+#      from a namespace the token does not match. This is an attack on the shared
+#      rule's premise - "Godot arrives under a name we can recognise" - not on
+#      either file set.
+#   3. The two combined, which is how the escape was actually demonstrated.
+#
+# Whoever performs the FND-004 merge owns all three. Taking FND-004's rule without
+# them re-lands a rule that has already been defeated.
 echo
 for entry in "${EXPECTED_PROJECTS[@]}"; do
   IFS='|' read -r project _expected_refs godot_allowed <<<"${entry}"

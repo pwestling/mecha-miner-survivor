@@ -128,7 +128,7 @@ public static class WeaponPriceFormulaReader
 
         DiagnosticBag bag = new();
         if (!CategoryPrelude.Run(
-                utf8, context, bag, out DefinitionEnvelope? envelope,
+                utf8, context, bag, out DefinitionEnvelope? envelope, out string? id,
                 out DocumentOutline _, out JsonStructure structure))
         {
             return new DefinitionReadResult(null, bag.Diagnostics, structure);
@@ -141,7 +141,6 @@ public static class WeaponPriceFormulaReader
             return new DefinitionReadResult(null, bag.Diagnostics, structure);
         }
 
-        string? id = envelope?.Id.Value;
         JsonPointer root = JsonPointer.Root;
 
         SemanticCheck.BehaviorToken(

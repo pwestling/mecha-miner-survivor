@@ -186,7 +186,7 @@ public static class EncounterScheduleReader
 
         DiagnosticBag bag = new();
         if (!CategoryPrelude.Run(
-                utf8, context, bag, out DefinitionEnvelope? envelope,
+                utf8, context, bag, out DefinitionEnvelope? envelope, out string? id,
                 out DocumentOutline _, out JsonStructure structure))
         {
             return new DefinitionReadResult(null, bag.Diagnostics, structure);
@@ -199,7 +199,6 @@ public static class EncounterScheduleReader
             return new DefinitionReadResult(null, bag.Diagnostics, structure);
         }
 
-        string? id = envelope?.Id.Value;
         List<long> minutes = Validate(dto, context, id, bag);
 
         if (bag.HasErrors || envelope is null)

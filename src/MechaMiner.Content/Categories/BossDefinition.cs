@@ -171,7 +171,7 @@ public static class BossReader
 
         DiagnosticBag bag = new();
         if (!CategoryPrelude.Run(
-                utf8, context, bag, out DefinitionEnvelope? envelope,
+                utf8, context, bag, out DefinitionEnvelope? envelope, out string? id,
                 out DocumentOutline outline, out JsonStructure structure))
         {
             return new DefinitionReadResult(null, bag.Diagnostics, structure);
@@ -183,7 +183,6 @@ public static class BossReader
             return new DefinitionReadResult(null, bag.Diagnostics, structure);
         }
 
-        string? id = envelope?.Id.Value;
         Validate(dto, outline, context, id, bag);
 
         if (bag.HasErrors || envelope is null || dto.Ability is null || dto.Arrival is null)

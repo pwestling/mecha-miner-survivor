@@ -201,7 +201,7 @@ public static class BranchReader
 
         DiagnosticBag bag = new();
         if (!CategoryPrelude.Run(
-                utf8, context, bag, out DefinitionEnvelope? envelope,
+                utf8, context, bag, out DefinitionEnvelope? envelope, out string? id,
                 out DocumentOutline _, out JsonStructure structure))
         {
             return new DefinitionReadResult(null, bag.Diagnostics, structure);
@@ -213,7 +213,6 @@ public static class BranchReader
             return new DefinitionReadResult(null, bag.Diagnostics, structure);
         }
 
-        string? id = envelope?.Id.Value;
         Validate(dto, context, id, bag);
 
         if (bag.HasErrors || envelope is null)

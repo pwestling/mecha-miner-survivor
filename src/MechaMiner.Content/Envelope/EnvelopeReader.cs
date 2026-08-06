@@ -32,6 +32,9 @@ namespace MechaMiner.Content.Envelope;
 /// </remarks>
 public static class EnvelopeReader
 {
+    private static readonly byte[] IdPropertyName =
+        System.Text.Encoding.UTF8.GetBytes(EnvelopeSchema.Id);
+
     /// <summary>Reads one definition's envelope.</summary>
     /// <exception cref="ArgumentNullException"><paramref name="context"/> is null.</exception>
     public static EnvelopeReadResult Read(ReadOnlySpan<byte> utf8, EnvelopeReadContext context)
@@ -48,12 +51,18 @@ public static class EnvelopeReader
                 bag.Add(StrictJsonDiagnostics.ToDiagnostic(violation, context.SourcePath, null));
             }
 
-            return new EnvelopeReadResult(null, bag.Diagnostics, scan.Structure);
+            return new EnvelopeReadResult(null, null, bag.Diagnostics, scan.Structure);
         }
 
-        if (!ValidateShape(scan.Structure, context, bag))
+        // The ID is read and validated before any other check runs, so that every
+        // diagnostic below it can name the definition at fault. It is carried out of the
+        // read separately from the envelope, because the envelope is null whenever
+        // anything at all was reported. EnvelopeReadResult.Id says why the two differ.
+        ContentId? id = ValidateId(ReadDeclaredId(utf8, context), context, bag);
+
+        if (!ValidateShape(scan.Structure, context, id, bag))
         {
-            return new EnvelopeReadResult(null, bag.Diagnostics, scan.Structure);
+            return new EnvelopeReadResult(null, id, bag.Diagnostics, scan.Structure);
         }
 
         EnvelopeDto? dto = JsonSerializer.Deserialize(utf8, EnvelopeJsonContext.Default.EnvelopeDto);
@@ -63,13 +72,70 @@ public static class EnvelopeReader
                 ContentDiagnosticCodes.MalformedJson,
                 context.SourcePath,
                 JsonPointer.Root,
-                null,
+                id?.Value,
                 "the document must deserialize into a definition envelope"));
-            return new EnvelopeReadResult(null, bag.Diagnostics, scan.Structure);
+            return new EnvelopeReadResult(null, id, bag.Diagnostics, scan.Structure);
         }
 
-        DefinitionEnvelope? envelope = ValidateValues(dto, scan.Structure, context, bag);
-        return new EnvelopeReadResult(envelope, bag.Diagnostics, scan.Structure);
+        DefinitionEnvelope? envelope = ValidateValues(dto, id, scan.Structure, context, bag);
+        return new EnvelopeReadResult(envelope, id, bag.Diagnostics, scan.Structure);
+    }
+
+    /// <summary>
+    /// Reads the root <c>id</c> property's string value, or null when the document does
+    /// not declare one as a string.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This is a second, targeted pass over bytes the codec has already scanned, and it
+    /// is deliberate. <see cref="JsonStructure"/> carries locations and kinds but no
+    /// values, which is what keeps it on the right side of doc 40's ban on dynamic JSON;
+    /// the typed DTO carries values but cannot be deserialized until the shape pass has
+    /// proved every field's kind. That leaves the ID unreadable exactly where it is most
+    /// needed - on the shape pass's own diagnostics - unless it is read on its own.
+    /// </para>
+    /// <para>
+    /// The pass reads one root property and skips the rest, and it asks nothing of the
+    /// document that the completed scan has not already established: the bytes are
+    /// well-formed JSON, the root is an object, and no property is duplicated, so the
+    /// first <c>id</c> at the root is the only one.
+    /// </para>
+    /// </remarks>
+    private static string? ReadDeclaredId(ReadOnlySpan<byte> utf8, EnvelopeReadContext context)
+    {
+        JsonReaderOptions options = new()
+        {
+            CommentHandling = JsonCommentHandling.Disallow,
+            AllowTrailingCommas = false,
+
+            // The codec's ceiling, already enforced, plus one so that a document at the
+            // ceiling is readable here rather than throwing on the boundary case.
+            MaxDepth = context.Policy.Limits.MaximumDepth + 1,
+        };
+
+        Utf8JsonReader reader = new(utf8, options);
+        if (!reader.Read() || reader.TokenType != JsonTokenType.StartObject)
+        {
+            return null;
+        }
+
+        while (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
+        {
+            bool isId = reader.ValueTextEquals(IdPropertyName);
+            if (!reader.Read())
+            {
+                return null;
+            }
+
+            if (isId)
+            {
+                return reader.TokenType == JsonTokenType.String ? reader.GetString() : null;
+            }
+
+            reader.Skip();
+        }
+
+        return null;
     }
 
     /// <summary>
@@ -79,8 +145,11 @@ public static class EnvelopeReader
     private static bool ValidateShape(
         JsonStructure structure,
         EnvelopeReadContext context,
+        ContentId? id,
         DiagnosticBag bag)
     {
+        string? contentId = id?.Value;
+
         bool kindsAreSound = true;
 
         foreach (string name in structure.RootPropertyNames)
@@ -105,7 +174,7 @@ public static class EnvelopeReader
                 ContentDiagnosticCodes.UnknownField,
                 context.SourcePath,
                 JsonPointer.Root.AppendProperty(name),
-                null,
+                contentId,
                 "the envelope declares exactly these fields: "
                     + string.Join(", ", EnvelopeSchema.Fields)));
         }
@@ -129,7 +198,7 @@ public static class EnvelopeReader
                         ContentDiagnosticCodes.PresentationIdNotMinted,
                         context.SourcePath,
                         pointer,
-                        null,
+                        contentId,
                         "'" + field + "' is omitted from every definition: no accepted "
                             + "document says what a presentation definition contains, so the "
                             + "presentation category is not yet minted and no ID grammar "
@@ -149,7 +218,7 @@ public static class EnvelopeReader
                         ContentDiagnosticCodes.RequiredFieldMissing,
                         context.SourcePath,
                         pointer,
-                        null,
+                        contentId,
                         "'" + field + "' is required; the declared-optional fields are "
                             + string.Join(", ", EnvelopeSchema.DeclaredOptional)));
                 }
@@ -164,7 +233,7 @@ public static class EnvelopeReader
                     ContentDiagnosticCodes.FieldTypeMismatch,
                     context.SourcePath,
                     pointer,
-                    null,
+                    contentId,
                     "'" + field + "' is a JSON " + Describe(expected) + ", not a "
                         + Describe(kind)));
                 kindsAreSound = false;
@@ -173,7 +242,8 @@ public static class EnvelopeReader
 
             if (expected == JsonValueKind.Array)
             {
-                kindsAreSound &= ValidateStringArrayElements(structure, context, bag, field, pointer);
+                kindsAreSound &= ValidateStringArrayElements(
+                    structure, context, contentId, bag, field, pointer);
             }
         }
 
@@ -183,6 +253,7 @@ public static class EnvelopeReader
     private static bool ValidateStringArrayElements(
         JsonStructure structure,
         EnvelopeReadContext context,
+        string? contentId,
         DiagnosticBag bag,
         string field,
         JsonPointer arrayPointer)
@@ -202,7 +273,7 @@ public static class EnvelopeReader
                     ContentDiagnosticCodes.FieldTypeMismatch,
                     context.SourcePath,
                     element,
-                    null,
+                    contentId,
                     "every element of '" + field + "' is a JSON string, not a " + Describe(kind)));
                 sound = false;
             }
@@ -211,27 +282,34 @@ public static class EnvelopeReader
         return sound;
     }
 
+    /// <summary>
+    /// Runs the value checks. <paramref name="id"/> is the already-validated ID, which
+    /// the caller reads first so that every diagnostic below can name it.
+    /// </summary>
     private static DefinitionEnvelope? ValidateValues(
         EnvelopeDto dto,
+        ContentId? id,
         JsonStructure structure,
         EnvelopeReadContext context,
         DiagnosticBag bag)
     {
-        string? rawId = dto.Id;
+        // The validated ID, never the raw string: a diagnostic that quoted an
+        // unparseable value here would assert the document has an ID it does not have.
+        // The one place the raw string belongs is the diagnostic rejecting it.
+        string? contentId = id?.Value;
 
-        ContentId? id = ValidateId(rawId, context, bag);
         int schemaVersion = ValidateVersion(
-            dto.SchemaVersion, EnvelopeSchema.SchemaVersion, rawId, context, bag);
+            dto.SchemaVersion, EnvelopeSchema.SchemaVersion, contentId, context, bag);
         int contentVersion = ValidateVersion(
-            dto.ContentVersion, EnvelopeSchema.ContentVersion, rawId, context, bag);
-        DefinitionStatus status = ValidateStatus(dto.Status, rawId, context, bag);
+            dto.ContentVersion, EnvelopeSchema.ContentVersion, contentId, context, bag);
+        DefinitionStatus status = ValidateStatus(dto.Status, contentId, context, bag);
         LocalizationKey? nameKey = ValidateLocalizationKey(
-            dto.NameKey, EnvelopeSchema.NameKey, rawId, context, bag);
+            dto.NameKey, EnvelopeSchema.NameKey, contentId, context, bag);
         LocalizationKey? summaryKey = ValidateLocalizationKey(
-            dto.SummaryKey, EnvelopeSchema.SummaryKey, rawId, context, bag);
-        List<string> tags = ValidateTags(dto.Tags, rawId, context, bag);
+            dto.SummaryKey, EnvelopeSchema.SummaryKey, contentId, context, bag);
+        List<string> tags = ValidateTags(dto.Tags, contentId, context, bag);
         List<SourceRef> sourceRefs = ValidateSourceRefs(
-            dto.SourceRefs, structure, rawId, context, bag);
+            dto.SourceRefs, structure, contentId, context, bag);
 
         if (bag.HasErrors || id is null)
         {
@@ -257,7 +335,9 @@ public static class EnvelopeReader
         JsonPointer pointer = JsonPointer.Root.AppendProperty(EnvelopeSchema.Id);
         if (rawId is null)
         {
-            // Already reported as a missing required field.
+            // The field is absent, or present and not a string. Either way the shape
+            // pass reports it, as a missing required field or as a kind mismatch, and
+            // saying so twice from here would name the same fault under two codes.
             return null;
         }
 

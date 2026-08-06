@@ -975,6 +975,70 @@
       ],
       "tier": "fast",
       "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-028",
+      "summary": "Every diagnostic a document produces names the definition at fault whenever its id is readable, proved through the route that most easily loses it: a valid fixture is given one unknown root field and several unrelated envelope-stage faults, read through the real category reader, and every diagnostic's ContentId is compared against the ID the document declares.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#compilation-pipeline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.DiagnosticContentIdTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/powerups/valid-powerup.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/valid-utility.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-029",
+      "summary": "The control that forbids satisfying VER-DAT-003-028 by inventing an ID: a document whose id is malformed for its category, and one that omits id entirely, are read by the same route and every diagnostic other than the one rejecting the raw string is compared against null, so no diagnostic may assert an identity the document does not have.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#compilation-pipeline",
+        "docs/technical/40-content-data-and-validation.md#stable-id-policy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.DiagnosticContentIdTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/powerups/valid-powerup.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
     }
   ]
 }

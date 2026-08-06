@@ -47,8 +47,12 @@ namespace MechaMiner.Content.Envelope;
 /// </remarks>
 internal sealed class EnvelopeDto
 {
-    [JsonPropertyName(EnvelopeSchema.Id)]
-    public string? Id { get; set; }
+    // There is no id property either, and for a third reason. The ID has to be readable
+    // before the shape pass runs, so that the shape pass's own diagnostics can name the
+    // definition at fault; deserialization cannot run that early, because it is the
+    // shape pass that makes it safe. EnvelopeReader.ReadDeclaredId reads it on its own,
+    // and is the single reader of the field - a copy here could only ever agree or be a
+    // bug.
 
     [JsonPropertyName(EnvelopeSchema.SchemaVersion)]
     public double? SchemaVersion { get; set; }

@@ -195,6 +195,20 @@ An author who types a derived value into a definition creates a second source of
 
 Everything above states the rule for **ordinary enemy identities** — the ones the accepted roster gives a body scale, and therefore the ones that have an authored operand to derive geometry from. Boss contact geometry is governed separately and is deliberately not decided here; the paragraphs above must not be read as settling it in either direction, and the boss definition schema that `DAT-002` owns must not be written against an inference drawn from them.
 
+**No gate enforces any of this today, and the correction that produced the wording above
+was verified by reading rather than by running anything.** The content compiler and its
+validator are `DAT-001`/`DAT-002` deliverables; nothing in `build/`, `src/`, or `tests/`
+reads `body_scale_multiplier`, and no content definition exists to check. So the
+authored/derived split is a rule a reader applies, not one a runner can catch, and until
+`DAT-001` lands a validator that can fail on an authored derived value the only
+protection is that this section does not contradict itself. It used to: the authored-field
+list said "contact damage/diameter/cadence" while the paragraph below it said derived
+geometry is never authored, which is a self-contradiction a schema author could resolve
+either way. That correction is recorded in commit `a494f09` as "item 4" of a list whose
+numbering resolves to nothing — the non-normative
+`docs/technical/delivery-waves.md` § Decision 12 records that separately — and it carries
+no exit-class evidence because there is no gate to produce one.
+
 ### Weapons
 
 Fields include recipe material pair, behavior kind, targeting policy, fixed properties, three stat-track definitions, rank-zero values, increments, snapshot/live classifications, all branch IDs, analytical-model registration, presentation/audio references, and rock-targeting behavior.

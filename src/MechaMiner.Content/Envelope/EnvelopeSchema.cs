@@ -22,11 +22,23 @@ namespace MechaMiner.Content.Envelope;
 /// reader can put the table and this list side by side.
 /// </para>
 /// <para>
-/// <b>Six required, three declared-optional.</b> § Declared-optional envelope fields
-/// names <c>presentation_id</c> and <c>name_key</c>, and states that
+/// <b>Six required, two declared-optional, one required absent.</b> § Declared-optional
+/// envelope fields names <c>presentation_id</c> and <c>name_key</c>, and states that
 /// <c>summary_key</c> "follows the same rule its row already states". Absence is
 /// expressed by omitting the key and never by <c>null</c>, which the codec rejects
 /// outright.
+/// </para>
+/// <para>
+/// <b>Why <c>presentation_id</c> is not among the declared-optional two.</b> No accepted
+/// document says what a presentation definition contains, so no ID grammar has been
+/// minted for one, and minting a shape for a category with zero members would be
+/// inventing structure ahead of need. Declared-optional with a non-empty-string
+/// constraint is worse than either: it accepts any string an author invents and
+/// validates nothing about it. The field is therefore <see cref="RequiredAbsent"/> -
+/// still declared, so it is not an unknown field, and rejected on presence with
+/// <c>MMC-2010</c>, so the first definition to carry one fails loudly instead of
+/// carrying an unauthorized value. The declaration becomes a grammar when a document
+/// mints one.
 /// </para>
 /// </remarks>
 public static class EnvelopeSchema
@@ -55,7 +67,10 @@ public static class EnvelopeSchema
     /// <summary>The <c>source_refs</c> field: the sources this definition implements.</summary>
     public const string SourceRefs = "source_refs";
 
-    /// <summary>The <c>presentation_id</c> field: where the content appears in-world.</summary>
+    /// <summary>
+    /// The <c>presentation_id</c> field: where the content appears in-world. Declared by
+    /// doc 40's table and required absent until a document mints its grammar.
+    /// </summary>
     public const string PresentationId = "presentation_id";
 
     /// <summary>
@@ -65,11 +80,12 @@ public static class EnvelopeSchema
     /// <remarks>
     /// Doc 40 § Common definition envelope: "Optional fields have explicit defaults
     /// materialized into the canonical bundle so runtime never guesses." The empty
-    /// string is the materialized default for all three, and it is unambiguous rather
-    /// than merely convenient: a localization key must have three dot-separated parts
-    /// and a presentation ID must be a non-empty logical entry, so no present value can
-    /// ever be the empty string. Runtime therefore reads a value, and the value says
-    /// "there is none".
+    /// string is the materialized default for the two declared-optional keys, and it is
+    /// unambiguous rather than merely convenient: a localization key must have three
+    /// dot-separated parts, so no present value can ever be the empty string. Runtime
+    /// therefore reads a value, and the value says "there is none". It is also the only
+    /// value <c>presentation_id</c> ever carries in the canonical bundle, because that
+    /// field is required absent in source and so is never anything else.
     /// </remarks>
     public const string AbsentOptionalDefault = "";
 
@@ -109,6 +125,10 @@ public static class EnvelopeSchema
     {
         NameKey,
         SummaryKey,
+    };
+
+    private static readonly string[] RequiredAbsentFields =
+    {
         PresentationId,
     };
 
@@ -122,6 +142,11 @@ public static class EnvelopeSchema
         [SummaryKey] = JsonValueKind.String,
         [Tags] = JsonValueKind.Array,
         [SourceRefs] = JsonValueKind.Array,
+
+        // Declared so that presentation_id is a known field rather than an unknown one,
+        // and so that a reader of this map sees all nine of doc 40's rows. The kind is
+        // never checked: a required-absent field is rejected on presence before anything
+        // asks what shape the value has.
         [PresentationId] = JsonValueKind.String,
     };
 
@@ -136,9 +161,16 @@ public static class EnvelopeSchema
     public static IReadOnlyList<string> Required { get; } =
         new ReadOnlyCollection<string>(new List<string>(RequiredFields));
 
-    /// <summary>The three fields whose absence is expressed by omitting the key.</summary>
+    /// <summary>The two fields whose absence is expressed by omitting the key.</summary>
     public static IReadOnlyList<string> DeclaredOptional { get; } =
         new ReadOnlyCollection<string>(new List<string>(DeclaredOptionalFields));
+
+    /// <summary>
+    /// The fields that are declared and must not be present, because no accepted document
+    /// grants them a value yet.
+    /// </summary>
+    public static IReadOnlyList<string> RequiredAbsent { get; } =
+        new ReadOnlyCollection<string>(new List<string>(RequiredAbsentFields));
 
     /// <summary>True when <paramref name="field"/> is one of the nine.</summary>
     /// <exception cref="ArgumentNullException"><paramref name="field"/> is null.</exception>
@@ -154,6 +186,14 @@ public static class EnvelopeSchema
     {
         ArgumentNullException.ThrowIfNull(field);
         return Array.IndexOf(RequiredFields, field) >= 0;
+    }
+
+    /// <summary>True when <paramref name="field"/> is declared and must not be present.</summary>
+    /// <exception cref="ArgumentNullException"><paramref name="field"/> is null.</exception>
+    public static bool IsRequiredAbsent(string field)
+    {
+        ArgumentNullException.ThrowIfNull(field);
+        return Array.IndexOf(RequiredAbsentFields, field) >= 0;
     }
 
     /// <summary>The JSON value kind <paramref name="field"/> must have.</summary>

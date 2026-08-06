@@ -52,6 +52,9 @@
     "source_refs": {
       "$ref": "#/$defs/source_refs"
     },
+    "presentation_id": {
+      "$ref": "#/$defs/presentation_id"
+    },
     "maximum_hull_integrity": {
       "type": "integer",
       "description": "Maximum Hull before any trait or PowerUp. The denominator of every derived hits-to-defeat figure.",
@@ -261,16 +264,9 @@
       }
     },
     "presentation_id": {
-      "title": "Logical presentation entry",
-      "description": "Omitted when a definition never appears in-world. No accepted document mints a grammar for a presentation ID, and inventing one for a category with zero members would be structure ahead of need, so the only constraint is that an authored value is not the empty string.",
-      "type": "string",
-      "minLength": 1,
-      "x-authority": {
-        "minLength": {
-          "kind": "structural",
-          "rationale": "not a capacity bound: the empty string is what the compiler materializes for an omitted field, so an authored empty string would be a second way to say 'absent'. 1 is the smallest length that excludes it"
-        }
-      }
+      "title": "Logical presentation entry, required absent",
+      "description": "Required absent: a definition carrying this field is an error. No accepted document says what a presentation definition contains, so no ID grammar has been minted for one, and minting a shape for a category with zero members would be inventing structure ahead of need. The field was declared-optional with a non-empty-string constraint, which accepted any string an author invented and validated nothing about it; rejecting the field outright fails loudly the first time somebody adds one instead of accepting an unauthorized value. The subschema is 'not' over the empty schema, which rejects every instance, so the fault is the field's presence rather than its shape and an authored empty string is rejected by the same rule rather than as an empty declared-optional field. The typed validator reports MMC-2010 and names the field. When an accepted document mints a presentation ID grammar, this declaration becomes that grammar; until then it has no minLength, because a length bound on a value that can never be authored explains nothing.",
+      "not": {}
     }
   }
 }

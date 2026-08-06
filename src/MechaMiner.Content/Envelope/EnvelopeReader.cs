@@ -113,6 +113,34 @@ public static class EnvelopeReader
         foreach (string field in EnvelopeSchema.Fields)
         {
             JsonPointer pointer = JsonPointer.Root.AppendProperty(field);
+
+            // A required-absent field is rejected on presence, before anything asks what
+            // kind of value it holds: the fault is that the field is there at all, so
+            // "presentation_id": 3 and "presentation_id": "" are the same fault as
+            // "presentation_id": "weapon-ab-emitter" and report the same code. The kind
+            // check below would otherwise turn the first of those into a type mismatch,
+            // which says the value is the wrong shape and invites an author to fix the
+            // shape.
+            if (EnvelopeSchema.IsRequiredAbsent(field))
+            {
+                if (structure.TryGetKind(pointer, out _))
+                {
+                    bag.Add(ContentDiagnostic.CreateError(
+                        ContentDiagnosticCodes.PresentationIdNotMinted,
+                        context.SourcePath,
+                        pointer,
+                        null,
+                        "'" + field + "' is omitted from every definition: no accepted "
+                            + "document says what a presentation definition contains, so the "
+                            + "presentation category is not yet minted and no ID grammar "
+                            + "exists for one. Any authored value would be unauthorized, "
+                            + "including the empty string. Remove the field; the declaration "
+                            + "becomes a grammar when a document mints one"));
+                }
+
+                continue;
+            }
+
             if (!structure.TryGetKind(pointer, out JsonValueKind kind))
             {
                 if (EnvelopeSchema.IsRequired(field))
@@ -204,7 +232,6 @@ public static class EnvelopeReader
         List<string> tags = ValidateTags(dto.Tags, rawId, context, bag);
         List<SourceRef> sourceRefs = ValidateSourceRefs(
             dto.SourceRefs, structure, rawId, context, bag);
-        string? presentationId = ValidatePresentationId(dto.PresentationId, rawId, context, bag);
 
         if (bag.HasErrors || id is null)
         {
@@ -219,8 +246,7 @@ public static class EnvelopeReader
             nameKey,
             summaryKey,
             DefinitionEnvelope.Freeze(tags),
-            DefinitionEnvelope.Freeze(sourceRefs),
-            presentationId);
+            DefinitionEnvelope.Freeze(sourceRefs));
     }
 
     private static ContentId? ValidateId(
@@ -474,34 +500,6 @@ public static class EnvelopeReader
         }
 
         return parsed;
-    }
-
-    private static string? ValidatePresentationId(
-        string? value,
-        string? contentId,
-        EnvelopeReadContext context,
-        DiagnosticBag bag)
-    {
-        if (value is null)
-        {
-            return null;
-        }
-
-        if (value.Length == 0)
-        {
-            bag.Add(EmptyOptional(
-                EnvelopeSchema.PresentationId,
-                JsonPointer.Root.AppendProperty(EnvelopeSchema.PresentationId),
-                contentId,
-                context));
-            return null;
-        }
-
-        // A presentation ID grammar is not minted anywhere yet; doc 40 § Presentation
-        // and audio describes the definitions but no accepted document gives their IDs a
-        // pattern. Until one is granted, the envelope requires a non-empty string and
-        // the cross-reference validator owned by DAT-005 checks that the entry exists.
-        return value;
     }
 
     private static ContentDiagnostic EmptyOptional(

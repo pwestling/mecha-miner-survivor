@@ -347,7 +347,7 @@
     },
     {
       "id": "VER-DAT-001-016",
-      "summary": "The SCH-CNT-001 envelope has exactly nine fields; the six required ones are errors when missing; presentation_id, name_key, and summary_key are expressed absent by omitting the key and materialize their documented defaults; schema_version and content_version reject a non-integer and a nonpositive value.",
+      "summary": "The SCH-CNT-001 envelope has exactly nine fields; the six required ones are errors when missing; name_key and summary_key are expressed absent by omitting the key and materialize their documented defaults; schema_version and content_version reject a non-integer and a nonpositive value. The claim about presentation_id that stood here - that it is the third field of that kind - was corrected by VER-DAT-001-041, which rules it required absent; the field is still one of the nine and still materializes the default, but a definition may not author it.",
       "task": "TASK-DAT-001-001",
       "requirements": ["TR-DAT-001", "TR-DAT-002"],
       "technicalSources": [
@@ -964,6 +964,30 @@
       ],
       "scenarios": [],
       "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-041",
+      "summary": "presentation_id is required absent: a definition carrying it is rejected with MMC-2010, which names the field and says the presentation category is not yet minted. Why the change: the field was declared-optional with minLength 1, so the envelope accepted any string an author invented and validated nothing about it - no accepted document says what a presentation definition contains, so no ID grammar has been minted for one, and minting a shape for a category with zero members would be inventing structure ahead of need. A constraint that admits every value is not a weaker gate than none, it is a worse one, because it reads as though somebody decided. Route: the field stays in the declared nine, so a document carrying it is not carrying an unknown field; EnvelopeReader checks the scanned structure for its presence before any kind check and before deserialization, and EnvelopeDto has no property for it, so a value of any JSON kind is the same fault rather than a type mismatch or an exception with no pointer. Negative controls: invalid/structural-presentation-id-authored.json carries a plausible value and invalid/structural-presentation-id-empty.json carries the empty string; both must fail with MMC-2010 and not with MMC-2001 or MMC-2009, and the second is the one with teeth, because under the previous rule it was an empty declared-optional field - a complaint about a value's shape, which invites an author to supply a better shape. A number is exercised in EnvelopeValidatorTests for the same reason. Positive control: an envelope omitting the field validates with zero diagnostics, and every valid fixture in the corpus omits it, so the rejection cannot be satisfied by a validator that rejects everything. Schema half: all seventeen documents under content/schemas declare presentation_id as 'not' over the empty schema and reference it from properties, so the draft 2020-12 mirror rejects the same two fixtures for the same stated reason rather than as an unknown property; the sixteen structural minLength rationales and their x-authority entries were deleted with the bound they explained, because a required-absent field has no length to justify. The canonical bundle still emits the row with the absent-optional default, since doc 40's table has nine rows and runtime reads a value rather than discovering a missing key. Route not covered: whether a presentation entry exists, which is DAT-005's cross-reference work and has nothing to resolve against until the category is minted.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Envelope.EnvelopeValidatorTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/structural-presentation-id-authored.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/structural-presentation-id-empty.json",
+        "content/schemas/envelope.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"

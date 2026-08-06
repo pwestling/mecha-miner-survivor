@@ -3,9 +3,9 @@
   "schema_version": 1,
   "content_version": 1,
   "status": "enabled",
-  "name_key": "",
   "tags": [],
   "source_refs": [
     "GDD-WEAPON-CATALOG#accepted-base-catalog-assignment"
-  ]
+  ],
+  "presentation_id": "weapon-ab-emitter"
 }

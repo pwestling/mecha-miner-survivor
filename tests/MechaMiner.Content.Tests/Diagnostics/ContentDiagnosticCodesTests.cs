@@ -200,7 +200,7 @@ internal sealed class ContentDiagnosticCodesTests
 
         // Structural, band 2xxx.
         "MMC-2001", "MMC-2002", "MMC-2003", "MMC-2004", "MMC-2005", "MMC-2006", "MMC-2007",
-        "MMC-2008", "MMC-2009",
+        "MMC-2008", "MMC-2009", "MMC-2010",
 
         // Identity, band 3xxx.
         "MMC-3001", "MMC-3002",

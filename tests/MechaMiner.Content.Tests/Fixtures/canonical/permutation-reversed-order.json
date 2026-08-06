@@ -1,5 +1,4 @@
 {
-  "presentation_id": "weapon-ab-emitter",
   "source_refs": [
     "GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
     "TDD-COMBAT-RUNTIME#weapon-actors",

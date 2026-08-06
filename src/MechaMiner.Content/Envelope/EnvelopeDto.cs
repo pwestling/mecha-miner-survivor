@@ -4,7 +4,8 @@ using System.Text.Json.Serialization;
 namespace MechaMiner.Content.Envelope;
 
 /// <summary>
-/// The wire shape of the nine envelope fields, for source-generated deserialization.
+/// The wire shape of the eight authorable envelope fields, for source-generated
+/// deserialization.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -34,6 +35,15 @@ namespace MechaMiner.Content.Envelope;
 /// detects an unknown field from the scanned structure and reports
 /// <c>MMC-2001</c> with its exact pointer, which a thrown exception could not.
 /// </para>
+/// <para>
+/// <b>There is no <c>presentation_id</c> property, and that is the same rule again.</b>
+/// The field is declared by the envelope and required absent, so no legal document ever
+/// carries a value for it to hold. Declaring one would only decide what happens to an
+/// illegal document, and it would decide it badly: <c>"presentation_id": 3</c> against a
+/// <c>string?</c> property is a deserialization exception with no pointer and no code.
+/// Presence is detected from the scanned structure instead, at any JSON kind, and
+/// reported as <c>MMC-2010</c>; an unmapped member here is simply ignored.
+/// </para>
 /// </remarks>
 internal sealed class EnvelopeDto
 {
@@ -60,7 +70,4 @@ internal sealed class EnvelopeDto
 
     [JsonPropertyName(EnvelopeSchema.SourceRefs)]
     public List<string>? SourceRefs { get; set; }
-
-    [JsonPropertyName(EnvelopeSchema.PresentationId)]
-    public string? PresentationId { get; set; }
 }

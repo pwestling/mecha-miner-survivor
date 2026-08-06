@@ -51,9 +51,10 @@ internal sealed class FixtureCorpusCoverageTests
     /// named, which a comparison derived from the table on both sides cannot do.
     /// </para>
     /// <para>
-    /// The counts are the part with teeth. <c>MMC-1004</c>, <c>MMC-1005</c> and
-    /// <c>MMC-2005</c> are each proved by two files, and a code proved by two files is one
-    /// deletion away from being proved by one while every existing assertion stays green.
+    /// The counts are the part with teeth. <c>MMC-1004</c>, <c>MMC-1005</c>,
+    /// <c>MMC-2005</c> and <c>MMC-2010</c> are each proved by two files, and a code proved
+    /// by two files is one deletion away from being proved by one while every existing
+    /// assertion stays green.
     /// </para>
     /// </remarks>
     private static readonly CodeCoverage[] TheFixtureRoster =
@@ -87,6 +88,10 @@ internal sealed class FixtureCorpusCoverageTests
         new("MMC-2007", "invalid/structural-name-key-literal-text.json"),
         new("MMC-2008", "invalid/structural-name-key-role-mismatch.json"),
         new("MMC-2009", "invalid/structural-empty-optional.json"),
+        new(
+            "MMC-2010",
+            "invalid/structural-presentation-id-authored.json",
+            "invalid/structural-presentation-id-empty.json"),
 
         // Identity, band 3xxx.
         new("MMC-3001", "invalid/identity-bad-id-for-category.json"),

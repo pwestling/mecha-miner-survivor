@@ -105,8 +105,16 @@ proves it stays rejected.
 
 ## Deliberately not schema'd yet
 
-- **`presentation_id` grammar.** No accepted document mints one. The envelope
-  requires a non-empty string; existence is a cross-reference check.
+- **`presentation_id` grammar.** No accepted document mints one, so the field is
+  **required absent**: every schema here declares it as `not` over the empty
+  schema, and the typed validator rejects a definition carrying one with
+  `MMC-2010`. It was declared-optional with `minLength: 1` until that was read
+  for what it was — a constraint that accepts any string an author invents and
+  validates nothing about it, while reading as though somebody decided. The
+  declaration becomes a grammar when a document mints one; until then the first
+  definition to author a value fails loudly instead of carrying an unauthorized
+  one. Existence stays a cross-reference check, with nothing yet to resolve
+  against.
 - **The `presentation` category.** Doc 40's layout lists
   `content/presentation/`, but the directory does not exist and no prefix has
   been granted. Minting one is an integration-owner decision.

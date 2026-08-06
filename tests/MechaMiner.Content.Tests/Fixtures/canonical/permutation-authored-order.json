@@ -10,6 +10,5 @@
     "GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
     "TDD-COMBAT-RUNTIME#weapon-actors",
     "DEC-120#decision"
-  ],
-  "presentation_id": "weapon-ab-emitter"
+  ]
 }

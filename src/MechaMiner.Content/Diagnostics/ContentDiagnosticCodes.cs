@@ -122,6 +122,17 @@ public static class ContentDiagnosticCodes
     /// </summary>
     public const string EmptyOptionalField = "MMC-2009";
 
+    /// <summary>
+    /// <c>presentation_id</c> is present. The field is declared by doc 40's envelope
+    /// table and is <b>required absent</b>: no accepted document says what a presentation
+    /// definition contains, so no ID grammar has been minted for one, and a
+    /// declared-optional non-empty string would accept whatever an author invented while
+    /// validating nothing about it. The presence of the field is the fault, so any value
+    /// provokes this - including the empty string, which is not an empty declared-optional
+    /// field here.
+    /// </summary>
+    public const string PresentationIdNotMinted = "MMC-2010";
+
     // --- Identity, band 3xxx ------------------------------------------------
 
     /// <summary>An ID does not match the pattern its content category declares.</summary>
@@ -295,6 +306,11 @@ public static class ContentDiagnosticCodes
             "a localization key's role does not match the envelope field carrying it"),
         Describe(EmptyOptionalField, nameof(EmptyOptionalField), ContentValidationStage.Structural,
             "a declared-optional field is present but empty; the empty string is the value the compiler materializes for an omitted field, so authoring one is a second way to say absent"),
+        Describe(PresentationIdNotMinted, nameof(PresentationIdNotMinted), ContentValidationStage.Structural,
+            "presentation_id is present; the field is required absent because no accepted document says what a "
+                + "presentation definition contains, so no ID grammar has been minted for one and any authored "
+                + "value would be unauthorized. Presence is the fault, so the empty string provokes this too "
+                + "rather than the empty-declared-optional code"),
 
         Describe(IdMalformedForCategory, nameof(IdMalformedForCategory), ContentValidationStage.Identity,
             "an ID does not match the pattern its content category declares"),

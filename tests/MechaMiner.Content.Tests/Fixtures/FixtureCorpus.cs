@@ -112,6 +112,17 @@ internal static class FixtureCorpus
         Bad("structural-name-key-role-mismatch.json", ContentDiagnosticCodes.LocalizationKeyRoleMismatch),
         Bad("structural-empty-optional.json", ContentDiagnosticCodes.EmptyOptionalField),
 
+        // Two fixtures, because presence is the fault and the empty string is the case a
+        // reader expects to be treated as absence. One of them without the other would
+        // leave the interesting half unproved: an authored value is the obvious fault,
+        // and "" is the one an author would defend as meaning "there is none".
+        Bad(
+            "structural-presentation-id-authored.json",
+            ContentDiagnosticCodes.PresentationIdNotMinted),
+        Bad(
+            "structural-presentation-id-empty.json",
+            ContentDiagnosticCodes.PresentationIdNotMinted),
+
         // --- identity ------------------------------------------------------
         Bad("identity-bad-id-for-category.json", ContentDiagnosticCodes.IdMalformedForCategory),
         Bad("identity-retired-id-reused.json", ContentDiagnosticCodes.RetiredIdReused),

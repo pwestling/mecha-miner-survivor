@@ -25,6 +25,13 @@ namespace MechaMiner.Content.Envelope;
 /// <see cref="EnvelopeSchema.AbsentOptionalDefault"/> in its place, so the canonical
 /// payload has no absent fields at all.
 /// </para>
+/// <para>
+/// There are eight properties for doc 40's nine rows. <c>presentation_id</c> is required
+/// absent - see <see cref="EnvelopeSchema.RequiredAbsent"/> - so a validated envelope can
+/// only ever have carried nothing for it, and a property that is unconditionally null
+/// would invite a consumer to branch on a condition that cannot arise.
+/// <see cref="WriteCanonical"/> still emits the row.
+/// </para>
 /// </remarks>
 public sealed class DefinitionEnvelope
 {
@@ -36,8 +43,7 @@ public sealed class DefinitionEnvelope
         LocalizationKey? nameKey,
         LocalizationKey? summaryKey,
         IReadOnlyList<string> tags,
-        IReadOnlyList<SourceRef> sourceRefs,
-        string? presentationId)
+        IReadOnlyList<SourceRef> sourceRefs)
     {
         Id = id;
         SchemaVersion = schemaVersion;
@@ -47,7 +53,6 @@ public sealed class DefinitionEnvelope
         SummaryKey = summaryKey;
         Tags = tags;
         SourceRefs = sourceRefs;
-        PresentationId = presentationId;
     }
 
     /// <summary>The stable category-valid ID.</summary>
@@ -73,12 +78,6 @@ public sealed class DefinitionEnvelope
 
     /// <summary>The parsed source references, in authored order.</summary>
     public IReadOnlyList<SourceRef> SourceRefs { get; }
-
-    /// <summary>
-    /// The logical presentation entry, or null when the definition never appears
-    /// in-world.
-    /// </summary>
-    public string? PresentationId { get; }
 
     /// <summary>
     /// True when a release bundle excludes this definition unless configured otherwise
@@ -121,9 +120,15 @@ public sealed class DefinitionEnvelope
             EnvelopeSchema.SourceRefs,
             SourceRefs,
             static (target, sourceRef) => target.WriteStringValue(sourceRef.Text));
+
+        // presentation_id is required absent in source, so there is nothing here to
+        // materialize from and no model property to read: the field's canonical value is
+        // the absent-optional default and nothing else. It is still emitted, because
+        // doc 40's table has nine rows and runtime reads a value rather than discovering
+        // a missing key.
         writer.WriteString(
             EnvelopeSchema.PresentationId,
-            PresentationId ?? EnvelopeSchema.AbsentOptionalDefault);
+            EnvelopeSchema.AbsentOptionalDefault);
         writer.EndObject();
     }
 

@@ -56,10 +56,6 @@ internal sealed class ValidFixtureCorpusTests
         {
             Assert.That(envelope.NameKey, Is.Null, "an omitted name_key reads as absent");
             Assert.That(envelope.SummaryKey, Is.Null, "an omitted summary_key reads as absent");
-            Assert.That(
-                envelope.PresentationId,
-                Is.Null,
-                "an omitted presentation_id reads as absent");
             NumericAssert.AreExactlyEqual(
                 EnvelopeSchema.InitialSchemaVersion,
                 envelope.SchemaVersion,
@@ -72,8 +68,18 @@ internal sealed class ValidFixtureCorpusTests
         });
     }
 
+    /// <summary>
+    /// The maximal fixture carries every field a definition may author - the six required
+    /// and both declared-optional keys - and exercises all five reference forms.
+    /// </summary>
+    /// <remarks>
+    /// It carried nine until <c>presentation_id</c> became required absent. A maximal
+    /// fixture is maximal among <em>legal</em> documents, so the ninth row is now proved by
+    /// <c>invalid/structural-presentation-id-authored.json</c> instead; carrying it here
+    /// would make the over-strict control assert that an unauthorized value is clean.
+    /// </remarks>
     [Test]
-    public void TheMaximalFixtureCarriesAllNineFieldsAndParsesEveryReferenceForm()
+    public void TheMaximalFixtureCarriesEveryAuthorableFieldAndParsesEveryReferenceForm()
     {
         EnvelopeReadResult result = Read("valid/envelope-maximal.json");
         Assert.That(result.Envelope, Is.Not.Null, () => string.Join("; ", result.Diagnostics));
@@ -90,7 +96,6 @@ internal sealed class ValidFixtureCorpusTests
             NumericAssert.AreExactlyEqual("W-AB", envelope.Id.Value, "the maximal fixture's ID");
             Assert.That(envelope.NameKey, Is.Not.Null);
             Assert.That(envelope.SummaryKey, Is.Not.Null);
-            Assert.That(envelope.PresentationId, Is.EqualTo("weapon-ab-emitter"));
             Assert.That(
                 kinds,
                 Is.EquivalentTo(new[]
@@ -105,8 +110,16 @@ internal sealed class ValidFixtureCorpusTests
         });
     }
 
+    /// <summary>
+    /// An aggregate omits <c>name_key</c>, which doc 40 prescribes for it specifically.
+    /// </summary>
+    /// <remarks>
+    /// It omits <c>presentation_id</c> too, but that is no longer a fact about aggregates:
+    /// every definition omits it now, and the rule is asserted where it belongs, in
+    /// <c>EnvelopeValidatorTests</c> and the two invalid fixtures.
+    /// </remarks>
     [Test]
-    public void AnAggregateOmitsNameKeyAndPresentationIdAsDocFortyPrescribes()
+    public void AnAggregateOmitsNameKeyAsDocFortyPrescribes()
     {
         // doc 40 § Encounter schedule: WAV-01 "is not embodied in the world and players
         // never read its name, so it omits presentation_id and name_key".
@@ -117,7 +130,6 @@ internal sealed class ValidFixtureCorpusTests
         {
             NumericAssert.AreExactlyEqual("WAV-01", result.Envelope!.Id.Value, "the aggregate ID");
             Assert.That(result.Envelope.NameKey, Is.Null);
-            Assert.That(result.Envelope.PresentationId, Is.Null);
         });
     }
 

@@ -23,8 +23,15 @@ internal static class BuildVerb
     internal static VerbOutcome Execute(VerbContext context)
     {
         WorkflowConfiguration configuration = context.Configuration();
+        StageLedger ledger = new(
+            context,
+            "locked restore",
+            "compile with analyzers and warnings as errors",
+            "assert the accepted project boundary",
+            "assert every gate script is wired or explicitly exempt",
+            "assert both root wrappers expose the same verb table");
 
-        context.Section("stage 1: locked restore (" + configuration.WorkflowName + " -> MSBuild "
+        ledger.Enter(0, "locked restore (" + configuration.WorkflowName + " -> MSBuild "
             + configuration.MsbuildName + ")");
         CommandResult restore = context.Runner.Run(
             "dotnet-restore-locked",
@@ -47,12 +54,12 @@ internal static class BuildVerb
             TimeSpan.FromMinutes(10));
         if (!restore.Succeeded)
         {
-            return VerbOutcome.Build(
+            return ledger.Abandon(VerbOutcome.Build(
                 "locked restore failed. CI restores in locked mode and fails if lock files would change "
-                + "(doc 100 § Dependency policy); update Directory.Packages.props and the lock files together.");
+                + "(doc 100 § Dependency policy); update Directory.Packages.props and the lock files together."));
         }
 
-        context.Section("stage 2: compile with analyzers and warnings as errors");
+        ledger.Enter(1);
         CommandResult build = context.Runner.Run(
             "dotnet-build",
             "dotnet",
@@ -100,26 +107,26 @@ internal static class BuildVerb
 
         if (!summaryFound)
         {
-            return VerbOutcome.Build(
+            return ledger.Abandon(VerbOutcome.Build(
                 "the build produced no MSBuild warning/error summary, so a zero-warning tree"
-                + " cannot be asserted; see the dotnet-build step log");
+                + " cannot be asserted; see the dotnet-build step log"));
         }
 
         if (!build.Succeeded || errors > 0)
         {
-            return VerbOutcome.Build(
+            return ledger.Abandon(VerbOutcome.Build(
                 "compilation failed with " + errors.ToString(CultureInfo.InvariantCulture)
-                + " error(s); see the step log");
+                + " error(s); see the step log"));
         }
 
         if (warnings > 0)
         {
-            return VerbOutcome.Build(
+            return ledger.Abandon(VerbOutcome.Build(
                 "compilation reported " + warnings.ToString(CultureInfo.InvariantCulture)
-                + " warning(s); the repository treats every warning as an error");
+                + " warning(s); the repository treats every warning as an error"));
         }
 
-        context.Section("stage 3: assert the accepted project boundary");
+        ledger.Enter(2);
         CommandResult architecture = context.RunRepositoryScript(
             "verify-architecture",
             "build/verify-architecture.sh",
@@ -127,8 +134,47 @@ internal static class BuildVerb
             timeout: TimeSpan.FromMinutes(10));
         if (!architecture.Succeeded)
         {
-            return VerbOutcome.Validation(
-                "the accepted project boundary or repository layout is violated; see the step log");
+            return ledger.Abandon(VerbOutcome.Validation(
+                "the accepted project boundary or repository layout is violated; see the step log"));
+        }
+
+        // Stage 4 exists because of what stage 3 could not tell anyone: for as long
+        // as this repository had nine gate scripts, six of them were invoked by
+        // nothing, and no gate said so. This one asserts the partition -- every gate
+        // script is invoked or explicitly exempted -- so the next unwired script is a
+        // failure rather than an omission. It is here rather than in a script of its
+        // own tier because it is a repository-consistency assertion, it costs about a
+        // second, and `build` is the verb CI reaches first.
+        ledger.Enter(3);
+        CommandResult wiring = context.RunRepositoryScript(
+            "verify-gate-wiring",
+            "build/verify-gate-wiring.sh",
+            scriptArguments: null,
+            timeout: TimeSpan.FromMinutes(5));
+        if (!wiring.Succeeded)
+        {
+            return ledger.Abandon(VerbOutcome.Validation(
+                "a gate script is neither invoked nor explicitly exempted, so it runs only when "
+                + "someone remembers to type it; see the step log"));
+        }
+
+        // Stage 5 is the wrapper's own contract. verify-wrapper-parity.sh runs both root
+        // wrappers with no verb, so it reads their usage tables and dispatches nothing:
+        // unlike every other gate that was exempted with it, there is no path from it
+        // back to this verb, and it costs about 13 seconds. It was exempted on the claim
+        // that the wrapper rebuilds the verb host the calling verb runs from; wired here,
+        // ./build.sh build exits 0.
+        ledger.Enter(4);
+        CommandResult parity = context.RunRepositoryScript(
+            "verify-wrapper-parity",
+            "build/verify-wrapper-parity.sh",
+            scriptArguments: null,
+            timeout: TimeSpan.FromMinutes(10));
+        if (!parity.Succeeded)
+        {
+            return ledger.Abandon(VerbOutcome.Validation(
+                "./build.sh and ./build.ps1 no longer expose the same verb and argument table, "
+                + "or a wrapper has started branching on the verb; see the step log"));
         }
 
         return VerbOutcome.Success(

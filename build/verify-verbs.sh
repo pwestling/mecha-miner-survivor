@@ -1,9 +1,21 @@
 #!/usr/bin/env bash
 #
 # Proves the wrapper contract: every one of doc 100's eighteen verbs is registered,
-# implemented verbs behave, unimplemented verbs return a typed nonzero status naming
-# their owning work package, invalid invocations exit 2 with usage, and a
-# deliberately broken environment exits 3.
+# unimplemented verbs return a typed nonzero status naming their owning work package,
+# invalid invocations exit 2 with usage, and a deliberately broken environment exits 3.
+#
+# It does NOT prove that the implemented verbs do their work. Of the eight implemented
+# verbs, only two are ever executed here: doctor (§ 5 via the matrix, and § 6, § 6a,
+# § 7, § 9, § 10) and build (§ 8, on its failure path only - nothing here asserts a
+# successful build). The other six - bootstrap, format, format-check, godot-import,
+# test-fast, test-main - are in SLOW_IMPLEMENTED below and are asserted for registration
+# and classification only. Where each is actually driven: format and format-check by
+# build/verify-format.sh, test-fast by build/verify-test-harness.sh, build's success path
+# by build/verify-configurations.sh § 3. Three verbs are driven by no gate script at all -
+# bootstrap, godot-import, and test-main - and their registry entries (VER-FND-002-005,
+# VER-FND-002-014, VER-FND-003-012) carry a bare command selector rather than a script.
+# Reading this script as the verb suite is the mistake worth naming here, because the
+# matrix lists all eighteen and looks like one.
 #
 # Exit class 3 has two halves, and both are asserted separately, because asserting
 # only one is how a misclassification survived. § 6 covers the *absent* half (a pinned
@@ -80,16 +92,11 @@ readonly SLOW_IMPLEMENTED=(
   "test-main"
 )
 
-failures=0
-
-fail() {
-  printf 'FAIL  %s\n' "$*"
-  failures=$((failures + 1))
-}
-
-pass() {
-  printf 'ok    %s\n' "$*"
-}
+# The shared emitters: pass/fail for findings about the subject under test,
+# control_pass/control_fail for anything produced while a negative control's fixture is in
+# place, section/gate_summary so a red run names the failing section. See build/gate-output.sh
+# for why control output is marked and why that marking is enforced rather than conventional.
+source "${REPO_ROOT}/build/gate-output.sh"
 
 is_slow_implemented() {
   local verb="$1"
@@ -105,7 +112,7 @@ usage_table() {
   "${WRAPPER}" 2>&1 || true
 }
 
-echo "=== 1. the registered verb set is exactly doc 100's eighteen verbs (VER-FND-002-006)"
+section "1. the registered verb set is exactly doc 100's eighteen verbs (VER-FND-002-006)"
 mapfile -t registered < <(usage_table \
   | sed -n '/^VERB TABLE/,/^$/p' \
   | sed -n 's/^  \([a-z-]*\).*/\1/p' \
@@ -119,31 +126,28 @@ else
   diff <(printf '%s\n' "${expected_names}") <(printf '%s\n' "${registered_names}") || true
 fi
 
-echo
-echo "=== 2. an empty invocation prints usage and exits 2 (VER-FND-002-004)"
+section "2. an empty invocation prints usage and exits 2 (VER-FND-002-004)"
 output="$("${WRAPPER}" 2>&1)"
 status=$?
-if [[ "${status}" -eq 2 ]] && printf '%s' "${output}" | grep -q '^VERB TABLE'; then
+if [[ "${status}" -eq 2 ]] && grep -q '^VERB TABLE' <<<"${output}"; then
   pass "no verb: exit 2 with the usage table"
 else
   fail "no verb: exit ${status} (expected 2) and/or no usage table"
 fi
 
-echo
-echo "=== 3. an unknown verb prints usage and exits 2 (VER-FND-002-003)"
+section "3. an unknown verb prints usage and exits 2 (VER-FND-002-003)"
 output="$("${WRAPPER}" definitely-not-a-verb 2>&1)"
 status=$?
 if [[ "${status}" -eq 2 ]] \
-    && printf '%s' "${output}" | grep -q '^VERB TABLE' \
-    && printf '%s' "${output}" | grep -q 'MMT-2001'; then
+    && grep -q '^VERB TABLE' <<<"${output}" \
+    && grep -q 'MMT-2001' <<<"${output}"; then
   pass "unknown verb: exit 2, usage table, diagnostic MMT-2001"
 else
   fail "unknown verb: exit ${status} (expected 2) with MMT-2001 and usage"
   printf '%s\n' "${output}" | tail -3 | sed 's/^/      /'
 fi
 
-echo
-echo "=== 4. invalid arguments print usage and exit 2 (VER-FND-002-004)"
+section "4. invalid arguments print usage and exit 2 (VER-FND-002-004)"
 declare -a INVALID_INVOCATIONS=(
   "build --configuration nope"
   "build --unknown-argument x"
@@ -158,7 +162,7 @@ for invocation in "${INVALID_INVOCATIONS[@]}"; do
   # shellcheck disable=SC2086
   output="$("${WRAPPER}" ${invocation} 2>&1)"
   status=$?
-  if [[ "${status}" -eq 2 ]] && printf '%s' "${output}" | grep -q 'MMT-2003'; then
+  if [[ "${status}" -eq 2 ]] && grep -q 'MMT-2003' <<<"${output}"; then
     pass "'${invocation}': exit 2 with MMT-2003"
   else
     fail "'${invocation}': exit ${status} (expected 2 with MMT-2003)"
@@ -166,8 +170,7 @@ for invocation in "${INVALID_INVOCATIONS[@]}"; do
   fi
 done
 
-echo
-echo "=== 5. every verb's classification (VER-FND-002-007, VER-FND-002-009)"
+section "5. every verb's classification (VER-FND-002-007, VER-FND-002-009)"
 for entry in "${VERB_MATRIX[@]}"; do
   IFS='|' read -r invocation expected_class expected_code expected_owner <<<"${entry}"
   verb="${invocation%% *}"
@@ -183,10 +186,10 @@ for entry in "${VERB_MATRIX[@]}"; do
 
   problems=()
   [[ "${status}" -eq "${expected_class}" ]] || problems+=("exit ${status}, expected ${expected_class}")
-  printf '%s' "${output}" | grep -q "\[${expected_code}\]" \
+  grep -q "\[${expected_code}\]" <<<"${output}" \
     || problems+=("diagnostic code ${expected_code} not printed")
   if [[ -n "${expected_owner}" ]]; then
-    printf '%s' "${output}" | grep -q "${expected_owner}" \
+    grep -q "${expected_owner}" <<<"${output}" \
       || problems+=("owning work package ${expected_owner} not named")
   fi
 
@@ -218,21 +221,19 @@ PY
   fi
 done
 
-echo
-echo "=== 6. a deliberately broken environment exits 3 (VER-FND-002-002)"
+section "6. a deliberately broken environment exits 3 (VER-FND-002-002)"
 output="$(MECHAMINER_GODOT=/nonexistent/godot "${WRAPPER}" doctor 2>&1)"
 status=$?
 if [[ "${status}" -eq 3 ]] \
-    && printf '%s' "${output}" | grep -q 'MMT-3001' \
-    && printf '%s' "${output}" | grep -q 'MISMATCH.*godot editor'; then
+    && grep -q 'MMT-3001' <<<"${output}" \
+    && grep -q 'MISMATCH.*godot editor' <<<"${output}"; then
   pass "MECHAMINER_GODOT pointing at a nonexistent editor: exit 3 with MMT-3001"
 else
   fail "broken environment: exit ${status} (expected 3 with MMT-3001)"
   printf '%s\n' "${output}" | tail -4 | sed 's/^/      /'
 fi
 
-echo
-echo "=== 6a. a SUBSTITUTED godot binary is detected by hash (VER-FND-002-017)"
+section "6a. a SUBSTITUTED godot binary is detected by hash (VER-FND-002-017)"
 #
 # § 6 only points MECHAMINER_GODOT at a path that does not exist, where the version
 # probe fails first and the hash probe is never reached on its interesting path. That
@@ -288,14 +289,14 @@ status=$?
 
 problems=()
 [[ "${status}" -eq 3 ]] || problems+=("exit ${status}, expected 3")
-printf '%s' "${output}" | grep -q 'MMT-3001' || problems+=("MMT-3001 not printed")
-printf '%s' "${output}" | grep -qE 'MISMATCH.*godot executable hash' \
+grep -q 'MMT-3001' <<<"${output}" || problems+=("MMT-3001 not printed")
+grep -qE 'MISMATCH.*godot executable hash' <<<"${output}" \
   || problems+=("the godot executable hash row is not MISMATCH")
 # The decisive assertion: the report must show the SUBSTITUTE's hash as observed. The
 # old defect showed the pinned hash as observed, which is how it read as a match.
-printf '%s' "${output}" | grep -q "${substitute_sha}" \
+grep -q "${substitute_sha}" <<<"${output}" \
   || problems+=("the report does not contain the substitute's own sha256 ${substitute_sha}")
-printf '%s' "${output}" | grep -q "sha256 of ${GODOT_SUBSTITUTE}" \
+grep -q "sha256 of ${GODOT_SUBSTITUTE}" <<<"${output}" \
   || problems+=("the report does not say it hashed ${GODOT_SUBSTITUTE}")
 
 if [[ "${#problems[@]}" -eq 0 ]]; then
@@ -314,40 +315,38 @@ if [[ -n "${resolved_pinned}" && -f "${resolved_pinned}" ]]; then
   ln -s "${resolved_pinned}" "${GODOT_SAME_CONTENT_LINK}"
   output="$(MECHAMINER_GODOT="${GODOT_SAME_CONTENT_LINK}" "${WRAPPER}" doctor 2>&1)"
   status=$?
-  if [[ "${status}" -eq 0 ]] && printf '%s' "${output}" | grep -q "${pinned_sha}"; then
-    pass "negative control: a different path with the pinned bytes still passes, so § 6a rejected content and not merely an unusual path"
+  if [[ "${status}" -eq 0 ]] && grep -q "${pinned_sha}" <<<"${output}"; then
+    control_pass "negative control: a different path with the pinned bytes still passes, so § 6a rejected content and not merely an unusual path"
   else
-    fail "negative control: the pinned binary reached through another path exited ${status} (expected 0); § 6a may be rejecting the path rather than the content"
+    control_fail "negative control: the pinned binary reached through another path exited ${status} (expected 0); § 6a may be rejecting the path rather than the content"
     printf '%s\n' "${output}" | grep -E 'godot' | sed 's/^/      /'
   fi
 else
-  fail "negative control could not run: no godot on PATH to reach by a second path"
+  control_fail "negative control could not run: no godot on PATH to reach by a second path"
 fi
 
 # Negative control 2. The substitute and the pin must genuinely differ, or § 6a's
 # central assertion would be trivially satisfiable.
 if [[ "${substitute_sha}" != "${pinned_sha}" ]]; then
-  pass "negative control: the substitute's sha256 differs from the pin, so the mismatch above was a real content difference"
+  control_pass "negative control: the substitute's sha256 differs from the pin, so the mismatch above was a real content difference"
 else
-  fail "negative control: the substitute hashes to the pinned value, which makes § 6a vacuous"
+  control_fail "negative control: the substitute hashes to the pinned value, which makes § 6a vacuous"
 fi
 
 remove_godot_fixtures
 trap cleanup_fixtures EXIT
 
-echo
-echo "=== 7. a correct environment exits 0 (VER-FND-002-001)"
+section "7. a correct environment exits 0 (VER-FND-002-001)"
 output="$("${WRAPPER}" doctor 2>&1)"
 status=$?
-if [[ "${status}" -eq 0 ]] && printf '%s' "${output}" | grep -q 'MMT-0000'; then
+if [[ "${status}" -eq 0 ]] && grep -q 'MMT-0000' <<<"${output}"; then
   pass "doctor: exit 0 with MMT-0000"
 else
   fail "doctor: exit ${status} (expected 0)"
   printf '%s\n' "${output}" | tail -4 | sed 's/^/      /'
 fi
 
-echo
-echo "=== 8. build returns exit class 5 when solution compilation fails (VER-FND-002-013)"
+section "8. build returns exit class 5 when solution compilation fails (VER-FND-002-013)"
 #
 # The fixture must break a project that is in MechaMiner.sln but is NOT the verb
 # host. A broken verb host is a different, also-correct outcome: the launcher cannot
@@ -380,20 +379,19 @@ write_uncompilable "${SOLUTION_FIXTURE}"
 output="$("${WRAPPER}" build 2>&1)"
 status=$?
 rm -f "${SOLUTION_FIXTURE}"
-if [[ "${status}" -eq 5 ]] && printf '%s' "${output}" | grep -q 'MMT-5001'; then
+if [[ "${status}" -eq 5 ]] && grep -q 'MMT-5001' <<<"${output}"; then
   pass "an uncompilable file in a solution project makes build exit 5 with MMT-5001"
 else
   fail "uncompilable solution project: build exited ${status} (expected 5 with MMT-5001)"
   printf '%s\n' "${output}" | tail -6 | sed 's/^/      /'
 fi
 
-echo
-echo "=== 9. a broken verb host exits 8 rather than leaking the tool's own 1"
+section "9. a broken verb host exits 8 rather than leaking the tool's own 1"
 write_uncompilable "${HOST_FIXTURE}"
 output="$("${WRAPPER}" doctor 2>&1)"
 status=$?
 rm -f "${HOST_FIXTURE}"
-if [[ "${status}" -eq 8 ]] && printf '%s' "${output}" | grep -q 'MMT-8001'; then
+if [[ "${status}" -eq 8 ]] && grep -q 'MMT-8001' <<<"${output}"; then
   pass "a verb host that does not build makes the wrapper exit 8 with MMT-8001"
 else
   fail "broken verb host: wrapper exited ${status} (expected 8 with MMT-8001)"
@@ -401,13 +399,12 @@ else
 fi
 
 if "${WRAPPER}" doctor >/dev/null 2>&1; then
-  pass "the tree builds again after both fixtures were removed"
+  control_pass "the tree builds again after both fixtures were removed"
 else
-  fail "the repository did not return to a buildable state after the fixtures"
+  control_fail "the repository did not return to a buildable state after the fixtures"
 fi
 
-echo
-echo "=== 10. a global.json pinning an uninstalled SDK exits 3, not 8 (VER-FND-002-016)"
+section "10. a global.json pinning an uninstalled SDK exits 3, not 8 (VER-FND-002-016)"
 #
 # Section 6 above only ever proved the *absent* half of exit class 3: it points
 # MECHAMINER_GODOT at a nonexistent editor. The mismatched half was unproved, and the
@@ -451,16 +448,16 @@ cp -f "${PINNED_SDK_FILE}" "${PINNED_SDK_BACKUP}"
 # never gained the probe, because a mismatched pin is nonzero either way.
 if ! sed '/^# MISMATCH-PROBE-BEGIN$/,/^# MISMATCH-PROBE-END$/d' "${WRAPPER}" \
       >"${NEGATIVE_CONTROL_WRAPPER}"; then
-  fail "could not write the negative-control wrapper"
+  control_fail "could not write the negative-control wrapper"
 fi
 chmod +x "${NEGATIVE_CONTROL_WRAPPER}"
 
 if ! grep -q '^# MISMATCH-PROBE-BEGIN$' "${WRAPPER}"; then
-  fail "build.sh has no MISMATCH-PROBE markers, so the negative control below is vacuous"
+  control_fail "build.sh has no MISMATCH-PROBE markers, so the negative control below is vacuous"
 elif grep -q 'MISMATCH-PROBE' "${NEGATIVE_CONTROL_WRAPPER}"; then
-  fail "the negative-control wrapper still contains the probe it was supposed to lose"
+  control_fail "the negative-control wrapper still contains the probe it was supposed to lose"
 else
-  pass "negative control built: build.sh with the pinned-SDK resolution probe removed"
+  control_pass "negative control built: build.sh with the pinned-SDK resolution probe removed"
 fi
 
 python3 - "${PINNED_SDK_FILE}" "${UNINSTALLABLE_SDK_VERSION}" <<'PY'
@@ -486,8 +483,8 @@ assert_mismatch_classification() {
 
   local classified_correctly=0
   if [[ "${wrapper_status}" -eq 3 ]] \
-      && printf '%s' "${wrapper_output}" | grep -q 'MMT-3001' \
-      && printf '%s' "${wrapper_output}" | grep -qi 'mismatch'; then
+      && grep -q 'MMT-3001' <<<"${wrapper_output}" \
+      && grep -qi 'mismatch' <<<"${wrapper_output}"; then
     classified_correctly=1
   fi
 
@@ -505,7 +502,7 @@ assert_mismatch_classification() {
   # predicate, and must specifically be the class-8 answer this fix replaced.
   if [[ "${classified_correctly}" -eq 1 ]]; then
     fail "${wrapper_name}: the probe-less wrapper still classified correctly, so section 10 proves nothing"
-  elif [[ "${wrapper_status}" -eq 8 ]] && printf '%s' "${wrapper_output}" | grep -q 'MMT-8001'; then
+  elif [[ "${wrapper_status}" -eq 8 ]] && grep -q 'MMT-8001' <<<"${wrapper_output}"; then
     pass "${wrapper_name}: rejected, and reproduces the original defect exactly (exit 8, MMT-8001)"
   else
     pass "${wrapper_name}: rejected by the same predicate (exit ${wrapper_status}, not 3/MMT-3001)"
@@ -525,10 +522,8 @@ else
   fail "global.json was not restored to its real pin"
 fi
 
-echo
-if [[ "${failures}" -eq 0 ]]; then
-  echo "verify-verbs: PASS"
-  exit 0
-fi
-echo "verify-verbs: FAIL (${failures} assertion(s))"
-exit "${EXIT_VALIDATION}"
+# This gate runs negative controls in band, so its log contains failure-shaped text on a
+# green run. Prove the marking that separates that text from genuine findings still holds.
+gate_assert_marking
+
+gate_summary "verify-verbs" "${EXIT_VALIDATION}"

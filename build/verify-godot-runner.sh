@@ -36,16 +36,11 @@ readonly HANG_TIMEOUT_SECONDS=15
 readonly EXIT_VALIDATION=4
 readonly EXIT_BUILD=5
 
-failures=0
-
-fail() {
-  printf 'FAIL  %s\n' "$*"
-  failures=$((failures + 1))
-}
-
-pass() {
-  printf 'ok    %s\n' "$*"
-}
+# The shared emitters: pass/fail for findings about the subject under test,
+# control_pass/control_fail for anything produced while a negative control's fixture is in
+# place, section/gate_summary so a red run names the failing section. See build/gate-output.sh
+# for why control output is marked and why that marking is enforced rather than conventional.
+source "${REPO_ROOT}/build/gate-output.sh"
 
 report_field() {
   # $1 report path, $2 dotted field path
@@ -61,7 +56,7 @@ PY
 
 mkdir -p "${EVIDENCE_DIR}"
 
-echo "=== 0. build and import so the runner scene is loadable"
+section "0. build and import so the runner scene is loadable"
 if ! dotnet build "${GAME_DIR}/MechaMiner.Game.csproj" --nologo -v quiet; then
   fail "MechaMiner.Game must build before Godot can load the runner"
   exit "${EXIT_BUILD}"
@@ -95,8 +90,7 @@ run_case() {
   printf '%s|%s|%s' "${status}" "${report}" "${log}"
 }
 
-echo
-echo "=== 1. the pass case reports passed (VER-FND-003-007)"
+section "1. the pass case reports passed (VER-FND-003-007)"
 IFS='|' read -r status report log <<<"$(run_case pass 90)"
 if [[ "${status}" -eq 0 && -f "${report}" ]] \
     && [[ "$(report_field "${report}" outcome)" == '"passed"' ]] \
@@ -109,8 +103,7 @@ else
   tail -5 "${log}" | sed 's/^/      /'
 fi
 
-echo
-echo "=== 2. the fail case reports failed and exits nonzero (VER-FND-003-008)"
+section "2. the fail case reports failed and exits nonzero (VER-FND-003-008)"
 IFS='|' read -r status report log <<<"$(run_case fail 90)"
 problems=()
 [[ "${status}" -ne 0 ]] || problems+=("exit was 0; a failing case must exit nonzero")
@@ -140,8 +133,7 @@ else
   tail -5 "${log}" | sed 's/^/      /'
 fi
 
-echo
-echo "=== 3. the hang case is terminated at its bound and leaves no report (VER-FND-003-009)"
+section "3. the hang case is terminated at its bound and leaves no report (VER-FND-003-009)"
 start_seconds="${SECONDS}"
 IFS='|' read -r status report log <<<"$(run_case hang "${HANG_TIMEOUT_SECONDS}")"
 elapsed=$((SECONDS - start_seconds))
@@ -163,8 +155,7 @@ else
   tail -5 "${log}" | sed 's/^/      /'
 fi
 
-echo
-echo "=== 4. the artifact case writes and references an artifact (VER-FND-003-010)"
+section "4. the artifact case writes and references an artifact (VER-FND-003-010)"
 IFS='|' read -r status report log <<<"$(run_case artifact 90)"
 problems=()
 [[ "${status}" -eq 0 ]] || problems+=("exit ${status}, expected 0")
@@ -186,8 +177,7 @@ else
   tail -5 "${log}" | sed 's/^/      /'
 fi
 
-echo
-echo "=== 5. the exit code alone is not a gate: a broken scene exits 0 with no report"
+section "5. the exit code alone is not a gate: a broken scene exits 0 with no report"
 #
 # This is the trap FND-001 recorded. A scene whose script cannot be instantiated logs
 # an error and the engine still exits 0. If the runner were gated on the exit code, this
@@ -217,24 +207,25 @@ broken_status=0
 cleanup_broken_scene
 
 broken_report="${EVIDENCE_DIR}/broken-scene/report.json"
+# The engine text quoted below is manufactured by this section's own broken fixture, so it
+# goes through control_detail: a reader hunting a real "cannot instantiate" must not find
+# this one first and stop. `head -3` here is a display truncation whose status is discarded
+# and whose value is correct, so it stays a pipeline (Decision 13).
 if [[ "${broken_status}" -eq 0 ]]; then
-  pass "a broken scene exited 0, which is exactly why the report is the gate"
-  grep -iE 'error|cannot|failed' "${broken_log}" | head -3 | sed 's/^/      /'
+  control_pass "a broken scene exited 0, which is exactly why the report is the gate"
 else
-  pass "a broken scene exited ${broken_status} in this engine build; the report is still the gate"
-  grep -iE 'error|cannot|failed' "${broken_log}" | head -3 | sed 's/^/      /'
+  control_pass "a broken scene exited ${broken_status} in this engine build; the report is still the gate"
 fi
+control_detail < <(grep -iE 'error|cannot|failed' "${broken_log}" | head -3)
 
 if [[ ! -f "${broken_report}" ]]; then
-  pass "no report was written, so a report-based gate rejects it regardless of exit code"
+  control_pass "no report was written, so a report-based gate rejects it regardless of exit code"
 else
-  fail "a broken scene somehow produced a report"
+  control_fail "a broken scene somehow produced a report"
 fi
 
-echo
-if [[ "${failures}" -eq 0 ]]; then
-  echo "verify-godot-runner: PASS"
-  exit 0
-fi
-echo "verify-godot-runner: FAIL (${failures} assertion(s))"
-exit "${EXIT_VALIDATION}"
+# This gate runs a negative control in band (§ 5's deliberately broken scene), so its log
+# contains engine error text on a green run. Prove the marking that separates it still holds.
+gate_assert_marking
+
+gate_summary "verify-godot-runner" "${EXIT_VALIDATION}"

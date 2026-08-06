@@ -53,7 +53,7 @@ internal sealed class GoldenTextTests
         Assert.That(
             fromReversedOrder,
             Is.EqualTo(fromSourceOrder),
-            "canonical text must not depend on source enumeration order (doc 40 § JSON codec baseline)");
+            "canonical text must not depend on source enumeration order (doc 40 § JSON codec and schema baseline)");
     }
 
     [Test]

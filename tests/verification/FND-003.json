@@ -4,9 +4,9 @@
   "workPackage": "FND-003",
   "workPackageTitle": "Pure NUnit test projects and Godot integration-test harness",
   "notes": [
-    "Entries are added before implementation and are never renumbered (docs/technical/91 \u00a7 Verification registry).",
+    "Entries are added before implementation and are never renumbered (docs/technical/91 § Verification registry).",
     "The structural validator for this file is owned by TASK-FND-009-002. Until it lands, the shape here matches tests/verification/FND-001.json exactly.",
-    "The pure tiers (MechaMiner.Simulation.Tests, MechaMiner.Content.Tests, MechaMiner.Persistence.Tests) never launch Godot. The engine tier (MechaMiner.Game.Tests) launches the pinned Godot executable as an external process and asserts the emitted report; it holds no Godot type, so game/ remains the only Godot-referencing project (docs/technical/115 \u00a7 Accepted project boundary).",
+    "The pure tiers (MechaMiner.Simulation.Tests, MechaMiner.Content.Tests, MechaMiner.Persistence.Tests) never launch Godot. The engine tier (MechaMiner.Game.Tests) launches the pinned Godot executable as an external process and asserts the emitted report; it holds no Godot type, so game/ remains the only Godot-referencing project (docs/technical/115 § Accepted project boundary).",
     "VER-FND-003-007 through VER-FND-003-010 deliberately assert the runner report rather than the Godot process exit code. A headless Godot launch exits 0 even when the C# script on the boot node fails to load, so exit status alone is not a gate; FND-001 hit this empirically and recorded it in tests/verification/FND-001.json.",
     "The sample tests prove the harness pattern, not domain behavior: at FND-003 the pure production projects contain no domain code. Every later stream replaces these samples with real subject tests using the same shared support types.",
     "Status is current status: an entry whose implementing task has not landed yet is 'registered'. TASK-FND-003-001 entries are implemented in this revision; TASK-FND-003-002 entries flip to 'implemented' when the Godot integration runner lands. Both sets of entries were written before either implementation."
@@ -326,7 +326,7 @@
     },
     {
       "id": "VER-FND-003-011",
-      "summary": "test-fast runs the pure tiers and the build-policy fixtures only, and launches no Godot process at all, observed with a tripwire: an executable named godot is placed first on PATH and in MECHAMINER_GODOT for every pure test process, and the tier fails if it was ever invoked. A negative control proves the assertion can fail.",
+      "summary": "test-fast runs the pure tiers and the build-policy fixtures only, and launches no Godot process at all, observed with a tripwire: an executable named godot is placed first on PATH and in MECHAMINER_GODOT for every pure test process, and the tier fails if it was ever invoked. A negative control proves the assertion can fail. The tripwire's coverage is the pure NUnit test processes and nothing else, which this entry and the assertion itself both used to overstate. VerbContext.RunRepositoryScript passes no environment, so the gate scripts test-fast runs are started with the verb host's own PATH and never see the shim; their nested ./build.sh invocations do launch the pinned engine - build/verify-verbs.sh probes it through doctor - and an empty sentinel says nothing about them. Observed: with verify-verbs.sh wired into test-fast, real doctor calls launched Godot and this assertion still reported that it was never invoked. The recorded assertion now says only what the shim can see. FOLLOW-UP (FND-003, which owns this code): propagate the tripwire environment through RunRepositoryScript. The hard part is not the plumbing - a gate script legitimately runs ./build.sh doctor and doctor's job is to probe the pinned engine, so arming the shim for gate scripts either fails doctor or needs an exception for it, and an exception is how a tripwire stops being one. That question has to be answered before the plumbing.",
       "task": "TASK-FND-003-001",
       "requirements": [
         "TR-BLD-005",

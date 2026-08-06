@@ -7,9 +7,11 @@
   "tags": [],
   "source_refs": [
     "GDD-SPECIALIZED-RESOURCE-IDENTITIES#accepted-identity-map",
+    "canonical_letter: TDD-CONTENT-DATA#resources",
     "resonance_behavior: GDD-MINING#geode-resonance-fields",
     "resonance_behavior.short_modifier: GDD-SPECIALIZED-RESOURCE-IDENTITIES#geode-resonance-behavior"
   ],
+  "canonical_letter": "D",
   "material_character": "Polarized metallic fins that continually realign",
   "loose_association": "Direction, momentum, displacement, geometry",
   "primary_color": "Vermilion red",

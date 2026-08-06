@@ -7,9 +7,11 @@
   "tags": [],
   "source_refs": [
     "GDD-SPECIALIZED-RESOURCE-IDENTITIES#accepted-identity-map",
+    "canonical_letter: TDD-CONTENT-DATA#resources",
     "resonance_behavior: GDD-MINING#geode-resonance-fields",
     "resonance_behavior.short_modifier: GDD-SPECIALIZED-RESOURCE-IDENTITIES#geode-resonance-behavior"
   ],
+  "canonical_letter": "A",
   "material_character": "Clean, faceted field-aligning crystal",
   "loose_association": "Precision, focus, stable fields, anchoring",
   "primary_color": "Saturated cyan",

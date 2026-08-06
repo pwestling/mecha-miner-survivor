@@ -4787,7 +4787,8 @@ methods here are the specification of what it owes.
 
 #### Proving this gate can fail
 
-Run at `e5a120e`. The perturbation is to a data file the gate reads at run time, so there is no
+Run at `e5a120e` and re-run unchanged at `789519b`, which is where the transcripts below were
+taken from. The perturbation is to a data file the gate reads at run time, so there is no
 compilation to force and § Why a forced rebuild is part of the method does not apply: the probe
 runs `--no-build` against an assembly already proved current, and the evidence that the perturbed
 file was the one read is that the failure text quotes the perturbation. Every probe restored with
@@ -4851,11 +4852,12 @@ stays green, which is correct and is why this is a separate assertion: had the r
 dropped the entry from the covered set, the partition would have failed instead and pointed at
 `VER-SIM-004-006` as though its control were missing.
 
-**A malformed document.** The `<!-- SIM-UNCOVERED-BEGIN -->` marker deleted:
+**A malformed document.** The line holding the begin marker deleted, and this transcript re-run
+at `789519b` so that it is what the current parser emits:
 
 ```
   Failed EveryNonRetiredEntryIsControlledOrUncoveredAndNeverBoth [23 ms]
-   System.IO.InvalidDataException : malformed tests/verification/SIM-negative-controls.md: the marker <!-- SIM-UNCOVERED-BEGIN --> is absent, so the uncovered list cannot be located. An absent block is not an empty one: a document with no block makes no statement about its gaps, and reading it as 'nothing is uncovered' would turn a lost list into a passing gate. This is a parse failure, not a coverage finding: no partition verdict was computed, so nothing here says any entry is covered or uncovered.
+   System.IO.InvalidDataException : malformed tests/verification/SIM-negative-controls.md: no line consists solely of the marker <!-- SIM-UNCOVERED-BEGIN -->, so the uncovered list cannot be located. An absent block is not an empty one: a document with no block makes no statement about its gaps, and reading it as 'nothing is uncovered' would turn a lost list into a passing gate. This is a parse failure, not a coverage finding: no partition verdict was computed, so nothing here says any entry is covered or uncovered.
 Failed!  - Failed:     5, Passed:     0, Skipped:     0, Total:     5, Duration: 37 ms
 ```
 

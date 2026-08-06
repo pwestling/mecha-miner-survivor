@@ -132,9 +132,10 @@ internal sealed class SnapshotDoubleBufferTests
     /// </para>
     /// <para>
     /// A real per-frame allocation budget in bytes belongs to a benchmark scenario in the main tier, not to
-    /// the fast tier. <c>QUA-005</c> owns that gate, and this entry records it as the successor - the same
-    /// shape <c>VER-SIM-001-013</c> uses to defer the catch-up bound's hardware measurement to
-    /// <c>./build.sh benchmark</c>.
+    /// the fast tier, and <c>QUA-005</c> owns that gate. The entry records that deferral in its summary and
+    /// not in <c>successor</c>: doc 91 § What 'successor' means makes the field a property of retirement
+    /// whose target is a <c>VER-*</c> entry, so a work-package ID on an implemented entry was neither, and
+    /// no <c>VER-*</c> ID is invented for a scenario that does not exist yet.
     /// </para>
     /// </remarks>
     [Test]

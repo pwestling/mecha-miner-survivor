@@ -15,6 +15,19 @@
 # references are included), the Godot dependency is read from the committed
 # NuGet lock files, and every mismatch exits nonzero.
 #
+# The Godot boundary is asserted TWICE, over two different reference sets, because
+# neither set can see what the other catches - § 4 reads what each project
+# DECLARES at evaluation time, § 4a reads what it ACTUALLY RESOLVES to on the
+# compile line. § 4a's own header explains what each one catches alone; read it
+# before deleting either as redundant.
+#
+# NO RESTORE IS REQUIRED to run this gate. § 4a cannot be measured without
+# obj/project.assets.json, and on a checkout that has none it reports NOT MEASURED
+# through skip() - a third outcome that is neither pass nor fail - so the gate
+# still exits 0 and gate_summary reports the reduced coverage. A plain checkout
+# must not fail this gate for lacking a restore, and "I could not measure this" is
+# not the same finding as "this is violated".
+#
 # TASK-FND-009-001 replaces the reference-graph portion with an architecture test
 # inside the pure test projects. This script remains the FND-001 gate until then.
 #
@@ -102,6 +115,80 @@ for identity in sorted(item["Identity"] for item in document.get("Items", {}).ge
 ' "$2"
 }
 
+msbuild_property() {
+  # $1 project, $2 property name. Prints the evaluated value.
+  #
+  # Returns nonzero when MSBuild cannot evaluate the project, or when the value is
+  # empty, so a caller never compares an accepted name against a silently empty
+  # string and calls the match a failure it can explain. An empty value and an
+  # unevaluable project are both "no answer", and neither is an answer.
+  local output
+  output="$(dotnet msbuild "${REPO_ROOT}/$1" -nologo "-getProperty:$2" 2>/dev/null)" || return 1
+  output="${output//[$'\r\n']/}"
+  [[ -n "${output}" ]] || return 1
+  printf '%s' "${output}"
+}
+
+godot_assembly_names() {
+  # Filters reference identities, assembly identities or paths on stdin down to the
+  # Godot assemblies among them, as a comma-separated list. Matches the last path
+  # segment so a bare assembly name and a full HintPath are treated alike, and
+  # treats tabs as separators so a caller may feed more than one column per
+  # reference.
+  tr '\t' '\n' \
+    | sed -E 's|.*[/\\]||; s|\.dll$||' \
+    | grep -iE '^Godot([A-Za-z0-9.]*)?$' \
+    | sort -u | paste -sd, - || true
+}
+
+resolved_assembly_identities() {
+  # $1 project. Prints "<assembly identity>\t<file name>" for every entry in the
+  # project's RESOLVED compile-time reference set. Returns nonzero when MSBuild
+  # fails or its output is not the JSON shape expected.
+  #
+  # The identity is the simple name out of FusionName, which
+  # ResolveAssemblyReferences reads from the assembly's own metadata. It therefore
+  # does not change when the FILE is renamed, which is the whole point: copying
+  # GodotSharp.dll to some other name and referencing it under that name defeats
+  # every name-based check while putting the real Godot assembly on a pure
+  # project's compile line.
+  #
+  # The file name is printed ALONGSIDE the identity rather than instead of it, so a
+  # reference whose identity metadata cannot be read is still matched by name
+  # rather than reported as clean.
+  #
+  # The absent-assets case is NOT handled here. Without obj/project.assets.json
+  # this command prints NETSDK1004 and exits 1 - but it also prints a well-formed
+  # document whose ReferencePath array is EMPTY, and an empty reference set is
+  # exactly what a project with no Godot dependency looks like. A caller that
+  # dropped the exit status would turn "nothing was measured" into nine passes.
+  # The caller therefore tests the precondition explicitly before calling this at
+  # all, and this function's nonzero return is reserved for a genuine failure.
+  local project="$1"
+  local output
+  output="$(dotnet msbuild "${REPO_ROOT}/${project}" -nologo \
+    -getItem:ReferencePath -t:ResolveAssemblyReferences \
+    -p:BuildProjectReferences=false 2>/dev/null)" || return 1
+  printf '%s' "${output}" | python3 -c '
+import json, sys
+try:
+    document = json.load(sys.stdin)
+except ValueError:
+    sys.exit(1)
+items = document.get("Items")
+if not isinstance(items, dict) or "ReferencePath" not in items:
+    sys.exit(1)
+for entry in items["ReferencePath"]:
+    path = (entry.get("Identity") or "").replace("\\", "/")
+    name = path.rsplit("/", 1)[-1]
+    if name.lower().endswith(".dll"):
+        name = name[:-4]
+    fusion = (entry.get("FusionName") or "").strip()
+    identity = fusion.split(",")[0].strip() if fusion else ""
+    sys.stdout.write("%s\t%s\n" % (identity, name))
+'
+}
+
 project_name() {
   local base="${1##*[/\\]}"
   printf '%s' "${base%.csproj}"
@@ -136,6 +223,29 @@ for entry in "${EXPECTED_PROJECTS[@]}"; do
     pass "$(project_name "${project}") -> [${expected_refs}]"
   else
     fail "$(project_name "${project}") references [${actual_refs}], accepted set is [${expected_refs}]"
+  fi
+done
+
+section "3a. each accepted project keeps its accepted assembly identity (VER-FND-001-003)"
+#
+# A project renamed only via <AssemblyName> keeps its accepted file path, so § 1's
+# layout check, § 2's project set and § 3's reference edges all still pass while the
+# assembly the boundary is written about no longer exists under the name the boundary
+# names. Every check in this file above this one reads PATHS; this is the only one that
+# reads the identity the compiler actually emits.
+#
+# Numbered 3a rather than inserted as a new § 4 on purpose: round evidence quotes this
+# gate's section numbers and assertion text verbatim, and § 7a already establishes the
+# suffix as this file's idiom for a check added between two existing ones.
+for entry in "${EXPECTED_PROJECTS[@]}"; do
+  IFS='|' read -r project _expected_refs _godot <<<"${entry}"
+  expected_name="$(project_name "${project}")"
+  if ! actual_name="$(msbuild_property "${project}" AssemblyName)"; then
+    fail "${expected_name}: AssemblyName could not be evaluated, so this project's assembly identity is unverified; an unread identity is not an accepted one"
+  elif [[ "${actual_name}" == "${expected_name}" ]]; then
+    pass "${expected_name} builds as assembly ${actual_name}"
+  else
+    fail "${expected_name} builds as assembly '${actual_name}'; the accepted boundary names '${expected_name}'"
   fi
 done
 
@@ -194,6 +304,121 @@ for entry in "${EXPECTED_PROJECTS[@]}"; do
     fi
   fi
 done
+
+section "4a. the RESOLVED compile-time reference set respects the Godot boundary (VER-FND-001-004)"
+#
+# WHY THIS EXISTS ALONGSIDE § 4, AND WHY NEITHER IS REDUNDANT. Do not delete one of the
+# two as a duplicate: they read different things, and each is blind to exactly what the
+# other catches.
+#
+#   § 4 is EVALUATION-time. It reads what a project DECLARES - its PackageReference
+#     items - cross-checked against its committed packages.lock.json. It needs no
+#     restore, so it runs on any checkout, and it is the only one of the two that can
+#     speak at all on an unrestored tree.
+#
+#   § 4a is RESOLUTION-time. It reads what the project ACTUALLY ENDS UP REFERENCING:
+#     the assembly identity of every ReferencePath entry after
+#     ResolveAssemblyReferences, which is the set the compiler is literally handed.
+#
+# What § 4a catches and § 4 cannot: a Godot reference that NO PROJECT DECLARES. A
+# transitive engine reference arriving through another package's dependency graph is
+# declared by nobody, appears in no project's PackageReference list, and still lands on
+# the compile line. Likewise a raw <Reference> with a HintPath, a <Reference> contributed
+# by an <Import>ed props/targets file, a Directory.Build.* contribution, and anything
+# SDK- or central-package-injected - none of which is a PackageReference. And because the
+# identity is read from FusionName, which ResolveAssemblyReferences takes from the
+# assembly's own metadata, renaming the FILE defeats this check not at all.
+#
+# What § 4 catches and § 4a cannot: a declared dependency whose RESOLUTION FAILS. A
+# <Reference> with a broken HintPath contributes nothing to ReferencePath, so the resolved
+# set looks clean while the project's stated intent is to reference the engine. § 4 also
+# reads the lock file, which covers transitive package routes, and it runs on trees where
+# § 4a cannot run at all.
+#
+# THE THIRD OUTCOME, DELIBERATELY. ResolveAssemblyReferences cannot run without
+# obj/project.assets.json, which only `dotnet restore` produces. "The property holds",
+# "the property is violated" and "the measurement did not happen" are three different
+# statements, and collapsing the third into the second is how a reader meets "could not be
+# evaluated" on a plain checkout, reaches for build contention or a broken SDK, and spends
+# an afternoon diagnosing the wrong thing. An absent assets file is therefore reported
+# through skip() as NOT MEASURED - neither pass nor fail - which gate_summary reports as
+# reduced coverage while the gate STILL EXITS 0. A plain checkout must not fail this gate
+# for lacking a restore. A genuine MSBuild failure WITH the assets file present is still a
+# fail, and so is an empty resolved set, which is a failed measurement rather than a
+# project without dependencies.
+
+resolved_absent=()
+resolved_present=()
+resolved_unevaluable=0
+
+for entry in "${EXPECTED_PROJECTS[@]}"; do
+  IFS='|' read -r project _expected_refs _godot <<<"${entry}"
+  # The assets path is read from MSBuild rather than assumed to be obj/project.assets.json:
+  # Directory.Build.props may redirect the intermediate output path, and a guessed path
+  # that is always absent would report "not measured" forever without anyone noticing.
+  if ! assets_file="$(msbuild_property "${project}" ProjectAssetsFile)"; then
+    fail "$(project_name "${project}"): ProjectAssetsFile could not be evaluated, so it is not even known whether the resolved reference set is measurable for this project"
+    resolved_unevaluable=$((resolved_unevaluable + 1))
+    continue
+  fi
+  if [[ -f "${assets_file}" ]]; then
+    resolved_present+=("${entry}"$'\t'"${assets_file}")
+  else
+    resolved_absent+=("${entry}"$'\t'"${assets_file}")
+  fi
+done
+
+# One skip rather than nine when nothing is measurable, because "no restore has been
+# performed in this checkout" is a single fact about the tree, and nine restatements of
+# one fact is the noise that made the original nine failures unreadable.
+if [[ "${#resolved_present[@]}" -eq 0 && "${resolved_unevaluable}" -eq 0 ]]; then
+  skip "4a. resolved compile-time reference set: NOT MEASURED for any of the ${#resolved_absent[@]} accepted projects - no restore has been performed in this checkout, so no project.assets.json exists and ResolveAssemblyReferences cannot run. This is not a failure and does not change this gate's exit code. § 4 asserted the declared and locked halves of the same boundary; run 'dotnet restore MechaMiner.sln' to measure this half too."
+else
+  if [[ "${#resolved_absent[@]}" -gt 0 ]]; then
+    for record in "${resolved_absent[@]}"; do
+      IFS=$'\t' read -r entry assets_file <<<"${record}"
+      IFS='|' read -r project _expected_refs _godot <<<"${entry}"
+      skip "$(project_name "${project}"): resolved compile-time reference set NOT MEASURED - ${assets_file#"${REPO_ROOT}/"} does not exist, so no restore has been performed for this project. Neither passed nor failed, and the gate's exit code is unchanged."
+    done
+  fi
+
+  for record in "${resolved_present[@]}"; do
+    IFS=$'\t' read -r entry assets_file <<<"${record}"
+    IFS='|' read -r project _expected_refs godot_allowed <<<"${entry}"
+    name="$(project_name "${project}")"
+
+    if ! resolved_references="$(resolved_assembly_identities "${project}")"; then
+      fail "${name}: the resolved compile-time reference set could not be read even though ${assets_file#"${REPO_ROOT}/"} exists, so its Godot boundary is unverified at resolution time; this is a real failure and not an absent restore"
+      continue
+    fi
+
+    # An empty resolved set is a failed measurement, not a project with no dependencies:
+    # every .NET project resolves at least its framework references. Decision 11 rule 2 -
+    # an empty candidate set never satisfies a gate - applies with force here, because an
+    # empty ReferencePath is precisely what MSBuild prints alongside NETSDK1004.
+    resolved_count="$(printf '%s\n' "${resolved_references}" | grep -c '[^[:space:]]' || true)"
+    if [[ "${resolved_count}" -eq 0 ]]; then
+      fail "${name}: the resolved compile-time reference set is EMPTY although its assets file exists; every .NET project resolves at least its framework references, so nothing was measured and an unmeasured boundary is not a satisfied one"
+      continue
+    fi
+
+    godot_resolved="$(printf '%s\n' "${resolved_references}" | godot_assembly_names)"
+
+    if [[ "${godot_allowed}" == "yes" ]]; then
+      if [[ "${godot_resolved}" == *GodotSharp* ]]; then
+        pass "${name} has Godot on its resolved compile line as accepted (resolved: ${godot_resolved}, of ${resolved_count} reference(s))"
+      else
+        fail "${name} must reference Godot but GodotSharp is not on its resolved compile line (resolved: ${godot_resolved:-none}, of ${resolved_count} reference(s))"
+      fi
+    else
+      if [[ -z "${godot_resolved}" ]]; then
+        pass "${name} has no Godot assembly on its resolved compile line (${resolved_count} reference(s) checked by assembly identity)"
+      else
+        fail "${name} must not reference Godot but Godot is on its RESOLVED compile line: ${godot_resolved} (of ${resolved_count} reference(s)). § 4 reads only what this project declares, so a reference arriving transitively or through a raw <Reference> passes there and is caught here."
+      fi
+    fi
+  done
+fi
 
 # Runs a recursive grep whose absence-of-match is the passing outcome, and distinguishes
 # grep's three exit classes instead of collapsing two of them.

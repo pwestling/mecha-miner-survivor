@@ -336,7 +336,7 @@
     },
     {
       "id": "VER-SIM-001-011",
-      "summary": "Run time advances only on committed authoritative ticks and equals the tick index divided by 60 exactly for every tick count tested; any amount of elapsed wall time that produces no tick leaves the run clock unchanged.",
+      "summary": "Run time advances only on committed authoritative ticks and equals the tick index divided by 60 exactly for every tick count tested; any amount of elapsed wall time that produces no tick leaves the run clock unchanged. This entry carried TASK-FND-009-001 in successor while its own status is implemented, which fails doc 91 \u00a7 What 'successor' means on both counts at once: a task ID where a VER-* ID belongs, and a successor on an entry that has not been retired. Unlike the two QUA-005 rows corrected alongside it, there is no deferred work here to restate. TASK-FND-009-001 replaces build/verify-architecture.sh with architecture tests, which is a coherent successor for VER-FND-001-004 and its script selector and has no bearing on this entry, whose selector is already an NUnit test about run time. The field arrived with the first registry commit as a copy of that FND-001 row's shape and never recorded a claim, so it is removed as an error rather than converted into a deferral this entry does not have. Removing it also restores doc 91's own census in that section, which says three entries carry the field today and was measured before these registries existed: the three are the FND rows, and with this one gone that is true again.",
       "task": "TASK-SIM-001-002",
       "requirements": [
         "TR-RUN-002",
@@ -365,8 +365,7 @@
         "linux-x64"
       ],
       "tier": "fast",
-      "status": "implemented",
-      "successor": "TASK-FND-009-001"
+      "status": "implemented"
     },
     {
       "id": "VER-SIM-001-012",

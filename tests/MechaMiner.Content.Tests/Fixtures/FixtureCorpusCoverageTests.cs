@@ -280,7 +280,7 @@ internal sealed class FixtureCorpusCoverageTests
     /// <remarks>
     /// <para>
     /// <b>Empty is the honest state today, and it is not the same as absent.</b> Every one
-    /// of the 33 fixtures in <c>Fixtures/schema/</c> is cited by an entry in
+    /// of the 34 fixtures in <c>Fixtures/schema/</c> is cited by an entry in
     /// <c>tests/verification/DAT-001.json</c>. The list exists so that the next fixture
     /// which genuinely should not be cited has somewhere to go that is a line in a diff,
     /// rather than being waved through by a check with a hole in it.
@@ -310,7 +310,7 @@ internal sealed class FixtureCorpusCoverageTests
     /// expected number is the one part of this that must not be computed. Changing it is a
     /// deliberate change to what the corpus proves.
     /// </remarks>
-    private const int TheSchemaFixtureCountTheRegistryClaims = 33;
+    private const int TheSchemaFixtureCountTheRegistryClaims = 34;
 
     /// <summary>
     /// Every file in <c>Fixtures/schema/</c> is either claimed by a verification-registry

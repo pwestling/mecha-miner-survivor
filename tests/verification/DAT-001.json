@@ -944,6 +944,29 @@
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "registered"
+    },
+    {
+      "id": "VER-DAT-001-040",
+      "summary": "No file under content/schemas/ contains a JSON null at any depth. Route: SchemaNullScan walks every *.json under content/schemas/ recursively - not only the *.schema.json the attribution gate globs - and descends through every object member and every array element to the leaves, reporting the JSON Pointer of each position whose value is the JSON null. It matches the null value and never the four-character string \"null\", which is a legal string and is frequently an enum token; a text search over the bytes cannot tell the two apart and would be a check people turn off. Why the rule: absence is written by omitting a key and letting the compiler materialize a documented default, so null is the one value the codec rejects, and a schema authoring it - as a default, inside an enum, inside a const, or in an example - authors the rejected value in the document that defines what is accepted. presentation_id has no default to author at all. Six were live when this was written: \"description\": null in six of the sixteen category schemas, written where the field was meant to be absent, reported by nothing because the loader read a non-string annotation as no annotation. That is why the scan asks about the value rather than about a list of keywords a null is likely to sit under - none of the six sat under a keyword anybody would have listed. Why it is asserted here rather than left to the whole-tree scan over content/, which enumerates every file and admits no exception list: that check does catch this, but in somebody else's run, naming a file nobody thinks of as content and offering no waiver, whereas this one fails in the change that wrote it. Negative control: tests/MechaMiner.Content.Tests/Fixtures/schema/null-default.schema.json carries two of the guarded thing where only one is a finding - a default of JSON null and a default of the string \"null\" - plus a null nested inside an array inside an examples array, so the scan is held to every depth and to the value rather than the spelling; both nulls must be reported by pointer and the string must not. Route not covered: files under content/ outside content/schemas/, which are the whole-tree scan's own.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.SchemaNullAbsenceTests"
+      },
+      "fixtures": [
+        "content/schemas",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/null-default.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
     }
   ]
 }

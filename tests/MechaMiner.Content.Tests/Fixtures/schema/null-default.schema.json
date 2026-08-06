@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mechaminer.local/schemas/null-default.schema.json",
+  "title": "A schema authoring the one value the codec rejects",
+  "description": "The negative control for SchemaNullAbsenceTests, and it carries two of the guarded thing where only one is a finding. capacity's default is the JSON null value; mode's default is the four-character string \"null\", which is a legal string and must not be reported. layers puts a null inside an array inside an examples array, so the scan is held to every depth rather than to the top level of a subschema.",
+  "type": "object",
+  "properties": {
+    "capacity": {
+      "type": "integer",
+      "default": null
+    },
+    "mode": {
+      "type": "string",
+      "default": "null",
+      "enum": [
+        "null",
+        "off"
+      ]
+    },
+    "layers": {
+      "type": "array",
+      "examples": [
+        [
+          1,
+          null
+        ]
+      ]
+    }
+  }
+}

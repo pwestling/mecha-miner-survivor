@@ -10,7 +10,8 @@
     "Every nunit selector is a fully qualified 'Namespace.Class.Method' so one entry names exactly one test method. Test namespaces mirror production namespaces per doc 114 \u00a7 Naming and file-placement defaults; the full type and method layout the implementation must produce is fixed in the W1-SIM design contract handed to the implementation tasks.",
     "doc 110 registers the SIM work packages but not their task IDs. SIM-003 splits into TASK-SIM-003-001, the identity layer (entity ID value type, allocator, generation and reserved-ID rules), and TASK-SIM-003-002, the storage layer (packed store per population category, capacity policy, stable ordering, diagnostics). The split is genuine: the identity layer is independently landable and testable, and the storage layer consumes it.",
     "doc 20 \u00a7 Authoritative population categories lists twelve categories - player, ordinary enemy, elite, boss, enemy projectile, weapon actor, damage zone, mining site, pickup, destructible rock, relic cache, static world object. VER-SIM-003-007 asserts twelve, one store per category. Any later category is an edit to doc 20 and a new entry here, never an unregistered thirteenth store.",
-    "Initial soft targets and hard capacities per store are derived from the encounter schedule plus a documented margin, as doc 20 \u00a7 Capacity and overload behavior requires and never as a power of two chosen for convenience. The derivations live in the W1-SIM design contract; VER-SIM-003-008 asserts the derived numbers and the overflow behaviour rather than restating them here."
+    "Initial soft targets and hard capacities per store are derived from the encounter schedule plus a documented margin, as doc 20 \u00a7 Capacity and overload behavior requires and never as a power of two chosen for convenience. The derivations live in the W1-SIM design contract; VER-SIM-003-008 asserts the derived numbers and the overflow behaviour rather than restating them here.",
+    "VER-SIM-003-011 asserts allocation-freedom as an object-identity invariant rather than a byte measurement: the dense record region is readonly plain arrays sized at construction, so no operation can replace or enlarge one, and a growth counter reports the only storage that may grow (the authored spawn queue). A GC.GetAllocatedBytesForCurrentThread assertion was tried first and removed: its residual tracked codegen of the measuring scaffold rather than any statement under test, which doc 91 \u00a7 Flake policy makes a defect. A byte-denominated allocation budget belongs to a main-tier benchmark scenario, recorded as this entry's successor QUA-005, the same shape VER-SIM-001-013 uses to defer its hardware measurement to ./build.sh benchmark."
   ],
   "entries": [
     {
@@ -40,7 +41,7 @@
         "osx-arm64"
       ],
       "tier": "fast",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-SIM-003-002",
@@ -71,7 +72,7 @@
         "osx-arm64"
       ],
       "tier": "fast",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-SIM-003-003",
@@ -100,7 +101,7 @@
         "osx-arm64"
       ],
       "tier": "fast",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-SIM-003-004",
@@ -130,7 +131,7 @@
         "osx-arm64"
       ],
       "tier": "fast",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-SIM-003-005",
@@ -162,7 +163,7 @@
         "osx-arm64"
       ],
       "tier": "fast",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-SIM-003-006",
@@ -192,7 +193,7 @@
         "osx-arm64"
       ],
       "tier": "fast",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-SIM-003-007",
@@ -223,7 +224,7 @@
         "osx-arm64"
       ],
       "tier": "fast",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-SIM-003-008",
@@ -260,7 +261,7 @@
         "osx-arm64"
       ],
       "tier": "fast",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-SIM-003-009",
@@ -291,7 +292,7 @@
         "osx-arm64"
       ],
       "tier": "fast",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-SIM-003-010",
@@ -325,7 +326,7 @@
         "osx-arm64"
       ],
       "tier": "fast",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-SIM-003-011",
@@ -348,7 +349,9 @@
       "scenarios": [],
       "evidenceKinds": [
         "test-counts",
-        "allocation-count"
+        "test-output",
+        "reference-identity",
+        "diagnostic-counter"
       ],
       "platforms": [
         "linux-x64",
@@ -356,7 +359,8 @@
         "osx-arm64"
       ],
       "tier": "fast",
-      "status": "registered"
+      "successor": "QUA-005",
+      "status": "implemented"
     },
     {
       "id": "VER-SIM-003-012",
@@ -388,7 +392,7 @@
         "osx-arm64"
       ],
       "tier": "fast",
-      "status": "registered"
+      "status": "implemented"
     }
   ]
 }

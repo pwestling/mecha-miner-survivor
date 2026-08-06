@@ -111,6 +111,14 @@ Random/property tests compare optimized results with the reference within declar
 
 “Approximately equal” without a named tolerance is not an acceptable test.
 
+## Negative control adequacy
+
+A negative control counts only when it fails for the reason the gate exists; the rules below name the failures that a control passing on its own terms still lets through.
+
+- Reach and arity are different axes. A negative control must exercise the cardinality a gate claims to enforce, not only whether the check visits every position. Reach asks whether the check reaches each position; arity asks how much one answer licenses. Reach failures live in the enumeration and get attacked first, because enumerating positions is the natural way to attack a walker. Arity failures live in the aggregation, in a `break`, an `Any()`, or a flag hoisted one scope too high, and they survive every reach attack. Name the cardinality the gate enforces, then write a control containing two of the guarded thing where only one satisfies the rule. The instance that produced this rule: one `x-authority` annotation licensed every numeric bound in the same subschema, on a gate that already had a parameterized control across all nine bound keywords plus a coverage assertion.
+- A negative control must be a coherent violation, not a broken state. If the injected violation also breaks the environment, through an unparseable file, an absent binary, or a failed subprocess, a red result is ambiguous between the gate catching the violation and the gate falling over for an unrelated reason, and a green result is worse still. Inject the smallest well-formed thing that the rule forbids.
+- An invariant asserting that two sets match is blind to a correlated deletion from both sides. Removing a member from each side keeps them equal and the assertion passes. Such an invariant needs a third anchor that names the expected members or their count independently of either side.
+
 ## Flake policy
 
 - Tests do not use wall-clock sleeps for simulation behavior.

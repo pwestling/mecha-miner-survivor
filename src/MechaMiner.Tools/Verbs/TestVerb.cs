@@ -186,6 +186,7 @@ internal static class TestVerb
         "tests/MechaMiner.Content.Tests/MechaMiner.Content.Tests.csproj",
         "tests/MechaMiner.Diagnostics.Tests/MechaMiner.Diagnostics.Tests.csproj",
         "tests/MechaMiner.Persistence.Tests/MechaMiner.Persistence.Tests.csproj",
+        "tests/MechaMiner.Tools.Tests/MechaMiner.Tools.Tests.csproj",
     };
 
     private const string EngineTestProject = "tests/MechaMiner.Game.Tests/MechaMiner.Game.Tests.csproj";

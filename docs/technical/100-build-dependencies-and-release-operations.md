@@ -39,6 +39,7 @@ tests/
   MechaMiner.Content.Tests/
   MechaMiner.Diagnostics.Tests/
   MechaMiner.Persistence.Tests/
+  MechaMiner.Tools.Tests/
   MechaMiner.Game.Tests/
 content/                      source JSON and localization
 assets-source/                retained editable/original assets

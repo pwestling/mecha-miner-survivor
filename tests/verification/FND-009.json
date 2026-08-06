@@ -1,0 +1,421 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "FND-009",
+  "workPackageTitle": "Architecture dependency tests plus complete documentation/requirement/component/contract/schema/verification/work ID registry validator",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91-verification-strategy.md § Verification registry).",
+    "TASK-FND-009-002 implements the structural validator for this file and for every other tests/verification/*.json, so this package validates its own registry. That is deliberate: a validator that could not be run against the registry it belongs to would leave its own package unchecked.",
+    "The architecture rules are a pure function from a ProjectGraph to findings, and the graph is a plain value a test can construct. That is what makes 'each forbidden synthetic edge fails' provable: an assertion that could only read the real repository can never be shown to fail on any edge, so it would be evidence of nothing.",
+    "build/verify-architecture.sh stays. It asks MSBuild to evaluate every project, which catches an SDK-injected package reference no project file mentions, and CI and the build verb both call it. The two gates deliberately do not consume each other's output, so a defect in one reader cannot hide from both.",
+    "The registry validator reports pre-existing documentation defects rather than being weakened until the repository passes. It separates errors from warnings by rule, and the rules that fire on pre-existing doc-tree defects are reported under their own exit class so they are visible instead of downgraded. See build/verify-registry.sh and the FND-009 handoff for the complete list found at implementation time.",
+    "tests/verification/FND-001.json wrote the section sign as literal UTF-8 while FND-002.json and FND-003.json wrote it as the \\u00a7 escape. TASK-FND-009-002 normalizes every registry file on literal UTF-8, because .editorconfig already fixes charset = utf-8 for the whole repository and an escape only obscures a character the file is already required to encode. The validator enforces it."
+  ],
+  "entries": [
+    {
+      "id": "VER-FND-009-001",
+      "summary": "The real repository satisfies the accepted project boundary: solution membership, every project-reference edge, the Godot dependency, the source scans, and the prescribed layout all produce zero findings.",
+      "task": "TASK-FND-009-001",
+      "requirements": [
+        "TR-CTR-001",
+        "TR-BLD-006",
+        "TR-FND-001",
+        "TR-FND-002"
+      ],
+      "technicalSources": [
+        "docs/technical/115-component-contract-and-schema-registry.md#accepted-project-boundary",
+        "docs/technical/115-component-contract-and-schema-registry.md#verification",
+        "docs/technical/100-build-dependencies-and-release-operations.md#repository-structure"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Tools.Tests.Audit.ArchitectureRuleTests.TheRepositorySatisfiesTheAcceptedProjectBoundary"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-009-002",
+      "summary": "Every forbidden project-reference edge fails, proved one negative control per edge: the complete ordered-pair matrix of accepted projects is enumerated, the pairs doc 115 permits are skipped, and each remaining pair is injected alone into an otherwise fully compliant graph and must produce exactly its own finding. A reference to MechaMiner.Game is reported as a reverse Godot edge rather than an ordinary forbidden one.",
+      "task": "TASK-FND-009-001",
+      "requirements": [
+        "TR-CTR-001",
+        "TR-AGT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/115-component-contract-and-schema-registry.md#accepted-project-boundary",
+        "docs/technical/115-component-contract-and-schema-registry.md#contract-change-rules"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Tools.Tests.Audit.ArchitectureRuleTests.EveryForbiddenReferenceEdgeIsRejected"
+      },
+      "fixtures": [
+        "synthetic ProjectGraph, one forbidden edge per control"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "negative-control",
+        "artifacts/architecture/architecture-forbidden-edges.txt"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-009-003",
+      "summary": "A Godot dependency in any project the boundary forbids one in fails, proved per project and per kind of evidence (SDK attribute, package reference, lock-file entry); the Godot project losing its engine dependency also fails; a Godot import outside game/ fails; and a GDScript file fails.",
+      "task": "TASK-FND-009-001",
+      "requirements": [
+        "TR-CTR-001",
+        "TR-FND-001",
+        "TR-FND-002"
+      ],
+      "technicalSources": [
+        "docs/technical/115-component-contract-and-schema-registry.md#accepted-project-boundary",
+        "docs/technical/00-technical-foundation.md#language-boundary"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Tools.Tests.Audit.ArchitectureRuleTests"
+      },
+      "fixtures": [
+        "synthetic ProjectGraph with injected Godot evidence, Godot import, or GDScript file"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "negative-control"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-009-004",
+      "summary": "A permitted-but-undeclared reference edge is reported as drift under its own rule rather than as a boundary violation, and a declared edge that disappears from a project file is reported as missing. Both matter because doc 115 states a maximum while the repository has an exact current set, and collapsing the two would let legal-but-unannounced dependency growth pass silently.",
+      "task": "TASK-FND-009-001",
+      "requirements": [
+        "TR-CTR-001",
+        "TR-CTR-005"
+      ],
+      "technicalSources": [
+        "docs/technical/115-component-contract-and-schema-registry.md#accepted-project-boundary",
+        "docs/technical/115-component-contract-and-schema-registry.md#contract-change-rules"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Tools.Tests.Audit.ArchitectureRuleTests.APermittedButUndeclaredEdgeIsReportedAsDrift"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "negative-control"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-009-005",
+      "summary": "Every prescribed repository layout path is individually load-bearing: removing any one of them from the observed layout fails, proved per path rather than by one sample.",
+      "task": "TASK-FND-009-001",
+      "requirements": [
+        "TR-BLD-006"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#repository-structure"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Tools.Tests.Audit.ArchitectureRuleTests.EveryMissingPrescribedLayoutPathIsRejected"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "negative-control"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-009-006",
+      "summary": "Solution membership must match the accepted decomposition exactly: omitting an accepted project and adding an unaccepted one are each rejected under distinct rules, and a project file on disk that the decomposition does not name is rejected as well. A compliant graph produces no findings at all, so the negative controls measure the injected violation rather than a rule that always fires.",
+      "task": "TASK-FND-009-001",
+      "requirements": [
+        "TR-BLD-006",
+        "TR-CTR-001"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#repository-structure",
+        "docs/technical/10-runtime-architecture.md#accepted-project-decomposition"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Tools.Tests.Audit.ArchitectureRuleTests.SolutionMembershipMustMatchTheAcceptedDecomposition"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "negative-control"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-009-007",
+      "summary": "Every CMP-*, CTR-*, SCH-*, TR-*, TDR-*, VER-*, work-package, and TASK-* identifier in the specification and the verification registries is unique, is defined exactly once, and resolves wherever it is referenced.",
+      "task": "TASK-FND-009-002",
+      "requirements": [
+        "TR-CTR-006",
+        "TR-QUA-004",
+        "TR-AGT-003"
+      ],
+      "technicalSources": [
+        "docs/technical/115-component-contract-and-schema-registry.md#verification",
+        "docs/technical/conventions.md#stable-identifiers",
+        "docs/technical/91-verification-strategy.md#verification-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Tools.Tests.Audit.RegistryValidatorTests.TheRepositoryHasNoIdentifierErrors"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "registry-report"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-009-008",
+      "summary": "Missing, duplicate, dangling, and malformed identifier fixtures each fail, under their own distinct rule, proved with one fixture per class so a single sample cannot stand for all four.",
+      "task": "TASK-FND-009-002",
+      "requirements": [
+        "TR-CTR-006",
+        "TR-QUA-004",
+        "TR-AGT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/115-component-contract-and-schema-registry.md#verification",
+        "docs/technical/conventions.md#stable-identifiers"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Tools.Tests.Audit.RegistryValidatorTests.EachFixtureClassFailsUnderItsOwnRule"
+      },
+      "fixtures": [
+        "build/policy-fixtures/registry/missing",
+        "build/policy-fixtures/registry/duplicate",
+        "build/policy-fixtures/registry/dangling",
+        "build/policy-fixtures/registry/malformed"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "negative-control",
+        "registry-report"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-009-009",
+      "summary": "Every relative document cross-link and every in-document anchor a technical document references resolves to a file that exists and to a heading that exists, and a broken link or a dangling anchor fails.",
+      "task": "TASK-FND-009-002",
+      "requirements": [
+        "TR-CTR-006",
+        "TR-DAT-005"
+      ],
+      "technicalSources": [
+        "docs/technical/115-component-contract-and-schema-registry.md#verification",
+        "docs/technical/conventions.md#traceability"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Tools.Tests.Audit.RegistryValidatorTests.TheRepositoryHasNoBrokenDocumentLinks"
+      },
+      "fixtures": [
+        "build/policy-fixtures/registry/dangling"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "registry-report",
+        "negative-control"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-009-010",
+      "summary": "Every tests/verification/*.json file validates against the SCH-QUA-001 shape doc 91 § Verification registry prescribes: a stable VER-<WORK-PACKAGE>-### ID, summary, cited TR-* requirements and sources, an automated selector or a manual procedure ID, fixture/seed/scenario IDs, evidence kinds, platforms, tier, and status. Every implementation task named by any entry has at least one non-compilation verification, and no entry is renumbered relative to the committed registry.",
+      "task": "TASK-FND-009-002",
+      "requirements": [
+        "TR-QUA-001",
+        "TR-QUA-004"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#verification-registry",
+        "docs/technical/115-component-contract-and-schema-registry.md#schema-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Tools.Tests.Audit.VerificationRegistryTests"
+      },
+      "fixtures": [
+        "tests/verification/FND-001.json",
+        "tests/verification/FND-002.json",
+        "tests/verification/FND-003.json",
+        "tests/verification/FND-004.json",
+        "tests/verification/FND-007.json",
+        "tests/verification/FND-008.json",
+        "tests/verification/FND-009.json",
+        "build/policy-fixtures/registry/malformed"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "registry-report",
+        "negative-control"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-009-011",
+      "summary": "Every registry file encodes the section sign as literal UTF-8 rather than a JSON escape, normalized across all of tests/verification/, and a file that escapes it fails. The repository already fixes charset = utf-8 in .editorconfig, so an escape only hides a character the file must encode anyway, and two spellings in sibling files make textual review and diffing inconsistent.",
+      "task": "TASK-FND-009-002",
+      "requirements": [
+        "TR-QUA-004",
+        "TR-BLD-001"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#verification-registry",
+        "docs/technical/conventions.md#canonical-format"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Tools.Tests.Audit.VerificationRegistryTests.EveryRegistryFileUsesLiteralUtf8ForTheSectionSign"
+      },
+      "fixtures": [
+        "build/policy-fixtures/registry/malformed"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "negative-control"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-009-012",
+      "summary": "The registry validator is reachable through the existing command surface and returns a doc 100 exit class: build/verify-registry.sh runs it, structural errors return class 4, and pre-existing documentation defects are reported under a distinct diagnostic code rather than downgraded to warnings so they cannot be silently accumulated.",
+      "task": "TASK-FND-009-002",
+      "requirements": [
+        "TR-BLD-005",
+        "TR-AGT-006",
+        "TR-CTR-006"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface",
+        "docs/technical/114-autonomous-agent-execution-protocol.md#failure-and-retry-policy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-registry.sh"
+      },
+      "fixtures": [
+        "build/policy-fixtures/registry"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output",
+        "registry-report"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    }
+  ]
+}

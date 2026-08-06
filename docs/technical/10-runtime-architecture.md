@@ -48,6 +48,7 @@ The simulation is the sole authority for active-run gameplay state. Rendering, a
 | `MechaMiner.Content.Tests` | schema, envelope, validator, canonical-ordering, and compiled-bundle tests | None |
 | `MechaMiner.Diagnostics.Tests` | build identity, logging, redaction, rotation, metric registry, and benchmark report tests | None |
 | `MechaMiner.Persistence.Tests` | serialization, migration, atomicity, recovery, and settlement tests | None |
+| `MechaMiner.Tools.Tests` | architecture-boundary, registry-validator, and generator/report audit tests | None |
 | `MechaMiner.Game.Tests` | engine integration, scene, rendering, input, and export smoke tests | Yes |
 
 Dependencies point inward: Game and Tools may depend on the pure projects; Simulation depends only on Content; Persistence depends only on Content and narrow immutable Simulation snapshot/result types; Diagnostics depends on nothing, so it is reachable from every consumer without a cycle. No pure project depends on Game. The full logical ownership and dependency rules live in the [Component, Contract, and Schema Registry](./115-component-contract-and-schema-registry.md).

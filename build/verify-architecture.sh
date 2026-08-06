@@ -15,8 +15,12 @@
 # references are included), the Godot dependency is read from the committed
 # NuGet lock files, and every mismatch exits nonzero.
 #
-# TASK-FND-009-001 replaces the reference-graph portion with an architecture test
-# inside the pure test projects. This script remains the FND-001 gate until then.
+# TASK-FND-009-001 added real architecture tests in tests/MechaMiner.Tools.Tests, with
+# one negative control per forbidden edge. This script deliberately stays: CI and the
+# build verb both call it, and it reads MSBuild's own evaluation of every project, which
+# catches an SDK-injected package reference that no project file mentions. The two gates
+# are independent on purpose - neither consumes the other's output - so one reader's
+# defect cannot hide from both.
 #
 # Exit classes follow doc 100 § Standard command surface: 0 success,
 # 4 validation failure.
@@ -62,6 +66,7 @@ readonly EXPECTED_PATHS=(
   "tests/MechaMiner.Content.Tests"
   "tests/MechaMiner.Diagnostics.Tests"
   "tests/MechaMiner.Persistence.Tests"
+  "tests/MechaMiner.Tools.Tests"
   "tests/MechaMiner.Game.Tests"
   "tests/verification"
   "content"
@@ -87,6 +92,7 @@ readonly EXPECTED_PROJECTS=(
   "tests/MechaMiner.Diagnostics.Tests/MechaMiner.Diagnostics.Tests.csproj|MechaMiner.Diagnostics|no"
   "tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj|MechaMiner.Simulation|no"
   "tests/MechaMiner.Persistence.Tests/MechaMiner.Persistence.Tests.csproj|MechaMiner.Persistence|no"
+  "tests/MechaMiner.Tools.Tests/MechaMiner.Tools.Tests.csproj|MechaMiner.Tools|no"
   "tests/MechaMiner.Game.Tests/MechaMiner.Game.Tests.csproj|MechaMiner.Content,MechaMiner.Diagnostics,MechaMiner.Persistence,MechaMiner.Simulation|no"
   "game/MechaMiner.Game.csproj|MechaMiner.Content,MechaMiner.Diagnostics,MechaMiner.Persistence,MechaMiner.Simulation|yes"
 )

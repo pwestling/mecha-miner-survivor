@@ -31,6 +31,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MechaMiner.Diagnostics", "s
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MechaMiner.Diagnostics.Tests", "tests\MechaMiner.Diagnostics.Tests\MechaMiner.Diagnostics.Tests.csproj", "{5C1E4A2B-7F63-4D18-9E20-3A8C61B4D907}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MechaMiner.Tools.Tests", "tests\MechaMiner.Tools.Tests\MechaMiner.Tools.Tests.csproj", "{9B34F7D1-42AE-4C05-8D6E-71F2A5E38C40}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -104,6 +106,12 @@ Global
 		{5C1E4A2B-7F63-4D18-9E20-3A8C61B4D907}.ExportDebug|Any CPU.Build.0 = ExportDebug|Any CPU
 		{5C1E4A2B-7F63-4D18-9E20-3A8C61B4D907}.ExportRelease|Any CPU.ActiveCfg = ExportRelease|Any CPU
 		{5C1E4A2B-7F63-4D18-9E20-3A8C61B4D907}.ExportRelease|Any CPU.Build.0 = ExportRelease|Any CPU
+		{9B34F7D1-42AE-4C05-8D6E-71F2A5E38C40}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B34F7D1-42AE-4C05-8D6E-71F2A5E38C40}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B34F7D1-42AE-4C05-8D6E-71F2A5E38C40}.ExportDebug|Any CPU.ActiveCfg = ExportDebug|Any CPU
+		{9B34F7D1-42AE-4C05-8D6E-71F2A5E38C40}.ExportDebug|Any CPU.Build.0 = ExportDebug|Any CPU
+		{9B34F7D1-42AE-4C05-8D6E-71F2A5E38C40}.ExportRelease|Any CPU.ActiveCfg = ExportRelease|Any CPU
+		{9B34F7D1-42AE-4C05-8D6E-71F2A5E38C40}.ExportRelease|Any CPU.Build.0 = ExportRelease|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -120,5 +128,6 @@ Global
 		{AC19AE8B-B059-49B3-8C8E-7EBED0C8F131} = {AE49D761-A782-2099-29A5-159B937B43CB}
 		{D87B7C70-D8C2-450A-ABAD-0E7A6CA00E47} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{5C1E4A2B-7F63-4D18-9E20-3A8C61B4D907} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{9B34F7D1-42AE-4C05-8D6E-71F2A5E38C40} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal

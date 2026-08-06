@@ -385,15 +385,28 @@ section "6. no Godot types outside game/ (VER-FND-001-004)"
 #     `\u0047odot.GD.Print()` both bind to `Godot`, and after stripping the text still
 #     reads `\u0047odot`.
 #
-# So this scan covers the naming forms its corpus names and no more. The corpus below now
-# records the uncovered ones as `k*` probes rather than leaving them unmeasured. Closing
-# them means deciding C# lexical and syntactic context, which is a parser: the class of
-# defect disappears if the reference graph is read from a C# syntax tree
-# (Microsoft.CodeAnalysis.CSharp) rather than from text. That is a new third-party
-# dependency, which doc 114 § Default mandate withholds agent autonomy for and doc 100
-# § Dependency policy requires a recorded dependency request for, so it is escalated
-# rather than approximated further. Do not close these by adding more substitution passes;
-# the two most recent defects in this scan were both introduced by doing that.
+# So this scan covers the naming forms its corpus names and no more. The corpus below
+# records the uncovered ones as the `k*` class - k1 `global using` / `    Godot;`, k2
+# `using` / `    Godot;`, k3 `Godot` / `    .GD.Print("y");`, k4 `using \u0047odot;`, k5
+# `\u0047odot.GD.Print("x");` - asserted as missed, so the gap is measured rather than
+# merely admitted.
+#
+# CLOSING THEM IS RULED OUT, and this is the ruling rather than a deferral. It needs a
+# parser: read the reference graph from a C# syntax tree (Microsoft.CodeAnalysis.CSharp)
+# and comments, literals, line splits and identifier escapes stop being cases at all. Four
+# independent constraints forbid adding it - doc 114 § Default mandate withholds agent
+# autonomy for a new third-party dependency, doc 114 § Explicit escalation boundary makes a
+# new foundational dependency human-only, doc 100 § Dependency policy requires a recorded
+# dependency request and this repository has no dependency ledger, and
+# Directory.Packages.props says in as many words not to add a package for build
+# convenience. The five stay open, named, and asserted. ProjectGraph.NamesGodotNamespace
+# carries the same list and the same ruling.
+#
+# DO NOT CLOSE THEM BY ADDING ANOTHER SUBSTITUTION PASS, and do not hand-roll a tokenizer
+# either. Both of the two most recent defects in this scan were introduced by adding a
+# pass: one closed the character-literal hole and opened a commoner apostrophe-prose hole,
+# the other rewrote a safe `grep -lE` into a `printf | grep -q` pipe whose SIGPIPE status
+# reported a real violation as `ok`.
 #
 # GODOT_TOKEN below is character-for-character the same expression as
 # ProjectGraph.GodotNamespaceToken in src/MechaMiner.Tools/Audit/ProjectGraph.cs. The two
@@ -552,12 +565,43 @@ for root in src tests; do
   fi
 done
 
+# THIS PASS IS A SCREEN, AND ITS OUTPUT ABOUT src/ AND tests/ IS NOT A VERDICT.
+#
+# It used to fail the gate on its own reading, which made an approximate reader
+# authoritative over a prohibition. Measured over the 46-file corpus below, it makes four
+# false accusations the C# reader correctly clears - x1 a single-line
+# `/* Godot.GD is engine-only */`, x2 the same in a multi-line block comment, x3 a
+# multi-line `@"` string containing `Godot.GD.Print(x);`, x4 a multi-line `"""` string
+# containing `Godot.` - because its `sed` strips `//` and never `/* */` in any form and has
+# no state across lines. Any of those four is ordinary prose about this very boundary, and
+# writing one would have turned `./build.sh build` red over code that is correct.
+#
+# THE AUTHORITATIVE READER IS ArchitectureRuleTests.TheGodotImportRuleCatchesEveryWayOfNaming-
+# TheNamespace, over ProjectGraph.NamesGodotNamespace, and it runs in test-fast. On the same
+# corpus it catches the same 31 of 36 references this screen catches and makes ZERO false
+# accusations. Nothing is lost by not deciding here: every reference this screen can see, the
+# C# reader can see too - its five escapes are a subset of this one's, verified probe by
+# probe - so the repository-level guarantee is unchanged while four ways to fail the build
+# over correct code are removed. CI runs both verbs, so both readers still run on every pull
+# request.
+#
+# What that costs, stated rather than implied: `./build.sh build` alone no longer enforces
+# the Godot prohibition. A `using Godot;` added under src/ is reported here as a candidate
+# and does not fail this gate; test-fast fails on it. If you want the prohibition inside
+# `build`, the way to get it is the C# reader, not this one.
+#
+# The control below is a different matter and DOES fail the gate. It asserts what this
+# screen does - which forms it catches, which lookalikes it clears, which references it
+# cannot see, which non-references it accuses - and that is a claim about this script rather
+# than about the repository, so drift in the screen is still a hard failure.
 if [[ "${godot_scan_roots_present}" -eq 1 ]]; then
   stray_godot="$(cd "${REPO_ROOT}" && godot_namespace_hits src tests)"
   if [[ -z "${stray_godot}" ]]; then
-    pass "no C# file under src/ or tests/ names the Godot namespace"
+    pass "screen: no C# file under src/ or tests/ names the Godot namespace by this scan's reading. Not a verdict - see the note above; ArchitectureRuleTests over ProjectGraph.NamesGodotNamespace decides this rule, in test-fast"
   else
-    fail "Godot namespace named outside game/: $(printf '%s' "${stray_godot}" | paste -sd' ' -)"
+    # Deliberately not `fail`. A candidate is a thing to look at, and this reader is known
+    # to accuse four shapes of correct code.
+    pass "screen: $(printf '%s' "${stray_godot}" | grep -c . || true) candidate(s) to look at, which this approximate reader believes name the Godot namespace: $(printf '%s' "${stray_godot}" | paste -sd' ' -). NOT A FINDING. This scan makes four known false accusations (see the x* class below); ArchitectureRuleTests in test-fast is what decides, and its verdict is the one to act on"
   fi
 fi
 

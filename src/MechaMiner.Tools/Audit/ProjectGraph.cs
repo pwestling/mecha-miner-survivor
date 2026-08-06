@@ -478,17 +478,60 @@ internal sealed class ProjectGraph
     /// </list>
     /// <para>
     /// Both classes need identifier position told apart from literal position and logical
-    /// lines told apart from physical ones. That is a parser, and the correct fix is to
-    /// read the reference graph from a C# syntax tree
+    /// lines told apart from physical ones. That is a parser, and the fix that closes them
+    /// is to read the reference graph from a C# syntax tree
     /// (<c>Microsoft.CodeAnalysis.CSharp</c>) rather than from text, which makes comments,
-    /// literals of every kind, line splits and identifier escapes stop being cases at
-    /// all. That is a new third-party dependency: doc 114 § Default mandate withholds
-    /// agent autonomy where one is introduced, and doc 100 § Dependency policy requires a
-    /// recorded dependency request. It is therefore escalated rather than approximated
-    /// further, and <c>VER-FND-001-004</c> records the gap. Do not close it by adding more
-    /// text-matching passes — the two most recent defects in the shell reader were both
-    /// introduced that way, one of them by the change that closed the character-literal
-    /// hole below.
+    /// literals of every kind, line splits and identifier escapes stop being cases at all.
+    /// </para>
+    /// <para>
+    /// THAT IS RULED OUT, AND THIS IS THE RULING RATHER THAN A DEFERRAL. Four independent
+    /// constraints point the same way: doc 114 § Default mandate withholds agent autonomy
+    /// where a new third-party dependency is introduced; doc 114 § Explicit escalation
+    /// boundary makes accepting a new foundational dependency human-only; doc 100
+    /// § Dependency policy requires a recorded dependency request and this repository has no
+    /// dependency ledger to record one in; and <c>Directory.Packages.props</c> says in as
+    /// many words not to add a package to make a build convenient. So the five escapes below
+    /// STAY OPEN AS DOCUMENTED LIMITATIONS, and they are named here so nobody has to
+    /// rediscover them:
+    /// </para>
+    /// <list type="table">
+    /// <item><term>k1</term><description>
+    /// <c>global using</c> then <c>    Godot;</c> — a reference split across two physical
+    /// lines.
+    /// </description></item>
+    /// <item><term>k2</term><description>
+    /// <c>using</c> then <c>    Godot;</c> — the same split on a plain using directive.
+    /// </description></item>
+    /// <item><term>k3</term><description>
+    /// <c>Godot</c> then <c>    .GD.Print("y");</c> — the same split in qualifier position.
+    /// </description></item>
+    /// <item><term>k4</term><description>
+    /// <c>using \u0047odot;</c> — a Unicode-escaped identifier in a using directive.
+    /// </description></item>
+    /// <item><term>k5</term><description>
+    /// <c>\u0047odot.GD.Print("x");</c> — a Unicode-escaped identifier in qualifier position.
+    /// </description></item>
+    /// </list>
+    /// <para>
+    /// Each is a real reference: every one fails to compile without a <c>Godot</c> shim, and
+    /// each is asserted as MISSED by
+    /// <c>ArchitectureRuleTests.TheRecordedGapInTheGodotImportRuleIsStillExactlyThatGap</c>
+    /// over <c>GodotFormsNeitherReaderCovers</c>, so the gap is measured rather than merely
+    /// admitted, and a form that starts being caught fails that test and says to move it.
+    /// <c>k1</c>–<c>k3</c> have a deliberately visible edge: <c>using static</c> split the
+    /// same way IS caught (<c>f13</c>), because its second line still holds <c>Godot.</c>.
+    /// That asymmetry is the evidence that a per-line reader's boundary is arbitrary rather
+    /// than principled, which is the argument for the parser and not a reason to special-case
+    /// three more forms.
+    /// </para>
+    /// <para>
+    /// DO NOT CLOSE THESE BY ADDING MORE TEXT-MATCHING PASSES, and do not hand-roll a
+    /// tokenizer either. The two most recent defects in the shell reader were both introduced
+    /// by adding a pass: one closed the character-literal hole and opened a commoner
+    /// apostrophe-prose hole, and the other rewrote a <c>grep -lE</c> into a
+    /// <c>printf | grep -q</c> pipe whose SIGPIPE status reported a real violation as `ok`. A
+    /// hand-written parser would satisfy the letter of the dependency constraint and produce
+    /// a worse artifact than either the dependency or this stated limitation.
     /// </para>
     /// </remarks>
     internal static bool NamesGodotNamespace(string sourceText)

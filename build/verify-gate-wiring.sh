@@ -1195,7 +1195,7 @@ gate_add_failures "${partition_failures}"
 section "5. negative controls: each check above can actually fail (VER-FND-005-010)"
 
 controls_run=0
-readonly EXPECTED_CONTROLS=8
+readonly EXPECTED_CONTROLS=9
 
 # expect_red <name> <expected-failure-count-at-least> <report> <count>
 # Every line this prints is manufactured by a control's fixture, INCLUDING the FAIL lines
@@ -1378,6 +1378,49 @@ else
   count=$?
   expect_red "a gate whose inventory entry requires --verify, reached only bare" 1 \
     "${report}" "${count}"
+fi
+
+# Control 9: the closure does not walk into the verb dispatch table, so verb attribution
+# still discriminates between verbs.
+#
+# THIS IS THE FALSIFICATION OF A DOCSTRING CLAIM, MADE RUNNABLE. `closure()` said that
+# over-approximating reachability "can only make this gate weaker in a way a reader can see,
+# never redder than the truth". That was unfalsified rather than true, and it is false
+# wherever an exemption exists: § 4 requires reached and exempt to be mutually exclusive, so
+# a FALSE POSITIVE on "reached" turns a correct exemption into a failure. It happened - on
+# the FND-004 tree the closure of `bootstrap` reached `BuildVerb.Execute` through
+# `BenchmarkReportBuilder.Build` (a bare-identifier edge to every member named `Build`) and
+# then `VerbRegistry.All`, so every script was attributed to every verb and
+# build/verify-godot-runner.sh was reported both "exempted but in fact reached" and "both
+# reached and exempt" while its exemption was correct.
+#
+# The signature of that collapse is a single row attributed to verbs that no single call
+# path can reach: `bootstrap` and `godot-import` are different entry points that do not
+# invoke one another, so a gate script attributed to BOTH is attribution that has stopped
+# discriminating. Asserted per row, and asserted a second way - that the rows do not all
+# carry one identical verb list - because a collapse makes every row the same.
+#
+# Removing the `_DISPATCH_TABLE` exclusion from `closure()` turns this control red. A
+# docstring nobody can check is where claims like the original one accumulate, so this is
+# the check.
+collapse_offenders=()
+distinct_verb_lists="$(cut -f3 "${sites_table}" | sort -u | grep -c . || true)"
+while IFS=$'\t' read -r path _where verbs _reached _verdict; do
+  [[ -n "${path}" ]] || continue
+  if [[ ",${verbs}," == *,bootstrap,* && ",${verbs}," == *,godot-import,* ]]; then
+    collapse_offenders+=("${path} -> [${verbs}]")
+  fi
+done <"${sites_table}"
+
+if [[ "${#collapse_offenders[@]}" -gt 0 ]]; then
+  control_fail "control: verb attribution has collapsed - $(printf '%s; ' "${collapse_offenders[@]}") - bootstrap and godot-import are separate entry points, so a script reached from both means closure() is walking through the dispatch table and § 4's reached/exempt exclusivity is unsound"
+  controls_run=$((controls_run + 1))
+elif [[ "${distinct_verb_lists}" -le 1 ]]; then
+  control_fail "control: every gate row carries the same verb list, so verb attribution is not discriminating between verbs and § 4 cannot tell a test-main-only gate from a build gate"
+  controls_run=$((controls_run + 1))
+else
+  control_pass "control: verb attribution discriminates - ${distinct_verb_lists} distinct verb list(s) across the gate rows and no row reached from both bootstrap and godot-import, so closure() is not walking through the dispatch table"
+  controls_run=$((controls_run + 1))
 fi
 
 # A control set that quietly shrinks proves less than it claims, so the count is

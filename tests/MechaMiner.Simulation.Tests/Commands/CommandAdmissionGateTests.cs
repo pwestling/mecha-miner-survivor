@@ -661,4 +661,177 @@ internal sealed class CommandAdmissionGateTests
         // tick being frozen and not about the gate having stopped admitting.
         Expect.DoesNotThrow(() => gate.BeginTick(new SimulationTick(2)));
     }
+    /// <summary>
+    /// Verification: supports <c>VER-SIM-004-002</c>, <c>VER-SIM-004-006</c>, <c>VER-SIM-004-007</c>.
+    ///
+    /// Every field of the gate's two renderings and of a frozen set's rendering is pinned to text this
+    /// test states, so a field cannot be deleted from any of the three without a failure.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Why this exists beside the before/after comparisons rather than instead of them.</b> Every other
+    /// assertion over these three renderings compares one rendering of an object against another rendering
+    /// of the same object - <c>CommandContractAssertions.NothingAuthoritativeChanged</c> takes a
+    /// <c>before</c> and an <c>after</c>, <c>AdmittedCommandsAreFrozenForTheTickTheyTarget</c> compares one
+    /// frozen set against itself at a later moment. Those check a real property, that a refusal or a later
+    /// tick changed nothing, and it is the property those tests are for. What they cannot check is
+    /// <em>existence</em>: a field deleted from the rendering disappears from both sides together, so the
+    /// comparison still holds and the whole-state claim silently covers less state than it says.
+    /// </para>
+    /// <para>
+    /// The same shape was found and fixed for <c>EntityDiagnostics.Render</c>, where the <c>retired=</c>
+    /// field could be deleted outright with the suite green.
+    /// <c>TickPublication.RenderAuthoritative</c> needs no equivalent: it feeds a committed golden, which
+    /// pins existence already.
+    /// </para>
+    /// <para>
+    /// The state below is small and fully determined on purpose. A rendering pinned against a state built
+    /// by a loop would have to be built by a second loop, and a second loop that agreed with the first is
+    /// the same tautology in a different place.
+    /// </para>
+    /// </remarks>
+    [Test]
+    public void EveryFieldOfTheGatesRenderingsIsPinnedToStatedText()
+    {
+        CommandFixture fixture = new();
+        CommandAdmissionGate gate = fixture.Gate;
+
+        // Tick 0: one admitted command, then the same envelope again so a rejection counter is non-zero.
+        gate.BeginTick(SimulationTick.Zero);
+        Assert.That(gate.TryAdmit(CommandFixture.Envelope(0, 4, 1.0, 0.0), out CommandRejection _), Is.True);
+        AdmittedCommandSet frozenTickZero = gate.FreezeTick();
+        Assert.That(
+            gate.TryAdmit(CommandFixture.Envelope(0, 4, 1.0, 0.0), out CommandRejection duplicate),
+            Is.False);
+        Assert.That(duplicate.Reason, Is.EqualTo(CommandRejectionReason.Duplicate));
+
+        // One accepted paused transaction, so the state version, the applied count, and the transactions
+        // section are all non-default.
+        fixture.PublishTick(0);
+        fixture.Clock.CommitTick();
+        fixture.Clock.Raise(PauseReason.Fabrication);
+        PausedTransactionResult applied = fixture.Apply(
+            CommandFixture.InstallRequest(gate.TransactionStateVersion, clientCommandSequence: 9));
+        Assert.That(applied.IsAccepted, Is.True);
+
+        // Tick 1 left open with one admitted command, so the open-tick section is non-empty too.
+        gate.BeginTick(new SimulationTick(1));
+        Assert.That(gate.TryAdmit(CommandFixture.Envelope(1, 5, 0.0, -1.0), out CommandRejection _), Is.True);
+
+        string expectedAuthoritative =
+            "gate run=000000005A700004 open=1 lastFrozen=0 highestSeq=5 admitted=2 stateVersion=2 "
+            + "appliedTransactions=1\n"
+            + "open-tick\n"
+            + "  5 intent(0,-1)\n"
+            + "admitted run=000000005A700004 tick=0 count=1\n"
+            + "  4 intent(1,0)\n"
+            + "history\n"
+            + "  4->0\n"
+            + "  5->1\n"
+            + "transactions\n"
+            + "  transaction-result accepted run=000000005A700004 action=A-INSTALL-WEAPON clientSeq=9 "
+            + "version=2 events=1 snapshot=v2\n";
+
+        string expectedDiagnostics = expectedAuthoritative
+            + "rejected=1\n"
+            + "  Stale=0\n"
+            + "  Duplicate=1\n"
+            + "  ForeignRunSession=0\n"
+            + "  SequenceRegression=0\n"
+            + "  InvalidPayload=0\n"
+            + "  AdmissionClosed=0\n"
+            + "transaction-rejections\n"
+            + "  StaleExpectedStateVersion=0\n"
+            + "  AlreadyApplied=0\n"
+            + "  ForeignRunSession=0\n"
+            + "  UnknownAction=0\n"
+            + "  ConfirmationRequired=0\n"
+            + "  DomainRefused=0\n"
+            + "  SequenceRegression=0\n"
+            + "abandonedCommits=0\n";
+
+        string expectedFrozenSet =
+            "admitted run=000000005A700004 tick=0 count=1\n  4 intent(1,0)";
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                gate.RenderAuthoritative(),
+                Is.EqualTo(expectedAuthoritative).Using(StringComparer.Ordinal),
+                "every field of the authoritative rendering is stated here, so deleting one from the "
+                    + "rendering fails rather than shrinking what the whole-state comparisons cover");
+            Assert.That(
+                gate.Render(),
+                Is.EqualTo(expectedDiagnostics).Using(StringComparer.Ordinal),
+                "and the diagnostic rendering adds exactly the rejection counters and the abandoned-commit "
+                    + "count, one line per declared reason of each enum");
+            Assert.That(
+                frozenTickZero.Render(),
+                Is.EqualTo(expectedFrozenSet).Using(StringComparer.Ordinal),
+                "and a frozen set states its tick, its count, and every sequence with its normalized "
+                    + "intent");
+        });
+    }
+
+    /// <summary>
+    /// Verification: supports <c>VER-SIM-004-002</c>.
+    ///
+    /// Both rejection-reason enums number their members contiguously from zero, and the gate answers a
+    /// count for every declared member of each - which is what the two counter arrays, sized from
+    /// <c>Enum.GetValues(...).Length</c> and indexed by the cast reason, silently depend on.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The gate holds <c>_rejectionCounts</c> and <c>_transactionRejectionCounts</c> as arrays whose length
+    /// is the member count and whose index is <c>(int)reason</c>. That is correct only while the values are
+    /// a contiguous run from zero. A member added with a gap - or given an explicit value above the count -
+    /// compiles, passes every existing test, and throws <c>IndexOutOfRangeException</c> the first time that
+    /// reason is counted, which is inside a refusal path where the exception replaces a typed rejection.
+    /// </para>
+    /// <para>
+    /// Nothing recorded that dependency, so adding
+    /// <see cref="TransactionRejectionReason.SequenceRegression"/> as a seventh member was safe by
+    /// arithmetic rather than by a check. This asserts the property the arrays need, for both enums, so the
+    /// next member is either contiguous or loud.
+    /// </para>
+    /// </remarks>
+    [Test]
+    public void BothRejectionEnumsAreContiguousFromZeroAndEveryMemberHasACounter()
+    {
+        CommandFixture fixture = new();
+        CommandAdmissionGate gate = fixture.Gate;
+
+        CommandRejectionReason[] commandReasons = Enum.GetValues<CommandRejectionReason>();
+        TransactionRejectionReason[] transactionReasons = Enum.GetValues<TransactionRejectionReason>();
+
+        Expect.Multiple(() =>
+        {
+            for (int index = 0; index < commandReasons.Length; index++)
+            {
+                Assert.That(
+                    (int)commandReasons[index],
+                    Is.EqualTo(index),
+                    "CommandRejectionReason must number its members contiguously from zero, because the "
+                        + "gate's counter array is indexed by the cast value");
+                Assert.That(
+                    gate.RejectionCount(commandReasons[index]),
+                    Is.Zero,
+                    "and a fresh gate must answer a count for every declared member rather than indexing "
+                        + "past its array");
+            }
+
+            for (int index = 0; index < transactionReasons.Length; index++)
+            {
+                Assert.That(
+                    (int)transactionReasons[index],
+                    Is.EqualTo(index),
+                    "TransactionRejectionReason must number its members contiguously from zero, for the "
+                        + "same reason");
+                Assert.That(
+                    gate.TransactionRejectionCount(transactionReasons[index]),
+                    Is.Zero,
+                    "and every declared member must have a counter");
+            }
+        });
+    }
 }

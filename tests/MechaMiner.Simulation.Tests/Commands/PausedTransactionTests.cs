@@ -903,7 +903,19 @@ internal sealed class PausedTransactionTests
         });
     }
 
-    /// <summary>Every typed refusal, each checked to have changed nothing at all.</summary>
+    /// <summary>Every typed refusal reachable from a fresh pause, each checked to have changed nothing.</summary>
+    /// <remarks>
+    /// The list below is written out rather than driven from <c>Enum.GetValues</c>, because each reason
+    /// needs its own request shape and a loop would have to build them anyway. That makes it a hand-written
+    /// claim to be exhaustive, so what it omits is stated here rather than left to the method name.
+    /// <see cref="TransactionRejectionReason.AlreadyApplied"/> and
+    /// <see cref="TransactionRejectionReason.SequenceRegression"/> are absent because neither is reachable
+    /// from this state: both need a client command sequence already spent by an accepted transaction, which
+    /// is a different fixture. They are covered, with the same no-mutation comparison, by
+    /// <see cref="ReplayWithTheSameIdempotencyKeyObservesTheAppliedResult"/> and
+    /// <see cref="ASpentIdempotencyKeyCarryingADifferentActionIsRefusedRatherThanReplayed"/>. Between the
+    /// three, every declared member of the enum has a no-mutation assertion.
+    /// </remarks>
     private static void AssertEveryRefusalChangesNothing(CommandFixture fixture)
     {
         long currentVersion = fixture.Gate.TransactionStateVersion;

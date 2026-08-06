@@ -646,9 +646,13 @@ public sealed class CommandAdmissionGate
     /// </para>
     /// <para>
     /// <b>The commit's precondition is checked here, not at the write that records the result.</b> A second
-    /// application of one idempotency key would be the one failure doc 20 § Tick transaction forbids outright,
-    /// because the commit publishes before it records, so a duplicate detected at the recording write would be
-    /// detected after a partial state had been published. The check therefore sits between the last validation
+    /// application of one idempotency key would be the one failure nothing here can recover from, because the
+    /// commit publishes before it records, so a duplicate detected at the recording write would be detected
+    /// after a state had been published and after the tick had closed - past the point
+    /// <see cref="AbandonPartialCommit"/> can reach. What that violates is <c>TR-RUN-007</c> in
+    /// <c>docs/technical/112-normative-requirement-index.md</c> § Foundation and runtime, stated unqualified,
+    /// and not doc 20 § Tick transaction, which rules only on a failure before commit. The check therefore
+    /// sits between the last validation
     /// and the call to <see cref="CommitApplied"/>, where nothing has moved yet, and it is an invariant failure
     /// rather than a rejection reason: the idempotency check above answers every submission a caller can
     /// actually make, so reaching this point with the key present means the history was consulted and then

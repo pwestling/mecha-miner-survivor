@@ -414,36 +414,60 @@ internal sealed class NegativeControlCoverageTests
                 statedTotal: ParseTotals(text, "total"));
         }
 
+        /// <remarks>
+        /// A marker counts only when it is the whole of its own line, trimmed. That rule is not
+        /// cosmetic and was found the hard way: § Proving this gate can fail quotes both markers
+        /// inside its transcripts, so a substring search found the begin marker three times and
+        /// reported the block as undecidable. The document has to be able to describe its own
+        /// format, which means the format cannot be "this text appears somewhere". Requiring the
+        /// marker to own its line lets prose quote it and still leaves exactly one place it can be
+        /// a delimiter.
+        /// </remarks>
         private static List<string> ParseUncoveredBlock(string text)
         {
-            int begin = text.IndexOf(BeginMarker, StringComparison.Ordinal);
-            if (begin < 0)
+            string[] allLines = text.Split('\n');
+            List<int> begins = new();
+            List<int> ends = new();
+            for (int index = 0; index < allLines.Length; index++)
             {
-                throw Malformed(
-                    "the marker " + BeginMarker + " is absent, so the uncovered list cannot be "
-                        + "located. An absent block is not an empty one: a document with no block "
-                        + "makes no statement about its gaps, and reading it as 'nothing is "
-                        + "uncovered' would turn a lost list into a passing gate");
+                string trimmed = allLines[index].Trim('\r', ' ', '\t');
+                if (trimmed == BeginMarker)
+                {
+                    begins.Add(index);
+                }
+                else if (trimmed == EndMarker)
+                {
+                    ends.Add(index);
+                }
             }
 
-            if (text.IndexOf(BeginMarker, begin + BeginMarker.Length, StringComparison.Ordinal) >= 0)
+            if (begins.Count == 0)
             {
                 throw Malformed(
-                    "the marker " + BeginMarker + " appears more than once, so which block is the "
-                        + "uncovered list is undecidable");
+                    "no line consists solely of the marker " + BeginMarker + ", so the uncovered "
+                        + "list cannot be located. An absent block is not an empty one: a document "
+                        + "with no block makes no statement about its gaps, and reading it as "
+                        + "'nothing is uncovered' would turn a lost list into a passing gate");
             }
 
-            int end = text.IndexOf(EndMarker, begin, StringComparison.Ordinal);
+            if (begins.Count > 1)
+            {
+                throw Malformed(
+                    "the marker " + BeginMarker + " owns more than one line (lines "
+                        + string.Join(", ", begins.Select(line => line + 1))
+                        + "), so which block is the uncovered list is undecidable");
+            }
+
+            int begin = begins[0];
+            int end = ends.FirstOrDefault(line => line > begin, -1);
             if (end < 0)
             {
                 throw Malformed(
-                    "the marker " + EndMarker + " is absent after " + BeginMarker
+                    "no line after the begin marker consists solely of " + EndMarker
                         + ", so the block has no end and its extent is undecidable");
             }
 
-            string body = text[(begin + BeginMarker.Length)..end];
-            List<string> lines = body
-                .Split('\n')
+            List<string> lines = allLines[(begin + 1)..end]
                 .Select(line => line.Trim('\r', ' ', '\t'))
                 .Where(line => line.Length > 0)
                 .ToList();

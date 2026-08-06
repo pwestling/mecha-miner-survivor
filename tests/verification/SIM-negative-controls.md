@@ -4728,8 +4728,16 @@ than two that can disagree. And `tests/verification/` gains a `SCH-QUA-001` regi
 work package, so a new `.json` or `.txt` beside them invites a future structural validator to
 glob it as one.
 
-The block is delimited by the two markers below and nothing outside them is read. Its grammar is
-exact: a first line `uncovered-count: <n>`, then exactly *n* lines each holding one
+The block is delimited by the two markers below and nothing outside them is read. A marker counts
+only when it is the whole of its own line, and that rule was found the hard way rather than
+designed: § Proving this gate can fail quotes both markers inside its transcripts, so the first
+version of the gate, which searched for the marker as a substring, found the begin marker three
+times and refused to parse the document. A document has to be able to describe its own format,
+which means the format cannot be "this text appears somewhere". The check is stronger for it, not
+weaker: prose may quote a marker freely, and there is still exactly one line where either can act
+as a delimiter.
+
+Its grammar is exact: a first line `uncovered-count: <n>`, then exactly *n* lines each holding one
 `VER-SIM-000-000`-shaped ID, ascending, no blanks, no comments, no trailing text. Every
 departure from that is a **malformed document**, which is a different and louder failure than a
 coverage failure: the gate reports what it could not parse and refuses to compute a partition
@@ -4776,6 +4784,108 @@ it verifies this document against the registries, which is the structural-valida
 Registering it under a SIM package would be the same category error as a technique in
 `evidenceKinds`. When that validator lands it should absorb these assertions, and the five test
 methods here are the specification of what it owes.
+
+#### Proving this gate can fail
+
+Run at `e5a120e`. The perturbation is to a data file the gate reads at run time, so there is no
+compilation to force and § Why a forced rebuild is part of the method does not apply: the probe
+runs `--no-build` against an assembly already proved current, and the evidence that the perturbed
+file was the one read is that the failure text quotes the perturbation. Every probe restored with
+`git checkout -- tests/verification/` and `git status --short` read 0 lines afterwards. Filter for
+all of them:
+
+```
+dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj \
+  --no-build --nologo --filter 'FullyQualifiedName~NegativeControlCoverageTests'
+```
+
+**An entry on neither list.** A synthetic `VER-SIM-002-011` appended to `SIM-002.json`, copied
+from an existing entry, `status` `implemented`, `fixtures` empty:
+
+```
+  Failed EveryNonRetiredEntryIsControlledOrUncoveredAndNeverBoth [73 ms]
+     every non-retired VER-SIM-* entry must either name a section of tests/verification/SIM-negative-controls.md in its fixtures or appear in that document's uncovered block. An entry in neither is a gap nothing records, which is what this gate exists to make impossible to add:
+  VER-SIM-002-011 in tests/verification/SIM-002.json
+  Expected: <empty>
+  But was:  < "VER-SIM-002-011 in tests/verification/SIM-002.json" >
+  Failed TheStatedTotalsAgreeWithTheRegistry [26 ms]
+  1)   the three stated groups must account for every entry in the seven files
+  Expected: 90
+  But was:  89
+  2)   controlled, uncovered and retired must add up, which is the arithmetic half of the partition
+  Expected: 90
+  But was:  89
+Failed!  - Failed:     2, Passed:     3, Skipped:     0, Total:     5, Duration: 170 ms
+```
+
+Two of the five fire, which is the point: the entry is named by the partition assertion, and the
+totals stop adding up. This is the exact case the prose numbers could not notice.
+
+**An entry on both lists.** `VER-SIM-001-010`, which names two control sections, added to the
+uncovered block, with the declared count and the totals paragraph both moved to 19 so that the
+document is internally consistent and only the contradiction remains:
+
+```
+  Failed EveryNonRetiredEntryIsControlledOrUncoveredAndNeverBoth [75 ms]
+     an entry that both names a control section and appears on the uncovered list makes the document contradict itself, and makes the two counts above double-count it:
+  Expected: <empty>
+  But was:  < "VER-SIM-001-010 (names 2 section(s))" >
+  Failed TheStatedTotalsAgreeWithTheRegistry [26 ms]
+     controlled, uncovered and retired must add up, which is the arithmetic half of the partition
+  Expected: 89
+  But was:  90
+Failed!  - Failed:     2, Passed:     3, Skipped:     0, Total:     5, Duration: 172 ms
+```
+
+**A renamed heading.** One `###` heading changed from "neutralised" to "neutralized", which is
+the whole perturbation:
+
+```
+  Failed EverySectionNamedByAnEntryExists [47 ms]
+  VER-SIM-004-006 names § The frozen-tick refusal is neutralised, and tests/verification/SIM-negative-controls.md has no such heading. Closest headings it does have: The frozen-tick refusal is neutralized | The foreign-run fence is checked second | The family key is dropped from the derivation
+Failed!  - Failed:     1, Passed:     4, Skipped:     0, Total:     5, Duration: 170 ms
+```
+
+The failure names the rename and offers the heading that replaced it. The partition assertion
+stays green, which is correct and is why this is a separate assertion: had the rename silently
+dropped the entry from the covered set, the partition would have failed instead and pointed at
+`VER-SIM-004-006` as though its control were missing.
+
+**A malformed document.** The `<!-- SIM-UNCOVERED-BEGIN -->` marker deleted:
+
+```
+  Failed EveryNonRetiredEntryIsControlledOrUncoveredAndNeverBoth [23 ms]
+   System.IO.InvalidDataException : malformed tests/verification/SIM-negative-controls.md: the marker <!-- SIM-UNCOVERED-BEGIN --> is absent, so the uncovered list cannot be located. An absent block is not an empty one: a document with no block makes no statement about its gaps, and reading it as 'nothing is uncovered' would turn a lost list into a passing gate. This is a parse failure, not a coverage finding: no partition verdict was computed, so nothing here says any entry is covered or uncovered.
+Failed!  - Failed:     5, Passed:     0, Skipped:     0, Total:     5, Duration: 37 ms
+```
+
+All five carry the same `InvalidDataException`, and none of them reports a coverage verdict.
+
+**A file that could not be read.** The document moved aside, then a registry file truncated to
+half its bytes. These are the two failures that must not look like "no entry has a control":
+
+```
+  Failed EveryNonRetiredEntryIsControlledOrUncoveredAndNeverBoth [17 ms]
+   System.InvalidOperationException : could not read tests/verification/SIM-negative-controls.md at <repo>/tests/verification/SIM-negative-controls.md. This is a read failure and not a coverage finding: nothing here says any entry lacks a control, only that the record could not be opened. FileNotFoundException: Could not find file '<repo>/tests/verification/SIM-negative-controls.md'.
+  ----> System.IO.FileNotFoundException : Could not find file '<repo>/tests/verification/SIM-negative-controls.md'.
+```
+
+```
+  Failed EveryNonRetiredEntryIsControlledOrUncoveredAndNeverBoth [55 ms]
+   System.InvalidOperationException : could not decode tests/verification/SIM-005.json as JSON. This is a read failure and not a coverage finding: the entries in this file were never examined, so nothing here says any of them lacks a control. JsonException: Expected start of a property name or value, but instead reached end of data. LineNumber: 112 | BytePositionInLine: 2.
+```
+
+Three distinct texts for three distinct facts: the record says this entry has no control, the
+record cannot be parsed, the record cannot be opened.
+
+**One probe proved nothing, recorded because it looked like it had.** The first attempt at the
+read-failure case was `chmod 000` on the document, and the suite **passed**: the tests run as
+root, and root bypasses the permission bits, so the file was read normally. A control that passes
+is a control that measured nothing, and had it been written up from its intent rather than from
+its output it would have gone into this file as evidence for a branch that had never executed.
+Moving the file and truncating the registry are the replacements, and both work regardless of
+privilege. § A control that proved nothing, and what it exposed records the same shape from the
+first review pass.
 
 ## What these transcripts do not establish
 

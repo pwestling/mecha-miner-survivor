@@ -165,6 +165,19 @@ prerequisites." A stream that starts on readiness accepts that its base can stil
 revised, and `RSK-017`'s first response above - "freeze consumer work; land one
 owner/contract and rebase consumers" - is what covers that when it happens.
 
+**Nothing gates any of this, including the correction that wrote it.** No script reads a
+status line in this document and compares it with doc 114's exit conditions; there is no
+`artifacts/evidence/` path to check a claim of Done against, which is the point item 2
+above makes. Before this section existed the document asserted "`FND-001` is landed and
+Done", "`FND-002` and `FND-003` are landed and Done", and "**Wave 1 is therefore open**"
+on that basis, and every one of those sentences was false in the same way: they used
+doc 114's word for a state whose instrument had not been built. That correction is
+recorded in commit `a494f09` as "item 1" of a list whose numbering resolves to nothing -
+see § Decision 12 - and it has no exit class before or after, because a document is
+verified by reading it. The protection is that the two words are now defined in one place
+and every status line below says which one it means; a status line that says "Done"
+without satisfying both conditions above is a defect a reader has to catch.
+
 ### Step 1
 
 | Package | Deliverable (doc 110) | Depends on | Completion gate | Owned file scope |
@@ -558,8 +571,27 @@ Doc 113 requires a risk review at each M0-M7 gate.
 
 ## Decisions already made
 
-Recorded here so no stream re-litigates them. Each was verified empirically in the
-FND-001 container, not recalled.
+Recorded here so no stream re-litigates them. **They were not all established the same
+way, and the list has grown past the sentence that used to cover it.** An earlier
+revision said "each was verified empirically in the FND-001 container, not recalled",
+which was true of Decisions 1-4 and is not true of the rest:
+
+- Decisions 1-4 were measured in the FND-001 container: versions installed, projects
+  built, exit codes observed. Each names the fixture or gate that holds it today.
+- Decisions 5-7 are design and routing choices, not measurements. There was nothing to
+  measure; what they record is which class, code, and owning package was chosen and why
+  a ninth exit class was rejected.
+- Decision 8's `build.ps1` half is a hand measurement on a host that had `pwsh`, not a
+  container result and not a committed gate. That bullet says so itself.
+- Decisions 9-11 are rules distilled from defects found in this repository's own gates.
+  Each cites the sites it came from; the rules themselves are obligations on future
+  gates and no gate asserts them.
+- Decision 12 is a claim about a commit message, two pull-request reviews, and the
+  absence of a file on any ref. It is established by search, and its own text records
+  that three of the nine items it tables have no gate at all.
+
+So read each decision for how it says it was established. Do not quote this section as
+a block of empirical results.
 
 ### Decision 1 - .NET SDK 10.0.302 with target framework `net8.0`
 
@@ -748,9 +780,18 @@ scope, so the request goes through the integration owner.
   to make a coverage claim true, and doc 100 § Toolchain pinning would then require an
   exact version and per-platform hashes for a tool that no repository verb needs on
   Linux or macOS.
-- Both wrappers do share one behavior that is not merely structural, and it is
-  asserted on both: an absent `dotnet` and a `global.json` pinning an uninstalled SDK
-  version each exit class 3 with `MMT-3001`, never class 8. See Decision 10.
+- Both wrappers do share one behavior that is not merely structural: an absent `dotnet`
+  and a `global.json` pinning an uninstalled SDK version each exit class 3 with
+  `MMT-3001`, never class 8. See Decision 10. **It is asserted by execution on
+  `build.sh` only.** `build/verify-verbs.sh` § 10 invokes `${WRAPPER}`, which is
+  `build.sh`, and `build/verify-wrapper-parity.sh`'s behavioral half does not run without
+  `pwsh`, so no committed gate ever runs `build.ps1 doctor` against a mismatched pin.
+  `build.ps1` does carry the same `MISMATCH-PROBE` block, and the reviewer who reported
+  the defect installed `pwsh` and observed the same 8 -> 3 transition by hand, so the
+  claim is true as fact. It is not evidence a clean checkout can produce, which is the
+  same distinction the `pwsh` bullet above draws for the usage tables. An earlier revision
+  of this bullet said the behavior "is asserted on both"; that was an overclaim and is
+  corrected here.
 
 ### Decision 9 - deliberately invalid fixtures are never committed inside a compiled project
 
@@ -815,6 +856,70 @@ scope, so the request goes through the integration owner.
   `verify-godot.sh`, and `verify-configurations.sh`. Every one of them reported success
   on something it had not examined. Assume the shape is present until the negative
   control proves otherwise.
+
+### Decision 12 - a message never cites a numbered list that is not an artifact
+
+- Commit `a494f09` on this branch carries the message `WIP: inherited uncommitted
+  review-fix work (items 1-8, 11), unverified` and enumerates nine items in its body. It
+  is the parent of most of the wrapper and gate work described above, it is not on
+  `origin/master` - the common ancestor of `master` and this whole stack is `739bf29` -
+  and it has reached four of the six pull requests stacked on this branch, three of them
+  by base merge (`a319afb`, `ea88ea8`, `c5f1378`) and one by linear descent.
+- **The numbered list it indexes into exists in no artifact.** It is not in any review or
+  comment on any pull request in this repository, and not in any file on any ref at any
+  commit. It was a triage list an agent assembled by merging findings from two independent
+  reviews, each of which numbers its own findings 1 through 9, and it lived only in that
+  agent's context. So the numbers survive in permanent history and the list does not, and
+  no reader of `git log` can resolve "items 1-8, 11" - which makes every claim that
+  message makes unauditable by the reader it was written for.
+- **Where the traceable items came from.** Six of the nine map onto the two reviews, and
+  two of those six map onto unnumbered "Corrections to the PR body" bullets rather than
+  onto numbered findings, so even the traceable half does not resolve as numbers:
+
+  | Item | Subject | Source |
+  | --- | --- | --- |
+  | 1 | this document's false "Done" / "Wave 1 is therefore open" wording | nothing |
+  | 2 | mismatched SDK pin returns class 3, not class 8 | [PR #3 review](https://github.com/pwestling/mecha-miner-survivor/pull/3#pullrequestreview-4870741930) finding 7 |
+  | 3 | `VER-FND-002-008` narrowed; the counted, named `SKIPPED` path | PR #3 review finding 8, plus its "`build.ps1` parity - proved by execution" correction bullet |
+  | 4 | doc 40 derived-geometry self-contradiction (contact diameter) | nothing |
+  | 5 | `format`/`format-check` fail open when `git ls-files` fails | PR #3 review finding 3 |
+  | 6 | `verify-architecture.sh` GDScript check `\|\| true` and untracked `.gd` | PR #3 review finding 6 and [PR #1 review](https://github.com/pwestling/mecha-miner-survivor/pull/1#pullrequestreview-4870772506) finding 6 |
+  | 7 | `doctor`'s Godot hash probe hashes a file it did not resolve | PR #3 review finding 4 |
+  | 8 | `FND-001.json` platform overclaims | PR #1 review, "Corrections to the PR body and registry" |
+  | 11 | delivery-waves.md "no public type in `src/`" claim | nothing - see below |
+
+- **Item 11 had no referent, and the claim behind it was withdrawn.** No text matching
+  "no public type in `src/`" appears in this document, or in any file on any ref, at any
+  commit. Another session originated that claim in conversation, relayed it as a defect,
+  and later retracted it; the sentence was never in any file. So item 11 was an item to
+  fix something that did not exist, there was nothing to fix, and the retraction never
+  reached the commit message - which is why it still reads as outstanding work. This is a
+  withdrawn claim, not an open question.
+- **Item 8 is not in `a494f09` at all.** That commit's only change to
+  `tests/verification/FND-001.json` is item 6's registry counterpart; `VER-FND-001-001`
+  and `-002` still carried three platforms there. The narrowing landed thirteen minutes
+  later in `a494f09`'s immediate child, `bc28ae2`.
+- **"unverified" is stale, and three of the nine items can never stop being unverified by
+  a gate.** Every gate `a494f09` touched has since been run red-then-green by injection;
+  the records live on the entries the gates belong to, in
+  `tests/verification/FND-002.json` (`VER-FND-002-008`, `-016`, `-017`, `-018`) and
+  `tests/verification/FND-001.json` (`VER-FND-001-005`), each naming the injected
+  violation and the exit class at the parent `2e6d717` and at every commit carrying the
+  fix. Items 1, 4 and 8 have no gate: items 1 and 4 are document edits, verified by
+  reading, and nothing anywhere reads the registry `platforms` field, so item 8's
+  correctness is a claim no check can hold. Item 3 is exit 0 on both sides by design -
+  it converts a silent pass into `PASS WITH 1 SKIPPED CHECK(S) - coverage reduced`, so
+  it is a reporting fix and its evidence is that line rather than an exit class.
+- **The rule.** In a commit message, pull request body, or review, carry the claim rather
+  than a pointer to it: one line per item saying what the item is costs a few hundred
+  bytes and stays true forever. If a numbered list must be referenced, cite the artifact
+  by URL or path plus sha and say which of several numbered lists it is - two of this
+  project's reviews each number findings 1 through 9, so a bare "item 6" is ambiguous
+  between them even for someone holding both. Never write "items N-M" where the list is
+  only in your context. And when a message says "unverified", plan the commit that says
+  otherwise: history is append-only, so a message on a branch others have already merged
+  cannot be corrected in place. Doc 91 § Claim and measurement discipline states this as a
+  rule about authors; this decision is the instance that produced it.
 
 ---
 

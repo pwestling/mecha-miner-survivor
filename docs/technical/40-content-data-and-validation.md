@@ -100,6 +100,8 @@ The remaining two are not aggregates on those terms. `RSC-` identifies ordinary 
 | `SIEGE-` | `^SIEGE-[0-9]{2}$` | boss field occupation | `content/bosses/` | this section |
 | `BOUNTY-` | `^BOUNTY-[0-9]{2}$` | boss death loot burst | `content/bosses/` | this section |
 
+Three further prefixes — `SITE-`, `ELT-` and `PLAYER-` — are minted not in another document but in this document's own FND-004 revision, under [Map generation](#map-generation), and are deliberately not restated here. This table is therefore complete only once that work package has merged. Until then a reader on a branch without FND-004 should treat those three as minted there rather than as unminted, and any check that reads this table must assert them by name, so that the mint's arrival breaks the build rather than passing silently.
+
 The table is the **machine-readable** form of what the prose in this section and in the sections it cites states in sentences, and the two **must agree**. The prose is what a reader needs in order to know why an ID exists and what it identifies; the row is what a check reads to detect that a schema `pattern` or an implementation category table has drifted from this document. Neither is redundant with the other and neither may be deleted in favor of the other: a check that scraped English would break on the first editorial rewrite, and a table with no prose would leave the next author guessing what an ID means. Every prefix this document mints anywhere owes a row here, including any minted in a catalog subsection below.
 
 Every prefix above was checked against the work-package prefix registry in [Implementation Plan for AI Agents](./110-implementation-plan-for-ai-agents.md#work-package-authority-routing) before it was minted, and none of them collides with a registered work-package prefix. That check is a precondition of minting rather than a courtesy: a content prefix equal to a work-package prefix makes a reference ambiguous between a content definition and a work package in exactly the places both appear — commit messages, task briefs, and the identifier validator — and no downstream reader can resolve it from context. The next person minting a content prefix runs the same check first.
@@ -192,6 +194,20 @@ Derived geometry is never authored, which is why the authored-field list above s
 An author who types a derived value into a definition creates a second source of truth that silently disagrees with the first the moment either operand changes, which is exactly how a gameplay table and a technical table came to disagree by 0.004 M on one enemy. Derived values appear in generated reports with their source operands and calculation version, as [Unit and numeric policy](#unit-and-numeric-policy) requires; they do not appear in source JSON.
 
 Everything above states the rule for **ordinary enemy identities** — the ones the accepted roster gives a body scale, and therefore the ones that have an authored operand to derive geometry from. Boss contact geometry is governed separately and is deliberately not decided here; the paragraphs above must not be read as settling it in either direction, and the boss definition schema that `DAT-002` owns must not be written against an inference drawn from them.
+
+**No gate enforces any of this today, and the correction that produced the wording above
+was verified by reading rather than by running anything.** The content compiler and its
+validator are `DAT-001`/`DAT-002` deliverables; nothing in `build/`, `src/`, or `tests/`
+reads `body_scale_multiplier`, and no content definition exists to check. So the
+authored/derived split is a rule a reader applies, not one a runner can catch, and until
+`DAT-001` lands a validator that can fail on an authored derived value the only
+protection is that this section does not contradict itself. It used to: the authored-field
+list said "contact damage/diameter/cadence" while the paragraph below it said derived
+geometry is never authored, which is a self-contradiction a schema author could resolve
+either way. That correction is recorded in commit `a494f09` as "item 4" of a list whose
+numbering resolves to nothing — the non-normative
+`docs/technical/delivery-waves.md` § Decision 12 records that separately — and it carries
+no exit-class evidence because there is no gate to produce one.
 
 ### Weapons
 

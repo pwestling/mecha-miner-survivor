@@ -7,7 +7,16 @@
 #            AGENTS.md § Standard workflow surface ("Do not create competing
 #              workflow entrypoints.")
 # Requirements: TR-BLD-005, TR-BLD-001, TR-BLD-002
-# Verification: tests/verification/FND-002.json (VER-FND-002-008 proves parity)
+# Verification: tests/verification/FND-002.json. VER-FND-002-008 proves parity
+#              STRUCTURALLY for this file - build/verify-wrapper-parity.sh checks A1 and
+#              A2 read this file's text, so they hold on every platform. Its behavioral
+#              half needs pwsh, which build/toolchain.json lists under optional_tools, so
+#              on a clean checkout of this repository this file is never EXECUTED by any
+#              gate, and it has never been executed on windows-x64 or osx-arm64 at all
+#              (VER-FND-002-008 records linux-x64 only; FND-005 owns the other runners).
+#              Read that entry before changing anything here: the structural checks will
+#              catch a verb table appearing in this file, and nothing committed will catch
+#              a PowerShell runtime behaviour that diverges from build.sh.
 #
 # This file is deliberately a launcher and nothing else, and it is the exact
 # counterpart of build.sh. Doc 100 requires both wrappers to expose "identical verbs
@@ -80,6 +89,18 @@ On Linux and macOS the repository ships an idempotent installer for the same pin
 # terminate: this script sets $ErrorActionPreference to 'Stop', and PowerShell 7.3+
 # can turn a native command's nonzero exit into a terminating error, which would skip
 # the classification below and surface an unclassified failure instead.
+#
+# NO COMMITTED GATE ASSERTS THIS BLOCK. build.sh's counterpart is asserted by
+# build/verify-verbs.sh § 10, whose negative control deletes the block between its
+# markers; that section invokes ${WRAPPER}, which is build.sh, and it never invokes
+# build.ps1. build/verify-wrapper-parity.sh's behavioral half does not run without pwsh,
+# and even where it does it only compares usage tables and an unknown-verb exit class -
+# it never drives a mismatched pin. The 8 -> 3 correction was established here by hand
+# instead: on a host with pwsh installed, ./build.ps1 doctor against a global.json
+# pinning an uninstalled SDK exits 3 with MMT-3001 while dotnet stays discoverable.
+# delivery-waves.md § Decision 8 records that measurement and why it is not evidence a
+# clean checkout can reproduce. So a change here can silently reclassify this path, and
+# the only protection is reading build.sh's probe alongside it.
 $sdkResolution = ''
 $sdkResolutionExit = 0
 try {

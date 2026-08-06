@@ -3354,6 +3354,1159 @@ verify-architecture: PASS
 arch exit: 0
 ```
 
+## Controls for the third review pass
+
+Thirteen controls, run at `95b04e5`, the merge of `claude/sim-defects` into this branch. That
+branch fixed three behavioural defects, added thirteen tests, and could not write here, because
+this directory belonged to another worker; these transcripts are the controls for its thirteen
+tests, re-run in the merged tree rather than transcribed from its report. One perturbation per
+control, one control per new test, and every one went red.
+
+The runner is `dotnet test` with a `--filter`, and every probe ran with `--no-build` against an
+assembly whose hash was proved to have moved, per § Why a forced rebuild is part of the method.
+Each control also restored its file to the pre-edit blob, verified with `git hash-object`,
+rebuilt, and re-ran the same filter green; the restored assembly hash is recorded beside the
+blob and is the same value in all thirteen.
+
+**The assembly hash is not a content hash, and reading it as one would be a mistake this batch
+can now demonstrate.** `Directory.Build.props` sets `Deterministic`, so the same source rebuilds
+to the same assembly, but SourceLink also stamps the commit into
+`AssemblyInformationalVersionAttribute` and into the source map. Committing therefore moves the
+hash with no source change at all, which is why the values here differ from the ones the defect
+branch's report records for the same perturbations against the same source, and why a hash from
+one revision must never be compared against a hash from another. Within one control, where no
+commit intervenes, "the hash moved" still means what § Why a forced rebuild is part of the
+method needs it to mean: a recompile happened and the probe measured it.
+
+The abort branch was exercised at this revision rather than assumed. The same
+before/build/after sequence with no perturbation applied, and no commit in between, leaves the
+hash where it was and stops:
+
+```
+$ sha256sum src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+4efca19ab2e91b7a0cf673a9c3100c0f3dc21496e661708a2fa431141fad13b4  src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:q --nologo
+$ sha256sum src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+4efca19ab2e91b7a0cf673a9c3100c0f3dc21496e661708a2fa431141fad13b4  src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+ABORT: the output assembly did not change, so this probe would measure the previous build
+exit: 3
+```
+
+**Twelve of the thirteen controls redden a test that no registry entry's `selector` names**,
+because the thirteen tests these controls cover are new and the entries they support already
+existed. That is a third kind of credit, defined in § Which entry each section controls beside
+the two the document already had, and it is deliberately not filed with them: a cross-reference
+shows no test of the entry's claim failing at all, whereas these sections show one failing in a
+case the entry's own selector does not reach. In every one the tally accounts for every test
+under the filter, so the entry's own selector is positively shown to have passed rather than
+merely not mentioned, which is the fact the credit rests on and the reason the new tests were
+written.
+
+The thirteenth, § A rejection reason is given a value the counter array cannot index, reddens
+`VER-SIM-004-013`'s own selector and is credited to it unqualified.
+
+`MECHAMINER_GOLDEN_UPDATE` was never set, no golden was written or regenerated, and
+`git status --short` read 0 lines after every restore.
+
+### A refused commit leaves the run alive, so the tick re-runs
+
+**Entries controlled.** `VER-SIM-001-010`
+
+**Perturbation** (`src/MechaMiner.Simulation/Runtime/SimulationHost.cs`, in `Step`'s `catch` around the tick call and the commit). The call to `EndRunInTechnicalFailure` is put behind `if (_technicalFailureTick.Index < 0)`, a condition nothing can satisfy: the field starts at tick zero and is only ever assigned a real tick index. The exception still propagates, so the caller sees a throw exactly as before; what is removed is the host recording that the run ended, which is the part that stops the next frame re-running the tick the clock never committed. A literal `if (false)` is not available here, because the compiler rejects the unreachable statement as `CS0162` under this repository's warnings-as-errors policy, so a runtime-impossible condition is used instead.
+
+Filter: `FullyQualifiedName~SimulationHostTests`
+
+Perturbed from:
+
+```csharp
+                EndRunInTechnicalFailure(tick, failure);
+```
+
+to:
+
+```csharp
+                if (_technicalFailureTick.Index < 0)
+                {
+                    EndRunInTechnicalFailure(tick, failure);
+                }
+```
+
+Forced rebuild:
+
+```
+$ git hash-object src/MechaMiner.Simulation/Runtime/SimulationHost.cs
+5f28f10136a387f2e16650a46e7e6cd858f823ea
+$ touch src/MechaMiner.Simulation/Runtime/SimulationHost.cs
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:q --nologo
+before: ee6f6c51fb87bd33961b9f71d5d48c08bffa4bf1f8b5887aa6afa2fee0a22b3e
+after:  c4408bc81219c6e955377eb26051f0639934484f01d4fa3a82de1773b791de72
+```
+
+Verbatim failure:
+
+```
+$ dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj --no-build --nologo --filter 'FullyQualifiedName~SimulationHostTests'
+Test run for <repo>/tests/MechaMiner.Simulation.Tests/bin/Debug/net8.0/MechaMiner.Simulation.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+  Failed ABlockingReasonRaisedInsideATickEndsTheRunInsteadOfRepeatingTheTick [61 ms]
+  Error Message:
+   Multiple failures or warnings in test:
+  1)   each tick reaches the tick target exactly once, with no gap and no repeat: tick 1 must not run a second time because its commit was refused
+Assert.That(world.AdvancedTicks, Is.EqualTo(new long[] { 0L, 1L }).AsCollection)
+  Expected is <System.Int64[2]>, actual is <System.Collections.Immutable.ImmutableArray`1[System.Int64]> with 3 elements
+  Values differ at index [2]
+  Extra:    < 1 >
+[4 stack-frame line(s) elided]
+  2)   a tick applied to the world that cannot be committed ends the run (doc 20 § Tick transaction), which is what stops the next frame from repeating it
+Assert.That(host.HasEndedInTechnicalFailure, Is.True)
+  Expected: True
+  But was:  False
+
+[4 stack-frame line(s) elided]
+  3)   and the recorded failure names the tick that was in flight: doc 91 § Numeric tolerance requires exact equality for this quantity
+Assert.That(actual, Is.EqualTo(expected))
+  Expected: 1
+  But was:  0
+
+[5 stack-frame line(s) elided]
+  4)   the recorded failure is the one the caller was given, not a copy or a summary
+Assert.That(host.TechnicalFailure, Is.SameAs(refusedCommit))
+  Expected: same as <System.InvalidOperationException: no tick commits while a blocking reason is present (doc 10 § Pause contract); present: RelicResolution
+[4 stack-frame line(s) elided]
+  But was:  null
+
+[4 stack-frame line(s) elided]
+  5)   and a later step refuses by naming that failure, so the run cannot be nursed along
+Assert.That(refusedStep.InnerException, Is.SameAs(refusedCommit))
+  Expected: same as <System.InvalidOperationException: no tick commits while a blocking reason is present (doc 10 § Pause contract); present: RelicResolution
+[4 stack-frame line(s) elided]
+  But was:  null
+
+[28 stack-frame line(s) elided]
+  Failed ATickTargetThatThrowsEndsTheRunThroughTheTechnicalFailurePath [9 ms]
+  Error Message:
+   Multiple failures or warnings in test:
+  1)   the failed tick is not retried, so no tick index appears twice
+Assert.That(world.AdvancedTicks, Is.EqualTo(new long[] { 0L, 1L }).AsCollection)
+  Expected is <System.Int64[2]>, actual is <System.Collections.Immutable.ImmutableArray`1[System.Int64]> with 3 elements
+  Values differ at index [2]
+  Extra:    < 1 >
+[4 stack-frame line(s) elided]
+  2)   and the run has ended
+Assert.That(host.HasEndedInTechnicalFailure, Is.True)
+  Expected: True
+  But was:  False
+
+[4 stack-frame line(s) elided]
+  3)   with the failure retained, so it is observable rather than only thrown
+Assert.That(host.TechnicalFailure, Is.SameAs(failure))
+  Expected: same as <System.InvalidOperationException: the tick target failed its own invariant
+[5 stack-frame line(s) elided]
+  But was:  null
+
+[4 stack-frame line(s) elided]
+  4)   naming the tick that was in flight: doc 91 § Numeric tolerance requires exact equality for this quantity
+Assert.That(actual, Is.EqualTo(expected))
+  Expected: 1
+  But was:  0
+
+[5 stack-frame line(s) elided]
+  5)   every later step refuses and names it: doc 90 § Crash handling does not continue a corrupted simulation
+Assert.That(refusedStep.InnerException, Is.SameAs(failure))
+  Expected: same as <System.InvalidOperationException: the tick target failed its own invariant
+[5 stack-frame line(s) elided]
+  But was:  null
+
+[28 stack-frame line(s) elided]
+Failed!  - Failed:     2, Passed:     6, Skipped:     0, Total:     8, Duration: 113 ms - MechaMiner.Simulation.Tests.dll (net8.0)
+probe exit: 1
+```
+
+Both failures are the two tests the defect branch added for this behaviour, and the recorded sequence is the defect itself: `AdvancedTicks` holds three elements where two are expected, because tick 1 was applied to the world, refused by the clock, and applied again on the next step. `Failed: 2, Passed: 6` over a filter covering all of `SimulationHostTests` accounts for every test in the class, so `VER-SIM-001-010`'s own selector, `TickTargetIsInvokedOncePerTickInAscendingOrder`, is among the six that passed. It is credited by the third rule of § Which entry each section controls: this section shows a test of the entry's claim going red in a case the entry's own selector does not reach.
+
+Restore, and the state after it:
+
+```
+$ git checkout -- src/MechaMiner.Simulation/Runtime/SimulationHost.cs && touch src/MechaMiner.Simulation/Runtime/SimulationHost.cs
+$ git hash-object src/MechaMiner.Simulation/Runtime/SimulationHost.cs
+5f28f10136a387f2e16650a46e7e6cd858f823ea
+$ git status --short | wc -l
+0
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:q --nologo
+$ sha256sum src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+ee6f6c51fb87bd33961b9f71d5d48c08bffa4bf1f8b5887aa6afa2fee0a22b3e  src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+$ dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj --no-build --nologo --filter 'FullyQualifiedName~SimulationHostTests' | tail -1
+Passed!  - Failed:     0, Passed:     8, Skipped:     0, Total:     8, Duration: 60 ms - MechaMiner.Simulation.Tests.dll (net8.0)
+```
+
+### The pre-tick boundary position is never evaluated
+
+**Entries controlled.** `VER-SIM-001-012`
+
+**Perturbation** (`src/MechaMiner.Simulation/Runtime/SimulationHost.cs`, in `Step`'s loop, at the `HasReachedFinalBoundary` check that precedes the tick). The boundary evaluation is deleted from the pre-tick position and the `break` is kept, which is exactly the shape the code had before the defect branch: a step that begins with the clock already past 35:00 leaves the loop without evaluating the boundary. `EvaluateFinalBoundary` is idempotent, so occupying both positions cannot evaluate twice, and removing one of them cannot be detected by a test that only ever arrives at the other.
+
+Filter: `FullyQualifiedName~SimulationHostTests|FullyQualifiedName~FinalBoundaryOrderingTests`
+
+Perturbed from:
+
+```csharp
+                boundaryEvaluated = EvaluateFinalBoundary() || boundaryEvaluated;
+```
+
+to:
+
+nothing; the statement is deleted outright.
+
+Forced rebuild:
+
+```
+$ git hash-object src/MechaMiner.Simulation/Runtime/SimulationHost.cs
+5f28f10136a387f2e16650a46e7e6cd858f823ea
+$ touch src/MechaMiner.Simulation/Runtime/SimulationHost.cs
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:q --nologo
+before: ee6f6c51fb87bd33961b9f71d5d48c08bffa4bf1f8b5887aa6afa2fee0a22b3e
+after:  3ca5ee94a6a119aada96b360cd12083c3f7aa75bbb06ac488ce989a901c182e4
+```
+
+Verbatim failure:
+
+```
+$ dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj --no-build --nologo --filter 'FullyQualifiedName~SimulationHostTests|FullyQualifiedName~FinalBoundaryOrderingTests'
+Test run for <repo>/tests/MechaMiner.Simulation.Tests/bin/Debug/net8.0/MechaMiner.Simulation.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+  Failed AStepThatBeginsPastTheBoundaryEvaluatesItRatherThanRunningOnForever [31 ms]
+  Error Message:
+   Multiple failures or warnings in test:
+  1)   the step that finds the clock past 35:00 evaluates the boundary
+Assert.That(atTheBoundary.TerminalBoundaryEvaluated, Is.True)
+  Expected: True
+  But was:  False
+
+[4 stack-frame line(s) elided]
+  2)   exactly once, on the tick target: doc 91 § Numeric tolerance requires exact equality for this quantity
+Assert.That(actual, Is.EqualTo(expected))
+  Expected: 1
+  But was:  0
+
+[5 stack-frame line(s) elided]
+  3)   and the run clock records it (doc 20 § Scope and invariants: assigned once)
+Assert.That(clock.TerminalBoundaryEvaluated, Is.True)
+  Expected: True
+  But was:  False
+
+[4 stack-frame line(s) elided]
+  4)   the terminal transition is raised, which is what stops the run rather than a zero-tick step repeating for ever
+Assert.That(clock.BlockingReasons, Is.EqualTo(PauseReasonSet.Of(PauseReason.TerminalTransition)))
+  Expected: TerminalTransition
+  But was:  none
+
+[4 stack-frame line(s) elided]
+  5)   the following step is blocked rather than reaching the boundary position again
+Assert.That(afterwards.WasBlocked, Is.True)
+  Expected: True
+  But was:  False
+
+[4 stack-frame line(s) elided]
+  6)   still exactly one evaluation in the whole run: doc 91 § Numeric tolerance requires exact equality for this quantity
+Assert.That(actual, Is.EqualTo(expected))
+  Expected: 1
+  But was:  0
+
+[5 stack-frame line(s) elided]
+  7)   and no scheduled event is admitted afterwards, which is the ordering doc 20 § Boundary and tie ordering requires the evaluation to establish
+Assert.That(admittedAfter, Is.False)
+  Expected: False
+  But was:  True
+
+[37 stack-frame line(s) elided]
+Failed!  - Failed:     1, Passed:     8, Skipped:     0, Total:     9, Duration: 271 ms - MechaMiner.Simulation.Tests.dll (net8.0)
+probe exit: 1
+```
+
+One test red, and it is the test written for this position. The filter deliberately also covers `FinalBoundaryOrderingTests`, which is where `VER-SIM-001-012`'s own selector lives, and `Failed: 1, Passed: 8` accounts for every test under it: the entry's own gate stayed green under the perturbation. That is the finding rather than an accident of the filter. The entry claims the boundary is evaluated before any event at or after 35:00 is admitted, and assertion 7 shows a 35:00 event being admitted afterwards, so the claim is false in this state and the entry's selector does not see it, because it always reaches the boundary from the post-tick position. Credited by the third rule of § Which entry each section controls.
+
+Restore, and the state after it:
+
+```
+$ git checkout -- src/MechaMiner.Simulation/Runtime/SimulationHost.cs && touch src/MechaMiner.Simulation/Runtime/SimulationHost.cs
+$ git hash-object src/MechaMiner.Simulation/Runtime/SimulationHost.cs
+5f28f10136a387f2e16650a46e7e6cd858f823ea
+$ git status --short | wc -l
+0
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:q --nologo
+$ sha256sum src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+ee6f6c51fb87bd33961b9f71d5d48c08bffa4bf1f8b5887aa6afa2fee0a22b3e  src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+$ dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj --no-build --nologo --filter 'FullyQualifiedName~SimulationHostTests|FullyQualifiedName~FinalBoundaryOrderingTests' | tail -1
+Passed!  - Failed:     0, Passed:     9, Skipped:     0, Total:     9, Duration: 131 ms - MechaMiner.Simulation.Tests.dll (net8.0)
+```
+
+### A spent idempotency key is replayed under a different action
+
+**Entries controlled.** `VER-SIM-004-009`
+
+**Perturbation** (`src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs`, in `Apply`'s idempotency branch). The refusal of a mismatched `ActionId` is put behind `&& _runSession == 0UL`, which the gate's own constructor makes impossible: it refuses a zero run session. The branch then falls through to the replay path for every submission that reuses a spent client command sequence, whatever action it carries.
+
+Filter: `FullyQualifiedName~PausedTransactionTests`
+
+Perturbed from:
+
+```csharp
+            if (!string.Equals(applied.ActionId, request.ActionId, StringComparison.Ordinal))
+```
+
+to:
+
+```csharp
+            if (!string.Equals(applied.ActionId, request.ActionId, StringComparison.Ordinal)
+                && _runSession == 0UL)
+```
+
+Forced rebuild:
+
+```
+$ git hash-object src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs
+9356696a21ef99da47455f1463f9c72637966e51
+$ touch src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:q --nologo
+before: ee6f6c51fb87bd33961b9f71d5d48c08bffa4bf1f8b5887aa6afa2fee0a22b3e
+after:  b456c5aadd61e996addc8264ca8f41dd70c9bf8cc1f440d022ab996e6215d4ae
+```
+
+Verbatim failure:
+
+```
+$ dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj --no-build --nologo --filter 'FullyQualifiedName~PausedTransactionTests'
+Test run for <repo>/tests/MechaMiner.Simulation.Tests/bin/Debug/net8.0/MechaMiner.Simulation.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+  Failed ASpentIdempotencyKeyCarryingADifferentActionIsRefusedRatherThanReplayed [28 ms]
+  Error Message:
+   Multiple failures or warnings in test:
+  1)   by the same name the active half of this gate gives the same reuse
+Assert.That(refused.Reason, Is.EqualTo(TransactionRejectionReason.SequenceRegression))
+  Expected: SequenceRegression
+  But was:  AlreadyApplied
+
+[4 stack-frame line(s) elided]
+  2)   and it reports that this action did not happen, which is the whole point: WasApplied is what CMP-UI-001 reads to decide whether its action was carried out
+Assert.That(refused.WasApplied, Is.False)
+  Expected: False
+  But was:  True
+
+[4 stack-frame line(s) elided]
+  3)   the result names the action that was submitted, not the one that was applied earlier
+Assert.That(refused.ActionId, Is.EqualTo(CommandFixture.AbandonActionId))
+  Expected string length 13 but was 16. Strings differ at index 2.
+  Expected: "A-ABANDON-RUN"
+  But was:  "A-INSTALL-WEAPON"
+  -------------^
+
+[4 stack-frame line(s) elided]
+  4)   and carries no domain event, unlike a replay, which carries the earlier one
+Assert.That(refused.HasAppliedEvent, Is.False)
+  Expected: False
+  But was:  True
+
+[4 stack-frame line(s) elided]
+  5)   the detail names the action the sequence was spent on, so a caller can see the collision
+Assert.That(refused.Detail, Does.Contain(CommandFixture.InstallActionId))
+  Expected: String containing "A-INSTALL-WEAPON"
+  But was:  "client command sequence 55 was already applied at state version 2; the applied result is returned rather than applied again"
+
+[4 stack-frame line(s) elided]
+  6)   and says what to do instead, because the history is never evicted and refreshing the view cannot help
+Assert.That(refused.Detail, Does.Contain("fresh sequence"))
+  Expected: String containing "fresh sequence"
+  But was:  "client command sequence 55 was already applied at state version 2; the applied result is returned rather than applied again"
+
+[4 stack-frame line(s) elided]
+  7)   it is not counted as a replay
+Assert.That(fixture.Gate.TransactionRejectionCount(TransactionRejectionReason.AlreadyApplied), Is.Zero)
+  Expected: 0
+  But was:  1
+
+[4 stack-frame line(s) elided]
+  8)   it is counted as the regression it is
+Assert.That(fixture.Gate.TransactionRejectionCount(TransactionRejectionReason.SequenceRegression), Is.EqualTo(1L))
+  Expected: 1
+  But was:  0
+
+[39 stack-frame line(s) elided]
+Failed!  - Failed:     1, Passed:     6, Skipped:     0, Total:     7, Duration: 126 ms - MechaMiner.Simulation.Tests.dll (net8.0)
+probe exit: 1
+```
+
+The failure text is the defect stated as data: a submission of `A-ABANDON-RUN` on a sequence spent by `A-INSTALL-WEAPON` comes back `WasApplied: True`, carrying the earlier action's identity and the earlier action's domain event. `CMP-UI-001` reads `WasApplied` to decide whether its own action happened, so this is not a mislabelled rejection, it is a false confirmation. `Failed: 1, Passed: 6` over `PausedTransactionTests` accounts for the class; `VER-SIM-004-009`'s own selector, `ReplayWithTheSameIdempotencyKeyObservesTheAppliedResult`, is among the six, because a replay of the *same* action still behaves correctly here. Credited by the third rule of § Which entry each section controls.
+
+Restore, and the state after it:
+
+```
+$ git checkout -- src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs && touch src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs
+$ git hash-object src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs
+9356696a21ef99da47455f1463f9c72637966e51
+$ git status --short | wc -l
+0
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:q --nologo
+$ sha256sum src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+ee6f6c51fb87bd33961b9f71d5d48c08bffa4bf1f8b5887aa6afa2fee0a22b3e  src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+$ dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj --no-build --nologo --filter 'FullyQualifiedName~PausedTransactionTests' | tail -1
+Passed!  - Failed:     0, Passed:     7, Skipped:     0, Total:     7, Duration: 87 ms - MechaMiner.Simulation.Tests.dll (net8.0)
+```
+
+### A stale generation is accepted at the free position
+
+**Entries controlled.** `VER-SIM-003-001`
+
+**Perturbation** (`src/MechaMiner.Simulation/Entities/EntityIdAllocator.cs`, in `TryFree`, after the category lookup). The generation clause is deleted from the liveness precondition, leaving `if (!_live[ordinal][slot])`. A free then succeeds on the storage index alone, so a stale generation-*n* identity releases the live generation-*n+1* entity occupying the slot it names and puts that slot back on the free list.
+
+Filter: `FullyQualifiedName~MechaMiner.Simulation.Tests.Entities`
+
+Perturbed from:
+
+```csharp
+        if (!_live[ordinal][slot] || _generations[ordinal][slot] != id.Generation)
+```
+
+to:
+
+```csharp
+        if (!_live[ordinal][slot])
+```
+
+Forced rebuild:
+
+```
+$ git hash-object src/MechaMiner.Simulation/Entities/EntityIdAllocator.cs
+f6708bb5a9d25629a06dfc47aff54e8aa368cb22
+$ touch src/MechaMiner.Simulation/Entities/EntityIdAllocator.cs
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:q --nologo
+before: ee6f6c51fb87bd33961b9f71d5d48c08bffa4bf1f8b5887aa6afa2fee0a22b3e
+after:  ab2e2c745cf49c245ed2d439574c4ad3f9d7109562406ab9a5087c8969c02826
+```
+
+Verbatim failure:
+
+```
+$ dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj --no-build --nologo --filter 'FullyQualifiedName~MechaMiner.Simulation.Tests.Entities'
+Test run for <repo>/tests/MechaMiner.Simulation.Tests/bin/Debug/net8.0/MechaMiner.Simulation.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+  Failed FreeingAStaleIdentityReleasesNothingAndLeavesTheLiveEntityAlone [28 ms]
+  Error Message:
+   Multiple failures or warnings in test:
+  1)   freeing a stale generation must be refused; the slot it names is occupied by a live entity of a later generation
+Assert.That(freedStale, Is.False)
+  Expected: False
+  But was:  True
+
+[4 stack-frame line(s) elided]
+  2)   the live entity in that slot must survive the stale free, which is the whole point: a wrongly accepted free destroys it silently
+Assert.That(allocator.IsLive(secondLife), Is.True)
+  Expected: True
+  But was:  False
+
+[4 stack-frame line(s) elided]
+  3)   so the live count does not move, and no free was counted
+Assert.That(liveAfterTheFrees, Is.EqualTo(liveBeforeTheFrees))
+  Expected: 1
+  But was:  0
+
+[4 stack-frame line(s) elided]
+  4)   and the next allocation must be a fresh slot: a refused free must not have put the live entity's slot back on the free list
+Assert.That(next.Index, Is.Not.EqualTo(secondLife.Index))
+  Expected: not equal to 3826
+  But was:  3826
+
+[23 stack-frame line(s) elided]
+Failed!  - Failed:     1, Passed:    17, Skipped:     0, Total:    18, Duration: 195 ms - MechaMiner.Simulation.Tests.dll (net8.0)
+probe exit: 1
+```
+
+This control was run because the defect branch reported the opposite of what the review claimed: the generation clause has been in `TryFree` since the commit that created the file, so nothing was fixed here, and what was missing was any test that would notice its removal. The failure text is the cost of that gap stated concretely, and assertion 4 is the one that matters most: with the clause gone the live entity's slot is handed straight back out, so a wrongly accepted free is silent destruction rather than a failed lookup. `Failed: 1, Passed: 17` over all of `...Tests.Entities` is the measure of how invisible it was. `VER-SIM-003-001`'s own selector, `SlotReuseIncrementsGeneration`, is among the 17: it asserts that reuse increments the generation, which this perturbation leaves intact. The entry is credited by the third rule of § Which entry each section controls, and the limit is worth naming: what this section shows failing is the free position of the stale-identity rule, which is what makes the entry's generation-increment claim load-bearing rather than decorative, and it is not the increment itself.
+
+Restore, and the state after it:
+
+```
+$ git checkout -- src/MechaMiner.Simulation/Entities/EntityIdAllocator.cs && touch src/MechaMiner.Simulation/Entities/EntityIdAllocator.cs
+$ git hash-object src/MechaMiner.Simulation/Entities/EntityIdAllocator.cs
+f6708bb5a9d25629a06dfc47aff54e8aa368cb22
+$ git status --short | wc -l
+0
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:q --nologo
+$ sha256sum src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+ee6f6c51fb87bd33961b9f71d5d48c08bffa4bf1f8b5887aa6afa2fee0a22b3e  src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+$ dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj --no-build --nologo --filter 'FullyQualifiedName~MechaMiner.Simulation.Tests.Entities' | tail -1
+Passed!  - Failed:     0, Passed:    18, Skipped:     0, Total:    18, Duration: 183 ms - MechaMiner.Simulation.Tests.dll (net8.0)
+```
+
+### Both of the store's slot-range clauses are deleted
+
+**Entries controlled.** `VER-SIM-003-002`
+
+**Perturbation** (`src/MechaMiner.Simulation/Entities/PackedEntityStore.cs`, in `ResolveDense`'s fail-closed precondition). Both slot-range clauses go at once, leaving the issued check and the run-session fence. These are the two clauses § What these transcripts do not establish records as having carried a false unreachability label until this pass: the label argued that `EntityId.Create` being internal stops the test assembly obtaining an out-of-partition identity, and it does not, because one allocator partitions twelve categories and an identity issued for any other category is a genuine live identity outside a given store's range.
+
+Filter: `FullyQualifiedName~MechaMiner.Simulation.Tests.Entities`
+
+Perturbed from:
+
+```csharp
+            || id.RunSession != _allocator.RunSession
+            || id.Index < _slotOffset
+            || id.Index >= _slotOffset + _capacity.HardCapacity)
+```
+
+to:
+
+```csharp
+            || id.RunSession != _allocator.RunSession)
+```
+
+Forced rebuild:
+
+```
+$ git hash-object src/MechaMiner.Simulation/Entities/PackedEntityStore.cs
+2911d2bf6ae54ee3a37e202add64174da2d442b0
+$ touch src/MechaMiner.Simulation/Entities/PackedEntityStore.cs
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:q --nologo
+before: ee6f6c51fb87bd33961b9f71d5d48c08bffa4bf1f8b5887aa6afa2fee0a22b3e
+after:  98b8c4a43fc1f7670707abd4d0f6b4938d22117d8c6010a4d70158ae5964db5e
+```
+
+Verbatim failure:
+
+```
+$ dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj --no-build --nologo --filter 'FullyQualifiedName~MechaMiner.Simulation.Tests.Entities'
+Test run for <repo>/tests/MechaMiner.Simulation.Tests/bin/Debug/net8.0/MechaMiner.Simulation.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+  Failed AnIdentityFromAboveThisStoresPartitionFailsClosed [9 ms]
+  Error Message:
+   System.IndexOutOfRangeException : Index was outside the bounds of the array.
+[11 stack-frame line(s) elided]
+  Failed AnIdentityFromBelowThisStoresPartitionFailsClosed [< 1 ms]
+  Error Message:
+   System.IndexOutOfRangeException : Index was outside the bounds of the array.
+[11 stack-frame line(s) elided]
+Failed!  - Failed:     2, Passed:    16, Skipped:     0, Total:    18, Duration: 189 ms - MechaMiner.Simulation.Tests.dll (net8.0)
+probe exit: 1
+```
+
+Both of the tests that reach the two clauses from opposite sides fail, and they do not fail with a refusal that was not counted: they fail with `IndexOutOfRangeException` at `PackedEntityStore.ResolveDense`, because `_slotToDense[id.Index - _slotOffset]` reads outside the array once the range clauses are gone. The clauses are therefore the array bounds check as well as the fail-closed refusal, which is stronger than the label ever claimed for them and is the sharpest possible answer to a label that said nothing could reach them. `Failed: 2, Passed: 16` accounts for all of `...Tests.Entities`; `VER-SIM-003-002`'s own selector, `StaleGenerationFailsClosedAndCountsADiagnostic`, is among the 16, because a stale generation inside the partition still resolves through the second precondition. Credited by the third rule of § Which entry each section controls.
+
+Restore, and the state after it:
+
+```
+$ git checkout -- src/MechaMiner.Simulation/Entities/PackedEntityStore.cs && touch src/MechaMiner.Simulation/Entities/PackedEntityStore.cs
+$ git hash-object src/MechaMiner.Simulation/Entities/PackedEntityStore.cs
+2911d2bf6ae54ee3a37e202add64174da2d442b0
+$ git status --short | wc -l
+0
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:q --nologo
+$ sha256sum src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+ee6f6c51fb87bd33961b9f71d5d48c08bffa4bf1f8b5887aa6afa2fee0a22b3e  src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+$ dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj --no-build --nologo --filter 'FullyQualifiedName~MechaMiner.Simulation.Tests.Entities' | tail -1
+Passed!  - Failed:     0, Passed:    18, Skipped:     0, Total:    18, Duration: 204 ms - MechaMiner.Simulation.Tests.dll (net8.0)
+```
+
+### The frozen-tick refusal is neutralised
+
+**Entries controlled.** `VER-SIM-004-006`
+
+**Perturbation** (`src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs`, in `BeginTick`). The refusal to reopen admission for a tick at or before the last frozen one is put behind `&& _runSession == 0UL`, which the constructor makes impossible. Admission can then reopen for a tick whose admitted set is supposed to be final.
+
+Filter: `FullyQualifiedName~CommandAdmissionGateTests`
+
+Perturbed from:
+
+```csharp
+        if (tick.Index <= _lastFrozenTickIndex)
+```
+
+to:
+
+```csharp
+        if (tick.Index <= _lastFrozenTickIndex && _runSession == 0UL)
+```
+
+Forced rebuild:
+
+```
+$ git hash-object src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs
+9356696a21ef99da47455f1463f9c72637966e51
+$ touch src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:q --nologo
+before: ee6f6c51fb87bd33961b9f71d5d48c08bffa4bf1f8b5887aa6afa2fee0a22b3e
+after:  cafee0eb99a542708133f4d24683c19cdfe04c16656660a633649ac372c9793d
+```
+
+Verbatim failure:
+
+```
+$ dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj --no-build --nologo --filter 'FullyQualifiedName~CommandAdmissionGateTests'
+Test run for <repo>/tests/MechaMiner.Simulation.Tests/bin/Debug/net8.0/MechaMiner.Simulation.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+  Failed TheGatesReachableRefusalsAreTypedAndChangeNothing [22 ms]
+  Error Message:
+     Assert.That(caughtException, expression)
+  Expected: <System.InvalidOperationException>
+  But was:  null
+
+[5 stack-frame line(s) elided]
+Failed!  - Failed:     1, Passed:     7, Skipped:     0, Total:     8, Duration: 99 ms - MechaMiner.Simulation.Tests.dll (net8.0)
+probe exit: 1
+```
+
+One test red, and the assertion that fires is the `Expect.Throws` around `BeginTick` on an already frozen tick: `Expected: <System.InvalidOperationException>, But was: null`. Writing this test found an ordering fact worth recording beside the transcript, because it is the plausible wrong version of the same control: the frozen-tick refusal is only reachable with the admission window closed, since the still-open check runs first, so a probe that opens a window and then asks for a frozen tick gets the still-open message and reports the wrong guard as covered. `Failed: 1, Passed: 7` over `CommandAdmissionGateTests` accounts for the class, so `VER-SIM-004-006`'s own selector, `AdmittedCommandsAreFrozenForTheTickTheyTarget`, is among the seven: it proves a frozen set is not visible to the previous tick and cannot be appended to, and it never asks the gate to reopen one. Credited by the third rule of § Which entry each section controls.
+
+Restore, and the state after it:
+
+```
+$ git checkout -- src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs && touch src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs
+$ git hash-object src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs
+9356696a21ef99da47455f1463f9c72637966e51
+$ git status --short | wc -l
+0
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:q --nologo
+$ sha256sum src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+ee6f6c51fb87bd33961b9f71d5d48c08bffa4bf1f8b5887aa6afa2fee0a22b3e  src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+$ dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj --no-build --nologo --filter 'FullyQualifiedName~CommandAdmissionGateTests' | tail -1
+Passed!  - Failed:     0, Passed:     8, Skipped:     0, Total:     8, Duration: 76 ms - MechaMiner.Simulation.Tests.dll (net8.0)
+```
+
+### The failed commit keeps the presentation buffer it opened
+
+**Entries controlled.** `VER-SIM-004-013`
+
+**Perturbation** (`src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs`, in `AbandonPartialCommit`'s presentation-buffer branch). The branch that discards a presentation buffer the failed commit itself opened is put behind `&& _runSession == 0UL`. This is the third half of doc 20 § Mid-commit invalidation's ruling, and the one the entry's own two recorded controls do not reach: § Commands: the two mid-commit recovery controls disables the call to `AbandonPartialCommit` altogether and § The mid-commit invalidation path is disabled neutralises its domain-buffer condition.
+
+Filter: `FullyQualifiedName~PausedTransactionTests`
+
+Perturbed from:
+
+```csharp
+        if (!presentationBufferWasOpen && presentationEvents.IsOpenForTick)
+```
+
+to:
+
+```csharp
+        if (!presentationBufferWasOpen && presentationEvents.IsOpenForTick && _runSession == 0UL)
+```
+
+Forced rebuild:
+
+```
+$ git hash-object src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs
+9356696a21ef99da47455f1463f9c72637966e51
+$ touch src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:q --nologo
+before: ee6f6c51fb87bd33961b9f71d5d48c08bffa4bf1f8b5887aa6afa2fee0a22b3e
+after:  1444ed3eaae9a19928f2446f7f6beca3aba4a863a10273d668a8e607374d2fed
+```
+
+Verbatim failure:
+
+```
+$ dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj --no-build --nologo --filter 'FullyQualifiedName~PausedTransactionTests'
+Test run for <repo>/tests/MechaMiner.Simulation.Tests/bin/Debug/net8.0/MechaMiner.Simulation.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+  Failed AFailedCommitDiscardsThePresentationBufferItOpened [82 ms]
+  Error Message:
+     the presentation buffer this commit opened must be discarded, or the next tick cannot open one and the run wedges on a buffer nobody owns
+Assert.That(fixture.PresentationEvents.IsOpenForTick, Is.False)
+  Expected: False
+  But was:  True
+
+[7 stack-frame line(s) elided]
+Failed!  - Failed:     1, Passed:     6, Skipped:     0, Total:     7, Duration: 133 ms - MechaMiner.Simulation.Tests.dll (net8.0)
+probe exit: 1
+```
+
+One assertion, and it is the only one that can distinguish this branch: the presentation buffer the commit opened is still open for the tick after the recovery ran. Everything else about the recovery is unchanged, which is why the entry's existing two controls stay green here and why this branch needed a control of its own. `Failed: 1, Passed: 6` over `PausedTransactionTests` accounts for the class, so `VER-SIM-004-013`'s own selector, `AFailedCommitInvalidatesTheTickInsteadOfWedgingTheRun`, is among the six. Credited by the third rule of § Which entry each section controls; § A rejection reason is given a value the counter array cannot index credits the same entry unqualified.
+
+Restore, and the state after it:
+
+```
+$ git checkout -- src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs && touch src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs
+$ git hash-object src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs
+9356696a21ef99da47455f1463f9c72637966e51
+$ git status --short | wc -l
+0
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:q --nologo
+$ sha256sum src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+ee6f6c51fb87bd33961b9f71d5d48c08bffa4bf1f8b5887aa6afa2fee0a22b3e  src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+$ dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj --no-build --nologo --filter 'FullyQualifiedName~PausedTransactionTests' | tail -1
+Passed!  - Failed:     0, Passed:     7, Skipped:     0, Total:     7, Duration: 95 ms - MechaMiner.Simulation.Tests.dll (net8.0)
+```
+
+### The category lookup's run-session fence is removed
+
+**Entries controlled.** `VER-SIM-003-003`
+
+**Perturbation** (`src/MechaMiner.Simulation/Entities/EntityIdAllocator.cs`, in `TryGetCategory`). The run-session fence is deleted from the precondition, leaving `if (!id.IsIssued)`. `TryFree`, `IsLive` and `IsRetired` all classify an identity through this one member, so removing the fence here removes it from all four answers at once.
+
+Filter: `FullyQualifiedName~MechaMiner.Simulation.Tests.Entities`
+
+Perturbed from:
+
+```csharp
+        if (!id.IsIssued || id.RunSession != _runSession)
+        {
+            category = default;
+```
+
+to:
+
+```csharp
+        if (!id.IsIssued)
+        {
+            category = default;
+```
+
+Forced rebuild:
+
+```
+$ git hash-object src/MechaMiner.Simulation/Entities/EntityIdAllocator.cs
+f6708bb5a9d25629a06dfc47aff54e8aa368cb22
+$ touch src/MechaMiner.Simulation/Entities/EntityIdAllocator.cs
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:q --nologo
+before: ee6f6c51fb87bd33961b9f71d5d48c08bffa4bf1f8b5887aa6afa2fee0a22b3e
+after:  223b574a56ebeadf270bb9f131dddc2ea72b8db2de17af76343e85716039ea60
+```
+
+Verbatim failure:
+
+```
+$ dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj --no-build --nologo --filter 'FullyQualifiedName~MechaMiner.Simulation.Tests.Entities'
+Test run for <repo>/tests/MechaMiner.Simulation.Tests/bin/Debug/net8.0/MechaMiner.Simulation.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+  Failed CategoryLookupAnswersOnlyForThisRunSession [40 ms]
+  Error Message:
+   Multiple failures or warnings in test:
+  1)   an identity from another run session is refused, even with its index inside a partition: IDs are unique only within one run session
+Assert.That(foreignFound, Is.False)
+  Expected: False
+  But was:  True
+
+[4 stack-frame line(s) elided]
+  2)   and no category is invented for it
+Assert.That(foreignCategory, Is.EqualTo(default(PopulationCategory)))
+  Expected: Player
+  But was:  Elite
+
+[4 stack-frame line(s) elided]
+  3)   so a foreign identity cannot be freed through this run's allocator either
+Assert.That(thisRun.TryFree(foreign), Is.False)
+  Expected: False
+  But was:  True
+
+[4 stack-frame line(s) elided]
+  4)   and this run's identity is untouched by any of it
+Assert.That(thisRun.IsLive(local), Is.True)
+  Expected: True
+  But was:  False
+
+[23 stack-frame line(s) elided]
+Failed!  - Failed:     1, Passed:    17, Skipped:     0, Total:    18, Duration: 232 ms - MechaMiner.Simulation.Tests.dll (net8.0)
+probe exit: 1
+```
+
+Four assertions fire, and together they are the whole of the cross-run aliasing failure: an identity issued by another run's allocator is accepted, is given a category it was never issued for, can be freed through this run's allocator, and freeing it kills this run's own live entity in the same slot. `Failed: 1, Passed: 17` over all of `...Tests.Entities` accounts for the tier. `VER-SIM-003-003`'s own selector, `AnIdFromAnotherRunSessionNeverResolves`, is among the 17, because it exercises the fence in `PackedEntityStore.ResolveDense`, which has its own copy and is untouched here. This section is the reason the entry moves off the uncovered list: it is the closest match of any of the thirteen, since the test that reddens asserts exactly this entry's claim, cross-run uniqueness, at the allocator rather than at the store. Credited by the third rule of § Which entry each section controls.
+
+Restore, and the state after it:
+
+```
+$ git checkout -- src/MechaMiner.Simulation/Entities/EntityIdAllocator.cs && touch src/MechaMiner.Simulation/Entities/EntityIdAllocator.cs
+$ git hash-object src/MechaMiner.Simulation/Entities/EntityIdAllocator.cs
+f6708bb5a9d25629a06dfc47aff54e8aa368cb22
+$ git status --short | wc -l
+0
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:q --nologo
+$ sha256sum src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+ee6f6c51fb87bd33961b9f71d5d48c08bffa4bf1f8b5887aa6afa2fee0a22b3e  src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+$ dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj --no-build --nologo --filter 'FullyQualifiedName~MechaMiner.Simulation.Tests.Entities' | tail -1
+Passed!  - Failed:     0, Passed:    18, Skipped:     0, Total:    18, Duration: 193 ms - MechaMiner.Simulation.Tests.dll (net8.0)
+```
+
+### The entity diagnostics rendering loses its retirement field
+
+**Entries controlled.** `VER-SIM-003-009`
+
+**Perturbation** (`src/MechaMiner.Simulation/Entities/EntityDiagnostics.cs`, in `Render`). The `retired=` field is deleted from the rendering. Before this pass no assertion anywhere read that field: the only render-text assertion in the entity tests was `Does.Contain("store-growth=0")`, so the field could be deleted, renamed or silently zeroed with the suite green.
+
+Filter: `FullyQualifiedName~EntityDiagnosticsTests`
+
+Perturbed from:
+
+```csharp
+            "retired=" + _retiredSlotCount.ToString(CultureInfo.InvariantCulture),
+```
+
+to:
+
+nothing; the statement is deleted outright.
+
+Forced rebuild:
+
+```
+$ git hash-object src/MechaMiner.Simulation/Entities/EntityDiagnostics.cs
+892bdbda2fad92069a73a8a4ca739453476da19c
+$ touch src/MechaMiner.Simulation/Entities/EntityDiagnostics.cs
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:q --nologo
+before: ee6f6c51fb87bd33961b9f71d5d48c08bffa4bf1f8b5887aa6afa2fee0a22b3e
+after:  2afc189dc9ec2aa640f335572f11ab69bdde71ab921bfee08860730bf4f779fa
+```
+
+Verbatim failure:
+
+```
+$ dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj --no-build --nologo --filter 'FullyQualifiedName~EntityDiagnosticsTests'
+Test run for <repo>/tests/MechaMiner.Simulation.Tests/bin/Debug/net8.0/MechaMiner.Simulation.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+  Failed ReadingACounterNeverResetsItAndTheRenderingCarriesEveryField [47 ms]
+  Error Message:
+   Multiple failures or warnings in test:
+  1)   the rendering carries every field with the value this run produced, compared against text stated here rather than against another rendering of the same object
+Assert.That(firstRendering, Is.EqualTo(expectedRendering).Using(StringComparer.Ordinal))
+  Expected string length 120 but was 110. Strings differ at index 96.
+  Expected: "category=Elite live=14 soft=13 hard=15 high-water=15 queue-depth=17 reuse=1 rejected=17 stale=1 retired=1 store-growth=1"
+  But was:  "category=Elite live=14 soft=13 hard=15 high-water=15 queue-depth=17 reuse=1 rejected=17 stale=1 store-growth=1"
+  -----------------------------------------------------------------------------------------------------------^
+
+[4 stack-frame line(s) elided]
+  2)   before any slot was exhausted the retirement field read zero, so the one above is a value the run moved and not a constant
+Assert.That(renderedBeforeAnyRetirement, Does.Contain("retired=0"))
+  Expected: String containing "retired=0"
+  But was:  "category=Elite live=0 soft=13 hard=15 high-water=0 queue-depth=0 reuse=0 rejected=0 stale=0 store-growth=0"
+
+[15 stack-frame line(s) elided]
+Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 47 ms - MechaMiner.Simulation.Tests.dll (net8.0)
+probe exit: 1
+```
+
+The first assertion compares the rendering against text the test states, which is what makes a deleted field a failure rather than a matched pair of shrunken strings. The second is the one that stops the first from being satisfiable by a constant: the same counter reads `retired=0` before any slot is exhausted, so the `retired=1` above is a value the run moved. `Failed: 1, Passed: 0, Total: 1` is the whole of `EntityDiagnosticsTests`, which is a new class, so this filter proves nothing about the rest of the tier and is not read as though it did. `VER-SIM-003-009`'s own selector, `StoreCapacityTests.CapacityDiagnosticsReconcileWithTheOperationsPerformed`, is not under this filter and was not run. The entry is credited because its claim is that the diagnostics reconcile with the operations performed "rather than being reset by a read", and this test is the second test of exactly that claim, covering all eight counters and the rendering instead of the one counter the entry's selector reads twice. The defect branch's report notes that the existing coverage of it, `StoreCapacityTests` reading `ReuseCount` twice and comparing, holds for a counter that was deleted, which is the tautology shape rather than a gate. The report proposed crediting `VER-SIM-003-008` instead; `-009` is used because "not reset by a read" is `-009`'s sentence and capacity derivation is `-008`'s. Credited by the third rule of § Which entry each section controls.
+
+Restore, and the state after it:
+
+```
+$ git checkout -- src/MechaMiner.Simulation/Entities/EntityDiagnostics.cs && touch src/MechaMiner.Simulation/Entities/EntityDiagnostics.cs
+$ git hash-object src/MechaMiner.Simulation/Entities/EntityDiagnostics.cs
+892bdbda2fad92069a73a8a4ca739453476da19c
+$ git status --short | wc -l
+0
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:q --nologo
+$ sha256sum src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+ee6f6c51fb87bd33961b9f71d5d48c08bffa4bf1f8b5887aa6afa2fee0a22b3e  src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+$ dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj --no-build --nologo --filter 'FullyQualifiedName~EntityDiagnosticsTests' | tail -1
+Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 28 ms - MechaMiner.Simulation.Tests.dll (net8.0)
+```
+
+### The gate's authoritative rendering loses its highest-sequence field
+
+**Entries controlled.** `VER-SIM-004-002`
+
+**Perturbation** (`src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs`, in `RenderAuthoritative`). The `highestSeq=` field and its value are deleted from the authoritative rendering. This is the first of four controls over the same defect shape rather than over a behaviour: every pre-existing assertion over this rendering compares the same gate before against after, so a deleted field disappears from both sides at once and no test notices.
+
+Filter: `FullyQualifiedName~MechaMiner.Simulation.Tests.Commands`
+
+Perturbed from:
+
+```csharp
+            .Append(" highestSeq=")
+            .Append(_highestAdmittedSequence.ToString(CultureInfo.InvariantCulture))
+```
+
+to:
+
+nothing; the statement is deleted outright.
+
+Forced rebuild:
+
+```
+$ git hash-object src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs
+9356696a21ef99da47455f1463f9c72637966e51
+$ touch src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:q --nologo
+before: ee6f6c51fb87bd33961b9f71d5d48c08bffa4bf1f8b5887aa6afa2fee0a22b3e
+after:  cb0f146d4a2808d647743ff24d3ca491aa2eb122e242641f70f72eae6cd6b18c
+```
+
+Verbatim failure:
+
+```
+$ dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj --no-build --nologo --filter 'FullyQualifiedName~MechaMiner.Simulation.Tests.Commands'
+Test run for <repo>/tests/MechaMiner.Simulation.Tests/bin/Debug/net8.0/MechaMiner.Simulation.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+  Failed EveryFieldOfTheGatesRenderingsIsPinnedToStatedText [41 ms]
+  Error Message:
+   Multiple failures or warnings in test:
+  1)   every field of the authoritative rendering is stated here, so deleting one from the rendering fails rather than shrinking what the whole-state comparisons cover
+Assert.That(gate.RenderAuthoritative(), Is.EqualTo(expectedAuthoritative).Using(StringComparer.Ordinal))
+  Expected string length 348 but was 335. Strings differ at index 46.
+  Expected: "gate run=000000005A700004 open=1 lastFrozen=0 highestSeq=5 admitted=2 stateVersion=2 appliedTransactions=1\nopen-tick\n  5 intent(0,-1)\nadmitted run=000000005A700004 tick=0 count=1\n  4 intent(1,0)\nhistory\n  4->0\n  5->1\ntransactions\n  transaction-result accepted run=000000005A700004 action=A-INSTALL-WEAPON clientSeq=9 version=2 events=1 snapshot=v2\n"
+  But was:  "gate run=000000005A700004 open=1 lastFrozen=0 admitted=2 stateVersion=2 appliedTransactions=1\nopen-tick\n  5 intent(0,-1)\nadmitted run=000000005A700004 tick=0 count=1\n  4 intent(1,0)\nhistory\n  4->0\n  5->1\ntransactions\n  transaction-result accepted run=000000005A700004 action=A-INSTALL-WEAPON clientSeq=9 version=2 events=1 snapshot=v2\n"
+  ---------------------------------------------------------^
+
+[4 stack-frame line(s) elided]
+  2)   and the diagnostic rendering adds exactly the rejection counters and the abandoned-commit count, one line per declared reason of each enum
+Assert.That(gate.Render(), Is.EqualTo(expectedDiagnostics).Using(StringComparer.Ordinal))
+  Expected string length 664 but was 651. Strings differ at index 46.
+  Expected: "gate run=000000005A700004 open=1 lastFrozen=0 highestSeq=5 admitted=2 stateVersion=2 appliedTransactions=1\nopen-tick\n  5 intent(0,-1)\nadmitted run=000000005A700004 tick=0 count=1\n  4 intent(1,0)\nhistory\n  4->0\n  5->1\ntransactions\n  transaction-result accepted run=000000005A700004 action=A-INSTALL-WEAPON clientSeq=9 version=2 events=1 snapshot=v2\nrejected=1\n  Stale=0\n  Duplicate=1\n  ForeignRunSession=0\n  SequenceRegression=0\n  InvalidPayload=0\n  AdmissionClosed=0\ntransaction-rejections\n  StaleExpectedStateVersion=0\n  AlreadyApplied=0\n  ForeignRunSession=0\n  UnknownAction=0\n  ConfirmationRequired=0\n  DomainRefused=0\n  SequenceRegression=0\nabandonedCommits=0\n"
+  But was:  "gate run=000000005A700004 open=1 lastFrozen=0 admitted=2 stateVersion=2 appliedTransactions=1\nopen-tick\n  5 intent(0,-1)\nadmitted run=000000005A700004 tick=0 count=1\n  4 intent(1,0)\nhistory\n  4->0\n  5->1\ntransactions\n  transaction-result accepted run=000000005A700004 action=A-INSTALL-WEAPON clientSeq=9 version=2 events=1 snapshot=v2\nrejected=1\n  Stale=0\n  Duplicate=1\n  ForeignRunSession=0\n  SequenceRegression=0\n  InvalidPayload=0\n  AdmissionClosed=0\ntransaction-rejections\n  StaleExpectedStateVersion=0\n  AlreadyApplied=0\n  ForeignRunSession=0\n  UnknownAction=0\n  ConfirmationRequired=0\n  DomainRefused=0\n  SequenceRegression=0\nabandonedCommits=0\n"
+  ---------------------------------------------------------^
+
+[15 stack-frame line(s) elided]
+Failed!  - Failed:     1, Passed:    18, Skipped:     0, Total:    19, Duration: 209 ms - MechaMiner.Simulation.Tests.dll (net8.0)
+probe exit: 1
+```
+
+The new test is red on both of its rendering assertions, and the eight pre-existing before/after comparisons over `RenderAuthoritative` are all green, which is the measurement of what they were covering. `Failed: 1, Passed: 18` over all of `...Tests.Commands` accounts for the tier. `VER-SIM-004-002`'s own selector, `StaleDuplicateAndInvalidEnvelopesRejectWithoutMutation`, is among the 18: it asserts that a refusal leaves the authoritative rendering byte-identical, and it still does, against a rendering that is now missing a field. That is precisely why the entry is credited here by the third rule of § Which entry each section controls: the rendering is the instrument its "byte-identical" claim is measured with, and an instrument that shrinks silently measures less while reporting the same result.
+
+Restore, and the state after it:
+
+```
+$ git checkout -- src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs && touch src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs
+$ git hash-object src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs
+9356696a21ef99da47455f1463f9c72637966e51
+$ git status --short | wc -l
+0
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:q --nologo
+$ sha256sum src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+ee6f6c51fb87bd33961b9f71d5d48c08bffa4bf1f8b5887aa6afa2fee0a22b3e  src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+$ dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj --no-build --nologo --filter 'FullyQualifiedName~MechaMiner.Simulation.Tests.Commands' | tail -1
+Passed!  - Failed:     0, Passed:    19, Skipped:     0, Total:    19, Duration: 189 ms - MechaMiner.Simulation.Tests.dll (net8.0)
+```
+
+### The gate's diagnostic rendering loses its rejection total
+
+**Entries controlled.** `VER-SIM-004-002`
+
+**Perturbation** (`src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs`, in `Render`). The `rejected=` total is deleted. This field exists only in the diagnostic half of the rendering, which is what makes the control worth running separately: it isolates `Render` from `RenderAuthoritative`, which `Render` is built on.
+
+Filter: `FullyQualifiedName~MechaMiner.Simulation.Tests.Commands`
+
+Perturbed from:
+
+```csharp
+        builder.Append("rejected=").Append(_rejectedInRun.ToString(CultureInfo.InvariantCulture));
+```
+
+to:
+
+nothing; the statement is deleted outright.
+
+Forced rebuild:
+
+```
+$ git hash-object src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs
+9356696a21ef99da47455f1463f9c72637966e51
+$ touch src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:q --nologo
+before: ee6f6c51fb87bd33961b9f71d5d48c08bffa4bf1f8b5887aa6afa2fee0a22b3e
+after:  d81f48d91964d95d62ab088065009854356f39996dc0481d3ad9f77756ee77ba
+```
+
+Verbatim failure:
+
+```
+$ dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj --no-build --nologo --filter 'FullyQualifiedName~MechaMiner.Simulation.Tests.Commands'
+Test run for <repo>/tests/MechaMiner.Simulation.Tests/bin/Debug/net8.0/MechaMiner.Simulation.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+  Failed EveryFieldOfTheGatesRenderingsIsPinnedToStatedText [37 ms]
+  Error Message:
+     and the diagnostic rendering adds exactly the rejection counters and the abandoned-commit count, one line per declared reason of each enum
+Assert.That(gate.Render(), Is.EqualTo(expectedDiagnostics).Using(StringComparer.Ordinal))
+  Expected string length 664 but was 654. Strings differ at index 348.
+  Expected: "gate run=000000005A700004 open=1 lastFrozen=0 highestSeq=5 admitted=2 stateVersion=2 appliedTransactions=1\nopen-tick\n  5 intent(0,-1)\nadmitted run=000000005A700004 tick=0 count=1\n  4 intent(1,0)\nhistory\n  4->0\n  5->1\ntransactions\n  transaction-result accepted run=000000005A700004 action=A-INSTALL-WEAPON clientSeq=9 version=2 events=1 snapshot=v2\nrejected=1\n  Stale=0\n  Duplicate=1\n  ForeignRunSession=0\n  SequenceRegression=0\n  InvalidPayload=0\n  AdmissionClosed=0\ntransaction-rejections\n  StaleExpectedStateVersion=0\n  AlreadyApplied=0\n  ForeignRunSession=0\n  UnknownAction=0\n  ConfirmationRequired=0\n  DomainRefused=0\n  SequenceRegression=0\nabandonedCommits=0\n"
+  But was:  "gate run=000000005A700004 open=1 lastFrozen=0 highestSeq=5 admitted=2 stateVersion=2 appliedTransactions=1\nopen-tick\n  5 intent(0,-1)\nadmitted run=000000005A700004 tick=0 count=1\n  4 intent(1,0)\nhistory\n  4->0\n  5->1\ntransactions\n  transaction-result accepted run=000000005A700004 action=A-INSTALL-WEAPON clientSeq=9 version=2 events=1 snapshot=v2\n\n  Stale=0\n  Duplicate=1\n  ForeignRunSession=0\n  SequenceRegression=0\n  InvalidPayload=0\n  AdmissionClosed=0\ntransaction-rejections\n  StaleExpectedStateVersion=0\n  AlreadyApplied=0\n  ForeignRunSession=0\n  UnknownAction=0\n  ConfirmationRequired=0\n  DomainRefused=0\n  SequenceRegression=0\nabandonedCommits=0\n"
+  ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------^
+
+[7 stack-frame line(s) elided]
+Failed!  - Failed:     1, Passed:    18, Skipped:     0, Total:    19, Duration: 198 ms - MechaMiner.Simulation.Tests.dll (net8.0)
+probe exit: 1
+```
+
+Only the diagnostic assertion fires, and the authoritative one passes, so `Render` is pinned independently of `RenderAuthoritative` rather than only through it. The failure text shows what a partially pinned rendering looks like: the total is gone and the per-reason counter lines it introduced are left hanging after a bare newline. `Failed: 1, Passed: 18` over all of `...Tests.Commands`. Credited to `VER-SIM-004-002` by the third rule of § Which entry each section controls, for the reason § The gate's authoritative rendering loses its highest-sequence field gives.
+
+Restore, and the state after it:
+
+```
+$ git checkout -- src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs && touch src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs
+$ git hash-object src/MechaMiner.Simulation/Commands/CommandAdmissionGate.cs
+9356696a21ef99da47455f1463f9c72637966e51
+$ git status --short | wc -l
+0
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:q --nologo
+$ sha256sum src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+ee6f6c51fb87bd33961b9f71d5d48c08bffa4bf1f8b5887aa6afa2fee0a22b3e  src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+$ dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj --no-build --nologo --filter 'FullyQualifiedName~MechaMiner.Simulation.Tests.Commands' | tail -1
+Passed!  - Failed:     0, Passed:    19, Skipped:     0, Total:    19, Duration: 188 ms - MechaMiner.Simulation.Tests.dll (net8.0)
+```
+
+### The admitted set's rendering loses its count
+
+**Entries controlled.** `VER-SIM-004-002` `VER-SIM-004-006`
+
+**Perturbation** (`src/MechaMiner.Simulation/Commands/AdmittedCommandSet.cs`, in `AdmittedCommandSet.Render`). The `count=` field and its value are deleted from the frozen set's own rendering. The single pre-existing assertion over this member compared one call of it against an earlier call of the same object, and the reference-model comparison in `CommandAdmissionPropertyTests` uses a test-side renderer rather than this one, so nothing pinned it.
+
+Filter: `FullyQualifiedName~MechaMiner.Simulation.Tests.Commands`
+
+Perturbed from:
+
+```csharp
+            .Append(" count=")
+            .Append(Count.ToString(CultureInfo.InvariantCulture));
+```
+
+to:
+
+```csharp
+            ;
+```
+
+Forced rebuild:
+
+```
+$ git hash-object src/MechaMiner.Simulation/Commands/AdmittedCommandSet.cs
+a5ff114ec224641681237677e1d2edbc2557dc52
+$ touch src/MechaMiner.Simulation/Commands/AdmittedCommandSet.cs
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:q --nologo
+before: ee6f6c51fb87bd33961b9f71d5d48c08bffa4bf1f8b5887aa6afa2fee0a22b3e
+after:  7bdb14ad3805c9592cb318726eaeac2ab5838d11bf02c24cba7c029dbdd2e6a2
+```
+
+Verbatim failure:
+
+```
+$ dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj --no-build --nologo --filter 'FullyQualifiedName~MechaMiner.Simulation.Tests.Commands'
+Test run for <repo>/tests/MechaMiner.Simulation.Tests/bin/Debug/net8.0/MechaMiner.Simulation.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+  Failed EveryFieldOfTheGatesRenderingsIsPinnedToStatedText [40 ms]
+  Error Message:
+   Multiple failures or warnings in test:
+  1)   every field of the authoritative rendering is stated here, so deleting one from the rendering fails rather than shrinking what the whole-state comparisons cover
+Assert.That(gate.RenderAuthoritative(), Is.EqualTo(expectedAuthoritative).Using(StringComparer.Ordinal))
+  Expected string length 348 but was 340. Strings differ at index 170.
+  Expected: "gate run=000000005A700004 open=1 lastFrozen=0 highestSeq=5 admitted=2 stateVersion=2 appliedTransactions=1\nopen-tick\n  5 intent(0,-1)\nadmitted run=000000005A700004 tick=0 count=1\n  4 intent(1,0)\nhistory\n  4->0\n  5->1\ntransactions\n  transaction-result accepted run=000000005A700004 action=A-INSTALL-WEAPON clientSeq=9 version=2 events=1 snapshot=v2\n"
+  But was:  "gate run=000000005A700004 open=1 lastFrozen=0 highestSeq=5 admitted=2 stateVersion=2 appliedTransactions=1\nopen-tick\n  5 intent(0,-1)\nadmitted run=000000005A700004 tick=0\n  4 intent(1,0)\nhistory\n  4->0\n  5->1\ntransactions\n  transaction-result accepted run=000000005A700004 action=A-INSTALL-WEAPON clientSeq=9 version=2 events=1 snapshot=v2\n"
+  ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------^
+
+[4 stack-frame line(s) elided]
+  2)   and the diagnostic rendering adds exactly the rejection counters and the abandoned-commit count, one line per declared reason of each enum
+Assert.That(gate.Render(), Is.EqualTo(expectedDiagnostics).Using(StringComparer.Ordinal))
+  Expected string length 664 but was 656. Strings differ at index 170.
+  Expected: "gate run=000000005A700004 open=1 lastFrozen=0 highestSeq=5 admitted=2 stateVersion=2 appliedTransactions=1\nopen-tick\n  5 intent(0,-1)\nadmitted run=000000005A700004 tick=0 count=1\n  4 intent(1,0)\nhistory\n  4->0\n  5->1\ntransactions\n  transaction-result accepted run=000000005A700004 action=A-INSTALL-WEAPON clientSeq=9 version=2 events=1 snapshot=v2\nrejected=1\n  Stale=0\n  Duplicate=1\n  ForeignRunSession=0\n  SequenceRegression=0\n  InvalidPayload=0\n  AdmissionClosed=0\ntransaction-rejections\n  StaleExpectedStateVersion=0\n  AlreadyApplied=0\n  ForeignRunSession=0\n  UnknownAction=0\n  ConfirmationRequired=0\n  DomainRefused=0\n  SequenceRegression=0\nabandonedCommits=0\n"
+  But was:  "gate run=000000005A700004 open=1 lastFrozen=0 highestSeq=5 admitted=2 stateVersion=2 appliedTransactions=1\nopen-tick\n  5 intent(0,-1)\nadmitted run=000000005A700004 tick=0\n  4 intent(1,0)\nhistory\n  4->0\n  5->1\ntransactions\n  transaction-result accepted run=000000005A700004 action=A-INSTALL-WEAPON clientSeq=9 version=2 events=1 snapshot=v2\nrejected=1\n  Stale=0\n  Duplicate=1\n  ForeignRunSession=0\n  SequenceRegression=0\n  InvalidPayload=0\n  AdmissionClosed=0\ntransaction-rejections\n  StaleExpectedStateVersion=0\n  AlreadyApplied=0\n  ForeignRunSession=0\n  UnknownAction=0\n  ConfirmationRequired=0\n  DomainRefused=0\n  SequenceRegression=0\nabandonedCommits=0\n"
+  ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------^
+
+[4 stack-frame line(s) elided]
+  3)   and a frozen set states its tick, its count, and every sequence with its normalized intent
+Assert.That(frozenTickZero.Render(), Is.EqualTo(expectedFrozenSet).Using(StringComparer.Ordinal))
+  Expected string length 60 but was 52. Strings differ at index 36.
+  Expected: "admitted run=000000005A700004 tick=0 count=1\n  4 intent(1,0)"
+  But was:  "admitted run=000000005A700004 tick=0\n  4 intent(1,0)"
+  -----------------------------------------------^
+
+[19 stack-frame line(s) elided]
+Failed!  - Failed:     1, Passed:    18, Skipped:     0, Total:    19, Duration: 207 ms - MechaMiner.Simulation.Tests.dll (net8.0)
+probe exit: 1
+```
+
+All three of the new test's assertions fire from one deleted field, because the gate embeds the frozen set's rendering inside both of its own: a field deletion in `AdmittedCommandSet` is now visible from three directions instead of none. `Failed: 1, Passed: 18` over all of `...Tests.Commands`. Two entries are credited, both by the third rule of § Which entry each section controls: `VER-SIM-004-006`, because the count is the frozen set's own statement of how many commands the tick admitted and that set's finality is the entry's claim, and `VER-SIM-004-002`, because the gate renderings its no-mutation comparison uses contain this one.
+
+Restore, and the state after it:
+
+```
+$ git checkout -- src/MechaMiner.Simulation/Commands/AdmittedCommandSet.cs && touch src/MechaMiner.Simulation/Commands/AdmittedCommandSet.cs
+$ git hash-object src/MechaMiner.Simulation/Commands/AdmittedCommandSet.cs
+a5ff114ec224641681237677e1d2edbc2557dc52
+$ git status --short | wc -l
+0
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:q --nologo
+$ sha256sum src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+ee6f6c51fb87bd33961b9f71d5d48c08bffa4bf1f8b5887aa6afa2fee0a22b3e  src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+$ dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj --no-build --nologo --filter 'FullyQualifiedName~MechaMiner.Simulation.Tests.Commands' | tail -1
+Passed!  - Failed:     0, Passed:    19, Skipped:     0, Total:    19, Duration: 191 ms - MechaMiner.Simulation.Tests.dll (net8.0)
+```
+
+### A rejection reason is given a value the counter array cannot index
+
+**Entries controlled.** `VER-SIM-004-013` `VER-SIM-004-002`
+
+**Perturbation** (`src/MechaMiner.Simulation/Commands/TransactionRejectionReason.cs`, at `SequenceRegression`'s declared value). `SequenceRegression = 6` becomes `SequenceRegression = 7`. Nothing else changes and the code compiles. The gate's two rejection-counter arrays are sized from `Enum.GetValues(...).Length` and indexed by `(int)reason`, which is correct only while the values run contiguously from zero, and nothing recorded that dependency before this pass. The member the defect branch added was safe by arithmetic rather than by a check, which is the reason the check now exists.
+
+Filter: `FullyQualifiedName~MechaMiner.Simulation.Tests.Commands`
+
+Perturbed from:
+
+```csharp
+    SequenceRegression = 6,
+```
+
+to:
+
+```csharp
+    SequenceRegression = 7,
+```
+
+Forced rebuild:
+
+```
+$ git hash-object src/MechaMiner.Simulation/Commands/TransactionRejectionReason.cs
+d9448c75867e9e5b2c2770b3edee8e7663dea2f3
+$ touch src/MechaMiner.Simulation/Commands/TransactionRejectionReason.cs
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:q --nologo
+before: ee6f6c51fb87bd33961b9f71d5d48c08bffa4bf1f8b5887aa6afa2fee0a22b3e
+after:  4e4bbfb6ffbed0deed56e98186622102cc7a767e001ac49ed0a07726747abf8b
+```
+
+Verbatim failure:
+
+```
+$ dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj --no-build --nologo --filter 'FullyQualifiedName~MechaMiner.Simulation.Tests.Commands'
+Test run for <repo>/tests/MechaMiner.Simulation.Tests/bin/Debug/net8.0/MechaMiner.Simulation.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+  Failed BothRejectionEnumsAreContiguousFromZeroAndEveryMemberHasACounter [24 ms]
+  Error Message:
+   Multiple failures or warnings in test:
+  1)   TransactionRejectionReason must number its members contiguously from zero, for the same reason
+Assert.That((int)transactionReasons[index], Is.EqualTo(index))
+  Expected: 6
+  But was:  7
+
+[4 stack-frame line(s) elided]
+  2) System.IndexOutOfRangeException : Index was outside the bounds of the array.
+[19 stack-frame line(s) elided]
+  Failed EveryFieldOfTheGatesRenderingsIsPinnedToStatedText [17 ms]
+  Error Message:
+   System.IndexOutOfRangeException : Index was outside the bounds of the array.
+[15 stack-frame line(s) elided]
+  Failed AFailedCommitInvalidatesTheTickInsteadOfWedgingTheRun [2 ms]
+  Error Message:
+   System.IndexOutOfRangeException : Index was outside the bounds of the array.
+[17 stack-frame line(s) elided]
+  Failed ASpentIdempotencyKeyCarryingADifferentActionIsRefusedRatherThanReplayed [1 ms]
+  Error Message:
+   System.IndexOutOfRangeException : Index was outside the bounds of the array.
+[13 stack-frame line(s) elided]
+Failed!  - Failed:     4, Passed:    15, Skipped:     0, Total:    19, Duration: 203 ms - MechaMiner.Simulation.Tests.dll (net8.0)
+probe exit: 1
+```
+
+This is the only one of the thirteen controls that reddens a registered selector, and it does so twice over. `BothRejectionEnumsAreContiguousFromZeroAndEveryMemberHasACounter` fails on the contiguity assertion and then again with `IndexOutOfRangeException` at `CommandAdmissionGate.TransactionRejectionCount`, which is the latent failure stated as data: a reason counted from inside a refusal path throws instead of returning the typed rejection `CTR-RUN-003` requires. `AFailedCommitInvalidatesTheTickInsteadOfWedgingTheRun` is `VER-SIM-004-013`'s own selector, so that entry is credited here unqualified, by the first rule of § Which entry each section controls; the widening is recorded rather than dropped, on the precedent § Attributions that did not survive the rule sets for a transcript showing a test failing that no record claimed. `VER-SIM-004-002` is credited by the third rule, because the typed rejection its claim rests on is what the exception replaces. `Failed: 4, Passed: 15` over all of `...Tests.Commands` accounts for the tier, and the four are named in the failure text.
+
+Restore, and the state after it:
+
+```
+$ git checkout -- src/MechaMiner.Simulation/Commands/TransactionRejectionReason.cs && touch src/MechaMiner.Simulation/Commands/TransactionRejectionReason.cs
+$ git hash-object src/MechaMiner.Simulation/Commands/TransactionRejectionReason.cs
+d9448c75867e9e5b2c2770b3edee8e7663dea2f3
+$ git status --short | wc -l
+0
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:q --nologo
+$ sha256sum src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+ee6f6c51fb87bd33961b9f71d5d48c08bffa4bf1f8b5887aa6afa2fee0a22b3e  src/MechaMiner.Simulation/bin/Debug/net8.0/MechaMiner.Simulation.dll
+$ dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj --no-build --nologo --filter 'FullyQualifiedName~MechaMiner.Simulation.Tests.Commands' | tail -1
+Passed!  - Failed:     0, Passed:    19, Skipped:     0, Total:    19, Duration: 190 ms - MechaMiner.Simulation.Tests.dll (net8.0)
+```
+
 ## Attributions that did not survive the rule
 
 Crediting a section with an entry only when the entry's own test is shown failing moved
@@ -3413,10 +4566,22 @@ Every entry in the seven `SIM-00*.json` files appears in exactly one row. An ent
 recorded as having no control does **not** name this file, which is the point of the table: a
 pointer to a transcript that does not mention the entry is worse than no pointer.
 
-Two kinds of qualified credit are marked inline. *Same perturbation against production* means
-the section applies to production code the perturbation the entry's gate applies to a stub, and
-does not show the entry's own test failing. *By filter* means the captured output is a golden
-diff rather than a `Failed <method>` line, and the credit rests on the command naming that test.
+Three kinds of credit short of "this section shows this entry's own selector going red" are
+marked inline, and the first two are weaker than the third. *Same perturbation against
+production* means the section applies to production code the perturbation the entry's gate
+applies to a stub, and does not show the entry's own test failing. *By filter* means the captured
+output is a golden diff rather than a `Failed <method>` line, and the credit rests on the command
+naming that test. Those two are cross-references: no test of the entry's claim is shown failing
+at all.
+
+*Second test of the claim* is not a cross-reference and is not filed with them. It means the
+section shows a test that asserts this entry's claim going red in a case the entry's own selector
+does not reach, and that the tally accounts for every test under the filter, so the selector is
+positively shown to have passed rather than merely not mentioned. It arose because the thirteen
+tests § Controls for the third review pass covers are new and support entries that already
+existed, so no entry's `selector` names them. Reading it as equivalent to the unmarked credit
+would be wrong in one specific way: the entry's registered gate is still the one that did not
+notice, and that is the fact the marker preserves.
 
 | Entry | Status | Section of this file, or the reason there is none |
 | --- | --- | --- |
@@ -3429,9 +4594,9 @@ diff rather than a `Failed <method>` line, and the credit rests on the command n
 | `VER-SIM-001-007` | implemented | § One diagnostic per discarded tick instead of one per occurrence |
 | `VER-SIM-001-008` | implemented | § SIM-001's permanent negative control, with its stub repaired |
 | `VER-SIM-001-009` | implemented | § Resume catches up instead of discarding |
-| `VER-SIM-001-010` | implemented | § A tick is invoked twice |
+| `VER-SIM-001-010` | implemented | § A tick is invoked twice; § A refused commit leaves the run alive, so the tick re-runs *(second test of the claim)* |
 | `VER-SIM-001-011` | implemented | § Run time accumulates instead of dividing the index |
-| `VER-SIM-001-012` | implemented | § A 35:00 event is admitted before the boundary is evaluated |
+| `VER-SIM-001-012` | implemented | § A 35:00 event is admitted before the boundary is evaluated; § The pre-tick boundary position is never evaluated *(second test of the claim)* |
 | `VER-SIM-001-013` | registered | Status is `registered`. Its selector is `./build.sh benchmark PERF-04`, a command that no runner in this repository can execute yet, so there is nothing to perturb and nothing to record. Its evidence will be an SCH-OBS-002 performance report on target hardware. |
 | `VER-SIM-001-014` | implemented | No control transcript. The gate scans the compiled assembly for forbidden determinism APIs, so a perturbation would mean adding a forbidden call to production code. Its five injected evasion routes, including the one a metadata scan cannot see, are recorded in the test's own remarks, which is the artifact a reader should open. |
 | `VER-SIM-002-001` | implemented | § An eighth pause reason is defined |
@@ -3444,31 +4609,31 @@ diff rather than a `Failed <method>` line, and the credit rests on the command n
 | `VER-SIM-002-008` | implemented | § The terminal transition can be cleared |
 | `VER-SIM-002-009` | implemented | § A pause banks wall time into the accumulator |
 | `VER-SIM-002-010` | implemented | § SIM-002's permanent negative control, with its stub repaired |
-| `VER-SIM-003-001` | implemented | No control transcript. Generation increment on slot reuse was never perturbed on its own; the exhaustion path was, under § An exhausted generation wraps instead of retiring the slot. |
-| `VER-SIM-003-002` | implemented | § Entities: the stale-reference gate refuses without counting; § The store resolves a stale generation |
-| `VER-SIM-003-003` | implemented | No control transcript. § The store resolves a stale generation drops the identity check that this entry's cross-run case also depends on, and the original record of that run named this entry as being under control, but the captured failure text does not show this entry's test failing. Recorded as uncovered rather than credited on the strength of the perturbation's intent. |
+| `VER-SIM-003-001` | implemented | § A stale generation is accepted at the free position *(second test of the claim)*. Generation increment on slot reuse is still not perturbed on its own; what that section shows failing is the free position that makes the increment load-bearing. The exhaustion path is under § An exhausted generation wraps instead of retiring the slot |
+| `VER-SIM-003-002` | implemented | § Entities: the stale-reference gate refuses without counting; § The store resolves a stale generation; § Both of the store's slot-range clauses are deleted *(second test of the claim)* |
+| `VER-SIM-003-003` | implemented | § The category lookup's run-session fence is removed *(second test of the claim)*. Previously recorded as uncovered, and the reason is kept because it is the sharper claim: § The store resolves a stale generation drops the identity check this entry's cross-run case also depends on and does not show this entry's test failing, so it is still not credited here |
 | `VER-SIM-003-004` | implemented | No control transcript. The reserved player identity was never perturbed. |
 | `VER-SIM-003-005` | implemented | § The store resolves a stale generation |
 | `VER-SIM-003-006` | implemented | § An exhausted generation wraps instead of retiring the slot |
 | `VER-SIM-003-007` | implemented | No control transcript. One store per authoritative population category is a structural enumeration; it was never perturbed. |
 | `VER-SIM-003-008` | implemented | § The hard capacity ignores the margin |
-| `VER-SIM-003-009` | implemented | § Entities: the stale-reference gate refuses without counting |
+| `VER-SIM-003-009` | implemented | § Entities: the stale-reference gate refuses without counting; § The entity diagnostics rendering loses its retirement field *(second test of the claim)* |
 | `VER-SIM-003-010` | implemented | § The store iterates in storage order; § EntityId.Compare loses its run-session key |
 | `VER-SIM-003-011` | implemented | § The packed store allocates during churn; § The dense record region becomes replaceable; § The growth counter is never recorded |
 | `VER-SIM-003-012` | implemented | § Entities: the stale-reference gate refuses without counting; § The store resolves a stale generation; § The store iterates in storage order; § EntityId.Compare loses its run-session key |
 | `VER-SIM-004-001` | implemented | § A command is applied more than once |
-| `VER-SIM-004-002` | implemented | § A refusal touches authoritative state |
+| `VER-SIM-004-002` | implemented | § A refusal touches authoritative state; § The gate's authoritative rendering loses its highest-sequence field; § The gate's diagnostic rendering loses its rejection total; § The admitted set's rendering loses its count; § A rejection reason is given a value the counter array cannot index, all four *(second test of the claim)* |
 | `VER-SIM-004-003` | implemented | § A sequence regression is admitted |
 | `VER-SIM-004-004` | implemented | § The foreign-run fence is checked second |
 | `VER-SIM-004-005` | implemented | § Movement normalizes by the wrong divisor |
-| `VER-SIM-004-006` | implemented | § The tick's admitted set is not frozen |
+| `VER-SIM-004-006` | implemented | § The tick's admitted set is not frozen; § The frozen-tick refusal is neutralised; § The admitted set's rendering loses its count, both *(second test of the claim)* |
 | `VER-SIM-004-007` | implemented | § Commit mutates before its last validation |
 | `VER-SIM-004-008` | implemented | § A stale expected state version is accepted |
-| `VER-SIM-004-009` | implemented | § A replay is refused without observing the applied result; § One control per replay guard; § The commit precondition, and the contrast that proves it is the guard |
+| `VER-SIM-004-009` | implemented | § A replay is refused without observing the applied result; § One control per replay guard; § The commit precondition, and the contrast that proves it is the guard; § A spent idempotency key is replayed under a different action *(second test of the claim)* |
 | `VER-SIM-004-010` | implemented | § A refused transaction publishes |
 | `VER-SIM-004-011` | implemented | § The reference model disagrees about a rejection reason |
 | `VER-SIM-004-012` | implemented | § SIM-004's permanent negative control, with its shared assertion weakened |
-| `VER-SIM-004-013` | implemented | § Commands: the two mid-commit recovery controls; § The mid-commit invalidation path is disabled |
+| `VER-SIM-004-013` | implemented | § Commands: the two mid-commit recovery controls; § The mid-commit invalidation path is disabled; § A rejection reason is given a value the counter array cannot index; § The failed commit keeps the presentation buffer it opened *(second test of the claim)* |
 | `VER-SIM-005-001` | implemented | § Randomness: the algorithm constants *(by filter)* |
 | `VER-SIM-005-002` | implemented | § The Mix shift, against a published external value *(by filter)* |
 | `VER-SIM-005-003` | implemented | No control transcript. The initialization golden was never perturbed on its own. § Randomness: the algorithm constants perturbs the constants that feed it and shows `random-stream-initialization.txt` diverging, but under a filter that names a different test, so the credit goes there and not here. |
@@ -3510,17 +4675,19 @@ diff rather than a `Failed <method>` line, and the credit rests on the command n
 | `VER-SIM-007-011` | implemented | § The snapshot gains a public member of a mutable type |
 | `VER-SIM-007-012` | implemented | § The staging run-session fence |
 
-68 entries name this file. 20 are recorded above as having no control transcript
+70 entries name this file. 18 are recorded above as having no control transcript
 anywhere and name it nowhere. One is retired and points at nothing. That accounts for all
 89 entries across the seven files. All seven packages' permanent negative-control entries now
 have a section that shows the entry's own test failing, `VER-SIM-005-016`'s being the last of
 the seven to be run, so no entry's only credit here is a qualified cross-reference.
 
-The 20 without a control are not a backlog with a plan attached, and this file does not
+The 18 without a control are not a backlog with a plan attached, and this file does not
 pretend otherwise. They are what the perturbation work did not reach. Seven of them are in
 SIM-005, the package whose gates lean hardest on committed goldens and an independent
 reference implementation, so the shape of its evidence is agreement with an external oracle
-rather than a demonstration that a gate can fail. That is a different kind of assurance, not a
+rather than a demonstration that a gate can fail. Two entries left the list in the third review
+pass, `VER-SIM-003-001` and `VER-SIM-003-003`, and both did so on a *second test of the claim*
+credit rather than on their own selectors reddening, which their rows say. That is a different kind of assurance, not a
 substitute for this one, and doc 91 § Acceptance evidence asks for this one.
 
 ## What these transcripts do not establish

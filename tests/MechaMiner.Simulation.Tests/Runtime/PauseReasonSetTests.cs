@@ -103,6 +103,22 @@ internal sealed class PauseReasonSetTests
     /// yields an equal set and is not an error, and a set handed to a consumer cannot be changed by
     /// that consumer or by a later change to the run's own set.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This also pins the writer's two idempotent <em>reports</em>, which nothing else stated. A
+    /// duplicate raise reports <see cref="PauseTransitionOutcome.AlreadyPresent"/>, and releasing a
+    /// reason never taken is idempotent and reported as
+    /// <see cref="PauseTransitionOutcome.AlreadyAbsent"/>, with the mask unchanged in both cases.
+    /// </para>
+    /// <para>
+    /// The distinction is the one <c>CMP-UIX-001</c> in
+    /// <c>docs/technical/115-component-contract-and-schema-registry.md</c> § Component registry
+    /// depends on: an idempotent no-op is fine, a refusal is a defect in the caller. Asserting only
+    /// the resulting set cannot tell them apart, because the set is equal either way - which is why
+    /// deleting either branch, so that a duplicate raise reported <c>Raised</c> or a clear of a
+    /// never-taken reason reported <c>Cleared</c>, previously left the suite green.
+    /// </para>
+    /// </remarks>
     [Test]
     public void SetIsImmutableAndIdempotent()
     {
@@ -119,8 +135,71 @@ internal sealed class PauseReasonSetTests
         clock.Raise(PauseReason.RelicResolution);
         clock.Clear(PauseReason.GeneralPause);
 
+        // The writer's own reports, on a clock nothing else touches. Both transitions below are
+        // no-ops on the mask; what is under test is that each one says so.
+        RunClock reporting = new();
+        PauseTransitionResult firstRaise = reporting.Raise(PauseReason.Fabrication);
+        PauseTransitionResult duplicateRaise = reporting.Raise(PauseReason.Fabrication);
+        PauseReasonSet maskAfterDuplicateRaise = reporting.BlockingReasons;
+        PauseTransitionResult clearNeverTaken = reporting.Clear(PauseReason.FocusLoss);
+        PauseReasonSet maskAfterClearNeverTaken = reporting.BlockingReasons;
+
         Expect.Multiple(() =>
         {
+            Assert.That(
+                firstRaise.Outcome,
+                Is.EqualTo(PauseTransitionOutcome.Raised),
+                "the first raise of an absent reason changes the set and reports that");
+
+            Assert.That(
+                duplicateRaise.Outcome,
+                Is.EqualTo(PauseTransitionOutcome.AlreadyPresent),
+                "a duplicate raise reports AlreadyPresent rather than reporting a change it did not "
+                    + "make (doc 10 § Pause contract makes the set a set)");
+            Assert.That(
+                duplicateRaise.ChangedTheSet,
+                Is.False,
+                "and reports that nothing moved");
+            Assert.That(
+                duplicateRaise.WasRefused,
+                Is.False,
+                "an idempotent no-op is not a refusal; CMP-UIX-001 must be able to tell them apart");
+            Assert.That(
+                maskAfterDuplicateRaise,
+                Is.EqualTo(PauseReasonSet.Of(PauseReason.Fabrication)),
+                "with the mask unchanged");
+            Assert.That(
+                duplicateRaise.ResultingSet,
+                Is.EqualTo(firstRaise.ResultingSet),
+                "and the result carries the same set the first raise produced");
+
+            // Releasing a reason never taken: idempotent, reported, and mask unchanged. Nothing
+            // else in the suite stated this, so deleting the branch reported Cleared and passed.
+            Assert.That(
+                clearNeverTaken.Outcome,
+                Is.EqualTo(PauseTransitionOutcome.AlreadyAbsent),
+                "clearing a reason never taken reports AlreadyAbsent rather than Cleared: nothing "
+                    + "was cleared, and the writer says so instead of claiming a transition");
+            Assert.That(
+                clearNeverTaken.ChangedTheSet,
+                Is.False,
+                "it changed nothing");
+            Assert.That(
+                clearNeverTaken.WasRefused,
+                Is.False,
+                "and it is not a refusal, unlike the one-way terminal transition");
+            Assert.That(
+                clearNeverTaken.Reason,
+                Is.EqualTo(PauseReason.FocusLoss),
+                "the result names the reason the transition was requested for, not one that moved");
+            Assert.That(
+                maskAfterClearNeverTaken,
+                Is.EqualTo(PauseReasonSet.Of(PauseReason.Fabrication)),
+                "the mask is untouched: releasing a reason never taken cannot release another one");
+            Assert.That(
+                clearNeverTaken.IsBlocking,
+                "and the run stays blocked by the reason that is genuinely present");
+
             Assert.That(
                 addedTwice,
                 Is.EqualTo(withFabrication),

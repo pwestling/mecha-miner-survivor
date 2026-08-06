@@ -11,10 +11,12 @@
     "One gap in this suite is deliberate and documented in the workflow header rather than silently absent: doc 91 § Fast pull-request suite additionally names content/localization/asset-manifest/license validation, which is the `content` verb owned by DAT-006 and today returns class 2. A second gap was claimed here and in the workflow header and was itself wrong. It said Godot headless import was not exposed short of `test-main`; `godot-import` is implemented and owned by FND-002, and the job now runs it, so the fast path is bootstrap, format-check, build, test-fast, godot-import. Only the focused integration tests doc 91 names alongside the import remain outside this job, because `test-main` is the verb that runs them and delivery-waves § Step 4 assigns test-main to the main path. OPS-001 owns the main and nightly suites; FND-010 owns evidence-bundle emission into these artifacts.",
     "The godot-import step has reachability evidence (a green run in which it recorded exit class 0) but no negative control of its own: no observed run has made the headless import fail and shown class 5 reaching the job result. VER-FND-005-002 through VER-FND-005-005 cover format, boundary, lock, and test failures; none of them exercises the import. Whoever adds an import control should add it as a numbered entry rather than reading this suite's green colour as covering the engine tier.",
     "Status is current status. VER-FND-005-008 is 'registered': its second half, a step that never ran while no step reported a failing class, has no evidence yet because no observed run has produced that state.",
-    "Observed runs, one scratch branch per control so no run can be mistaken for another. Clean commit a77d5fd, run 31073418621: every step exit class 0. Boundary control b9d0774, run 31073523317: build exit class 4, MMT-4001. Lock control d75514b, run 31073565252: bootstrap exit class 3, MMT-3001. Format control a7945a4, run 31073610902: format-check exit class 4, MMT-4001. Test control 4e4ecb9, run 31073708816: test-fast exit class 4, MMT-4001, 1 failed of 27. Runs are at https://github.com/pwestling/mecha-miner-survivor/actions/runs/<id>; the scratch branches were deleted after observation, so the runs and these commit ids are the record.",
+    "Observed runs, one scratch branch per control so no run can be mistaken for another. Clean commit a77d5fd, run 31073418621: every step exit class 0. Boundary control b9d0774, run 31073523317: build exit class 4, MMT-4001. Lock control d75514b, run 31073565252: bootstrap exit class 3, MMT-3001. Format control a7945a4, run 31073610902: format-check exit class 4, MMT-4001. Test control 4e4ecb9, run 31073708816: test-fast exit class 4, MMT-4001, 1 failed of 27. Runs are at https://github.com/pwestling/mecha-miner-survivor/actions/runs/<id>. There are eleven runs of this workflow, not ten: runs 1 through 10 are push events, which test the branch commit, and run 11 (31078454752, commit d8a5b53, green) is the only pull_request event, which tests the merge of that commit into the base. That is the only run of the merged tree there has ever been, and an earlier version of this note and of the pull request body omitted it. The four scratch branches were NOT deleted, contrary to what this note and the pull request body previously said: claude/fnd-005-nc-boundary, -nc-lock, -nc-format and -nc-test are all still listed by `git ls-remote --heads origin`. `git push origin --delete` returns HTTP 403 from this session's credentials, so deletion is unavailable rather than done. They are harmless where they are and their commits are cited above.",
     "The lock control's observed class contradicted this registry's first prediction, and the registry was corrected to the observation rather than the reverse. VER-FND-005-004 originally predicted class 5 at the build step, which is what ./build.sh build alone returns for that commit locally (MMT-5001, NuGet NU1004). In run 31073565252 (commit d75514b) bootstrap stage 3 reached the same locked restore first and classified it MMT-3001, exit class 3. So the two verbs disagreed about one defect: bootstrap called a lock-file/props disagreement a mismatched pinned environment, build called it a build failure, and which class a caller saw depended only on which verb ran first.",
-    "That divergence has since been resolved, in FND-002's BootstrapVerb, in favour of build's class. Doc 100's verb table assigns 'locked restore' to build, so build owns the condition and doc 100 says wrappers 'preserve the owning tool's class'; class 3 is 'missing or mismatched pinned environment' and doc 100 scopes the environment through doctor's 'exact Godot/.NET/Blender/tool/template availability and hashes', which a disagreement between two committed repository files is not. bootstrap's stage-3 restore failure is now class 5 (MMT-5001), the same as build's. Control on this tree: with NUnit's central version changed and the lock files untouched, ./build.sh bootstrap exits 5 MMT-5001 and ./build.sh build exits 5 MMT-5001; with the change reverted bootstrap exits 0. The observation above is left as observed -- run 31073565252 really did report 3 -- because rewriting it would hide the defect that prompted the fix.",
-    "A second wiring gap, found while adding the workflow-existence check and fixed the same way. Nine build/verify-*.sh gate scripts existed and three were invoked by anything: verify-architecture.sh from build, verify-godot.sh from godot-import, verify-policies.sh from test-fast. The other six ran only when a person remembered to type them, so every 'all gates green' report in this repository was true about a subset nobody had stated. build/verify-gate-wiring.sh now asserts a partition -- every gate script is invoked or explicitly exempted with a reason -- and build reaches it at stage 4. Each of the six was run first: verify-configurations 93 s, verify-format 212 s, verify-verbs 89 s, verify-wrapper-parity 14 s, verify-godot-runner 25 s all pass standalone, so none is exempted for being broken. verify-godot-runner.sh is now invoked by test-main. The other five are exempted for one demonstrated reason: ./build.sh rebuilds the verb host on every invocation, so a gate whose subject is the wrapper, reached from inside a running verb, makes MSBuild rewrite the assembly the calling verb is executing from. Observed, not assumed: with verify-verbs.sh wired into test-fast its section 1 read an empty verb table and the gate failed; two of them also launch Godot on the way and tripped test-fast's pure-tier tripwire, so the wiring itself would have turned the tier red. Unblocking them is FND-002's: a wrapper dispatch that does not rebuild a host already running."
+    "That divergence has since been resolved, in FND-002's BootstrapVerb, in favour of build's class 5. It is a judgement between two supportable readings of doc 100, and it is recorded as one here because an earlier version of this note presented it as a derivation from the documents, which it is not. The counter-reading is real: doc 100 § Toolchain pinning lists \"NuGet dependency graph and lock files\" among the things to pin in version-controlled files, so a lock file is part of the pinned set by that section's own words and \"missing or mismatched pinned environment\" is textually available for a lock-file disagreement. Class 3 is not a misreading. The reading that decided it is what the class means to a caller. Class 3 tells a caller to repair a machine - install the pinned SDK, install Godot, fix a PATH - and the repair for this condition is a repository edit committed through review, on every machine at once. A class that sends the reader to the wrong place is wrong for that reason, whatever table mentions which verb. The verb-table argument (doc 100 assigns \"locked restore\" to build, and wrappers \"preserve the owning tool's class\") points the same way but is the weaker of the two, because it is about ownership rather than about what the caller is told to do. Anyone with a new reason may revisit this; the counter-reading is named above so that revisiting it does not require deciding the documents were wrong. Control on this tree: with NUnit's central version changed and the lock files untouched, ./build.sh bootstrap exits 5 MMT-5001 and ./build.sh build exits 5 MMT-5001; with the change reverted bootstrap exits 0. The observation above is left as observed -- run 31073565252 really did report 3 -- because rewriting it would hide the defect that prompted the fix.",
+    "A second wiring gap, found while adding the workflow-existence check. Nine build/verify-*.sh gate scripts existed and three were invoked by anything: verify-architecture.sh from build, verify-godot.sh from godot-import, verify-policies.sh from test-fast. The other six ran only when a person remembered to type them, so every 'all gates green' report in this repository was true about a subset nobody had stated. build/verify-gate-wiring.sh now asserts a partition -- every gate script is reached from a workflow or explicitly exempted with the failure that was observed when it was wired -- and build reaches it at stage 4. The first version of that partition exempted five of the six on one shared reason: that ./build.sh rebuilds the verb host on every invocation, so a gate reached from inside a running verb makes MSBuild rewrite the assembly the calling verb is executing from, 'observed' as verify-verbs.sh reading an empty verb table when wired into test-fast. That reason does not reproduce and has been withdrawn. Each of the five was wired and its owning verb run end to end: verify-wrapper-parity.sh in build, exit 0, 30 s for the whole verb against a 20 s baseline; verify-verbs.sh in test-fast, exit 0, 122 s against a 28 s baseline, with 'verify-verbs: PASS' and '18 verbs registered and no others' after its own thirty-odd nested ./build.sh invocations; verify-configurations.sh in test-fast, exit 0, 109 s; verify-test-harness.sh in build, exit 0, 142 s. Three are now wired. Two are not, each for its own observed reason rather than a shared one. verify-format.sh: 212 s standalone, which is more than twice the fast job's whole current duration, and its own subject is format/format-check so the verb that owns it recurses (wired into format-check, ./build.sh format-check did not terminate and was killed at 200 s). Runtime is the honest objection and the number is above. verify-test-harness.sh: it invokes ./build.sh test-fast, so test-fast cannot hold it (observed: killed at 200 s, still nesting), and build cannot either once test-fast reaches verify-verbs.sh and verify-configurations.sh, because those invoke ./build.sh build and the cycle build -> test-harness -> test-fast -> verbs -> build closes (observed the same way). verify-godot-runner.sh was described here as 'now invoked by test-main'. It was, and that was not automation: .github holds one workflow and its steps do not include test-main, so the gate ran exactly as often after being wired as before - never. The partition now requires the invoking verb to be reachable from a workflow, and verify-godot-runner.sh is exempt on that ground until OPS-001's main-branch suite exists to run test-main.",
+    "Two of doc 91 § Fast pull-request suite's seven bullets were in neither this job nor its documented gaps, which made the gap accounting read as complete when it was not. 'generated-artifact staleness/diff check' has no verb behind it; delivery-waves assigns it to DAT-008, whose completion gate is 'generated artifacts stable and stale detection works' and which depends on DAT-006. 'changed UI/render captures where applicable' could not run in this job even with a verb: delivery-waves § Decision 2's CI note records that --headless 'uses the dummy driver and cannot capture screenshots, so visual verification needs xvfb-run plus lavapipe. Two distinct CI tiers, not one.' The second tier is OPS-001's and the screenshot/focus matrices are UI-001 through UI-010's. Both are now stated in the workflow header as well.",
+    "The job's own pins were unpinned, against doc 100 § Toolchain pinning's requirement to pin 'container/runner image identity where CI uses one' in version-controlled files: runs-on was ubuntu-latest, and actions/checkout and actions/upload-artifact were used at @v4, a branch-like ref their owner can repoint without a commit here. The runner is now ubuntu-24.04 and both actions are pinned to commit digests with the release recorded in a trailing comment. This was not on any gap list either."
   ],
   "entries": [
     {
@@ -208,7 +210,7 @@
     },
     {
       "id": "VER-FND-005-007",
-      "summary": "The job retains the verb evidence tree under artifacts/ as a bounded run artifact, and fails the upload when that set is empty. The control that matters here is the empty-set one: with if-no-files-found left at its default the step is green when nothing was collected, so 'no evidence was produced' and 'evidence was retained' would look the same in the run list, and the concise summaries TASK-FND-005-001 closes on would be unfalsifiable. Each retained result.json carries the verb, its exit class and class name, its diagnostic code, the source revision, the step logs, and the named artifacts.",
+      "summary": "The job retains the verb evidence tree under artifacts/ as a bounded run artifact, and fails the upload when that set is empty. The control that matters here is the empty-set one: with if-no-files-found left at its default the step is green when nothing was collected, so 'no evidence was produced' and 'evidence was retained' would look the same in the run list, and the concise summaries TASK-FND-005-001 closes on would be unfalsifiable. No observed run has produced an empty artifacts/ tree, so that control has not been run and this entry is registered rather than implemented, on the same ground as VER-FND-005-008: what is evidenced is that eleven runs uploaded a non-empty tree, which is the positive case only. Each retained result.json carries the verb, its exit class and class name, its diagnostic code, the source revision, the step logs, and the named artifacts.",
       "task": "TASK-FND-005-001",
       "requirements": [
         "TR-QUA-001",
@@ -233,7 +235,7 @@
         "linux-x64"
       ],
       "tier": "fast",
-      "status": "implemented"
+      "status": "registered"
     },
     {
       "id": "VER-FND-005-008",
@@ -266,7 +268,7 @@
     },
     {
       "id": "VER-FND-005-009",
-      "summary": "Deleting or renaming .github/workflows/fast.yml fails the repository-layout gate by name, so the workflow's existence is a checked fact rather than an assumption. No gate inside the workflow can cover this: removing the file removes every gate at once and produces no red run anywhere, because there is no run. build/verify-architecture.sh's EXPECTED_PATHS now lists the workflow, and ./build.sh build reaches that assertion at stage 3. The negative control is the whole content of this entry: with the file renamed to fast.yml.disabled, verify-architecture printed 'FAIL  missing prescribed path: .github/workflows/fast.yml' and ./build.sh build exited class 4 (MMT-4001); with the file restored it printed 'ok    exists: .github/workflows/fast.yml' and exited 0. Without the control this entry would assert only that a string was added to an array.",
+      "summary": "Deleting, renaming, truncating, or gutting .github/workflows/fast.yml fails the repository-layout gate by name, so what the workflow contains is a checked fact and not only that a path exists. No gate inside the workflow can cover this: removing the file removes every gate at once and produces no red run anywhere, because there is no run. The first version of this check was `[[ -e ]]` on the path, and it accepted a zero-byte fast.yml and a workflow with no jobs and no pull_request or push trigger - both of which un-gate the repository exactly as silently as deletion. build/verify-architecture.sh § 4 now asserts that the file is non-empty, that it triggers on both pull_request and push, that it declares at least one job with a steps: block, and that its steps invoke ./build.sh for each of the five verbs delivery-waves § Step 4 puts on the fast path. ./build.sh build reaches that assertion. Four negative controls, all run, each red and each naming what is missing: truncated to zero bytes gives 'fast.yml exists but is empty, so it runs nothing'; both triggers deleted gives 'declares no pull_request trigger' and 'declares no push trigger'; the jobs: mapping emptied gives 'declares no job, so nothing in it can run' plus the five missing verbs; the test-fast step deleted gives 'never invokes ./build.sh test-fast'. Restored, the section prints ten ok lines and ./build.sh build exits 0.",
       "task": "TASK-FND-005-001",
       "requirements": [
         "TR-BLD-006",
@@ -282,9 +284,7 @@
         "kind": "script",
         "value": "build/verify-architecture.sh"
       },
-      "fixtures": [
-        "local control: .github/workflows/fast.yml renamed to fast.yml.disabled, then restored"
-      ],
+      "fixtures": [],
       "scenarios": [],
       "evidenceKinds": [
         "command-exit-code",
@@ -298,7 +298,7 @@
     },
     {
       "id": "VER-FND-005-010",
-      "summary": "Every gate script in the repository is either invoked automatically or listed as deliberately unwired with a reason, and build/verify-gate-wiring.sh fails when a script is neither. The candidate set is enumerated from the filesystem rather than from a list in the script, because a hardcoded roster reproduces the defect one level up: a new script absent from the roster would pass by not being looked at. An empty enumeration fails rather than passing. Three negative controls, all run: a new build/verify-zzz-probe.sh that is neither wired nor listed fails the check with exit 4 and fails ./build.sh build with class 4 MMT-4001; an exemption naming a script that does not exist fails as a stale exemption; and renaming the godot-import verb's call site away from build/verify-godot.sh fails the check by name. The third control also found a real defect in the first version of this gate: it matched any occurrence of the script name, so a diagnostic message that merely named the script counted as running it and the control passed. 'Invoked' now means a complete C# string literal or a shell/YAML command, never a mention.",
+      "summary": "Every gate script in the repository is either reached automatically from a workflow or listed as deliberately unwired with the failure observed when it was wired, and build/verify-gate-wiring.sh fails when a script is neither. The candidate set is enumerated from the filesystem rather than from a list in the script, because a hardcoded roster reproduces the defect one level up: a new script absent from the roster would pass by not being looked at. An empty enumeration fails rather than passing. The enumeration covers verify-* and verify_* under any extension except documents, because a checker written in PowerShell, in Python, or with no extension at all is the same kind of artifact and this repository ships build.ps1. Three negative controls, all run: a new build/verify-zzz-probe.sh that is neither wired nor listed fails the check with exit 4 and fails ./build.sh build with class 4 MMT-4001; an exemption naming a script that does not exist fails as a stale exemption; and renaming the godot-import verb's call site away from build/verify-godot.sh fails the check by name. The definition of 'reached' is VER-FND-005-011's subject.",
       "task": "TASK-FND-005-001",
       "requirements": [
         "TR-BLD-005",
@@ -314,11 +314,66 @@
         "kind": "script",
         "value": "build/verify-gate-wiring.sh"
       },
-      "fixtures": [
-        "local control: build/verify-zzz-probe.sh, neither invoked nor exempt",
-        "local control: an EXEMPT entry naming build/verify-deleted-yesterday.sh, which does not exist",
-        "local control: GodotImportVerb.cs's build/verify-godot.sh call site renamed away"
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output"
       ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-005-011",
+      "summary": "'Reached' means a call site a workflow actually gets to, and the twelve forms that are not call sites are rejected while the real ones are still accepted. Two properties, both with controls in both directions, because a matcher tightened until it rejects everything is as useless as one that accepts prose. First, a call site is a call site. The previous matcher required a complete C# string literal, which was not enough: seven forms still counted as invocations, including the two the file said it had closed - a concatenated diagnostic (\"build/verify-zzz.sh\" + \" was never run\") and here-doc prose (see build/verify-zzz.sh for details) - plus a C# trailing comment after code, an unused const string, a shell echo message, a quoted shell assignment, and a shell trailing comment. The mechanical causes were a comment filter anchored at line start only and a character class that allowed a preceding quote. A C# call site is now the literal in argument position and a shell or YAML call site is the path in command position, with comments stripped anywhere on the line. All twelve non-call-site forms are rejected and the five real C# call sites plus a real shell command and a real YAML run: step are still accepted; both directions are run. Second, a call site only counts when a workflow reaches the verb that holds it. verify-godot-runner.sh was called by test-main, .github holds one workflow, and its steps do not include test-main, so 'invoked' was satisfied by a verb nothing runs and the gate ran as often as before it was wired - never. Attribution is per C# member, not per file, because TestVerb.cs holds both RunFastTier, which test-fast runs, and RunMainTier, which only test-main runs. Control: the same gate wired into BuildVerb.Execute passes and wired into TestVerb.RunMainTier fails, naming the verb.",
+      "task": "TASK-FND-005-001",
+      "requirements": [
+        "TR-BLD-005",
+        "TR-QUA-001"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface",
+        "docs/technical/91-verification-strategy.md#fast-pull-request-suite",
+        "docs/technical/91-verification-strategy.md#negative-control-adequacy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-gate-wiring.sh"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-005-012",
+      "summary": "The report step accounts for the exit-class record in both directions, from a roster it derives rather than one it lists, and refuses a class it cannot read. Four defects, each with a control that was red before the fix and green after. The roster of six step names was hardcoded in the step, which is the construction build/verify-gate-wiring.sh § 1 rejects one level down; it is now derived from the recorder lines of the workflow itself, and a step that runs a command without recording a class is caught by the count of run: steps against the count of recorders. Only expected-subset-of-recorded was enforced, so a row for a step the workflow does not have was ignored: an injected `content 4` row produced 'the fast suite passed' and exit 0, and now produces exit 8 naming content. `awk ... | tail -n 1` took the last row for a step, so a duplicate later 0 masked an earlier nonzero; every row is now read, and `build 4` followed by `build 0` exits 4. `[[ \"${class}\" -ne 0 ]]` coerced a non-numeric class to 0, so rows reading FAILED, 4x and 00 all reported a pass; the class is now matched against the classes doc 100 defines, and FAILED, 4x, 00 and 1 each exit 8. The pre-existing guards still hold: a real class 4 exits 4, a skipped step exits 8, and an absent record exits 8.",
+      "task": "TASK-FND-005-001",
+      "requirements": [
+        "TR-QUA-001",
+        "TR-QUA-003"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#negative-control-adequacy",
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": ".github/workflows/fast.yml"
+      },
+      "fixtures": [],
       "scenarios": [],
       "evidenceKinds": [
         "command-exit-code",

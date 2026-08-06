@@ -253,11 +253,13 @@ internal static class TestVerb
     /// failure means).
     /// </summary>
     /// <remarks>
-    /// Both of these have <c>./build.sh build</c> as their subject, which is the verb
-    /// that would otherwise own them, and that is exactly why they are here: both invoke
-    /// <c>./build.sh build</c> themselves, so from <c>build</c> they recurse without
+    /// Three of the four have <c>./build.sh build</c> as their subject, which is the verb
+    /// that would otherwise own them, and that is exactly why they are here: each invokes
+    /// <c>./build.sh build</c> itself, so from <c>build</c> they recurse without
     /// bound - observed as a 200 s timeout with the wrapper still nesting.
-    /// <c>test-fast</c> is the next verb the CI workflow runs and it invokes neither.
+    /// <c>test-fast</c> is the next verb the CI workflow runs and it invokes neither. The
+    /// fourth, <c>build/verify-registry.sh</c>, never touches the wrapper and is here
+    /// because it needs the test assemblies this verb builds.
     /// They were exempted from <c>build/verify-gate-wiring.sh</c> on a shared reason that
     /// did not reproduce; wiring each one and running this verb end to end is what
     /// retired it.
@@ -284,6 +286,31 @@ internal static class TestVerb
             "verify-configurations",
             "build/verify-configurations.sh",
             "doc 100's three configuration names no longer map 1:1 onto MSBuild's"),
+
+        // The two gates FND-004 and FND-009 wrote and left unwired. PR #7 recorded that as
+        // an open item on the reasoning that wiring a gate is a workflow-contract decision
+        // rather than part of writing the validator - which was true when nothing asserted
+        // the partition. build/verify-gate-wiring.sh now does, and its exemption list says
+        // in its own header that it "is not a place to park a script that could simply be
+        // wired". Both of these can be, so both are, and the open item is closed rather
+        // than restated.
+        //
+        // Here rather than in `build` for the same reason as the two above, measured the
+        // same way. build/verify-build-identity.sh runs `./build.sh build` at line 73, so
+        // from `build` it recurses; test-fast invokes neither `build` nor itself through
+        // it. build/verify-registry.sh runs `dotnet build MechaMiner.sln` and
+        // `dotnet test` directly and never touches the wrapper, so no placement recurses -
+        // it is here beside the other repository-consistency gates rather than in `build`
+        // because it needs the test assemblies built and test-fast is where that happens.
+        (
+            "verify-registry",
+            "build/verify-registry.sh",
+            "the specification's identifiers, cross-links or verification registries are broken, "
+            + "or the retained audit evidence does not match what the tests assert"),
+        (
+            "verify-build-identity",
+            "build/verify-build-identity.sh",
+            "the three build-identity surfaces no longer read one baked assembly and agree"),
     };
 
     /// <summary>Runs the pure tiers and the build-policy fixtures, and launches no Godot process.</summary>

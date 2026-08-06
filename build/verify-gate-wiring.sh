@@ -233,6 +233,8 @@ readonly INVENTORY=(
   "build/verify-configurations.sh|gate||asserts the Godot project builds in all three configurations"
   "build/verify-format.sh|gate||asserts owned text files satisfy the .editorconfig rules"
   "build/verify-gate-wiring.sh|gate||this file: asserts the partition below. It is a gate about gates and is subject to its own rule, which is why it appears in its own inventory rather than being special-cased out of it"
+  "build/verify-build-identity.sh|gate||asserts the three build-identity surfaces read one baked assembly and agree, through the boot scene rather than the test runner (FND-004). Arrived with the FND-004 merge, which is the change that created the unclassified condition and is therefore the change that resolves it"
+  "build/verify-registry.sh|gate||asserts the identifier, cross-link and tests/verification/*.json registry and the retained audit evidence (FND-009). Arrived with the same merge and is classified by it for the same reason"
   "build/verify-godot-runner.sh|gate||asserts the Godot integration-test runner emits the report the engine tier asserts"
   "build/verify-godot.sh|gate||asserts the Godot import step produced the expected artifacts"
   "build/verify-policies.sh|gate||asserts the compiler and analyzer policy fixtures fail as designed"
@@ -855,11 +857,38 @@ def entry_points(registry_text, members):
     return entries
 
 
+# The verb dispatch table. The closure below must not walk INTO it, and that is not a
+# convenience: it is the one type that names every verb's entry point, so any edge that
+# lands in it merges every verb's closure into one set. The seeds already come out of it
+# - entry_points() reads it - so traversing back in can only add edges that are not calls.
+#
+# This was measured, not anticipated. Over the FND-004 tree the closure of the `bootstrap`
+# verb reached BuildVerb.Execute by this exact path:
+#
+#   BootstrapVerb.Execute --[bare 'Build', 4 members of that name]--> BenchmarkReportBuilder.Build
+#   BenchmarkReportBuilder.Build --[bare 'All', 5 members]---------> VerbRegistry.All
+#   VerbRegistry.All --[same-type 'Verbs']-------------------------> VerbRegistry.Verbs
+#   VerbRegistry.Verbs --[qualified BuildVerb.Execute]-------------> BuildVerb.Execute
+#
+# so every script was attributed to every verb - "(verb bootstrap,build,doctor,format,
+# format-check,godot-import,test-fast,test-main)" on all seven rows - and § 3 and § 4 then
+# both failed on build/verify-godot-runner.sh, which is reached only from test-main and is
+# correctly exempt on the ground that no workflow runs test-main. THE DOCSTRING BELOW USED
+# TO CLAIM over-approximating "can only make this gate weaker ... never redder than the
+# truth". That is false wherever an exemption exists: § 4 requires reached and exempt to be
+# exclusive, so a false positive on "reached" turns a correct exemption into a failure.
+# Excluding the dispatch table is the narrowest fix, and it is a precision improvement in
+# the direction the two checks need - no real call path runs from one verb's code into
+# another verb THROUGH the registry, because the registry is what dispatches them.
+_DISPATCH_TABLE = "VerbRegistry"
+
+
 def closure(seeds, members, by_name):
     """Members reachable from seeds. A qualified T.N is an edge to T.N; a bare N is
     an edge to this type's N when it has one, and otherwise to every N there is.
-    Over-approximating widens what counts as reached, which can only make this gate
-    weaker in a way a reader can see, never redder than the truth."""
+    Over-approximating widens what counts as reached, which makes this gate weaker in a
+    way a reader can see - except through the dispatch table, where it makes it wrongly
+    RED, so that one type is excluded. See the note above."""
     reached = set()
     queue = [seed for seed in seeds if seed in members]
     while queue:
@@ -870,7 +899,8 @@ def closure(seeds, members, by_name):
         member = members[key]
         for type_name, member_name in _QUALIFIED.findall(member.text):
             candidate = (type_name, member_name)
-            if candidate in members and candidate not in reached:
+            if (candidate in members and candidate not in reached
+                    and candidate[0] != _DISPATCH_TABLE):
                 queue.append(candidate)
         for name in set(_IDENTIFIER.findall(member.text)):
             same_type = (member.type_name, name)
@@ -879,7 +909,7 @@ def closure(seeds, members, by_name):
                     queue.append(same_type)
                 continue
             for candidate in by_name.get(name, ()):
-                if candidate not in reached:
+                if candidate not in reached and candidate[0] != _DISPATCH_TABLE:
                     queue.append(candidate)
     return reached
 

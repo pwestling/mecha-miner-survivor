@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Negative control: bare bound in a $defs nested inside a subschema",
+  "description": "A bare numeric bound with no adjacent x-authority, placed in a $defs declared on a subschema rather than at the root, which no $ref of this evaluator can reach. This file exists to prove the attribution walk reaches that position; it is never loaded as a real schema.",
+  "type": "object",
+  "properties": {
+    "payload": {
+      "type": "object",
+      "$defs": {
+        "capacity": {
+          "type": "integer",
+          "maximum": 2048
+        }
+      }
+    }
+  }
+}

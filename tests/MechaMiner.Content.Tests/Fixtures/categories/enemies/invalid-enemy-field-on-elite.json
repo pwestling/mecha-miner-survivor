@@ -1,0 +1,42 @@
+{
+  "id": "ELT-01",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "tags": [],
+  "source_refs": [
+    "TR-DAT-002"
+  ],
+  "maximum_hull_multiplier": 4,
+  "movement_speed_multiplier": 1.1,
+  "contact_damage_multiplier": 1.5,
+  "body_scale_multiplier": 1.35,
+  "added_control_resistance_percent": 25,
+  "control_resistance_maximum_percent": 90,
+  "post_hard_control_immunity_seconds": 0.75,
+  "adds_behavior": false,
+  "adds_attacks_phases_aura_or_support_ai": false,
+  "adds_loot": false,
+  "retains_base_identity_behavior": "pure pursuit and contact",
+  "maximum_scheduled_elites_at_once": 2,
+  "beacon_elites_additional": "Hyper Gold beacons may temporarily add their separately specified elite counts.",
+  "modifier_application_order": [
+    "base",
+    "elite",
+    "resonance",
+    "relic"
+  ],
+  "recycling": {
+    "beacon_tagged_elites": "remain active until killed or run end",
+    "ordinary_elites": "may be recycled only under ordinary off-screen pressure rules"
+  },
+  "presentation_requirements": {
+    "required": [
+      "luminous crown organ",
+      "thicker outline",
+      "persistent minimap pip"
+    ],
+    "insufficient": "Scale or palette alone is insufficient."
+  },
+  "hull": 110
+}

@@ -1,0 +1,141 @@
+{
+  "id": "W-CF",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "weapon.W-CF.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#rank-zero-values-and-ore-stat-increments",
+    "recipe_pair: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "fabrication_cost: GDD-PROGRESSION#base-weapon-availability",
+    "base_automatic_attack: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "base_behavior: GDD-WEAPON-NUMERIC-CATALOG#w-cf--wake-projector",
+    "ore_upgradeable_stat_labels: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "damage_model: GDD-WEAPON-NUMERIC-CATALOG#base-weapon-summary",
+    "global_attack_rate_mapping: GDD-WEAPON-NUMERIC-CATALOG#global-weapon-attack-rate-mapping",
+    "branches.amplification.cost: GDD-WEAPON-NUMERIC-CATALOG#runaway-wake--amplification--2-cinderglass",
+    "branches.amplification.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.amplification: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.amplification: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.functional.cost: GDD-WEAPON-NUMERIC-CATALOG#carrier-ignition--functional--2-flux-amber",
+    "branches.functional.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.functional: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.functional: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.conversion.cost: GDD-WEAPON-NUMERIC-CATALOG#circuit-closure--conversion--2-driftmetal",
+    "branches.conversion.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.conversion: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.conversion: GDD-WEAPON-INDEX#catalog-lookup"
+  ],
+  "recipe_pair": {
+    "notation": "C + F",
+    "material_codes": [
+      "C",
+      "F"
+    ],
+    "material_names": [
+      "Cinderglass",
+      "Flux Amber"
+    ]
+  },
+  "fabrication_cost": {
+    "materials": [
+      {
+        "material_code": "C",
+        "material": "Cinderglass",
+        "units": 1
+      },
+      {
+        "material_code": "F",
+        "material": "Flux Amber",
+        "units": 1
+      }
+    ],
+    "signature_weapon_begins_equipped_without_paying_cost": true,
+    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost."
+  },
+  "base_automatic_attack": {
+    "text": "Leaves temporary damaging trail segments behind movement"
+  },
+  "base_behavior": {
+    "text": "movement leaves damaging trail segments. An enemy may take damage from at most two segments simultaneously, preventing stationary turns from creating unbounded overlap."
+  },
+  "ore_upgradeable_stat_labels": {
+    "labels": [
+      "Damage",
+      "trail width",
+      "trail duration"
+    ]
+  },
+  "ore_upgradeable_stats": [
+    {
+      "slot": 1,
+      "name": "Segment damage",
+      "rank_zero": 18,
+      "increment_per_rank": 1.8,
+      "unit": "damage per second",
+      "discrete": false
+    },
+    {
+      "slot": 2,
+      "name": "Wake width",
+      "rank_zero": 1.2,
+      "increment_per_rank": 0.1,
+      "unit": "M",
+      "discrete": false
+    },
+    {
+      "slot": 3,
+      "name": "Segment duration",
+      "rank_zero": 5.0,
+      "increment_per_rank": 0.5,
+      "unit": "seconds",
+      "discrete": false
+    }
+  ],
+  "fixed_properties": {
+    "placement_interval_base_travel_seconds": 0.25,
+    "simultaneous_segment_overlap_maximum_per_target": 2,
+    "raw": "Segment every 0.25 base-travel seconds, two-segment overlap cap per target"
+  },
+  "damage_model": {
+    "rank_zero_damage_model": "18/s per segment, two-segment target overlap cap",
+    "burst_10_dps": 34.2,
+    "sustained_30_dps": 36.0,
+    "favorable_horde_dps": 144,
+    "primary_limitation": "Requires movement and useful trail geometry"
+  },
+  "global_attack_rate_mapping": {
+    "affected_timing": "None",
+    "unaffected_timing": "Distance-based placement, damage ticks, and segment life"
+  },
+  "branches": {
+    "amplification": {
+      "name": "Runaway Wake",
+      "funding_material_code": "C",
+      "funding_material": "Cinderglass",
+      "cost": {
+        "material": "Cinderglass",
+        "units": 2
+      }
+    },
+    "functional": {
+      "name": "Carrier Ignition",
+      "funding_material_code": "F",
+      "funding_material": "Flux Amber",
+      "cost": {
+        "material": "Flux Amber",
+        "units": 2
+      }
+    },
+    "conversion": {
+      "name": "Circuit Closure",
+      "funding_material_code": "D",
+      "funding_material": "Driftmetal",
+      "cost": {
+        "material": "Driftmetal",
+        "units": 2
+      }
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "id": "REL-02",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "relic.REL-02.name",
+  "summary_key": "relic.REL-02.summary",
+  "tags": [],
+  "source_refs": [
+    "TR-DAT-003"
+  ],
+  "transformation_key": "relic.REL-02.transformation",
+  "tradeoff_key": "relic.REL-02.tradeoff",
+  "affected_scope": [
+    "all-equipped-weapons"
+  ],
+  "behavior_kind": "activation-rate-transform-and-opposite-geometry",
+  "trigger_condition": "always active while installed",
+  "effects": {
+    "activation_rate_multiplier": 3,
+    "geometry_inverted": true
+  },
+  "pool_availability": "hyper-gold-unlock",
+  "overrides_or_replaces": [],
+  "sale_value_common_ore": 150,
+  "rules": [
+    "Only one relic is active at a time."
+  ],
+  "cross_document_rules": [
+    {
+      "text": "Directional attacks fire opposite the mech's facing.",
+      "parameters": {
+        "position_history_minimum_seconds": 2
+      }
+    }
+  ],
+  "unlock_id": "UNL-02"
+}

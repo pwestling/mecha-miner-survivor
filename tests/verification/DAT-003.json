@@ -1,0 +1,1361 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "DAT-003",
+  "workPackageTitle": "Per-category schemas and typed models: weapons and the stat price formula, branches, utilities, relics, PowerUps, and option unlocks",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91 § Verification registry).",
+    "Every summary states the route the check takes to its subject, and names the gap where the route has one. See the same note in tests/verification/DAT-002.json.",
+    "This repository has no CI. Every gate below is a local ./build.sh run.",
+    "Fixture IDs are paths beneath tests/MechaMiner.Content.Tests/Fixtures/categories/. Every invalid fixture asserts the one diagnostic code it is named for.",
+    "VER-DAT-003-026 is the over-strict control for this package.",
+    "VER-DAT-003-003 is the compensation for recipes that are no longer human-legible. Once a recipe holds resource IDs rather than letters, a mis-assigned pair is invisible to a reader; resolving each ID to its canonical letter and comparing the concatenation to the weapon's own ID suffix restores the check a human used to perform by eye.",
+    "Cross-reference existence - that a named resource, weapon, branch, relic or unlock definition is actually present - is DAT-005's relational work. Entries here check ID grammar and intra-catalog cardinality only, and say so.",
+    "The relic hook reading is corrected and no entry depends on the old one. relic.schema.json described behavior_kind as the mapping of ten hook sentences that 'each named a distinct hook point and none overlapped'. Measured against content/relics: there are nineteen hook points across the ten strings, because nine of the ten join two noun phrases with different head nouns by 'and' and both conjuncts are independently realised in the same file's effects block - REL-01 carries primary_activation_frequency_multiplier 3 and mirrors_directional_and_targeted_geometry true. Only REL-04 names one. REL-01, REL-04 and REL-09 overlap each other on rate/cadence transformation. So no relic-to-hook mapping is derivable: it would need nineteen invented names and a document that mints them. hook is unmapped prose, no field represents it, and VER-DAT-003-019 is unaffected because it only ever claimed token grammar and an open effects map. No test asserted hook distinctness or one hook per relic, so none was removed."
+  ],
+  "entries": [
+    {
+      "id": "VER-DAT-003-001",
+      "summary": "A weapon's recipe_pair_material_ids holds two resource IDs, not letters and not display names. The route is the RSC-[0-9]{2} grammar applied to each element; whether the referenced resource exists is DAT-005's relational check, so a syntactically valid ID naming no resource passes here and a display name such as 'Asterite' does not.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-002",
+        "TR-DAT-004"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#weapons",
+        "docs/technical/40-content-data-and-validation.md#stable-id-policy"
+      ],
+      "gameplaySources": [
+        "docs/66-weapon-catalog-and-resource-graph.md#accepted-base-catalog-assignment"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/valid-weapon.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/invalid-recipe-display-name.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-002",
+      "summary": "The weapons catalog holds exactly 15 unordered material-pair recipes with no duplicate pair. The route sorts each weapon's two recipe resource IDs and matches on the sorted pair across every file in content/weapons/, so [RSC-01, RSC-02] and [RSC-02, RSC-01] collide as they should and the count is of distinct pairs rather than of files. A file count alone would not catch two weapons sharing one pair.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#weapons"
+      ],
+      "gameplaySources": [
+        "docs/66-weapon-catalog-and-resource-graph.md#accepted-catalog-structure"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/valid-weapon.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/catalog-duplicate-recipe-pair.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/invalid-recipe-count.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-003",
+      "summary": "Each weapon's recipe resources, in authored order, have canonical letters that concatenate to its W-xy ID suffix. The route resolves each recipe resource ID to its canonical_letter in the resources catalog and compares the concatenation to the two characters after 'W-', so W-AB must resolve to the resources lettered A and B. This is the compensation for a recipe that is no longer human-legible: without it a mis-assigned pair reads as valid. The control is content/weapons/catalog-recipe-letters-mismatch.json, individually valid and holding a pair whose letters do not spell its own ID, which the catalog pass must reject.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002",
+        "TR-DAT-004"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#weapons",
+        "docs/technical/40-content-data-and-validation.md#stable-id-policy"
+      ],
+      "gameplaySources": [
+        "docs/66-weapon-catalog-and-resource-graph.md#assignment-structure"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/valid-weapon.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/catalog-recipe-letters-mismatch.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-004",
+      "summary": "A weapon declares exactly three ore-upgradeable stat tracks. The route is the array cardinality of ore_upgradeable_stats plus a uniqueness check on the parsed stat names, so three tracks with two identical names fails as a duplicate rather than passing the count.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#weapons"
+      ],
+      "gameplaySources": [
+        "docs/71-initial-weapon-numeric-catalog.md#rank-zero-values-and-ore-stat-increments"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/valid-weapon.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/invalid-stat-track-count.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/invalid-stat-track-duplicate-name.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-005",
+      "summary": "A weapon's branch_ids holds exactly three branch IDs whose prefixes are the weapon's own ID. The route matches on the ID prefix inside the weapon file; that the three are one amplification, one functional and one conversion is asserted from the branch side by VER-DAT-003-010, because branch_class lives on the branch and not on the weapon.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-002",
+        "TR-DAT-004"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#weapons",
+        "docs/technical/40-content-data-and-validation.md#branches"
+      ],
+      "gameplaySources": [
+        "docs/65-weapon-stat-and-branch-upgrades.md#weapon-branches"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/valid-weapon.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/invalid-branch-id-foreign-weapon.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/invalid-branch-id-count.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-006",
+      "summary": "A stat track's unit is a token from a closed eight-token enum rather than a free string, matched by exact case-sensitive comparison. This is the one place in the tree where a unit is carried as a value rather than as a name suffix, because rank_zero and increment_per_rank are a generic pair whose unit varies per row; the enum is what keeps that from becoming a free-text field. The control is a stat track whose unit is a near-miss of a declared token, which the exact comparison must reject rather than treat as an unknown future unit.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#weapons",
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy"
+      ],
+      "gameplaySources": [
+        "docs/71-initial-weapon-numeric-catalog.md#measurement-conventions"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/valid-weapon.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/invalid-stat-unit-token.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-007",
+      "summary": "FORMULA-01, the weapon stat price curve, is a registered formula kind plus parameters and never a script string. The route is a formula_kind token plus a typed parameter object; the fixture carrying formula: '5n(n + 1)' is rejected as an unknown field, because no field in the schema accepts an expression. Whether the kind has a registered descriptor is DAT-004's check.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#weapons",
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy"
+      ],
+      "gameplaySources": [
+        "docs/65-weapon-stat-and-branch-upgrades.md#individual-stat-upgrades"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/valid-price-formula.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/invalid-price-formula-script-string.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-008",
+      "summary": "branch_class is one of exactly three tokens: amplification, functional, conversion. The field is branch_class and not class; the route rejects a document carrying class as an unknown field, so the thirty files that used the shorter spelling cannot pass by accident.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#branches"
+      ],
+      "gameplaySources": [
+        "docs/65-weapon-stat-and-branch-upgrades.md#weapon-branches"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/branches/valid-branch.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/branches/invalid-branch-class-token.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/branches/invalid-class-instead-of-branch-class.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-009",
+      "summary": "A branch registers against exactly one weapon. The route is a single scalar weapon_id whose value must equal the branch ID's own W-xy prefix, so a branch cannot name a second weapon and cannot name a weapon other than the one its ID already claims. An array-valued weapon reference is a type error, which is what makes 'exactly one' structural rather than a count.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-002",
+        "TR-DAT-004"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#branches"
+      ],
+      "gameplaySources": [
+        "docs/65-weapon-stat-and-branch-upgrades.md#weapon-branches"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/branches/valid-branch.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/branches/invalid-weapon-id-mismatch.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-010",
+      "summary": "Each weapon has exactly one amplification, one functional and one conversion branch. The route groups every definition in content/branches/ by its weapon_id and requires each group's branch_class multiset to equal the three-token set, so a weapon with two conversions and no functional fails even though its branch count is three.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#branches",
+        "docs/technical/40-content-data-and-validation.md#weapons"
+      ],
+      "gameplaySources": [
+        "docs/71-initial-weapon-numeric-catalog.md#branch-numeric-summary"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/branches/valid-branch.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/branches/catalog-duplicate-branch-class.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-011",
+      "summary": "A branch adds no fourth stat track. The route is structural and not a rule: the branch field table declares no field by which a branch could add one, so a document carrying adds_stat_track or ore_upgradeable_stats is rejected as an unknown field at the root. What the route does not cover is a branch whose effects parameters change a quantity that is not one of the parent weapon's three tracks without naming it as a track; effects is a registry-owned parameter map, so its keys are the behavior descriptor's to constrain and not this schema's.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#branches",
+        "docs/technical/40-content-data-and-validation.md#weapons"
+      ],
+      "gameplaySources": [
+        "docs/65-weapon-stat-and-branch-upgrades.md#weapon-branches"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategoryFixtureCorpusTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/branches/valid-branch.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/branches/invalid-fourth-stat-track.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-012",
+      "summary": "A branch's expected_effect is one field shaped {magnitude, qualitative} with qualitative always present and magnitude omitted where the effect is unquantified. The route rejects the superseded favorable_scene_effect spelling as an unknown field, so the two encodings cannot coexist.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#branches"
+      ],
+      "gameplaySources": [
+        "docs/71-initial-weapon-numeric-catalog.md#branch-numeric-summary"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/branches/valid-branch.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/branches/invalid-favorable-scene-effect.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/branches/invalid-expected-effect-no-qualitative.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-013",
+      "summary": "A branch's cost is a resource ID plus a unit count, never a material display name. The route is the RSC- grammar on cost_material_id and a positive integer on cost_units; the two-unit value that every accepted branch shares is not hardcoded, so a future branch costing a different number is expressible and a zero or negative count is not.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-002",
+        "TR-DAT-004"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#branches",
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy"
+      ],
+      "gameplaySources": [
+        "docs/65-weapon-stat-and-branch-upgrades.md#fabrication-flow"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/branches/valid-branch.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/branches/invalid-cost-material-display-name.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/branches/invalid-cost-units-nonpositive.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-014",
+      "summary": "No two utilities share an installed identity. The route matches on the pair (material_id, primary_role) across every definition in content/utilities/, so two utilities on the same material with the same role collide even though their IDs differ. It matches on parsed field values and not on the ID, precisely so that minting a new ID for a duplicate cannot slip past.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#utilities"
+      ],
+      "gameplaySources": [
+        "docs/68-utility-catalog.md#shared-acquisition-and-rank-rules"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/valid-utility.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/catalog-duplicate-installed-identity.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-015",
+      "summary": "A utility's rank array length equals rank_count plus one, the extra row being rank 0 for Installed, and the rank values are the contiguous integers from 0. The route compares the parsed rank of each row against its index, so a correct length with a repeated rank fails. The ore-only radar exception has rank_count 0 and omits ranks entirely, so the invariant is conditioned on ore_only_exception rather than applied blindly.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#utilities"
+      ],
+      "gameplaySources": [
+        "docs/68-utility-catalog.md#shared-acquisition-and-rank-rules"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/valid-utility.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/valid-utility-radar.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/invalid-rank-count-mismatch.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/invalid-rank-values-noncontiguous.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-016",
+      "summary": "The utility catalog's fresh-versus-unlocked distribution is exactly the accepted one: six utilities available on a fresh profile, six behind the utility-suite unlock, and one ore-only radar always present. The route counts parsed pool_availability tokens over the catalog and compares all three counts, so moving one utility from one pool to the other fails even though every file remains individually valid.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#utilities"
+      ],
+      "gameplaySources": [
+        "docs/68-utility-catalog.md#fresh-profile-and-unlocked-availability"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/valid-utility.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/catalog-shifted-pool-availability.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-017",
+      "summary": "The ore-only radar exception is a single boolean that gates nine fields at once. The route makes material_id, ranks and the four acquisition fields conditionally forbidden when ore_only_exception is true and conditionally required when it is false, so neither a radar carrying a material nor a material utility omitting one can pass. One discriminator replaces nine nullable fields.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#utilities"
+      ],
+      "gameplaySources": [
+        "docs/68-utility-catalog.md#catalog-overview"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/valid-utility-radar.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/invalid-radar-with-material.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/invalid-material-utility-without-material.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-018",
+      "summary": "A relic carries a pool_availability token and, where the token is hyper-gold-unlock, an unlock_id; a fresh-profile relic carries no unlock_id. The route is a conditional requirement keyed on the token, which replaces the anti-correlated in_fresh_profile_pool boolean that stated the same fact a second time. The control is a fresh-profile relic carrying an unlock_id and a hyper-gold-unlock relic carrying none; both must be rejected by the conditional requirement.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-002",
+        "TR-DAT-004"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#relics"
+      ],
+      "gameplaySources": [
+        "docs/69-initial-relic-catalog.md#fresh-profile-and-unlocked-availability"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/relics/valid-relic-fresh.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/relics/valid-relic-unlocked.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/relics/invalid-unlock-id-on-fresh-relic.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/relics/invalid-unlocked-relic-without-unlock-id.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-019",
+      "summary": "A relic's effects is an open parameter map whose contract is owned by the behavior registry, and its behavior_kind is a lower-kebab-case token. The route validates the token grammar and the map's presence, and deliberately does not validate the map's keys, because the per-kind parameter schema lives with the registered descriptor rather than in the content schema. Seventy-four keys across ten relics share none, which is why the map is open rather than a union.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#relics",
+        "docs/technical/40-content-data-and-validation.md#behavior-registries"
+      ],
+      "gameplaySources": [
+        "docs/69-initial-relic-catalog.md#catalog-principles"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/relics/valid-relic-fresh.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/relics/invalid-relic-behavior-kind-prose.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-020",
+      "summary": "PowerUp rank prices sum to 9,450 Hyper Gold across the catalog. The route is an integer sum over every ranks[].price_hyper_gold in every definition in content/powerups/, so the total is recomputed from the parts rather than compared against an authored total; there is no authored total left to compare against, because it was derived and removed. The control is a catalog whose rank prices sum to anything other than 9,450, which must be reported as a catalog total mismatch rather than silently accepted.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#powerups-and-option-unlocks"
+      ],
+      "gameplaySources": [
+        "docs/62-permanent-powerup-catalog.md#fully-upgraded-account-envelope"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/powerups/valid-powerup.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-021",
+      "summary": "A PowerUp's per-rank contribution is one effect_kind token from a closed five-way union plus one numeric value, the unit carried by the token. The route rejects the five parallel value keys the previous encoding used, so hull: 15 under an additive-percent kind is an unknown field rather than a silently accepted second encoding.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#powerups-and-option-unlocks"
+      ],
+      "gameplaySources": [
+        "docs/62-permanent-powerup-catalog.md#catalog-overview"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/powerups/valid-powerup.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/powerups/invalid-effect-kind-token.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/powerups/invalid-parallel-value-key.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-022",
+      "summary": "A PowerUp's ranks are the contiguous integers 1 through its cap, each with a positive integer price. The route compares each parsed rank against its index plus one and the array length against cap, so a cap that disagrees with the array is caught from both directions; prices are not required to increase, because no accepted document says they must and two catalogs have flat ladders.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#powerups-and-option-unlocks",
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy"
+      ],
+      "gameplaySources": [
+        "docs/62-permanent-powerup-catalog.md#shared-purchase-rules"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/powerups/valid-powerup.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/powerups/invalid-rank-cap-mismatch.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/powerups/invalid-rank-price-nonpositive.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-023",
+      "summary": "Option unlock costs sum to 2,150 Hyper Gold across the catalog, recomputed as an integer sum over cost_hyper_gold in every definition in content/unlocks/. The maximum-account envelope of 11,600 is the sum of this and VER-DAT-003-021's total, and is deliberately not asserted here: no accepted document states it, and asserting a number against itself proves nothing.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#powerups-and-option-unlocks"
+      ],
+      "gameplaySources": [
+        "docs/63-permanent-option-unlock-catalog.md#catalog-overview"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/unlocks/valid-unlock.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-024",
+      "summary": "unlock_kind is a lower-kebab-case token from a closed two-token vocabulary, and granted_ids holds stable IDs of the granted content. The route rejects the camelCase spellings relicCachePoolEntry and utilityBlueprints by exact comparison against the kebab-case vocabulary, and rejects a display name in granted_ids by ID grammar. Whether the granted IDs exist is DAT-005's relational check.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-002",
+        "TR-DAT-004"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#powerups-and-option-unlocks",
+        "docs/technical/40-content-data-and-validation.md#stable-id-policy"
+      ],
+      "gameplaySources": [
+        "docs/63-permanent-option-unlock-catalog.md#catalog-overview"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/unlocks/valid-unlock.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/unlocks/invalid-unlock-kind-camel-case.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/unlocks/invalid-granted-id-display-name.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-025",
+      "summary": "For every DAT-003 category the draft 2020-12 schema and the authoritative typed validator reach the same accept/reject verdict on every structural fixture, under the exclusion discipline VER-DAT-002-026 describes: each excluded diagnostic code carries a written reason, is separately proven still to be rejected by the typed validator, and must be exercised by at least one fixture. The comparison is on the verdict, matched per fixture against the corpus's declaration.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002",
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySchemaAgreementTests"
+      },
+      "fixtures": [
+        "content/schemas"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-026",
+      "summary": "Every valid DAT-003 fixture produces zero diagnostics, read through the same reader the invalid corpus uses so that cleanliness is matched on the identical code path. The over-strictness control for this package's field tables and semantic rules: without it a field table could require a field no document asks for and the invalid corpus would still pass. Catalog-only fixtures are asserted clean here too, which is what proves the per-file and catalog stages are separate rather than one pass that happens to catch both.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002",
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategoryFixtureCorpusTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-027",
+      "summary": "Every numeric bound in the DAT-003 schemas records its provenance in an adjacent x-authority with a derivation where the kind is sourced or derived, through the same directory-glob route as VER-DAT-002-028. The control is a DAT-003 schema bound stripped of its x-authority, and one whose authority kind is sourced with no derivation; each must fail the walk.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-005",
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy",
+        "docs/technical/40-content-data-and-validation.md#agent-content-change-workflow"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySchemaAuthorityCoverageTests"
+      },
+      "fixtures": [
+        "content/schemas"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-028",
+      "summary": "Every diagnostic a document produces names the definition at fault whenever its id is readable, proved through the route that most easily loses it: a valid fixture is given one unknown root field and several unrelated envelope-stage faults, read through the real category reader, and every diagnostic's ContentId is compared against the ID the document declares. Route covered: every diagnostic a category read produces for a document whose id is a string matching its category's grammar. Route not covered: a document the strict codec cannot scan at all, where no id has been read and every diagnostic is a codec diagnostic.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#compilation-pipeline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.DiagnosticContentIdTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/powerups/valid-powerup.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/valid-utility.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-029",
+      "summary": "The control that forbids satisfying VER-DAT-003-028 by inventing an ID: a document whose id is malformed for its category, and one that omits id entirely, are read by the same route and every diagnostic other than the one rejecting the raw string is compared against null, so no diagnostic may assert an identity the document does not have.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#compilation-pipeline",
+        "docs/technical/40-content-data-and-validation.md#stable-id-policy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.DiagnosticContentIdTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/powerups/valid-powerup.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-030",
+      "summary": "A root-level unknown field on a category document is reported exactly once and by the layer that names the kind, compared by counting the diagnostics at that one pointer after reading a valid fixture given one extra root property, and again with three, so the rule cannot be satisfied by a fix keyed to a single document's shape. Route covered: unknown properties at the document root, under a category field table. Route not covered: unknown properties at any nested depth, which only ever had one reporter and are held to the same single-report rule by the same fixture.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-002",
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#common-definition-envelope",
+        "docs/technical/40-content-data-and-validation.md#structural"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.RootUnknownFieldOwnershipTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/bosses/valid-boss.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/valid-utility.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-031",
+      "summary": "The over-suppression control for VER-DAT-003-030: an envelope read with no category field table behind it must still reject an unknown root field, so the deduplication cannot be satisfied by deleting the envelope's check. The same document is read by both routes and the two constraint messages are compared, one naming the envelope and one naming the kind. Route covered: an envelope read constructed without category field names. Route not covered: whether the two layers agree on which properties are unknown, which is the field tables' own business and is asserted by the schema-agreement suites.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-002",
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#common-definition-envelope"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.RootUnknownFieldOwnershipTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/powerups/valid-powerup.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-032",
+      "summary": "A dependent semantic check whose operand the field table has already reported stays silent, and the structural diagnostic at that operand's own pointer is still there. Twenty-one checks are each routed through the same valid fixture with the operand removed, and the diagnostics are matched by code and pointer so a suppression that swallowed both halves fails. Route covered: the twenty-one dependent checks the suppression names, each with the operands it reads written down beside it. Route not covered: a semantic check not in that table, which is unguarded by construction because nothing can infer the operands a check reads.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-004",
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#semantic",
+        "docs/technical/40-content-data-and-validation.md#compilation-pipeline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.DependentSemanticSuppressionTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/powerups/valid-powerup.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/valid-utility.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/valid-utility-radar.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/valid-weapon.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/unlocks/valid-unlock.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/branches/valid-branch.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/enemies/valid-elite-modifiers.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/encounters/valid-schedule.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id",
+        "absent-value-assertion"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-033",
+      "summary": "The control that makes VER-DAT-003-032 a suppression rather than a weakening: each of the same twenty-one checks is routed through the same fixture a second time, with every operand present and the rule genuinely broken, and must still report. The variant is also compared against the structural codes to prove it left the operand readable. Route covered: the same twenty-one checks, one violating variant each. Route not covered: every other way each rule can be broken, which is the invalid fixture corpus's job and not this control's. Which direction the accepted catalog can exercise, and which it cannot, measured over its 138 definitions at this revision by reading every one of them through its category reader and tallying codes: the suppression direction is exercised heavily and the firing direction is almost not exercised at all. With suppression disabled the catalog emits MMC-6006 49 times, MMC-6010 35, MMC-6004 14, MMC-6005 13 and MMC-6007 12; with it enabled those become 0, 0, 0, 6 and 0. The catalog is not clean - the same read emits 1760 MMC-2001, 971 MMC-2002 and 247 MMC-2003, because the field tables are ahead of the authored files - and that is precisely why the dependent checks are silenced on it: their operands are among the fields the structural stage has already reported. So four of the five dependent codes appear zero times in real output, MMC-6005 appears six, and for those four this fixture table is the only place the check is ever made to fire. A check in that state has no symptom outside this table if it breaks, which is what VER-DAT-003-037 and VER-DAT-003-038 were added to bound: one holds the suppression to the reported pointer and the other holds the message text.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-004",
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#semantic"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.DependentSemanticSuppressionTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/powerups/valid-powerup.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/valid-utility.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/valid-utility-radar.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/valid-weapon.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/unlocks/valid-unlock.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/branches/valid-branch.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/enemies/valid-elite-modifiers.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/encounters/valid-schedule.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-034",
+      "summary": "StructuralReport counts a mistyped operand as well as a missing one, and only the missing half is reachable today. A document with a mistyped field is read by the same route and its diagnostics are compared against the semantic band, which must be empty, pinning the ordering that makes an unsound shape stop the read before any semantic check runs.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-004",
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#validation-layers"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.DependentSemanticSuppressionTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/powerups/valid-powerup.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "absent-value-assertion"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-035",
+      "summary": "A recipe pair written in the other order, correct in every other respect, is reported by RecipeLettersSpellTheWeaponId and deliberately not by FifteenDistinctRecipePairs. Route: weapons/catalog-recipe-pair-reversed.json is W-AB carrying [RSC-02, RSC-01] and nothing else changed; the letters are resolved in authored order and the concatenation compared against the weapon ID's suffix, which spells BA against AB and must emit MMC-7005, while the sorted-pair route is asserted to stay silent because a material pair is unordered. Why it is a test and not a comment: the two checks read one field and disagree about ordering on purpose, which reads as an inconsistency side by side, and harmonising them by sorting the resolved letters deletes the only check that catches a swapped pair while leaving it looking like a check. Technique: sorting the resolved letters in RecipeLettersSpellTheWeaponId - the exact cleanup the remarks on both methods warn against - failed this test with 'Expected: some item equal to MMC-7005, But was: <empty>'.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-004",
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#weapons",
+        "docs/technical/91-verification-strategy.md#negative-control-adequacy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/catalog-recipe-pair-reversed.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-036",
+      "summary": "The branch_class field name is justified by what the value classifies, in both artifacts that justify it, and by no appeal to C# naming. Route: the branch_class description in content/schemas/branch.schema.json is read and compared against the ground that holds and against the withdrawn appeal's vocabulary, and BranchDto is reflected over so that every property is asserted to carry JsonPropertyName. Why: the schema and BranchDefinition's remarks both argued the name partly on the claim that the shorter spelling is a keyword a typed model would have to escape, which is false - the DTO annotates all eight properties, so the wire name is never a C# identifier, and the property behind a wire name of class would be Class - and a justification retracted in one copy while the other still carries it is later read as corroboration and restored. Technique: restoring the withdrawn clause to the schema description failed the first test naming both 'escape' and 'keyword'; removing JsonPropertyName from BranchDto.BranchClass failed the second naming BranchClass, which is the fact the retraction rests on.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-004",
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#branches"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.BranchClassNamingRationaleTests"
+      },
+      "fixtures": [
+        "content/schemas/branch.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-037",
+      "summary": "Dependent-check suppression is scoped to the reported pointer and not to the document. Each of the same twenty-one checks is routed through its fixture a third time with two independent faults composed: the rule broken with every operand present, and one unrelated required root field removed. The structural diagnostic at the unrelated pointer and the dependent diagnostic at its own pointer are matched by code and pointer and both must appear. Why a third table: every document in the other two breaks exactly one thing, so the structural bag is either empty or holds exactly the operand, and in both of those states an exact pointer test and a 'was anything reported at all' test are indistinguishable. Replacing all three pointer tests in StructuralReport with a count-greater-than-zero sweep left 1216 of 1216 other tests green and turned exactly these twenty-one red. Route covered: the twenty-one dependent checks, each composed with one unrelated removal declared per fixture and asserted to be reported, to differ from the operand, and to differ from where the check reports. Route not covered: two faults that interact, since the unrelated field is chosen per fixture to be one no check in the table reads; a composition where they did interact would fail the assertion that the operand is still readable rather than pass quietly.",
+      "task": "TASK-DAT-003-001",
+      "requirements": ["TR-DAT-004", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#semantic",
+        "docs/technical/40-content-data-and-validation.md#validation-layers"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.DependentSemanticSuppressionTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/powerups/valid-powerup.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/valid-utility.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/valid-utility-radar.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/valid-weapon.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/unlocks/valid-unlock.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/branches/valid-branch.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/enemies/valid-elite-modifiers.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/encounters/valid-schedule.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-038",
+      "summary": "The constraint sentence each of the five dependent semantic codes emits is compared as text, in full, against the sentence written down beside the case that provokes it. Route: nine variants built from five valid fixtures are read through their category readers, the diagnostic at the named code and pointer is required to be reported exactly once, and its ExpectedConstraint is compared for equality with the expected string. Why: a message can state the opposite of the truth while preserving everything a structural assertion looks at. Swapping expected and actual in SemanticCheck.ExactCount makes MMC-6006 report a five-row ladder under a cap of four as 'holds exactly 5 elements; found 4', at the same code and the same pointer with the same values present, and every count, key and code assertion in the suite still passed. MMC-6006 is covered three times, with expected above actual and below it, and MMC-6007 carries both an ordinal and the index it was required to equal, so a swap cannot be invisible in every row at once. The text is held inline rather than in a golden file so that changing a sentence changes a line in the diff of the commit that changes it. Route not covered: whether a sentence a reviewer approves is actually true of the document, which no check can decide; what this fixes is that nobody was being asked.",
+      "task": "TASK-DAT-003-001",
+      "requirements": ["TR-DAT-004", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#semantic"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.DependentSemanticConstraintTextTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/powerups/valid-powerup.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/valid-utility.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/valid-utility-radar.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/valid-weapon.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/encounters/valid-schedule.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id", "golden-text"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-039",
+      "summary": "Every walk over DAT-003.json's entries counts what it visited and fails when the count is zero. Route: each of the six per-package checks - citation resolution, ID sequencing, required fields, summary routes, nunit selector resolution and fixture-path existence - increments a counter per entry, and the citation, selector and fixture walks additionally count the citations, selectors and paths they actually resolved, since a registry of entries that name none of those would still be a walk that decided nothing. Why: all six were foreach loops with no non-empty assertion, so an emptied entries array satisfied every one of them. Measured directly: with the entries array of all three registries emptied, the nineteen tests in these two fixtures were 19 passed, 0 failed before this change and 2 passed, 17 failed after - the two survivors being the resolver's own negative control, which reads no entries. What makes each counter a count rather than a constant is exactly that: emptying the array turns all of them red.",
+      "task": "TASK-DAT-003-001",
+      "requirements": ["TR-DAT-004", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#what-evidencekinds-means"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategoryVerificationRegistryTests"
+      },
+      "fixtures": ["tests/verification/DAT-003.json"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    }
+  ]
+}

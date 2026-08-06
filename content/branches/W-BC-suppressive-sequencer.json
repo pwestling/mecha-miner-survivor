@@ -1,0 +1,63 @@
+{
+  "id": "W-BC-suppressive-sequencer",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-BC-suppressive-sequencer.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#suppressive-sequencer--functional--2-cinderglass",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#suppressive-sequencer--functional--2-cinderglass"
+  ],
+  "weapon_id": "W-BC",
+  "weapon_name": "Pulse Repeater",
+  "class": "Functional",
+  "cost": {
+    "resource": "Cinderglass",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-BC-zero-lag-emitter",
+      "W-BC-broadside-oscillator"
+    ],
+    "irreversible_within_run": true,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run."
+  },
+  "availability": {
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite."
+  },
+  "effects": {
+    "target_memory_window_seconds": 1.5,
+    "target_preference": "any valid enemy not in the memory set",
+    "slow_on_hit_percent": {
+      "percent": 25
+    },
+    "slow_duration_seconds": 1.0,
+    "boss_slow_handling": "the globally resisted form",
+    "all_targets_marked_fallback": "selects normally rather than withholding fire",
+    "damage_changed": false
+  },
+  "favorable_scene_effect": {
+    "qualitative": "converts repeated single-target fire into broad crowd suppression"
+  },
+  "rules": [
+    {
+      "text": "The weapon remembers enemies it hit during the previous 1.5 s and prefers any valid enemy not in that memory set."
+    },
+    {
+      "text": "Every hit slows its target by 25% for 1.0 s. Bosses receive the globally resisted form."
+    },
+    {
+      "text": "If every valid target is already marked, it selects normally rather than withholding fire."
+    },
+    {
+      "text": "Damage is unchanged; the branch converts repeated single-target fire into broad crowd suppression."
+    }
+  ]
+}

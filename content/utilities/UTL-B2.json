@@ -1,0 +1,113 @@
+{
+  "id": "UTL-B2",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "utility.UTL-B2.name",
+  "summary_key": "utility.UTL-B2.summary",
+  "tags": [],
+  "source_refs": [
+    "GDD-UTILITY-CATALOG#utl-b2--extraction-accelerator",
+    "external_numerics[]: GDD-INITIAL-MECH-CATALOG",
+    "effect.stacking_classification: GDD-UTILITY-CATALOG#modifier-and-timing-rules",
+    "catalog_wide_rules.modifier_and_timing_rules[]: GDD-UTILITY-CATALOG#modifier-and-timing-rules",
+    "catalog_wide_rules.shared_acquisition_and_rank_rules[]: GDD-UTILITY-CATALOG#shared-acquisition-and-rank-rules",
+    "installed_to_rank_3: GDD-UTILITY-CATALOG#catalog-overview"
+  ],
+  "material": "Barysteel",
+  "primary_role": "Mining speed",
+  "installed_to_rank_3": "+5% → +20% forward extraction rate",
+  "effect": {
+    "stat_names": [
+      "Forward extraction rate"
+    ],
+    "value_kind": "additive-percent",
+    "stacking_classification": "Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative."
+  },
+  "ranks": [
+    {
+      "state": "Installed",
+      "forward_extraction_rate": {
+        "percent": 5
+      }
+    },
+    {
+      "state": "Rank 1",
+      "forward_extraction_rate": {
+        "percent": 10
+      }
+    },
+    {
+      "state": "Rank 2",
+      "forward_extraction_rate": {
+        "percent": 15
+      }
+    },
+    {
+      "state": "Rank 3",
+      "forward_extraction_rate": {
+        "percent": 20
+      }
+    }
+  ],
+  "acquisition": {
+    "material_unit_cost": 1,
+    "utility_slots_filled": 1,
+    "rank_count": 3,
+    "rank_ore_costs": [
+      50,
+      100,
+      150
+    ],
+    "total_rank_ore_cost": 300,
+    "rank_values_are_totals_not_cumulative_additions": true,
+    "unique_in_loadout": true,
+    "has_branches": false,
+    "has_alternative_recipes": false,
+    "replaceable": false,
+    "dismantlable": false,
+    "sellable": false,
+    "refundable_during_run": false,
+    "requires_manual_activation": false,
+    "previews_all_four_effect_tiers": true
+  },
+  "availability": {
+    "fresh_profile": true,
+    "coverage_role": "Mining speed"
+  },
+  "effect_rules": [
+    "Applies to standard seams, rich seams, material geodes, and Hyper Gold sites.",
+    "A +20% extraction rate completes a nominal 15-second seam in 12.5 seconds, a 20-second geode in about 16.7 seconds, and a 45-second Hyper Gold site in 37.5 seconds before interruptions.",
+    "Mining decay remains four times the mech's current forward extraction rate. The utility shortens successful holds without improving the fraction of progress retained after leaving.",
+    "Does not change payouts, completed checkpoints, the 0.5-second leaving grace period, threat-beacon progress thresholds, or enemies already summoned."
+  ],
+  "catalog_wide_rules": {
+    "shared_acquisition_and_rank_rules": [
+      "Every non-radar utility costs one unit of its assigned specialized material and permanently fills one of three utility slots.",
+      "Each begins at its listed Installed effect and has three common-ore ranks costing 50, 100, and 150 ore.",
+      "The four values shown for a utility are its Installed, Rank 1, Rank 2, and Rank 3 totals—not cumulative additions.",
+      "A utility is unique within the loadout and cannot be fabricated twice.",
+      "Utilities have no branches, alternative recipes, replacement, dismantling, sale, or refund during a run.",
+      "Fabrication previews all four effect tiers, the current build's affected systems, and any equipped weapon that receives no benefit from a weapon-support utility.",
+      "The resource radar remains outside the material table: it costs 300 common ore, has no ranks, and retains its accepted seven-category directional behavior."
+    ],
+    "modifier_and_timing_rules": [
+      "Flat statistic changes apply before percentage modifiers. Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative.",
+      "Attack rate is represented as attacks per second or equivalent frequency; a +20% attack-rate total produces 1.2 times the unmodified activation frequency.",
+      "Recovery sources add in Hull Integrity per second.",
+      "Already-created finite projectiles, zones, mines, and similar weapon instances retain the damage, geometry, and lifetime with which they were created. New instances use the newly fabricated or ranked utility values.",
+      "Persistent autonomous units remain in place and use new utility values for attacks they perform after play resumes.",
+      "Fabrication and utility ranking occur during a complete-simulation pause, so no duration, cooldown, Recovery, or mining state advances while the purchase is reviewed.",
+      "If a later relic explicitly replaces a statistic or rule, its description must state whether it overrides or combines with these utilities. Silent exceptions are not allowed."
+    ]
+  },
+  "external_numerics": [
+    {
+      "statement": "Prospector's inherent 115% extraction rate reaches 135% with a Rank 3 Extraction Accelerator.",
+      "value": {
+        "percent": 135
+      },
+      "quote": "| Prospector | 115% extraction rate | 135% with Extraction Accelerator |"
+    }
+  ]
+}

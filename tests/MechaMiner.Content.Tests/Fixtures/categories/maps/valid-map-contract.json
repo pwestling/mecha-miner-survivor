@@ -1,0 +1,251 @@
+{
+  "id": "MGC-01",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "tags": [],
+  "source_refs": [
+    "TR-DAT-002"
+  ],
+  "mode": "standard",
+  "distance_language": "Distances are route distances, not straight-line proximity.",
+  "distance_bands": [
+    {
+      "band": "Near",
+      "route_distance_m": {
+        "max_inclusive": 135
+      },
+      "base_travel_time_from_deployment": {
+        "max_seconds_inclusive": 45
+      }
+    },
+    {
+      "band": "Middle",
+      "route_distance_m": {
+        "min_exclusive": 135,
+        "max_inclusive": 270
+      },
+      "base_travel_time_from_deployment": {
+        "min_seconds_exclusive": 45,
+        "max_seconds_inclusive": 90
+      }
+    },
+    {
+      "band": "Far",
+      "route_distance_m": {
+        "min_exclusive": 270,
+        "max_inclusive": 450
+      },
+      "base_travel_time_from_deployment": {
+        "min_seconds_exclusive": 90,
+        "max_seconds_inclusive": 150
+      }
+    }
+  ],
+  "world_scale": {
+    "major_region_count": {
+      "min": 6,
+      "max": 8,
+      "initial_target": 7
+    },
+    "traversable_diameter_m": {
+      "min": 720,
+      "max": 900,
+      "target": 810
+    },
+    "traversable_diameter_base_travel_seconds": {
+      "min": 240,
+      "max": 300,
+      "target": 270
+    },
+    "maximum_base_travel_from_deployment_to_important_location_seconds": 150,
+    "deployment_placement": "an interior portion of a randomly selected major region",
+    "region_boundary_rule": "Region boundaries may be visual, topographic, or implied.",
+    "region_size_rule": "A region is large enough to hold a fight and a site.",
+    "landmark_per_region": "Each region carries one recognisable landmark."
+  },
+  "topology": {
+    "redundant_major_routes": {
+      "min_connected_major_regions_per_region": 2,
+      "multiple_loops_required": true,
+      "single_connector_removal_cannot_isolate": true,
+      "compulsory_narrow_bridge_allowed": false,
+      "primary_connector_width_in_mining_zone_diameters": {
+        "min": 1,
+        "target": 1.5
+      }
+    },
+    "open_combat_ground": {
+      "solid_obstacle_coverage_per_major_region_percent": {
+        "initial_target": {
+          "min": 8,
+          "max": 12
+        },
+        "excludes": "the outer world boundary",
+        "maximum": 15
+      },
+      "obstacle_detour_target_seconds": 6,
+      "clustering_rule": "Obstacles form sparse local clusters rather than maze walls.",
+      "long_barrier_rule": "A longer barrier requires multiple broad openings.",
+      "weapon_pattern_rule": "Terrain cannot routinely invalidate a weapon pattern."
+    },
+    "optional_pockets": {
+      "count_per_map": {
+        "min": 0,
+        "max": 2
+      },
+      "maximum_one_way_depth_seconds": 20,
+      "maximum_hyper_gold_sites_across_all_pockets": 1,
+      "maximum_relic_caches_across_all_pockets": 1,
+      "exit_readable_from_terminal_area": true,
+      "near_band_guarantees_depend_on_pockets": false,
+      "terminal_area_rule": "A pocket's terminal area is readable from its entrance."
+    }
+  },
+  "deployment_and_opening_fairness": {
+    "obstacle_free_radius_in_mining_zone_diameters": 1,
+    "min_distinct_broad_departure_routes": 2,
+    "min_offscreen_enemy_entry_directions": 3,
+    "nearest_standard_ore_seam_base_travel_seconds": {
+      "min": 10,
+      "max": 20
+    },
+    "near_band_guarantees": {
+      "standard_ore_seams_min": 2,
+      "rich_ore_seams_min": 1,
+      "geodes_per_present_material_min": 1
+    },
+    "not_against_world_boundary": true,
+    "not_inside_narrow_connector": true,
+    "not_inside_spur_pocket": true,
+    "changes_every_run": true,
+    "directions_revealed_to_player": false,
+    "excluded_from_initial_camera_view": [
+      "Hyper Gold site",
+      "material geode",
+      "relic cache",
+      "damaging hazard"
+    ]
+  },
+  "shared_important_site_placement_contract": [
+    "An important site is placed on navigable ground with a readable approach."
+  ],
+  "visible_mining_opportunities_in_normal_view": {
+    "target_minimum": 1,
+    "target_maximum": 3,
+    "hard_maximum": 4
+  },
+  "site_placement": {
+    "specialized_material_geodes": {
+      "present_materials": 4,
+      "geodes_per_present_material": {
+        "min": 8,
+        "max": 10
+      },
+      "min_in_near_band_per_material": 1,
+      "min_major_regions_represented_per_material": 5,
+      "maximum_same_material_geodes_per_major_region": 2,
+      "maximum_share_of_all_geodes_per_major_region_percent": 30,
+      "single_directional_cluster_allowed": false,
+      "resonance_field_separation_evaluated_on": "the full field, not only the extraction circle"
+    },
+    "common_ore_seams": {
+      "standard_seam_count": 20,
+      "rich_seam_count": 8,
+      "min_standard_seams_per_major_region": 2,
+      "min_major_regions_with_rich_seams": 4,
+      "maximum_rich_seams_per_major_region": 2,
+      "maximum_share_of_all_ore_seams_per_major_region_percent": 25,
+      "near_band_min_standard_seams": 2,
+      "near_band_min_rich_seams": 1,
+      "dominant_cluster_allowed": false
+    },
+    "hyper_gold_sites": {
+      "count": 3,
+      "distinct_major_regions": 3,
+      "min_middle_band_sites": 1,
+      "min_far_band_sites": 1,
+      "maximum_in_optional_spur_pocket": 1,
+      "min_separation_base_travel_seconds": 60,
+      "total_site_based_hyper_gold": 300,
+      "allowed_in_initial_camera_view": false
+    },
+    "relic_caches": {
+      "count": 3,
+      "distinct_major_regions": 3,
+      "min_middle_band_caches": 1,
+      "min_far_band_caches": 1,
+      "maximum_in_optional_spur_pocket": 1,
+      "min_separation_base_travel_seconds": 45,
+      "allowed_in_initial_camera_view": false,
+      "dedicated_guard_package": false,
+      "global_through_fog_bearing": false,
+      "discovery_rule": "Presentation becomes discoverable only when it enters the gameplay view.",
+      "relic_assignment": "The run assigns three distinct relics without replacement from the pool."
+    }
+  },
+  "destructible_rock_rules": {
+    "initial_count": 16,
+    "active_maximum": 16,
+    "initial_placement": "valid offscreen positions around deployment",
+    "valid_position_distance_from_mech_m": {
+      "min": 18,
+      "max": 45
+    },
+    "min_m_beyond_visible_camera_rectangle_m": 2,
+    "replenishment_attempt_interval_seconds": 1,
+    "replenishment_success_chance_percent": 10,
+    "success_behavior": "A successful attempt places one rock at a valid position.",
+    "position_constraints": [
+      "Never inside an active mining zone."
+    ],
+    "destructible_rock": {
+      "prop": "Destructible rock",
+      "hull": 100,
+      "armor": 0,
+      "damage_footprint_diameter_m": 0.8,
+      "control_response": "Immune; displacement and status are ignored",
+      "movement_collision": "Non-solid to mech and enemies",
+      "health_pack_chance_percent": 20,
+      "health_pack_chance_is_independent_per_rock": true,
+      "rules": [
+        "A rock never blocks a mining point."
+      ]
+    },
+    "health_pack": {
+      "prop": "Health pack",
+      "repair_hull": 25,
+      "pickup_radius_m": 0.25,
+      "can_exceed_maximum_hull": false,
+      "map_or_radar_marker": false,
+      "attraction": "none beyond contact",
+      "movement_collision": "Non-solid",
+      "persistence": "persists until collected or run end",
+      "rules": [
+        "A pack never overheals."
+      ]
+    }
+  },
+  "landmarks_and_repetition": {
+    "biomes_per_seed": 1,
+    "maximum_appearances_of_one_authored_structure_per_map": 2,
+    "adjacent_region_repetition_allowed": false,
+    "orientation_variation_allowed": true,
+    "landmark_independent_of_rewards": true,
+    "landmark_guarantees_adjacent_resource": false,
+    "structure_recognition_reveals_global_position": false,
+    "mandatory_environmental_damage_hazards": false
+  },
+  "variation_independence": [
+    "Terrain varies independently of site placement."
+  ],
+  "boundary_and_fog_presentation": [
+    "The world boundary is readable before it is reached."
+  ],
+  "valid_seed_contract": {
+    "validation_distance_metric": "navigable route distance rather than straight-line proximity",
+    "invalid_if_violated": [
+      "A major region is unreachable."
+    ]
+  }
+}

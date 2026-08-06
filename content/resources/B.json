@@ -1,0 +1,33 @@
+{
+  "id": "B",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "resource.B.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-SPECIALIZED-RESOURCE-IDENTITIES#accepted-identity-map",
+    "resonance_behavior: GDD-MINING#geode-resonance-fields",
+    "resonance_behavior.short_modifier: GDD-SPECIALIZED-RESOURCE-IDENTITIES#geode-resonance-behavior"
+  ],
+  "material_character": "Extremely dense layered alien metal",
+  "loose_association": "Mass, impact, armor, force redirection",
+  "primary_color": "Muted gold",
+  "icon_and_silhouette_cue": "Squared hexagonal slab",
+  "audio_character": "Low metallic strike",
+  "resource_class": "specialized ordinary resource",
+  "inventory_scope": "run-local",
+  "persistence": "Run-local; unspent units are lost when the run ends",
+  "shared_economy_tier": true,
+  "resonance_effect_name": "Dense Plating",
+  "resonance_behavior": {
+    "effect_name": "Dense Plating",
+    "resonance_effect": "enemies take 20% less damage",
+    "modifier": {
+      "percent": 20,
+      "direction": "decrease"
+    },
+    "short_modifier": "Enemy incoming damage −20%",
+    "edge_case_rule": "Reduces incoming damage only while the enemy remains inside the field and never restores health when the effect ends."
+  }
+}

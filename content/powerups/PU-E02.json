@@ -1,0 +1,105 @@
+{
+  "id": "PU-E02",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "powerup.PU-E02.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-PERMANENT-POWERUP-CATALOG#pu-e02--tether-amplifier",
+    "GDD-PERMANENT-POWERUP-CATALOG#catalog-overview",
+    "currency: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "ui_grouping: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "fresh_profile_purchasable: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "ranks_must_be_bought_sequentially: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "prices_fixed: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "applies_account_wide: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "refundable: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "purchasable_during_run: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "active_rank_policy: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "total_cost_hyper_gold: DEC-120#decision",
+    "maximum_effect: GDD-PROGRESSION#progression-layers"
+  ],
+  "domain": "Mining/economy",
+  "per_rank_effect": {
+    "text": "+3% extraction-zone radius",
+    "statistic": "extraction-zone radius",
+    "percent": 3
+  },
+  "maximum": 5,
+  "maximum_effect": {
+    "text": "+15%",
+    "statistic": "extraction-zone radius",
+    "percent": 15
+  },
+  "total_cost_hyper_gold": 675,
+  "currency": "Hyper Gold",
+  "ui_grouping": "Mining/economy",
+  "fresh_profile_purchasable": true,
+  "ranks_must_be_bought_sequentially": true,
+  "prices_fixed": true,
+  "applies_account_wide": true,
+  "refundable": true,
+  "purchasable_during_run": false,
+  "active_rank_policy": {
+    "minimum_active_rank": 0,
+    "maximum_active_rank_equals_purchased_rank": true,
+    "change_cost_hyper_gold": 0,
+    "changeable_between_runs": true,
+    "changeable_during_run": false
+  },
+  "rank_effect_column": "Total extraction-zone radius",
+  "ranks": [
+    {
+      "rank": 1,
+      "total_effect": {
+        "text": "+3%",
+        "percent": 3
+      },
+      "price_hyper_gold": 50,
+      "cumulative_cost_hyper_gold": 50
+    },
+    {
+      "rank": 2,
+      "total_effect": {
+        "text": "+6%",
+        "percent": 6
+      },
+      "price_hyper_gold": 75,
+      "cumulative_cost_hyper_gold": 125
+    },
+    {
+      "rank": 3,
+      "total_effect": {
+        "text": "+9%",
+        "percent": 9
+      },
+      "price_hyper_gold": 125,
+      "cumulative_cost_hyper_gold": 250
+    },
+    {
+      "rank": 4,
+      "total_effect": {
+        "text": "+12%",
+        "percent": 12
+      },
+      "price_hyper_gold": 175,
+      "cumulative_cost_hyper_gold": 425
+    },
+    {
+      "rank": 5,
+      "total_effect": {
+        "text": "+15%",
+        "percent": 15
+      },
+      "price_hyper_gold": 250,
+      "cumulative_cost_hyper_gold": 675
+    }
+  ],
+  "rules": [
+    "Expands the visible automatic-mining boundary for every mining-point class and stacks additively with Extraction Tether.",
+    "Does not change extraction speed, payouts, discovery, resource radar behavior, threat-beacon reach, or resonance-field size.",
+    "The map-generation separation and base-travel rules continue using the unmodified baseline mining-zone size."
+  ]
+}

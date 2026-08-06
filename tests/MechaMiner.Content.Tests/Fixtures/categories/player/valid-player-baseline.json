@@ -1,0 +1,25 @@
+{
+  "id": "PLAYER-01",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "tags": [],
+  "source_refs": [
+    "TR-DAT-002"
+  ],
+  "maximum_hull_integrity": 100,
+  "armor": 0,
+  "recovery_hull_per_second": 0,
+  "revival_charges": 0,
+  "movement_speed_m_per_s": 3.0,
+  "collision_diameter_m": 1.0,
+  "collision_shape": "circle",
+  "mining_extraction_rate_percent": 100,
+  "weapon_damage_percent": 100,
+  "weapon_attack_rate_percent": 100,
+  "weapon_area_percent": 100,
+  "starting_hull_is_current_maximum": true,
+  "same_enemy_contact_repeat_interval_seconds": 0.75,
+  "global_contact_grace_after_resolved_contact_seconds": 0.2,
+  "enemy_body_scale_reference_diameter_m": 0.8
+}

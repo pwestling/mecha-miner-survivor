@@ -1,0 +1,18 @@
+{
+  "id": "FORMULA-01",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "tags": [],
+  "source_refs": [
+    "TR-DAT-003"
+  ],
+  "formula_kind": "polynomial-rank-price",
+  "currency_resource_id": "RSC-07",
+  "parameters": {
+    "coefficient": 5,
+    "degree": 2,
+    "offset": 1
+  },
+  "applies_to": "every ore-upgradeable weapon stat track"
+}

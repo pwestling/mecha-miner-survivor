@@ -1,0 +1,118 @@
+{
+  "id": "UTL-C1",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "utility.UTL-C1.name",
+  "summary_key": "utility.UTL-C1.summary",
+  "tags": [],
+  "source_refs": [
+    "GDD-UTILITY-CATALOG#utl-c1--cycle-capacitor",
+    "external_numerics[]: GDD-INITIAL-MECH-CATALOG",
+    "external_numerics[]: GDD-WEAPON-NUMERIC-CATALOG",
+    "effect.stacking_classification: GDD-UTILITY-CATALOG#modifier-and-timing-rules",
+    "catalog_wide_rules.modifier_and_timing_rules[]: GDD-UTILITY-CATALOG#modifier-and-timing-rules",
+    "catalog_wide_rules.shared_acquisition_and_rank_rules[]: GDD-UTILITY-CATALOG#shared-acquisition-and-rank-rules",
+    "installed_to_rank_3: GDD-UTILITY-CATALOG#catalog-overview"
+  ],
+  "material": "Cinderglass",
+  "primary_role": "Weapon tempo",
+  "installed_to_rank_3": "+8% → +20% weapon attack rate",
+  "effect": {
+    "stat_names": [
+      "Weapon attack rate"
+    ],
+    "value_kind": "additive-percent",
+    "stacking_classification": "Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative."
+  },
+  "ranks": [
+    {
+      "state": "Installed",
+      "weapon_attack_rate": {
+        "percent": 8
+      }
+    },
+    {
+      "state": "Rank 1",
+      "weapon_attack_rate": {
+        "percent": 12
+      }
+    },
+    {
+      "state": "Rank 2",
+      "weapon_attack_rate": {
+        "percent": 16
+      }
+    },
+    {
+      "state": "Rank 3",
+      "weapon_attack_rate": {
+        "percent": 20
+      }
+    }
+  ],
+  "acquisition": {
+    "material_unit_cost": 1,
+    "utility_slots_filled": 1,
+    "rank_count": 3,
+    "rank_ore_costs": [
+      50,
+      100,
+      150
+    ],
+    "total_rank_ore_cost": 300,
+    "rank_values_are_totals_not_cumulative_additions": true,
+    "unique_in_loadout": true,
+    "has_branches": false,
+    "has_alternative_recipes": false,
+    "replaceable": false,
+    "dismantlable": false,
+    "sellable": false,
+    "refundable_during_run": false,
+    "requires_manual_activation": false,
+    "previews_all_four_effect_tiers": true
+  },
+  "availability": {
+    "fresh_profile": true,
+    "coverage_role": "Weapon tempo"
+  },
+  "effect_rules": [
+    "Increases attacks per second rather than subtracting the displayed percentage from cooldown.",
+    "Applies to each weapon's primary repeat or activation schedule, including autonomous weapon attacks where that schedule exists.",
+    "Does not accelerate damage ticks inside an already-created effect, delayed secondary pulses, mine arming, projectile travel, drone movement, or non-weapon timers unless a weapon specification explicitly identifies that timing as its attack rate.",
+    "Fabrication lists which equipped weapons and branch behaviors receive the modifier."
+  ],
+  "catalog_wide_rules": {
+    "shared_acquisition_and_rank_rules": [
+      "Every non-radar utility costs one unit of its assigned specialized material and permanently fills one of three utility slots.",
+      "Each begins at its listed Installed effect and has three common-ore ranks costing 50, 100, and 150 ore.",
+      "The four values shown for a utility are its Installed, Rank 1, Rank 2, and Rank 3 totals—not cumulative additions.",
+      "A utility is unique within the loadout and cannot be fabricated twice.",
+      "Utilities have no branches, alternative recipes, replacement, dismantling, sale, or refund during a run.",
+      "Fabrication previews all four effect tiers, the current build's affected systems, and any equipped weapon that receives no benefit from a weapon-support utility.",
+      "The resource radar remains outside the material table: it costs 300 common ore, has no ranks, and retains its accepted seven-category directional behavior."
+    ],
+    "modifier_and_timing_rules": [
+      "Flat statistic changes apply before percentage modifiers. Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative.",
+      "Attack rate is represented as attacks per second or equivalent frequency; a +20% attack-rate total produces 1.2 times the unmodified activation frequency.",
+      "Recovery sources add in Hull Integrity per second.",
+      "Already-created finite projectiles, zones, mines, and similar weapon instances retain the damage, geometry, and lifetime with which they were created. New instances use the newly fabricated or ranked utility values.",
+      "Persistent autonomous units remain in place and use new utility values for attacks they perform after play resumes.",
+      "Fabrication and utility ranking occur during a complete-simulation pause, so no duration, cooldown, Recovery, or mining state advances while the purchase is reviewed.",
+      "If a later relic explicitly replaces a statistic or rule, its description must state whether it overrides or combines with these utilities. Silent exceptions are not allowed."
+    ]
+  },
+  "external_numerics": [
+    {
+      "statement": "Kestrel's inherent 115% attack rate reaches 135% with a Rank 3 Cycle Capacitor.",
+      "value": {
+        "percent": 135
+      },
+      "quote": "| Kestrel | 115% attack rate | 135% with Cycle Capacitor |"
+    },
+    {
+      "statement": "Reference-build progression uses the Installed +8% value by minute 14, +16% by minute 21, and +20% by minute 28.",
+      "quote": "- Utilities by minute 14: Harmonic Amplifier and Cycle Capacitor, at their installed +8% values. Both reach Rank 2 (+16%) by minute 21 and Rank 3 (+20%) by minute 28."
+    }
+  ]
+}

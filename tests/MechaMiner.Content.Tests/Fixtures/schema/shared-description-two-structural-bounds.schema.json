@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Negative control: two structural bounds under one description",
+  "description": "The arity failure on the rationale axis, in the state a real change would leave behind. Both bounds are attributed - the x-authority map has an entry keyed by each - and both are structural, so under the rule this file was written against the whole subschema was justified by one sentence of prose: 'the envelope is bounded' licensed the 1 and the 4096 alike, and nothing could check which sentence covered which number. Both entries must be reported, by keyword. It is never loaded as a real schema.",
+  "type": "object",
+  "properties": {
+    "presentation_id": {
+      "type": "string",
+      "description": "the envelope is bounded",
+      "minLength": 1,
+      "maxLength": 4096,
+      "x-authority": {
+        "minLength": {
+          "kind": "structural"
+        },
+        "maxLength": {
+          "kind": "structural"
+        }
+      }
+    }
+  }
+}

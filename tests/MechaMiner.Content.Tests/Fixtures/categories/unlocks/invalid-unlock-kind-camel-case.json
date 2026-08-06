@@ -1,0 +1,25 @@
+{
+  "id": "UNL-01",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "unlock.UNL-01.name",
+  "summary_key": "unlock.UNL-01.summary",
+  "tags": [],
+  "source_refs": [
+    "TR-DAT-003"
+  ],
+  "cost_hyper_gold": 600,
+  "unlock_kind": "utilityBlueprints",
+  "granted_ids": [
+    "UTL-A2",
+    "UTL-B1",
+    "UTL-C2",
+    "UTL-D2",
+    "UTL-E2",
+    "UTL-F2"
+  ],
+  "rules": [
+    "The purchase is permanent and nonrefundable."
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "id": "W-BE-forward-bastion",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-BE-forward-bastion.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#forward-bastion--conversion--2-asterite",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#forward-bastion--conversion--2-asterite"
+  ],
+  "weapon_id": "W-BE",
+  "weapon_name": "Sentry Pod",
+  "class": "Conversion",
+  "cost": {
+    "resource": "Asterite",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-BE-battery-overclock",
+      "W-BE-guardian-firmware"
+    ],
+    "irreversible_within_run": true,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run."
+  },
+  "availability": {
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite."
+  },
+  "effects": {
+    "ordinary_timed_pod_deployment_removed": true,
+    "deploy_hold_radius_m": 0.25,
+    "deploy_hold_seconds": 1.5,
+    "bastions_per_deploy": 1,
+    "bastion_persistent": true,
+    "bastion_shot_damage_percent_of_current": {
+      "percent": 300
+    },
+    "bastion_attack_rate_percent_of_current": {
+      "percent": 200
+    },
+    "bastion_range_percent_of_current": {
+      "percent": 125
+    },
+    "pack_distance_from_bastion_m": 6,
+    "pack_timing": "instantly",
+    "redeploy_hold_seconds": 1.5,
+    "bastion_indestructible": true
+  },
+  "favorable_scene_effect": {
+    "magnitude": {
+      "steady_dps_multiplier_versus_three_ordinary_pods": 2
+    },
+    "qualitative": "only while the player repeatedly anchors near it"
+  },
+  "rules": [
+    {
+      "text": "Ordinary timed pod deployment is removed. Holding within 0.25M of one position for 1.5 s erects one persistent bastion there."
+    },
+    {
+      "text": "The bastion has 300% current shot Damage, 200% current attack rate, and 125% current range."
+    },
+    {
+      "text": "It packs instantly if the mech moves more than 6M from it, after which another 1.5 s hold is required to redeploy. It remains indestructible."
+    },
+    {
+      "text": "One active bastion has 2× the total steady DPS of three ordinary pods, but only while the player repeatedly anchors near it."
+    }
+  ]
+}

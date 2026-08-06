@@ -1,0 +1,148 @@
+{
+  "id": "W-AD",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "weapon.W-AD.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#rank-zero-values-and-ore-stat-increments",
+    "recipe_pair: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "signature_mech: GDD-INITIAL-MECH-CATALOG#catalog-overview",
+    "fabrication_cost: GDD-PROGRESSION#base-weapon-availability",
+    "base_automatic_attack: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "base_behavior: GDD-WEAPON-NUMERIC-CATALOG#w-ad--gravity-projector",
+    "ore_upgradeable_stat_labels: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "damage_model: GDD-WEAPON-NUMERIC-CATALOG#base-weapon-summary",
+    "global_attack_rate_mapping: GDD-WEAPON-NUMERIC-CATALOG#global-weapon-attack-rate-mapping",
+    "branches.amplification.cost: GDD-WEAPON-NUMERIC-CATALOG#echo-well--amplification--2-asterite",
+    "branches.amplification.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.amplification: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.amplification: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.functional.cost: GDD-WEAPON-NUMERIC-CATALOG#gravity-slingshot--functional--2-driftmetal",
+    "branches.functional.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.functional: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.functional: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.conversion.cost: GDD-WEAPON-NUMERIC-CATALOG#singularity-forge--conversion--2-barysteel",
+    "branches.conversion.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.conversion: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.conversion: GDD-WEAPON-INDEX#catalog-lookup"
+  ],
+  "recipe_pair": {
+    "notation": "A + D",
+    "material_codes": [
+      "A",
+      "D"
+    ],
+    "material_names": [
+      "Asterite",
+      "Driftmetal"
+    ]
+  },
+  "signature_mech": {
+    "mech_id": "MCH-04",
+    "mech": "Lodestar",
+    "is_initial_signature": true
+  },
+  "fabrication_cost": {
+    "materials": [
+      {
+        "material_code": "A",
+        "material": "Asterite",
+        "units": 1
+      },
+      {
+        "material_code": "D",
+        "material": "Driftmetal",
+        "units": 1
+      }
+    ],
+    "signature_weapon_begins_equipped_without_paying_cost": true,
+    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost."
+  },
+  "base_automatic_attack": {
+    "text": "Creates a damaging pull pulse at an automatically selected ground location"
+  },
+  "base_behavior": {
+    "text": "places a field at the current center of the densest enemy concentration within 10M. The field damages and pulls ordinary enemies toward its center for its current duration."
+  },
+  "ore_upgradeable_stat_labels": {
+    "labels": [
+      "Damage",
+      "field radius",
+      "field duration"
+    ]
+  },
+  "ore_upgradeable_stats": [
+    {
+      "slot": 1,
+      "name": "Field damage",
+      "rank_zero": 36,
+      "increment_per_rank": 3.6,
+      "unit": "damage per second",
+      "discrete": false
+    },
+    {
+      "slot": 2,
+      "name": "Field radius",
+      "rank_zero": 2.5,
+      "increment_per_rank": 0.2,
+      "unit": "M",
+      "discrete": false
+    },
+    {
+      "slot": 3,
+      "name": "Field duration",
+      "rank_zero": 1.5,
+      "increment_per_rank": 0.15,
+      "unit": "seconds",
+      "discrete": false
+    }
+  ],
+  "fixed_properties": {
+    "deployment_cadence_seconds": 2.5,
+    "targeting_range_m": 10,
+    "inward_pull_speed_m_per_s": 2,
+    "raw": "2.5 s deployment cadence, 10M targeting range, 2M/s inward pull"
+  },
+  "damage_model": {
+    "rank_zero_damage_model": "36/s for 1.5 s every 2.5 s",
+    "burst_10_dps": 21.6,
+    "sustained_30_dps": 21.6,
+    "favorable_horde_dps": 173,
+    "primary_limitation": "Delayed field placement and partial uptime"
+  },
+  "global_attack_rate_mapping": {
+    "affected_timing": "Base field deployment rate; Singularity Forge full-cycle rate",
+    "unaffected_timing": "Echo delay, field ticks, and field duration"
+  },
+  "branches": {
+    "amplification": {
+      "name": "Echo Well",
+      "funding_material_code": "A",
+      "funding_material": "Asterite",
+      "cost": {
+        "material": "Asterite",
+        "units": 2
+      }
+    },
+    "functional": {
+      "name": "Gravity Slingshot",
+      "funding_material_code": "D",
+      "funding_material": "Driftmetal",
+      "cost": {
+        "material": "Driftmetal",
+        "units": 2
+      }
+    },
+    "conversion": {
+      "name": "Singularity Forge",
+      "funding_material_code": "B",
+      "funding_material": "Barysteel",
+      "cost": {
+        "material": "Barysteel",
+        "units": 2
+      }
+    }
+  }
+}

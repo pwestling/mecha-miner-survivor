@@ -1,0 +1,105 @@
+{
+  "id": "UTL-D2",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "utility.UTL-D2.name",
+  "summary_key": "utility.UTL-D2.summary",
+  "tags": [],
+  "source_refs": [
+    "GDD-UTILITY-CATALOG#utl-d2--extraction-tether",
+    "effect.stacking_classification: GDD-UTILITY-CATALOG#modifier-and-timing-rules",
+    "catalog_wide_rules.modifier_and_timing_rules[]: GDD-UTILITY-CATALOG#modifier-and-timing-rules",
+    "catalog_wide_rules.shared_acquisition_and_rank_rules[]: GDD-UTILITY-CATALOG#shared-acquisition-and-rank-rules"
+  ],
+  "material": "Driftmetal",
+  "primary_role": "Mining space",
+  "installed_to_rank_3": "+10% → +25% extraction-zone radius",
+  "effect": {
+    "stat_names": [
+      "Extraction-zone radius"
+    ],
+    "value_kind": "additive-percent",
+    "stacking_classification": "Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative."
+  },
+  "ranks": [
+    {
+      "state": "Installed",
+      "extraction_zone_radius": {
+        "percent": 10
+      }
+    },
+    {
+      "state": "Rank 1",
+      "extraction_zone_radius": {
+        "percent": 15
+      }
+    },
+    {
+      "state": "Rank 2",
+      "extraction_zone_radius": {
+        "percent": 20
+      }
+    },
+    {
+      "state": "Rank 3",
+      "extraction_zone_radius": {
+        "percent": 25
+      }
+    }
+  ],
+  "acquisition": {
+    "material_unit_cost": 1,
+    "utility_slots_filled": 1,
+    "rank_count": 3,
+    "rank_ore_costs": [
+      50,
+      100,
+      150
+    ],
+    "total_rank_ore_cost": 300,
+    "rank_values_are_totals_not_cumulative_additions": true,
+    "unique_in_loadout": true,
+    "has_branches": false,
+    "has_alternative_recipes": false,
+    "replaceable": false,
+    "dismantlable": false,
+    "sellable": false,
+    "refundable_during_run": false,
+    "requires_manual_activation": false,
+    "previews_all_four_effect_tiers": true
+  },
+  "availability": {
+    "fresh_profile": false,
+    "unlock_id": "UNL-01",
+    "unlock_name": "Advanced Utility Suite",
+    "unlock_cost_hyper_gold": 600
+  },
+  "effect_rules": [
+    "Applies to standard seams, rich seams, material geodes, and Hyper Gold sites.",
+    "The visible extraction circle expands to match the effective interaction boundary; activation, grace, and decay use that displayed boundary.",
+    "Does not increase extraction speed, payout, resonance-field size, threat-beacon reach, or resource discovery radius.",
+    "Material-geode resonance fields remain larger than the maximum expanded extraction zone, preserving their danger role."
+  ],
+  "catalog_wide_rules": {
+    "shared_acquisition_and_rank_rules": [
+      "Every non-radar utility costs one unit of its assigned specialized material and permanently fills one of three utility slots.",
+      "Each begins at its listed Installed effect and has three common-ore ranks costing 50, 100, and 150 ore.",
+      "The four values shown for a utility are its Installed, Rank 1, Rank 2, and Rank 3 totals—not cumulative additions.",
+      "A utility is unique within the loadout and cannot be fabricated twice.",
+      "Utilities have no branches, alternative recipes, replacement, dismantling, sale, or refund during a run.",
+      "Fabrication previews all four effect tiers, the current build's affected systems, and any equipped weapon that receives no benefit from a weapon-support utility.",
+      "The resource radar remains outside the material table: it costs 300 common ore, has no ranks, and retains its accepted seven-category directional behavior."
+    ],
+    "modifier_and_timing_rules": [
+      "Flat statistic changes apply before percentage modifiers. Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative.",
+      "Attack rate is represented as attacks per second or equivalent frequency; a +20% attack-rate total produces 1.2 times the unmodified activation frequency.",
+      "Recovery sources add in Hull Integrity per second.",
+      "Already-created finite projectiles, zones, mines, and similar weapon instances retain the damage, geometry, and lifetime with which they were created. New instances use the newly fabricated or ranked utility values.",
+      "Persistent autonomous units remain in place and use new utility values for attacks they perform after play resumes.",
+      "Fabrication and utility ranking occur during a complete-simulation pause, so no duration, cooldown, Recovery, or mining state advances while the purchase is reviewed.",
+      "If a later relic explicitly replaces a statistic or rule, its description must state whether it overrides or combines with these utilities. Silent exceptions are not allowed."
+    ]
+  },
+  "external_numerics": []
+}

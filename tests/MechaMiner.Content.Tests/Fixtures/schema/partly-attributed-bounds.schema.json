@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Negative control: two bounds in one subschema, one authority",
+  "description": "The control the gate went six rounds without. Every earlier control asked whether an attribution gate reaches a position; this one asks how much one answer licenses. presentation_id asserts two numbers and attributes one of them, which is exactly the shape that passed when x-authority was read per subschema instead of per bound: the attributed minLength vouched for the unattributed maxLength beside it. It is never loaded as a real schema.",
+  "type": "object",
+  "properties": {
+    "presentation_id": {
+      "type": "string",
+      "description": "The empty string is what the compiler materializes for an omitted field, so an authored empty string would be a second way to say absent.",
+      "minLength": 1,
+      "maxLength": 4096,
+      "x-authority": {
+        "minLength": {
+          "kind": "structural",
+          "rationale": "the empty string is what the compiler materializes for an omitted field, so an authored empty string would be a second way to say 'absent'"
+        }
+      }
+    }
+  }
+}

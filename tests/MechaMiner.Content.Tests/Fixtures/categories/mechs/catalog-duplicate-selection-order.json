@@ -1,0 +1,30 @@
+{
+  "id": "MCH-02",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "mech.MCH-02.name",
+  "summary_key": "mech.MCH-02.summary",
+  "tags": [],
+  "source_refs": [
+    "TR-DAT-002"
+  ],
+  "signature_weapon_id": "W-BC",
+  "selection_order": 1,
+  "selection_role": "Approachable rapid-fire skirmisher",
+  "is_recommended_default": true,
+  "inherent_trait": {
+    "name_key": "mech.MCH-01.name",
+    "affected_statistic": "weapon-attack-rate",
+    "modifier_kind": "additive-percent",
+    "modifier_value": 15
+  },
+  "matching_utility_id": "UTL-C1",
+  "top_down_silhouette": [
+    "Compact chassis",
+    "Forward-swept vents"
+  ],
+  "rules": [
+    "Attack rate means 1.15 times the ordinary activation frequency, not a 15 percentage point cooldown subtraction."
+  ]
+}

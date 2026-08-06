@@ -1,0 +1,1924 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mechaminer.local/schemas/map-generation-contract.schema.json",
+  "title": "SCH-CNT-002 standard map generation contract",
+  "description": "The standard map generation contract. The project-owned typed validator in src/MechaMiner.Content/Categories/ remains authoritative; this schema is the draft 2020-12 mirror kept for editor and tool interoperability, and a fixture corpus proves the two reach the same accept/reject verdict on every structural case. See content/schemas/README.md. generation_version is deliberately not declared against doc 40's field list: the map-generation version is part of build identity, which is generated, and an authored copy would be a second writer on a value the generator owns.",
+  "type": "object",
+  "additionalProperties": false,
+  "propertyNames": {
+    "$ref": "#/$defs/snake_case_field"
+  },
+  "required": [
+    "id",
+    "schema_version",
+    "content_version",
+    "status",
+    "tags",
+    "source_refs",
+    "mode",
+    "distance_language",
+    "distance_bands",
+    "world_scale",
+    "topology",
+    "deployment_and_opening_fairness",
+    "shared_important_site_placement_contract",
+    "visible_mining_opportunities_in_normal_view",
+    "site_placement",
+    "destructible_rock_rules",
+    "landmarks_and_repetition",
+    "variation_independence",
+    "boundary_and_fog_presentation",
+    "valid_seed_contract"
+  ],
+  "properties": {
+    "id": {
+      "title": "A stable, case-sensitive ASCII content ID",
+      "type": "string",
+      "pattern": "^MGC-[0-9]{2}$"
+    },
+    "schema_version": {
+      "$ref": "#/$defs/version"
+    },
+    "content_version": {
+      "$ref": "#/$defs/version"
+    },
+    "status": {
+      "$ref": "#/$defs/status"
+    },
+    "tags": {
+      "$ref": "#/$defs/tags"
+    },
+    "source_refs": {
+      "$ref": "#/$defs/source_refs"
+    },
+    "presentation_id": {
+      "$ref": "#/$defs/presentation_id"
+    },
+    "mode": {
+      "type": "string",
+      "description": "The run mode this contract generates for.",
+      "enum": [
+        "standard"
+      ]
+    },
+    "distance_language": {
+      "type": "string",
+      "description": "How distances are described to a reader."
+    },
+    "distance_bands": {
+      "type": "array",
+      "description": "The three half-open distance bands.",
+      "items": {
+        "title": "A distance band",
+        "description": "One band.",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "band": {
+            "type": "string",
+            "description": "The band's name."
+          },
+          "route_distance_m": {
+            "title": "A half-open distance band",
+            "description": "Exclusivity is in the key names because losing it loses a fact: two adjacent inclusive bands would overlap at their shared boundary.",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "min_exclusive": {
+                "type": "number",
+                "description": "The exclusive floor. Absent on the band that starts at the deployment point, where absence means unbounded below rather than unknown: a band whose floor was unknown could not be sampled.",
+                "minimum": 0,
+                "x-authority": {
+                  "minimum": {
+                    "source": "TDD-CONTENT-DATA",
+                    "section": "Unit and numeric policy",
+                    "kind": "sourced",
+                    "derivation": "the section states that durations are nonnegative and that rates cannot be negative, so the floor of every duration and rate is zero and there is no upper bound the section supplies"
+                  }
+                }
+              },
+              "max_inclusive": {
+                "type": "number",
+                "description": "The inclusive ceiling.",
+                "exclusiveMinimum": 0,
+                "x-authority": {
+                  "exclusiveMinimum": {
+                    "source": "TDD-CONTENT-DATA",
+                    "section": "Unit and numeric policy",
+                    "kind": "sourced",
+                    "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+                  }
+                }
+              }
+            },
+            "required": [
+              "max_inclusive"
+            ]
+          },
+          "base_travel_time_from_deployment": {
+            "title": "A half-open time band",
+            "description": "The same band measured in base travel seconds.",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "min_seconds_exclusive": {
+                "type": "number",
+                "description": "The exclusive floor.",
+                "minimum": 0,
+                "x-authority": {
+                  "minimum": {
+                    "source": "TDD-CONTENT-DATA",
+                    "section": "Unit and numeric policy",
+                    "kind": "sourced",
+                    "derivation": "the section states that durations are nonnegative and that rates cannot be negative, so the floor of every duration and rate is zero and there is no upper bound the section supplies"
+                  }
+                }
+              },
+              "max_seconds_inclusive": {
+                "type": "number",
+                "description": "The inclusive ceiling.",
+                "exclusiveMinimum": 0,
+                "x-authority": {
+                  "exclusiveMinimum": {
+                    "source": "TDD-CONTENT-DATA",
+                    "section": "Unit and numeric policy",
+                    "kind": "sourced",
+                    "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+                  }
+                }
+              }
+            },
+            "required": [
+              "max_seconds_inclusive"
+            ]
+          }
+        },
+        "required": [
+          "band",
+          "route_distance_m",
+          "base_travel_time_from_deployment"
+        ]
+      }
+    },
+    "world_scale": {
+      "title": "The world scale",
+      "description": "Region counts and traversable extent.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "major_region_count": {
+          "title": "The major region count",
+          "description": "A map has at least one region.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "min": {
+              "type": "integer",
+              "description": "The floor.",
+              "minimum": 1,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+                }
+              }
+            },
+            "max": {
+              "type": "integer",
+              "description": "The ceiling.",
+              "minimum": 1,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+                }
+              }
+            },
+            "initial_target": {
+              "type": "integer",
+              "description": "The value generation aims at.",
+              "minimum": 1,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+                }
+              }
+            }
+          },
+          "required": [
+            "min",
+            "max",
+            "initial_target"
+          ]
+        },
+        "traversable_diameter_m": {
+          "title": "A target range",
+          "description": "Three authored values, not one range: the target is what generation aims at and the bounds are what it accepts.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "min": {
+              "type": "number",
+              "description": "The floor.",
+              "exclusiveMinimum": 0,
+              "x-authority": {
+                "exclusiveMinimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+                }
+              }
+            },
+            "max": {
+              "type": "number",
+              "description": "The ceiling.",
+              "exclusiveMinimum": 0,
+              "x-authority": {
+                "exclusiveMinimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+                }
+              }
+            },
+            "target": {
+              "type": "number",
+              "description": "The authored target within the band.",
+              "exclusiveMinimum": 0,
+              "x-authority": {
+                "exclusiveMinimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+                }
+              }
+            }
+          },
+          "required": [
+            "min",
+            "max",
+            "target"
+          ]
+        },
+        "traversable_diameter_base_travel_seconds": {
+          "title": "A target range",
+          "description": "Three authored values, not one range: the target is what generation aims at and the bounds are what it accepts.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "min": {
+              "type": "number",
+              "description": "The floor.",
+              "exclusiveMinimum": 0,
+              "x-authority": {
+                "exclusiveMinimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+                }
+              }
+            },
+            "max": {
+              "type": "number",
+              "description": "The ceiling.",
+              "exclusiveMinimum": 0,
+              "x-authority": {
+                "exclusiveMinimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+                }
+              }
+            },
+            "target": {
+              "type": "number",
+              "description": "The authored target within the band.",
+              "exclusiveMinimum": 0,
+              "x-authority": {
+                "exclusiveMinimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+                }
+              }
+            }
+          },
+          "required": [
+            "min",
+            "max",
+            "target"
+          ]
+        },
+        "maximum_base_travel_from_deployment_to_important_location_seconds": {
+          "type": "number",
+          "description": "The furthest any important location may be from deployment.",
+          "exclusiveMinimum": 0,
+          "x-authority": {
+            "exclusiveMinimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+            }
+          }
+        },
+        "deployment_placement": {
+          "type": "string",
+          "description": "Where deployment may be placed."
+        },
+        "region_boundary_rule": {
+          "type": "string",
+          "description": "What a region boundary may be."
+        },
+        "region_size_rule": {
+          "type": "string",
+          "description": "How large a region is."
+        },
+        "landmark_per_region": {
+          "type": "string",
+          "description": "What each region carries."
+        }
+      },
+      "required": [
+        "major_region_count",
+        "traversable_diameter_m",
+        "traversable_diameter_base_travel_seconds",
+        "maximum_base_travel_from_deployment_to_important_location_seconds",
+        "deployment_placement",
+        "region_boundary_rule",
+        "region_size_rule",
+        "landmark_per_region"
+      ]
+    },
+    "topology": {
+      "title": "The topology contract",
+      "description": "How regions connect and how open they are.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "redundant_major_routes": {
+          "title": "The redundant-route contract",
+          "description": "Connectivity guarantees.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "min_connected_major_regions_per_region": {
+              "type": "integer",
+              "description": "How many neighbours each region connects to.",
+              "minimum": 1,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+                }
+              }
+            },
+            "multiple_loops_required": {
+              "type": "boolean",
+              "description": "Whether the graph must have loops."
+            },
+            "single_connector_removal_cannot_isolate": {
+              "type": "boolean",
+              "description": "Whether removing one connector may isolate a region."
+            },
+            "compulsory_narrow_bridge_allowed": {
+              "type": "boolean",
+              "description": "Whether a compulsory narrow bridge is allowed."
+            },
+            "primary_connector_width_in_mining_zone_diameters": {
+              "title": "The connector width",
+              "description": "In mining-zone diameters, so the width tracks the zone.",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "min": {
+                  "type": "number",
+                  "description": "The narrowest accepted connector.",
+                  "exclusiveMinimum": 0,
+                  "x-authority": {
+                    "exclusiveMinimum": {
+                      "source": "TDD-CONTENT-DATA",
+                      "section": "Unit and numeric policy",
+                      "kind": "sourced",
+                      "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+                    }
+                  }
+                },
+                "target": {
+                  "type": "number",
+                  "description": "The width generation aims at.",
+                  "exclusiveMinimum": 0,
+                  "x-authority": {
+                    "exclusiveMinimum": {
+                      "source": "TDD-CONTENT-DATA",
+                      "section": "Unit and numeric policy",
+                      "kind": "sourced",
+                      "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+                    }
+                  }
+                }
+              },
+              "required": [
+                "min",
+                "target"
+              ]
+            }
+          },
+          "required": [
+            "min_connected_major_regions_per_region",
+            "multiple_loops_required",
+            "single_connector_removal_cannot_isolate",
+            "compulsory_narrow_bridge_allowed",
+            "primary_connector_width_in_mining_zone_diameters"
+          ]
+        },
+        "open_combat_ground": {
+          "title": "The open-combat-ground contract",
+          "description": "Obstacle density and shape.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "solid_obstacle_coverage_per_major_region_percent": {
+              "title": "The obstacle coverage share",
+              "description": "A target band and a hard ceiling, each named for what it is.",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "initial_target": {
+                  "title": "An integer range",
+                  "description": "Both bounds inclusive; the floor is no greater than the ceiling, which the typed validator asserts as feasibility.",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "min": {
+                      "type": "integer",
+                      "description": "The floor.",
+                      "minimum": 0,
+                      "x-authority": {
+                        "minimum": {
+                          "source": "TDD-CONTENT-DATA",
+                          "section": "Unit and numeric policy",
+                          "kind": "sourced",
+                          "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                        }
+                      }
+                    },
+                    "max": {
+                      "type": "integer",
+                      "description": "The ceiling.",
+                      "minimum": 0,
+                      "x-authority": {
+                        "minimum": {
+                          "source": "TDD-CONTENT-DATA",
+                          "section": "Unit and numeric policy",
+                          "kind": "sourced",
+                          "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "min",
+                    "max"
+                  ]
+                },
+                "maximum": {
+                  "type": "integer",
+                  "description": "The ceiling coverage may reach. A property named after a bound keyword is a property: both the loader and the corpus walk read a properties block as a map keyed by names the author chose, so the field carries the name the domain gives it rather than a qualifier that only ever meant 'not the keyword'.",
+                  "minimum": 0,
+                  "maximum": 100,
+                  "x-authority": {
+                    "minimum": {
+                      "source": "TDD-CONTENT-DATA",
+                      "section": "Unit and numeric policy",
+                      "kind": "sourced",
+                      "derivation": "the section scopes _percent to human-readable percentage points; the floor of a share of a whole is zero of them, which is the share that is none of it"
+                    },
+                    "maximum": {
+                      "source": "TDD-CONTENT-DATA",
+                      "section": "Unit and numeric policy",
+                      "kind": "sourced",
+                      "derivation": "the section scopes _percent to human-readable percentage points; the ceiling of a share of a whole is one hundred of them, which is the whole, and a larger value is not a share of anything"
+                    }
+                  }
+                },
+                "excludes": {
+                  "type": "string",
+                  "description": "What the coverage share excludes."
+                }
+              },
+              "required": [
+                "initial_target",
+                "maximum",
+                "excludes"
+              ]
+            },
+            "obstacle_detour_target_seconds": {
+              "type": "number",
+              "description": "How long a detour around an obstacle should take.",
+              "exclusiveMinimum": 0,
+              "x-authority": {
+                "exclusiveMinimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+                }
+              }
+            },
+            "clustering_rule": {
+              "type": "string",
+              "description": "How obstacles cluster."
+            },
+            "long_barrier_rule": {
+              "type": "string",
+              "description": "What a long barrier requires."
+            },
+            "weapon_pattern_rule": {
+              "type": "string",
+              "description": "What terrain may not invalidate."
+            }
+          },
+          "required": [
+            "solid_obstacle_coverage_per_major_region_percent",
+            "obstacle_detour_target_seconds",
+            "clustering_rule",
+            "long_barrier_rule",
+            "weapon_pattern_rule"
+          ]
+        },
+        "optional_pockets": {
+          "title": "The optional-pocket contract",
+          "description": "Dead-end pocket limits.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "count_per_map": {
+              "title": "An integer range",
+              "description": "Both bounds inclusive; the floor is no greater than the ceiling, which the typed validator asserts as feasibility.",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "min": {
+                  "type": "integer",
+                  "description": "The floor.",
+                  "minimum": 0,
+                  "x-authority": {
+                    "minimum": {
+                      "source": "TDD-CONTENT-DATA",
+                      "section": "Unit and numeric policy",
+                      "kind": "sourced",
+                      "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                    }
+                  }
+                },
+                "max": {
+                  "type": "integer",
+                  "description": "The ceiling.",
+                  "minimum": 0,
+                  "x-authority": {
+                    "minimum": {
+                      "source": "TDD-CONTENT-DATA",
+                      "section": "Unit and numeric policy",
+                      "kind": "sourced",
+                      "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                    }
+                  }
+                }
+              },
+              "required": [
+                "min",
+                "max"
+              ]
+            },
+            "maximum_one_way_depth_seconds": {
+              "type": "number",
+              "description": "How deep a pocket may run.",
+              "exclusiveMinimum": 0,
+              "x-authority": {
+                "exclusiveMinimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+                }
+              }
+            },
+            "maximum_hyper_gold_sites_across_all_pockets": {
+              "type": "integer",
+              "description": "How many Hyper Gold sites all pockets may hold between them.",
+              "minimum": 0,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                }
+              }
+            },
+            "maximum_relic_caches_across_all_pockets": {
+              "type": "integer",
+              "description": "How many relic caches all pockets may hold between them.",
+              "minimum": 0,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                }
+              }
+            },
+            "exit_readable_from_terminal_area": {
+              "type": "boolean",
+              "description": "Whether the exit is readable from the pocket's end."
+            },
+            "near_band_guarantees_depend_on_pockets": {
+              "type": "boolean",
+              "description": "Whether near-band guarantees may be satisfied inside a pocket."
+            },
+            "terminal_area_rule": {
+              "type": "string",
+              "description": "What a pocket's terminal area provides."
+            }
+          },
+          "required": [
+            "count_per_map",
+            "maximum_one_way_depth_seconds",
+            "maximum_hyper_gold_sites_across_all_pockets",
+            "maximum_relic_caches_across_all_pockets",
+            "exit_readable_from_terminal_area",
+            "near_band_guarantees_depend_on_pockets",
+            "terminal_area_rule"
+          ]
+        }
+      },
+      "required": [
+        "redundant_major_routes",
+        "open_combat_ground",
+        "optional_pockets"
+      ]
+    },
+    "deployment_and_opening_fairness": {
+      "title": "The deployment and opening fairness contract",
+      "description": "What the opening guarantees.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "obstacle_free_radius_in_mining_zone_diameters": {
+          "type": "number",
+          "description": "The deployment clearance, in mining-zone diameters. The relative unit is deliberate: the clearance tracks the zone. That it is no tighter than a mining point's cleared radius is RC-02, a relation across definitions.",
+          "exclusiveMinimum": 0,
+          "x-authority": {
+            "exclusiveMinimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+            }
+          }
+        },
+        "min_distinct_broad_departure_routes": {
+          "type": "integer",
+          "description": "How many broad routes leave deployment.",
+          "minimum": 1,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+            }
+          }
+        },
+        "min_offscreen_enemy_entry_directions": {
+          "type": "integer",
+          "description": "How many directions enemies may enter from.",
+          "minimum": 1,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+            }
+          }
+        },
+        "nearest_standard_ore_seam_base_travel_seconds": {
+          "title": "An integer range",
+          "description": "Both bounds inclusive; the floor is no greater than the ceiling, which the typed validator asserts as feasibility.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "min": {
+              "type": "integer",
+              "description": "The floor.",
+              "minimum": 0,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                }
+              }
+            },
+            "max": {
+              "type": "integer",
+              "description": "The ceiling.",
+              "minimum": 0,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                }
+              }
+            }
+          },
+          "required": [
+            "min",
+            "max"
+          ]
+        },
+        "near_band_guarantees": {
+          "title": "The near-band guarantees",
+          "description": "Three unrelated floors, not a range: each names a different site class.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "standard_ore_seams_min": {
+              "type": "integer",
+              "description": "Standard seams guaranteed in the near band.",
+              "minimum": 0,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                }
+              }
+            },
+            "rich_ore_seams_min": {
+              "type": "integer",
+              "description": "Rich seams guaranteed in the near band.",
+              "minimum": 0,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                }
+              }
+            },
+            "geodes_per_present_material_min": {
+              "type": "integer",
+              "description": "Geodes per present material guaranteed in the near band.",
+              "minimum": 0,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                }
+              }
+            }
+          },
+          "required": [
+            "standard_ore_seams_min",
+            "rich_ore_seams_min",
+            "geodes_per_present_material_min"
+          ]
+        },
+        "not_against_world_boundary": {
+          "type": "boolean",
+          "description": "Whether deployment may sit against the world boundary."
+        },
+        "not_inside_narrow_connector": {
+          "type": "boolean",
+          "description": "Whether deployment may sit inside a narrow connector."
+        },
+        "not_inside_spur_pocket": {
+          "type": "boolean",
+          "description": "Whether deployment may sit inside a spur pocket."
+        },
+        "changes_every_run": {
+          "type": "boolean",
+          "description": "Whether deployment moves between runs."
+        },
+        "directions_revealed_to_player": {
+          "type": "boolean",
+          "description": "Whether departure directions are revealed."
+        },
+        "excluded_from_initial_camera_view": {
+          "type": "array",
+          "description": "What the opening view may not contain.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "obstacle_free_radius_in_mining_zone_diameters",
+        "min_distinct_broad_departure_routes",
+        "min_offscreen_enemy_entry_directions",
+        "nearest_standard_ore_seam_base_travel_seconds",
+        "near_band_guarantees",
+        "not_against_world_boundary",
+        "not_inside_narrow_connector",
+        "not_inside_spur_pocket",
+        "changes_every_run",
+        "directions_revealed_to_player",
+        "excluded_from_initial_camera_view"
+      ]
+    },
+    "shared_important_site_placement_contract": {
+      "type": "array",
+      "description": "The placement rules every important site obeys.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "visible_mining_opportunities_in_normal_view": {
+      "title": "How many mining opportunities a normal view shows",
+      "description": "A target band and a hard ceiling.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "target_minimum": {
+          "type": "integer",
+          "description": "The floor of the target band.",
+          "minimum": 0,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+            }
+          }
+        },
+        "target_maximum": {
+          "type": "integer",
+          "description": "The ceiling of the target band.",
+          "minimum": 0,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+            }
+          }
+        },
+        "hard_maximum": {
+          "type": "integer",
+          "description": "The ceiling generation may never exceed. Two ceilings on one quantity, so each carries the qualifier that says which it is; that the target ceiling is no greater than the hard one is asserted as a relation, because both pass their own range check inverted.",
+          "minimum": 0,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+            }
+          }
+        }
+      },
+      "required": [
+        "target_minimum",
+        "target_maximum",
+        "hard_maximum"
+      ]
+    },
+    "site_placement": {
+      "title": "The site placement contract",
+      "description": "Counts and distribution per site class.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "specialized_material_geodes": {
+          "title": "Geode placement",
+          "description": "Where geodes may go.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "present_materials": {
+              "type": "integer",
+              "description": "Materials in a run's profile.",
+              "minimum": 1,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+                }
+              }
+            },
+            "geodes_per_present_material": {
+              "title": "An integer range",
+              "description": "Both bounds inclusive; the floor is no greater than the ceiling, which the typed validator asserts as feasibility.",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "min": {
+                  "type": "integer",
+                  "description": "The floor.",
+                  "minimum": 0,
+                  "x-authority": {
+                    "minimum": {
+                      "source": "TDD-CONTENT-DATA",
+                      "section": "Unit and numeric policy",
+                      "kind": "sourced",
+                      "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                    }
+                  }
+                },
+                "max": {
+                  "type": "integer",
+                  "description": "The ceiling.",
+                  "minimum": 0,
+                  "x-authority": {
+                    "minimum": {
+                      "source": "TDD-CONTENT-DATA",
+                      "section": "Unit and numeric policy",
+                      "kind": "sourced",
+                      "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                    }
+                  }
+                }
+              },
+              "required": [
+                "min",
+                "max"
+              ]
+            },
+            "min_in_near_band_per_material": {
+              "type": "integer",
+              "description": "Near-band floor per material.",
+              "minimum": 0,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                }
+              }
+            },
+            "min_major_regions_represented_per_material": {
+              "type": "integer",
+              "description": "Regions each material must appear in.",
+              "minimum": 1,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+                }
+              }
+            },
+            "maximum_same_material_geodes_per_major_region": {
+              "type": "integer",
+              "description": "Ceiling per region per material.",
+              "minimum": 1,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+                }
+              }
+            },
+            "maximum_share_of_all_geodes_per_major_region_percent": {
+              "type": "integer",
+              "description": "Ceiling share of all geodes in one region.",
+              "minimum": 0,
+              "maximum": 100,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section scopes _percent to human-readable percentage points; the floor of a share of a whole is zero of them, which is the share that is none of it"
+                },
+                "maximum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section scopes _percent to human-readable percentage points; the ceiling of a share of a whole is one hundred of them, which is the whole, and a larger value is not a share of anything"
+                }
+              }
+            },
+            "single_directional_cluster_allowed": {
+              "type": "boolean",
+              "description": "Whether all geodes may sit in one direction."
+            },
+            "resonance_field_separation_evaluated_on": {
+              "type": "string",
+              "description": "What separation is measured against."
+            }
+          },
+          "required": [
+            "present_materials",
+            "geodes_per_present_material",
+            "min_in_near_band_per_material",
+            "min_major_regions_represented_per_material",
+            "maximum_same_material_geodes_per_major_region",
+            "maximum_share_of_all_geodes_per_major_region_percent",
+            "single_directional_cluster_allowed",
+            "resonance_field_separation_evaluated_on"
+          ]
+        },
+        "common_ore_seams": {
+          "title": "Ore seam placement",
+          "description": "Where ore seams may go.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "standard_seam_count": {
+              "type": "integer",
+              "description": "Standard seams per map.",
+              "minimum": 0,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                }
+              }
+            },
+            "rich_seam_count": {
+              "type": "integer",
+              "description": "Rich seams per map.",
+              "minimum": 0,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                }
+              }
+            },
+            "min_standard_seams_per_major_region": {
+              "type": "integer",
+              "description": "Standard seam floor per region.",
+              "minimum": 0,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                }
+              }
+            },
+            "min_major_regions_with_rich_seams": {
+              "type": "integer",
+              "description": "Regions that must hold a rich seam.",
+              "minimum": 0,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                }
+              }
+            },
+            "maximum_rich_seams_per_major_region": {
+              "type": "integer",
+              "description": "Rich seam ceiling per region.",
+              "minimum": 0,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                }
+              }
+            },
+            "maximum_share_of_all_ore_seams_per_major_region_percent": {
+              "type": "integer",
+              "description": "Ceiling share of all ore seams in one region.",
+              "minimum": 0,
+              "maximum": 100,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section scopes _percent to human-readable percentage points; the floor of a share of a whole is zero of them, which is the share that is none of it"
+                },
+                "maximum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section scopes _percent to human-readable percentage points; the ceiling of a share of a whole is one hundred of them, which is the whole, and a larger value is not a share of anything"
+                }
+              }
+            },
+            "near_band_min_standard_seams": {
+              "type": "integer",
+              "description": "Near-band standard seam floor.",
+              "minimum": 0,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                }
+              }
+            },
+            "near_band_min_rich_seams": {
+              "type": "integer",
+              "description": "Near-band rich seam floor.",
+              "minimum": 0,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                }
+              }
+            },
+            "dominant_cluster_allowed": {
+              "type": "boolean",
+              "description": "Whether one cluster may dominate."
+            }
+          },
+          "required": [
+            "standard_seam_count",
+            "rich_seam_count",
+            "min_standard_seams_per_major_region",
+            "min_major_regions_with_rich_seams",
+            "maximum_rich_seams_per_major_region",
+            "maximum_share_of_all_ore_seams_per_major_region_percent",
+            "near_band_min_standard_seams",
+            "near_band_min_rich_seams",
+            "dominant_cluster_allowed"
+          ]
+        },
+        "hyper_gold_sites": {
+          "title": "Hyper Gold site placement",
+          "description": "Where Hyper Gold sites may go.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "count": {
+              "type": "integer",
+              "description": "Sites per map.",
+              "minimum": 0,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                }
+              }
+            },
+            "distinct_major_regions": {
+              "type": "integer",
+              "description": "Regions the sites spread across.",
+              "minimum": 1,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+                }
+              }
+            },
+            "min_middle_band_sites": {
+              "type": "integer",
+              "description": "Middle-band floor.",
+              "minimum": 0,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                }
+              }
+            },
+            "min_far_band_sites": {
+              "type": "integer",
+              "description": "Far-band floor.",
+              "minimum": 0,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                }
+              }
+            },
+            "maximum_in_optional_spur_pocket": {
+              "type": "integer",
+              "description": "Pocket ceiling.",
+              "minimum": 0,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                }
+              }
+            },
+            "min_separation_base_travel_seconds": {
+              "type": "number",
+              "description": "How far apart two sites must be.",
+              "exclusiveMinimum": 0,
+              "x-authority": {
+                "exclusiveMinimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+                }
+              }
+            },
+            "total_site_based_hyper_gold": {
+              "type": "integer",
+              "description": "Total Hyper Gold from sites on one map.",
+              "minimum": 0,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                }
+              }
+            },
+            "allowed_in_initial_camera_view": {
+              "type": "boolean",
+              "description": "Whether a site may sit in the opening view."
+            }
+          },
+          "required": [
+            "count",
+            "distinct_major_regions",
+            "min_middle_band_sites",
+            "min_far_band_sites",
+            "maximum_in_optional_spur_pocket",
+            "min_separation_base_travel_seconds",
+            "total_site_based_hyper_gold",
+            "allowed_in_initial_camera_view"
+          ]
+        },
+        "relic_caches": {
+          "title": "Relic cache placement",
+          "description": "Where relic caches may go.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "count": {
+              "type": "integer",
+              "description": "Caches per map.",
+              "minimum": 0,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                }
+              }
+            },
+            "distinct_major_regions": {
+              "type": "integer",
+              "description": "Regions the caches spread across.",
+              "minimum": 1,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+                }
+              }
+            },
+            "min_middle_band_caches": {
+              "type": "integer",
+              "description": "Middle-band floor.",
+              "minimum": 0,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                }
+              }
+            },
+            "min_far_band_caches": {
+              "type": "integer",
+              "description": "Far-band floor.",
+              "minimum": 0,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                }
+              }
+            },
+            "maximum_in_optional_spur_pocket": {
+              "type": "integer",
+              "description": "Pocket ceiling.",
+              "minimum": 0,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                }
+              }
+            },
+            "min_separation_base_travel_seconds": {
+              "type": "number",
+              "description": "How far apart two caches must be.",
+              "exclusiveMinimum": 0,
+              "x-authority": {
+                "exclusiveMinimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+                }
+              }
+            },
+            "allowed_in_initial_camera_view": {
+              "type": "boolean",
+              "description": "Whether a cache may sit in the opening view."
+            },
+            "dedicated_guard_package": {
+              "type": "boolean",
+              "description": "Whether a cache carries its own guards."
+            },
+            "global_through_fog_bearing": {
+              "type": "boolean",
+              "description": "Whether a cache is bearing-visible through fog."
+            },
+            "discovery_rule": {
+              "type": "string",
+              "description": "When a cache becomes discoverable."
+            },
+            "relic_assignment": {
+              "type": "string",
+              "description": "How relics are assigned to caches."
+            }
+          },
+          "required": [
+            "count",
+            "distinct_major_regions",
+            "min_middle_band_caches",
+            "min_far_band_caches",
+            "maximum_in_optional_spur_pocket",
+            "min_separation_base_travel_seconds",
+            "allowed_in_initial_camera_view",
+            "dedicated_guard_package",
+            "global_through_fog_bearing",
+            "discovery_rule",
+            "relic_assignment"
+          ]
+        }
+      },
+      "required": [
+        "specialized_material_geodes",
+        "common_ore_seams",
+        "hyper_gold_sites",
+        "relic_caches"
+      ]
+    },
+    "destructible_rock_rules": {
+      "title": "The destructible rock contract",
+      "description": "Rocks, their replenishment, and their drop.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "initial_count": {
+          "type": "integer",
+          "description": "Rocks placed at deployment.",
+          "minimum": 0,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+            }
+          }
+        },
+        "active_maximum": {
+          "type": "integer",
+          "description": "The ceiling on live rocks.",
+          "minimum": 0,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+            }
+          }
+        },
+        "initial_placement": {
+          "type": "string",
+          "description": "Where the initial rocks go."
+        },
+        "valid_position_distance_from_mech_m": {
+          "title": "An integer range",
+          "description": "Both bounds inclusive; the floor is no greater than the ceiling, which the typed validator asserts as feasibility.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "min": {
+              "type": "integer",
+              "description": "The floor.",
+              "minimum": 0,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                }
+              }
+            },
+            "max": {
+              "type": "integer",
+              "description": "The ceiling.",
+              "minimum": 0,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                }
+              }
+            }
+          },
+          "required": [
+            "min",
+            "max"
+          ]
+        },
+        "min_m_beyond_visible_camera_rectangle_m": {
+          "type": "number",
+          "description": "How far outside the visible rectangle a rock may appear.",
+          "minimum": 0,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section states that durations are nonnegative and that rates cannot be negative, so the floor of every duration and rate is zero and there is no upper bound the section supplies"
+            }
+          }
+        },
+        "replenishment_attempt_interval_seconds": {
+          "type": "number",
+          "description": "How often replenishment is attempted.",
+          "exclusiveMinimum": 0,
+          "x-authority": {
+            "exclusiveMinimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+            }
+          }
+        },
+        "replenishment_success_chance_percent": {
+          "type": "integer",
+          "description": "The chance one attempt succeeds.",
+          "minimum": 0,
+          "maximum": 100,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section scopes _percent to human-readable percentage points; the floor of a share of a whole is zero of them, which is the share that is none of it"
+            },
+            "maximum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section scopes _percent to human-readable percentage points; the ceiling of a share of a whole is one hundred of them, which is the whole, and a larger value is not a share of anything"
+            }
+          }
+        },
+        "success_behavior": {
+          "type": "string",
+          "description": "What a successful attempt does."
+        },
+        "position_constraints": {
+          "type": "array",
+          "description": "Where a rock may not go.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "destructible_rock": {
+          "title": "The destructible rock prop",
+          "description": "The rock itself.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "prop": {
+              "type": "string",
+              "description": "The prop's authored label."
+            },
+            "hull": {
+              "type": "integer",
+              "description": "The rock's Hull.",
+              "exclusiveMinimum": 0,
+              "x-authority": {
+                "exclusiveMinimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+                }
+              }
+            },
+            "armor": {
+              "type": "integer",
+              "description": "The rock's Armor.",
+              "minimum": 0,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+                }
+              }
+            },
+            "damage_footprint_diameter_m": {
+              "type": "number",
+              "description": "The rock's damage footprint.",
+              "exclusiveMinimum": 0,
+              "x-authority": {
+                "exclusiveMinimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+                }
+              }
+            },
+            "control_response": {
+              "type": "string",
+              "description": "How the rock responds to control effects."
+            },
+            "movement_collision": {
+              "type": "string",
+              "description": "What the rock blocks."
+            },
+            "health_pack_chance_percent": {
+              "type": "integer",
+              "description": "The chance a destroyed rock yields a health pack.",
+              "minimum": 0,
+              "maximum": 100,
+              "x-authority": {
+                "minimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section scopes _percent to human-readable percentage points; the floor of a share of a whole is zero of them, which is the share that is none of it"
+                },
+                "maximum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section scopes _percent to human-readable percentage points; the ceiling of a share of a whole is one hundred of them, which is the whole, and a larger value is not a share of anything"
+                }
+              }
+            },
+            "health_pack_chance_is_independent_per_rock": {
+              "type": "boolean",
+              "description": "Whether the chance is rolled per rock."
+            },
+            "rules": {
+              "type": "array",
+              "description": "Rules with no structured twin.",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "prop",
+            "hull",
+            "armor",
+            "damage_footprint_diameter_m",
+            "control_response",
+            "movement_collision",
+            "health_pack_chance_percent",
+            "health_pack_chance_is_independent_per_rock",
+            "rules"
+          ]
+        },
+        "health_pack": {
+          "title": "The health pack prop",
+          "description": "What a destroyed rock may yield.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "prop": {
+              "type": "string",
+              "description": "The prop's authored label."
+            },
+            "repair_hull": {
+              "type": "integer",
+              "description": "How much Hull a pack restores. A health pack is a world prop, so the map contract is its writer rather than the player baseline.",
+              "exclusiveMinimum": 0,
+              "x-authority": {
+                "exclusiveMinimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+                }
+              }
+            },
+            "pickup_radius_m": {
+              "type": "number",
+              "description": "The collection radius. The centre distance at which collection happens is this plus the player's collision radius, and is derived.",
+              "exclusiveMinimum": 0,
+              "x-authority": {
+                "exclusiveMinimum": {
+                  "source": "TDD-CONTENT-DATA",
+                  "section": "Unit and numeric policy",
+                  "kind": "sourced",
+                  "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+                }
+              }
+            },
+            "can_exceed_maximum_hull": {
+              "type": "boolean",
+              "description": "Whether a pack can overheal."
+            },
+            "map_or_radar_marker": {
+              "type": "boolean",
+              "description": "Whether a pack is marked."
+            },
+            "attraction": {
+              "type": "string",
+              "description": "Whether a pack is drawn to the mech."
+            },
+            "movement_collision": {
+              "type": "string",
+              "description": "What a pack blocks."
+            },
+            "persistence": {
+              "type": "string",
+              "description": "How long a pack lasts."
+            },
+            "rules": {
+              "type": "array",
+              "description": "Rules with no structured twin.",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "prop",
+            "repair_hull",
+            "pickup_radius_m",
+            "can_exceed_maximum_hull",
+            "map_or_radar_marker",
+            "attraction",
+            "movement_collision",
+            "persistence",
+            "rules"
+          ]
+        }
+      },
+      "required": [
+        "initial_count",
+        "active_maximum",
+        "initial_placement",
+        "valid_position_distance_from_mech_m",
+        "min_m_beyond_visible_camera_rectangle_m",
+        "replenishment_attempt_interval_seconds",
+        "replenishment_success_chance_percent",
+        "success_behavior",
+        "position_constraints",
+        "destructible_rock",
+        "health_pack"
+      ]
+    },
+    "landmarks_and_repetition": {
+      "title": "The landmark and repetition contract",
+      "description": "How authored structures repeat.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "biomes_per_seed": {
+          "type": "integer",
+          "description": "Biomes on one map.",
+          "minimum": 1,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+            }
+          }
+        },
+        "maximum_appearances_of_one_authored_structure_per_map": {
+          "type": "integer",
+          "description": "How often one authored structure may repeat.",
+          "minimum": 1,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+            }
+          }
+        },
+        "adjacent_region_repetition_allowed": {
+          "type": "boolean",
+          "description": "Whether adjacent regions may repeat a structure."
+        },
+        "orientation_variation_allowed": {
+          "type": "boolean",
+          "description": "Whether a structure may be rotated."
+        },
+        "landmark_independent_of_rewards": {
+          "type": "boolean",
+          "description": "Whether landmarks are independent of rewards."
+        },
+        "landmark_guarantees_adjacent_resource": {
+          "type": "boolean",
+          "description": "Whether a landmark guarantees a nearby resource."
+        },
+        "structure_recognition_reveals_global_position": {
+          "type": "boolean",
+          "description": "Whether recognising a structure locates the player globally."
+        },
+        "mandatory_environmental_damage_hazards": {
+          "type": "boolean",
+          "description": "Whether a map must contain damaging hazards."
+        }
+      },
+      "required": [
+        "biomes_per_seed",
+        "maximum_appearances_of_one_authored_structure_per_map",
+        "adjacent_region_repetition_allowed",
+        "orientation_variation_allowed",
+        "landmark_independent_of_rewards",
+        "landmark_guarantees_adjacent_resource",
+        "structure_recognition_reveals_global_position",
+        "mandatory_environmental_damage_hazards"
+      ]
+    },
+    "variation_independence": {
+      "type": "array",
+      "description": "What varies independently between runs.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "boundary_and_fog_presentation": {
+      "type": "array",
+      "description": "How the world boundary and fog present.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "valid_seed_contract": {
+      "title": "What makes a seed valid",
+      "description": "There is no retry budget: no accepted document states one, and inventing a number the generator would then obey is not a transcription.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "validation_distance_metric": {
+          "type": "string",
+          "description": "How distance is measured for validation."
+        },
+        "invalid_if_violated": {
+          "type": "array",
+          "description": "The conditions that make a seed invalid.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "validation_distance_metric",
+        "invalid_if_violated"
+      ]
+    }
+  },
+  "$defs": {
+    "snake_case_field": {
+      "title": "A schema-declared field name",
+      "description": "Property names use snake_case.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "version": {
+      "title": "A positive integer version",
+      "description": "The initial schema_version and content_version of every first-authored definition is 1.",
+      "type": "integer",
+      "minimum": 1,
+      "x-authority": {
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Initial versions",
+          "kind": "sourced",
+          "derivation": "the initial value of every first-authored definition is 1 and both versions only ever increment, so no valid version is below 1; there is no upper bound because a definition may be revised without limit"
+        }
+      }
+    },
+    "status": {
+      "title": "Lifecycle state",
+      "type": "string",
+      "enum": [
+        "development",
+        "enabled",
+        "disabled",
+        "retired"
+      ]
+    },
+    "name_key": {
+      "title": "Localization key for the player-facing name",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*\\.[A-Za-z0-9][A-Za-z0-9_-]*\\.name$"
+    },
+    "summary_key": {
+      "title": "Localization key for the concise player-facing summary",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*\\.[A-Za-z0-9][A-Za-z0-9_-]*\\.summary$"
+    },
+    "tags": {
+      "title": "Closed query and tooling vocabulary",
+      "description": "The vocabulary starts empty, so [] is the only accepted value.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": []
+      }
+    },
+    "source_refs": {
+      "title": "The sources this definition implements",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(?:[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*|\\[\\]|\\[[0-9]+\\]|\\[[0-9]+\\.\\.[0-9]+\\])*: )?(?:(?:GDD|TDD)-[A-Z0-9-]+|DEC-[0-9]{3}|TDR-[0-9]{3}|TR-[A-Z]+-[0-9]{3})(?:#[a-z0-9-]+)?$"
+      }
+    },
+    "presentation_id": {
+      "title": "Logical presentation entry, required absent",
+      "description": "Required absent: a definition carrying this field is an error. No accepted document says what a presentation definition contains, so no ID grammar has been minted for one, and minting a shape for a category with zero members would be inventing structure ahead of need. The field was declared-optional with a non-empty-string constraint, which accepted any string an author invented and validated nothing about it; rejecting the field outright fails loudly the first time somebody adds one instead of accepting an unauthorized value. The subschema is 'not' over the empty schema, which rejects every instance, so the fault is the field's presence rather than its shape and an authored empty string is rejected by the same rule rather than as an empty declared-optional field. The typed validator reports MMC-2010 and names the field. When an accepted document mints a presentation ID grammar, this declaration becomes that grammar; until then it has no minLength, because a length bound on a value that can never be authored explains nothing.",
+      "not": {}
+    }
+  }
+}

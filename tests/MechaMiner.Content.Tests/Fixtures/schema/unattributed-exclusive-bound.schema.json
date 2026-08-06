@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Negative control for the x-authority gate: an exclusive bound",
+  "description": "A bare exclusiveMinimum with no adjacent x-authority. There is no principled line between 'at least 1' and 'strictly greater than 0', so the exclusive spellings are gated exactly as the inclusive ones are; this file proves that gate can fail. It is never loaded as a real schema.",
+  "type": "object",
+  "properties": {
+    "throughput": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    }
+  }
+}

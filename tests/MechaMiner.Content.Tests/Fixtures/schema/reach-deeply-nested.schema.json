@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Negative control: bare bound several applicators deep",
+  "description": "A bare numeric bound with no adjacent x-authority, placed in properties -> allOf -> oneOf -> items -> properties -> not, so that reaching it needs every applicator in the chain and not merely the first. This file exists to prove the attribution walk reaches that position; it is never loaded as a real schema.",
+  "type": "object",
+  "properties": {
+    "payload": {
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "count": {
+                    "not": {
+                      "type": "integer",
+                      "maximum": 2048
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

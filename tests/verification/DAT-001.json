@@ -1,0 +1,1180 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "DAT-001",
+  "workPackageTitle": "Common definition envelope, stable-ID rules, schema infrastructure, diagnostic format",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91 § Verification registry).",
+    "Fixture IDs are file names beneath tests/MechaMiner.Content.Tests/Fixtures/. Every invalid fixture asserts the one diagnostic code it is named for; a fixture that fails with a different code fails the suite, because a gate that passes on the wrong error is not a gate.",
+    "VER-DAT-001-022 is the over-strict control: the valid fixtures must produce zero diagnostics. Without it the invalid corpus could be satisfied by a validator that rejects everything.",
+    "VER-DAT-001-021 is the mechanism doc 40 § JSON codec and schema baseline asks for by name: 'a fixture corpus proves the schema and typed validator accept/reject the same structural cases'. The typed validator stays authoritative; the draft 2020-12 schema is the interoperability mirror.",
+    "VER-DAT-001-023 exists because a string field carrying a mini-language drifts unless its shape is pinned structurally. The envelope schema's source_refs pattern must reject a malformed element on its own, with the typed parser removed from the path.",
+    "The size, depth, and count limits verified by VER-DAT-001-007 are injected rather than global, so a boundary fixture stays a small reviewable file instead of a megabyte of generated JSON. VER-DAT-001-007 also asserts the shipped default limit values.",
+    "VER-DAT-001-026 and VER-DAT-001-027 exist because the failure this project keeps repeating is a control that covers only the routes its author enumerated by hand. 026 attacks the walk's reach position by position; 027 attacks the two ways a list-driven control fails silently - a keyword deleted from the list, and an empty set that satisfies every emptiness assertion.",
+    "VER-DAT-001-028 and VER-DAT-001-029 continue that pass. 028 attacks the input set itself: a fixture no table row claims is tested by nothing, and a code proved by two fixtures can lose one while every set-equality assertion stays true. 029 attacks the walk's model of what a schema object is - every keyword is a legal property name, so a map keyed by author-chosen names cannot be read as a subschema.",
+    "TR-DAT-003's full gate is DAT-006's ('source-order permutation yields identical hash' over a compiled bundle). VER-DAT-001-010 proves the same property at the single-payload level that DAT-006 builds on.",
+    "VER-DAT-001-030 through 033 come from review of the first pass, and 031 is the one that matters. Every control before it put one guarded thing in one position and proved the walk reached it; none asked how much a single answer licensed, and the answer was 'every bound in the subschema'. The rule is now written down in content/schemas/README.md: when hardening a gate, add a control with two of the guarded thing where only one satisfies the rule.",
+    "VER-DAT-001-034 is the second half of 031, and its existence is the finding. 031 made attribution per bound and left the rationale for a structural bound keyed to the subschema's description - the same arity failure, one field over, in the same commit. 029 had already been the same story: the phantom-bound class closed for the properties map and reintroduced one level inside the annotation by the fix for a different hole. So the README now carries a second rule beside the first: having asked how much one answer licenses, ask what else in the gate is keyed per subschema, per document or per file that should be keyed per bound, per field or per item."
+  ],
+  "entries": [
+    {
+      "id": "VER-DAT-001-001",
+      "summary": "The strict JSON codec rejects a comment anywhere in a source definition and reports the codec comment diagnostic with the exact byte location.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Fixtures.InvalidFixtureCorpusTests"
+      },
+      "fixtures": ["tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-comment.json"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-002",
+      "summary": "The strict JSON codec rejects a trailing comma and distinguishes it from every other lexical fault.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Fixtures.InvalidFixtureCorpusTests"
+      },
+      "fixtures": ["tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-trailing-comma.json"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-003",
+      "summary": "The strict JSON codec rejects a duplicate object property, which System.Text.Json tolerates by default, and points at the second occurrence.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Fixtures.InvalidFixtureCorpusTests"
+      },
+      "fixtures": ["tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-duplicate-property.json"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-004",
+      "summary": "The strict JSON codec rejects the nonfinite number tokens NaN, Infinity, and -Infinity, and rejects a finite-looking literal whose value is not finite as a double.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Fixtures.InvalidFixtureCorpusTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-nonfinite-nan.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-nonfinite-overflow.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-005",
+      "summary": "An unknown envelope field is an error rather than a silently ignored property, reported with its JSON Pointer.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-002"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#common-definition-envelope",
+        "docs/technical/115-component-contract-and-schema-registry.md#schema-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Fixtures.InvalidFixtureCorpusTests"
+      },
+      "fixtures": ["tests/MechaMiner.Content.Tests/Fixtures/invalid/structural-unknown-field.json"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-006",
+      "summary": "A JSON null is rejected as a type error wherever it appears, so absence is expressible only by omitting the key.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-002"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#declared-optional-envelope-fields"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Fixtures.InvalidFixtureCorpusTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-null-value.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-null-nested.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-007",
+      "summary": "The codec enforces document size, nesting depth, object property count, array element count, node count, and string length limits, accepting the boundary value and rejecting the first value past it; the shipped default limits are the documented ones.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/115-component-contract-and-schema-registry.md#schema-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Codec.StrictJsonLimitsTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/limit-depth.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/limit-object-properties.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/limit-array-elements.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/limit-node-count.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/limit-string-length.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/limit-document-bytes.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-008",
+      "summary": "The canonical writer implements doc 40's three ordering rules as three distinct mechanisms: schema-declared field order, ordinal-sorted dictionary keys, and authored order preserved for semantically ordered arrays.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-003", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Codec.CanonicalJsonWriterTests"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-009",
+      "summary": "Canonical numeric formatting writes integers without padding, writes finite doubles in invariant shortest round-trip form that reparses to the same bits, normalizes negative zero to zero, and refuses to write a nonfinite double.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline",
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Codec.CanonicalNumberTests"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-010",
+      "summary": "Definitions that differ only in source property order, indentation, and line endings produce byte-identical canonical payloads and the identical SHA-256 hex digest.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-003", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline",
+        "docs/technical/40-content-data-and-validation.md#compilation-pipeline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Fixtures.CanonicalPermutationTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/canonical/permutation-authored-order.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/canonical/permutation-reversed-order.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/canonical/permutation-reindented.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/canonical/permutation-compact.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "golden-text"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-011",
+      "summary": "Every diagnostic carries the five elements doc 40 requires as first-class fields - stable code, repo-relative source path plus JSON Pointer, content ID, expected constraint, related IDs - and a warning cannot be constructed without an owner and an expiration date.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-002"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#compilation-pipeline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Diagnostics.ContentDiagnosticTests"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-012",
+      "summary": "Diagnostic codes are declared in exactly one place, no two collide, every declared code carries a human description, and the set of codes the DAT-001 validators actually emit over the fixture corpus equals the declared set. The declared set is additionally stated as a literal roster inside the test, because deleting a descriptor together with the fixture that provokes it shrinks both sides of the provoked-equals-declared comparison at once and would otherwise leave no trace of the code that went.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-002"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#compilation-pipeline",
+        "docs/technical/conventions.md#stable-identifiers"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Diagnostics.ContentDiagnosticCodesTests"
+      },
+      "fixtures": ["tests/MechaMiner.Content.Tests/Fixtures/invalid"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-013",
+      "summary": "JSON Pointers follow RFC 6901: tokens escape ~ as ~0 and / as ~1 in that order, array indices are unpadded decimals, and the root pointer is the empty string.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-002"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#compilation-pipeline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Codec.JsonPointerTests"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-014",
+      "summary": "Every stable ID in the accepted catalog is accepted by its own category's pattern and rejected by every other category's pattern; IDs are case-sensitive ASCII and a lowercased or localized form is rejected.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-004"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#stable-id-policy"
+      ],
+      "gameplaySources": [
+        "docs/36-initial-mech-catalog.md",
+        "docs/31-initial-alien-roster.md",
+        "docs/66-weapon-catalog-and-resource-graph.md",
+        "docs/68-utility-catalog.md"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Ids.ContentIdTests"
+      },
+      "fixtures": ["tests/MechaMiner.Content.Tests/Fixtures/invalid/identity-bad-id-for-category.json"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-015",
+      "summary": "Removing shipped content leaves a tombstone: a retired ID cannot be reused by a new definition, the tombstone records the retiring content version and its replacement or migration note, and a retired-ID lookup resolves to that entry.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-004"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#stable-id-policy",
+        "docs/technical/115-component-contract-and-schema-registry.md#contract-change-rules"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Ids.RetiredIdRegistryTests"
+      },
+      "fixtures": ["tests/MechaMiner.Content.Tests/Fixtures/invalid/identity-retired-id-reused.json"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-016",
+      "summary": "The SCH-CNT-001 envelope has exactly nine fields; the six required ones are errors when missing; name_key and summary_key are expressed absent by omitting the key and materialize their documented defaults; schema_version and content_version reject a non-integer and a nonpositive value. The claim about presentation_id that stood here - that it is the third field of that kind - was corrected by VER-DAT-001-041, which rules it required absent; the field is still one of the nine and still materializes the default, but a definition may not author it.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-002"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#common-definition-envelope",
+        "docs/technical/40-content-data-and-validation.md#declared-optional-envelope-fields",
+        "docs/technical/40-content-data-and-validation.md#initial-versions",
+        "docs/technical/115-component-contract-and-schema-registry.md#schema-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Envelope.EnvelopeValidatorTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/valid/envelope-minimal.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/valid/envelope-maximal.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/valid/envelope-optionals-omitted.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/structural-missing-required.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/version-non-integer.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/version-nonpositive.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/structural-unknown-status.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/structural-wrong-type.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-camel-case-property.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-017",
+      "summary": "The tags vocabulary is closed and currently empty, an empty array is accepted, and any term is rejected until it is added to the vocabulary in the change that first uses it.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-002"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#tags-vocabulary"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Envelope.TagVocabularyTests"
+      },
+      "fixtures": ["tests/MechaMiner.Content.Tests/Fixtures/invalid/structural-tag-outside-vocabulary.json"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-018",
+      "summary": "Each source_refs element parses into a structured SourceRef carrying its optional scope, reference kind, document ID, and anchor; a malformed element is a diagnostic, and a file path or path:line pair is rejected under its own distinct diagnostic code.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-002", "TR-DAT-004"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#source_refs-element-grammar",
+        "docs/technical/conventions.md#stable-identifiers",
+        "docs/conventions.md#stable-identifiers"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Envelope.SourceRefTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/traceability-source-ref-malformed.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/traceability-source-ref-path-line.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-019",
+      "summary": "A source_refs scope prefix must resolve to a path that actually exists in the definition it annotates, including through array wildcard, index, and range forms; a scope naming a field the definition does not have is a diagnostic.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-002", "TR-DAT-005"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#source_refs-element-grammar",
+        "docs/technical/40-content-data-and-validation.md#agent-content-change-workflow"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Envelope.SourceRefScopeResolutionTests"
+      },
+      "fixtures": ["tests/MechaMiner.Content.Tests/Fixtures/invalid/traceability-scope-unresolved.json"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-020",
+      "summary": "The draft 2020-12 evaluator fails loudly on a schema keyword it does not implement, on an unresolvable $ref, and on a malformed schema document, rather than ignoring the keyword and silently ceasing to be a gate.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline",
+        "docs/technical/115-component-contract-and-schema-registry.md#schema-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.JsonSchemaEvaluatorTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/unsupported-keyword.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/unresolvable-ref.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/malformed.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-021",
+      "summary": "For every fixture in the corpus the project-owned typed structural validator and content/schemas/envelope.schema.json evaluated as draft 2020-12 reach the same accept/reject verdict.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Fixtures.SchemaAgreementTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/valid",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid",
+        "content/schemas/envelope.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-022",
+      "summary": "The valid fixtures produce zero diagnostics of any severity, so an over-strict validator fails the suite as loudly as an under-strict one.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-002"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#verification",
+        "docs/technical/91-verification-strategy.md"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Fixtures.ValidFixtureCorpusTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/valid/envelope-minimal.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/valid/envelope-maximal.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/valid/envelope-optionals-omitted.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/valid/envelope-aggregate.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-023",
+      "summary": "The envelope schema's source_refs element pattern rejects a malformed element on its own, with the typed parser removed from the path, so the mini-language is pinned structurally rather than only after the fact.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-002", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#source_refs-element-grammar",
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.EnvelopeSchemaPatternTests"
+      },
+      "fixtures": ["content/schemas/envelope.schema.json"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-024",
+      "summary": "name_key and summary_key are localization keys of the form <category>.<stable_id>.<role> and never literal player-facing text; the role must match the field.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-002"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#common-definition-envelope",
+        "docs/technical/40-content-data-and-validation.md#source-catalog-format-and-key-pattern"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Envelope.LocalizationKeyTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/structural-name-key-literal-text.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/structural-name-key-role-mismatch.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-025",
+      "summary": "Every bound keyword requires an adjacent x-authority, enforced by walking every node of every schema document under content/schemas/** and matching on the nine bound keyword names (minimum, maximum, exclusiveMinimum, exclusiveMaximum, minItems, maxItems, minLength, maxLength, multipleOf) with no exemption list. Every sourced or derived bound additionally states the derivation by which the number follows from its source. The control is a schema document carrying a bound keyword with no adjacent x-authority, which must be rejected with the malformed-schema diagnostic rather than loaded.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy",
+        "docs/technical/40-content-data-and-validation.md#agent-content-change-workflow"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.SchemaAuthorityTests"
+      },
+      "fixtures": [
+        "content/schemas/envelope.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/unattributed-bound.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/unattributed-exclusive-bound.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/unattributed-length-bound.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/undelivered-derivation.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-026",
+      "summary": "The x-authority walk reaches every position in a draft 2020-12 schema document where a numeric bound can sit, not only the positions under properties: the root object, $defs (including a $defs declared on a subschema, which no $ref of this evaluator can reach), allOf, anyOf, oneOf, not, items, prefixItems, propertyNames, additionalProperties as a schema object, a subschema reached through $ref, and those applicators nested several deep. One fixture per position, each a bare bound, each asserted to fail with MMC-5003 naming x-authority. The positions whose keyword this evaluator does not implement - if, then, else, contains, patternProperties, dependentSchemas - are asserted to fail the load with MMC-5001 and nothing else, so they are unreachable by refusal rather than by oversight, and the structure-blind corpus walk is asserted to reach them regardless. The recognised keyword set and the numeric keywords deliberately left unimplemented (minProperties, maxProperties, minContains, maxContains) are stated independently, so implementing one cannot silently create a position the walk does not visit.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy",
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.SchemaAuthorityReachTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-root.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-defs.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-nested-defs.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-ref.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-all-of.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-any-of.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-one-of.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-not.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-items.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-prefix-items.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-property-names.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-additional-properties.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-deeply-nested.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-if.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-then.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-else.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-contains.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-pattern-properties.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/reach-dependent-schemas.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-027",
+      "summary": "The x-authority gate cannot be narrowed by deletion and cannot pass vacuously. The nine bound keywords are stated in the test independently of SchemaAuthority.BoundKeywords(), so removing one - which would delete the rule and every parameterised control for it in a single edit, leaving no exemption list behind - fails a test that names the keyword removed. Every bound keyword is asserted to be one the evaluator implements, so no control can pass on the wrong diagnostic. The walk over content/schemas is asserted to have visited a nonzero number of documents, objects, and bounds; the *.schema.json glob is asserted to match every JSON file in that directory; and both counts are proved to be real counts by a bound-free schema that reports zero bounds and an empty corpus that reports zero documents, each producing the same empty violation list a clean corpus does.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy",
+        "docs/technical/40-content-data-and-validation.md#agent-content-change-workflow"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.SchemaAuthorityCoverageTests"
+      },
+      "fixtures": [
+        "content/schemas/envelope.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/no-bounds.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-028",
+      "summary": "The invalid fixture corpus contains exactly the files the expectation table claims, and each diagnostic code is proved by exactly the fixtures an independently stated roster names. Every gate over the corpus iterates FixtureCorpus.Invalid, so a file added to Fixtures/invalid/ without a table row runs no test at all and nothing reports it; that orphan now fails a test naming the path, as does a row that outlives the file it names. The per-code roster closes the other direction: MMC-1004, MMC-1005 and MMC-2005 are each proved by two fixtures, and deleting one of a pair - file, table row, and registry citation together - leaves the code still provoked by its sibling, so the provoked-equals-declared comparison in VER-DAT-001-012 stays green with the coverage halved and nothing naming what went.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-002", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#compilation-pipeline",
+        "docs/technical/conventions.md#stable-identifiers"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Fixtures.FixtureCorpusCoverageTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-nonfinite-nan.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-nonfinite-overflow.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-null-value.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-null-nested.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/version-non-integer.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/version-nonpositive.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-029",
+      "summary": "The structure-blind corpus walk reads a name-to-subschema map as a map and never as a subschema. Every schema keyword is a legal property name, so a properties, $defs, patternProperties or dependentSchemas map declaring a member called maximum beside one called x-authority presented the walk with a bound keyword and an authority keyword side by side: it counted a bound that does not exist and suppressed its own finding on it, and without the authority-named sibling it reported an unattributed bound at a pointer addressing no bound. The counted phantom is the fail-open, because BoundsSeen is what VER-DAT-001-027 relies on to prove the gate looked at anything. Asserted over every recognised keyword in each of the four map positions, so a keyword implemented later inherits the control, plus a committed fixture whose declared properties are named maximum, $defs, $ref, type and x-authority and whose one real unattributed bound must still be reported. The loader's structure-aware walk reads properties through ReadSubschemaMap and never had the confusion; it is asserted on the same fixture.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy",
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.SchemaBoundWalkStructureTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/keyword-named-properties.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-030",
+      "summary": "Bound coverage is asserted per document against an enumerated list of documents declared bound-free, replacing an aggregate BoundsSeen > 0 over the whole corpus. The aggregate was satisfied by any one schema, so one document with a bound vouched for every other and a schema could lose every bound it had while the total stayed positive. The list is file names written out one by one - not a pattern, a prefix, or a predicate - so a document that loses its bounds fails until somebody adds its name in a line a reviewer can argue with. This exemption is over documents, a factual claim about the corpus settled by opening the file, which is why it is right here while the x-authority gate over keyword kinds deliberately has none: an exemption there would widen the rule everywhere at once, including in schemas nobody has written yet. Three negative controls over a two-document fixture corpus: a bound-free document on no list is reported by name, while the aggregate count over that same corpus stays positive; an exemption naming no document in the corpus is reported, because a waiver for nothing is a standing waiver for whatever file next takes that name; and an exemption whose document does carry bounds is reported, because an unneeded exemption is a false claim that would absorb that document losing every bound it has. A positive control asserts that a declared bound-free document is accepted, so the three cannot be satisfied by a check that reports everything.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy",
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.SchemaAuthorityCoverageTests"
+      },
+      "fixtures": [
+        "content/schemas/envelope.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/no-bounds.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/attributed-bound.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-031",
+      "summary": "Attribution is per bound keyword, not per subschema. x-authority was read as a flag on the enclosing object by both the loader and the structure-blind corpus walk, so one authority licensed every bound beside it: a bare maxLength added next to the attributed minLength in content/schemas/envelope.schema.json left the whole suite green. x-authority is now a map keyed by the bound each entry explains, chosen over a flat authority carrying a bound field or an array of those because a map cannot express the same keyword attributed twice with two different derivations. The relation is a bijection, reported keyword by keyword in both directions: a declared bound with no entry fails naming the keyword, and an entry for a bound the subschema does not declare fails too, since provenance for an absent bound silently covers that bound the day someone adds it. The committed control is a subschema declaring minLength and maxLength and attributing one of them; the loader and the walk must each name maxLength and neither may name minLength. Keying the annotation by bound keyword puts the string 'minimum' one level inside the annotation, so the walk is asserted not to count an authority map's own keys as bounds - the same phantom the properties map produced, arriving through the fix for a different hole.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy",
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.SchemaAuthorityTests"
+      },
+      "fixtures": [
+        "content/schemas/envelope.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/partly-attributed-bounds.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-032",
+      "summary": "Two rules that were satisfied by something which is not an answer. The annotation keywords title, description and $comment - and $schema and $id, accepted just as loosely - returned true for any JSON value, so a title holding {\"if\":{\"maximum\":5}} loaded clean: an unevaluated subschema parked under a recognised keyword's name, which every parse-time rule including x-authority placement stopped at the edge of. That is the same hiding place a $defs on a subschema was, reached by a shorter route, and the structure-blind corpus walk is asserted to find the bound the loader stepped over. Separately, the structural-bound rationale check tested only that a description property was present, so the empty string, whitespace, 0, false, {} and [] all counted as justifying a limit; it now requires a string with non-whitespace content. Both are asserted with the accepting case alongside the rejecting one, so neither is a ban rather than a type.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy",
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.SchemaAuthorityTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/annotation-hiding-a-subschema.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-033",
+      "summary": "The propertyNames path quotes a property name with Utf8JsonWriter rather than the JsonSerializer.Serialize overload that takes no JsonTypeInfo. That overload resolves a contract by reflection, and JsonSerializerIsReflectionEnabledByDefault is a per-application runtimeconfig property rather than a per-assembly one, so the same assembly threw InvalidOperationException under the host that runs the content-compile verb while passing under the test host; doc 40 forbids runtime contract reflection outright. Asserted over the names where the quoting has to be right rather than merely present - a name containing a quote, a backslash, a control character, non-ASCII text, and the empty name - each instance built with Utf8JsonWriter so the test does not depend on the mechanism under test, plus the rejection naming the property it rejected. Recorded limitation: this test project does not set JsonSerializerIsReflectionEnabledByDefault, so the suite still cannot see a reflection-based call of this class, and this entry proves the call site rather than the class. Setting that property on the library and test projects is integration-owner scope.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy",
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.JsonSchemaEvaluatorTests"
+      },
+      "fixtures": [
+        "content/schemas/envelope.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-034",
+      "summary": "The rationale for a structural bound is a field of its own x-authority entry, and the description-based check that preceded it is deleted rather than kept beside it. Requiring a kind 'structural' bound to be justified by the enclosing subschema's description was the same arity failure VER-DAT-001-031 had just fixed one field over: a description belongs to the subschema, so one sentence licensed every structural bound under it and nothing could check which clause covered which number. Both checks were not kept, because the weak one is the one people satisfy - a shared description would keep passing for two unrelated bounds while the strong check sat beside it looking like coverage - so description returns to being prose with no checking role, and the presence-only spelling that accepted the empty string retires with it. rationale is required for structural and absent for sourced and derived, mirroring how source, section and derivation are absent for structural: those kinds already state a derivation, and two prose fields asking why the number is that number would mean neither is the one to read. Controls: a structural bound with no rationale, rejected naming the keyword by the loader and reported at the same pointer by the structure-blind walk; two structural bounds under one description saying 'the envelope is bounded', which must be reported twice and name both, since a diagnostic per annotation where the guarded thing is a bound would let the reviewer repair the named half and meet the rest as a new defect; an empty and a whitespace rationale; a description that plainly says something alongside no rationale, which must still fail. Two phantom questions are asked of the change itself. The walk steps over x-authority wholesale, so a rationale whose text names a bound keyword is asserted not to inflate BoundsSeen for any of the nine. That same blindness is why the entry's five string fields are now string-typed: read as 'a string if it is a string, otherwise absent', a structural entry could park a subschema under source and have it reached by neither reader - strictly worse than the annotation case in VER-DAT-001-032, where the blind walk still found the bound.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy",
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.SchemaAuthorityTests"
+      },
+      "fixtures": [
+        "content/schemas/envelope.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/structural-bound-without-rationale.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/shared-description-two-structural-bounds.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-035",
+      "summary": "The per-document bound-free exemption list keys a schema by its repository-relative path rather than by its bare file name. The glob over content/schemas is recursive, so content/schemas/a/x.schema.json and content/schemas/b/x.schema.json were one name to the list and a single exemption would have waived both: the same defect this sweep has been closing everywhere else - a check keyed per name where the guarded thing is a document - sitting in the list that was written to fix the aggregate version of it. It is latent today, because the corpus is one flat file and the exemption list is empty, so the control is the whole of the deliverable. The control is two documents whose file names collide in different directories, one of them exempted, and the other must still be reported by name. Both names are taken from the production naming function rather than written out, because the naming is the thing under test and a control that spelled the two names itself would pass over bare-name keying too. Under the previous keying it fails twice: the two names compare equal, and the unexempted document is reported by nothing.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy",
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.SchemaAuthorityCoverageTests"
+      },
+      "fixtures": [
+        "content/schemas/envelope.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-036",
+      "summary": "A $ref inside a $defs declared on a subschema is resolution-checked like any other. {\"properties\":{\"a\":{\"$defs\":{\"x\":{\"$ref\":\"#/$defs/nope\"}}}}} loaded clean, because the position fell between the loader's two readers rather than being accepted by either: a subschema-level $defs is parsed only so the parse-time rules reach it and its nodes were then dropped on the spot, since no $ref of this evaluator can resolve to them; and reference resolution runs afterwards over the node graph, which needs the finished document to resolve against and by then no longer contained them. That is a worse class than a rule that accepts too much - there was no reader whose rule could have been wrong, so no rule could be tightened - and it is the same class as the x-authority entry fields that neither the loader nor the corpus walk reached. The nodes are now kept on the enclosing node in a field the evaluator never reads and the document's definition map never receives, so the deliberate part of the discard is unchanged: nothing under a subschema's $defs becomes evaluable and no $ref can reach it. Controls: the exact document above, which must fail with MMC-5002 pointed at /properties/a/$defs/x/$ref rather than merely fail, and a resolvable $ref in that same position, which must still load - otherwise the fix would be a ban on $ref under a nested $defs rather than a check that it resolves.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy",
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.JsonSchemaEvaluatorTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/unresolvable-ref.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-037",
+      "summary": "Every file in Fixtures/schema/ is partitioned into exactly one of two classes - claimed by a verification-registry entry, or named on an explicit list of deliberately unclaimed fixtures - and the number claimed is compared against a literal stated in the test. Fixtures/invalid/ has had an orphan check since VER-DAT-001-028; Fixtures/schema/ had nothing, so a .schema.json dropped into 33 files that no test reads and no entry cites ran nothing while a reader counting the directory believed the corpus was one proof larger. A partition rather than an orphan scan, because an orphan scan has its own silencer: the way to stop the report is to add the file to whatever list the scan consults, and afterwards nothing distinguishes deliberately uncited from quietened. Under a partition the classification is forced on whoever adds the file, and a file in both classes is a contradiction that fails. The count is a literal and not derived because the correlated deletion satisfies every emptiness assertion at once: a fixture removed together with its citation leaves the directory and the registry agreeing with each other, no orphan, no contradiction, no stale declaration, and no citation for EveryNamedFixturePathExists to find - demonstrated by deleting reach-contains.schema.json, its citation, and its reach test case, after which 814 tests passed and only the literal count failed. Controls: an uncited fixture reported by name; a fixture both cited and declared unclaimed, which is the silencing case; a declaration naming no file, which pre-classifies whatever file next takes that name; a fixture deleted while its citation remains; the correlated deletion, which additionally asserts that a count taken from either side of the partition agrees with itself on that input and so could not have been the expected value; and a positive control with one file of each class, so the five cannot be satisfied by a partition that reports everything.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy",
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Fixtures.FixtureCorpusCoverageTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/schema",
+        "tests/verification/DAT-001.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-038",
+      "summary": "AProjectSchemaStillLoadsWithItsAuthorities is asserted per document, by TestCaseSource, like the three gates it is the positive control for. It was one test looping the whole corpus with a bare assert, so it stopped at the first schema that failed to load and said nothing about the rest: with two broken schemas in content/schemas the run reported one failure naming one file, and the second surfaced only after the first was repaired, where it reads as a new defect rather than the other half of the same one. Not a fail-open - the run does go red either way - but a corpus-wide assertion cannot answer the only question its failure raises, which is which of these files is wrong. Per document it reports two failures, each named by its path.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy",
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.SchemaAuthorityTests"
+      },
+      "fixtures": [
+        "content/schemas/envelope.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-039",
+      "summary": "The content-ID grammars minted in docs/technical/40-content-data-and-validation.md must agree with the id patterns in content/schemas/** and with the grammars in ContentCategories. The document is the anchor and the other two are asserted against it rather than against each other. EnvelopeSchemaPatternTests holds the schema patterns and the C# constants equal to each other, which stops those two drifting apart and does nothing to stop them drifting from the document together - two-party agreement is not verification when both parties derive from a third thing and neither reads it, which doc 91 Negative control adequacy states as the rule that a two-set invariant needs a third anchor naming the expected members independently of either side. How the design constraints are honoured. (1) The check reads only the machine-readable grammar table under doc 40 'Minted content-ID grammars' - prefix, pattern, category, directory - and never its prose; a check that scraped English would break on the first editorial rewrite and be deleted as flaky. (2) Agreement is three-way: for each minted prefix the document's grammar is compared against the category schema's properties/id pattern, against the envelope schema's stable_id alternative, and against the ContentCategories descriptor. (3) A prefix the document mints that no schema implements is reported by name rather than skipped - eleven aggregate prefixes have no definition extracted yet and are asserted as an explicit list, so the day one gains a schema the assertion fails and forces it to be wired in. Route covered: every content-ID prefix in the document's grammar table - the five with an implementation compared three ways, the eleven without one asserted as a named coverage gap. Covered in reverse too: every grammar ContentCategories declares that the document does not mint is recorded by name, which is how SITE-, ELT- and PLAYER- stay visible as unminted rather than passing as documented. Route not covered: this gate anchors doc 40's table, the schemas and ContentCategories to one another and opens no file under content/, so whether the corpus satisfies these grammars is outside it and belongs to DAT-002's population rule. Separately, and not a limitation of the gate: content/schemas/resource.schema.json asserts ^RSC-[0-9]{2}$ while all eight files under content/resources/ author A, B, C, D, E, F, common-ore and hyper-gold, so those two committed artifacts contradict each other today and nothing is red only because no check reads the corpus. That is a defect in the data rather than a scope note: the content is behind, not the schema. The catalog stream has accepted the RSC- rename, the grammar and the canonical_letter split already exist to receive it, and the migration is scheduled after that stream's PR #10; it is owned there and is deliberately not attempted from this entry. Negative controls, each a coherent well-formed violation per doc 91: changing the document's RSC- row to a three-digit grammar failed TheDocumentSchemaAndCodeStateOneGrammarFor_RSC, naming the schema, the envelope and ContentCategories as the three disagreeing artifacts; deleting the FORMULA- grammar from both envelope.schema.json and ContentCategories - the correlated deletion that leaves EnvelopeSchemaPatternTests green, confirmed green - failed TheDocumentSchemaAndCodeStateOneGrammarFor_FORMULA; deleting the SIEGE- row from the document failed TheDocumentTableIsExactlyTheSixteenPrefixesNamedHere reporting 'Missing (1): SIEGE-'.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-002", "TR-DAT-004"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#minted-content-id-grammars",
+        "docs/technical/40-content-data-and-validation.md#stable-id-policy",
+        "docs/technical/40-content-data-and-validation.md#content-catalogs"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.DocumentGrammarAgreementTests"
+      },
+      "fixtures": [
+        "docs/technical/40-content-data-and-validation.md",
+        "content/schemas/envelope.schema.json",
+        "content/schemas/resource.schema.json",
+        "content/schemas/utility.schema.json",
+        "content/schemas/encounter-schedule.schema.json",
+        "content/schemas/map-generation-contract.schema.json",
+        "content/schemas/weapon-stat-price-formula.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-040",
+      "summary": "No file under content/schemas/ contains a JSON null at any depth. Route: SchemaNullScan walks every *.json under content/schemas/ recursively - not only the *.schema.json the attribution gate globs - and descends through every object member and every array element to the leaves, reporting the JSON Pointer of each position whose value is the JSON null. It matches the null value and never the four-character string \"null\", which is a legal string and is frequently an enum token; a text search over the bytes cannot tell the two apart and would be a check people turn off. Why the rule: absence is written by omitting a key and letting the compiler materialize a documented default, so null is the one value the codec rejects, and a schema authoring it - as a default, inside an enum, inside a const, or in an example - authors the rejected value in the document that defines what is accepted. presentation_id has no default to author at all. Six were live when this was written: \"description\": null in six of the sixteen category schemas, written where the field was meant to be absent, reported by nothing because the loader read a non-string annotation as no annotation. That is why the scan asks about the value rather than about a list of keywords a null is likely to sit under - none of the six sat under a keyword anybody would have listed. Why it is asserted here rather than left to the whole-tree scan over content/, which enumerates every file and admits no exception list: that check does catch this, but in somebody else's run, naming a file nobody thinks of as content and offering no waiver, whereas this one fails in the change that wrote it. Negative control: tests/MechaMiner.Content.Tests/Fixtures/schema/null-default.schema.json carries two of the guarded thing where only one is a finding - a default of JSON null and a default of the string \"null\" - plus a null nested inside an array inside an examples array, so the scan is held to every depth and to the value rather than the spelling; both nulls must be reported by pointer and the string must not. Route not covered: files under content/ outside content/schemas/, which are the whole-tree scan's own.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.SchemaNullAbsenceTests"
+      },
+      "fixtures": [
+        "content/schemas",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/null-default.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-041",
+      "summary": "presentation_id is required absent: a definition carrying it is rejected with MMC-2010, which names the field and says the presentation category is not yet minted. Why the change: the field was declared-optional with minLength 1, so the envelope accepted any string an author invented and validated nothing about it - no accepted document says what a presentation definition contains, so no ID grammar has been minted for one, and minting a shape for a category with zero members would be inventing structure ahead of need. A constraint that admits every value is not a weaker gate than none, it is a worse one, because it reads as though somebody decided. Route: the field stays in the declared nine, so a document carrying it is not carrying an unknown field; EnvelopeReader checks the scanned structure for its presence before any kind check and before deserialization, and EnvelopeDto has no property for it, so a value of any JSON kind is the same fault rather than a type mismatch or an exception with no pointer. Negative controls: invalid/structural-presentation-id-authored.json carries a plausible value and invalid/structural-presentation-id-empty.json carries the empty string; both must fail with MMC-2010 and not with MMC-2001 or MMC-2009, and the second is the one with teeth, because under the previous rule it was an empty declared-optional field - a complaint about a value's shape, which invites an author to supply a better shape. A number is exercised in EnvelopeValidatorTests for the same reason. Positive control: an envelope omitting the field validates with zero diagnostics, and every valid fixture in the corpus omits it, so the rejection cannot be satisfied by a validator that rejects everything. Schema half: all seventeen documents under content/schemas declare presentation_id as 'not' over the empty schema and reference it from properties, so the draft 2020-12 mirror rejects the same two fixtures for the same stated reason rather than as an unknown property; the sixteen structural minLength rationales and their x-authority entries were deleted with the bound they explained, because a required-absent field has no length to justify. The canonical bundle still emits the row with the absent-optional default, since doc 40's table has nine rows and runtime reads a value rather than discovering a missing key. Route not covered: whether a presentation entry exists, which is DAT-005's cross-reference work and has nothing to resolve against until the category is minted.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Envelope.EnvelopeValidatorTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/structural-presentation-id-authored.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/structural-presentation-id-empty.json",
+        "content/schemas/envelope.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-042",
+      "summary": "The envelope schema's properties, required list, status enum and tag enum are each compared against a third anchor stated in the test, not only against EnvelopeSchema and the vocabulary types. Route: each set is read from content/schemas/envelope.schema.json, compared member by member against a roster written out in EnvelopeSchemaPatternTests, compared as a set against that roster so an addition fails, compared against the C# declaration, and counted. Why the third anchor: the four assertions were two-set comparisons between artifacts that both derive from doc 40, which doc 91 Negative control adequacy names as blind to a correlated deletion, and the counts their names asserted - nine fields, six required - were not asserted by their bodies at all. Technique: each anchor was proved by injecting the correlated deletion into both real artifacts at once and confirming the pre-existing set assertion stayed green while the new roster and count assertions failed naming the member. Deleting summary_key from the schema's properties and from EnvelopeSchema.DeclaredOrder failed ThePropertiesAreExactlyTheNineEnvelopeFields on 'no longer declares the property summary_key' and on Count 8 versus 9, with Is.EquivalentTo(EnvelopeSchema.Fields) not among the reported failures; deleting tags from the schema's required array and from EnvelopeSchema.RequiredFields failed TheRequiredListIsExactlyTheSixRequiredEnvelopeFields the same way at 5 versus 6; deleting retired from the schema enum and from DefinitionStatuses failed TheStatusEnumIsExactlyTheAcceptedTokens at 3 versus 4. The tags case is the empty-set one: both sides are empty by design, so adding legacy to the schema enum and to TagVocabulary.Declared together was the injection, and it failed the roster and the IsEmpty assertion while the old two-set comparison passed. Deleting the enum keyword from $defs/tag - which an absent-versus-empty set comparison cannot distinguish - failed the explicit declaration assertion.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-004", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#common-definition-envelope",
+        "docs/technical/40-content-data-and-validation.md#tags-vocabulary",
+        "docs/technical/91-verification-strategy.md#negative-control-adequacy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.EnvelopeSchemaPatternTests"
+      },
+      "fixtures": [
+        "content/schemas/envelope.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-043",
+      "summary": "The cardinalities VER-DAT-001-039 advertises are asserted rather than only named. Route: doc 40's minted-grammar table is read and its row count compared against sixteen, the roster of sixteen prefixes stated in DocumentGrammarAgreementTests is compared against sixteen, the eleven aggregates with no implementation are counted, and the eleven grammars ContentCategories declares that no document mints are counted. Why: each of those three tests held a set read from an artifact equal to a literal list in the test, which is a real third anchor for a one-sided deletion and no anchor at all for a deletion taken from the artifact and the literal together - and the numbers were in the test names only. Technique: deleting the SITE- grammar from ContentCategories and its line from TheGrammarsNoDocumentMints in one edit left Is.EquivalentTo green and failed only the two new count assertions at 10 versus 11; deleting SIEGE- from the sixteen-prefix roster failed both the set assertion, naming SIEGE- as Extra, and the count at 15 versus 16.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-004", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#stable-id-policy",
+        "docs/technical/91-verification-strategy.md#negative-control-adequacy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.DocumentGrammarAgreementTests"
+      },
+      "fixtures": [
+        "content/schemas/envelope.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-044",
+      "summary": "The nine bound keywords are counted, not only listed. Route: SchemaAuthority.BoundKeywords() is compared member by member and as a set against the roster stated in SchemaAuthorityCoverageTests, and both the rule and the roster are then compared against nine. Why: the roster made a one-sided deletion fail by name, and a keyword removed from the rule and from the roster in the same edit kept every existing assertion green while narrowing what the x-authority gate reaches - the nine is advertised by content/schemas/README.md, by VER-DAT-001-025 and VER-DAT-001-027, and by doc 91 Negative control adequacy, so it is a promise rather than a label. Technique: removing multipleOf from SchemaAuthority.BoundKeywords() and from TheNineBoundKeywords together left the per-keyword and set assertions passing and failed only the two new counts at 8 versus 9.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-004", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline",
+        "docs/technical/91-verification-strategy.md#negative-control-adequacy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.SchemaAuthorityCoverageTests"
+      },
+      "fixtures": [
+        "content/schemas"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-045",
+      "summary": "The maximal envelope fixture is compared field by field against the eight authorable envelope fields rather than spot-checked. Route: the fixture's root property names are read from the JSON and compared as a set against the eight written out in the test, then counted against the declared nine less the required-absent ones. Why: the test asserted the identity, name_key and summary_key and left the remaining five to the validator, so 'carries every authorable field' was a claim about the fixture that the fixture's own contents were never compared to. This strengthens a claim that was already held indirectly - the six required fields are enforced by the read succeeding and presentation_id by its required-absent rule - rather than closing a fail-open.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-004", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#common-definition-envelope"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Fixtures.ValidFixtureCorpusTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/valid/envelope-maximal.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-046",
+      "summary": "How many permutations the canonicalization property is proved over is anchored twice, and neither anchor is a number written beside the array. First, the committed set is compared as a set against the canonical/permutation-*.json files on disk, so the fixture directory decides the count and a line deleted from the array fails against a file that is still there. Second, a family is generated rather than committed: every cyclic rotation of the authored fixture's own root property order, each emitted indented and compact, with its size compared against twice the number of root properties the document declares. Why: both agreement loops ranged over a four-element array with no cardinality claim, and shrinking it to one element left them comparing the baseline against itself - measured at 5 passed, 0 failed with a one-element array before this entry, and 1 failed after. Reducing the rotation generator to a single rotation fails the size comparison, 16 expected against 2, which is what shows the number is read from the document rather than written down. DAT-006's permutation gate is built on this property, and determinism proved over one permutation reads identically to determinism proved over all of them. Route not covered: orderings no rotation reaches, which the committed reversed-order fixture covers, and all n! orderings, which is 40320 envelope reads for a property a rotation through every starting position already exercises.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Fixtures.CanonicalPermutationTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/canonical/permutation-authored-order.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/canonical/permutation-reversed-order.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/canonical/permutation-reindented.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/canonical/permutation-compact.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "file-hash", "canonical-ordering"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-047",
+      "summary": "Doc 40 states each minted grammar twice, in a table and in prose, and makes their agreement a mandatory rule; this asserts the half of that rule a machine can hold. Route: every prefix in the minted-grammar table is looked for, as a substring, in the prose of the grammars section with the table rows stripped out, plus the prose of whichever section that row's 'Minted in' column links to - the document's own statement of where the prefix is minted, which is what UTL- needs, since its grammar is minted under Utilities and the grammars section never spells it outside the table. Why containment and not parsing: a check that read what the prose said about a prefix would break on the first editorial rewrite, be called flaky, and be deleted in a reasonable cleanup, which is the outcome doc 40 names as the reason the table exists. Containment survives a rewrite and fails in one case only. Measured against the real document: deleting both prose mentions of SIEGE- while leaving its row failed this and nothing else, 1248 of 1249 still passing. The complementary direction is already held - deleting the SIEGE- row together with both roster entries in this fixture fails the two count assertions - so the two together bound both halves of the must-agree rule.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#minted-content-id-grammars",
+        "docs/technical/40-content-data-and-validation.md#stable-id-policy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.DocumentGrammarAgreementTests"
+      },
+      "fixtures": ["docs/technical/40-content-data-and-validation.md"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-048",
+      "summary": "Every walk over DAT-001.json's entries counts what it visited and fails when the count is zero. Route: the citation, ID-sequence, required-field, nunit-selector and fixture-path checks each increment a counter per entry, and the citation, selector and fixture walks additionally count the citations, selectors and paths actually resolved, since a registry whose entries named none of those would still be a walk that decided nothing. Why: all five were foreach loops with no non-empty assertion, so an emptied entries array satisfied every one of them. Measured directly: with the entries array emptied in all three verification registries, the nineteen tests across the two registry fixtures were 19 passed, 0 failed before this change and 2 passed, 17 failed after, the two survivors being the resolver's own negative control, which reads no entries. That is what makes each counter a count rather than a constant.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#what-evidencekinds-means"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Fixtures.VerificationRegistryTests"
+      },
+      "fixtures": ["tests/verification/DAT-001.json"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-049",
+      "summary": "The declared content-category table is compared as a set against the ContentCategory enum less its zero sentinel, and the sentinel is separately required not to be declared. Why: two checks range over ContentCategories.All and both are foreach loops, so the table decides how much they prove and neither can see it shrink; a count literal beside the table would be a second copy of a fact the table already states. The enum is the third party - it lives in another file, it is the type every caller passes, and dropping a member is a breaking API change rather than a tidy-up. Measured: adding a member to ContentCategory with no descriptor passed 1249 of 1249 before this entry and fails it after. The reverse direction, deleting a declared category, was already caught loudly by the fixture corpus at 57 failures, so that half is a strengthening rather than a fail-open closed. Both loops additionally assert the table is not empty so that an emptied table reports as an empty walk instead of as success.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#stable-id-policy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Ids.ContentIdTests"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    }
+  ]
+}

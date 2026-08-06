@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Negative control: bare bound in oneOf",
+  "description": "A bare numeric bound with no adjacent x-authority, placed in an oneOf branch. This file exists to prove the attribution walk reaches that position; it is never loaded as a real schema.",
+  "oneOf": [
+    {
+      "type": "integer"
+    },
+    {
+      "type": "integer",
+      "maximum": 2048
+    }
+  ]
+}

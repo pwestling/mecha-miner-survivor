@@ -1,0 +1,78 @@
+{
+  "id": "EN-03",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "enemy.EN-03.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-INITIAL-ALIEN-ROSTER#ordinary-roster-overview",
+    "movement_speed: GDD-PLAYER-SURVIVABILITY-BASELINE#movement-and-speed-modifiers",
+    "contact_footprint: GDD-PLAYER-SURVIVABILITY-BASELINE#collision-and-contact-footprints",
+    "contact_cadence: GDD-PLAYER-SURVIVABILITY-BASELINE#contact-cadence-and-damage-grace",
+    "damage_pressure: GDD-PLAYER-SURVIVABILITY-BASELINE#damage-pressure-reference",
+    "applies_to_player: GDD-INITIAL-ALIEN-ROSTER#shared-ordinary-enemy-rules",
+    "elite_eligible: GDD-INITIAL-ALIEN-ROSTER#elite-treatment",
+    "first_playable_subset: GDD-INITIAL-ALIEN-ROSTER#first-playable-subset",
+    "description: GDD-INITIAL-ALIEN-ROSTER#six-silhouette-families"
+  ],
+  "family": "Armored beetle",
+  "hull": 150,
+  "movement_speed": {
+    "percent_of_mech_base_speed": {
+      "percent": 34
+    },
+    "world_speed_m_per_s": 1.02
+  },
+  "contact_damage": 14,
+  "body_scale_multiplier": 1.3,
+  "control_resistance": {
+    "percent": 45
+  },
+  "earliest_minute": 4,
+  "behavior_kind": "pure contact pursuer",
+  "contact_footprint": {
+    "shape": "Circle",
+    "reference_diameter_m": 0.8
+  },
+  "contact_cadence": {
+    "first_hit": "immediately when an eligible overlap begins",
+    "same_enemy_repeat_interval_seconds": 0.75,
+    "global_contact_grace_after_resolved_contact_seconds": 0.2
+  },
+  "damage_pressure": {
+    "hits_to_defeat_100_hull": 8,
+    "continuous_overlap_time_to_defeat_seconds": 5.25,
+    "assumptions": "100 Hull, zero Armor, no healing, no resonance, uninterrupted overlap with one attacker"
+  },
+  "movement_collision": {
+    "solid_to_mech": false,
+    "solid_to_other_enemies": false,
+    "solid_to_mining_points_and_pickups": false,
+    "constrained_by_solid_world_terrain": true
+  },
+  "applies_to_player": {
+    "flinch": false,
+    "forced_movement": false,
+    "mining_interruption": false,
+    "control_loss": false,
+    "hitstun": false,
+    "knockback": false
+  },
+  "post_hard_control_immunity_seconds": 0.25,
+  "fixed_profile": true,
+  "scales_with_elapsed_time_or_player_state": false,
+  "elite_eligible": true,
+  "drops": {
+    "xp": 0,
+    "common_ore": 0,
+    "hyper_gold_units": 0,
+    "specialized_material_units": 0,
+    "repair_pickups": 0,
+    "temporary_pickups": 0
+  },
+  "first_playable_subset": {
+    "included": true
+  },
+  "description": "A slow beetle-like alien whose large rounded carapace and short legs produce a broad solid silhouette. Shellbacks create durable moving obstacles without physically blocking the mech and teach that some bodies should be routed around or concentrated under sustained fire."
+}

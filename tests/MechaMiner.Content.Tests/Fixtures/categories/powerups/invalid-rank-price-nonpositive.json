@@ -1,0 +1,49 @@
+{
+  "id": "PU-C01",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "powerup.PU-C01.name",
+  "summary_key": "powerup.PU-C01.summary",
+  "tags": [],
+  "source_refs": [
+    "TR-DAT-003"
+  ],
+  "ui_grouping": "combat",
+  "affected_statistic": "weapon-damage",
+  "effect_kind": "additive-percent",
+  "per_rank_value": 3,
+  "cap": 5,
+  "ranks": [
+    {
+      "rank": 1,
+      "price_hyper_gold": 100
+    },
+    {
+      "rank": 2,
+      "price_hyper_gold": 150
+    },
+    {
+      "rank": 3,
+      "price_hyper_gold": 0
+    },
+    {
+      "rank": 4,
+      "price_hyper_gold": 250
+    },
+    {
+      "rank": 5,
+      "price_hyper_gold": 300
+    }
+  ],
+  "active_rank_policy": {
+    "minimum_active_rank": 0,
+    "maximum_active_rank_equals_purchased_rank": true,
+    "changeable_between_runs": true,
+    "changeable_during_run": false,
+    "change_cost_hyper_gold": 0
+  },
+  "rules": [
+    "Ranks must be bought sequentially."
+  ]
+}

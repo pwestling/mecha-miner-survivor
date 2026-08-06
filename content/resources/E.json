@@ -1,0 +1,32 @@
+{
+  "id": "E",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "resource.E.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-SPECIALIZED-RESOURCE-IDENTITIES#accepted-identity-map",
+    "resonance_behavior: GDD-MINING#geode-resonance-fields",
+    "resonance_behavior.short_modifier: GDD-SPECIALIZED-RESOURCE-IDENTITIES#geode-resonance-behavior"
+  ],
+  "material_character": "Branching techno-organic conductive growth",
+  "loose_association": "Coordination, autonomous systems, cycling, reserves",
+  "primary_color": "Acid green",
+  "icon_and_silhouette_cue": "Branching three-lobed node",
+  "audio_character": "Layered harmonic pulse",
+  "resource_class": "specialized ordinary resource",
+  "inventory_scope": "run-local",
+  "persistence": "Run-local; unspent units are lost when the run ends",
+  "shared_economy_tier": true,
+  "resonance_effect_name": "Synchronized Aggression",
+  "resonance_behavior": {
+    "effect_name": "Synchronized Aggression",
+    "resonance_effect": "enemy attack cadence is 20% faster without increasing movement speed",
+    "modifier": {
+      "percent": 20,
+      "direction": "increase"
+    },
+    "short_modifier": "Enemy attack cadence +20%"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "id": "RSC-08",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "resource.RSC-08.name",
+  "summary_key": "resource.RSC-08.summary",
+  "tags": [],
+  "source_refs": [
+    "TR-DAT-002"
+  ],
+  "resource_class": "hyper-gold",
+  "inventory_scope": "cross-run",
+  "persistence_class": "banked-at-extraction",
+  "primary_purpose": "Buys permanent account upgrades between runs.",
+  "secured_only_by_mission_extraction": true,
+  "increased_by_power_ups": false,
+  "canonical_letter": "A"
+}

@@ -1,0 +1,133 @@
+{
+  "id": "EN-06",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "enemy.EN-06.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-INITIAL-ALIEN-ROSTER#ordinary-roster-overview",
+    "movement_speed: GDD-PLAYER-SURVIVABILITY-BASELINE#movement-and-speed-modifiers",
+    "contact_footprint: GDD-PLAYER-SURVIVABILITY-BASELINE#collision-and-contact-footprints",
+    "contact_cadence: GDD-PLAYER-SURVIVABILITY-BASELINE#contact-cadence-and-damage-grace",
+    "damage_pressure: GDD-PLAYER-SURVIVABILITY-BASELINE#damage-pressure-reference",
+    "applies_to_player: GDD-INITIAL-ALIEN-ROSTER#shared-ordinary-enemy-rules",
+    "elite_eligible: GDD-INITIAL-ALIEN-ROSTER#elite-treatment",
+    "elite_eligible: TDD-ENCOUNTERS#elite-construction",
+    "specialist_attack.projectile: TDD-ENCOUNTERS#needler",
+    "specialist_attack.resonant_damage_reference: GDD-PLAYER-SURVIVABILITY-BASELINE#damage-pressure-reference",
+    "first_playable_subset: GDD-INITIAL-ALIEN-ROSTER#first-playable-subset",
+    "description: GDD-INITIAL-ALIEN-ROSTER#six-silhouette-families",
+    "specialist_attack.hard_control_interaction: TDD-ENCOUNTERS#needler",
+    "specialist_attack.projectile.lifetime_description: GDD-INITIAL-ALIEN-ROSTER#en-06--needler",
+    "specialist_attack.resonance_interactions.flux_amber: GDD-INITIAL-ALIEN-ROSTER#en-06--needler"
+  ],
+  "family": "Ranged stalk",
+  "hull": 80,
+  "movement_speed": {
+    "percent_of_mech_base_speed": {
+      "percent": 40
+    },
+    "world_speed_m_per_s": 1.2
+  },
+  "contact_damage": 8,
+  "body_scale_multiplier": 1.0,
+  "control_resistance": {
+    "percent": 25
+  },
+  "earliest_minute": 16,
+  "behavior_kind": "pursuit and contact plus one telegraphed straight projectile",
+  "contact_footprint": {
+    "shape": "Circle",
+    "reference_diameter_m": 0.8
+  },
+  "contact_cadence": {
+    "first_hit": "immediately when an eligible overlap begins",
+    "same_enemy_repeat_interval_seconds": 0.75,
+    "global_contact_grace_after_resolved_contact_seconds": 0.2
+  },
+  "damage_pressure": {
+    "hits_to_defeat_100_hull": 13,
+    "continuous_overlap_time_to_defeat_seconds": 9.0,
+    "assumptions": "100 Hull, zero Armor, no healing, no resonance, uninterrupted overlap with one attacker"
+  },
+  "movement_collision": {
+    "solid_to_mech": false,
+    "solid_to_other_enemies": false,
+    "solid_to_mining_points_and_pickups": false,
+    "constrained_by_solid_world_terrain": true
+  },
+  "applies_to_player": {
+    "flinch": false,
+    "forced_movement": false,
+    "mining_interruption": false,
+    "control_loss": false,
+    "hitstun": false,
+    "knockback": false
+  },
+  "post_hard_control_immunity_seconds": 0.25,
+  "fixed_profile": true,
+  "scales_with_elapsed_time_or_player_state": false,
+  "elite_eligible": false,
+  "drops": {
+    "xp": 0,
+    "common_ore": 0,
+    "hyper_gold_units": 0,
+    "specialized_material_units": 0,
+    "repair_pickups": 0,
+    "temporary_pickups": 0
+  },
+  "specialist_attack": {
+    "kind": "telegraphed straight non-homing projectile",
+    "cadence_seconds": 4.5,
+    "charge_duration_seconds": 0.8,
+    "movement_speed_while_charging_multiplier": 0.5,
+    "targeting": "samples the mech's current position at charge completion and fires along that line without leading",
+    "returns_to_full_pursuit_after_firing": true,
+    "projectile": {
+      "damage": 14,
+      "speed": {
+        "percent_of_mech_base_speed": {
+          "percent": 75
+        },
+        "world_speed_m_per_s": 2.25
+      },
+      "lifetime_description": "carries it slightly beyond one screen width",
+      "homing": false,
+      "leads_target": false,
+      "retargets": false,
+      "splits": false,
+      "explodes": false,
+      "leaves_hazard": false,
+      "applies_status": false,
+      "snapshot_at_creation": [
+        "speed",
+        "damage",
+        "lifetime",
+        "terrainCollision",
+        "noHoming"
+      ]
+    },
+    "resonance_interactions": {
+      "cinderglass": "increases projectile damage",
+      "eidolon_coral": "increases firing frequency",
+      "flux_amber": "affects Needler movement but not projectile speed"
+    },
+    "resonant_damage_reference": {
+      "base_damage": 14,
+      "resonant_damage": 17,
+      "resonance_source": "Cinderglass",
+      "fresh_mech_hits_to_defeat_at_resonant_value": 6
+    },
+    "readability_requirements": [
+      "bright body contraction",
+      "contrasting line flash",
+      "unique audio chirp that makes the shot readable without relying on projectile color"
+    ],
+    "hard_control_interaction": "hard control may pause locomotion but does not erase already-earned cadence; ordinary Needler charge may pause under hard control because it is not a boss ability"
+  },
+  "first_playable_subset": {
+    "included": true
+  },
+  "description": "A narrow stalk-like organism with a visibly swollen projectile sac and two rear stabilizing limbs. It continues pursuing, but every 4.5 seconds it begins a conspicuous 0.8-second charge, samples the mech's current position, and fires one straight non-homing needle along that line."
+}

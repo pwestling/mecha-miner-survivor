@@ -1,0 +1,105 @@
+{
+  "id": "PU-M02",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "powerup.PU-M02.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-PERMANENT-POWERUP-CATALOG#pu-m02--survey-optics",
+    "GDD-PERMANENT-POWERUP-CATALOG#catalog-overview",
+    "currency: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "ui_grouping: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "fresh_profile_purchasable: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "ranks_must_be_bought_sequentially: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "prices_fixed: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "applies_account_wide: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "refundable: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "purchasable_during_run: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "active_rank_policy: GDD-PERMANENT-POWERUP-CATALOG#shared-purchase-rules",
+    "total_cost_hyper_gold: DEC-120#decision",
+    "maximum_effect: GDD-PROGRESSION#progression-layers"
+  ],
+  "domain": "Mobility",
+  "per_rank_effect": {
+    "text": "+5% discovery radius",
+    "statistic": "discovery radius",
+    "percent": 5
+  },
+  "maximum": 5,
+  "maximum_effect": {
+    "text": "+25%",
+    "statistic": "discovery radius",
+    "percent": 25
+  },
+  "total_cost_hyper_gold": 400,
+  "currency": "Hyper Gold",
+  "ui_grouping": "Mobility",
+  "fresh_profile_purchasable": true,
+  "ranks_must_be_bought_sequentially": true,
+  "prices_fixed": true,
+  "applies_account_wide": true,
+  "refundable": true,
+  "purchasable_during_run": false,
+  "active_rank_policy": {
+    "minimum_active_rank": 0,
+    "maximum_active_rank_equals_purchased_rank": true,
+    "change_cost_hyper_gold": 0,
+    "changeable_between_runs": true,
+    "changeable_during_run": false
+  },
+  "rank_effect_column": "Total discovery radius",
+  "ranks": [
+    {
+      "rank": 1,
+      "total_effect": {
+        "text": "+5%",
+        "percent": 5
+      },
+      "price_hyper_gold": 25,
+      "cumulative_cost_hyper_gold": 25
+    },
+    {
+      "rank": 2,
+      "total_effect": {
+        "text": "+10%",
+        "percent": 10
+      },
+      "price_hyper_gold": 50,
+      "cumulative_cost_hyper_gold": 75
+    },
+    {
+      "rank": 3,
+      "total_effect": {
+        "text": "+15%",
+        "percent": 15
+      },
+      "price_hyper_gold": 75,
+      "cumulative_cost_hyper_gold": 150
+    },
+    {
+      "rank": 4,
+      "total_effect": {
+        "text": "+20%",
+        "percent": 20
+      },
+      "price_hyper_gold": 100,
+      "cumulative_cost_hyper_gold": 250
+    },
+    {
+      "rank": 5,
+      "total_effect": {
+        "text": "+25%",
+        "percent": 25
+      },
+      "price_hyper_gold": 150,
+      "cumulative_cost_hyper_gold": 400
+    }
+  ],
+  "rules": [
+    "Expands ordinary terrain-fog reveal and discovery of landmarks, mining points, relic caches, and destructible rocks using the same boundary as Survey Aperture.",
+    "Does not reveal through blocked terrain when ordinary visibility would not, disclose exact hidden locations, add radar directions, reveal absent materials, or mark undiscovered objects globally.",
+    "Previously revealed terrain and markers remain recorded normally after leaving the enlarged radius."
+  ]
+}

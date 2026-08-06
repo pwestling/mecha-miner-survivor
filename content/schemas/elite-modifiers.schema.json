@@ -1,0 +1,336 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mechaminer.local/schemas/elite-modifiers.schema.json",
+  "title": "SCH-CNT-002 shared elite modifier profile",
+  "description": "The shared elite modifier profile. The project-owned typed validator in src/MechaMiner.Content/Categories/ remains authoritative; this schema is the draft 2020-12 mirror kept for editor and tool interoperability, and a fixture corpus proves the two reach the same accept/reject verdict on every structural case. See content/schemas/README.md. This is not an enemy and does not validate against the enemy schema: it is a modifier profile applied on top of one, and it shares six fields with an enemy out of sixteen.",
+  "type": "object",
+  "additionalProperties": false,
+  "propertyNames": {
+    "$ref": "#/$defs/snake_case_field"
+  },
+  "required": [
+    "id",
+    "schema_version",
+    "content_version",
+    "status",
+    "tags",
+    "source_refs",
+    "maximum_hull_multiplier",
+    "movement_speed_multiplier",
+    "contact_damage_multiplier",
+    "body_scale_multiplier",
+    "added_control_resistance_percent",
+    "control_resistance_maximum_percent",
+    "post_hard_control_immunity_seconds",
+    "adds_behavior",
+    "adds_attacks_phases_aura_or_support_ai",
+    "adds_loot",
+    "retains_base_identity_behavior",
+    "maximum_scheduled_elites_at_once",
+    "beacon_elites_additional",
+    "modifier_application_order",
+    "recycling",
+    "presentation_requirements"
+  ],
+  "properties": {
+    "id": {
+      "title": "A stable, case-sensitive ASCII content ID",
+      "type": "string",
+      "pattern": "^ELT-[0-9]{2}$"
+    },
+    "schema_version": {
+      "$ref": "#/$defs/version"
+    },
+    "content_version": {
+      "$ref": "#/$defs/version"
+    },
+    "status": {
+      "$ref": "#/$defs/status"
+    },
+    "tags": {
+      "$ref": "#/$defs/tags"
+    },
+    "source_refs": {
+      "$ref": "#/$defs/source_refs"
+    },
+    "presentation_id": {
+      "$ref": "#/$defs/presentation_id"
+    },
+    "maximum_hull_multiplier": {
+      "type": "number",
+      "description": "How an elite's maximum Hull is scaled.",
+      "exclusiveMinimum": 0,
+      "x-authority": {
+        "exclusiveMinimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+        }
+      }
+    },
+    "movement_speed_multiplier": {
+      "type": "number",
+      "description": "How an elite's movement speed is scaled.",
+      "exclusiveMinimum": 0,
+      "x-authority": {
+        "exclusiveMinimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+        }
+      }
+    },
+    "contact_damage_multiplier": {
+      "type": "number",
+      "description": "How an elite's contact damage is scaled.",
+      "exclusiveMinimum": 0,
+      "x-authority": {
+        "exclusiveMinimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+        }
+      }
+    },
+    "body_scale_multiplier": {
+      "type": "number",
+      "description": "How an elite's body scale is scaled, on top of the enemy's own. The name is the same as the enemy's on purpose: doc 40 requires one name in every scope, and the composition chain reads in one vocabulary because of it.",
+      "exclusiveMinimum": 0,
+      "x-authority": {
+        "exclusiveMinimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section makes durations nonnegative and rates non-negative; this quantity is additionally one the definition divides by, scales by, or spends, so zero is excluded as well and the bound is exclusive rather than inclusive"
+        }
+      }
+    },
+    "added_control_resistance_percent": {
+      "type": "integer",
+      "description": "Percentage points of control resistance an elite gains.",
+      "minimum": 0,
+      "maximum": 100,
+      "x-authority": {
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section scopes _percent to human-readable percentage points; the floor of a share of a whole is zero of them, which is the share that is none of it"
+        },
+        "maximum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section scopes _percent to human-readable percentage points; the ceiling of a share of a whole is one hundred of them, which is the whole, and a larger value is not a share of anything"
+        }
+      }
+    },
+    "control_resistance_maximum_percent": {
+      "type": "integer",
+      "description": "The ceiling an elite's control resistance may reach after the addition. Two bounds live here, so each carries the qualifier that says which it is.",
+      "minimum": 0,
+      "maximum": 100,
+      "x-authority": {
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section scopes _percent to human-readable percentage points; the floor of a share of a whole is zero of them, which is the share that is none of it"
+        },
+        "maximum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section scopes _percent to human-readable percentage points; the ceiling of a share of a whole is one hundred of them, which is the whole, and a larger value is not a share of anything"
+        }
+      }
+    },
+    "post_hard_control_immunity_seconds": {
+      "type": "number",
+      "description": "An elite's immunity after a hard control effect resolves.",
+      "minimum": 0,
+      "x-authority": {
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section states that durations are nonnegative and that rates cannot be negative, so the floor of every duration and rate is zero and there is no upper bound the section supplies"
+        }
+      }
+    },
+    "adds_behavior": {
+      "type": "boolean",
+      "description": "Whether the profile adds a behavior."
+    },
+    "adds_attacks_phases_aura_or_support_ai": {
+      "type": "boolean",
+      "description": "Whether the profile adds attacks, phases, an aura, or support AI."
+    },
+    "adds_loot": {
+      "type": "boolean",
+      "description": "Whether the profile adds loot."
+    },
+    "retains_base_identity_behavior": {
+      "type": "string",
+      "description": "What the elite keeps from its base enemy."
+    },
+    "maximum_scheduled_elites_at_once": {
+      "type": "integer",
+      "description": "How many scheduled elites may be alive at once.",
+      "minimum": 1,
+      "x-authority": {
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+        }
+      }
+    },
+    "beacon_elites_additional": {
+      "type": "string",
+      "description": "How beacon elites add to the scheduled ceiling."
+    },
+    "modifier_application_order": {
+      "type": "array",
+      "description": "The order in which modifier layers apply. Every layer appears exactly once, so this is a total order over the closed vocabulary rather than a subset of it.",
+      "items": {
+        "type": "string",
+        "enum": [
+          "base",
+          "elite",
+          "resonance",
+          "relic"
+        ]
+      },
+      "uniqueItems": true,
+      "minItems": 4,
+      "maxItems": 4,
+      "x-authority": {
+        "minItems": {
+          "source": "GDD-INITIAL-ALIEN-ROSTER",
+          "section": "Elite treatment",
+          "kind": "sourced",
+          "derivation": "the four layers are the whole accepted vocabulary and the field is their total order, so the floor is the vocabulary's size; a shorter array would leave a layer's position undefined"
+        },
+        "maxItems": {
+          "source": "GDD-INITIAL-ALIEN-ROSTER",
+          "section": "Elite treatment",
+          "kind": "sourced",
+          "derivation": "the same vocabulary size as the floor; a longer array would have to repeat a layer, and a total order names each element exactly once"
+        }
+      }
+    },
+    "recycling": {
+      "title": "How elites are recycled",
+      "description": "Two rules with no structured twin.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "beacon_tagged_elites": {
+          "type": "string",
+          "description": "How beacon-tagged elites are recycled."
+        },
+        "ordinary_elites": {
+          "type": "string",
+          "description": "How ordinary elites are recycled."
+        }
+      },
+      "required": [
+        "beacon_tagged_elites",
+        "ordinary_elites"
+      ]
+    },
+    "presentation_requirements": {
+      "title": "What an elite must show",
+      "description": "Readability requirements for the elite treatment.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required": {
+          "type": "array",
+          "description": "What an elite must show.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "insufficient": {
+          "type": "string",
+          "description": "What is explicitly not enough on its own."
+        }
+      },
+      "required": [
+        "required",
+        "insufficient"
+      ]
+    }
+  },
+  "$defs": {
+    "snake_case_field": {
+      "title": "A schema-declared field name",
+      "description": "Property names use snake_case.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "version": {
+      "title": "A positive integer version",
+      "description": "The initial schema_version and content_version of every first-authored definition is 1.",
+      "type": "integer",
+      "minimum": 1,
+      "x-authority": {
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Initial versions",
+          "kind": "sourced",
+          "derivation": "the initial value of every first-authored definition is 1 and both versions only ever increment, so no valid version is below 1; there is no upper bound because a definition may be revised without limit"
+        }
+      }
+    },
+    "status": {
+      "title": "Lifecycle state",
+      "type": "string",
+      "enum": [
+        "development",
+        "enabled",
+        "disabled",
+        "retired"
+      ]
+    },
+    "name_key": {
+      "title": "Localization key for the player-facing name",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*\\.[A-Za-z0-9][A-Za-z0-9_-]*\\.name$"
+    },
+    "summary_key": {
+      "title": "Localization key for the concise player-facing summary",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*\\.[A-Za-z0-9][A-Za-z0-9_-]*\\.summary$"
+    },
+    "tags": {
+      "title": "Closed query and tooling vocabulary",
+      "description": "The vocabulary starts empty, so [] is the only accepted value.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": []
+      }
+    },
+    "source_refs": {
+      "title": "The sources this definition implements",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(?:[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*|\\[\\]|\\[[0-9]+\\]|\\[[0-9]+\\.\\.[0-9]+\\])*: )?(?:(?:GDD|TDD)-[A-Z0-9-]+|DEC-[0-9]{3}|TDR-[0-9]{3}|TR-[A-Z]+-[0-9]{3})(?:#[a-z0-9-]+)?$"
+      }
+    },
+    "presentation_id": {
+      "title": "Logical presentation entry, required absent",
+      "description": "Required absent: a definition carrying this field is an error. No accepted document says what a presentation definition contains, so no ID grammar has been minted for one, and minting a shape for a category with zero members would be inventing structure ahead of need. The field was declared-optional with a non-empty-string constraint, which accepted any string an author invented and validated nothing about it; rejecting the field outright fails loudly the first time somebody adds one instead of accepting an unauthorized value. The subschema is 'not' over the empty schema, which rejects every instance, so the fault is the field's presence rather than its shape and an authored empty string is rejected by the same rule rather than as an empty declared-optional field. The typed validator reports MMC-2010 and names the field. When an accepted document mints a presentation ID grammar, this declaration becomes that grammar; until then it has no minLength, because a length bound on a value that can never be authored explains nothing.",
+      "not": {}
+    }
+  }
+}

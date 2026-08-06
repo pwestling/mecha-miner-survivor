@@ -1867,7 +1867,8 @@ a passage that never existed. It also lacks a scoped `source_ref` for `progress_
 the wider citation-coverage finding deliberately left to a follow-up pass (below).
 
 **Deliberately out of scope.** The prototype that found these two also reported 248 further prose/citation
-mismatches needing roughly 64 new scoped `source_refs` entries across 37 files. Those are **citation**
+mismatches needing roughly 64 new scoped `source_refs` entries across 37 files. (**That projection was
+superseded: enumeration gives 65 groups and 59 new elements** — Ruling 36.) Those are **citation**
 defects, not prose defects — the prose is right and the citation is too coarse to check it — and folding
 37 files into this pass would bury the fixes under review. That is a follow-up pull request.
 
@@ -2135,15 +2136,36 @@ records all six as `exact` rather than `no-match`. So **59 new scoped elements a
 close the remaining 242.
 
 **On the audit's "64 new scoped `source_refs` elements across 37 files".** Enumeration gives 65, not
-64. The one-group difference is reproducible: `content/enemies/EN-06.json` has two groups —
-`specialist_attack.projectile.lifetime_description` and
-`specialist_attack.resonance_interactions.flux_amber` — whose correct section is the *same*
-(`GDD-INITIAL-ALIEN-ROSTER#en-06--needler`), so they collapse to one element under the shallower
-`specialist_attack:` prefix and the total becomes 64. They are kept separate here, because a prefix
-that also covers `specialist_attack.hard_control_interaction` — which is quoted from
-`TDD-ENCOUNTERS#needler`, a different document — would attribute that field to a section it does
-not come from. The audit's 37-file figure counts the six `UNL-0*` files this pass does not need to
-touch.
+64, and **65 / 59 supersedes 64 / 58** wherever the older pair appears — including `master`'s copy of
+`content/quote-verification-audit.md`, which still carries 64 at its `:137` and `:421`. The audit's
+own §4 now records the supersession in place rather than by annotation from elsewhere.
+
+**The grouping key, so the recipe reproduces.** `(file, pointer with every array index collapsed)` —
+`[4]` → `[]`. Read literally, `(file, pointer)` gives **248** and `(file, the existing citation's
+scope)` gives **38**; only the index collapse gives 65. Three notations of that collapse (`[4]` → `[]`,
+`[4]` → nothing, `[4]` → `[*]`) induce the identical partition and all give **65 / 37 files / 6
+already-correct / 59 new**; `all records exact` and `any record exact` both give 6, so nothing at the
+subtraction can be tuned. The derivation is committed as
+`src/MechaMiner.Tools/ContentImport/derive_citation_pass_expectations.py`.
+
+**Why the two `EN-06` groups do not collapse — and an earlier revision of this ruling named the wrong
+field.** The two are `specialist_attack.projectile.lifetime_description` and
+`specialist_attack.resonance_interactions.flux_amber`, whose correct section is the *same*
+(`GDD-INITIAL-ALIEN-ROSTER#en-06--needler`), so they would collapse to one element under the shallower
+`specialist_attack:` prefix and the total would become 64 groups / 58 new. What that collapse actually
+breaks is **`specialist_attack.projectile.lifetime_description`**: a bare `specialist_attack:` prefix
+has specificity 1 and is therefore shadowed, for that field, by the pre-existing
+`specialist_attack.projectile: TDD-ENCOUNTERS#needler` at specificity 2. Measured by performing the
+collapse and running the checker: `stored verdict_on_this_tree disagreements: 1`,
+`content/enemies/EN-06.json :: specialist_attack.projectile.lifetime_description: stored 'exact',
+recomputed 'no-match'`, `RESULT: FAIL`.
+
+The earlier reason given here — that the collapse would mis-attribute
+`specialist_attack.hard_control_interaction`, quoted from `TDD-ENCOUNTERS#needler` — **was wrong.**
+That field carries its own equally specific `specialist_attack.hard_control_interaction:` element and
+is unaffected by the collapse. The count was right and the reason was not; the reason is what a reader
+would have relied on. The audit's 37-file figure counts the six `UNL-0*` files this pass does not need
+to touch.
 
 **The largest single instance, and the count that had to be taken from the filesystem.** 182 of the
 248 are the shared utility rules block: seven `catalog_wide_rules.shared_acquisition_and_rank_rules`
@@ -2217,9 +2239,23 @@ Both reverted; the checker returns `RESULT: ok` on the committed tree.
 
 #### Ruling 38 — `FORMULA-01`, and the summary that says what the definition is
 
-`content/weapons/stat-price-formula.json` carried `"id": "weapon-stat-price-formula"`, which matches
-no ID grammar in the tree — every other minted ID is `<PREFIX>-<NN>`. It is now **`FORMULA-01`**. The
-prefix was confirmed unused first: `grep -rn "FORMULA-" docs/ content/ src/` returned nothing.
+`content/weapons/stat-price-formula.json` carried `"id": "weapon-stat-price-formula"`. It is now
+**`FORMULA-01`**, and the prefix was confirmed unused first: `grep -rn "FORMULA-" docs/ content/ src/`
+returned nothing.
+
+**The stated reason for the rename was false on this tree, and is corrected here.** It said the old ID
+"matches no ID grammar in the tree — every other minted ID is `<PREFIX>-<NN>`". Enumerating every `id`
+leaf under `content/` refutes both halves: the shapes present are `<PREFIX>-<NN>` (44), `W-<LL>-<kebab>`
+on the 45 branch files, `PU-<L><NN>` (13), `UTL-<L><N>` (13), `W-<LL>` (15), the bare **resource letters
+`A`–`F`** (6), and **lower-kebab-case** — `common-ore` and `hyper-gold` (2). So `<PREFIX>-<NN>` is not
+the tree's only shape, and lower-kebab is not unheard of in an `id`.
+
+**The rename is still right, on a narrower and true reason.** `common-ore` and `hyper-gold` are
+*transcribed* resource IDs, and they are themselves pending the `RSC-01`–`08` migration noted in
+Ruling 39. Of the IDs **minted here rather than transcribed** — `SITE-01`…`SITE-04` and `ELT-01`, per
+`content/README.md`'s `id` row — **every one is `<PREFIX>-<NN>`**, and `weapon-stat-price-formula` was
+the only minted ID that was not. That is the grammar it failed: the one for newly minted IDs, not "any
+grammar in the tree".
 
 Its localization keys migrate to `weapon.FORMULA-01.*`, and `content/localization/en.json` stays
 flat, lexically sorted, duplicate-free and orphan-free (A10/A11 pass; 164 → 165 strings, the one
@@ -2249,8 +2285,11 @@ Measured over every string leaf of every `*.json` under `content/`, kebab-case v
 `pool_availability`, `site_class`, `value_kind` — against camelCase's **12 occurrences of 8 distinct
 tokens across four spaces**. (The brief for the earlier revision said "six token spaces … against
 camelCase twice"; neither figure reproduces. That revision's own prose said 38 kebab occurrences;
-enumerating them gives **37**, and the enumeration is in `content/README.md` under
-"Property names are `snake_case`; values keep their exact case".)
+enumerating them gives **37**, and the enumeration is in `content/README.md:164-189` under
+"Property names are `snake_case`; values keep their exact case" — the stable-ID/enum/kind-token bullet
+that protects a value's exact case is `content/README.md:173`. Both ranges were verified by opening the
+file; an earlier brief for this pass cited this passage as `content/README.md:108-120`, which is inside
+the directory-layout section and is not it.)
 
 The eight, found by scanning for the camelCase shape rather than by trusting a list:
 
@@ -2314,19 +2353,26 @@ difference.
   508 → 508 over the 33 touched files, 2,303 → 2,303 over all 139. Value multiset difference:
   **removed `{}`, added `{}`** at both scopes. **No gameplay number changed in this pass.** This
   proof says nothing about the strings.
-- **String multiset — changed, and every difference was enumerated before it was measured. Scope:
-  string leaves.** 1,366 → 1,427 over the 33 touched files, 5,201 → 5,262 over all 139; both are
-  **+61 net = 63 added, 2 removed**, and the 63/2 sets are identical at both scopes. The expected
-  difference was written down first — from the frozen artifact, not from the diff — and the measured
-  set equals it exactly:
-  - **59 added:** one new scoped `source_refs` element per `(file, scope)` group. The 59 groups were
-    re-derived independently by grouping the 248 located-somewhere records of
-    `quote_mismatch_evidence.json` **as it stands on `master`** by `(file, pointer)` → 65 groups
+- **String multiset — changed. Scope: string leaves.** 1,366 → 1,427 over the 33 touched files,
+  5,201 → 5,262 over all 139; both are **+61 net = 63 added, 2 removed**, and the 63/2 sets are
+  identical at both scopes.
+
+  **"Every difference was enumerated before it was measured" was claimed here and is withdrawn** —
+  see Ruling 43. No committed record establishes that the prediction preceded the measurement.
+  What is true and defensible in its place: the 59 pairs are **independently re-derivable from the
+  frozen evidence artifact on `origin/master`, and were re-derived** — and the agreement is a **set
+  equality over 59 elements**, not two integers matching.
+  - **59 added:** one new scoped `source_refs` element per group. The 59 were re-derived from
+    `quote_mismatch_evidence.json` **as it stands on `master`** alone, grouping its 248
+    located-somewhere records by **`(file, pointer with every array index collapsed)`** → 65 groups
     across 37 files, less the 6 `UNL-0*` `rules` groups already stored `exact` → **59 groups across
-    31 files covering 242 records**. Measured: 59 new elements, one per group, `(file, scope)`
-    multiset equal to the derived one, each of the form `<scope>: <DOC-ID>#<anchor>` and each at a
-    `source_refs[...]` path. *Anchor* correctness is a separate proof, re-derived against `docs/` by
-    `check_quote_mismatch_evidence.py`.
+    31 files covering 242 records**. (Read literally, `(file, pointer)` gives 248 and
+    `(file, the existing citation's scope)` gives 38; only the index collapse gives 65. Ruling 36
+    has the full recipe and the `EN-06` no-collapse rule.) Compared element-wise against the pairs
+    extracted from the diff: **exact set equality — nothing derived-but-not-measured, nothing
+    measured-but-not-derived, one element per group, zero citations deleted.** Each is of the form
+    `<scope>: <DOC-ID>#<anchor>` and each sits at a `source_refs[...]` path. *Anchor* correctness is
+    a separate proof, re-derived against `docs/` by `check_quote_mismatch_evidence.py`.
   - **4 added, 2 removed:** `FORMULA-01`, `weapon.FORMULA-01.name`, `weapon.FORMULA-01.summary` and
     the summary string itself, against `weapon-stat-price-formula` and
     `weapon.weapon-stat-price-formula.name` (Ruling 38).
@@ -2346,6 +2392,177 @@ difference.
   numeric leaves go 6 → 7 as the verdict summary gains a third category). That is the recomputation
   Ruling 37 exists to perform. The three Markdown files under `content/` are prose and are excluded
   from both multisets.
+
+#### Ruling 41 — the checker's recomputation is anchored to the frozen string, and two frozen values are re-baselined by hand
+
+**The defect.** `verdict_now()` in `check_quote_mismatch_evidence.py` read the live value at
+`(file, pointer)` and tested `raw in hay`. It **never compared that value against the record's own
+`value`**, and put no minimum length on the containment. So `248 exact` asserted only that *whatever
+string sits at that pointer now* is a substring of the cited section.
+
+**Measured before it was fixed, so the claim is not a reading of the code.** Replacing
+`content/utilities/UTL-R1.json :: catalog_wide_rules.modifier_and_timing_rules[0]` — a 22-word
+gameplay rule, stored `exact`, one of the 248 — with the single character `"a"` still produced:
+
+```
+    248  exact
+    129  no-match
+      1  match-under-a-named-rule
+  stored verdict_on_this_tree disagreements: 0
+RESULT: ok - zero cases move, as §5 claims
+```
+
+A one-character string is a substring of every section. The tell was `content/relics/REL-09.json`,
+which read `located: nowhere` and re-derived `exact` at the same time — impossible if the frozen
+string were under test.
+
+**The fix, and both anchors are failures rather than warnings.** (1) **Identity** — the live value
+must equal the record's expected live value; a divergence names both strings and fails. (2)
+**Length** — the adopted-normalized live value must clear its population's *containment gate*, stored
+in the artifact so the gate is data rather than a constant in the checker: **40 characters / 6 words**
+for the 378 (audit §2's decidability gate; the smallest of the 378 is 43/7) and **25 / 6** for the 16
+of audit §13 (the smallest is 28/6). With identity in place the same `"a"` sabotage gives
+`live value != frozen value: 1`, `recomputed 'value-diverged'`, `RESULT: FAIL`.
+
+**Two records diverged the moment the test existed, and both are legitimate fixes the artifact never
+learned about.** Each is re-baselined by adding `refreshed_value` and `refreshed_reason` to **that one
+record**, and the count of re-baselined records is printed on every run.
+
+| record | classification | what verifies the refresh |
+| --- | --- | --- |
+| `content/relics/REL-09.json → pause_behavior.rule` | frozen string is the **pre-fix drifted text** of audit §3; the live string is the corrected quotation | **The cited section**: `docs/69-initial-relic-catalog.md:153`, inside `GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core`, character-for-character |
+| `content/encounters/standard-encounter-schedule.json → minute_rows[33].formation_events[0].reconstruction_basis` | **authored prose, not a quotation** — `no-match` before and after; there is no cited section to verify it against | **`A24` plus Ruling 40**: the frozen string ends `See content/transcription-notes.md.`, embedding a repo path in a value, which `A24` forbids unconditionally, so the frozen string cannot legally exist in this tree. The live string is the A24-compliant replacement of Rulings 25/26/31 |
+
+The second is refreshed on **weaker and different** evidence than the first — an assertion and a
+ruling, not a source section — and that is recorded rather than blurred, per record, so the two can be
+judged separately. Nothing else diverges: the other 376 live values are byte-identical to their frozen
+strings.
+
+**Why a refresh is two hand-written fields and never a code path.** If refreshing were an automatic
+consequence of the live string verifying against its cited section, then any future change that
+happened to verify would silently re-baseline the artifact — and a drift detector whose baseline
+follows the tree never fires. The value of a frozen string is that it *disagrees* with the tree when
+something moved. `value` itself is never re-baselined either: refreshing `REL-09`'s `value` would make
+the corrected quotation findable in its cited section, firing `CASES THAT MOVE` and quietly converting
+an anti-golden proof over 378 mismatches into one over 377.
+
+**Three further defects in the same output, fixed with it.**
+
+- **The printed `248` conflated two populations.** Of the 248 re-pointing targets, 247 read `exact`
+  and `EN-06 :: specialist_attack.hard_control_interaction` reads `match-under-a-named-rule`; the
+  248th `exact` in that line was `REL-09`, a `located: nowhere` record from the *other* set. The two
+  coincided at 248, and had they not, the off-by-one would have exposed the missing identity test.
+  Every verdict line now names its cohort and every cohort's expected verdicts are stored and
+  asserted separately.
+- **`citations that did not resolve in docs/: 0` measured something other than what it read as** — it
+  was computed over the frozen `cited[]` array, so it said nothing about the 59 live elements this
+  branch added. Now two lines: **`FROZEN cited[] citations`** and **`LIVE source_refs anchors`**.
+- **`disagreements: 0` is labelled as the weakest line in the output**, where a reader meets it, in
+  the checker's header and in the artifact itself. It is true *by construction* on the commit that
+  generates the artifact — the stored verdicts **are** the checker's output at that commit. A
+  degenerate matcher returning `no-match` unconditionally reproduces **371 of `master`'s 378** labels,
+  so only **7** records discriminate on the positive side; the one informative control is the
+  specificity rule, which disagrees on exactly the **4** `BOSS-01`…`BOSS-04 ::
+  persistence.reentry.behavior` records. **11 of 378 records carry information** about a matcher now
+  asserting 248 positives, and those two controls are its sole non-circular support.
+
+#### Ruling 42 — negative controls for every changed assertion, run and reverted one at a time
+
+Reported per assertion, never in aggregate. Each was applied to the committed tree alone, measured,
+and reverted before the next.
+
+| # | control | result |
+| --: | --- | --- |
+| 1 | `UTL-R1 :: catalog_wide_rules.modifier_and_timing_rules[0]` replaced with `"a"` — **the sabotage that used to pass** | `live value != frozen value: 1`, record named with both strings, `stored 'exact', recomputed 'value-diverged'`, `FAIL: cohort 'the 248 re-pointing targets': stored {'exact': 247, …} != re-derived {'exact': 246, …, 'value-diverged': 1}`, `RESULT: FAIL` |
+| 2 | the same value replaced with `"a"` **and** the record's frozen string re-baselined to `"a"`, so identity is satisfied — isolates the length guard | `live value != frozen value: 0`, `live values under their population's containment gate: 1`, `adopted-normalized live value is 1 character(s) / 1 word(s), under this population's containment gate of 40/6`, `recomputed 'under-the-containment-gate'`, `RESULT: FAIL` |
+| 3 | stored 248-cohort summary edited from `247 exact` to `246 exact + 1 no-match` | `disagreements: 0` (correctly — no record moved) and `FAIL: cohort 'the 248 re-pointing targets': stored {…'no-match': 1} != re-derived {'exact': 247, …}`, `RESULT: FAIL` |
+| 4a | `REL-09`'s `refreshed_value` kept, its `refreshed_reason` deleted | `*** NO REASON RECORDED ***` printed against the record, `FAIL: … refreshed_value with no refreshed_reason`, `RESULT: FAIL` |
+| 4b | `REL-09`'s refresh removed entirely, declared `refreshed_record_count` left at 2 | `records RE-BASELINED: 1`, `live value != frozen value: 1`, `FAIL: 1 record(s) carry refreshed_value, artifact declares 2`, `RESULT: FAIL` |
+| 5 | one **live** `UTL-R1` anchor re-pointed to `GDD-UTILITY-CATALOG#no-such-anchor` | `LIVE source_refs anchors that did not resolve in docs/: 7`, each of the seven named, `disagreements: 7`, `RESULT: FAIL` — and `FROZEN cited[] citations that did not resolve: 0`, which is the point of splitting the line |
+| 6 | one **frozen** `cited[].anchor` corrupted | `FROZEN cited[] citations that did not resolve in docs/: 1`, the record named, `RESULT: FAIL` |
+| 7 | one `audit-5-378` record deleted | `mismatch records: 393 = 377 audit-5-378 + 16 live-sweep-16`, `FAIL: … holds {'audit-5-378': 377, …}, expected {'audit-5-378': 378, …}`, `RESULT: FAIL` |
+| 8 | one of this pass's 13 new citations removed, then `derive_citation_pass_expectations.py --verify` | `derived but NOT measured: 1` with the pair named, `SET EQUALITY over 13 elements: NO`, string `added: 12 (expected 13)`, `RESULT: FAIL` |
+
+All reverted; both tools return their passing result on the committed tree.
+
+#### Ruling 43 — "enumerated before it was measured" is withdrawn, and ordering is made structural
+
+The eighth pass claimed its string differences were **"enumerated before they were measured"**. No
+committed record supports that. `git log -S` for both the phrase and the `63 added, 2 removed` figure
+returns only `b482304`, the branch's last commit, **fourteen minutes after** the change landed in
+`9c1a4e3`; and `9c1a4e3`'s own message cannot serve as the record, because that commit *contains* the
+59 citations it describes, so its message could have been read off its own diff. A prediction that
+exists only after the measurement is not a prediction, however true it happens to be.
+
+**Replaced by what is actually true**, and it is stronger than the wording it replaces: the 59 pairs
+are **independently re-derivable from the frozen evidence artifact on `origin/master`, and were
+re-derived**, and the agreement is **set equality over 59 elements** — nothing
+derived-but-not-measured, nothing measured-but-not-derived, one element per group, zero deletions.
+Two wrong sets can agree on counts; they cannot agree element-wise.
+
+**The mechanism adopted from this pass on.** One extra commit, placed **first**, touching **no
+`content/` file**: `derive_citation_pass_expectations.py` plus its committed output
+`expected_citation_deltas.json`. Then a second commit making the change. `git show <first> --stat`
+showing zero `content/` files **is** the ordering proof, because at that commit there is no diff to
+fit the expectation to. `--verify` then measures the second commit against the first and fails unless
+the measured delta equals the committed expectation, multiplicity kept — which matters here, because
+six of this pass's thirteen new elements are the identical string, so collapsing to distinct values
+would turn a 13-element expectation into a 5-element one.
+
+#### Ruling 44 — the 16 mis-citations the frozen artifact could not see, and the 13 that were re-pointed
+
+Recorded in full in `content/quote-verification-audit.md` §13, with the frozen-list limitation it
+exposes in §14. In brief: a live sweep of every prose leaf with an anchored equally-most-specific
+citation, at six or more words, finds **145 absent from their cited section — 129 of them the
+artifact's own `no-match` records and 16 outside it.** Eleven of the 16 are siblings of fields this
+branch had already re-pointed, which is the shape a frozen population predicts: four
+`BOSS-0* :: persistence.reentry.trigger` quoting **the same source sentence** as the
+`persistence.reentry.behavior` field already fixed, six `UTL-* :: installed_to_rank_3` from the same
+table column as `UTL-E2`'s, and `REL-09 :: core_tradeoff` from the same table as four already fixed.
+
+**13 re-pointed, and each now reads `exact`.** No existing citation was deleted. **3 are not
+mis-citations** — their citations already name the right section and the *values* are not verbatim
+quotations, so re-pointing them would be citation-shopping; they become audit §11 item 9 instead. All
+16 join the evidence artifact as a **separate population**, `live-sweep-16`, because §5's anti-golden
+claim is a claim over exactly 378 mismatches; all 16 were re-tested under maximal normalization and
+**none moves**.
+
+Every one of the 16 is 28–39 normalized characters, i.e. **below** audit §2's 40-character
+decidability gate, so all 16 sit in §2's 406 undecidable bucket and **no figure in §2's tables moves.**
+
+#### Value-preservation record — ninth pass
+
+**Two multisets, over two different value types, with their scopes named.** This pass changes
+**strings** and no numbers, so the numeric multiset is not the proof that covers this diff. Both were
+run; neither stands in for the other.
+
+**Range for both: `b482304` → this pass's commit** — that is, from the commit carrying the committed
+expectation (which touches no `content/` file) to the commit making the change. Scope: **all 139
+`*.json` files under `content/`**, so nothing can hide outside the 13 touched files.
+
+- **Numeric multiset — unchanged. Scope: numeric leaves (`int`/`float`, `bool` excluded).**
+  2,303 → 2,303, difference **added `{}`, removed `{}`**. **No gameplay number changed in this pass.**
+  This proof says nothing about the strings.
+- **String multiset — changed, and the expected difference was committed one commit earlier, in a
+  commit containing no `content/` file at all** (Ruling 43). Scope: string leaves. 5,262 → 5,275,
+  **+13 net = 13 added, 0 removed**, and the measured multiset equals the committed expectation
+  **element by element with multiplicity kept**: `installed_to_rank_3: GDD-UTILITY-CATALOG#catalog-overview`
+  ×6, `persistence.reentry.trigger: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward` ×4,
+  and one each of `core_tradeoff: GDD-INITIAL-RELIC-CATALOG#catalog-overview`,
+  `inherent_trait.effect_detail: GDD-INITIAL-MECH-CATALOG#signature-and-trait-1` and
+  `destructible_rock_rules.health_pack.persistence: GDD-CORE-LOOP#combat-pressure`.
+- **13 `(file, scope)` pairs added, as a set: derived 13, measured 13, nothing
+  derived-but-not-measured, nothing measured-but-not-derived, zero citations deleted.**
+- **0 `(file, JSON path)` pairs changed value.** Every addition is a new `source_refs[...]` element;
+  no existing leaf moved.
+- **`null` count: 0 → 0**, still with no declared exceptions.
+- **Outside `content/`, reported not asserted, and this exclusion is a decision rather than an
+  oversight.** `quote_mismatch_evidence.json` is a measurement artifact, not a value store: its own
+  bookkeeping strings change by construction on every pass — here it gains 16 records, two
+  `refreshed_value`/`refreshed_reason` pairs, and a per-population/per-cohort structure in place of
+  the flat summary. Binding it to a value-preservation proof would assert that a measurement never
+  changes, which is the opposite of what it is for. The three Markdown files under `content/` are
+  prose and are excluded from both multisets.
 
 ### Per-definition notes, by catalog
 

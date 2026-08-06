@@ -37,17 +37,57 @@ property is now checkable against an artifact rather than re-derived from a
 description of one.
 
 ================================================================================
+READ THIS BEFORE QUOTING `disagreements: 0`
+================================================================================
+
+`stored verdict_on_this_tree disagreements: 0` is the WEAKEST claim this script
+makes, and on the commit that generates the artifact it is TRUE BY CONSTRUCTION:
+the stored verdicts ARE this script's own output at that commit. It can detect
+drift AFTER that commit. It can never establish that the 248 citations are
+right. It was quoted as corroboration for the re-pointing pass on PR #8, and it
+does not corroborate it.
+
+Two further limits on the "reproduces master's 371 no-match / 7 exact" claim,
+which sounds like 378 agreeing data points:
+
+  - A DEGENERATE MATCHER that returns "no-match" unconditionally reproduces 371
+    of master's 378 labels, because "no-match" is `verdict_now`'s default return
+    and 371 of the stored labels are "no-match". Only SEVEN records discriminate
+    on the positive side.
+  - The one genuinely informative control is the SPECIFICITY rule: replacing
+    "equally most specific" with "every covering citation" disagrees on exactly
+    FOUR records, and they are exactly the four BOSS-01..BOSS-04
+    persistence.reentry.behavior records the audit names. That is real evidence
+    precisely because it is an external disagreement the artifact could not have
+    been fitted to.
+
+So 11 of 378 records carry information about a matcher that now asserts 248
+positives, and that is the sole non-circular support for it. The load-bearing
+evidence is those two controls, not the agreement count.
+
+================================================================================
 WHAT IS FROZEN AND WHAT IS RECOMPUTED
 ================================================================================
 
 FROZEN in the JSON, because the tree has moved since the measurement:
-  - the 378 stored strings AS MEASURED, and the citation covering each.
-    Seven of them have since been repaired in content/ (six UNL-0* rules and
-    content/relics/REL-09.json, the one genuine drift of audit §3), so reading
-    those strings back out of the tree today would silently drop them from the
-    population and turn a 378-record claim into a 371-record one. The frozen
-    values are what the audit's 378 refers to; `verdict_on_this_tree` records
-    what each has become.
+  - every record's stored string AS MEASURED (`value`), and the citation
+    covering it. Reading those strings back out of the tree today would silently
+    drop the repaired ones from the population and turn a 378-record claim into
+    a smaller one. `value` is what audit §5's claim is ABOUT, and it is the
+    needle of the maximal-normalization test. It is never re-baselined.
+
+RE-BASELINED, one record at a time, explicitly, and never by a code path:
+  - `refreshed_value` + `refreshed_reason`, present on exactly the records whose
+    live string has legitimately changed since the measurement. The expected
+    live value is `refreshed_value` when present and `value` otherwise.
+
+    This shape is deliberate. If a refresh were an automatic consequence of the
+    live string verifying against its cited section, then any future change that
+    happened to verify would silently re-baseline the artifact - and a drift
+    detector whose baseline follows the tree never fires. The whole value of a
+    frozen string is that it DISAGREES with the tree when something moved. So
+    there is no such code path: a refresh is two fields written by hand, with the
+    reason recorded, and the count of them is printed on every run.
 
 RECOMPUTED on every run, so the artifact cannot rot into a transcript:
   - the maximal normalization of every stored string, checked against the
@@ -55,19 +95,54 @@ RECOMPUTED on every run, so the artifact cannot rot into a transcript:
   - the cited section of every citation, read out of docs/**/*.md at its
     current content;
   - the containment test itself;
-  - `verdict_on_this_tree`, per record. This field is NOT frozen: it is the one
-    thing in the artifact that is a statement about content/ TODAY rather than
-    about the measurement, so it is re-derived from the live tree - the value at
-    that (file, pointer) as it now stands, against the source_refs that now
-    cover that pointer - and a disagreement with the stored field is a FAILURE.
-    Written down rather than recomputed, it would drift silently every time a
-    citation is re-pointed, which is exactly the kind of stale prose about an
-    artifact that this pair of files exists to make impossible.
+  - `verdict_on_this_tree`, per record - the value at that (file, pointer) as it
+    now stands, against the source_refs that now cover that pointer - and a
+    disagreement with the stored field is a FAILURE.
+
+================================================================================
+WHAT `verdict_on_this_tree` IS ANCHORED TO, AND WHY IT HAD TO BE
+================================================================================
+
+The recomputation used to read the live value at (file, pointer) and test
+`raw in hay` WITHOUT ever comparing that value to the record's own frozen
+string, and with no minimum-length guard on the containment. That made "248
+exact" assert only that WHATEVER STRING SITS THERE NOW is a substring of the
+cited section. Measured: replacing
+content/utilities/UTL-R1.json :: catalog_wide_rules.modifier_and_timing_rules[0]
+- a 22-word gameplay rule, stored `exact`, one of the 248 - with the single
+character "a" still produced 248 exact / 129 no-match / 1 rule-match,
+disagreements: 0, RESULT: ok, because a one-character string is a substring of
+every section. The tell was content/relics/REL-09.json, which read
+`located: nowhere` and still re-derived `exact` - impossible if the frozen string
+were under test.
+
+So the recomputation is now anchored twice:
+
+  1. IDENTITY. The live value must equal the record's expected live value. A
+     divergence is a failure that names both strings; it is never absorbed.
+  2. LENGTH. The adopted-normalized live value must clear the record's
+     population's containment gate (stored per population in the artifact, so
+     the gate is data rather than a constant buried here). Containment of a short
+     string is not evidence - that is the same reasoning as audit §2's
+     decidability gate - so a record that falls under the gate is a failure
+     rather than a quieter pass.
+
+================================================================================
+THE TWO POPULATIONS, COUNTED SEPARATELY
+================================================================================
+
+The printed "248 exact" used to conflate two different sets. Of the 248
+re-pointing targets, 247 read `exact` and EN-06 :: hard_control_interaction
+reads `match-under-a-named-rule`; the 248th `exact` in that line was REL-09, a
+`located: nowhere` record from the OTHER set. The two happened to coincide, and
+had they not, the off-by-one would have exposed the missing identity test. So
+every verdict line now names the cohort it counts, and each cohort's expected
+verdicts are stored and asserted separately.
 
 docs/ is the half of the comparison this repository can still change, and it is
-read live. If a design document is edited so that one of these 378 strings
-becomes findable under maximal normalization, this script fails and audit §5
-needs re-measuring - which is the correct outcome, not a false alarm.
+read live. If a design document is edited so that one of these strings becomes
+findable under maximal normalization, this script fails and audit §5 needs
+re-measuring - which is the correct outcome, not a false alarm.
 
 ================================================================================
 WHAT "MAXIMAL" MEANS HERE
@@ -101,9 +176,15 @@ DOCS = REPO_ROOT / "docs"
 CONTENT = REPO_ROOT / "content"
 EVIDENCE = HERE / "quote_mismatch_evidence.json"
 
-# The audit's figure. Asserted, not inferred from the file's length, so a
-# truncated or padded artifact is a failure rather than a quieter claim.
-EXPECTED_RECORD_COUNT = 378
+# Asserted per population, not inferred from the file's length, so a truncated or
+# padded artifact is a failure rather than a quieter claim. The two populations
+# are separate claims about separate things and are never added together:
+#
+#   audit-5-378   the 378 mismatches audit §5's anti-golden proof is ABOUT.
+#   live-sweep-16 the 16 mis-cited leaves the frozen 378 CANNOT SEE, found by the
+#                 live sweep of audit §13. Adding them to the 378 would change
+#                 what §5 is a claim over; they are counted alongside it instead.
+EXPECTED_POPULATION_COUNTS = {"audit-5-378": 378, "live-sweep-16": 16}
 
 
 # --------------------------------------------------------------------------
@@ -379,11 +460,16 @@ def main() -> int:
     failures: list[str] = []
     moved: list[str] = []
     normalization_drift: list[str] = []
-    unresolved: list[str] = []
+    frozen_unresolved: list[str] = []
+    live_unresolved: list[str] = []
     verdict_drift: list[str] = []
-    verdicts: Counter = Counter()
+    value_divergence: list[str] = []
+    gate_violation: list[str] = []
+    verdicts: dict[str, Counter] = {}
     citations_tested = 0
+    refreshed = 0
     adopted_haystacks: dict[tuple[str, str], str] = {}
+    populations = payload["populations"]
 
     def adopted_section(doc_id: str, anchor: str) -> str | None:
         key = (doc_id, anchor)
@@ -395,8 +481,23 @@ def main() -> int:
             adopted_haystacks[key] = adopted("\n".join(entry["lines"][start:end]))
         return adopted_haystacks.get(key)
 
+    def expected_live_value(rec) -> str:
+        """The string this record asserts is at (file, pointer) TODAY.
+
+        `refreshed_value` when the record has been explicitly re-baselined, and
+        the frozen as-measured `value` otherwise. There is no third case and no
+        code path that computes one.
+        """
+        return rec.get("refreshed_value", rec["value"])
+
     def verdict_now(rec) -> str:
-        """Re-derive verdict_on_this_tree from content/ as it stands."""
+        """Re-derive verdict_on_this_tree from content/ as it stands.
+
+        Anchored to the record: the live value must BE the expected live value,
+        and its adopted-normalized form must clear the population's containment
+        gate. Neither is a warning - both are failures, recorded by the caller.
+        """
+        where = f"{rec['file']} :: {rec['pointer']}"
         path = REPO_ROOT / rec["file"]
         if not path.exists():
             return "file-gone"
@@ -407,7 +508,28 @@ def main() -> int:
             return "field-gone"
         if not isinstance(value, str):
             return "field-gone"
+
+        wanted = expected_live_value(rec)
+        if value != wanted:
+            value_divergence.append(
+                f"{where}:\n"
+                f"      frozen{' (refreshed)' if 'refreshed_value' in rec else ''}: "
+                f"{wanted!r}\n"
+                f"      live  : {value!r}"
+            )
+            return "value-diverged"
+
         raw = adopted(value)
+        gate = populations[rec["population"]]["containment_gate"]
+        if len(raw) < gate["min_characters"] or len(raw.split()) < gate["min_words"]:
+            gate_violation.append(
+                f"{where}: adopted-normalized live value is {len(raw)} character(s) / "
+                f"{len(raw.split())} word(s), under this population's containment gate "
+                f"of {gate['min_characters']}/{gate['min_words']}. Containment of a "
+                f"string this short is not evidence."
+            )
+            return "under-the-containment-gate"
+
         forms = adopted_variants(value)
         best = "no-match"
         for cite in covering_citations(doc.get("source_refs", []), rec["pointer"]):
@@ -415,6 +537,7 @@ def main() -> int:
                 continue
             hay = adopted_section(*cite.split("#", 1))
             if hay is None:
+                live_unresolved.append(f"{where}: live source_refs cites {cite}")
                 continue
             if raw in hay:
                 return "exact"
@@ -422,18 +545,31 @@ def main() -> int:
                 best = "match-under-a-named-rule"
         return best
 
-    if len(records) != EXPECTED_RECORD_COUNT:
+    seen_counts = Counter(rec["population"] for rec in records)
+    if dict(seen_counts) != EXPECTED_POPULATION_COUNTS:
         failures.append(
-            f"evidence artifact holds {len(records)} record(s), expected "
-            f"{EXPECTED_RECORD_COUNT}. content/quote-verification-audit.md §5 "
-            f"claims the property over exactly {EXPECTED_RECORD_COUNT} mismatches; "
-            f"a different population is a different claim."
+            f"evidence artifact holds {dict(seen_counts)}, expected "
+            f"{EXPECTED_POPULATION_COUNTS}. content/quote-verification-audit.md §5 "
+            f"claims its property over exactly 378 mismatches and §13 over exactly "
+            f"16; a different population is a different claim."
         )
+    for name, spec in populations.items():
+        if spec["record_count"] != EXPECTED_POPULATION_COUNTS.get(name):
+            failures.append(f"population {name!r} declares record_count "
+                            f"{spec['record_count']}, expected "
+                            f"{EXPECTED_POPULATION_COUNTS.get(name)}")
 
     for rec in records:
         where = f"{rec['file']} :: {rec['pointer']}"
+        cohort = rec["cohort"]
+        if "refreshed_value" in rec:
+            refreshed += 1
+            if not rec.get("refreshed_reason"):
+                failures.append(f"{where}: refreshed_value with no refreshed_reason. "
+                                f"A re-baselined string without a recorded reason is "
+                                f"exactly the silent baseline this artifact forbids.")
         now = verdict_now(rec)
-        verdicts[now] += 1
+        verdicts.setdefault(cohort, Counter())[now] += 1
         if now != rec.get("verdict_on_this_tree"):
             verdict_drift.append(
                 f"{where}: stored {rec.get('verdict_on_this_tree')!r}, "
@@ -452,7 +588,7 @@ def main() -> int:
             doc_id, anchor = cite["doc_id"], cite["anchor"]
             entry = index.get(doc_id)
             if entry is None or anchor not in entry["anchors"]:
-                unresolved.append(f"{where}: {doc_id}#{anchor}")
+                frozen_unresolved.append(f"{where}: {doc_id}#{anchor}")
                 continue
             start, end = entry["anchors"][anchor]
             hay = maximal_haystack("\n".join(entry["lines"][start:end]))
@@ -461,33 +597,68 @@ def main() -> int:
                 moved.append(f"{where}: now contained in {doc_id}#{anchor}")
 
     print("=" * 78)
-    print("ANTI-GOLDEN RE-MEASUREMENT - content/quote-verification-audit.md §5")
+    print("ANTI-GOLDEN RE-MEASUREMENT - content/quote-verification-audit.md §5 and §13")
     print("=" * 78)
     print(f"  evidence artifact          : {EVIDENCE.relative_to(REPO_ROOT)}")
-    print(f"  mismatch records           : {len(records)}")
+    print(f"  mismatch records           : {len(records)}"
+          f"  = " + " + ".join(f"{n} {k}" for k, n in sorted(seen_counts.items())))
     print(f"  citations re-tested        : {citations_tested}")
     print(f"  docs/ sections indexed     : {sum(len(e['anchors']) for e in index.values())}"
           f" across {len(index)} document(s)")
+    print(f"  records RE-BASELINED       : {refreshed}  (records carrying an explicit "
+          f"refreshed_value + refreshed_reason)")
+    for rec in records:
+        if "refreshed_value" in rec:
+            print(f"      re-baselined: {rec['file']} :: {rec['pointer']}")
+            print(f"                    {rec.get('refreshed_reason', '*** NO REASON RECORDED ***')}")
     print()
-    print("  frozen population, by where the string WAS found under maximal normalization:")
-    for k, n in sorted(payload["located_breakdown"].items(), key=lambda kv: -kv[1]):
-        print(f"    {n:5d}  {k}")
+    for name, spec in sorted(populations.items()):
+        gate = spec["containment_gate"]
+        print(f"  POPULATION {name} - {spec['record_count']} record(s): {spec['what_it_is']}")
+        print(f"    containment gate: >= {gate['min_characters']} characters and "
+              f">= {gate['min_words']} words")
+        print("    where the string WAS found under maximal normalization (frozen):")
+        for k, n in sorted(spec["located_breakdown"].items(), key=lambda kv: -kv[1]):
+            print(f"      {n:5d}  {k}")
     print()
-    print("  the same 378 locations, RE-DERIVED against content/ as it stands today")
-    print("  (adopted rules only, disjunctive over the equally-most-specific citations):")
-    for k, n in sorted(verdicts.items(), key=lambda kv: -kv[1]):
-        print(f"    {n:5d}  {k}")
-    print(f"  stored verdict_on_this_tree disagreements: {len(verdict_drift)}")
+    print("  RE-DERIVED against content/ as it stands today, BY COHORT (adopted rules")
+    print("  only, disjunctive over the equally-most-specific citations). Each line names")
+    print("  the population it counts: the printed total used to merge the 248 re-pointing")
+    print("  targets with a `nowhere` record that happened to read `exact`, and the")
+    print("  coincidence masked a missing identity test.")
+    for cohort in sorted(verdicts):
+        print(f"    {cohort} ({sum(verdicts[cohort].values())} record(s)):")
+        for k, n in sorted(verdicts[cohort].items(), key=lambda kv: -kv[1]):
+            print(f"      {n:5d}  {k}")
+        note = payload["cohort_notes"].get(cohort)
+        if note:
+            print(f"        {note}")
+    print(f"  stored verdict_on_this_tree disagreements: {len(verdict_drift)}"
+          f"   <- the WEAKEST line here: on the commit that generates the artifact this")
+    print("       is 0 by construction, because the stored verdicts ARE this script's")
+    print("       output at that commit. It detects drift after the fact; it is not")
+    print("       evidence that any citation is correct. See the header.")
+    print(f"  live value != frozen value: {len(value_divergence)}")
+    print(f"  live values under their population's containment gate: {len(gate_violation)}")
     print()
     print(f"  normalized forms reproduced: {len(records) - len(normalization_drift)}"
           f"/{len(records)}")
-    print(f"  citations that did not resolve in docs/: {len(unresolved)}")
+    print(f"  FROZEN cited[] citations that did not resolve in docs/: "
+          f"{len(frozen_unresolved)}")
+    print("      (this line measures the artifact's frozen cited[] array ONLY - it says")
+    print("       nothing about the live source_refs elements, which are gated by A9 in")
+    print("       verify_content.py and counted on the next line)")
+    print(f"  LIVE source_refs anchors that did not resolve in docs/: "
+          f"{len(live_unresolved)}")
     print(f"  CASES THAT MOVE under maximal normalization: {len(moved)}")
     print()
 
     for bucket, label in (
         (normalization_drift, "NORMALIZED FORM DID NOT REPRODUCE"),
-        (unresolved, "CITATION DID NOT RESOLVE IN docs/"),
+        (frozen_unresolved, "FROZEN cited[] CITATION DID NOT RESOLVE IN docs/"),
+        (live_unresolved, "LIVE source_refs ANCHOR DID NOT RESOLVE IN docs/"),
+        (value_divergence, "LIVE VALUE != FROZEN VALUE"),
+        (gate_violation, "LIVE VALUE UNDER THE CONTAINMENT GATE"),
         (verdict_drift, "VERDICT DRIFTED - stored != re-derived from content/"),
         (moved, "CASE MOVED - a mismatch became a match"),
     ):
@@ -496,13 +667,35 @@ def main() -> int:
         if len(bucket) > 20:
             print(f"  ... and {len(bucket) - 20} more")
 
-    if dict(verdicts) != payload.get("verdict_on_this_tree"):
+    for cohort, stored in payload["verdict_on_this_tree_by_cohort"].items():
+        if dict(verdicts.get(cohort, Counter())) != stored:
+            failures.append(
+                f"cohort {cohort!r}: stored summary {stored} != re-derived "
+                f"{dict(verdicts.get(cohort, Counter()))}"
+            )
+    for cohort in verdicts:
+        if cohort not in payload["verdict_on_this_tree_by_cohort"]:
+            failures.append(f"cohort {cohort!r} has no stored summary to check against")
+    if refreshed != payload["refreshed_record_count"]:
         failures.append(
-            f"payload verdict_on_this_tree summary {payload.get('verdict_on_this_tree')} "
-            f"!= re-derived {dict(verdicts)}"
+            f"{refreshed} record(s) carry refreshed_value, artifact declares "
+            f"{payload['refreshed_record_count']}. Re-baselining is the one thing here "
+            f"that must never happen quietly."
         )
 
-    bad = failures + normalization_drift + unresolved + verdict_drift + moved
+    if value_divergence:
+        print()
+        print(
+            "A LIVE VALUE DIVERGED FROM ITS FROZEN STRING. This is the test that makes "
+            "the verdict mean anything: without it, `exact` says only that whatever "
+            "string sits at that pointer now is a substring of the cited section, which "
+            "a single character satisfies. Either the tree changed under the record - in "
+            "which case verify the live string against its cited section and, if it is "
+            "right, add an explicit refreshed_value and refreshed_reason for THAT record "
+            "- or the tree is wrong. Do not widen the comparison."
+        )
+    bad = (failures + normalization_drift + frozen_unresolved + live_unresolved
+           + value_divergence + gate_violation + verdict_drift + moved)
     if verdict_drift:
         print()
         print(

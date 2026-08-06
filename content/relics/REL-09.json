@@ -32,7 +32,8 @@
     "summary_key: GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core",
     "trigger: GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core",
     "pause_behavior: GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core",
-    "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core"
+    "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core",
+    "core_tradeoff: GDD-INITIAL-RELIC-CATALOG#catalog-overview"
   ],
   "primary_transformation": "Double extraction speed",
   "core_tradeoff": "Enemies move 50% faster during mining",

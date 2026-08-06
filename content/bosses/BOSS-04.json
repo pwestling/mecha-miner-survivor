@@ -22,7 +22,8 @@
     "resonance: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
     "defeat_reward: GDD-RUN-STRUCTURE#boss-defeat-reward",
     "description: GDD-INITIAL-ALIEN-ROSTER#boss-04--skybreaker-apex",
-    "persistence.reentry.behavior: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward"
+    "persistence.reentry.behavior: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
+    "persistence.reentry.trigger: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward"
   ],
   "arrival": {
     "timecode": "28:00",

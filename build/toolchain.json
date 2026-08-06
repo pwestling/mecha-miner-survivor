@@ -1,0 +1,87 @@
+{
+  "schema": "MMT-TOOLCHAIN-PINS",
+  "schema_version": 1,
+  "purpose": [
+    "The single machine-readable record of the pinned toolchain, read by the doctor and bootstrap verbs of ./build.sh and ./build.ps1.",
+    "Authority: docs/technical/100-build-dependencies-and-release-operations.md § Toolchain pinning, which requires that a bootstrap command 'verifies/downloads approved public tools or prints exact manual installation instructions and checks hashes'.",
+    "Requirements: TR-BLD-001, TR-BLD-002, TR-BLD-005, TR-FND-001.",
+    "Owned by the FND-002 integration owner. A tool is added here only with the dependency request recorded in doc 100 § Dependency policy."
+  ],
+  "dotnet_sdk": {
+    "version_authority": "global.json",
+    "install_directory": "/usr/share/dotnet",
+    "install_directory_reason": "hostfxr's default probe path. Godot's GodotPlugins host resolves the runtime from there with no DOTNET_ROOT and no dotnet on PATH; a custom install directory breaks the headless game launch.",
+    "install_script_url": "https://dot.net/v1/dotnet-install.sh",
+    "required": true,
+    "required_by": "FND-001"
+  },
+  "godot": {
+    "version": "4.7.1",
+    "release_channel": "stable",
+    "flavor": "mono",
+    "expected_version_prefix": "4.7.1.stable.mono.official",
+    "required": true,
+    "required_by": "FND-001",
+    "discovery_order": [
+      "MECHAMINER_GODOT environment variable",
+      "godot on PATH"
+    ],
+    "platforms": {
+      "linux-x64": {
+        "archive_url": "https://github.com/godotengine/godot-builds/releases/download/4.7.1-stable/Godot_v4.7.1-stable_mono_linux_x86_64.zip",
+        "archive_sha256": "6ca7ff0459f1b806900be683c1b0837c607a9c16834c530dc68c81b9fc3ae1f6",
+        "archive_size_bytes": 105894311,
+        "install_root": "/opt/godot",
+        "executable_relative_path": "Godot_v4.7.1-stable_mono_linux_x86_64/Godot_v4.7.1-stable_mono_linux.x86_64",
+        "executable_sha256": "ca05114f8c6da175e78c1b5bfd7cc7541dead1638200e3969731845ad85600cc",
+        "retrieved_utc": "2026-08-05"
+      }
+    },
+    "unpinned_platform_policy": "A platform with no recorded hash is reported by doctor as an explicit warning naming this file, never as a silent pass. Recording the Windows and macOS hashes is FND-002 follow-on work; doc 100 § Toolchain pinning requires the pin, and only linux-x64 has been bootstrapped so far."
+  },
+  "godot_export_templates": {
+    "version": "4.7.1",
+    "archive_url": "https://github.com/godotengine/godot-builds/releases/download/4.7.1-stable/Godot_v4.7.1-stable_mono_export_templates.tpz",
+    "archive_size_bytes": 1201759011,
+    "required": false,
+    "required_by": "FND-006",
+    "deferred_reason": "1.2 GB. Needed only by the export and package verbs, whose owner is FND-006. doctor reports it as deferred until that package lands, and never fails on its absence."
+  },
+  "optional_tools": [
+    {
+      "name": "blender",
+      "expected_version": "unpinned",
+      "required": false,
+      "required_by": "AST-002",
+      "deferred_reason": "doc 100 § Toolchain pinning requires the exact Blender major/minor/patch used by derivation scripts. No derivation script exists until AST-002, so the exact version is pinned by that package. doctor reports Blender as deferred, not missing."
+    },
+    {
+      "name": "pwsh",
+      "expected_version": "7 or newer",
+      "required": false,
+      "required_by": "FND-002",
+      "deferred_reason": "build.ps1 is the Windows workflow wrapper. PowerShell is not required on Linux or macOS; when it is present, build/verify-wrapper-parity.sh proves wrapper parity by executing both wrappers instead of by comparing their sources."
+    },
+    {
+      "name": "xvfb-run",
+      "expected_version": "unpinned",
+      "required": false,
+      "required_by": "PRE-004",
+      "deferred_reason": "--headless uses the dummy rendering driver and cannot capture a viewport, so the screenshot/render tier needs Xvfb plus a software Vulkan ICD. No screenshot verification exists until PRE-004."
+    }
+  ],
+  "required_commands": [
+    {
+      "name": "git",
+      "reason": "source revision identity in verb results and evidence bundles"
+    },
+    {
+      "name": "unzip",
+      "reason": "bootstrap extracts the pinned Godot archive"
+    },
+    {
+      "name": "curl",
+      "reason": "bootstrap downloads the pinned Godot archive and the .NET install script"
+    }
+  ]
+}

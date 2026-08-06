@@ -44,6 +44,10 @@ readonly EXPECTED_PATHS=(
   "global.json"
   "Directory.Build.props"
   "Directory.Packages.props"
+  # doc 100 § Repository structure lists both root wrappers in the accepted tree.
+  # They exist from FND-002 onward and are the only workflow entrypoint.
+  "build.sh"
+  "build.ps1"
   "game/project.godot"
   "game/MechaMiner.Game.csproj"
   "game/scenes"

@@ -8,8 +8,8 @@ namespace MechaMiner.Content.Tests.Schema;
 
 /// <summary>
 /// Walks a schema document's raw JSON and reports every numeric bound it saw, which of
-/// them carry no adjacent <c>x-authority</c>, and which sourced or derived authorities
-/// state no derivation.
+/// them carry no adjacent <c>x-authority</c>, which sourced or derived authorities state no
+/// derivation, and which structural authorities state no rationale.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -36,6 +36,12 @@ namespace MechaMiner.Content.Tests.Schema;
 /// this object carry an authority - and the two questions are not the same one: a
 /// subschema asserting <c>minLength</c> and <c>maxLength</c> satisfied it with a single
 /// authority, so the second number was attributed to the first number's provenance.
+/// </para>
+/// <para>
+/// The rationale for a structural bound is asked the same way, of the entry rather than of
+/// the subschema. It was once the subschema's <c>description</c> - the identical arity
+/// failure one field over, and one this walk could not even have reported per bound, since
+/// a <c>description</c> has no bound to point at.
 /// </para>
 /// <para>
 /// <see cref="Result.BoundsSeen"/> and <see cref="Result.ObjectsSeen"/> exist so that
@@ -125,9 +131,20 @@ internal static class SchemaBoundWalk
                     continue;
                 }
 
-                if (CitesASource(authority) && !StatesDerivation(authority))
+                if (CitesASource(authority))
                 {
-                    result.MissingDerivations.Add(at.AppendProperty(keyword).Value);
+                    if (!StatesDerivation(authority))
+                    {
+                        result.MissingDerivations.Add(at.AppendProperty(keyword).Value);
+                    }
+                }
+                else if (IsStructural(authority) && !StatesRationale(authority))
+                {
+                    // Asked of the entry, not of the enclosing subschema. The rationale for
+                    // a structural bound used to be the subschema's description, so one
+                    // sentence answered for every structural bound beside it and this walk
+                    // could not have told which number it was about.
+                    result.MissingRationales.Add(at.AppendProperty(keyword).Value);
                 }
             }
 
@@ -245,6 +262,29 @@ internal static class SchemaBoundWalk
             && !string.IsNullOrWhiteSpace(derivation.GetString());
     }
 
+    private static bool IsStructural(JsonElement authority)
+    {
+        return authority.ValueKind == JsonValueKind.Object
+            && authority.TryGetProperty("kind", out JsonElement kind)
+            && kind.ValueKind == JsonValueKind.String
+            && kind.GetString() == "structural";
+    }
+
+    /// <summary>
+    /// Whether a structural entry states a rationale of its own that says something.
+    /// </summary>
+    /// <remarks>
+    /// The same shape as <see cref="StatesDerivation"/>, and deliberately so: the two are
+    /// the same question asked of the two kinds, and the field a reader must find is decided
+    /// by the entry's <c>kind</c> rather than by what happens to be present.
+    /// </remarks>
+    private static bool StatesRationale(JsonElement authority)
+    {
+        return authority.TryGetProperty("rationale", out JsonElement rationale)
+            && rationale.ValueKind == JsonValueKind.String
+            && !string.IsNullOrWhiteSpace(rationale.GetString());
+    }
+
     /// <summary>What one walk saw.</summary>
     internal sealed class Result
     {
@@ -253,6 +293,9 @@ internal static class SchemaBoundWalk
 
         /// <summary>The pointer of every sourced or derived bound stating no derivation.</summary>
         internal List<string> MissingDerivations { get; } = new();
+
+        /// <summary>The pointer of every structural bound stating no rationale.</summary>
+        internal List<string> MissingRationales { get; } = new();
 
         /// <summary>How many bound keywords the walk passed, attributed or not.</summary>
         internal int BoundsSeen { get; set; }

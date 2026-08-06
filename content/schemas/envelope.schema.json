@@ -118,7 +118,8 @@
       "minLength": 1,
       "x-authority": {
         "minLength": {
-          "kind": "structural"
+          "kind": "structural",
+          "rationale": "not a capacity bound: the empty string is what the compiler materializes for an omitted field, so an authored empty string would be a second way to say 'absent'. 1 is the smallest length that excludes it"
         }
       }
     }

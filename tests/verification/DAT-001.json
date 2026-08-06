@@ -13,7 +13,8 @@
     "VER-DAT-001-026 and VER-DAT-001-027 exist because the failure this project keeps repeating is a control that covers only the routes its author enumerated by hand. 026 attacks the walk's reach position by position; 027 attacks the two ways a list-driven control fails silently - a keyword deleted from the list, and an empty set that satisfies every emptiness assertion.",
     "VER-DAT-001-028 and VER-DAT-001-029 continue that pass. 028 attacks the input set itself: a fixture no table row claims is tested by nothing, and a code proved by two fixtures can lose one while every set-equality assertion stays true. 029 attacks the walk's model of what a schema object is - every keyword is a legal property name, so a map keyed by author-chosen names cannot be read as a subschema.",
     "TR-DAT-003's full gate is DAT-006's ('source-order permutation yields identical hash' over a compiled bundle). VER-DAT-001-010 proves the same property at the single-payload level that DAT-006 builds on.",
-    "VER-DAT-001-030 through 033 come from review of the first pass, and 031 is the one that matters. Every control before it put one guarded thing in one position and proved the walk reached it; none asked how much a single answer licensed, and the answer was 'every bound in the subschema'. The rule is now written down in content/schemas/README.md: when hardening a gate, add a control with two of the guarded thing where only one satisfies the rule."
+    "VER-DAT-001-030 through 033 come from review of the first pass, and 031 is the one that matters. Every control before it put one guarded thing in one position and proved the walk reached it; none asked how much a single answer licensed, and the answer was 'every bound in the subschema'. The rule is now written down in content/schemas/README.md: when hardening a gate, add a control with two of the guarded thing where only one satisfies the rule.",
+    "VER-DAT-001-034 is the second half of 031, and its existence is the finding. 031 made attribution per bound and left the rationale for a structural bound keyed to the subschema's description - the same arity failure, one field over, in the same commit. 029 had already been the same story: the phantom-bound class closed for the properties map and reintroduced one level inside the annotation by the fix for a different hole. So the README now carries a second rule beside the first: having asked how much one answer licenses, ask what else in the gate is keyed per subschema, per document or per file that should be keyed per bound, per field or per item."
   ],
   "entries": [
     {
@@ -795,6 +796,31 @@
       },
       "fixtures": [
         "content/schemas/envelope.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-034",
+      "summary": "The rationale for a structural bound is a field of its own x-authority entry, and the description-based check that preceded it is deleted rather than kept beside it. Requiring a kind 'structural' bound to be justified by the enclosing subschema's description was the same arity failure VER-DAT-001-031 had just fixed one field over: a description belongs to the subschema, so one sentence licensed every structural bound under it and nothing could check which clause covered which number. Both checks were not kept, because the weak one is the one people satisfy - a shared description would keep passing for two unrelated bounds while the strong check sat beside it looking like coverage - so description returns to being prose with no checking role, and the presence-only spelling that accepted the empty string retires with it. rationale is required for structural and absent for sourced and derived, mirroring how source, section and derivation are absent for structural: those kinds already state a derivation, and two prose fields asking why the number is that number would mean neither is the one to read. Controls: a structural bound with no rationale, rejected naming the keyword by the loader and reported at the same pointer by the structure-blind walk; two structural bounds under one description saying 'the envelope is bounded', which must be reported twice and name both, since a diagnostic per annotation where the guarded thing is a bound would let the reviewer repair the named half and meet the rest as a new defect; an empty and a whitespace rationale; a description that plainly says something alongside no rationale, which must still fail. Two phantom questions are asked of the change itself. The walk steps over x-authority wholesale, so a rationale whose text names a bound keyword is asserted not to inflate BoundsSeen for any of the nine. That same blindness is why the entry's five string fields are now string-typed: read as 'a string if it is a string, otherwise absent', a structural entry could park a subschema under source and have it reached by neither reader - strictly worse than the annotation case in VER-DAT-001-032, where the blind walk still found the bound.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy",
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.SchemaAuthorityTests"
+      },
+      "fixtures": [
+        "content/schemas/envelope.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/structural-bound-without-rationale.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/shared-description-two-structural-bounds.schema.json"
       ],
       "scenarios": [],
       "evidenceKinds": ["test-output", "negative-control"],

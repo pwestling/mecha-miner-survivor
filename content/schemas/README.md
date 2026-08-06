@@ -134,9 +134,11 @@ A subschema that asserts several numbers writes several entries, one per bound:
 ```json
 { "minLength": 1,
   "maxLength": 4096,
-  "description": "the empty string is what an omitted field materializes as",
+  "description": "prose about this field, for a reader",
   "x-authority": {
-    "minLength": { "kind": "structural" },
+    "minLength": {
+      "kind": "structural",
+      "rationale": "the empty string is what an omitted field materializes as, so an authored empty string would be a second way to say 'absent'" },
     "maxLength": {
       "source": "TDD-CONTENT-DATA",
       "section": "Limits",
@@ -161,10 +163,19 @@ bound the day someone adds it.
 | `source` | the document ID, in the **same vocabulary as `source_refs`** and validated by the same parser — no scope prefix, no anchor |
 | `section` | a heading name, never a line number |
 | `derivation` | how the number follows from its source |
+| `rationale` | why a structural bound is this number |
 
-`source`, `section`, and `derivation` are required for `sourced` and `derived`,
-and must be **absent** for `structural`, whose rationale lives in `description`
-instead.
+**The `kind` decides the field set exactly, in both directions.** `source`,
+`section`, and `derivation` are required for `sourced` and `derived` and must be
+**absent** for `structural`; `rationale` is required for `structural` and must be
+**absent** for the other two. Every one of the five is a string wherever it
+appears.
+
+`rationale` is absent rather than optional on a sourced or derived bound because
+those already state a `derivation`, which answers the same question — *why is it
+this number*. Two fields asking one question mean neither is the one to read, and
+the redundant one is the one that fills with filler. Which field carries the
+justification is settled by the `kind` rather than by whoever wrote the entry.
 
 Why both a source and a derivation: the source says *where* a number came from,
 the derivation says *why it is that number*, and the two go stale independently.
@@ -175,26 +186,53 @@ derivation someone can re-check.
 `section` is a heading rather than a line number for the same reason
 `source_refs` rejects a `path:line` pair: a heading survives an edit.
 
-A `structural` entry states its rationale in the subschema's `description`, and
-`description` has to be a string with something in it. Presence alone was the
-rule once, which made `""`, `"   "`, `0`, `false`, `{}` and `[]` all count as a
-justification.
+**The rationale is a field of the entry, and `description` has no checking role.**
+It used to be the rule that a `structural` bound's rationale lived in the
+subschema's `description`, which is the same arity failure the `x-authority` map
+had just been reshaped to fix, sitting one field over: a `description` belongs to
+the *subschema*, so one sentence licensed every structural bound under it. A
+subschema asserting two structural bounds beneath `"description": "the envelope is
+bounded"` satisfied the rule for both, and nothing could check which clause
+covered which number.
+
+The `description` check was **deleted** rather than kept alongside the new one.
+Two checks for one thing is worse than either alone: the weak check is the one
+people satisfy, so a shared `description` would go on passing for two unrelated
+bounds while the strong check sat beside it looking like coverage. `description`
+is now prose for a reader and nothing more. The presence-only spelling of the old
+rule — which accepted `""`, `"   "`, `0`, `false`, `{}` and `[]` as a
+justification — retires with it; `rationale` is a string with non-whitespace
+content in it.
 
 The annotation keywords — `title`, `description`, `$comment`, and likewise
 `$schema` and `$id` — hold strings. A non-string annotation is a
 subschema-shaped value that nothing walks: `{"title": {"if": {"maximum": 5}}}`
 loaded clean and hid a bound behind a keyword's name.
 
+**The same is true of every field inside `x-authority`, and there it is worse.**
+The five were read as "a string if it is a string, otherwise absent", so
+`{"kind": "structural", "source": {"if": {"maximum": 5}}}` read as a structural
+entry declaring no source: the loader raised nothing, and the corpus walk steps
+over `x-authority` wholesale by design, precisely so that the annotation's own
+keys are not counted as bounds. Between them the subschema parked under `source`
+was reached by neither — strictly worse than the `title` case, where the blind
+walk at least still found the bound. Each field is now string-typed where it
+appears.
+
 **The gate.** `SchemaAuthorityTests` asserts that every `minimum`, `maximum`,
 `exclusiveMinimum`, `exclusiveMaximum`, `minItems`, `maxItems`, `minLength`,
 `maxLength`, and `multipleOf` under `content/schemas/**` has its own entry in
-the adjacent `x-authority` map — per bound, not per subschema — and that every
-sourced or derived entry states a derivation. Negative-control fixtures prove
-the gate can fail: a bare bound, a bare exclusive bound, a bare length bound, a
-bound with a source but no derivation, and a subschema with two bounds that
-attributes one of them. The loader half of the control is parameterised over the
-keyword list, so a tenth keyword arrives with its control already written. The
-schema loader enforces the same rules, so the gate holds from both directions.
+the adjacent `x-authority` map — per bound, not per subschema — that every
+sourced or derived entry states a derivation, and that every structural entry
+states a rationale. Negative-control fixtures prove the gate can fail: a bare
+bound, a bare exclusive bound, a bare length bound, a bound with a source but no
+derivation, a subschema with two bounds that attributes one of them, a structural
+bound whose entry states no rationale, and two structural bounds sharing one
+subschema `description` — which must be reported **twice, naming both**, since the
+guarded thing is a bound and a check that stopped at the first would be counting
+annotations. The loader half of the control is parameterised over the keyword
+list, so a tenth keyword arrives with its control already written. The schema
+loader enforces the same rules, so the gate holds from both directions.
 
 `SchemaAuthorityCoverageTests` additionally asserts, per document, that every
 schema under `content/schemas/` either declares a bound or is named in an
@@ -206,6 +244,16 @@ reaches a position is a different question from checking how much one answer
 licenses, and this gate was hardened six times on the first question before the
 second one turned up a hole: a single `x-authority` was licensing every bound in
 its subschema.
+
+**Then ask the same question of the field next door.** The arity fix above
+reshaped `x-authority` into a per-bound map and left the rationale rule keyed to
+the subschema's `description` — the identical failure, one field over, in the same
+commit. Before that, the phantom-bound class was closed for `properties` and
+reintroduced one level inside the annotation by the fix for a different hole. Each
+time, the fix and the remaining hole were the same shape in the adjacent position.
+So the second question to ask of a check is not only *how much does one answer
+license* but *what else here is keyed per subschema, per document, or per file
+that should be keyed per bound, per field, or per item*.
 
 **No exemption list.** The nine are one list: every bound that may be attributed
 must be. (The per-document bound-free list above is a different kind of thing:

@@ -90,18 +90,18 @@ internal sealed class JsonSchemaEvaluatorTests
     [TestCase("{\"const\":5}", "6", false)]
     [TestCase("{\"pattern\":\"^a+$\"}", "\"aaa\"", true)]
     [TestCase("{\"pattern\":\"^a+$\"}", "\"ab\"", false)]
-    [TestCase("{\"minLength\":2,\"description\":\"bound under test\",\"x-authority\":{\"minLength\":{\"kind\":\"structural\"}}}", "\"ab\"", true)]
-    [TestCase("{\"minLength\":2,\"description\":\"bound under test\",\"x-authority\":{\"minLength\":{\"kind\":\"structural\"}}}", "\"a\"", false)]
-    [TestCase("{\"maxLength\":2,\"description\":\"bound under test\",\"x-authority\":{\"maxLength\":{\"kind\":\"structural\"}}}", "\"abc\"", false)]
-    [TestCase("{\"minimum\":1,\"description\":\"bound under test\",\"x-authority\":{\"minimum\":{\"kind\":\"structural\"}}}", "1", true)]
-    [TestCase("{\"minimum\":1,\"description\":\"bound under test\",\"x-authority\":{\"minimum\":{\"kind\":\"structural\"}}}", "0", false)]
-    [TestCase("{\"exclusiveMinimum\":1,\"description\":\"bound under test\",\"x-authority\":{\"exclusiveMinimum\":{\"kind\":\"structural\"}}}", "1", false)]
-    [TestCase("{\"maximum\":1,\"description\":\"bound under test\",\"x-authority\":{\"maximum\":{\"kind\":\"structural\"}}}", "2", false)]
-    [TestCase("{\"exclusiveMaximum\":1,\"description\":\"bound under test\",\"x-authority\":{\"exclusiveMaximum\":{\"kind\":\"structural\"}}}", "1", false)]
-    [TestCase("{\"multipleOf\":3,\"description\":\"bound under test\",\"x-authority\":{\"multipleOf\":{\"kind\":\"structural\"}}}", "9", true)]
-    [TestCase("{\"multipleOf\":3,\"description\":\"bound under test\",\"x-authority\":{\"multipleOf\":{\"kind\":\"structural\"}}}", "10", false)]
-    [TestCase("{\"minItems\":2,\"description\":\"bound under test\",\"x-authority\":{\"minItems\":{\"kind\":\"structural\"}}}", "[1]", false)]
-    [TestCase("{\"maxItems\":1,\"description\":\"bound under test\",\"x-authority\":{\"maxItems\":{\"kind\":\"structural\"}}}", "[1,2]", false)]
+    [TestCase("{\"minLength\":2,\"x-authority\":{\"minLength\":{\"kind\":\"structural\",\"rationale\":\"bound under test\"}}}", "\"ab\"", true)]
+    [TestCase("{\"minLength\":2,\"x-authority\":{\"minLength\":{\"kind\":\"structural\",\"rationale\":\"bound under test\"}}}", "\"a\"", false)]
+    [TestCase("{\"maxLength\":2,\"x-authority\":{\"maxLength\":{\"kind\":\"structural\",\"rationale\":\"bound under test\"}}}", "\"abc\"", false)]
+    [TestCase("{\"minimum\":1,\"x-authority\":{\"minimum\":{\"kind\":\"structural\",\"rationale\":\"bound under test\"}}}", "1", true)]
+    [TestCase("{\"minimum\":1,\"x-authority\":{\"minimum\":{\"kind\":\"structural\",\"rationale\":\"bound under test\"}}}", "0", false)]
+    [TestCase("{\"exclusiveMinimum\":1,\"x-authority\":{\"exclusiveMinimum\":{\"kind\":\"structural\",\"rationale\":\"bound under test\"}}}", "1", false)]
+    [TestCase("{\"maximum\":1,\"x-authority\":{\"maximum\":{\"kind\":\"structural\",\"rationale\":\"bound under test\"}}}", "2", false)]
+    [TestCase("{\"exclusiveMaximum\":1,\"x-authority\":{\"exclusiveMaximum\":{\"kind\":\"structural\",\"rationale\":\"bound under test\"}}}", "1", false)]
+    [TestCase("{\"multipleOf\":3,\"x-authority\":{\"multipleOf\":{\"kind\":\"structural\",\"rationale\":\"bound under test\"}}}", "9", true)]
+    [TestCase("{\"multipleOf\":3,\"x-authority\":{\"multipleOf\":{\"kind\":\"structural\",\"rationale\":\"bound under test\"}}}", "10", false)]
+    [TestCase("{\"minItems\":2,\"x-authority\":{\"minItems\":{\"kind\":\"structural\",\"rationale\":\"bound under test\"}}}", "[1]", false)]
+    [TestCase("{\"maxItems\":1,\"x-authority\":{\"maxItems\":{\"kind\":\"structural\",\"rationale\":\"bound under test\"}}}", "[1,2]", false)]
     [TestCase("{\"uniqueItems\":true}", "[1,2]", true)]
     [TestCase("{\"uniqueItems\":true}", "[1,1]", false)]
     [TestCase("{\"uniqueItems\":true}", "[\"a\",\"a\"]", false)]
@@ -115,12 +115,12 @@ internal sealed class JsonSchemaEvaluatorTests
     [TestCase("{\"items\":{\"type\":\"string\"}}", "[1]", false)]
     [TestCase("{\"prefixItems\":[{\"type\":\"string\"}]}", "[\"a\",1]", true)]
     [TestCase("{\"prefixItems\":[{\"type\":\"string\"}]}", "[1]", false)]
-    [TestCase("{\"allOf\":[{\"type\":\"string\"},{\"minLength\":2,\"description\":\"bound under test\",\"x-authority\":{\"minLength\":{\"kind\":\"structural\"}}}]}", "\"ab\"", true)]
-    [TestCase("{\"allOf\":[{\"type\":\"string\"},{\"minLength\":2,\"description\":\"bound under test\",\"x-authority\":{\"minLength\":{\"kind\":\"structural\"}}}]}", "\"a\"", false)]
+    [TestCase("{\"allOf\":[{\"type\":\"string\"},{\"minLength\":2,\"x-authority\":{\"minLength\":{\"kind\":\"structural\",\"rationale\":\"bound under test\"}}}]}", "\"ab\"", true)]
+    [TestCase("{\"allOf\":[{\"type\":\"string\"},{\"minLength\":2,\"x-authority\":{\"minLength\":{\"kind\":\"structural\",\"rationale\":\"bound under test\"}}}]}", "\"a\"", false)]
     [TestCase("{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"integer\"}]}", "1", true)]
     [TestCase("{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"integer\"}]}", "true", false)]
     [TestCase("{\"oneOf\":[{\"type\":\"string\"},{\"type\":\"integer\"}]}", "1", true)]
-    [TestCase("{\"oneOf\":[{\"minimum\":1,\"description\":\"bound under test\",\"x-authority\":{\"minimum\":{\"kind\":\"structural\"}}},{\"minimum\":2,\"description\":\"bound under test\",\"x-authority\":{\"minimum\":{\"kind\":\"structural\"}}}]}", "3", false)]
+    [TestCase("{\"oneOf\":[{\"minimum\":1,\"x-authority\":{\"minimum\":{\"kind\":\"structural\",\"rationale\":\"bound under test\"}}},{\"minimum\":2,\"x-authority\":{\"minimum\":{\"kind\":\"structural\",\"rationale\":\"bound under test\"}}}]}", "3", false)]
     [TestCase("{\"not\":{\"type\":\"string\"}}", "1", true)]
     [TestCase("{\"not\":{\"type\":\"string\"}}", "\"a\"", false)]
     [TestCase("true", "1", true)]
@@ -223,8 +223,8 @@ internal sealed class JsonSchemaEvaluatorTests
     public void PropertyNamesReportsTheNameItRejected()
     {
         JsonSchemaLoadResult load = JsonSchemaLoader.Load(
-            Encoding.UTF8.GetBytes("{\"propertyNames\":{\"minLength\":4,\"description\":\"d\","
-                + "\"x-authority\":{\"minLength\":{\"kind\":\"structural\"}}}}"),
+            Encoding.UTF8.GetBytes("{\"propertyNames\":{\"minLength\":4,\"x-authority\":"
+                + "{\"minLength\":{\"kind\":\"structural\",\"rationale\":\"bound under test\"}}}}"),
             "inline.schema.json");
         Assert.That(load.IsValid, Is.True, () => Describe(load));
 

@@ -11,7 +11,8 @@
       "minimum": 1,
       "x-authority": {
         "minimum": {
-          "kind": "structural"
+          "kind": "structural",
+          "rationale": "a charge counts discrete uses, and a negative count is not a smaller charge but a different kind of thing; 1 is the smallest count this fixture has any use for"
         }
       }
     }

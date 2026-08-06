@@ -213,6 +213,16 @@ internal sealed class SchemaAuthorityCoverageTests
                 walk.Unattributed,
                 Is.Empty,
                 () => "unattributed bounds: " + string.Join(", ", walk.Unattributed));
+            Assert.That(
+                walk.MissingDerivations,
+                Is.Empty,
+                () => "sourced or derived bounds with no derivation: "
+                    + string.Join(", ", walk.MissingDerivations));
+            Assert.That(
+                walk.MissingRationales,
+                Is.Empty,
+                () => "structural bounds with no rationale of their own: "
+                    + string.Join(", ", walk.MissingRationales));
         });
     }
 

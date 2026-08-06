@@ -70,6 +70,27 @@ internal sealed class SchemaAuthorityTests
     }
 
     /// <summary>
+    /// A structural bound has no citation to go stale, so the only thing standing between
+    /// it and a limit chosen to make something pass is a stated reason.
+    /// </summary>
+    /// <remarks>
+    /// The reason is asked of the entry, not of the enclosing subschema. It used to be the
+    /// subschema's <c>description</c>, which is per subschema and therefore licensed every
+    /// structural bound under it at once.
+    /// </remarks>
+    [TestCaseSource(nameof(ProjectSchemas))]
+    public void EveryStructuralBoundStatesItsRationale(string path)
+    {
+        IReadOnlyList<string> missing = FindMissingRationales(File.ReadAllBytes(path));
+
+        Assert.That(
+            missing,
+            Is.Empty,
+            () => TestArtifacts.Relative(path) + " has structural bounds whose x-authority "
+                + "entry states no 'rationale': " + string.Join(", ", missing));
+    }
+
+    /// <summary>
     /// The negative control. Without it, the gate above would pass just as happily if
     /// <see cref="FindUnattributedBounds"/> never found anything.
     /// </summary>
@@ -208,13 +229,18 @@ internal sealed class SchemaAuthorityTests
     // is that number.
     [TestCase("{\"maximum\":1,\"x-authority\":{\"maximum\":{\"kind\":\"sourced\",\"source\":\"TDD-COMBAT\",\"section\":\"S\"}}}", false)]
     [TestCase("{\"maximum\":1,\"x-authority\":{\"maximum\":{\"kind\":\"sourced\",\"source\":\"TDD-COMBAT\",\"section\":\"S\",\"derivation\":\"  \"}}}", false)]
-    // A structural bound has no derivation; its rationale is in description.
+    // A sourced or derived bound states a derivation and not a rationale: two prose fields
+    // asking one question mean neither is the one to read.
+    [TestCase("{\"maximum\":1,\"x-authority\":{\"maximum\":{\"kind\":\"sourced\",\"source\":\"TDD-COMBAT\",\"section\":\"S\",\"derivation\":\"d\",\"rationale\":\"r\"}}}", false)]
+    // A structural bound has no derivation; it states a rationale of its own.
     [TestCase("{\"maximum\":1,\"description\":\"d\",\"x-authority\":{\"maximum\":{\"kind\":\"structural\",\"derivation\":\"x\"}}}", false)]
-    [TestCase("{\"maximum\":1,\"description\":\"why\",\"x-authority\":{\"maximum\":{\"kind\":\"structural\"}}}", true)]
-    // A structural bound with no rationale: the limit is unjustified.
+    [TestCase("{\"maximum\":1,\"x-authority\":{\"maximum\":{\"kind\":\"structural\",\"rationale\":\"why\"}}}", true)]
+    // A structural bound with no rationale: the limit is unjustified, and a description
+    // that says something does not answer for it.
     [TestCase("{\"maximum\":1,\"x-authority\":{\"maximum\":{\"kind\":\"structural\"}}}", false)]
+    [TestCase("{\"maximum\":1,\"description\":\"why\",\"x-authority\":{\"maximum\":{\"kind\":\"structural\"}}}", false)]
     // A structural bound must not claim an authority it does not have.
-    [TestCase("{\"maximum\":1,\"description\":\"d\",\"x-authority\":{\"maximum\":{\"kind\":\"structural\",\"source\":\"TDD-COMBAT\"}}}", false)]
+    [TestCase("{\"maximum\":1,\"x-authority\":{\"maximum\":{\"kind\":\"structural\",\"rationale\":\"r\",\"source\":\"TDD-COMBAT\"}}}", false)]
     // A sourced bound needs both the document and the section.
     [TestCase("{\"maximum\":1,\"x-authority\":{\"maximum\":{\"kind\":\"sourced\",\"section\":\"S\",\"derivation\":\"d\"}}}", false)]
     // The source uses the source_refs vocabulary, validated by the same parser.
@@ -224,18 +250,19 @@ internal sealed class SchemaAuthorityTests
     [TestCase("{\"maximum\":1,\"x-authority\":{\"maximum\":{\"kind\":\"sourced\",\"source\":\"TDD-COMBAT#capacity\",\"section\":\"S\",\"derivation\":\"d\"}}}", false)]
     [TestCase("{\"maximum\":1,\"x-authority\":{\"maximum\":{\"kind\":\"invented\",\"source\":\"TDD-COMBAT\",\"section\":\"S\",\"derivation\":\"d\"}}}", false)]
     [TestCase("{\"maximum\":1,\"x-authority\":{\"maximum\":{\"kind\":\"sourced\",\"source\":\"TDD-COMBAT\",\"section\":\"S\",\"derivation\":\"d\",\"extra\":1}}}", false)]
-    // An authority with nothing to annotate is misplaced.
-    [TestCase("{\"type\":\"integer\",\"x-authority\":{\"maximum\":{\"kind\":\"structural\"}}}", false)]
+    // An authority with nothing to annotate is misplaced. It carries a rationale, so the
+    // misplacement is the only thing left for it to fail on.
+    [TestCase("{\"type\":\"integer\",\"x-authority\":{\"maximum\":{\"kind\":\"structural\",\"rationale\":\"r\"}}}", false)]
     // The map is keyed by the bound it explains, so the flat pre-DAT-001 shape is a
     // failure that names the offending key rather than an authority for a bound called
     // "kind".
-    [TestCase("{\"maximum\":1,\"description\":\"d\",\"x-authority\":{\"kind\":\"structural\"}}", false)]
+    [TestCase("{\"maximum\":1,\"x-authority\":{\"kind\":\"structural\"}}", false)]
     // An empty map records nothing while reading as though a bound had been attributed.
-    [TestCase("{\"maximum\":1,\"description\":\"d\",\"x-authority\":{}}", false)]
+    [TestCase("{\"maximum\":1,\"x-authority\":{}}", false)]
     // The map is a map, not a subschema and not a list.
-    [TestCase("{\"maximum\":1,\"description\":\"d\",\"x-authority\":[{\"kind\":\"structural\"}]}", false)]
+    [TestCase("{\"maximum\":1,\"x-authority\":[{\"kind\":\"structural\",\"rationale\":\"r\"}]}", false)]
     // An authority keyed by a keyword that is not a bound at all.
-    [TestCase("{\"maximum\":1,\"description\":\"d\",\"x-authority\":{\"type\":{\"kind\":\"structural\"}}}", false)]
+    [TestCase("{\"maximum\":1,\"x-authority\":{\"type\":{\"kind\":\"structural\",\"rationale\":\"r\"}}}", false)]
     public void TheAuthorityShapeIsValidated(string schemaText, bool expected)
     {
         JsonSchemaLoadResult load = JsonSchemaLoader.Load(
@@ -291,8 +318,8 @@ internal sealed class SchemaAuthorityTests
     {
         JsonSchemaLoadResult load = JsonSchemaLoader.Load(
             Encoding.UTF8.GetBytes(
-                "{\"" + keyword + "\":1,\"description\":\"why\",\"x-authority\":{\""
-                    + keyword + "\":{\"kind\":\"structural\"}}}"),
+                "{\"" + keyword + "\":1,\"x-authority\":{\"" + keyword
+                    + "\":{\"kind\":\"structural\",\"rationale\":\"why this number\"}}}"),
             "inline.schema.json");
 
         Assert.That(load.IsValid, Is.True, () => string.Join("; ", load.Diagnostics));
@@ -364,15 +391,16 @@ internal sealed class SchemaAuthorityTests
     /// is added under that key tomorrow - the same standing-waiver failure a stale
     /// exemption is.
     /// </remarks>
-    // Two bounds, one authority: rejected.
-    [TestCase("{\"minLength\":1,\"maxLength\":9,\"description\":\"d\",\"x-authority\":{\"minLength\":{\"kind\":\"structural\"}}}", false)]
-    [TestCase("{\"minLength\":1,\"maxLength\":9,\"description\":\"d\",\"x-authority\":{\"maxLength\":{\"kind\":\"structural\"}}}", false)]
+    // Two bounds, one authority: rejected. Every entry present carries a rationale, so the
+    // arity of the attribution is the only thing left for these to fail on.
+    [TestCase("{\"minLength\":1,\"maxLength\":9,\"x-authority\":{\"minLength\":{\"kind\":\"structural\",\"rationale\":\"r\"}}}", false)]
+    [TestCase("{\"minLength\":1,\"maxLength\":9,\"x-authority\":{\"maxLength\":{\"kind\":\"structural\",\"rationale\":\"r\"}}}", false)]
     // Two bounds, two authorities: accepted.
-    [TestCase("{\"minLength\":1,\"maxLength\":9,\"description\":\"d\",\"x-authority\":{\"minLength\":{\"kind\":\"structural\"},\"maxLength\":{\"kind\":\"structural\"}}}", true)]
+    [TestCase("{\"minLength\":1,\"maxLength\":9,\"x-authority\":{\"minLength\":{\"kind\":\"structural\",\"rationale\":\"r\"},\"maxLength\":{\"kind\":\"structural\",\"rationale\":\"r\"}}}", true)]
     // Three bounds, two authorities: rejected.
-    [TestCase("{\"minimum\":1,\"maximum\":9,\"multipleOf\":3,\"description\":\"d\",\"x-authority\":{\"minimum\":{\"kind\":\"structural\"},\"maximum\":{\"kind\":\"structural\"}}}", false)]
+    [TestCase("{\"minimum\":1,\"maximum\":9,\"multipleOf\":3,\"x-authority\":{\"minimum\":{\"kind\":\"structural\",\"rationale\":\"r\"},\"maximum\":{\"kind\":\"structural\",\"rationale\":\"r\"}}}", false)]
     // An authority for a bound the subschema does not declare.
-    [TestCase("{\"minLength\":1,\"description\":\"d\",\"x-authority\":{\"minLength\":{\"kind\":\"structural\"},\"maxLength\":{\"kind\":\"structural\"}}}", false)]
+    [TestCase("{\"minLength\":1,\"x-authority\":{\"minLength\":{\"kind\":\"structural\",\"rationale\":\"r\"},\"maxLength\":{\"kind\":\"structural\",\"rationale\":\"r\"}}}", false)]
     public void EveryBoundNeedsItsOwnAuthorityAndEveryAuthorityItsOwnBound(
         string schemaText,
         bool expected)
@@ -402,8 +430,8 @@ internal sealed class SchemaAuthorityTests
     public void TheWalkAttributesEachOfTwoBoundsSeparately(string attributed, string bare)
     {
         byte[] bytes = Encoding.UTF8.GetBytes(
-            "{\"" + attributed + "\":1,\"" + bare + "\":9,\"description\":\"d\","
-                + "\"x-authority\":{\"" + attributed + "\":{\"kind\":\"structural\"}}}");
+            "{\"" + attributed + "\":1,\"" + bare + "\":9,\"x-authority\":{\"" + attributed
+                + "\":{\"kind\":\"structural\",\"rationale\":\"why this number\"}}}");
 
         SchemaBoundWalk.Result walk = SchemaBoundWalk.Of(bytes);
 
@@ -438,8 +466,8 @@ internal sealed class SchemaAuthorityTests
     public void TheAuthorityMapsOwnKeysAreNotCountedAsBounds(string keyword)
     {
         byte[] bytes = Encoding.UTF8.GetBytes(
-            "{\"" + keyword + "\":1,\"description\":\"d\",\"x-authority\":{\"" + keyword
-                + "\":{\"kind\":\"structural\"}}}");
+            "{\"" + keyword + "\":1,\"x-authority\":{\"" + keyword
+                + "\":{\"kind\":\"structural\",\"rationale\":\"why this number\"}}}");
 
         SchemaBoundWalk.Result walk = SchemaBoundWalk.Of(bytes);
 
@@ -453,6 +481,107 @@ internal sealed class SchemaAuthorityTests
                 walk.Unattributed,
                 Is.Empty,
                 () => "nothing here is unattributed: " + string.Join(", ", walk.Unattributed));
+            Assert.That(
+                walk.MissingRationales,
+                Is.Empty,
+                () => "the entry states a rationale: "
+                    + string.Join(", ", walk.MissingRationales));
+        });
+    }
+
+    /// <summary>
+    /// A <c>rationale</c> whose text is a bound keyword is prose, not a bound.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The phantom check on this change itself. Moving the rationale out of the subschema's
+    /// <c>description</c> and into the authority entry puts another author-written string one
+    /// level inside the annotation, which is the position the structure-blind walk has been
+    /// fooled in twice: once by <c>properties</c>, whose keys are author-chosen, and once by
+    /// the authority map's own keys.
+    /// </para>
+    /// <para>
+    /// The walk is safe here for a reason worth stating rather than assuming: it steps over
+    /// <c>x-authority</c> wholesale, so nothing inside the annotation - key or value, at any
+    /// depth - is read as a schema. The rationale text is asserted with a bound keyword in it
+    /// to hold that in place, because a walk that descended one level for the rationale's
+    /// sake would count this as a second bound and inflate <c>BoundsSeen</c>, the counter the
+    /// coverage argument rests on.
+    /// </para>
+    /// </remarks>
+    [TestCaseSource(typeof(SchemaAuthority), nameof(SchemaAuthority.BoundKeywords))]
+    public void ARationaleNamingABoundKeywordIsNotCountedAsASecondBound(string keyword)
+    {
+        byte[] bytes = Encoding.UTF8.GetBytes(
+            "{\"maximum\":1,\"x-authority\":{\"maximum\":{\"kind\":\"structural\","
+                + "\"rationale\":\"chosen so that " + keyword + " stays a round number\"}}}");
+
+        SchemaBoundWalk.Result walk = SchemaBoundWalk.Of(bytes);
+        JsonSchemaLoadResult load = JsonSchemaLoader.Load(bytes, "inline.schema.json");
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                walk.BoundsSeen,
+                Is.EqualTo(1),
+                "the schema asserts one number; a rationale mentioning '" + keyword
+                    + "' is prose about that number, not a second one");
+            Assert.That(walk.Unattributed, Is.Empty);
+            Assert.That(walk.MissingRationales, Is.Empty);
+            Assert.That(load.IsValid, Is.True, () => string.Join("; ", load.Diagnostics));
+        });
+    }
+
+    /// <summary>
+    /// No field of an authority entry may hold a subschema.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The same hole <c>title</c> and <c>description</c> were, one level further in, and
+    /// found while adding a fifth string field to the entry. These fields were read as "a
+    /// string if it is a string, otherwise absent", so
+    /// <c>{"kind":"structural","source":{"if":{"maximum":5}}}</c> read as a structural entry
+    /// that declares no source: the loader raised nothing, and the corpus walk steps over
+    /// <c>x-authority</c> wholesale by design. Between the two of them the subschema parked
+    /// under <c>source</c> was walked by nobody, which is strictly worse than the annotation
+    /// case, where at least the blind walk still reached the bound.
+    /// </para>
+    /// <para>
+    /// Asserted over every field rather than over <c>rationale</c> alone. A type rule applied
+    /// to the newest field and not its neighbours is how this reopens.
+    /// </para>
+    /// </remarks>
+    [TestCase("source")]
+    [TestCase("section")]
+    [TestCase("derivation")]
+    [TestCase("rationale")]
+    public void AnAuthorityFieldCannotHideASubschema(string field)
+    {
+        byte[] hiding = Encoding.UTF8.GetBytes(
+            "{\"maximum\":1,\"x-authority\":{\"maximum\":{\"kind\":\"structural\",\""
+                + field + "\":{\"if\":{\"maximum\":5}}}}}");
+
+        JsonSchemaLoadResult load = JsonSchemaLoader.Load(hiding, "inline.schema.json");
+        SchemaBoundWalk.Result walk = SchemaBoundWalk.Of(hiding);
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                load.IsValid,
+                Is.False,
+                () => "x-authority." + field + " must not accept an object: nothing walks a "
+                    + "subschema parked inside the annotation");
+            Assert.That(
+                ConstraintsOf(load),
+                Has.Some.Contains("'" + field + "'"),
+                () => "the diagnostic must name the field: "
+                    + string.Join("; ", load.Diagnostics));
+            Assert.That(
+                walk.BoundsSeen,
+                Is.EqualTo(1),
+                "the corpus walk cannot help here - it steps over x-authority by design - so "
+                    + "the loader is the only reader of this position and the type check is "
+                    + "the whole of the gate");
         });
     }
 
@@ -527,30 +656,45 @@ internal sealed class SchemaAuthorityTests
     }
 
     /// <summary>
-    /// A structural bound's rationale is a <c>description</c> that says something, not a
-    /// <c>description</c> key that exists.
+    /// A structural bound's rationale lives in its own <c>x-authority</c> entry, and the
+    /// subschema's <c>description</c> does not answer for it.
     /// </summary>
     /// <remarks>
-    /// The check was presence only, so <c>""</c>, <c>"   "</c>, <c>0</c>, <c>false</c>,
-    /// <c>{}</c> and <c>[]</c> all satisfied "state your rationale". A rule satisfied by
-    /// the empty string is not a rule about justification; it is a rule about typing eleven
-    /// characters.
+    /// <para>
+    /// The rule this replaced asked the <em>subschema</em> for the rationale, which is the
+    /// arity failure the <c>x-authority</c> map had just been reshaped to fix, sitting one
+    /// field over. A <c>description</c> belongs to the subschema, so one sentence licensed
+    /// every structural bound under it and nothing could check which clause covered which
+    /// number.
+    /// </para>
+    /// <para>
+    /// <b>The two checks do not coexist.</b> The <c>description</c> check is gone rather than
+    /// kept as a second line of defence, because the weak check is the one people satisfy: a
+    /// shared description would go on passing for two unrelated bounds while the strong check
+    /// sat beside it looking like coverage. The final case here is that exact state - a
+    /// description that plainly says something, and no rationale - and it must fail.
+    /// </para>
+    /// <para>
+    /// The presence-only spelling of the old rule is retired with it. It accepted <c>""</c>,
+    /// <c>"   "</c>, <c>0</c>, <c>false</c>, <c>{}</c> and <c>[]</c>; its replacement is
+    /// asserted over the whitespace forms below, and the non-string forms are covered by
+    /// <see cref="AnAuthorityFieldCannotHideASubschema"/>.
+    /// </para>
     /// </remarks>
-    [TestCase("\"\"", false)]
-    [TestCase("\"   \"", false)]
-    [TestCase("\"\\t\\n\"", false)]
-    [TestCase("0", false)]
-    [TestCase("false", false)]
-    [TestCase("{}", false)]
-    [TestCase("[]", false)]
-    [TestCase("\"the empty string is how an omitted field materializes\"", true)]
-    public void AStructuralBoundNeedsARationaleWithSomethingInIt(
-        string descriptionJson,
+    // A rationale that says nothing is not a rationale.
+    [TestCase("{\"minLength\":1,\"x-authority\":{\"minLength\":{\"kind\":\"structural\",\"rationale\":\"\"}}}", false)]
+    [TestCase("{\"minLength\":1,\"x-authority\":{\"minLength\":{\"kind\":\"structural\",\"rationale\":\"   \"}}}", false)]
+    [TestCase("{\"minLength\":1,\"x-authority\":{\"minLength\":{\"kind\":\"structural\",\"rationale\":\"\\t\\n\"}}}", false)]
+    // A rationale that does is.
+    [TestCase("{\"minLength\":1,\"x-authority\":{\"minLength\":{\"kind\":\"structural\",\"rationale\":\"the empty string is how an omitted field materializes\"}}}", true)]
+    // The description no longer licenses anything, however much it says.
+    [TestCase("{\"minLength\":1,\"description\":\"the empty string is how an omitted field materializes\",\"x-authority\":{\"minLength\":{\"kind\":\"structural\"}}}", false)]
+    // And it is still prose the schema may carry, alongside a rationale.
+    [TestCase("{\"minLength\":1,\"description\":\"prose for a reader\",\"x-authority\":{\"minLength\":{\"kind\":\"structural\",\"rationale\":\"the empty string is how an omitted field materializes\"}}}", true)]
+    public void AStructuralBoundNeedsARationaleOfItsOwnWithSomethingInIt(
+        string schemaText,
         bool expected)
     {
-        string schemaText = "{\"minLength\":1,\"description\":" + descriptionJson
-            + ",\"x-authority\":{\"minLength\":{\"kind\":\"structural\"}}}";
-
         JsonSchemaLoadResult load = JsonSchemaLoader.Load(
             Encoding.UTF8.GetBytes(schemaText), "inline.schema.json");
 
@@ -558,6 +702,122 @@ internal sealed class SchemaAuthorityTests
             load.IsValid,
             Is.EqualTo(expected),
             () => schemaText + " -> " + string.Join("; ", load.Diagnostics));
+    }
+
+    /// <summary>
+    /// The committed control: one structural bound, a subschema that says plenty, and no
+    /// rationale on the entry.
+    /// </summary>
+    /// <remarks>
+    /// The loader must name the keyword rather than merely fail, because the message a
+    /// reviewer reads in a build log has to say which of the subschema's numbers went
+    /// unjustified.
+    /// </remarks>
+    [Test]
+    public void AStructuralBoundWithNoRationaleIsRejectedNamingTheKeyword()
+    {
+        byte[] bytes = File.ReadAllBytes(Path.Combine(
+            FixtureCorpus.Root, "schema", "structural-bound-without-rationale.schema.json"));
+
+        JsonSchemaLoadResult load = JsonSchemaLoader.Load(
+            bytes, "tests/fixtures/schema/structural-bound-without-rationale.schema.json");
+        SchemaBoundWalk.Result walk = SchemaBoundWalk.Of(bytes);
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                load.IsValid,
+                Is.False,
+                "a structural bound with no rationale is a limit nobody can justify, which is "
+                    + "indistinguishable from one chosen to make something pass");
+            Assert.That(
+                load.Diagnostics[0].Code,
+                Is.EqualTo(ContentDiagnosticCodes.SchemaMalformed));
+            Assert.That(
+                ConstraintsOf(load),
+                Has.Some.Contains("minLength"),
+                () => "the diagnostic must name the keyword: "
+                    + string.Join("; ", load.Diagnostics));
+            Assert.That(
+                ConstraintsOf(load),
+                Has.Some.Contains("rationale"),
+                () => "the diagnostic must name what is missing: "
+                    + string.Join("; ", load.Diagnostics));
+            Assert.That(
+                walk.MissingRationales,
+                Is.EqualTo(new[] { "/properties/presentation_id/minLength" }),
+                () => "the structure-blind walk must reach the same conclusion at the same "
+                    + "pointer: " + string.Join(", ", walk.MissingRationales));
+            Assert.That(
+                walk.Unattributed,
+                Is.Empty,
+                () => "the bound is attributed; what it lacks is a reason: "
+                    + string.Join(", ", walk.Unattributed));
+        });
+    }
+
+    /// <summary>
+    /// Two structural bounds under one <c>description</c> fail for <em>both</em>, naming
+    /// both.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The control with two of the guarded thing where only one answer was ever supplied -
+    /// the shape <c>content/schemas/README.md</c> now requires of any change to this gate,
+    /// and the one that was missing when the rationale rule was written. Under the rule this
+    /// replaced, <c>"description": "the envelope is bounded"</c> satisfied the requirement
+    /// for the 1 and the 4096 alike.
+    /// </para>
+    /// <para>
+    /// Both halves have to be reported in one run. Reporting the first and stopping would
+    /// make the diagnostic per annotation where the guarded thing is a bound: the reviewer
+    /// repairs the named half, the other surfaces on the next run, and it reads as a second
+    /// defect rather than the rest of the first.
+    /// </para>
+    /// </remarks>
+    [Test]
+    public void TwoStructuralBoundsSharingOneDescriptionAreBothReported()
+    {
+        byte[] bytes = File.ReadAllBytes(Path.Combine(
+            FixtureCorpus.Root, "schema", "shared-description-two-structural-bounds.schema.json"));
+
+        JsonSchemaLoadResult load = JsonSchemaLoader.Load(
+            bytes, "tests/fixtures/schema/shared-description-two-structural-bounds.schema.json");
+        SchemaBoundWalk.Result walk = SchemaBoundWalk.Of(bytes);
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                load.IsValid,
+                Is.False,
+                "one description cannot justify two numbers, and it used to be accepted as "
+                    + "justifying both");
+            Assert.That(
+                ConstraintsOf(load),
+                Has.Exactly(1).Contains("minLength"),
+                () => "minLength must be reported once, by name: "
+                    + string.Join("; ", load.Diagnostics));
+            Assert.That(
+                ConstraintsOf(load),
+                Has.Exactly(1).Contains("maxLength"),
+                () => "maxLength must be reported too - a check that stopped at the first "
+                    + "unjustified bound would be per annotation where the guarded thing is a "
+                    + "bound: " + string.Join("; ", load.Diagnostics));
+            Assert.That(
+                walk.MissingRationales,
+                Is.EqualTo(new[]
+                {
+                    "/properties/presentation_id/minLength",
+                    "/properties/presentation_id/maxLength",
+                }),
+                () => "the walk must report both, in the order the keywords are declared: "
+                    + string.Join(", ", walk.MissingRationales));
+            Assert.That(
+                walk.Unattributed,
+                Is.Empty,
+                () => "both bounds are attributed; neither is justified: "
+                    + string.Join(", ", walk.Unattributed));
+        });
     }
 
     private static IReadOnlyList<string> ConstraintsOf(JsonSchemaLoadResult load)
@@ -587,5 +847,14 @@ internal sealed class SchemaAuthorityTests
     private static IReadOnlyList<string> FindMissingDerivations(byte[] schemaBytes)
     {
         return SchemaBoundWalk.Of(schemaBytes).MissingDerivations;
+    }
+
+    /// <summary>
+    /// Walks a schema document and returns the JSON Pointer of every structural bound whose
+    /// authority states no rationale.
+    /// </summary>
+    private static IReadOnlyList<string> FindMissingRationales(byte[] schemaBytes)
+    {
+        return SchemaBoundWalk.Of(schemaBytes).MissingRationales;
     }
 }

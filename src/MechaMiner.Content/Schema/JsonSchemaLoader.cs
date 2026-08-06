@@ -186,6 +186,13 @@ public static class JsonSchemaLoader
     /// and by the corpus walk together. Provenance is a property of a number, and a
     /// subschema can assert several numbers.
     /// </para>
+    /// <para>
+    /// Nothing here reads the subschema's <c>description</c>. A structural bound's rationale
+    /// used to be checked against it, which is the same arity failure one field over: a
+    /// <c>description</c> is per subschema, so one sentence licensed every structural bound
+    /// under it. The rationale is now a field of the entry, checked in
+    /// <see cref="ReadAuthority"/> where the bound it explains is known by name.
+    /// </para>
     /// </remarks>
     private static void ValidateAuthorityPlacement(
         JsonSchemaNode node,
@@ -223,7 +230,6 @@ public static class JsonSchemaLoader
                     + "document changed\" is answerable only from memory"));
         }
 
-        bool structural = false;
         foreach (KeyValuePair<string, SchemaAuthority> attributed in authorities)
         {
             if (!declaredBounds.Contains(attributed.Key))
@@ -237,35 +243,8 @@ public static class JsonSchemaLoader
                         + "'. An authority for a bound that is not there is provenance for "
                         + "nothing, and it would silently cover that bound the day someone "
                         + "adds it"));
-                continue;
             }
-
-            structural |= attributed.Value.Kind == SchemaAuthorityKind.Structural;
         }
-
-        // A structural bound has no citation to go stale, but it still has to be
-        // justified, and description is where a reader looks for the justification.
-        // Presence is not enough: "", "   ", 0, false, {} and [] are all present and none
-        // of them justifies anything.
-        if (structural && !StatesRationale(element))
-        {
-            bag.Add(Malformed(
-                sourcePath,
-                pointer.AppendProperty(SchemaAuthority.Keyword),
-                "a structural bound states its rationale in 'description', as a string with "
-                    + "something in it; a limit nobody can justify is indistinguishable from "
-                    + "one chosen to make something pass"));
-        }
-    }
-
-    /// <summary>
-    /// Whether the subschema's <c>description</c> is a string that actually says something.
-    /// </summary>
-    private static bool StatesRationale(JsonElement element)
-    {
-        return element.TryGetProperty("description", out JsonElement description)
-            && description.ValueKind == JsonValueKind.String
-            && !string.IsNullOrWhiteSpace(description.GetString());
     }
 
     private static readonly IReadOnlyDictionary<string, SchemaAuthority> EmptyAuthorities =
@@ -787,6 +766,14 @@ public static class JsonSchemaLoader
     /// here naming <c>kind</c> rather than loading as an authority for a bound called
     /// "kind". A shape change that failed silently would be worse than the defect it fixes.
     /// </para>
+    /// <para>
+    /// Every entry is read even after one of them faults, so a subschema with two
+    /// unjustified bounds is reported twice and names both. Stopping at the first fault made
+    /// the diagnostic per <em>annotation</em> where the guarded thing is a <em>bound</em>,
+    /// and the two bounds sharing one flaw is exactly the case a reviewer needs to see whole:
+    /// repairing the named half and finding the other still broken reads as a second, new
+    /// defect rather than the rest of the first.
+    /// </para>
     /// </remarks>
     private static IReadOnlyDictionary<string, SchemaAuthority>? ReadAuthorities(
         JsonElement value,
@@ -804,6 +791,7 @@ public static class JsonSchemaLoader
         }
 
         Dictionary<string, SchemaAuthority> authorities = new(StringComparer.Ordinal);
+        bool faulted = false;
         foreach (JsonProperty entry in value.EnumerateObject())
         {
             if (Array.IndexOf(SchemaAuthority.BoundKeywords(), entry.Name) < 0)
@@ -816,17 +804,24 @@ public static class JsonSchemaLoader
                         + string.Join(", ", SchemaAuthority.BoundKeywords())
                         + ", because a subschema may assert several numbers and each has its "
                         + "own provenance"));
-                return null;
+                faulted = true;
+                continue;
             }
 
-            SchemaAuthority? authority =
-                ReadAuthority(entry.Value, at.AppendProperty(entry.Name), sourcePath, bag);
+            SchemaAuthority? authority = ReadAuthority(
+                entry.Value, at.AppendProperty(entry.Name), entry.Name, sourcePath, bag);
             if (authority is null)
             {
-                return null;
+                faulted = true;
+                continue;
             }
 
             authorities[entry.Name] = authority;
+        }
+
+        if (faulted)
+        {
+            return null;
         }
 
         if (authorities.Count == 0)
@@ -842,15 +837,26 @@ public static class JsonSchemaLoader
         return authorities;
     }
 
+    /// <summary>Reads the one authority explaining <paramref name="keyword"/>.</summary>
+    /// <remarks>
+    /// <paramref name="keyword"/> is carried in so that every diagnostic below names the
+    /// bound it is about. The pointer alone would say it, but a pointer is the thing a
+    /// reader skims past, and the message that has to survive being read in a build log is
+    /// the one naming which of two numbers went unjustified.
+    /// </remarks>
     private static SchemaAuthority? ReadAuthority(
         JsonElement value,
         JsonPointer at,
+        string keyword,
         string sourcePath,
         DiagnosticBag bag)
     {
         if (value.ValueKind != JsonValueKind.Object)
         {
-            bag.Add(Malformed(sourcePath, at, "each x-authority entry is an object"));
+            bag.Add(Malformed(
+                sourcePath,
+                at,
+                "the x-authority entry for '" + keyword + "' is an object"));
             return null;
         }
 
@@ -859,7 +865,8 @@ public static class JsonSchemaLoader
             if (property.NameEquals("source")
                 || property.NameEquals("section")
                 || property.NameEquals("kind")
-                || property.NameEquals("derivation"))
+                || property.NameEquals("derivation")
+                || property.NameEquals("rationale"))
             {
                 continue;
             }
@@ -867,7 +874,7 @@ public static class JsonSchemaLoader
             bag.Add(Malformed(
                 sourcePath,
                 at.AppendProperty(property.Name),
-                "x-authority declares only source, section, kind, and derivation"));
+                "x-authority declares only source, section, kind, derivation, and rationale"));
             return null;
         }
 
@@ -899,18 +906,15 @@ public static class JsonSchemaLoader
                 return null;
         }
 
-        string? source = value.TryGetProperty("source", out JsonElement sourceElement)
-            && sourceElement.ValueKind == JsonValueKind.String
-                ? sourceElement.GetString()
-                : null;
-        string? section = value.TryGetProperty("section", out JsonElement sectionElement)
-            && sectionElement.ValueKind == JsonValueKind.String
-                ? sectionElement.GetString()
-                : null;
-        string? derivation = value.TryGetProperty("derivation", out JsonElement derivationElement)
-            && derivationElement.ValueKind == JsonValueKind.String
-                ? derivationElement.GetString()
-                : null;
+        if (!TryReadAuthorityText(value, at, "source", sourcePath, bag, out string? source)
+            || !TryReadAuthorityText(value, at, "section", sourcePath, bag, out string? section)
+            || !TryReadAuthorityText(
+                value, at, "derivation", sourcePath, bag, out string? derivation)
+            || !TryReadAuthorityText(
+                value, at, "rationale", sourcePath, bag, out string? rationale))
+        {
+            return null;
+        }
 
         if (kind == SchemaAuthorityKind.Structural)
         {
@@ -919,13 +923,43 @@ public static class JsonSchemaLoader
                 bag.Add(Malformed(
                     sourcePath,
                     at,
-                    "a structural bound has no external authority, so it declares no source, "
-                        + "section, or derivation; its rationale lives in 'description'. Use "
-                        + "kind 'sourced' if the number does come from a document"));
+                    "'" + keyword + "' is structural, so it has no external authority and "
+                        + "declares no source, section, or derivation; it states a 'rationale' "
+                        + "instead. Use kind 'sourced' if the number does come from a document"));
                 return null;
             }
 
-            return new SchemaAuthority(kind, null, null, null);
+            // A structural bound has no citation to go stale, and a limit nobody can justify
+            // is indistinguishable from one chosen to make something pass. The rationale sits
+            // in this entry rather than in the subschema's description because a description
+            // is per subschema: one sentence licensed every structural bound under it, and
+            // nothing could check which clause covered which number.
+            if (string.IsNullOrWhiteSpace(rationale))
+            {
+                bag.Add(Malformed(
+                    sourcePath,
+                    at.AppendProperty("rationale"),
+                    "'" + keyword + "' is structural, so its own x-authority entry states a "
+                        + "'rationale': a string with something in it saying why this number. "
+                        + "The subschema's 'description' does not answer for it - a description "
+                        + "is per subschema, so one sentence would license every structural "
+                        + "bound beside this one"));
+                return null;
+            }
+
+            return new SchemaAuthority(kind, null, null, null, rationale);
+        }
+
+        if (rationale is not null)
+        {
+            bag.Add(Malformed(
+                sourcePath,
+                at.AppendProperty("rationale"),
+                "'" + keyword + "' is " + kindElement.GetString() + ", so it states a "
+                    + "'derivation' and not a 'rationale'. Both would ask why the number is "
+                    + "that number, and two fields asking one question mean neither is the one "
+                    + "to read; the redundant one is the one that fills with filler"));
+            return null;
         }
 
         if (string.IsNullOrWhiteSpace(source) || string.IsNullOrWhiteSpace(section))
@@ -933,8 +967,8 @@ public static class JsonSchemaLoader
             bag.Add(Malformed(
                 sourcePath,
                 at,
-                "a " + kindElement.GetString() + " bound names the source document and the "
-                    + "section within it"));
+                "'" + keyword + "' is " + kindElement.GetString() + ", so it names the source "
+                    + "document and the section within it"));
             return null;
         }
 
@@ -943,9 +977,10 @@ public static class JsonSchemaLoader
             bag.Add(Malformed(
                 sourcePath,
                 at,
-                "a " + kindElement.GetString() + " bound states its 'derivation': how the number "
-                    + "follows from its source. The source says where the number came from; the "
-                    + "derivation says why it is that number, and the two go stale independently"));
+                "'" + keyword + "' is " + kindElement.GetString() + ", so it states its "
+                    + "'derivation': how the number follows from its source. The source says "
+                    + "where the number came from; the derivation says why it is that number, "
+                    + "and the two go stale independently"));
             return null;
         }
 
@@ -963,7 +998,59 @@ public static class JsonSchemaLoader
             return null;
         }
 
-        return new SchemaAuthority(kind, source, section, derivation);
+        return new SchemaAuthority(kind, source, section, derivation, null);
+    }
+
+    /// <summary>
+    /// Reads one optional text field of an <c>x-authority</c> entry, requiring it to be a
+    /// string when it is present at all.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The type check is the point. These four fields used to be read as "a string if it is
+    /// a string, otherwise absent", which quietly made every one of them a hiding place with
+    /// a recognised field's name on it - the same hole <c>title</c> and <c>description</c>
+    /// were, one level further in. <c>{"kind":"structural","source":{"if":{"maximum":5}}}</c>
+    /// read as a structural entry declaring no source, so the loader raised nothing, and the
+    /// corpus walk steps over <c>x-authority</c> wholesale precisely so that the annotation's
+    /// own keys are not mistaken for bounds. Between them, the subschema parked under
+    /// <c>source</c> was walked by nobody.
+    /// </para>
+    /// <para>
+    /// <c>rationale</c> is the field that made this urgent: it is a new string one level
+    /// inside the annotation, which is exactly the position the structure-blind walk has been
+    /// fooled in twice. It is checked here with the other three rather than on its own,
+    /// because a rule applied to the newest field and not its neighbours is how the hole gets
+    /// reopened next time.
+    /// </para>
+    /// </remarks>
+    private static bool TryReadAuthorityText(
+        JsonElement value,
+        JsonPointer at,
+        string field,
+        string sourcePath,
+        DiagnosticBag bag,
+        out string? text)
+    {
+        text = null;
+        if (!value.TryGetProperty(field, out JsonElement element))
+        {
+            return true;
+        }
+
+        if (element.ValueKind != JsonValueKind.String)
+        {
+            bag.Add(Malformed(
+                sourcePath,
+                at.AppendProperty(field),
+                "'" + field + "' is a string; a non-string field inside x-authority is a "
+                    + "subschema-shaped value that nothing walks, because the loader never "
+                    + "parses the annotation as a schema and the corpus walk steps over it"));
+            return false;
+        }
+
+        text = element.GetString();
+        return true;
     }
 
     private static ContentDiagnostic Malformed(

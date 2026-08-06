@@ -11,7 +11,8 @@
       "maxLength": 4096,
       "x-authority": {
         "minLength": {
-          "kind": "structural"
+          "kind": "structural",
+          "rationale": "the empty string is what the compiler materializes for an omitted field, so an authored empty string would be a second way to say 'absent'"
         }
       }
     }

@@ -21,12 +21,14 @@ public sealed class SchemaAuthority
         SchemaAuthorityKind kind,
         string? source,
         string? section,
-        string? derivation)
+        string? derivation,
+        string? rationale)
     {
         Kind = kind;
         Source = source;
         Section = section;
         Derivation = derivation;
+        Rationale = rationale;
     }
 
     /// <summary>Whether the bound is sourced, derived, or structural.</summary>
@@ -43,7 +45,8 @@ public sealed class SchemaAuthority
 
     /// <summary>
     /// How the bound follows from its source, in plain language. Null for a structural
-    /// bound, where <c>description</c> already carries the rationale.
+    /// bound, which has no source to follow from and states a <see cref="Rationale"/>
+    /// instead.
     /// </summary>
     /// <remarks>
     /// <see cref="Source"/> says <em>where</em> a number came from; this says <em>why it
@@ -53,6 +56,32 @@ public sealed class SchemaAuthority
     /// re-check.
     /// </remarks>
     public string? Derivation { get; }
+
+    /// <summary>
+    /// Why a structural bound is this number. Required for
+    /// <see cref="SchemaAuthorityKind.Structural"/> and null for every other kind.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This used to be the enclosing subschema's <c>description</c>, which is an arity
+    /// failure of exactly the kind <see cref="Kind"/> was moved into a per-bound map to fix.
+    /// A <c>description</c> is per subschema, so one sentence licensed every structural
+    /// bound under it: a subschema asserting <c>minLength</c> and <c>maxLength</c> beneath
+    /// <c>"description": "the envelope is bounded"</c> satisfied the rule for both, and
+    /// nothing could check which clause covered which number. A rationale is a property of
+    /// a number, and it lives with the number.
+    /// </para>
+    /// <para>
+    /// It is <em>absent</em> rather than optional on a sourced or derived bound, mirroring
+    /// how <see cref="Source"/>, <see cref="Section"/>, and <see cref="Derivation"/> are
+    /// absent here. Those kinds already state a <see cref="Derivation"/> — "why it is that
+    /// number" — so a second prose field asking the same question would mean neither is the
+    /// one to read, and the redundant one is the one that fills with filler. Each kind has
+    /// exactly one complete field set, and which field carries the justification is decided
+    /// by the kind rather than by whoever wrote the entry.
+    /// </para>
+    /// </remarks>
+    public string? Rationale { get; }
 
     /// <summary>
     /// The keywords that <b>require</b> an adjacent authority, and equally the only
@@ -102,7 +131,7 @@ public sealed class SchemaAuthority
     public override string ToString()
     {
         return Kind == SchemaAuthorityKind.Structural
-            ? "structural"
+            ? "structural (" + Rationale + ")"
             : Kind.ToString().ToUpperInvariant() + " from " + Source + " § " + Section
                 + " (" + Derivation + ")";
     }

@@ -1321,7 +1321,10 @@ else
   report="$(check_partition gates EXEMPT "${control_sites}")"
   count=$?
   expect_red "the godot-import call site renamed away from ${RENAME_TARGET}" 1 "${report}" "${count}"
-  if ! printf '%s\n' "${report}" | grep -q "${RENAME_TARGET}"; then
+  # Here-string, not a pipe: `grep -q` exits on its first match, printf takes SIGPIPE, and
+  # `set -o pipefail` reports 141 - which on this negated test reads as "the report does not
+  # name it" and would fabricate a control failure. See delivery-waves § Decision 13.
+  if ! grep -q "${RENAME_TARGET}" <<<"${report}"; then
     control_fail "control: the renamed-call-site control went red without naming ${RENAME_TARGET}; a failure that does not say which gate is unrun is not the one this control is for"
   fi
 fi

@@ -979,9 +979,18 @@ scope, so the request goes through the integration owner.
   demonstrated three were `verify-wrapper-parity.sh` § A1's dispatch check,
   `verify-format.sh` § 6's two reads, and `verify-architecture.sh`'s `| head -1`
   assignments. A census over `build.sh` and `build/*.sh`, with line continuations joined so
-  a logical pipeline counts once, then found **36** pipelines that both contained an
-  early-exit stage and had their status consumed - 32 read by a conditional or `&&`/`||`,
-  4 aborting under `set -e`. All 36 were converted; the census now reports 0.
+  a logical pipeline counts once, then found the rest: **36** such pipelines at `4c5a79f`
+  (32 read by a conditional or `&&`/`||`, 4 aborting under `set -e`), and **33** at the
+  merged base `402b919` - the difference being `verify-architecture.sh`'s four, which
+  another stream found and fixed independently in the same window, against one new site
+  arriving with `verify-gate-wiring.sh`. Every one is converted; the census over the merged
+  tree reports **0**.
+- **Two streams found this independently, five days into a six-PR stack.** That is worth
+  recording as evidence about the defect rather than about either stream: the construct is
+  idiomatic, it reads correctly, and it is wrong only intermittently and only at scale, so
+  finding it is not a matter of care. A census is the only reliable way to know a repository
+  is clear of it, which is why the numbers above are stated per ref rather than as one
+  total.
 - **Two shapes are safe and were deliberately left alone**, because churning them would
   hide the ones that matter. A pipeline whose right-hand side is `tail`, `sort`, `wc`,
   `cut`, `paste`, `tr` or `grep -c` must read to EOF to produce an answer, so it never

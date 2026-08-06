@@ -194,11 +194,22 @@ internal static class TestVerb
     /// failure means).
     /// </summary>
     /// <remarks>
-    /// Only scripts that drive the pinned engine and the SDK directly belong here. A
-    /// gate whose subject is <c>./build.sh</c> itself cannot be reached from any verb:
-    /// the wrapper rebuilds the verb host assembly on every invocation, including the
-    /// one the calling verb is currently executing from.
-    /// <c>build/verify-gate-wiring.sh</c> lists those and says so per script.
+    /// <para>
+    /// Only scripts that drive the pinned engine and the SDK directly belong here. An
+    /// earlier version of this remark said a gate whose subject is <c>./build.sh</c>
+    /// cannot be reached from any verb, because the wrapper rebuilds the verb host
+    /// assembly the calling verb is executing from. That does not reproduce. What does
+    /// constrain placement is recursion - a gate that invokes <c>./build.sh &lt;verb&gt;</c>
+    /// cannot live in that verb - and <c>build/verify-gate-wiring.sh</c>'s exemption
+    /// list states per script what was observed.
+    /// </para>
+    /// <para>
+    /// A gate placed here is not automation. No workflow invokes <c>test-main</c>, so a
+    /// script in this table runs only when a person types the verb, which is why
+    /// <c>build/verify-godot-runner.sh</c> is exempt in
+    /// <c>build/verify-gate-wiring.sh</c> rather than counted as wired. OPS-001's
+    /// main-branch suite is the workflow that would change that.
+    /// </para>
     /// </remarks>
     private static readonly (string Step, string Script, string Claim)[] MainTierContractGates =
     {
@@ -206,6 +217,32 @@ internal static class TestVerb
             "verify-godot-runner",
             "build/verify-godot-runner.sh",
             "the Godot integration runner's pass/fail/timeout/report contract is broken"),
+    };
+
+    /// <summary>
+    /// Wrapper-contract gate scripts the fast tier runs: (step name, script, what a
+    /// failure means).
+    /// </summary>
+    /// <remarks>
+    /// Both of these have <c>./build.sh build</c> as their subject, which is the verb
+    /// that would otherwise own them, and that is exactly why they are here: both invoke
+    /// <c>./build.sh build</c> themselves, so from <c>build</c> they recurse without
+    /// bound - observed as a 200 s timeout with the wrapper still nesting.
+    /// <c>test-fast</c> is the next verb the CI workflow runs and it invokes neither.
+    /// They were exempted from <c>build/verify-gate-wiring.sh</c> on a shared reason that
+    /// did not reproduce; wiring each one and running this verb end to end is what
+    /// retired it.
+    /// </remarks>
+    private static readonly (string Step, string Script, string Claim)[] FastTierWrapperGates =
+    {
+        (
+            "verify-verbs",
+            "build/verify-verbs.sh",
+            "the wrapper's verb table, argument validation, or exit classification is broken"),
+        (
+            "verify-configurations",
+            "build/verify-configurations.sh",
+            "doc 100's three configuration names no longer map 1:1 onto MSBuild's"),
     };
 
     /// <summary>Runs the pure tiers and the build-policy fixtures, and launches no Godot process.</summary>
@@ -224,7 +261,21 @@ internal static class TestVerb
             return VerbOutcome.Validation("a build-policy fixture no longer proves its policy; see the step log");
         }
 
-        context.Section("stage 2: pure NUnit tiers (no Godot)");
+        context.Section("stage 2: wrapper-contract gate scripts");
+        foreach ((string step, string script, string claim) in FastTierWrapperGates)
+        {
+            CommandResult wrapperGate = context.RunRepositoryScript(
+                step,
+                script,
+                scriptArguments: null,
+                timeout: TimeSpan.FromMinutes(20));
+            if (!wrapperGate.Succeeded)
+            {
+                return VerbOutcome.Validation(claim + "; see the " + step + " step log");
+            }
+        }
+
+        context.Section("stage 3: pure NUnit tiers (no Godot)");
         List<TestTally> tallies = new();
         List<string> failures = new();
         foreach (string project in PureTestProjects)
@@ -236,7 +287,7 @@ internal static class TestVerb
             }
         }
 
-        context.Section("stage 3: assert the pure tier launched no Godot process");
+        context.Section("stage 4: assert the pure tier launched no Godot process");
         tripwire.Assert(context, failures);
 
         return Summarize(context, tallies, failures, "test-fast");

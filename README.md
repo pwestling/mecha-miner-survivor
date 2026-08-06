@@ -15,10 +15,10 @@ The slice has merged — but into another branch, not into `master`. See [Try it
 | | Area | State |
 | --- | --- | --- |
 | ✅ | Design + technical specification | Complete, on `master` (`docs/`) |
-| ✅ | Content catalog | 139 JSON definitions on `master` — 15 weapons, 45 branches, 6 mechs, 10 enemies, 4 bosses, 10 relics, 13 utilities, 13 power-ups |
+| ✅ | Content catalog | 138 JSON definitions on `master` — 15 weapons, 45 branches, 6 mechs, 10 enemies, 4 bosses, 10 relics, 13 utilities, 13 power-ups (116), and 22 more: 8 resources, 6 unlocks, 4 mining sites, 1 map contract, 1 encounter schedule, and the shared weapon-price and elite-modifier rule files. This is the number the content gate asserts — `python3 src/MechaMiner.Tools/ContentImport/verify_content.py` reports 138 definition `*.json` files under `content/`, excluding `localization/` and `schemas/`, which is why the tree also holds a 139th JSON file (`content/localization/en.json`) that is not a definition. |
 | 🚧 | Build + toolchain | Works on a branch. `master` carries the provisioning script but **no `./build.sh`** and no CI. |
 | 🚧 | Simulation core | Written, 252 tests passing in `MechaMiner.Simulation.Tests`, not on `master` — [#11](https://github.com/pwestling/mecha-miner-survivor/pull/11) is open and in draft, with head `claude/hearth-thread-3aamx2` and base `claude/hearth-thread-2vmaro-fnd-002` |
-| 🚧 | Playable slice | Movement only. [#19](https://github.com/pwestling/mecha-miner-survivor/pull/19) **merged** on 6 Aug 2026 — into `claude/hearth-thread-3aamx2` (merge commit `5f9e28c`), **not** into `master`. The scene is still not on `master`. |
+| 🚧 | Playable slice | Movement only. [#19](https://github.com/pwestling/mecha-miner-survivor/pull/19) **merged** on 6 Aug 2026 — into `claude/hearth-thread-3aamx2` (merge commit `5f9e28c`), **not** into `master`. It now rides that branch instead of one of its own, and three merges still separate it from `master`: [#11](https://github.com/pwestling/mecha-miner-survivor/pull/11), [#3](https://github.com/pwestling/mecha-miner-survivor/pull/3), and a pull request nobody has opened yet. |
 | ⬜ | Everything else | Not started |
 
 Because #19 merged into #11's head branch, #11's own diff now carries the playable slice as well as the simulation core.
@@ -33,18 +33,16 @@ Full definitions: `docs/technical/110-implementation-plan-for-ai-agents.md` § M
 | **M1** | Headless simulation skeleton — clocks, entities, commands, events, RNG, snapshots | 🚧 built, on a branch, not on `master` |
 | **M2** | Combat graybox — one mech, pursuing enemies, one weapon, hull/HUD, 60 FPS | 🚧 movement only, on a branch, not on `master` |
 | **M3** | Core differentiator slice — mining seams, resources, fabrication, radar, map | ⬜ |
-| **M4** | Internal gameplay demo — a 14-minute scenario, two mechs, four weapons, eight enemies, two bosses | ⬜ |
+| **M4** | Internal gameplay demo — a 14-minute scenario, two mechs, four weapons, six enemies, two bosses | ⬜ |
 | **M5** | Full standard run — all 15 weapons and 45 branches, six mechs, the 35-minute schedule | ⬜ |
 | **M6** | Content and performance production readiness | ⬜ |
 | **M7** | Release candidate — exports, Steam staging, release checklist | ⬜ |
 
-Everything executable is stacked in a chain of unmerged branches, each one based on the next rather than on `master`. Read from the pull-request API on 6 Aug 2026, the chain is now:
+Everything executable is stacked in a chain of unmerged branches, each one based on the next rather than on `master`:
 
-`claude/hearth-thread-3aamx2` ([#11](https://github.com/pwestling/mecha-miner-survivor/pull/11), open, draft) → `claude/hearth-thread-2vmaro-fnd-002` ([#3](https://github.com/pwestling/mecha-miner-survivor/pull/3), open, draft) → `claude/hearth-thread-2vmaro` (**no open pull request**) → `master`
+`claude/hearth-thread-3aamx2` ([#11](https://github.com/pwestling/mecha-miner-survivor/pull/11)) → `claude/hearth-thread-2vmaro-fnd-002` ([#3](https://github.com/pwestling/mecha-miner-survivor/pull/3)) → `claude/hearth-thread-2vmaro` → `master`
 
-#19 merging did not put the playable scene on `master`; it moved it one link along, onto the head of #11. The `./build.sh` command surface and CI both live on `claude/hearth-thread-2vmaro-fnd-002` and arrive on `master` in the same reconcile, which is why `master` currently has neither — it holds the specification, the content catalog, and an empty Godot shell.
-
-**The last hop is untracked.** No open pull request proposes `claude/hearth-thread-2vmaro` → `master`, and #3's base is that branch rather than `master`, so nothing on GitHub currently describes how this work reaches the default branch. Today `claude/hearth-thread-2vmaro` is already an ancestor of `master` and holds nothing `master` lacks — `master` is 21 commits ahead of it and 0 behind — so the hop is empty until #3 lands on it, at which point someone has to open the pull request that does not exist yet.
+The playable slice ([#19](https://github.com/pwestling/mecha-miner-survivor/pull/19)) has already merged into `claude/hearth-thread-3aamx2`, so it rides that branch now instead of one of its own; that moved it one link along and did not put it on `master`. Both remaining pull requests are still drafts. The `./build.sh` command surface and CI both live on `claude/hearth-thread-2vmaro-fnd-002` and arrive on `master` in the same reconcile, which is why `master` currently has neither — it holds the specification, the content catalog, and an empty Godot shell. The last hop is not pending work: `claude/hearth-thread-2vmaro` already merged to `master` once ([#1](https://github.com/pwestling/mecha-miner-survivor/pull/1)) and is an ancestor of it today — `master` is 21 commits ahead of it and 0 behind — so it needs a fresh pull request only once #3 lands on it.
 
 ## Try it out
 
@@ -55,7 +53,7 @@ You will need `git`, `curl` and `unzip`, and then two pinned tools:
 - **.NET SDK 10.0.302** — exactly this patch, not "latest .NET 10"
 - **Godot 4.7.1-stable, mono flavour** — the .NET build; the standard build cannot run this project
 
-### Linux (x86-64) — verified
+### Linux (x86-64, Debian/Ubuntu) — verified
 
 ```bash
 sudo apt-get update && sudo apt-get install -y git curl unzip
@@ -64,7 +62,7 @@ cd mecha-miner-survivor
 git checkout claude/hearth-thread-3aamx2   # exists only until the scene reaches master
 ```
 
-If that checkout fails with `did not match any file(s) known to git`, the branch is gone because the work landed — stay on the default branch and carry on with the next block. `claude/hearth-thread-3aamx2` exists for exactly as long as the merge chain above is unfinished, and disappears when it completes. To pin the precise tree the verification below describes, `git checkout 5f9e28cc` instead — a sha never disappears, but it leaves you on a detached HEAD. (The earlier branch this page named, `claude/ui-002-first-playable`, is the merged side of #19; it is no longer the branch to check out and may be deleted at any time.)
+If that checkout fails with `did not match any file(s) known to git`, the branch is gone because the work landed — stay on the default branch and carry on with the next block. `claude/hearth-thread-3aamx2` exists for exactly as long as the merge chain above is unfinished, and disappears when it completes. To pin the precise tree the verification below describes, `git checkout 5f9e28cc` instead — or `git checkout dccc9588`, the sha the measurements were taken at, whose tree is identical to `5f9e28cc`'s. A sha never disappears, but it leaves you on a detached HEAD. (The earlier branch this page named, `claude/ui-002-first-playable`, is the merged side of #19; it is no longer the branch to check out and may be deleted at any time.)
 
 ```bash
 sudo build/bootstrap-linux.sh   # once per machine, about a minute
@@ -80,6 +78,20 @@ WASD or the arrow keys drive the mech at 3 m/s; a gamepad left stick works too. 
 `build/bootstrap-linux.sh` installs the .NET SDK to `/usr/share/dotnet`, Godot to `/opt/godot` with a `/usr/local/bin/godot` symlink, and the `mesa-vulkan-drivers` package. It must run as root and does not call `sudo` itself, so invoke it with `sudo`. `/usr/share/dotnet` is not a free choice: it is hostfxr's default probe path, and Godot's .NET host finds the runtime there without `DOTNET_ROOT`. Re-running the script is safe — it revalidates and skips what is already correct. You do not need to re-run it per clone.
 
 On a machine with no display, also `sudo apt-get install -y xvfb` (the bootstrap script does not install it) and prefix the launch with `xvfb-run -a`.
+
+### Running the pinned tools directly — verified on Linux
+
+You can skip `./build.sh` entirely and drive the two pinned tools yourself. This is the only route on this page that invokes no gate script, which is what makes it the way out of the GNU-userland requirement the macOS section below opens with. This three-command sequence was executed on Linux from a fresh clone at `5f9e28cc` with **no `./build.sh` verb invoked at all**, and reached a running scene:
+
+```bash
+dotnet build game/MechaMiner.Game.csproj   # exit 0, "Build succeeded", 0 warnings
+godot --headless --path game --import      # exit 0
+godot --path game res://scenes/Run.tscn    # the game window
+```
+
+Verified exit codes for that run: the build printed `Build succeeded` and exited 0; the import exited 0; the launch stayed up until killed and printed `MechaMiner: run scene ready`, and the same command with `--quit-after 120` exited 0. Only the Linux behaviour of these three commands is verified; running them on a Mac is not.
+
+What you give up is `doctor`, so check the two pins by hand: `dotnet --version` must print exactly `10.0.302` and `godot --version` must print `4.7.1.stable.mono.official.a13da4feb`. You also give up `test-fast` and the evidence bundles, so use this to look at the game, not to validate a change.
 
 ### macOS — not run on hardware
 
@@ -113,7 +125,7 @@ sudo ln -s /Applications/Godot_mono.app/Contents/MacOS/Godot /usr/local/bin/godo
 godot --version   # expect 4.7.1.stable.mono.official.a13da4feb
 ```
 
-The bundle is named `Godot_mono.app`, not `Godot.app`. Godot publishes SHA512 sums for this release and no SHA256, so there is nothing to compare against `build/toolchain.json`, which records Linux hashes only.
+The bundle is named `Godot_mono.app`, not `Godot.app`. There is nothing to check this download against: the sums published with the 4.7.1-stable release, read over the network on 6 Aug 2026, were SHA512, while `build/toolchain.json` records SHA256 and only for `linux-x64`. Whether the release server offers a SHA256 elsewhere was not established, and no macOS hash is pinned in this repository at all.
 
 **4. Clone the playable branch and run the verbs.** There is no bootstrap step here; steps 2 and 3 already installed both pinned tools.
 
@@ -129,19 +141,7 @@ godot --path game res://scenes/Run.tscn
 
 `doctor` should still exit 0. It will report the Godot pin as a **warning** rather than a mismatch, because `build/toolchain.json` has no macOS entry; that is deliberate and non-blocking.
 
-#### If you would rather not install GNU bash and coreutils
-
-Step 1 exists only to satisfy the gate scripts. You can skip it and skip `./build.sh` entirely, driving the two pinned tools yourself. This three-command sequence was executed on Linux from a fresh clone at `5f9e28cc` with **no `./build.sh` verb invoked at all**, and reached a running scene:
-
-```bash
-dotnet build game/MechaMiner.Game.csproj   # exit 0, "Build succeeded", 0 warnings
-godot --headless --path game --import      # exit 0
-godot --path game res://scenes/Run.tscn    # the game window
-```
-
-Verified exit codes for that run: the build printed `Build succeeded` and exited 0; the import exited 0; the launch stayed up until killed and printed `MechaMiner: run scene ready`, and the same command with `--quit-after 120` exited 0. Only the Linux behaviour of these three commands is verified — like everything else in this section, running them on a Mac is not.
-
-What you give up is `doctor`, so check the two pins by hand: `dotnet --version` must print exactly `10.0.302` and `godot --version` must print `4.7.1.stable.mono.official.a13da4feb`. You also give up `test-fast` and the evidence bundles, so use this to look at the game, not to validate a change.
+If you would rather not install GNU bash and coreutils, skip step 1 and use [Running the pinned tools directly](#running-the-pinned-tools-directly--verified-on-linux) above instead of `./build.sh` — that path invokes no gate script, so it needs neither `mapfile` nor `sha256sum` nor `timeout`; its exit codes are verified on Linux only, and running it on a Mac is as unverified as everything else here.
 
 ### Windows — not supported
 
@@ -149,9 +149,9 @@ What you give up is `doctor`, so check the two pins by hand: `dotnet --version` 
 
 ## What has and hasn't been verified
 
-Run on Linux x86-64 from a fresh HTTPS clone on 6 Aug 2026, at `master` `3016fbc` and `claude/hearth-thread-3aamx2` `5f9e28cc` — which is the merge commit of #19, so this is the merged slice and not the pre-merge branch:
+Run on Linux x86-64 from a fresh HTTPS clone on 6 Aug 2026, at `master` `3016fbc` and on the playable branch at `dccc9588` and `5f9e28cc`. `5f9e28cc` is the merge commit of #19 and the tip of `claude/hearth-thread-3aamx2`; `dccc9588` is its second parent, the sha the measurements were taken at. Every file this guide touches — `build/bootstrap-linux.sh`, `build.sh`, `game/project.godot`, `game/scenes/Run.tscn`, and the whole of `game/` and `src/MechaMiner.Tools/` — is the same blob or tree object at both commits; in fact the two commits share one root tree (`fbe1966`), so a checkout of either gives a byte-identical working tree and the results below hold at both.
 
-- ✅ `sudo build/bootstrap-linux.sh` — exit 0, reporting .NET SDK 10.0.302 and Godot 4.7.1.stable.mono.official.a13da4feb present and both pins re-verified. This file is byte-identical to the copy verified before the merge (blob `f091537`), and it is *not* the same file as `build/bootstrap-linux.sh` on `master` (blob `ee6b470`), so run it after the checkout, not before. The 63 s figure for a from-scratch install was measured on a fresh machine against that same byte-identical script.
+- ✅ `sudo build/bootstrap-linux.sh` — exit 0, reporting .NET SDK 10.0.302 and Godot 4.7.1.stable.mono.official.a13da4feb present and both pins re-verified. This file is byte-identical to the copy verified before the merge (blob `f091537`), and it is *not* the same file as `build/bootstrap-linux.sh` on `master` (blob `ee6b470`), so run it after the checkout, not before. The 63 s figure for a from-scratch install was measured in a Linux container against that same byte-identical script, not on a workstation, and says nothing about how long it takes on your hardware or link.
 - ✅ `./build.sh doctor` — exit 0, 10 probes, 0 mismatches
 - ✅ `./build.sh build` — exit 0, 0 warnings; `./build.sh godot-import` — exit 0
 - ✅ `./build.sh test-fast` — exit 0, total 260, passed 260, failed 0, skipped 0 (252 in `MechaMiner.Simulation.Tests`, 5 in `MechaMiner.Content.Tests`, 3 in `MechaMiner.Persistence.Tests`). The mech stopping at the arena wall is asserted here, not by the harnesses below: `MovementCommandPathTests.TheBodyCannotLeaveTheGrayboxArena` drives east for 20 seconds and requires the body to come to rest at 19.5 m, its collision circle tangent to the wall of the 40 m square graybox arena.
@@ -166,6 +166,7 @@ Not verified, and not claimed:
 - ⚠️ **A real keyboard.** A container cannot press keys. The input map — WASD, arrows and stick, bound by physical keycode — and the movement path driven from action state are both verified; that pressing a physical W moves the mech is not.
 - ⚠️ A real GPU. Everything above rendered through `llvmpipe`, a software Vulkan implementation. Audio fell back to the dummy driver, and every launch was under Xvfb rather than a window on a real desktop.
 - ⚠️ Exports and packaging. The `export`, `package-demo`, `release-validate` and `run` verbs are unimplemented, and the 1.2 GB Godot export templates are not fetched.
+- ⚠️ **Any Linux that is not Debian or Ubuntu.** The block opens with `apt-get`, and `build/bootstrap-linux.sh` installs `mesa-vulkan-drivers` by that name — on a non-apt distro it logs `WARNING: no apt-get` and skips the Vulkan driver rather than failing. Install `git`, `curl`, `unzip` and a Vulkan ICD with your own package manager; the rest of the block is unchanged.
 - ⚠️ **Every macOS and Windows instruction on this page.**
 
 ## Things that will trip you up

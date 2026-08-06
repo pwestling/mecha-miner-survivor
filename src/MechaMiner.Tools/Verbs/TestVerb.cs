@@ -184,6 +184,7 @@ internal static class TestVerb
     {
         "tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj",
         "tests/MechaMiner.Content.Tests/MechaMiner.Content.Tests.csproj",
+        "tests/MechaMiner.Diagnostics.Tests/MechaMiner.Diagnostics.Tests.csproj",
         "tests/MechaMiner.Persistence.Tests/MechaMiner.Persistence.Tests.csproj",
     };
 

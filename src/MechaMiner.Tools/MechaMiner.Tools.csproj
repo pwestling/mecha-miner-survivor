@@ -34,8 +34,18 @@
 
   <ItemGroup>
     <ProjectReference Include="../MechaMiner.Content/MechaMiner.Content.csproj" />
+    <!--
+      CMP-OBS-001. The tool reads build identity, emits the SCH-BLD-001 manifest, and
+      renders SCH-OBS-002 reports from the one diagnostics owner rather than deriving
+      any of them a second time (FND-004, FND-007, FND-008).
+    -->
+    <ProjectReference Include="../MechaMiner.Diagnostics/MechaMiner.Diagnostics.csproj" />
     <ProjectReference Include="../MechaMiner.Simulation/MechaMiner.Simulation.csproj" />
     <ProjectReference Include="../MechaMiner.Persistence/MechaMiner.Persistence.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Label="Tests of the audits and validators this project owns">
+    <InternalsVisibleTo Include="MechaMiner.Tools.Tests" />
   </ItemGroup>
 
 </Project>

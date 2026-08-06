@@ -40,14 +40,17 @@ The simulation is the sole authority for active-run gameplay state. Rendering, a
 | --- | --- | --- |
 | `MechaMiner.Simulation` | clocks, entities, systems, commands, rules, RNG abstractions, snapshots | None |
 | `MechaMiner.Content` | typed definitions, stable IDs, schemas, catalog loading and validation | None |
+| `MechaMiner.Diagnostics` | build identity, diagnostic codes, bounded structured logs, metrics and profiler markers, benchmark reports | None |
 | `MechaMiner.Persistence` | save envelopes, migrations, checksums, atomic storage contracts | None |
 | `MechaMiner.Game` | Godot scenes, composition root, input, rendering, UI, audio, platform adapters | Yes |
 | `MechaMiner.Tools` | content validation, generation audits, balance simulations, converters, external Godot process orchestration | None |
 | `MechaMiner.Simulation.Tests` | unit, property, fixture, and integration tests for pure logic | None |
+| `MechaMiner.Content.Tests` | schema, envelope, validator, canonical-ordering, and compiled-bundle tests | None |
+| `MechaMiner.Diagnostics.Tests` | build identity, logging, redaction, rotation, metric registry, and benchmark report tests | None |
 | `MechaMiner.Persistence.Tests` | serialization, migration, atomicity, recovery, and settlement tests | None |
 | `MechaMiner.Game.Tests` | engine integration, scene, rendering, input, and export smoke tests | Yes |
 
-Dependencies point inward: Game and Tools may depend on the pure projects; Simulation depends only on Content; Persistence depends only on Content and narrow immutable Simulation snapshot/result types. No pure project depends on Game. The full logical ownership and dependency rules live in the [Component, Contract, and Schema Registry](./115-component-contract-and-schema-registry.md).
+Dependencies point inward: Game and Tools may depend on the pure projects; Simulation depends only on Content; Persistence depends only on Content and narrow immutable Simulation snapshot/result types; Diagnostics depends on nothing, so it is reachable from every consumer without a cycle. No pure project depends on Game. The full logical ownership and dependency rules live in the [Component, Contract, and Schema Registry](./115-component-contract-and-schema-registry.md).
 
 ## Runtime ownership
 

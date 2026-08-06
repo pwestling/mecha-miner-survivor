@@ -41,6 +41,7 @@ readonly CONFIGURATION_MAP=(
 
 readonly PROBED_PROJECTS=(
   "src/MechaMiner.Content/MechaMiner.Content.csproj"
+  "src/MechaMiner.Diagnostics/MechaMiner.Diagnostics.csproj"
   "src/MechaMiner.Simulation/MechaMiner.Simulation.csproj"
   "src/MechaMiner.Persistence/MechaMiner.Persistence.csproj"
   "src/MechaMiner.Tools/MechaMiner.Tools.csproj"

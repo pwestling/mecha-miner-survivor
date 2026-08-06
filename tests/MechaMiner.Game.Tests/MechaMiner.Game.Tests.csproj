@@ -17,6 +17,12 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/MechaMiner.Content/MechaMiner.Content.csproj" />
+    <!--
+      CMP-OBS-001. The build-identity equality fixture (VER-FND-004-004) compares the
+      identity the Godot process reports with the identity this host process reads from
+      the same diagnostics assembly, so the host needs that assembly (FND-004).
+    -->
+    <ProjectReference Include="../../src/MechaMiner.Diagnostics/MechaMiner.Diagnostics.csproj" />
     <ProjectReference Include="../../src/MechaMiner.Simulation/MechaMiner.Simulation.csproj" />
     <ProjectReference Include="../../src/MechaMiner.Persistence/MechaMiner.Persistence.csproj" />
   </ItemGroup>

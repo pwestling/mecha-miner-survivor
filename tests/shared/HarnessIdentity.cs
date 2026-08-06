@@ -15,11 +15,37 @@ namespace MechaMiner.Tests.Support;
 /// code is a different experiment - so the identity is logged with it.
 /// </para>
 /// <para>
-/// This is the harness's own identity, not the build identity. Product version,
-/// build number, source commit, Godot and .NET versions, content bundle hash, and
-/// the schema/map/random/save versions are owned by <c>FND-004</c>
-/// (<c>TASK-FND-004-001</c>) and replace this text when that package lands. The
-/// successor is recorded on <c>VER-FND-003-002</c>.
+/// This is the harness's own identity, not the build identity. Product version, build
+/// number, source commit, Godot and .NET versions, content bundle hash, and the
+/// schema/map/random/save versions are owned by <c>CMP-OBS-001</c> in
+/// <c>MechaMiner.Diagnostics</c>, which <c>FND-004</c> landed.
+/// </para>
+/// <para>
+/// The build identity is nevertheless not concatenated here, and the trailing token
+/// still names <c>TASK-FND-004-001</c>, for two reasons that are worth stating so the
+/// next reader does not treat it as an oversight:
+/// </para>
+/// <list type="number">
+///   <item><description>
+///     These files are linked into every test project, and only a project that
+///     references <c>MechaMiner.Diagnostics</c> can read the identity.
+///     <c>MechaMiner.Diagnostics.Tests</c> and <c>MechaMiner.Game.Tests</c> do; adding
+///     the reference to the remaining three is a one-line change to project files owned
+///     by the wave-1 streams, not by <c>FND-004</c>.
+///   </description></item>
+///   <item><description>
+///     <c>MechaMiner.Simulation.Tests.Support.DeterministicCaseTests</c> asserts this
+///     exact token. Changing the token and that assertion is one atomic change, and
+///     that test file is another stream's owned scope, so <c>FND-004</c> cannot make it.
+///     Changing only the token would fail a gate; changing only the test would be an
+///     edit outside this package's scope.
+///   </description></item>
+/// </list>
+/// <para>
+/// The identity itself is landed and proved: <c>VER-FND-004-004</c> asserts it is one
+/// value across the tool process, the Godot process, and diagnostics. What remains is
+/// wiring it into the three remaining test assemblies' log lines, which is the
+/// follow-up recorded on <c>VER-FND-003-002</c>.
 /// </para>
 /// </remarks>
 internal static class HarnessIdentity

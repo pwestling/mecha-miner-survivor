@@ -31,11 +31,13 @@ game/                         Godot project and the only Godot-dependent C# proj
 src/
   MechaMiner.Simulation/
   MechaMiner.Content/
+  MechaMiner.Diagnostics/
   MechaMiner.Persistence/
   MechaMiner.Tools/
 tests/
   MechaMiner.Simulation.Tests/
   MechaMiner.Content.Tests/
+  MechaMiner.Diagnostics.Tests/
   MechaMiner.Persistence.Tests/
   MechaMiner.Game.Tests/
 content/                      source JSON and localization
@@ -170,6 +172,12 @@ Use semantic product version plus monotonically increasing CI build number and s
 - build configuration/platform.
 
 Development builds show identity unobtrusively in debug surfaces. Release builds expose it in Settings/Support.
+
+Identity has exactly one owner, `CMP-OBS-001` in `MechaMiner.Diagnostics`, and exactly one representation, the `SCH-BLD-001` manifest. The values are baked into that assembly's metadata at compile time from `build/version-identity.props`, `global.json`, and the source working tree, and every surface reads them back from the loaded assembly rather than probing its own environment. That is what makes "the tool, the game, and diagnostics report the same identity" a testable equality rather than three independent derivations that could disagree about platform, configuration, or working-tree state.
+
+Every field of identity is stable across two clean builds of the same source, so identity cannot break the deterministic-build requirement above. Nothing in it is a timestamp. A build tree that is not a git working tree records the source commit as `unavailable` and the dirty flag as `unknown` instead of reporting a clean build it cannot observe.
+
+The `build` verb writes the manifest to `generated/build-manifest.json` and reads it back. That file is a build output and is not committed: it names the source commit of the build that produced it, so a committed copy could never be current at the commit that contained it. The staleness relation that matters — does the manifest match the assembly just built — is asserted at emission and classified as current, stale, missing, or unreadable. Per-artifact release manifests, one for each packaged platform and configuration with its checksums, are the [Artifacts](#artifacts) obligation and belong to the release-packaging package; `SCH-BLD-001` already carries the artifact list so its shape does not change when they land.
 
 ## Continuous integration
 

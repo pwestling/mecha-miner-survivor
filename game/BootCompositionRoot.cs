@@ -1,4 +1,5 @@
 using Godot;
+using MechaMiner.Diagnostics.Identity;
 
 namespace MechaMiner.Game;
 
@@ -20,8 +21,9 @@ namespace MechaMiner.Game;
 /// </para>
 /// <list type="bullet">
 ///   <item><description>
-///     <c>FND-004</c> - build identity is verified first, per
-///     <c>docs/technical/115</c> § Initialization order step 1.
+///     <c>FND-004</c> - landed. Build identity is read from <c>CMP-OBS-001</c> and
+///     printed before anything else, per <c>docs/technical/115</c> § Initialization
+///     order step 1.
 ///   </description></item>
 ///   <item><description>
 ///     <c>FND-007</c> - bounded local logging and crash breadcrumbs replace
@@ -62,9 +64,16 @@ public partial class BootCompositionRoot : Node
     /// </summary>
     internal const string StartupLine = "MechaMiner: boot composition root ready";
 
+    /// <summary>The stable prefix that precedes the build identity line.</summary>
+    internal const string IdentityLinePrefix = "MechaMiner: build identity ";
+
     /// <inheritdoc/>
     public override void _Ready()
     {
+        // doc 115 § Initialization order step 1: "Verify build/tool identity embedded in
+        // the executable" happens before anything else. FND-004 supplies the identity;
+        // FND-007 replaces this print with the bounded local log it opens at step 2.
+        GD.Print(IdentityLinePrefix + BuildIdentity.IdentityLine);
         GD.Print(StartupLine);
     }
 }

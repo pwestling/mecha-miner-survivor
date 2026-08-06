@@ -50,6 +50,12 @@
 
   <ItemGroup>
     <ProjectReference Include="../src/MechaMiner.Content/MechaMiner.Content.csproj" />
+    <!--
+      CMP-OBS-001. doc 115 § Initialization order makes build identity step 1 and
+      bounded local logging step 2, both before content loads, so the composition
+      root needs the diagnostics owner from its first line (FND-004, FND-007).
+    -->
+    <ProjectReference Include="../src/MechaMiner.Diagnostics/MechaMiner.Diagnostics.csproj" />
     <ProjectReference Include="../src/MechaMiner.Simulation/MechaMiner.Simulation.csproj" />
     <ProjectReference Include="../src/MechaMiner.Persistence/MechaMiner.Persistence.csproj" />
   </ItemGroup>

@@ -128,23 +128,8 @@
           "System.Collections.Immutable": "8.0.0"
         }
       },
-      "mechaminer.content": {
-        "type": "Project"
-      },
       "mechaminer.diagnostics": {
         "type": "Project"
-      },
-      "mechaminer.persistence": {
-        "type": "Project",
-        "dependencies": {
-          "MechaMiner.Content": "[0.1.0, )"
-        }
-      },
-      "mechaminer.simulation": {
-        "type": "Project",
-        "dependencies": {
-          "MechaMiner.Content": "[0.1.0, )"
-        }
       }
     }
   }

@@ -191,15 +191,33 @@ Two things the harness deliberately does not provide, so nobody builds on a gues
 | `FND-008` | Profiler marker/metric registry and benchmark report format | `FND-004` | sample CPU/count/allocation report produced | diagnostics metric owner, `SCH-OBS-002` |
 | `FND-009` | Architecture dependency tests plus complete documentation/requirement/component/contract/schema/verification/work ID registry validator | `FND-001`, `FND-003` | forbidden project edges and missing/duplicate/dangling registry IDs/links fail fixtures | architecture tests, registry/document validation tooling, `SCH-QUA-001` validator |
 
-**Step 3 is now Ready.** `FND-004` depends only on `FND-001`, and `FND-009` depends on
-`FND-001` and `FND-003`, both of which are Done. Doc 110 makes `FND-007` and `FND-008`
-depend on `FND-004`, so inside this step `FND-004` lands first and then
-`FND-007`/`FND-008` can run in parallel with `FND-009`. `FND-004` also has two waiting
-consumers already recorded in code: `HarnessIdentity` in `tests/shared/` says
-`build-identity=pending:TASK-FND-004-001`, and `game/BootCompositionRoot.cs` names
-`FND-004` as its first successor. `FND-009` replaces `build/verify-architecture.sh`'s reference-graph
-assertions with real architecture tests (`TASK-FND-009-001`) and takes over
-validating `tests/verification/*.json` (`TASK-FND-009-002`).
+**Step 3 is landing in one PR of task commits.** `FND-004` depends only on `FND-001`, and
+`FND-009` depends on `FND-001` and `FND-003`, all Done. Doc 110 makes `FND-007` and
+`FND-008` depend on `FND-004`, so inside this step `FND-004` lands first.
+`FND-009` replaces `build/verify-architecture.sh`'s reference-graph assertions with real
+architecture tests (`TASK-FND-009-001`) and takes over validating
+`tests/verification/*.json` (`TASK-FND-009-002`); the script stays, because CI and the
+`build` verb both call it.
+
+`FND-004` added a fourth pure project, **`src/MechaMiner.Diagnostics`**, as the home of
+`CMP-OBS-001`, plus `tests/MechaMiner.Diagnostics.Tests`. `CMP-OBS-001` had no project in
+the accepted boundary: its consumers are `game/` (build identity is initialization step 1
+and bounded logging step 2, both before content loads) and `MechaMiner.Tools`, and no game
+or pure project may depend on the tool host, so it could not live there; and Content,
+Simulation, and Persistence each own different semantics. Doc 115 § Accepted project
+boundary, doc 100 § Repository structure, and doc 10 § Accepted project decomposition were
+corrected in the same commit. The new project is a dependency leaf, so a later owner may
+reference it without a cycle, and `Simulation` deliberately does not: it publishes
+`CTR-SIM-001` batches that `CMP-OBS-001` consumes.
+
+Consequences every stream should know:
+
+| Surface | Where | Notes for consumers |
+| --- | --- | --- |
+| build identity | `MechaMiner.Diagnostics.Identity.BuildIdentity` | one owner, baked into that assembly at compile time. Never re-derive product version, commit, tool versions, or configuration anywhere else |
+| the `SCH-BLD-001` manifest | `generated/build-manifest.json`, written by `./build.sh build` | a build output, deliberately not committed: it names the commit of the build that produced it |
+| identity pins | `build/version-identity.props` | product version, CI build number, Godot pin, and the schema/map/random/save versions. `MAP-007`, `SIM-005`, `PST-006`, and `DAT-006` each own their own row |
+| `HarnessIdentity` | `tests/shared/` | still prints `build-identity=pending:TASK-FND-004-001`, deliberately. `MechaMiner.Simulation.Tests.Support.DeterministicCaseTests` asserts that exact token and that test file is `W1-SIM`'s scope, so replacing the token and the assertion is one atomic change `FND-004` cannot make alone. A test project that wants the real identity line adds a `ProjectReference` to `MechaMiner.Diagnostics`; `MechaMiner.Diagnostics.Tests` and `MechaMiner.Game.Tests` already have it. The follow-up is recorded on `VER-FND-003-002` |
 
 ### Step 4
 

@@ -55,10 +55,12 @@ readonly EXPECTED_PATHS=(
   "game/presentation"
   "src/MechaMiner.Simulation"
   "src/MechaMiner.Content"
+  "src/MechaMiner.Diagnostics"
   "src/MechaMiner.Persistence"
   "src/MechaMiner.Tools"
   "tests/MechaMiner.Simulation.Tests"
   "tests/MechaMiner.Content.Tests"
+  "tests/MechaMiner.Diagnostics.Tests"
   "tests/MechaMiner.Persistence.Tests"
   "tests/MechaMiner.Game.Tests"
   "tests/verification"
@@ -77,14 +79,16 @@ readonly EXPECTED_PATHS=(
 
 readonly EXPECTED_PROJECTS=(
   "src/MechaMiner.Content/MechaMiner.Content.csproj||no"
+  "src/MechaMiner.Diagnostics/MechaMiner.Diagnostics.csproj||no"
   "src/MechaMiner.Simulation/MechaMiner.Simulation.csproj|MechaMiner.Content|no"
   "src/MechaMiner.Persistence/MechaMiner.Persistence.csproj|MechaMiner.Content|no"
-  "src/MechaMiner.Tools/MechaMiner.Tools.csproj|MechaMiner.Content,MechaMiner.Persistence,MechaMiner.Simulation|no"
+  "src/MechaMiner.Tools/MechaMiner.Tools.csproj|MechaMiner.Content,MechaMiner.Diagnostics,MechaMiner.Persistence,MechaMiner.Simulation|no"
   "tests/MechaMiner.Content.Tests/MechaMiner.Content.Tests.csproj|MechaMiner.Content|no"
+  "tests/MechaMiner.Diagnostics.Tests/MechaMiner.Diagnostics.Tests.csproj|MechaMiner.Diagnostics|no"
   "tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj|MechaMiner.Simulation|no"
   "tests/MechaMiner.Persistence.Tests/MechaMiner.Persistence.Tests.csproj|MechaMiner.Persistence|no"
-  "tests/MechaMiner.Game.Tests/MechaMiner.Game.Tests.csproj|MechaMiner.Content,MechaMiner.Persistence,MechaMiner.Simulation|no"
-  "game/MechaMiner.Game.csproj|MechaMiner.Content,MechaMiner.Persistence,MechaMiner.Simulation|yes"
+  "tests/MechaMiner.Game.Tests/MechaMiner.Game.Tests.csproj|MechaMiner.Content,MechaMiner.Diagnostics,MechaMiner.Persistence,MechaMiner.Simulation|no"
+  "game/MechaMiner.Game.csproj|MechaMiner.Content,MechaMiner.Diagnostics,MechaMiner.Persistence,MechaMiner.Simulation|yes"
 )
 
 msbuild_items() {
@@ -118,7 +122,7 @@ actual_solution="$(cd "${REPO_ROOT}" && dotnet sln MechaMiner.sln list \
   | grep -E '\.csproj$' | tr '\\' '/' | sort)"
 expected_solution="$(printf '%s\n' "${EXPECTED_PROJECTS[@]}" | cut -d'|' -f1 | sort)"
 if [[ "${actual_solution}" == "${expected_solution}" ]]; then
-  pass "MechaMiner.sln references exactly the 9 accepted projects"
+  pass "MechaMiner.sln references exactly the ${#EXPECTED_PROJECTS[@]} accepted projects"
 else
   fail "MechaMiner.sln project set differs from the accepted decomposition"
   diff <(printf '%s\n' "${expected_solution}") <(printf '%s\n' "${actual_solution}") || true

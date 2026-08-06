@@ -20,3 +20,11 @@ export_credentials.cfg
 
 # Per-developer IDE and user state
 *.user
+
+# The generated SCH-BLD-001 build manifest is a build output, not a committed
+# source file. It records the source commit of the build that produced it, so a
+# committed copy could never be current at the commit that contained it: the file
+# cannot name its own commit. `./build.sh build` regenerates it and reads it back
+# (VER-FND-004-005). Everything else under generated/ is committed reproducible
+# output per doc 100 § Repository structure.
+generated/build-manifest.json

@@ -1,0 +1,131 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    CMP-OBS-001 (diagnostics/metrics service). Owns build identity, bounded
+    structured logs, stable diagnostic codes, redaction, rotation, the metric and
+    profiler-marker registry, the frame budget allocation, and the canonical
+    benchmark report.
+
+    Accepted project boundary (docs/technical/115 § Accepted project boundary):
+      allowed project dependencies: .NET base libraries only
+      Godot types allowed:          No
+
+    Why this project exists (recorded because it changed the accepted boundary):
+    CMP-OBS-001 is a registered component whose consumers are MechaMiner.Game
+    (initialization step 2 starts bounded local logging before content loads) and
+    MechaMiner.Tools (reports and benchmark orchestration). A component reachable
+    from the Godot project cannot live in MechaMiner.Tools, because no pure project
+    and no game project may depend on the tool host. Placing it in Content,
+    Simulation, or Persistence would put logging, metrics, and build identity inside
+    a project whose registered semantics are content, run domain, or durable saves,
+    which doc 114 § Naming and file-placement defaults forbids ("Place a type with
+    the project that owns its semantics"). So doc 115 § Accepted project boundary,
+    doc 100 § Repository structure, and doc 10 § Accepted project decomposition were
+    corrected in the same task under doc 114 § Specification maintenance autonomy.
+
+    It is deliberately a dependency leaf: it references no other project, so any
+    later owner may depend on it without creating a cycle.
+  -->
+
+  <PropertyGroup>
+    <AssemblyName>MechaMiner.Diagnostics</AssemblyName>
+    <RootNamespace>MechaMiner.Diagnostics</RootNamespace>
+    <!--
+      Doc 40 § JSON codec and schema baseline mandates source-generated
+      System.Text.Json metadata and forbids runtime contract reflection.
+    -->
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
+
+  <ItemGroup Label="Consumers that read build identity from this assembly">
+    <InternalsVisibleTo Include="MechaMiner.Diagnostics.Tests" />
+    <InternalsVisibleTo Include="MechaMiner.Tools" />
+    <InternalsVisibleTo Include="MechaMiner.Tools.Tests" />
+    <InternalsVisibleTo Include="MechaMiner.Game" />
+    <InternalsVisibleTo Include="MechaMiner.Game.Tests" />
+  </ItemGroup>
+
+  <!--
+    Build identity is baked into this one assembly's metadata at compile time, not
+    read from the environment at run time. That is what makes the identity equal
+    across the tool process, the Godot process, and the diagnostics header: all three
+    load this assembly and read the same baked values. A run-time probe would let
+    two processes disagree about platform, configuration, or working-tree state.
+
+    Every value is stable across two clean builds of the same source, so
+    VER-FND-001-011 still holds.
+  -->
+  <Target Name="MechaMinerResolveSourceRevision"
+          BeforeTargets="GetAssemblyAttributes;CoreCompile">
+
+    <!--
+      git is a required command (build/toolchain.json § required_commands). It is
+      still allowed to fail: an exported source archive is not a git working tree,
+      and a build must not stop because provenance is unavailable. The identity then
+      records the absence explicitly instead of inventing a commit.
+    -->
+    <Exec Command="git rev-parse HEAD"
+          WorkingDirectory="$(MSBuildThisFileDirectory)"
+          ConsoleToMSBuild="true"
+          StandardOutputImportance="low"
+          EchoOff="true"
+          ContinueOnError="true"
+          IgnoreExitCode="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_MechaMinerGitCommit" />
+      <Output TaskParameter="ExitCode" PropertyName="_MechaMinerGitCommitExit" />
+    </Exec>
+
+    <Exec Command="git status --porcelain --untracked-files=no"
+          WorkingDirectory="$(MSBuildThisFileDirectory)"
+          ConsoleToMSBuild="true"
+          StandardOutputImportance="low"
+          EchoOff="true"
+          ContinueOnError="true"
+          IgnoreExitCode="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_MechaMinerGitStatus" />
+      <Output TaskParameter="ExitCode" PropertyName="_MechaMinerGitStatusExit" />
+    </Exec>
+
+    <PropertyGroup>
+      <_MechaMinerSourceAvailable>false</_MechaMinerSourceAvailable>
+      <_MechaMinerSourceAvailable Condition=" '$(_MechaMinerGitCommitExit)' == '0' AND '$(_MechaMinerGitCommit)' != '' ">true</_MechaMinerSourceAvailable>
+      <_MechaMinerSourceCommit>unavailable</_MechaMinerSourceCommit>
+      <_MechaMinerSourceCommit Condition=" '$(_MechaMinerSourceAvailable)' == 'true' ">$(_MechaMinerGitCommit.Trim())</_MechaMinerSourceCommit>
+      <_MechaMinerSourceDirty>unknown</_MechaMinerSourceDirty>
+      <_MechaMinerSourceDirty Condition=" '$(_MechaMinerGitStatusExit)' == '0' AND '$(_MechaMinerGitStatus)' == '' ">false</_MechaMinerSourceDirty>
+      <_MechaMinerSourceDirty Condition=" '$(_MechaMinerGitStatusExit)' == '0' AND '$(_MechaMinerGitStatus)' != '' ">true</_MechaMinerSourceDirty>
+      <!--
+        doc 100 § Build configurations: the workflow vocabulary is Debug /
+        Development / Release, and the MSBuild identity is Debug / ExportDebug /
+        ExportRelease. Identity carries both so a report never has to guess which
+        column a reader meant.
+      -->
+      <_MechaMinerWorkflowConfiguration Condition=" '$(Configuration)' == 'Debug' ">Debug</_MechaMinerWorkflowConfiguration>
+      <_MechaMinerWorkflowConfiguration Condition=" '$(Configuration)' == 'ExportDebug' ">Development</_MechaMinerWorkflowConfiguration>
+      <_MechaMinerWorkflowConfiguration Condition=" '$(Configuration)' == 'ExportRelease' ">Release</_MechaMinerWorkflowConfiguration>
+      <_MechaMinerWorkflowConfiguration Condition=" '$(_MechaMinerWorkflowConfiguration)' == '' ">$(Configuration)</_MechaMinerWorkflowConfiguration>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <AssemblyMetadata Include="MechaMiner.ProductVersion" Value="$(MechaMinerProductVersion)" />
+      <AssemblyMetadata Include="MechaMiner.BuildNumber" Value="$(MechaMinerBuildNumber)" />
+      <AssemblyMetadata Include="MechaMiner.BuildNumberSource" Value="$(MechaMinerBuildNumberSource)" />
+      <AssemblyMetadata Include="MechaMiner.SourceCommit" Value="$(_MechaMinerSourceCommit)" />
+      <AssemblyMetadata Include="MechaMiner.SourceDirty" Value="$(_MechaMinerSourceDirty)" />
+      <AssemblyMetadata Include="MechaMiner.GodotVersion" Value="$(MechaMinerGodotVersion)" />
+      <AssemblyMetadata Include="MechaMiner.DotnetSdkVersion" Value="$(NETCoreSdkVersion)" />
+      <AssemblyMetadata Include="MechaMiner.TargetFramework" Value="$(TargetFramework)" />
+      <AssemblyMetadata Include="MechaMiner.ContentBundleSha256" Value="$(MechaMinerContentBundleSha256)" />
+      <AssemblyMetadata Include="MechaMiner.ContentBundleStatus" Value="$(MechaMinerContentBundleStatus)" />
+      <AssemblyMetadata Include="MechaMiner.ContentBundleOwner" Value="$(MechaMinerContentBundleOwner)" />
+      <AssemblyMetadata Include="MechaMiner.SchemaVersion" Value="$(MechaMinerSchemaVersion)" />
+      <AssemblyMetadata Include="MechaMiner.MapVersion" Value="$(MechaMinerMapVersion)" />
+      <AssemblyMetadata Include="MechaMiner.RandomVersion" Value="$(MechaMinerRandomVersion)" />
+      <AssemblyMetadata Include="MechaMiner.SaveVersion" Value="$(MechaMinerSaveVersion)" />
+      <AssemblyMetadata Include="MechaMiner.MsbuildConfiguration" Value="$(Configuration)" />
+      <AssemblyMetadata Include="MechaMiner.WorkflowConfiguration" Value="$(_MechaMinerWorkflowConfiguration)" />
+      <AssemblyMetadata Include="MechaMiner.Platform" Value="$(NETCoreSdkRuntimeIdentifier)" />
+    </ItemGroup>
+  </Target>
+
+</Project>

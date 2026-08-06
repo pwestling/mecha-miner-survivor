@@ -18,12 +18,15 @@ The IDs identify logical contracts, not mandatory C# class names. An implementat
 | Project | Owns | Allowed project dependencies | Godot types allowed |
 | --- | --- | --- | --- |
 | `MechaMiner.Content` | strict source models, schemas, compiler, immutable runtime definitions, behavior-registration contracts | .NET base libraries only | No |
+| `MechaMiner.Diagnostics` | build identity and its manifest, stable diagnostic codes, bounded structured logs, redaction, rotation, metric/profiler-marker registry, frame budget allocation, benchmark reports, evidence manifests | .NET base libraries only | No |
 | `MechaMiner.Simulation` | run domain, geometry, combat, encounters, mining, progression, commands, events, snapshots | `MechaMiner.Content` | No |
 | `MechaMiner.Persistence` | save envelopes, canonical serialization, checksums, migrations, atomic storage abstractions | `MechaMiner.Content`, narrow immutable types from `MechaMiner.Simulation` | No |
 | `MechaMiner.Tools` | command-line workflows, audits, generators, reports, benchmark orchestration | all pure projects | No; it may launch the pinned Godot executable as an external process |
 | `MechaMiner.Game` | Godot composition root, input adapters, presentation, UI, audio, platform adapters | all pure projects plus Godot APIs | Yes |
 
-Tests mirror those projects. Production projects never depend on test projects or generated test fixtures. `Content`, `Simulation`, and `Persistence` never reference `MechaMiner.Game` or engine assemblies.
+Tests mirror those projects. Production projects never depend on test projects or generated test fixtures. `Content`, `Diagnostics`, `Simulation`, and `Persistence` never reference `MechaMiner.Game` or engine assemblies.
+
+`MechaMiner.Diagnostics` is the project that owns `CMP-OBS-001`, and it is a dependency leaf: it references no other project, so any later owner may depend on it without creating a cycle. It exists as its own project because its consumers are `MechaMiner.Game`, whose [initialization order](#initialization-order) reads build identity at step 1 and opens bounded local logging at step 2 before content loads, and `MechaMiner.Tools`, which renders reports and orchestrates benchmarks. No game or pure project may depend on the tool host, so the component cannot live in `MechaMiner.Tools`; and placing logging, metrics, and build identity inside `Content`, `Simulation`, or `Persistence` would contradict [placing a type with the project that owns its semantics](./114-autonomous-agent-execution-protocol.md#naming-and-file-placement-defaults), because this registry already separates “Logs/metrics/evidence buffers” from every persistence row in the [mutable-state ownership matrix](#mutable-state-ownership-matrix). `Simulation` deliberately does not reference it: simulation components publish `CTR-SIM-001` domain event batches that `CMP-OBS-001` consumes, which is also what keeps diagnostic I/O off the authoritative tick.
 
 Dependency direction is enforced through project references and an architecture test. Moving a type “for convenience” may not create a reverse edge.
 

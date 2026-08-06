@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using MechaMiner.Diagnostics.Identity;
 using MechaMiner.Tools.Cli;
 
 namespace MechaMiner.Tools.Verbs;
@@ -105,9 +106,65 @@ internal static class BuildVerb
                 "the accepted project boundary or repository layout is violated; see the step log");
         }
 
+        context.Section("stage 4: emit the SCH-BLD-001 build manifest");
+        VerbOutcome? manifestFailure = EmitBuildManifest(context, out string manifestPath);
+        if (manifestFailure is not null)
+        {
+            return manifestFailure;
+        }
+
         return VerbOutcome.Success(
             "build " + configuration.WorkflowName + " (MSBuild " + configuration.MsbuildName
-            + ") succeeded with 0 warnings, 0 errors, and an intact project boundary");
+            + ") succeeded with 0 warnings, 0 errors, an intact project boundary, and a current "
+            + "SCH-BLD-001 manifest")
+            .WithArtifact(manifestPath);
+    }
+
+    /// <summary>
+    /// Writes <c>generated/build-manifest.json</c> from the one build-identity owner and
+    /// then reads it back to prove the file on disk is current.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The manifest describes the assembly that carries the identity — the workflow host
+    /// this process is — not the configuration named by <c>--configuration</c>. That is
+    /// deliberate and is why the <c>target</c> block records the host's own configuration
+    /// and platform. Per-artifact release manifests, one for each packaged
+    /// platform/configuration pair with its checksums, are doc 100 § Artifacts material
+    /// and belong to <c>OPS-002</c>; inventing them here would mean writing a manifest
+    /// whose <c>target</c> block was copied from an argument rather than read from the
+    /// binary it describes.
+    /// </para>
+    /// <para>
+    /// The file is not committed. It names the source commit of the build that produced
+    /// it, so a committed copy could never be current at the commit that contains it.
+    /// The relation a reviewer needs is "does the manifest match the assembly that was
+    /// just built", and that is what the read-back asserts.
+    /// </para>
+    /// </remarks>
+    private static VerbOutcome? EmitBuildManifest(VerbContext context, out string manifestPath)
+    {
+        manifestPath = BuildManifestFile.RepositoryRelativePath;
+        string absolute = context.Layout.Absolute(manifestPath);
+        BuildManifestFile.Write(absolute);
+
+        BuildManifestComparison comparison = BuildManifestFile.Compare(absolute, manifestPath);
+        context.Runner.RecordAssertion(
+            "build-manifest-current",
+            comparison.IsCurrent,
+            comparison.Detail
+                + (comparison.Differences.Count > 0 ? " [" + string.Join("; ", comparison.Differences) + "]" : string.Empty));
+
+        context.Console.WriteLine("      " + manifestPath + ": " + comparison.Status);
+        context.Console.WriteLine("      identity: " + Diagnostics.Identity.BuildIdentity.IdentityLine);
+
+        if (!comparison.IsCurrent)
+        {
+            return VerbOutcome.Validation(
+                "the SCH-BLD-001 manifest just written does not read back as current: " + comparison.Detail);
+        }
+
+        return null;
     }
 
     /// <summary>

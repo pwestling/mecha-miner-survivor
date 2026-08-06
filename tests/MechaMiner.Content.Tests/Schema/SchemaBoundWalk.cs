@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using MechaMiner.Content.Codec;
@@ -21,6 +22,15 @@ namespace MechaMiner.Content.Tests.Schema;
 /// evade two walkers with different blind spots rather than one.
 /// </para>
 /// <para>
+/// It knows exactly one thing about schema structure, and only because it must:
+/// <see cref="SubschemaMapKeywords"/>. The value of <c>properties</c> is a map keyed by
+/// names the author chose, and every schema keyword is a legal name, so reading that map
+/// as a schema object invents bounds and authorities out of property names. Knowing which
+/// keys hold such a map costs the walk none of its reach - it still descends into every
+/// value - and is the difference between blind to applicators, which is the intent, and
+/// blind to what is a keyword at all, which is a defect.
+/// </para>
+/// <para>
 /// <see cref="Result.BoundsSeen"/> and <see cref="Result.ObjectsSeen"/> exist so that
 /// "the walk found nothing wrong" can be told apart from "the walk found nothing". A
 /// gate that reports success over zero documents, or over documents with zero bounds, is
@@ -29,6 +39,36 @@ namespace MechaMiner.Content.Tests.Schema;
 /// </remarks>
 internal static class SchemaBoundWalk
 {
+    /// <summary>
+    /// The keywords whose value is a map from an author-chosen name to a subschema,
+    /// rather than a subschema itself.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Structure-blind means blind to which keys are <em>applicators</em>. It cannot mean
+    /// blind to the difference between a schema object and a map keyed by names the
+    /// author chose, because every schema keyword is a legal property name: a schema
+    /// declaring properties called <c>maximum</c> and <c>x-authority</c> hands the walk an
+    /// object with a bound keyword and an authority keyword side by side, and the walk
+    /// counts a bound that does not exist and attributes it to an authority that does not
+    /// exist. The counted phantom is the fail-open - <c>BoundsSeen</c> is what proves the
+    /// gate looked at anything, and property names alone were enough to satisfy it.
+    /// </para>
+    /// <para>
+    /// <c>patternProperties</c> and <c>dependentSchemas</c> are here although the
+    /// evaluator refuses them outright. The loader stops at an unimplemented keyword and
+    /// this walk deliberately does not, so those positions are reachable here, and a
+    /// position the walk reaches is a position it can be confused in.
+    /// </para>
+    /// </remarks>
+    internal static IReadOnlyList<string> SubschemaMapKeywords { get; } = new[]
+    {
+        "properties",
+        "$defs",
+        "patternProperties",
+        "dependentSchemas",
+    };
+
     /// <summary>Walks one schema document's bytes.</summary>
     internal static Result Of(byte[] schemaBytes)
     {
@@ -81,6 +121,12 @@ internal static class SchemaBoundWalk
 
             foreach (JsonProperty property in element.EnumerateObject())
             {
+                if (IsSubschemaMap(property))
+                {
+                    WalkSubschemaMap(property.Value, at.AppendProperty(property.Name), result);
+                    continue;
+                }
+
                 Walk(property.Value, at.AppendProperty(property.Name), result);
             }
 
@@ -95,6 +141,46 @@ internal static class SchemaBoundWalk
                 Walk(item, at.AppendIndex(index), result);
                 index++;
             }
+        }
+    }
+
+    /// <summary>
+    /// Whether <paramref name="property"/> holds a map from author-chosen name to
+    /// subschema.
+    /// </summary>
+    /// <remarks>
+    /// A non-object value is not a map and is walked normally, so a malformed
+    /// <c>"properties": 3</c> or <c>"properties": [...]</c> keeps whatever reach the
+    /// blind walk had over it rather than being quietly skipped. Rejecting that shape is
+    /// the loader's job.
+    /// </remarks>
+    private static bool IsSubschemaMap(JsonProperty property)
+    {
+        if (property.Value.ValueKind != JsonValueKind.Object)
+        {
+            return false;
+        }
+
+        foreach (string keyword in SubschemaMapKeywords)
+        {
+            if (string.Equals(property.Name, keyword, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Walks each member of a name-to-subschema map as a subschema, without ever reading
+    /// the map's own keys as keywords.
+    /// </summary>
+    private static void WalkSubschemaMap(JsonElement map, JsonPointer at, Result result)
+    {
+        foreach (JsonProperty member in map.EnumerateObject())
+        {
+            Walk(member.Value, at.AppendProperty(member.Name), result);
         }
     }
 

@@ -11,6 +11,7 @@
     "VER-DAT-001-023 exists because a string field carrying a mini-language drifts unless its shape is pinned structurally. The envelope schema's source_refs pattern must reject a malformed element on its own, with the typed parser removed from the path.",
     "The size, depth, and count limits verified by VER-DAT-001-007 are injected rather than global, so a boundary fixture stays a small reviewable file instead of a megabyte of generated JSON. VER-DAT-001-007 also asserts the shipped default limit values.",
     "VER-DAT-001-026 and VER-DAT-001-027 exist because the failure this project keeps repeating is a control that covers only the routes its author enumerated by hand. 026 attacks the walk's reach position by position; 027 attacks the two ways a list-driven control fails silently - a keyword deleted from the list, and an empty set that satisfies every emptiness assertion.",
+    "VER-DAT-001-028 and VER-DAT-001-029 continue that pass. 028 attacks the input set itself: a fixture no table row claims is tested by nothing, and a code proved by two fixtures can lose one while every set-equality assertion stays true. 029 attacks the walk's model of what a schema object is - every keyword is a legal property name, so a map keyed by author-chosen names cannot be read as a subschema.",
     "TR-DAT-003's full gate is DAT-006's ('source-order permutation yields identical hash' over a compiled bundle). VER-DAT-001-010 proves the same property at the single-payload level that DAT-006 builds on."
   ],
   "entries": [
@@ -646,6 +647,58 @@
       "fixtures": [
         "content/schemas/envelope.schema.json",
         "tests/MechaMiner.Content.Tests/Fixtures/schema/no-bounds.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-028",
+      "summary": "The invalid fixture corpus contains exactly the files the expectation table claims, and each diagnostic code is proved by exactly the fixtures an independently stated roster names. Every gate over the corpus iterates FixtureCorpus.Invalid, so a file added to Fixtures/invalid/ without a table row runs no test at all and nothing reports it; that orphan now fails a test naming the path, as does a row that outlives the file it names. The per-code roster closes the other direction: MMC-1004, MMC-1005 and MMC-2005 are each proved by two fixtures, and deleting one of a pair - file, table row, and registry citation together - leaves the code still provoked by its sibling, so the provoked-equals-declared comparison in VER-DAT-001-012 stays green with the coverage halved and nothing naming what went.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-002", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#compilation-pipeline",
+        "docs/technical/conventions.md#stable-identifiers"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Fixtures.FixtureCorpusCoverageTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-nonfinite-nan.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-nonfinite-overflow.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-null-value.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-null-nested.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/version-non-integer.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/version-nonpositive.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-029",
+      "summary": "The structure-blind corpus walk reads a name-to-subschema map as a map and never as a subschema. Every schema keyword is a legal property name, so a properties, $defs, patternProperties or dependentSchemas map declaring a member called maximum beside one called x-authority presented the walk with a bound keyword and an authority keyword side by side: it counted a bound that does not exist and suppressed its own finding on it, and without the authority-named sibling it reported an unattributed bound at a pointer addressing no bound. The counted phantom is the fail-open, because BoundsSeen is what VER-DAT-001-027 relies on to prove the gate looked at anything. Asserted over every recognised keyword in each of the four map positions, so a keyword implemented later inherits the control, plus a committed fixture whose declared properties are named maximum, $defs, $ref, type and x-authority and whose one real unattributed bound must still be reported. The loader's structure-aware walk reads properties through ReadSubschemaMap and never had the confusion; it is asserted on the same fixture.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy",
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.SchemaBoundWalkStructureTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/keyword-named-properties.schema.json"
       ],
       "scenarios": [],
       "evidenceKinds": ["test-output", "negative-control"],

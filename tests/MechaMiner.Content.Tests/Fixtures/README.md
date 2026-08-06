@@ -56,6 +56,22 @@ produces an empty violation list, which is exactly what an empty
 a nonzero number of documents and bounds, and this file proves the counter is a
 count rather than a constant.
 
+`keyword-named-properties.schema.json` is the control for the other way that
+counter can lie. **Every schema keyword is a legal property name.** A schema
+declaring properties called `maximum` and `x-authority` handed the structure-blind
+walk an object with a bound keyword and an authority keyword side by side, so it
+counted a bound that does not exist and suppressed its own finding on it — and
+`BoundsSeen > 0`, the assertion that proves the gate looked at anything, was
+satisfiable by property names alone. This file declares properties named
+`maximum`, `$defs`, `$ref`, `type` and `x-authority`, plus one real unattributed
+bound under `capacity` that must still be reported. `SchemaBoundWalkStructureTests`
+generalises it: the walk now reads `properties`, `$defs`, `patternProperties` and
+`dependentSchemas` as maps of subschemas, and every recognised keyword is asserted
+harmless as a property name in each of those four positions, so a keyword
+implemented later inherits the control instead of needing a new fixture. The
+loader's structure-aware walk reads `properties` through `ReadSubschemaMap` and
+never had the confusion; it is asserted on the same file.
+
 ## What binds a fixture to its expectation
 
 `FixtureCorpus.cs` holds the table mapping each invalid fixture to the one
@@ -76,6 +92,29 @@ Three properties are asserted for every invalid fixture
 And the control in the other direction (`ValidFixtureCorpusTests`): the valid
 fixtures produce zero diagnostics of any severity, so an over-strict validator
 fails as loudly as an under-strict one.
+
+## What binds the table to the directory
+
+Every one of those gates iterates the table, so the table decides which files are
+tested and nothing checks the table against the disk.
+`FixtureCorpusCoverageTests` is that check, in both directions:
+
+- a file in `invalid/` with no row is an **orphan** — it runs no test, it looks
+  like corpus to anyone reading the directory, and nothing would notice if it
+  stopped being invalid. It now fails a test that names the path;
+- a row naming a file that is no longer there fails as one sentence naming the
+  row, rather than as three `FileNotFoundException`s out of
+  `InvalidFixtureCorpusTests`.
+
+The same class shows up per code. `MMC-1004`, `MMC-1005` and `MMC-2005` are each
+proved by **two** fixtures. Delete one of a pair — the file, its table row, and
+its `tests/verification/DAT-001.json` citation together — and the code is still
+provoked by its sibling, so `ContentDiagnosticCodesTests`' provoked-equals-declared
+comparison holds with half the coverage and nothing says so. That was verified,
+not assumed: the suite went green at 601 tests with `MMC-1005` down to one
+fixture. `TheFixturesProvokingEachCodeAreExactlyTheRosterStatedHere` states the
+whole code-to-fixtures roster independently of the table, so a deletion fails a
+test that names the code *and* the file.
 
 ## Why some fixtures carry reduced limits
 

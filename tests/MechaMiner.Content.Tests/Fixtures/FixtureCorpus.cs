@@ -20,9 +20,16 @@ namespace MechaMiner.Content.Tests.Fixtures;
 /// asserting anything.
 /// </para>
 /// <para>
+/// What the table cannot check is itself. Every gate iterates it, so a file in
+/// <c>Fixtures/invalid/</c> with no row here runs no test at all, and a code proved by
+/// two fixtures can quietly drop to one. <see cref="FixtureCorpusCoverageTests"/> checks
+/// the table against the directory in both directions and states the code-to-fixtures
+/// roster independently of this table.
+/// </para>
+/// <para>
 /// Verification: <c>VER-DAT-001-001</c> through <c>VER-DAT-001-007</c>,
 /// <c>VER-DAT-001-012</c>, <c>VER-DAT-001-014</c> through <c>VER-DAT-001-019</c>,
-/// <c>VER-DAT-001-022</c>, <c>VER-DAT-001-024</c>.
+/// <c>VER-DAT-001-022</c>, <c>VER-DAT-001-024</c>, <c>VER-DAT-001-028</c>.
 /// </para>
 /// </remarks>
 internal static class FixtureCorpus

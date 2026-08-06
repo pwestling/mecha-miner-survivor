@@ -87,8 +87,8 @@
     "rarity_tier": null,
     "cache_selection_weight": null,
     "selection_model": "three distinct relics drawn without replacement from the currently unlocked pool and assigned to the three caches during generation",
-    "fresh_profile_pool_size": 5,
-    "fully_unlocked_pool_size": 10,
+    "fresh_profile_pool_count": 5,
+    "fully_unlocked_pool_count": 10,
     "in_fresh_profile_pool": false,
     "guaranteed_to_appear": false
   },

@@ -1109,6 +1109,276 @@ table. Two are judgement calls worth flagging for a reviewer: re-pointing the 15
 be authoring content this pass has no ruling for), and keeping `catalog_overview_row:` /
 `corroboration:` as **file-level** refs rather than picking one of the several fields each supports.
 
+### Integration-owner rulings applied — fourth pass
+
+One naming pass, driven by the schema stream's rulings on how a multiplicative scale and an upper bound
+are spelled. Everything here is a **rename, a collapse of two names onto one value, or an omission**; no
+number changed. The pass is recorded as Rulings 14–18 plus the audit that produced them, which is
+preserved verbatim in the [pre-clear audit appendix](#appendix--pre-clear-audit-three-independent-checks)
+at the end of this file.
+
+#### Ruling 14 — a multiplicative scale is spelled `_multiplier`, and nothing else
+
+**Citation.** `docs/technical/40-content-data-and-validation.md:26` ("Property names use `snake_case`")
+with `:96` (the unit-suffix list) is the whole of the naming mandate; neither names a spelling for a
+multiplicative scale, so the tree had drifted into four — `_multiplier` (43 names, 52 leaves),
+`_scaling` (4 names), `_multiple_of_` (1 name), and a `_scale` grouping key over non-factors. The ruling
+picks `_multiplier`.
+
+**Changes.**
+
+| File | Before | After | Why |
+| --- | --- | --- | --- |
+| `content/relics/REL-07.json` | `effects.explosion_area_scaling` | `effects.explosion_area_multiplier` | one spelling; the `area` half of the name is exempt, see Ruling 17 |
+| `content/relics/REL-09.json` | `effects.mining_decay_multiple_of_current_forward_extraction_rate` | `effects.decay_rate_multiplier_of_forward_rate` | the same quantity is already `progress_decay.decay_rate_multiplier_of_forward_rate` in all four `content/mining-sites/*.json`, at the same value `4`. One concept, one name |
+
+**Left alone deliberately:** `content/branches/W-BF-tethered-reaper.json :: effects.speed_scaling`. The
+ruling asked whether it was null; it is not. It holds a prose curve — "linear with blade world speed
+from stationary to one base mech full-speed" — which is a *shape*, not a scale, so `_multiplier` would
+be the wrong name for it and no rename applies. It stays as authored.
+
+#### Ruling 15 — three fields whose multiplicativity was inferred from prose are omitted, not renamed
+
+**The ruling.** Inferring multiplicativity from prose in order to choose a field name is inventing a
+semantic from a name, which `40:90` ("Unknown fields are errors") and the transcribe-don't-derive rule
+both forbid. **A declared optional field whose semantics we guessed is worse than an absent one**, because
+the guess survives into the schema as if a document had stated it. So a `_scaling` field whose value is
+`null` is omitted entirely rather than renamed to `_multiplier`.
+
+**Two fields are omitted from `content/relics/REL-07.json :: effects`:**
+
+| Omitted field | What the prose actually says | Why no field was declared |
+| --- | --- | --- |
+| `explosion_strength_scaling` (was `null`) | `docs/69-initial-relic-catalog.md:130` — "Explosion strength and Area scale from that enemy's maximum Hull, subject to a cap for elites and bosses." | The sentence says explosion strength *scales from* maximum Hull. It does not say the relationship is multiplicative, nor give a coefficient, an exponent, or a curve. Naming the field `explosion_strength_multiplier` would assert a multiplication the document never states; naming it `_scaling` keeps a second spelling alive for a value that does not exist. `REL-07 :: rules[5]` records the same gap in the relic's own words: "Exact explosion scaling, generational decay, delay, and boss cap remain numerical tuning." |
+| `elite_and_boss_scaling_cap` (was `null`) | the same line 130 — "subject to a cap for elites and bosses" — and `rules[5]`'s "boss cap remain numerical tuning" | The cap's *existence* is stated; its magnitude, and even whether it bounds a multiplier, an absolute damage figure, or a fraction of Hull, are not. The field would have had to declare both a bound spelling and the kind of quantity bounded, and the document supports neither. |
+
+The surviving prose is not lost: `effects.explosion_scales_from = "the defeated enemy's maximum Hull"`
+still carries the relationship as a string, `rules[1]` carries the full doc sentence, and `rules[5]`
+carries the "remains numerical tuning" admission. **A later pass that finds real numbers for these two
+must add them as `_multiplier` and `maximum_`-spelled fields, and must not resurrect the `_scaling`
+names.** `effects.explosion_delay_seconds`, `effects.generational_decay` and
+`effects.chain_generation_limit` stay as `null`: their names state a unit or a plain quantity and assert
+nothing about a scale, so `null` there means "the document states no value", which is exactly what
+`content/README.md` says a `null` means.
+
+**One open tension a reviewer should see.** `effects.explosion_area_multiplier` is still `null` after
+Ruling 14 renamed it, and it comes from the *same sentence* as `explosion_strength_scaling` — so by
+Ruling 15's own reasoning it is also a guessed semantic and arguably belongs in the omitted column.
+Ruling 14 named it explicitly for rename, and Ruling 15 enumerated three other fields, so the rename was
+applied as instructed and the tension is recorded here rather than resolved locally. **This is an open
+question for the integration owner: omit `explosion_area_multiplier` too, or keep it.**
+
+#### Ruling 16 — an upper bound is spelled `maximum`, a lower bound `minimum`
+
+**Citation.** `40:26` again for property-name form, and `40:94` for why the bound word cannot always take
+the suffix slot: units live in key-name suffixes, so a name carrying `_percent` or `_seconds` must keep
+that terminal.
+
+**The ruling.** A cap *is* a maximum. `_cap`, `_max` and `_maximum` were three spellings of one concept —
+in two files, two of them inside a single object — and `_min` sat beside `_minimum` the same way. One
+spelling now: the word is spelled out, and **the qualifier rather than the noun carries the distinction
+between two bounds on one quantity**, so `{target_min, target_max, hard_max}` becomes
+`{target_minimum, target_maximum, hard_maximum}`. Where a unit suffix must stay terminal the bound word
+moves to the front instead.
+
+**Scope: 88 distinct property names, 194 leaf occurrences, across 57 files.** Every property name in
+`content/**/*.json` whose underscore-delimited tokens included `cap`, `max` or `min` was rewritten,
+including the bare `{min, max}` range objects (32 + 32 leaves) that `content/README.md` used to mandate —
+that line now reads `{minimum, maximum}`. Representative cases, one per shape:
+
+| Shape | Before | After |
+| --- | --- | --- |
+| bare range members | `target_time_to_kill_seconds.{min, max}` | `.{minimum, maximum}` |
+| two bounds, one quantity | `visible_mining_opportunities_in_normal_view.{target_min, target_max, hard_max}` | `.{target_minimum, target_maximum, hard_maximum}` |
+| unit suffix must stay terminal | `control_resistance_cap_percent` | `maximum_control_resistance_percent` |
+| unit suffix must stay terminal | `pursuit_duration_seconds_max` | `maximum_pursuit_duration_seconds` |
+| unit suffix must stay terminal | `stagger_cap_seconds` | `maximum_stagger_seconds` |
+| no unit, suffix slot free | `raw_output_multiplier_max` | `raw_output_multiplier_maximum` |
+| `cap` mid-name | `focus_cap_multiplier` | `focus_maximum_multiplier` |
+| `cap` as the whole name | `cap` (13 PowerUp rank caps) | `maximum` |
+| prefix form | `max_simultaneous_bosses`, `min_far_band_caches` | `maximum_simultaneous_bosses`, `minimum_far_band_caches` |
+
+**One `source_refs` citation was re-pointed, not deleted:**
+`content/enemies/shared-elite-modifiers.json` carried the scope prefix
+`control_resistance_cap_percent: GDD-PLAYER-SURVIVABILITY-BASELINE#control-resistance-and-status-stacking`,
+which A22 correctly reported as dangling the moment the field was renamed. It now reads
+`maximum_control_resistance_percent: …`, same document, same anchor. No other citation in the tree names
+a renamed field.
+
+**`content/branches/W-BD-selective-detonators.json` needed no deletion.** `effects.damage_multiplier_cap`
+and `favorable_scene_effect.magnitude.damage_multiplier_max` both held `2`, but they sit in *different*
+objects, and restating an effect value inside `favorable_scene_effect.magnitude` is a shape every branch
+file uses (compare `W-BC-broadside-oscillator.json` and `W-BF-tethered-reaper.json`). So both were spelled
+`damage_multiplier_maximum` and both stayed; unifying the spelling was the whole defect.
+
+**`content/branches/W-BF-tethered-reaper.json` STOPS, and is escalated.** One object holds
+`effects.contact_damage_speed_bonus_percent_max = {percent: 200}` and
+`effects.contact_damage_percent_cap = {percent: 400}` — two spellings holding **different** values. That is
+either two real bounds wearing two spellings or one bound duplicated with a wrong number, and the two need
+opposite treatment: rename both, or delete one. Renaming them now would leave two identical stems holding
+different numbers, which reads as a duplicate with a typo and hides the collision. **Both are left exactly
+as authored** and declared in the verifier's `BOUND_SPELLING_ESCALATED`, so the exception is visible instead
+of absorbed. **This needs a document owner's answer: are 200 and 400 two bounds, or one bound and a
+mistake?**
+
+#### Ruling 17 — `Area` the stat keeps its name; the geometry rule does not bind it
+
+**Citation.** `40:98` — "Geometry dimensions distinguish radius, diameter, width, range, and area; `area`
+is never used as a vague scalar name" — read against `docs/35-playable-mechs.md:65`, which lists "weapon
+Area" in "the shared stat vocabulary", and `docs/36-initial-mech-catalog.md:137`, which defines its
+membership: "scalable radii, widths, blast areas, projectile bodies, cones, and persistent damage zones
+qualify".
+
+**The ruling.** `content/relics/REL-04.json :: effects.weapon_area_multiplier` is **not renamed**. It
+deliberately scales a *set* of dimensions, so forcing a specific dimension into the name would encode a
+falsehood — `REL-04 :: rules[1]` restates `docs/69-initial-relic-catalog.md:99` verbatim ("weapon Area is
+doubled"). `40:98` binds a field naming a measured dimension of a specific shape, not a field naming the
+Area stat. `content/README.md`'s geometry bullet now records the exemption.
+
+This is one of two rules in the planned validator set that **would have produced a wrong answer** if
+applied mechanically; the other is Ruling 18. Both are called out in the audit appendix.
+
+#### Ruling 18 — `obstacle_free_radius_in_mining_zone_diameters` is not touched
+
+`content/maps/standard-map-generation-contract.json ::
+deployment_and_opening_fairness.obstacle_free_radius_in_mining_zone_diameters = 1` names a **radius**
+measured in **diameters**, and `docs/51-standard-map-generation-contract.md:70` ("obstacle-free space at
+least one mining-zone diameter around the mech") does not say whether the clear envelope's radius or its
+diameter equals one mining-zone diameter. That is a **factor-of-two design ambiguity**, not a naming
+defect: renaming the field either way would silently pick one reading. The field and its flag stay
+exactly as they are, escalated for a document correction.
+
+#### Ruling 19 — REL-09's duplicate movement multipliers collapse to one field each
+
+`content/relics/REL-09.json` held one value under two names, twice.
+
+**Pair 1 — the Claim-Jumper factor, `1.5` under two names inside one file.**
+`effects.enemy_movement_speed_multiplier_while_mining` and
+`cross_document_rules[0].enemy_movement_multiplier` were the same number.
+`cross_document_rules[0].enemy_movement_multiplier` is **removed**, and the longer name is kept, because
+that is the name the source wording supports: `docs/72-player-survivability-and-damage-baseline.md:80` —
+which is the sentence `cross_document_rules[0].rule` transcribes — says "Claim-Jumper Core multiplies it by
+1.50 **only while mining progress advances**", and `docs/69-initial-relic-catalog.md:153` says "+50%
+movement **speed** while extraction progress is actively advancing". The short name dropped both the
+`speed` the docs name and the `while_mining` condition the rule text restates.
+
+**Pair 2 — the elite movement factor, `1.1`, and a correction to the ruling's premise.** The ruling
+described this as a pair internal to REL-09 between `movement_speed_multiplier` and
+`multiplies_with_elite_movement_multiplier`. **REL-09 has no `movement_speed_multiplier` field**; the pair is
+*cross-file*. `content/enemies/shared-elite-modifiers.json (ELT-01) :: movement_speed_multiplier = 1.1` is
+the authored value — `docs/31-initial-alien-roster.md:107` states it as a multiplier in the shared elite
+modifier table, "| Movement speed | 1.10× |" — and `REL-09 :: cross_document_rules[0].multiplies_with_elite_movement_multiplier = 1.1`
+was a second writer on it, under a name that reads as a boolean predicate while holding a number. So the
+collapse keeps ELT-01's field and **removes the copy in REL-09**. Nothing about the ordering is lost:
+`cross_document_rules[1].enemy_movement_multiplier_order = [base, elite, resonance, Claim-Jumper Core]`
+still states that the factors multiply and in what order, and `cross_document_rules[0].rule` still carries
+the doc sentence in full.
+
+**`cross_document_rules[0].multiplies_with_flux_amber_resonance_multiplier = 1.2` is left in place.** It is
+the same *name* shape, but not the same defect: `1.20` is authored nowhere else in `content/` — no resource
+definition carries it — so this field is the tree's only carrier of the Flux Amber movement factor from
+`docs/72:80`, and removing it would delete a value rather than a duplicate. Flagged as the asymmetry it is.
+
+**No `source_refs` citation was orphaned.** REL-09's four `cross_document_rules[]:` prefixes name the
+array, which still exists with element 0 intact; no prefix named either removed field.
+
+#### Ruling 20 — counts carry `_count`, not a bare `size`
+
+`40:94` lists `_count` among the required suffixes. `rarity_and_weighting.fresh_profile_pool_size` and
+`rarity_and_weighting.fully_unlocked_pool_size` are counts of relics in a pool (5 and 10), so across
+`REL-01`–`REL-10` — 20 occurrences — they become `fresh_profile_pool_count` and
+`fully_unlocked_pool_count`. Values unchanged.
+
+`content/branches/W-AE-replicator-swarm.json :: expected_effect.maximum_total_squad_size_multiplier` keeps
+`size`: it is a *multiplier on* a squad size, not a count, and no ruling covered it.
+
+#### Ruling 21 — the factor-and-percentage twins are audited, and none is removed
+
+`40:95` says the compiler writes the normalized factor into the runtime bundle "as a separate derived
+field", which argues a hand-authored factor sitting beside its percentage is a second writer. The ruling
+set two mandatory conditions: the factor must actually agree with the percentage, and the factor may be
+removed **only where the design document states the value as a percentage**. Where the source states a
+multiplier, the multiplier is what is authored and nothing is derived.
+
+**Agreement check — all three pairs agree, so there is no data defect:**
+
+| File | Percentage | Factor | Relationship | Agrees? |
+| --- | --- | --- | --- | --- |
+| `REL-04` | `primary_activation_frequency_reduction = {percent: 60}` and `primary_activation_frequency_of_final = {percent: 40}` | *none* | `60 + 40 = 100`; two percentages, no factor | yes |
+| `REL-07` | `direct_damage_reduction = {percent: 35}` | `direct_and_persistent_weapon_damage_multiplier = 0.65` | `0.65 = 1 − 35/100` | yes |
+| `REL-09` | `enemy_movement_speed_increase_while_mining = {percent: 50}` | `enemy_movement_speed_multiplier_while_mining = 1.5` | `1.5 = 1 + 50/100` | yes |
+
+**Removal check — the doc line relied on, per relic. Nothing is removed:**
+
+- **`REL-04`** — `docs/69-initial-relic-catalog.md:99`: "All weapon damage is multiplied by 2.5, weapon Area
+  is doubled, and finite weapon-created durations are doubled." The document states *multipliers*, so
+  `weapon_damage_multiplier = 2.5`, `weapon_area_multiplier = 2` and
+  `finite_weapon_created_duration_multiplier = 2` are the authored form and stay. There is no
+  factor-and-percentage pair here at all: the cadence numbers are two percentages, both doc-stated
+  (`:98` "Each weapon produces primary activations at 40% of its otherwise final frequency", `:96`
+  "Weapons attack 60% less often"), and `60` is the complement of `40` rather than a normalized factor —
+  a different redundancy class, outside this ruling.
+- **`REL-07`** — `docs/69-initial-relic-catalog.md:129`: "All direct and persistent damage attributed to
+  equipped weapons is multiplied by 0.65." The normative rule line states the **multiplier**, so the
+  multiplier is authored and is not removed. The percentage sibling is doc-stated too, at `:127`: "Weapons
+  deal 35% less direct damage." Both forms appear in the source, so removing either would drop a
+  doc-stated value.
+- **`REL-09`** — `docs/69-initial-relic-catalog.md:153` states the **percentage**: "Every living enemy
+  receives +50% movement speed while extraction progress is actively advancing." That alone would make
+  `enemy_movement_speed_multiplier_while_mining = 1.5` the derived member and remove it. It is **not**
+  removed, because a second accepted document states the multiplier directly —
+  `docs/72-player-survivability-and-damage-baseline.md:80`: "Claim-Jumper Core multiplies it by 1.50 only
+  while mining progress advances." Both forms are authored by documents this definition already cites, so
+  the ruling's own test ("whichever the source states is authored") keeps both.
+
+**What this leaves open.** Three definitions now carry a percentage and its factor side by side with doc
+support for each. That is not a defect under this ruling, but it *will* collide with the compiler's derived
+field when `DAT-006` lands, and the collision needs a decision then: either the compiler's derived factor is
+suppressed where an authored one exists, or the authored factor is dropped and the doc line that states it
+is treated as prose. **Not decided here.**
+
+#### Ruling 22 — two confirmed findings stay out until a citation exists
+
+Neither is a naming matter; both are recorded so a reviewer does not read them as oversights.
+
+- **The extraction-zone and resonance-field radii (3.0 M / 6.0 M) are not added.** The values are confirmed,
+  but `source_refs` has nothing real to point at until a decision record exists, and `40:87` wants
+  "gameplay document IDs/anchors and decision IDs implemented". An uncitable value is not transcribed.
+- **Minute 33's `timestamps_reconstructed`, `timestamp_provenance` and `reconstruction_basis` markers stay,
+  and the preserved malformed token stays.** They record that the row was reconstructed rather than read.
+  The doc correction that would retire them has not landed; stripping the markers first would erase the
+  only evidence that the row is not a straight transcription.
+
+#### Corrected transcription errors — the geode resonance directions, audited and found correct
+
+Distinct from the design-source contradictions in section 1 of this file: those are the documents
+disagreeing with themselves, whereas this heading is for **our own** transcription mistakes, found and
+fixed. The distinction matters for judging how far to trust the rest of the tree.
+
+One was reported and investigated this pass, and **it is not a defect**. The report was that
+`content/resources/F.json` (Flux Amber) carried `resonance_behavior.modifier.direction = "decrease"` while
+`docs/40-mining-and-extraction.md:109` states the opposite. The doc line is:
+
+> | Flux Amber | **Overclocked Motion:** enemy movement speed is 20% higher |
+
+`F.json` already carries `"direction": "increase"`, matching it. All six were then checked against
+`docs/40-mining-and-extraction.md:104-109` in full, and all six are correct:
+
+| Resource | Geode | Doc wording (`docs/40:104-109`) | `direction` | Correct? |
+| --- | --- | --- | --- | --- |
+| `A` | Asterite | "outgoing enemy damage is 20% **higher**" | `increase` | yes |
+| `B` | Barysteel | "enemies take 20% **less** damage" | `decrease` | yes |
+| `C` | Cinderglass | "enemy projectile damage is 20% **higher**" | `increase` | yes |
+| `D` | Driftmetal | "displacement magnitude and control-effect duration are 20% **lower**" | `decrease` | yes |
+| `E` | Eidolon Coral | "enemy attack cadence is 20% **faster**" | `increase` | yes |
+| `F` | Flux Amber | "enemy movement speed is 20% **higher**" | `increase` | yes |
+
+`git log` confirms `F.json` has never held `"decrease"` in any commit, and neither did the deleted
+`resources/geode-resonance-effects.json` aggregate it was decomposed from (Ruling 4) — the only two
+`"decrease"` values in that file were Barysteel's and Driftmetal's, both correct. **No value was changed,
+and no value-level defect exists in the six resonance directions.** The heading is kept for the next real
+one.
+
 ### Per-definition notes, by catalog
 
 #### Weapons (`content/weapons/`)
@@ -2473,3 +2743,201 @@ be authoring content this pass has no ruling for), and keeping `catalog_overview
 7. Destructible-rock and health-pack property definitions live in content/maps/world-props.json; the dynamic rock population rule is kept here because docs/technical/40-content-data-and-validation.md:148 lists "rock rules" under map generation.
 8. Mining-site payout profiles live in content/mining-sites/; only their placement and distribution constraints are transcribed here.
 
+---
+
+## Appendix — pre-clear audit: three independent checks
+
+This appendix is the durable record of the read-only audit that produced Rulings 14–22 above. It ran
+before those rulings existed, wrote nothing into the repository, and mutated no git state. It is kept
+here rather than discarded because **two of the rules it checked would have produced a wrong answer if a
+validator had applied them mechanically** — see [What the audit changed about the validator
+set](#what-the-audit-changed-about-the-validator-set) — and because the findings it left open still need
+owners.
+
+**Scope.** 139 JSON files under `content/**`, 8,827 scalar leaves walked, plus the full text of
+`docs/technical/40-content-data-and-validation.md` and the design documents cited below.
+
+**The rules checked.**
+
+1. `40:106` and `40:67` — whether the resource-field enumeration and the stable-ID reuse policy support
+   the premise behind a downstream ID ruling.
+2. `40:96` (`_m`, `_m_per_s`, `_seconds`, `_per_second`, `_hull`, `_degrees`, `_fraction`, `_count`) and
+   `40:97` (percentage points only on a `_percent` name, the normalized factor left to the compiler) —
+   the one-spelling rule for a multiplicative scale.
+3. `40:98` — "Geometry dimensions distinguish radius, diameter, width, range, and area; `area` is never
+   used as a vague scalar name."
+
+### Check 1 — the premise behind a downstream ID ruling
+
+- **`docs/technical/40-content-data-and-validation.md:106` enumerates resource fields — CONFIRMED
+  verbatim.** "Resource definition fields include ID, canonical letter, localization keys,
+  icon/pattern/audio identity, inventory scope, persistence class, maximum safe count, and resonance
+  behavior registration if applicable." So the prose does list "ID" and "canonical letter" as two
+  separate entries in one enumeration.
+- **The ID-reuse rule omits resources — CONFIRMED.** `40:67` reads "Reuse accepted gameplay IDs exactly
+  for defined content: `MCH-01`, `EN-01`, `BOSS-01`, `W-AB`, `REL-01`, and equivalent utility/PowerUp/unlock
+  IDs." Resources are absent, confirmed by reading all of `## Stable ID policy` (lines 65–72).
+- **`canonical_letter` is prose only, never a field name.** The token is absent from the entire
+  repository (`grep -rn "canonical_letter" docs/ src/ content/` → no matches). "canonical letter" appears
+  three times, all in running prose: `40:106`, `docs/73-…:156`, `docs/73-…:189`. By contrast the doc names
+  real fields in backticks in the `## Common definition envelope` table at `40:74-88`. **So
+  `canonical_letter` as a field name would be a choice, not a mandate.**
+- **Counter-evidence the ruling should have seen.** The inference "the letters `A`–`F` were never the
+  resource ID" is contradicted by the shipped content: `content/resources/A.json` carries `"id": "A"` and
+  `"name_key": "resource.A.name"`, and the same shape runs through `F.json`. No resource file carries a
+  canonical-letter field of any spelling. Today the letter *is* the ID.
+- **Resources are not uniquely omitted from the reuse bullet.** `branches` (eleven-plus ID-bearing files,
+  its own doc section) and `mining-sites` are omitted too, and the bullet says "and equivalent … IDs",
+  so its list is illustrative rather than exhaustive. Any argument built on "resources were deliberately
+  excluded" is weakened by that.
+
+**Status: informational, no content change.** Nothing in Rulings 14–22 depends on it; it is recorded so
+the ID decision is not re-argued from the same unsupported premise.
+
+### Check 2 — the `_multiplier` one-spelling rule
+
+**Spellings found for a multiplicative scale.**
+
+| Spelling | Names | Leaves | Verdict |
+| --- | --- | --- | --- |
+| `_multiplier` | 43 | 52 | dominant and canonical |
+| `_scaling` | 4 | 4 | a second live spelling — `REL-07 :: explosion_strength_scaling`, `explosion_area_scaling`, `elite_and_boss_scaling_cap` (all `null`), and `W-BF-tethered-reaper :: effects.speed_scaling` (a prose curve) |
+| `_multiple_of_` | 1 | 1 | `REL-09 :: mining_decay_multiple_of_current_forward_extraction_rate = 4`, colliding with a `_multiplier_of_` twin |
+| `_factor` / `_scale` / `_ratio` / `_times` / `_x` as a suffix | 0 | 0 | **confirmed clean** — a regex over every leaf key returned no matches, so the `body_scale_factor` regression is gone from the JSON and `body_scale_multiplier` is uniform across all eleven files that carry it |
+| `_scale` as a grouping key | 1 | — | `maps/standard-map-generation-contract.json :: world_scale` is an object of *absolute* quantities (`major_region_count`, `traversable_diameter_m`, …), not factors — a `_scale` name over a container of non-factors |
+
+Non-suffix `scale`/`scales` predicates and reference strings (booleans and strings, not scalars) were
+listed for completeness and are not violations: `scales_with_elapsed_time_or_player_state` (10 enemy
+files), `scales_with_attack_rate_ranks_and_global_modifiers`, `scales_with`,
+`link_length_and_formation_size_scale_with`, `pull_resistance_scales_for_elites_and_bosses`,
+`explosion_scales_from`.
+
+**Same concept under two different names — seven findings.**
+
+| # | Finding | Status |
+| --- | --- | --- |
+| A | Mining progress-decay rate, value `4`, under `decay_rate_multiplier_of_forward_rate` in four `mining-sites/*.json` and `mining_decay_multiple_of_current_forward_extraction_rate` in `REL-09` | **fixed** — Ruling 14 |
+| B | Claim-Jumper enemy movement, value `1.5`, under `effects.enemy_movement_speed_multiplier_while_mining` and `cross_document_rules[0].enemy_movement_multiplier` in one file; the short name drops the `while_mining` condition its own `rule` text restates | **fixed** — Ruling 19, pair 1 |
+| C | Elite movement factor, value `1.1`, under `shared-elite-modifiers :: movement_speed_multiplier` and `REL-09 :: cross_document_rules[0].multiplies_with_elite_movement_multiplier`; the second reads as a boolean predicate while holding a number | **fixed** — Ruling 19, pair 2 (and the audit's "internal to REL-09" framing corrected there: the pair is cross-file) |
+| D | Damage-multiplier ceiling, value `2`, as `_cap` and `_max` in one file (`W-BD-selective-detonators`) | **fixed** — Ruling 16, spelling unified in both objects, neither removed |
+| E | Focus-multiplier ceiling, value `2`, as `W-AF :: fixed_properties.focus_multiplier_maximum` and `W-AF-coherence-memory :: effects.focus_cap_multiplier` — the same ceiling with the two words transposed, plus `changes_focus_cap_multiplier = false`, a boolean carrying `_multiplier` | **partly fixed, partly open** — Ruling 16 spelled the branch fields `focus_maximum_multiplier` / `changes_focus_maximum_multiplier`, but the weapon and its branch still name one ceiling two ways (`focus_multiplier_maximum` vs `focus_maximum_multiplier`) and the boolean still carries `_multiplier`. **Open: no ruling picked a winner across the two files.** |
+| F | Upper-bound suffix inconsistent repo-wide across `_cap`, `_max` and `_maximum`, with `W-BF-tethered-reaper` carrying two spellings in one object | **fixed, with one escalation** — Ruling 16; `W-BF-tethered-reaper`'s two fields hold *different* values (200 and 400) and are left as authored, declared in `BOUND_SPELLING_ESCALATED`. **Open for a document owner.** |
+| G | Factor and its complementary percentage stored side by side, on `REL-04`, `REL-07` and `REL-09` | **audited, nothing removed** — Ruling 21. All three pairs agree arithmetically, and each factor is stated as a multiplier by a document the definition already cites, so removing one would drop a doc-stated value. **Open: collides with the compiler's derived field when `DAT-006` lands.** |
+
+**Multiplicative values whose property name does not say so.**
+
+1. `REL-09 :: mining_decay_multiple_of_current_forward_extraction_rate` — same as finding A. **Fixed.**
+2. `REL-07 :: explosion_strength_scaling` and `explosion_area_scaling`, both `null`, multiplicativity
+   inferred from `docs/69-initial-relic-catalog.md:130` rather than from data. **Resolved by Ruling 15
+   (omitted) and Ruling 14 (renamed) respectively — see the open tension recorded under Ruling 15.**
+3. `REL-07 :: elite_and_boss_scaling_cap`, `null`, a bound on a scaling whose name states neither a
+   multiplier nor a unit. **Fixed — omitted, Ruling 15.**
+4. `maps/standard-map-generation-contract.json :: world_scale` — a `_scale` name over non-multiplicative
+   contents. **Open, unruled.**
+5. `W-CF-circuit-closure :: effects.eruption_damage_as_seconds_of_current_segment_damage = 6` —
+   functionally a multiplier on current DPS, named as a duration, and doc-faithful
+   (`docs/71-initial-weapon-numeric-catalog.md:418`: "an eruption hit equal to six seconds of current
+   segment Damage"). **Open judgement call; arguably intended.**
+6. The `_percent_of_current_*` family (`charged_shot_width_percent_of_current_width = 200`,
+   `secondary_blast_radius_percent_of_current_radius = 60`, `shell_blast_radius_percent_of_current_radius = 160`,
+   `singularity_radius_percent_of_current_radius = 150`, `blade_radius_percent_of_current_cutter_radius`,
+   `burst_damage_percent_of_full_duration_damage_budget`) — relative scales in percentage points.
+   **Compliant** under `40:97`, which permits percentage points when the name says `_percent`. Listed so
+   they are not miscounted as violations.
+7. Formula strings that encode multipliers instead of naming them —
+   `W-BD-selective-detonators :: damage_multiplier_formula`, `W-AE-containment-lattice :: link_damage_per_second_formula`,
+   `W-AD-singularity-forge :: singularity_damage_per_second_formula`, `W-AD-gravity-slingshot :: burst_damage_formula`.
+   `40:99` requires "a registered formula kind plus parameters, not arbitrary script strings".
+   **Open — a separate rule, already reported by the verifier as an A17 warning.**
+
+**`body_scale_factor` in this file is deliberately not scrubbed.** The audit found the dead spelling
+surviving at `content/transcription-notes.md:442`, `:451`, `:484-486`, `:597`, `:784`, `:811`, `:817` —
+both spellings in adjacent tables of one document. The ruling: **naming rules bind definitions, not
+documentation.** Ruling 7 is recorded as superseding the rename, and scrubbing the old spelling out of an
+audit trail stops it being a record. The verifier walks `content/**/*.json` definitions only. **Not a
+defect; no change.**
+
+**Check 2 tally.** Rename-level violations of the one-spelling rule: 6. Bound-suffix violations of the
+same principle: 1 cluster (88 property names once swept). Redundant twin representations: 3. Confirmed
+clean: no `_factor`/`_scale`/`_ratio`/`_times`/`_x` suffix anywhere in the JSON.
+
+### Check 3 — the `area` dimension rule
+
+**Every property whose name contains `area` — 6 total.**
+
+| # | Property | Value | Doc support for a specific dimension | Verdict |
+| --- | --- | --- | --- | --- |
+| 1 | `W-CF-circuit-closure :: effects.minimum_enclosed_area_m2` | 4 | yes — `docs/71-…:418` "encloses at least 4M², the loop closes" | compliant |
+| 2 | `W-CF-circuit-closure :: effects.maximum_claimed_interior_area_m2` | 40 | yes — `docs/71-…:419` "A loop may claim at most 40M² of interior area" | compliant |
+| 3 | `REL-04 :: effects.weapon_area_multiplier` | 2 | no single dimension — it scales a set | **exempt, Ruling 17** |
+| 4 | `REL-07 :: effects.explosion_area_multiplier` (was `explosion_area_scaling`) | `null` | no — `docs/69-…:130` says only "Explosion strength and Area scale from that enemy's maximum Hull" | **renamed under Ruling 14; exemption reasoning of Ruling 17 applies to the `area` half; the `null` is the open tension under Ruling 15** |
+| 5 | `maps/… :: topology.optional_pockets.terminal_area_rule` | prose | n/a — region noun | compliant |
+| 6 | `maps/… :: topology.optional_pockets.exit_readable_from_terminal_area` | `true` | n/a — region noun | compliant |
+
+**Geometry names that do not state their dimension — five judgement calls.**
+
+| Property | Value | Problem | Status |
+| --- | --- | --- | --- |
+| `maps/… :: deployment_and_opening_fairness.obstacle_free_radius_in_mining_zone_diameters` | 1 | a **radius** measured in **diameters**; `docs/51-…:70` ("obstacle-free space at least one mining-zone diameter around the mech") does not say whether the radius or the diameter of the clear envelope is meant. `docs/technical/50-…:99` and `docs/51-…:47` use "diameters" as a unit of *width* elsewhere. Factor-of-two risk. | **not touched — Ruling 18**, escalated for a doc correction |
+| `W-DF :: fixed_properties.forward_reach_m` | 1.2 | "reach" is not one of `40:98`'s five words; `docs/71-…:89` and `docs/data/weapon-base-balance.csv:15` both say "1.2M forward reach" and neither says whether it is measured from mech centre or hull front | **open** |
+| `W-AF-cutting-vector :: effects.range` | `"the upgradeable laser range"` | a bare `range` — an allowed dimension word, but not *which* range | **open** |
+| `W-DF-siege-anchor :: effects.barrier_thickness_source` | `"current ram width"` | dimension-word mismatch: key says *thickness*, value says *width*; "thickness" is outside `40:98`'s five words | **open** |
+| `W-AB-fracture-lance :: effects.shockwave_reach_per_side_m` | 2.5 | "reach" again; `per_side` resolves the half-vs-full ambiguity, but no doc line states the dimension or the value | **open** |
+
+**Dimension-by-reference strings are compliant** — the dimension word is present and no unit is expected
+because the value is a pointer: `burst_radius`, `collection_field_radius`, `emission_range`,
+`follow_distance`, `shockwave_width`.
+
+**No ambiguous `_m` radius-or-diameter value exists.** Every metric geometry leaf states its dimension in
+the key; the audit enumerated all of them across `radius`, `diameter`, `width`, `range`, `distance` and
+`area` and found zero cases where an `_m` value could be either.
+
+**Bare `size`.** `REL-01`–`REL-10 :: rarity_and_weighting.fresh_profile_pool_size` and
+`fully_unlocked_pool_size` — 20 occurrences, counts wearing a bare `size`, a `40:96` unit-suffix defect
+rather than a geometry one. **Fixed — Ruling 20.** `W-AE-replicator-swarm :: max_total_squad_size_multiplier`
+and `W-AE-containment-lattice :: link_length_and_formation_size_scale_with` were also flagged; the first
+keeps `size` deliberately (it multiplies a size, it is not a count) and the second, which bundles a length
+and a size into one key with no dimension on either, is **open**.
+
+**Check 3 tally.** Properties containing `area`: 6 — 4 compliant, 2 needing a ruling (both now ruled).
+Geometry names lacking a stated dimension: 5 judgement calls, 1 ruled and 4 open. Bare `size` on counts:
+20 occurrences, fixed. Ambiguous `_m` values: 0.
+
+### What the audit changed about the validator set
+
+Two rules in the planned validator set **would have produced a wrong answer** had they been implemented
+as written and run unattended. This is the audit's most important output, and the reason it is preserved
+rather than summarized away.
+
+1. **`40:98` applied to the `Area` stat.** Read literally, "`area` is never used as a vague scalar name"
+   condemns `REL-04 :: effects.weapon_area_multiplier` — and a validator enforcing it would have demanded
+   a specific dimension in the name. That would have been **wrong**: `Area` is an established stat
+   classification (`docs/35-playable-mechs.md:65`), whose membership `docs/36-initial-mech-catalog.md:137`
+   defines as "scalable radii, widths, blast areas, projectile bodies, cones, and persistent damage zones",
+   with explicit exclusions at `:138`. Naming one dimension would encode a falsehood about a scalar that
+   deliberately spans several. The rule binds a field naming a measured dimension of a specific shape, not
+   a field naming the Area stat (Ruling 17), and `content/README.md` now records the exemption.
+2. **A geometry-naming validator applied to
+   `obstacle_free_radius_in_mining_zone_diameters`.** The name is internally odd — a radius in diameters —
+   and any mechanical fix (rename the key, or normalize the unit) would have silently chosen one of two
+   readings that differ by a factor of two, because `docs/51-…:70` does not say which is meant. The correct
+   output is *no change plus an escalation* (Ruling 18). A validator that "fixes" this produces a map
+   contract that is quietly wrong in one direction.
+
+The general lesson both cases share: a naming rule that fires on a *token* cannot distinguish a name that
+misdescribes a measurement from a name that correctly describes a classification, and it cannot tell a
+naming defect from a design ambiguity wearing a naming defect's clothes. Both need a citation check before
+a rename, which is why every ruling above quotes the line it relied on.
+
+### Findings still open after this pass
+
+| Finding | Owner needed |
+| --- | --- |
+| `W-BF-tethered-reaper` — `contact_damage_speed_bonus_percent_max = {percent: 200}` and `contact_damage_percent_cap = {percent: 400}`: two bounds, or one bound and a mistake? | document owner |
+| `obstacle_free_radius_in_mining_zone_diameters` — radius or diameter? Factor of two. | document owner (`docs/51`) |
+| `REL-07 :: effects.explosion_area_multiplier` is still `null` from the same sentence whose sibling was omitted | integration owner |
+| One focus ceiling under two names across `W-AF.json` and `W-AF-coherence-memory.json`, plus a boolean named `changes_focus_maximum_multiplier` | schema stream |
+| Percentage-and-factor twins on `REL-04`, `REL-07`, `REL-09` versus the compiler's derived field (`40:95`) | schema stream, at `DAT-006` |
+| `world_scale`, `eruption_damage_as_seconds_of_current_segment_damage`, `forward_reach_m`, bare `range`, `barrier_thickness_source`, `shockwave_reach_per_side_m`, `link_length_and_formation_size_scale_with` | schema stream / document owners |
+| Formula strings versus a registered formula kind (`40:99`) — already an A17 warning | schema stream |
+| Extraction-zone / resonance-field radii (3.0 M / 6.0 M) awaiting a decision-record citation; minute 33's reconstruction markers awaiting a doc correction | document owner (Ruling 22) |

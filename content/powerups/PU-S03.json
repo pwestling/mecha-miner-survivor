@@ -27,7 +27,7 @@
     "statistic": "Recovery",
     "hull_per_second": 0.03
   },
-  "cap": 5,
+  "maximum": 5,
   "maximum_effect": {
     "text": "+0.15 Hull/s",
     "statistic": "Recovery",

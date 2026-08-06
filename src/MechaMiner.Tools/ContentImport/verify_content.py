@@ -169,6 +169,24 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       with 40:90 ("Unknown fields are errors") for why a prefix may not name
       a field the definition does not have                            FAILURE
 
+  A23 One spelling for a bound. No property name abbreviates a bound as the
+      token `cap`, `max`, or `min`; the word is spelled out as `maximum` or
+      `minimum`, with the qualifier - not the noun - carrying the distinction
+      between two bounds on one quantity (`target_minimum` vs `target_maximum`
+      vs `hard_maximum`). A cap IS a maximum, so `_cap`, `_max` and `_maximum`
+      were three spellings of one concept, twice inside a single object. Where
+      a unit suffix must stay terminal (40:96) the bound word moves to the
+      front instead: `maximum_control_resistance_percent`, not
+      `control_resistance_maximum_percent`.
+      Checked on KEY NAMES at any depth, so the abbreviation cannot return
+      under a new stem. The only accepted members are the paths listed in
+      BOUND_SPELLING_ESCALATED, which is asserted for drift the way A19
+      asserts its two sets: an undeclared member is a failure, and a member
+      that no longer applies is a warning asking for the list to shrink.
+      Mandate: docs/technical/40-content-data-and-validation.md:26
+      (snake_case property names) with 40:96 (the unit-suffix rule that fixes
+      which end of the name the bound word may occupy)                FAILURE
+
 Not asserted here: no structural JSON Schema validation happens, because
 content/schemas/ (40:36) does not exist yet. Domain field names outside the
 envelope are therefore unvalidated and will need one reconciliation pass when
@@ -280,6 +298,40 @@ NAME_KEY_OMITTED = frozenset(
         "content/encounters/standard-encounter-schedule.json",
         "content/enemies/shared-elite-modifiers.json",
         "content/maps/standard-map-generation-contract.json",
+    }
+)
+
+# --------------------------------------------------------------------------
+# A23 - one spelling for a bound
+#
+# A cap is a maximum. Before this pass the same upper bound was spelled `_cap`,
+# `_max` and `_maximum` - twice inside a single object in two files - and `_min`
+# sat beside `_minimum` the same way. The word is now always spelled out, and
+# the qualifier rather than the noun carries the distinction between two bounds
+# on one quantity: `{target_minimum, target_maximum, hard_maximum}`, not
+# `{target_min, target_max, hard_max}`.
+#
+# Where the name carries a unit suffix, the unit stays terminal (40:96) and the
+# bound word moves to the front: `maximum_control_resistance_percent`,
+# `maximum_pursuit_duration_seconds`, `minimum_percent`.
+BOUND_ABBREVIATIONS = frozenset({"cap", "max", "min"})
+
+# A23 - the accepted exceptions, as "<file>::<property name>".
+#
+# Both are in one object in one file, and they hold DIFFERENT values:
+# effects.contact_damage_speed_bonus_percent_max is {percent: 200} while
+# effects.contact_damage_percent_cap is {percent: 400}. That is either two real
+# bounds wearing two spellings or one bound duplicated with a wrong number, and
+# the two need opposite treatment - rename both, or delete one. Renaming them to
+# a single spelling before that is decided would leave two identical stems
+# holding different numbers, which reads as a duplicate with a typo and hides
+# the collision the audit found. They are therefore left exactly as authored,
+# escalated to the document owner, and declared here so the exception is visible
+# rather than absorbed.
+BOUND_SPELLING_ESCALATED = frozenset(
+    {
+        "content/branches/W-BF-tethered-reaper.json::contact_damage_percent_cap",
+        "content/branches/W-BF-tethered-reaper.json::contact_damage_speed_bonus_percent_max",
     }
 )
 
@@ -809,6 +861,47 @@ def check_scope_prefixes(docs: dict[Path, object]) -> list[tuple]:
 # --------------------------------------------------------------------------
 # A2-A9 - per-definition checks
 # --------------------------------------------------------------------------
+
+
+def check_bound_spelling(docs: dict[Path, object]) -> list[tuple]:
+    """A23 - no property name abbreviates a bound as cap/max/min."""
+    seen: set[str] = set()
+    offenders: list[str] = []
+    for path, doc in sorted(docs.items()):
+        for jpath, key, _ in walk(doc):
+            if not key or not (set(key.split("_")) & BOUND_ABBREVIATIONS):
+                continue
+            marker = f"{rel(path)}::{key}"
+            seen.add(marker)
+            if marker not in BOUND_SPELLING_ESCALATED:
+                offenders.append(f"{rel(path)}{jpath[1:]}")
+    resolved = sorted(BOUND_SPELLING_ESCALATED - seen)
+    rows = [
+        (
+            "property names spell a bound out as maximum/minimum",
+            0,
+            f"{len(offenders)} abbreviated",
+            "ok" if not offenders else "FAIL",
+        ),
+        (
+            "declared BOUND_SPELLING_ESCALATED exceptions",
+            len(BOUND_SPELLING_ESCALATED),
+            f"{len(BOUND_SPELLING_ESCALATED) - len(resolved)} still present",
+            "ok" if not resolved else "WARN",
+        ),
+    ]
+    if offenders:
+        fail(
+            f"{len(offenders)} property name(s) abbreviate a bound as 'cap', 'max' or 'min'; a cap "
+            f"is a maximum and the word is spelled out, with the unit suffix kept terminal (40:26, "
+            f"40:96): {offenders[:15]}"
+        )
+    if resolved:
+        warn(
+            f"{len(resolved)} member(s) of BOUND_SPELLING_ESCALATED no longer exist, so the "
+            f"escalation is settled: {resolved}. Shrink BOUND_SPELLING_ESCALATED."
+        )
+    return rows
 
 
 def check_definitions(docs: dict[Path, object], doc_index: dict[str, dict]) -> dict:
@@ -1653,6 +1746,7 @@ def main() -> int:
     derived_rows = check_derived_values(docs)
     footprint_rows = check_derived_footprint_fields(docs)
     prefix_rows = check_scope_prefixes(docs)
+    bound_rows = check_bound_spelling(docs)
     inventory_rows = check_file_inventory()
     loc_rows = check_localization(stats)
 
@@ -1674,6 +1768,11 @@ def main() -> int:
         "A22 source_refs scope prefixes",
         ("check", "prefixed refs", "dangling", "status"),
         prefix_rows,
+    )
+    table(
+        "A23 One spelling for a bound (maximum/minimum, spelled out)",
+        ("check", "expected", "actual", "status"),
+        bound_rows,
     )
     table("A10/A11 Localization", ("check", "expected", "actual", "status"), loc_rows)
     table("A19 Expected exception sets", ("set", "expected", "actual", "status"), set_rows)

@@ -101,7 +101,7 @@
   ],
   "fixed_properties": {
     "damages_every_valid_target_in_radius": true,
-    "has_target_or_overlap_cap": false,
+    "has_target_or_overlap_maximum": false,
     "raw": "Damages every valid target in radius"
   },
   "damage_model": {

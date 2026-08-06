@@ -41,7 +41,7 @@
     "new_original_field_may_coexist_with_older_echo": true
   },
   "expected_effect": {
-    "max_damage_increase_percent": 100,
+    "maximum_damage_increase_percent": 100,
     "condition": "player keeps enemies in the location",
     "materially_less_benefit_against_moving_boss": true
   },

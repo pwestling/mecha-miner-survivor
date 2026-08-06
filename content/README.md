@@ -153,13 +153,29 @@ rule:
   (`docs/technical/40-content-data-and-validation.md:95`). The normalized factor is *not* authored
   here — the compiler writes it into the runtime bundle as a separate derived field.
 - **Geometry names distinguish radius, diameter, width, and range**; `area` is never a vague scalar
-  (`docs/technical/40-content-data-and-validation.md:98`).
+  (`docs/technical/40-content-data-and-validation.md:98`). **`Area` the stat is exempt**, because it is
+  an established stat classification rather than a geometric measurement: `docs/36-initial-mech-catalog.md:137`
+  defines its membership as "scalable radii, widths, blast areas, projectile bodies, cones, and
+  persistent damage zones", so `weapon_area_multiplier` deliberately scales a *set* of dimensions and
+  naming one of them would encode a falsehood. The rule binds a field naming a measured dimension of a
+  specific shape, not a field naming the Area stat.
+- **A multiplicative scale is always `_multiplier`.** Not `_scaling`, not `_multiple_of_`, not
+  `_factor`. `content/mining-sites/*.json` and `content/relics/REL-09.json` name the same mining
+  progress-decay quantity `decay_rate_multiplier_of_forward_rate`, because one concept has one name.
+  A field is *not* named `_multiplier` on the strength of prose that says a value "scales": where no
+  document states the multiplicativity, the property is omitted rather than declared under a guessed
+  semantic (see `content/transcription-notes.md`).
+- **A bound is always `maximum` or `minimum`, spelled out** — never `_cap`, `_max` or `_min`. A cap is
+  a maximum, and the qualifier rather than the noun carries the distinction between two bounds on one
+  quantity: `{target_minimum, target_maximum, hard_maximum}`. Where the name carries a unit suffix the
+  unit stays terminal (`40:94`) and the bound word moves to the front instead:
+  `maximum_control_resistance_percent`, `maximum_pursuit_duration_seconds`.
 - **Formulas are not script strings.** A player-facing formula such as the weapon upgrade price must
   become a registered formula kind plus parameters
   (`docs/technical/40-content-data-and-validation.md:99`).
-- **Ranges are `{min, max}` objects**, never a string like `"8-10"`.
+- **Ranges are `{minimum, maximum}` objects**, never a string like `"8-10"`.
 - **Per-rank values are rank-ordered arrays** (`ranks[0]` is rank 1), variable length: PowerUp rank
-  arrays have 1, 3, 4, or 5 entries matching each entry's cap, and `PU-S04` has exactly one rank.
+  arrays have 1, 3, 4, or 5 entries matching each entry's `maximum`, and `PU-S04` has exactly one rank.
 - **Values are transcribed, not derived.** No value is computed, rounded, or filled in. Where the docs
   state no fact, the property is `null` and the reason is recorded in `content/transcription-notes.md`.
 - **The authoritative source wins over its mirrors.** The Markdown design docs are authoritative; the
@@ -253,6 +269,10 @@ file, and `src/MechaMiner.Tools/ContentImport/README.md`):
   warning to shrink the list;
 - `snake_case` property names everywhere, keys only, so ID/enum tokens in values keep their case
   (`40:26`);
+- that no property name abbreviates a bound as `cap`, `max` or `min` at any depth, so the spelled-out
+  `maximum`/`minimum` cannot drift back into three spellings. The only accepted exceptions are the two
+  fields declared in the verifier's `BOUND_SPELLING_ESCALATED`, which hold *different* values under two
+  spellings in one object and are escalated rather than renamed;
 - no stale extraction metadata keys survive anywhere at any depth, including the retired
   `shared_rule_refs`, whose content now lives in `source_refs`;
 - every `source_refs` document ID and `#anchor` resolves against `docs/` front matter (`40:87`), and

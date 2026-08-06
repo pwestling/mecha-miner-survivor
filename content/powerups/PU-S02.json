@@ -27,7 +27,7 @@
     "statistic": "Armor",
     "armor": 1
   },
-  "cap": 3,
+  "maximum": 3,
   "maximum_effect": {
     "text": "+3",
     "statistic": "Armor",

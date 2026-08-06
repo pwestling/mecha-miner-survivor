@@ -46,12 +46,12 @@
       "ore_per_completion": 50,
       "partial_payout": false,
       "geodes_per_map": {
-        "min": 32,
-        "max": 40
+        "minimum": 32,
+        "maximum": 40
       },
       "total_per_map": {
-        "min": 1600,
-        "max": 2000
+        "minimum": 1600,
+        "maximum": 2000
       }
     },
     {
@@ -68,8 +68,8 @@
   ],
   "seam_total_per_map": 3600,
   "complete_run_ceiling_before_relic_sales": {
-    "min": 6400,
-    "max": 6800
+    "minimum": 6400,
+    "maximum": 6800
   },
   "dropped_by_ordinary_enemies_and_elites": false
 }

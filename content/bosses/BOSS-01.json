@@ -61,17 +61,17 @@
     "assumptions": "100 Hull, zero Armor, no healing, no resonance, uninterrupted overlap with one attacker"
   },
   "target_time_to_kill_seconds": {
-    "min": 45,
-    "max": 75
+    "minimum": 45,
+    "maximum": 75
   },
   "required_realized_build_dps": {
-    "min": 80,
-    "max": 133
+    "minimum": 80,
+    "maximum": 133
   },
   "milestone_reach_target_probability": {
     "percent": {
-      "min": 85,
-      "max": 95
+      "minimum": 85,
+      "maximum": 95
     },
     "cohort": "players who understand movement and fabrication but have no permanent PowerUps"
   },
@@ -108,7 +108,7 @@
   "persistence": {
     "never_despawns": true,
     "counts_toward_ordinary_population": false,
-    "max_simultaneous_bosses": 4,
+    "maximum_simultaneous_bosses": 4,
     "persists_until_killed": true,
     "later_bosses_may_overlap": true,
     "required_for_extraction": false,

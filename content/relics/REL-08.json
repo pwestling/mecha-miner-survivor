@@ -48,13 +48,13 @@
     "positional_tolerance_m": null,
     "heat_build_rate_per_second": null,
     "heat_vent_rate_per_second": null,
-    "max_heat_weapon_damage_bonus": {
+    "maximum_heat_weapon_damage_bonus": {
       "percent": 100
     },
-    "max_heat_attack_rate_bonus": {
+    "maximum_heat_attack_rate_bonus": {
       "percent": 50
     },
-    "max_heat_weapon_area_bonus": {
+    "maximum_heat_weapon_area_bonus": {
       "percent": 50
     },
     "redline_hull_integrity_loss_per_active_second": 3,
@@ -100,8 +100,8 @@
     "rarity_tier": null,
     "cache_selection_weight": null,
     "selection_model": "three distinct relics drawn without replacement from the currently unlocked pool and assigned to the three caches during generation",
-    "fresh_profile_pool_size": 5,
-    "fully_unlocked_pool_size": 10,
+    "fresh_profile_pool_count": 5,
+    "fully_unlocked_pool_count": 10,
     "in_fresh_profile_pool": false,
     "guaranteed_to_appear": false
   },

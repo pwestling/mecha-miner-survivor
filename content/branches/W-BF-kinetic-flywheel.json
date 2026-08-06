@@ -41,11 +41,11 @@
     "orbit_speed_per_stack": {
       "percent": 4
     },
-    "stack_cap": 10,
-    "cutter_damage_at_cap": {
+    "stack_maximum": 10,
+    "cutter_damage_at_maximum": {
       "percent": 40
     },
-    "orbit_speed_at_cap": {
+    "orbit_speed_at_maximum": {
       "percent": 40
     },
     "decay_delay_seconds_without_cutter_hit": 2.0,

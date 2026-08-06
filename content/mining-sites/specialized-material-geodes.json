@@ -22,12 +22,12 @@
   ],
   "material_units_per_geode": 1,
   "geodes_per_present_material": {
-    "min": 8,
-    "max": 10
+    "minimum": 8,
+    "maximum": 10
   },
   "geodes_per_standard_map": {
-    "min": 32,
-    "max": 40
+    "minimum": 32,
+    "maximum": 40
   },
   "abundance_states": [
     {
@@ -48,8 +48,8 @@
   ],
   "survey_disclosure": "The geological survey reports both the abundance label and detected geode count, but not their locations.",
   "common_ore_from_completion_jackpots_per_map": {
-    "min": 1600,
-    "max": 2000
+    "minimum": 1600,
+    "maximum": 2000
   },
   "extraction_duration_seconds": 20,
   "completion_only_reward": true,

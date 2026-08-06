@@ -42,7 +42,7 @@
     },
     "shard_travel_m": 4,
     "shard_ends_on_first_enemy": true,
-    "max_shards_per_enemy_per_interception_burst": 2,
+    "maximum_shards_per_enemy_per_interception_burst": 2,
     "per_cutter_interception_cooldown_seconds": 0.5,
     "undeflectable_boss_attacks": "remain visually distinct"
   },

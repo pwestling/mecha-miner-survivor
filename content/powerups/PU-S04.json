@@ -28,7 +28,7 @@
     "statistic": "revival charges",
     "revival_charges_per_run": 1
   },
-  "cap": 1,
+  "maximum": 1,
   "maximum_effect": {
     "text": "One revival",
     "statistic": "revival charges",

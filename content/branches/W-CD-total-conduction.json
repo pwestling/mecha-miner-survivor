@@ -33,19 +33,19 @@
     "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite."
   },
   "effects": {
-    "target_cap_removed": true,
-    "removed_target_cap": 5,
+    "target_maximum_removed": true,
+    "removed_target_maximum": 5,
     "chain_continues_while": "a new valid enemy is within current chain range",
     "damage_falloff_across_jumps": {
       "percent": 0
     },
-    "max_hits_per_enemy_per_activation": 1
+    "maximum_hits_per_enemy_per_activation": 1
   },
   "favorable_scene_effect": {
     "magnitude": {
       "horde_throughput_increase_percent": {
-        "min": 40,
-        "max": 150
+        "minimum": 40,
+        "maximum": 150
       },
       "approximate": true
     },

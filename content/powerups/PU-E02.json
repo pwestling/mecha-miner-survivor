@@ -27,7 +27,7 @@
     "statistic": "extraction-zone radius",
     "percent": 3
   },
-  "cap": 5,
+  "maximum": 5,
   "maximum_effect": {
     "text": "+15%",
     "statistic": "extraction-zone radius",

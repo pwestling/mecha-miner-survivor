@@ -35,10 +35,10 @@
   "effects": {
     "first_target_stagger_seconds": 0.25,
     "stagger_increment_per_chain_step_seconds": 0.05,
-    "stagger_cap_seconds": 0.6,
+    "maximum_stagger_seconds": 0.6,
     "elite_and_boss_handling": "globally resisted stagger duration and immunity-window behavior",
     "damage_changed": false,
-    "target_cap_changed": false
+    "target_maximum_changed": false
   },
   "favorable_scene_effect": {
     "magnitude": null,

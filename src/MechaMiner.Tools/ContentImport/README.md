@@ -33,6 +33,12 @@ checks:
   list;
 - `snake_case` property names at every depth, checked on keys only, so stable ID/enum/kind tokens in
   values keep their exact case;
+- that no property name abbreviates a bound as `cap`, `max` or `min`. A cap is a maximum, so the word is
+  spelled out and the qualifier rather than the noun distinguishes two bounds on one quantity
+  (`{target_minimum, target_maximum, hard_maximum}`). Where the name carries a unit suffix the unit stays
+  terminal and the bound word moves to the front (`maximum_control_resistance_percent`). The exception
+  list `BOUND_SPELLING_ESCALATED` has two members — one object holding *different* values under two
+  spellings, escalated rather than renamed — and it is asserted for drift like `ID_NULL_EXPECTED`;
 - that no stale extraction metadata key (`_provenance`, `_source`, `notes`, `refs`, `lines`, `line`,
   `shared_rule_refs`) survives anywhere at any depth;
 - that every `source_refs` element resolves — the document ID against `doc_id` front matter under

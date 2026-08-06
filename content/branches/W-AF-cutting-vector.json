@@ -34,8 +34,8 @@
     "damages_every_enemy_crossed_at_full_current_damage_rate": true,
     "focus_builds_within_facing_change_degrees": 12,
     "focus_decay_band_degrees": {
-      "min": 12,
-      "max": 25
+      "minimum": 12,
+      "maximum": 25
     },
     "focus_decay_rate_multiplier_in_band": 2,
     "focus_reset_beyond_degrees": 25,

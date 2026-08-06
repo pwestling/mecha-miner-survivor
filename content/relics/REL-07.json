@@ -43,9 +43,7 @@
     },
     "explosion_delay_seconds": null,
     "explosion_scales_from": "the defeated enemy's maximum Hull",
-    "explosion_strength_scaling": null,
-    "explosion_area_scaling": null,
-    "elite_and_boss_scaling_cap": null,
+    "explosion_area_multiplier": null,
     "generational_decay": null,
     "chain_generation_limit": null,
     "can_damage_player_mining_points_caches_pickups_or_rocks": false
@@ -73,8 +71,8 @@
     "rarity_tier": null,
     "cache_selection_weight": null,
     "selection_model": "three distinct relics drawn without replacement from the currently unlocked pool and assigned to the three caches during generation",
-    "fresh_profile_pool_size": 5,
-    "fully_unlocked_pool_size": 10,
+    "fresh_profile_pool_count": 5,
+    "fully_unlocked_pool_count": 10,
     "in_fresh_profile_pool": true,
     "guaranteed_to_appear": false
   },

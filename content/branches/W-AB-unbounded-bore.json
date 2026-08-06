@@ -44,8 +44,8 @@
   "expected_effect": {
     "approximate": true,
     "horde_throughput_percent": {
-      "min": 35,
-      "max": 70
+      "minimum": 35,
+      "maximum": 70
     },
     "scene": "dense aligned stream",
     "direct_single_target_increase": false

@@ -53,7 +53,7 @@
     "always_present_in_fixed_fabrication_catalog": true
   },
   "tracking": {
-    "max_simultaneous_bearings": 7,
+    "maximum_simultaneous_bearings": 7,
     "tracked_category_count": 7,
     "tracked_categories": [
       "Nearest remaining unopened geode of each of the four materials known to be present from the geological survey (four categories)",

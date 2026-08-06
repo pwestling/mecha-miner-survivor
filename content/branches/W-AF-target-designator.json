@@ -33,7 +33,7 @@
     "exposed_applies_to": "every player weapon, including Tracking Laser",
     "exposed_duration_seconds": 4.0,
     "duration_refreshes_while_at_or_above_threshold": true,
-    "max_exposed_targets_from_this_weapon": 1,
+    "maximum_exposed_targets_from_this_weapon": 1,
     "old_exposure_on_target_change": "expires normally",
     "stacks_with_second_copy": false,
     "modifier_kind": "weapon-specific damage-taken multiplier"

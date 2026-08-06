@@ -28,8 +28,8 @@
   },
   "boss_arrival_minute_rule": {
     "minimum_reduction_from_preceding_minute": {
-      "percent_min": 10,
-      "percent_max": 20
+      "minimum_percent": 10,
+      "maximum_percent": 20
     },
     "additional_scheduled_formation": false,
     "statement": "Boss-arrival minutes deliberately reduce the baseline minimum by roughly 10–20% from the preceding minute and contain no additional scheduled formation."

@@ -27,7 +27,7 @@
     "statistic": "discovery radius",
     "percent": 5
   },
-  "cap": 5,
+  "maximum": 5,
   "maximum_effect": {
     "text": "+25%",
     "statistic": "discovery radius",

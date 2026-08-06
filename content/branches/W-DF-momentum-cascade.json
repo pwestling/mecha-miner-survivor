@@ -50,7 +50,7 @@
     "per_stack_ram_width_bonus": {
       "percent": 5
     },
-    "stack_cap": 6,
+    "stack_maximum": 6,
     "maximum_damage_bonus": {
       "percent": 60
     },

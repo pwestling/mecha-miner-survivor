@@ -27,7 +27,7 @@
     "statistic": "weapon Duration",
     "percent": 4
   },
-  "cap": 4,
+  "maximum": 4,
   "maximum_effect": {
     "text": "+16%",
     "statistic": "weapon Duration",

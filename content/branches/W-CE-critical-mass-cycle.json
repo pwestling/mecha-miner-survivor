@@ -38,7 +38,7 @@
   "effects": {
     "charge_name": "Critical Mass",
     "charges_granted_per_enemy_hit_by_pulse": 1,
-    "charge_cap": 20,
+    "charge_maximum": 20,
     "charges_apply_to_next_pulse_only": true,
     "per_charge_damage_bonus": {
       "percent": 2

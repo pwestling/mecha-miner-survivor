@@ -335,6 +335,13 @@ mesh = SubResource("mesh_marker")
 [node name="Marker_20_20" type="MeshInstance3D" parent="ReferenceMarkers"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.0, 0.06, -20.0)
 mesh = SubResource("mesh_marker")
+; Pooled visuals for simulation entities hang off this node, created and freed by
+; RunSceneRoot.RenderVisibleEntities as the published snapshot gains and loses identities.
+; It is empty in the scene file on purpose: enemies, projectiles, and the number of mining
+; sites are all decided by the simulation at run time, so an authored child here would be a
+; body the simulation does not know about.
+[node name="SimulationEntities" type="Node3D" parent="."]
+
 [node name="PlayerBody" type="Node3D" parent="."]
 
 [node name="Chassis" type="MeshInstance3D" parent="PlayerBody"]

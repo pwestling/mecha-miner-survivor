@@ -4,9 +4,14 @@ using System.IO;
 using System.Text;
 using Godot;
 using MechaMiner.Game.Presentation;
+using MechaMiner.Simulation.Combat;
 using MechaMiner.Simulation.Commands;
+using MechaMiner.Simulation.Encounters;
+using MechaMiner.Simulation.Entities;
 using MechaMiner.Simulation.Geometry;
+using MechaMiner.Simulation.Mining;
 using MechaMiner.Simulation.Player;
+using MechaMiner.Simulation.Runtime;
 using MechaMiner.Simulation.Snapshots;
 using MechaMiner.Simulation.Time;
 using MechaMiner.Simulation.World;
@@ -96,6 +101,10 @@ public partial class RunSliceEvidenceHarness : Node
         RunOpenTickSection();
         RunMovementSection();
         RunInterpolationSection();
+        RunThreatSection();
+        RunExtractionSection();
+        RunDeterminismSection();
+        RunTerminalSection();
 
         Line(string.Empty);
         Line("assertions_run\t" + _assertionsRun.ToString(CultureInfo.InvariantCulture));
@@ -535,6 +544,456 @@ public partial class RunSliceEvidenceHarness : Node
 
         pivot.Free();
         Line(string.Empty);
+    }
+
+    /// <summary>
+    /// The loop as numbers: enemies close on the mech, the mech's Hull falls, and pursuers die.
+    /// </summary>
+    /// <remarks>
+    /// Driven under <c>HarnessStressRows.LethalSwarm</c>, which is a row NO DOCUMENT STATES and whose own
+    /// label says so - the label is printed below. It is used because the measured consequence of doc
+    /// 32:56's authored minute-0 row is that a run is very nearly unlosable: 35 minutes of kiting ends
+    /// with 95 of 100 Hull. A transcript that claimed to show damage accumulating from the authored row
+    /// would be claiming something it had not arranged to see.
+    /// </remarks>
+    private void RunThreatSection()
+    {
+        Line("## enemies-close-and-the-mech-takes-damage");
+        Line("# EN-01 Skitterling: hull 20, contact 5, 42% move share (docs/31:39), which is 1.26 m/s");
+        Line("# against the 3.0 m/s baseline of docs/72:39 - the product docs/72:65 tabulates.");
+        Line("enemy_profile\t" + EnemyRoster.Skitterling.ToString());
+        Line("contact_repeat_ticks\t"
+            + ContactDamageCadence.RepeatIntervalTicks.ToString(CultureInfo.InvariantCulture)
+            + "\tdocs/72:42, 0.75 s");
+        Line("global_grace_ticks\t"
+            + ContactDamageCadence.GraceTicks.ToString(CultureInfo.InvariantCulture)
+            + "\tdocs/72:43, 0.20 s");
+
+        RunComposition run = RunComposition.CreateGraybox(
+            0x7EA7_0000_0001UL,
+            HarnessStressRows.LethalSwarm);
+        Line("replenishment_row\t" + run.World.BaselineRow.ToString());
+        Line(string.Empty);
+        Line("tick\thull\tenemies\tnearest_enemy_m\tcontacts_resolved\tkilled\tshots");
+
+        long sequence = CommandEnvelope.FirstSequence;
+        int hullFirstFell = -1;
+        int hullAtStart = run.World.Player.Hull;
+        double nearestEver = double.PositiveInfinity;
+
+        for (int tick = 0; tick < 2400 && !run.World.HasEnded; tick++)
+        {
+            // The mech stands still, so the only thing that changes its Hull is contact.
+            run.CommandGate.TryAdmit(run.ComposeEnvelope(sequence++, 0.0, 0.0), out _);
+            run.Host.Step(TickRate.SecondsPerTick);
+            _ = run.SettleTerminalTransition();
+
+            double nearest = NearestEnemyDistance(run);
+            nearestEver = Math.Min(nearestEver, nearest);
+
+            if (hullFirstFell < 0 && run.World.Player.Hull < hullAtStart)
+            {
+                hullFirstFell = tick;
+            }
+
+            if (tick % 120 == 0 || run.World.HasEnded)
+            {
+                Line(
+                    tick.ToString(CultureInfo.InvariantCulture) + "\t"
+                    + run.World.Player.Hull.ToString(CultureInfo.InvariantCulture) + "\t"
+                    + run.World.LiveEnemyCount.ToString(CultureInfo.InvariantCulture) + "\t"
+                    + (double.IsPositiveInfinity(nearest) ? "none" : Invariant(nearest)) + "\t"
+                    + run.World.ContactInstancesResolved.ToString(CultureInfo.InvariantCulture) + "\t"
+                    + run.World.EnemiesDestroyed.ToString(CultureInfo.InvariantCulture) + "\t"
+                    + run.World.ProjectilesFired.ToString(CultureInfo.InvariantCulture));
+            }
+        }
+
+        Line("# first tick Hull fell: "
+            + hullFirstFell.ToString(CultureInfo.InvariantCulture)
+            + "; closest an enemy came: " + Invariant(nearestEver) + " m");
+
+        Check(
+            "enemies-materialize-from-the-spawn-ring",
+            run.World.EnemiesMaterialized > 0,
+            "phase 3 admitted the row's pulse (doc 10:146)");
+        Check(
+            "enemies-reach-the-mech",
+            nearestEver <= PlayerBaseline.CollisionRadiusMeters
+                + EnemyRoster.Skitterling.ContactRadiusMeters,
+            "the closest approach is within the summed footprints, so the overlap phase 9 collects "
+                + "candidates from really occurred rather than being asserted from a distance");
+        Check(
+            "the-mech-takes-contact-damage",
+            run.World.ContactInstancesResolved > 0 && run.World.Player.Hull < hullAtStart,
+            "docs/31:27 - an overlapping enemy deals its listed contact damage. Hull started at "
+                + hullAtStart.ToString(CultureInfo.InvariantCulture) + " and is now "
+                + run.World.Player.Hull.ToString(CultureInfo.InvariantCulture));
+        Check(
+            "hull-only-ever-falls",
+            run.World.Player.Hull <= hullAtStart,
+            "docs/72:37 Passive Recovery is 0 Hull/s, so damage accumulates and the run is losable");
+        Check(
+            "the-weapon-kills-pursuers",
+            run.World.EnemiesDestroyed > 0,
+            "two 12-damage Pulse Repeater projectiles (docs/71:81) exhaust a 20-Hull Skitterling "
+                + "(docs/31:39), and phase 12 removed the record");
+        Check(
+            "no-contact-instance-lands-inside-the-global-grace",
+            run.World.ContactInstancesResolved
+                <= (run.World.CommittedTickCount / ContactDamageCadence.GraceTicks) + 1,
+            "docs/31:28 caps the mech's intake at one instance per 0.20 s no matter how large the crowd; "
+                + run.World.ContactInstancesResolved.ToString(CultureInfo.InvariantCulture)
+                + " instances over "
+                + run.World.CommittedTickCount.ToString(CultureInfo.InvariantCulture)
+                + " ticks");
+
+        Line(string.Empty);
+    }
+
+    /// <summary>The mining loop as numbers: progress rising, installments paying, decay taking it back.</summary>
+    private void RunExtractionSection()
+    {
+        Line("## mining-progress-rises-and-decays");
+        Line("# Standard ore seam (docs/40:62): 10 ore per 1.5 s installment, ten installments,");
+        Line("# 100 ore over 15 s. Grace 0.5 s and decay 4x forward rate (docs/40:52).");
+        Line("# The extraction-zone RADIUS is graybox with no source claimed: docs/40:48, DEC-031:51");
+        Line("# and docs/10:75 each say it remains open in OQ-004.");
+        Line("installment_ticks\t"
+            + StandardOreSeamProfile.InstallmentTicks.ToString(CultureInfo.InvariantCulture));
+        Line("grace_ticks\t"
+            + GrayboxExtraction.ExitGraceTicks.ToString(CultureInfo.InvariantCulture));
+        Line("decay_multiple\t"
+            + GrayboxExtraction.DecayRateMultiple.ToString(CultureInfo.InvariantCulture));
+        Line("zone_radius_m_GRAYBOX\t" + Invariant(GrayboxExtraction.ZoneRadiusMeters));
+
+        RunComposition run = RunComposition.CreateGraybox(0x0DE0_0000_0002UL);
+        PlanarVector seam = run.World.MiningSiteAt(0).Centre;
+        Line("seam0_at\t(" + Invariant(seam.X) + "," + Invariant(seam.Y) + ")");
+        Line(string.Empty);
+        Line("phase\ttick\tseam0_state\tprogress\tpaid\tore\thud_ore\thud_extraction_pct");
+
+        long sequence = CommandEnvelope.FirstSequence;
+
+        // Walk to the seam and drill for four installments.
+        for (int tick = 0; tick < 600; tick++)
+        {
+            PlanarVector toSeam = seam - run.World.Player.Position;
+            PlanarVector intent = toSeam.Magnitude > 0.05 ? toSeam.Normalized() : PlanarVector.Zero;
+            StepWithIntent(run, intent, ref sequence);
+            if (tick % 60 == 0)
+            {
+                LogSeam(run, "drill");
+            }
+
+            if (run.World.InstallmentsPaid >= 4)
+            {
+                break;
+            }
+        }
+
+        long orePaid = run.World.RunLocalCommonOre;
+        LogSeam(run, "leaving");
+
+        // Walk away. The grace is keyed to the tick occupancy actually ENDS, not to the tick the walk
+        // begins: the mech is at the seam's centre and needs about 40 ticks to cross the zone radius,
+        // during which progress is still rising. Measuring from the start of the walk was the first
+        // version of this section and it failed - progress was 21 when the walk began and 51 thirty ticks
+        // later - which is the harness catching its own measurement error rather than a production defect.
+        PlanarVector away = (run.World.Player.Position - seam).Normalized();
+        int progressWhenOccupancyEnded = -1;
+        int progressAfterGrace = -1;
+        for (int tick = 0; tick < 400; tick++)
+        {
+            StepWithIntent(run, away, ref sequence);
+            MiningSiteState seamNow = run.World.MiningSiteAt(0);
+
+            if (progressWhenOccupancyEnded < 0 && seamNow.TicksOutside == 1)
+            {
+                progressWhenOccupancyEnded = seamNow.InstallmentProgressTicks;
+                LogSeam(run, "left-zone");
+            }
+
+            if (progressAfterGrace < 0 && seamNow.TicksOutside == GrayboxExtraction.ExitGraceTicks)
+            {
+                progressAfterGrace = seamNow.InstallmentProgressTicks;
+                LogSeam(run, "grace-end");
+            }
+
+            if (tick % 60 == 0)
+            {
+                LogSeam(run, "away");
+            }
+        }
+
+        LogSeam(run, "decayed");
+
+        Check(
+            "entering-the-zone-starts-extraction-with-no-command",
+            run.World.InstallmentsPaid >= 4,
+            "docs/40:16-18 - mining is automatic and needs no interaction button. The only command "
+                + "submitted was a movement intent");
+        Check(
+            "each-installment-pays-the-documented-ore",
+            orePaid == 4L * StandardOreSeamProfile.OrePerInstallment,
+            "docs/40:62 - 10 common ore per installment. Four installments paid "
+                + orePaid.ToString(CultureInfo.InvariantCulture));
+        Check(
+            "unfinished-progress-holds-through-the-grace",
+            progressWhenOccupancyEnded > 0 && progressAfterGrace == progressWhenOccupancyEnded,
+            "docs/40:52 - progress holds steady for 0.5 s after leaving. It was "
+                + progressWhenOccupancyEnded.ToString(CultureInfo.InvariantCulture)
+                + " on the tick occupancy ended and "
+                + progressAfterGrace.ToString(CultureInfo.InvariantCulture)
+                + " thirty ticks later. The first conjunct matters: with zero progress on leaving, the "
+                + "equality would hold trivially and this check could not fail");
+        Check(
+            "progress-then-decays-to-zero",
+            run.World.MiningSiteAt(0).InstallmentProgressTicks == 0
+                && run.World.MiningSiteAt(0).Phase == MiningPhase.Available,
+            "docs/40's state diagram - 'Decaying --> Available: Progress decays to zero'");
+        Check(
+            "paid-installments-survive-the-decay",
+            run.World.RunLocalCommonOre == orePaid,
+            "docs/40:64 - 'it never removes previously awarded ore'. The run still holds "
+                + run.World.RunLocalCommonOre.ToString(CultureInfo.InvariantCulture) + " ore");
+        Check(
+            "the-hud-publishes-the-authoritative-ore-total",
+            run.Snapshots.Latest!.Hud.DisplayedCommonOre == run.World.RunLocalCommonOre,
+            "so the number a player sees is the authoritative one rather than a presentation copy");
+
+        Line(string.Empty);
+    }
+
+    /// <summary>Two runs of one seed, compared as text.</summary>
+    private void RunDeterminismSection()
+    {
+        Line("## same-seed-runs-are-byte-identical");
+        Line("# doc 20 § Authoritative random-number contract. Two registered families are drawn from:");
+        Line("# 0x0210 standard-seam placement and 0x0300 baseline encounter composition.");
+
+        const ulong seed = 0x5EED_0000_0003UL;
+        string first = RenderRun(seed);
+        string second = RenderRun(seed);
+        string other = RenderRun(seed + 1UL);
+
+        Line("transcript_chars\t" + first.Length.ToString(CultureInfo.InvariantCulture));
+        Line("same_seed_identical\t" + (string.Equals(first, second, StringComparison.Ordinal) ? "yes" : "no"));
+        Line("different_seed_identical\t"
+            + (string.Equals(first, other, StringComparison.Ordinal) ? "yes" : "no"));
+
+        Check(
+            "two-runs-of-the-same-seed-render-identically",
+            string.Equals(first, second, StringComparison.Ordinal),
+            "every enemy position, seam progress and counter at every sampled tick, rendered round-trip "
+                + "so two doubles differing in the last bit would differ here");
+        Check(
+            "two-runs-of-different-seeds-do-not",
+            !string.Equals(first, other, StringComparison.Ordinal),
+            "without this the check above would also pass for a world that drew no randomness at all, or "
+                + "one whose draws never reached anything the transcript renders");
+
+        Line(string.Empty);
+    }
+
+    /// <summary>
+    /// The run ends: the real 35:00 boundary, executed tick by tick, and the destroyed path.
+    /// </summary>
+    /// <remarks>
+    /// The surviving case executes all 126,000 ticks rather than calling
+    /// <c>EvaluateTerminalBoundary</c> directly, because what is being shown is that a run REACHES the
+    /// boundary - which is a claim about the host, the clock, and 35 minutes of gameplay, not about a
+    /// method. It takes a few seconds of wall time.
+    /// </remarks>
+    private void RunTerminalSection()
+    {
+        Line("## the-run-ends");
+        Line("final_boundary_minutes\t"
+            + RunClock.FinalBoundaryMinutes.ToString(CultureInfo.InvariantCulture));
+        Line("final_boundary_tick\t"
+            + RunClock.FinalBoundaryTick.Index.ToString(CultureInfo.InvariantCulture));
+        Line(string.Empty);
+
+        // --- survived: 35 real minutes under the authored row ---
+        RunComposition survivor = RunComposition.CreateGraybox(0x5A1E_0000_0001UL);
+        long sequence = CommandEnvelope.FirstSequence;
+        long lastReported = 0;
+        Line("outcome\ttick\tclock_s\thull\tore\tkilled\tterminal_flag");
+
+        while (!survivor.Host.Clock.BlockingReasons.IsBlocking)
+        {
+            StepWithIntent(survivor, KiteIntent(survivor, 12.0), ref sequence);
+            if (survivor.World.CommittedTickCount - lastReported >= 18000)
+            {
+                lastReported = survivor.World.CommittedTickCount;
+                LogOutcomeRow(survivor, "surviving");
+            }
+        }
+
+        LogOutcomeRow(survivor, "survived");
+
+        Check(
+            "a-run-that-reaches-35-00-is-settled-survived",
+            survivor.World.Terminal.Outcome == RunOutcome.Survived,
+            "doc 20 § Boundary and tie ordering - at 35:00 'successful extraction is evaluated'. Reached "
+                + "by executing all "
+                + survivor.World.CommittedTickCount.ToString(CultureInfo.InvariantCulture)
+                + " ticks, not by calling the boundary member");
+        Check(
+            "the-survived-boundary-is-the-real-126000th-tick",
+            survivor.World.CommittedTickCount == RunClock.FinalBoundaryTick.Index
+                && survivor.World.Terminal.Tick == RunClock.FinalBoundaryTick.Index,
+            "35 minutes at 60 Hz");
+        Check(
+            "no-technical-failure-was-recorded-for-a-run-that-ended-correctly",
+            !survivor.Host.HasEndedInTechnicalFailure,
+            "doc 20 § Tick transaction reserves that path for an invalidated tick");
+
+        // --- destroyed: the stress row ---
+        RunComposition casualty = RunComposition.CreateGraybox(
+            0xDEAD_0000_0001UL,
+            HarnessStressRows.LethalSwarm);
+        Line("row_for_the_destroyed_case\t" + casualty.World.BaselineRow.ToString());
+        sequence = CommandEnvelope.FirstSequence;
+        while (!casualty.World.HasEnded && casualty.World.CommittedTickCount < 7200)
+        {
+            StepWithIntent(casualty, PlanarVector.Zero, ref sequence);
+        }
+
+        LogOutcomeRow(casualty, "destroyed");
+
+        Check(
+            "a-run-whose-hull-reaches-zero-is-settled-destroyed",
+            casualty.World.Terminal.Outcome == RunOutcome.Destroyed
+                && casualty.World.Player.Hull == 0,
+            "doc 10:156 - phase 13 evaluates 'death or extraction terminal conditions'");
+        Check(
+            "the-destroyed-run-never-reached-the-boundary",
+            casualty.World.BoundaryEvaluationCount == 0
+                && casualty.World.Terminal.Tick < RunClock.FinalBoundaryTick.Index,
+            "which is what makes the two outcomes distinguishable rather than two names for one path");
+        Check(
+            "the-two-outcomes-are-distinguishable",
+            survivor.World.Terminal.Outcome != casualty.World.Terminal.Outcome,
+            survivor.World.Terminal.ToString() + " vs " + casualty.World.Terminal.ToString());
+        Check(
+            "a-settled-run-publishes-its-terminal-flag",
+            casualty.Snapshots.Latest!.IsTerminal,
+            "phase 14 staged it, so presentation sees the run ended without being told separately");
+        Check(
+            "a-settled-run-stops-without-a-technical-failure",
+            !casualty.Host.HasEndedInTechnicalFailure
+                && casualty.Host.Clock.BlockingReasons.Contains(PauseReason.TerminalTransition),
+            "the terminal transition is raised between steps, not inside the tick that settled the run: "
+                + "RunClock refuses to commit while blocking, so raising it inside phase 13 would have "
+                + "filed a crash report for a run that ended exactly as designed");
+
+        Line(string.Empty);
+    }
+
+    private static PlanarVector KiteIntent(RunComposition run, double radiusMeters)
+    {
+        PlanarVector position = run.World.Player.Position;
+        double magnitude = position.Magnitude;
+        PlanarVector radial = magnitude < 1e-6
+            ? PlanarVector.East
+            : PlanarVector.FromComponents(position.X / magnitude, position.Y / magnitude);
+        PlanarVector tangent = PlanarVector.FromComponents(-radial.Y, radial.X);
+        double error = Math.Clamp(radiusMeters - magnitude, -1.0, 1.0);
+        return (tangent + (radial * error)).Normalized();
+    }
+
+    private static void StepWithIntent(RunComposition run, PlanarVector intent, ref long sequence)
+    {
+        run.CommandGate.TryAdmit(run.ComposeEnvelope(sequence, intent.X, intent.Y), out _);
+        sequence++;
+        run.Host.Step(TickRate.SecondsPerTick);
+        _ = run.SettleTerminalTransition();
+    }
+
+    private static double NearestEnemyDistance(RunComposition run)
+    {
+        double nearest = double.PositiveInfinity;
+        for (int index = 0; index < run.World.LiveEnemyCount; index++)
+        {
+            nearest = Math.Min(
+                nearest,
+                run.World.EnemyAt(index).Position.DistanceTo(run.World.Player.Position));
+        }
+
+        return nearest;
+    }
+
+    /// <summary>Renders a short run as canonical text, for the same-seed comparison.</summary>
+    private static string RenderRun(ulong seed)
+    {
+        RunComposition run = RunComposition.CreateGraybox(seed);
+        StringBuilder text = new();
+        long sequence = CommandEnvelope.FirstSequence;
+
+        for (int tick = 0; tick < 900; tick++)
+        {
+            StepWithIntent(run, KiteIntent(run, 9.0), ref sequence);
+            if (tick % 90 != 0)
+            {
+                continue;
+            }
+
+            text.Append(run.World.CommittedTickCount.ToString(CultureInfo.InvariantCulture))
+                .Append('|').Append(run.World.Player.Hull.ToString(CultureInfo.InvariantCulture))
+                .Append('|').Append(Round(run.World.Player.Position))
+                .Append('|').Append(run.World.RunLocalCommonOre.ToString(CultureInfo.InvariantCulture))
+                .Append('|').Append(run.World.EnemiesDestroyed.ToString(CultureInfo.InvariantCulture));
+
+            for (int index = 0; index < run.World.LiveEnemyCount; index++)
+            {
+                text.Append('|').Append(Round(run.World.EnemyAt(index).Position));
+            }
+
+            for (int index = 0; index < run.World.MiningSiteCount; index++)
+            {
+                text.Append('|').Append(Round(run.World.MiningSiteAt(index).Centre))
+                    .Append(':')
+                    .Append(run.World.MiningSiteAt(index).InstallmentProgressTicks
+                        .ToString(CultureInfo.InvariantCulture));
+            }
+
+            text.Append('\n');
+        }
+
+        return text.ToString();
+    }
+
+    private static string Round(PlanarVector value)
+    {
+        return "(" + value.X.ToString("R", CultureInfo.InvariantCulture)
+            + "," + value.Y.ToString("R", CultureInfo.InvariantCulture) + ")";
+    }
+
+    private void LogSeam(RunComposition run, string phase)
+    {
+        MiningSiteState seam = run.World.MiningSiteAt(0);
+        Line(
+            phase + "\t"
+            + run.World.CommittedTickCount.ToString(CultureInfo.InvariantCulture) + "\t"
+            + seam.Phase.ToString() + "\t"
+            + seam.InstallmentProgressTicks.ToString(CultureInfo.InvariantCulture) + "\t"
+            + seam.InstallmentsPaid.ToString(CultureInfo.InvariantCulture) + "\t"
+            + run.World.RunLocalCommonOre.ToString(CultureInfo.InvariantCulture) + "\t"
+            + run.Snapshots.Latest!.Hud.DisplayedCommonOre.ToString(CultureInfo.InvariantCulture) + "\t"
+            + run.Snapshots.Latest!.Hud.DisplayedExtractionPercent.ToString(CultureInfo.InvariantCulture));
+    }
+
+    private void LogOutcomeRow(RunComposition run, string label)
+    {
+        Line(
+            label + "\t"
+            + run.World.CommittedTickCount.ToString(CultureInfo.InvariantCulture) + "\t"
+            + Invariant(run.World.CommittedTickCount * TickRate.SecondsPerTick) + "\t"
+            + run.World.Player.Hull.ToString(CultureInfo.InvariantCulture) + "\t"
+            + run.World.RunLocalCommonOre.ToString(CultureInfo.InvariantCulture) + "\t"
+            + run.World.EnemiesDestroyed.ToString(CultureInfo.InvariantCulture) + "\t"
+            + (run.Snapshots.Latest?.IsTerminal == true ? "terminal" : "running"));
     }
 
     private static void SubmitThroughAdapter(

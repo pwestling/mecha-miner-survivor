@@ -5,6 +5,10 @@ using System.IO;
 using System.Text;
 using Godot;
 using MechaMiner.Game.Presentation;
+using MechaMiner.Simulation.Encounters;
+using MechaMiner.Simulation.Geometry;
+using MechaMiner.Simulation.Mining;
+using MechaMiner.Simulation.World;
 
 namespace MechaMiner.Game.EngineTesting;
 
@@ -55,19 +59,119 @@ public partial class RunSliceCaptureHarness : Node
 
     private const string RunScenePath = "res://scenes/Run.tscn";
 
-    /// <summary>One scripted beat: hold a set of keys for a number of frames, then capture.</summary>
-    private sealed record Beat(string Label, Key[] Held, int Frames);
+    /// <summary>How a beat decides what to hold each frame.</summary>
+    private enum Steering
+    {
+        /// <summary>Hold a fixed set of keys, unchanged for the whole beat.</summary>
+        FixedKeys = 0,
+
+        /// <summary>
+        /// Each frame, hold whichever of the eight movement combinations points most nearly at the target.
+        /// </summary>
+        /// <remarks>
+        /// Needed because the run's mining seams are placed from a seeded stream, so their bearings are
+        /// not cardinal and a fixed key hold cannot reach one. Eight directions land within 22.5 degrees
+        /// of any bearing, which converges to well inside a 2 m zone. It is still real held input through
+        /// the real action map: what is scripted is which action to hold, not how the hold is delivered.
+        /// </remarks>
+        HomeOnSeam = 1,
+    }
+
+    /// <summary>What ends a beat.</summary>
+    private enum Until
+    {
+        /// <summary>A fixed number of frames.</summary>
+        Frames = 0,
+
+        /// <summary>The mech is inside the first seam's extraction zone.</summary>
+        InsideTheSeam = 1,
+
+        /// <summary>The first seam has paid at least one installment.</summary>
+        AnInstallmentIsPaid = 2,
+
+        /// <summary>A pursuer has closed inside the mech's own weapon range.</summary>
+        /// <remarks>
+        /// Eight metres, which is <c>W-BC</c>'s targeting range from docs/71:81, so this is the moment the
+        /// weapon engages rather than an arbitrary distance. Under the authored minute-0 row it is as close
+        /// as a pursuer gets: measured, the nearest approach over 3,600 frames was 6.65 m, because the
+        /// weapon kills a 20-Hull Skitterling before it crosses the rest. A beat asking for four metres
+        /// there was the first version of this harness and it correctly reported itself unmet.
+        /// </remarks>
+        AnEnemyIsInWeaponRange = 3,
+
+        /// <summary>A pursuer's footprint overlaps the mech's, so contact damage is eligible.</summary>
+        AnEnemyIsTouchingTheMech = 6,
+
+        /// <summary>The mech's Hull has fallen below its maximum.</summary>
+        HullHasFallen = 4,
+
+        /// <summary>The run has been settled.</summary>
+        TheRunHasEnded = 5,
+    }
+
+    /// <summary>One scripted beat: steer this way until this happens, then capture.</summary>
+    private sealed record Beat(string Label, Steering Steering, Key[] Held, Until Until, int FrameBound);
 
     private readonly List<string> _log = new();
 
-    private readonly Beat[] _beats =
+    /// <summary>
+    /// The movement beats the first slice established. Retained verbatim, so extending this harness cannot
+    /// quietly drop the evidence it already produced.
+    /// </summary>
+    private static readonly Beat[] MovementBeats =
     {
-        new("01-at-rest", Array.Empty<Key>(), 20),
-        new("02-holding-east", new[] { Key.D }, 90),
-        new("03-holding-north", new[] { Key.W }, 90),
-        new("04-holding-north-east", new[] { Key.W, Key.D }, 90),
-        new("05-released", Array.Empty<Key>(), 30),
+        new("01-at-rest", Steering.FixedKeys, Array.Empty<Key>(), Until.Frames, 20),
+        new("02-holding-east", Steering.FixedKeys, new[] { Key.D }, Until.Frames, 90),
+        new("03-holding-north", Steering.FixedKeys, new[] { Key.W }, Until.Frames, 90),
+        new("04-holding-north-east", Steering.FixedKeys, new[] { Key.W, Key.D }, Until.Frames, 90),
+        new("05-released", Steering.FixedKeys, Array.Empty<Key>(), Until.Frames, 30),
     };
+
+    /// <summary>
+    /// The loop beats: walk onto a seam, drill it, and let a pursuer close.
+    /// </summary>
+    /// <remarks>
+    /// Every one of these ends on a condition read from authoritative state rather than on a frame count.
+    /// A beat that captured after N frames and called the frame "the seam being drilled" would be a claim
+    /// about what N happened to produce; a beat that captures when <c>InstallmentsPaid</c> first reaches
+    /// one is a claim about the thing itself. The frame bound is a failure bound, not a schedule: a beat
+    /// that reaches it without its condition is reported as a failure below.
+    /// </remarks>
+    private static readonly Beat[] LoopBeats =
+    {
+        new("06-walking-to-the-seam", Steering.HomeOnSeam, Array.Empty<Key>(), Until.InsideTheSeam, 900),
+        new("07-drilling-the-seam", Steering.HomeOnSeam, Array.Empty<Key>(), Until.AnInstallmentIsPaid, 600),
+        new(
+            "08-a-pursuer-enters-weapon-range",
+            Steering.HomeOnSeam,
+            Array.Empty<Key>(),
+            Until.AnEnemyIsInWeaponRange,
+            3600),
+    };
+
+    /// <summary>
+    /// The failure beats, reachable only under the lethal graybox pressure preset.
+    /// </summary>
+    /// <remarks>
+    /// The mech holds nothing and is overrun. Under the authored minute-0 row of docs/32:56 neither
+    /// condition is reachable inside any capture a person would watch - measured: 35 minutes of kiting
+    /// ends with 95 of 100 Hull - so these beats run only when the scene was launched with
+    /// <c>RunSceneRoot.PressureArgument</c>, and the log says which row produced them.
+    /// </remarks>
+    private static readonly Beat[] FailureBeats =
+    {
+        new(
+            "09-a-pursuer-reaches-the-mech",
+            Steering.FixedKeys,
+            Array.Empty<Key>(),
+            Until.AnEnemyIsTouchingTheMech,
+            3600),
+        new("10-taking-damage", Steering.FixedKeys, Array.Empty<Key>(), Until.HullHasFallen, 1200),
+        new("11-the-run-has-ended", Steering.FixedKeys, Array.Empty<Key>(), Until.TheRunHasEnded, 1800),
+    };
+
+    private readonly List<Beat> _beats = new();
+    private readonly List<string> _unmetBeats = new();
 
     private string _outputDirectory = string.Empty;
     private RunSceneRoot? _runScene;
@@ -75,6 +179,7 @@ public partial class RunSliceCaptureHarness : Node
     private int _framesInBeat;
     private Key[] _currentlyHeld = Array.Empty<Key>();
     private bool _finished;
+    private bool _lethalPressure;
 
     /// <inheritdoc/>
     public override void _Ready()
@@ -106,6 +211,27 @@ public partial class RunSliceCaptureHarness : Node
 
         _runScene = runScene;
 
+        foreach (string argument in OS.GetCmdlineUserArgs())
+        {
+            _lethalPressure |= argument
+                == RunSceneRoot.PressureArgument + RunSceneRoot.LethalPressure;
+        }
+
+        // The scenario REPLACES the beat set rather than extending it. The movement and loop beats need
+        // the authored row - a seam cannot be drilled in peace under a lethal swarm - and the failure
+        // beats need the lethal one. Running all eleven in one pass would also cost several thousand
+        // software-rendered frames, so the two passes are two launches, each with its own output
+        // directory and its own row printed at the top of its log.
+        if (_lethalPressure)
+        {
+            _beats.AddRange(FailureBeats);
+        }
+        else
+        {
+            _beats.AddRange(MovementBeats);
+            _beats.AddRange(LoopBeats);
+        }
+
         Log("# MechaMiner run slice capture. Each row is the authoritative state at the frame the");
         Log("# matching PNG was taken. The physical-keycode bindings are ASSERTED below as an");
         Log("# InputMap lookup: an action with no bound events, or a key that does not resolve to");
@@ -113,6 +239,12 @@ public partial class RunSliceCaptureHarness : Node
         Log("# Input.ActionPress, because a synthesized key event does not enter the Input");
         Log("# singleton's held state. See RunSliceCaptureHarness.ApplyHeldKeys for that");
         Log("# measurement.");
+        Log("graybox_pressure\t"
+            + (_lethalPressure
+                ? RunSceneRoot.LethalPressure
+                : "authored docs/32:56 minute-0 row"));
+        Log("replenishment_row\t" + (runScene.Run?.World.BaselineRow.ToString() ?? "unavailable"));
+        Log("beats\t" + _beats.Count.ToString(CultureInfo.InvariantCulture));
         Log("display_server\t" + DisplayServer.GetName());
         Log("rendering_method\t"
             + ProjectSettings.GetSetting("rendering/renderer/rendering_method").AsString());
@@ -218,7 +350,8 @@ public partial class RunSliceCaptureHarness : Node
 
         Log(string.Empty);
         Log("capture\tkeys_held\ttick\tsim_x\tsim_y\tfacing_rad\trendered_world_x\trendered_world_z"
-            + "\taction_east\taction_north\tget_vector");
+            + "\taction_east\taction_north\tget_vector\thull\tore\tenemies\tnearest_m\tseam0"
+            + "\tprogress\tpaid\tterminal\tdrawn_nodes\tframes_in_beat");
 
         ApplyHeldKeys(_beats[0].Held);
     }
@@ -232,9 +365,28 @@ public partial class RunSliceCaptureHarness : Node
         }
 
         _framesInBeat++;
-        if (_framesInBeat < _beats[_beatIndex].Frames)
+        Beat beat = _beats[_beatIndex];
+
+        if (beat.Steering == Steering.HomeOnSeam)
+        {
+            ApplyHeldKeys(KeysTowardTheSeam());
+        }
+
+        bool reached = IsBeatConditionMet(beat);
+        bool exhausted = _framesInBeat >= beat.FrameBound;
+        if (!reached && !exhausted)
         {
             return;
+        }
+
+        if (!reached)
+        {
+            // A beat that ran out of frames without its condition is a failure, not a capture. Saying so
+            // is what keeps this harness from producing a PNG labelled "drilling the seam" that shows a
+            // mech standing next to one.
+            _unmetBeats.Add(
+                beat.Label + " never reached " + beat.Until + " within "
+                + beat.FrameBound.ToString(CultureInfo.InvariantCulture) + " frames");
         }
 
         CaptureCurrentBeat();
@@ -242,17 +394,130 @@ public partial class RunSliceCaptureHarness : Node
         _beatIndex++;
         _framesInBeat = 0;
 
-        if (_beatIndex >= _beats.Length)
+        if (_beatIndex >= _beats.Count)
         {
             _finished = true;
             ApplyHeldKeys(Array.Empty<Key>());
             WriteLog();
+
+            if (_unmetBeats.Count > 0)
+            {
+                foreach (string unmet in _unmetBeats)
+                {
+                    GD.PushError("MechaMiner: capture beat unmet: " + unmet);
+                }
+
+                GD.Print("MechaMiner: run slice capture FAILED with "
+                    + _unmetBeats.Count.ToString(CultureInfo.InvariantCulture) + " unmet beat(s)");
+                GetTree().Quit(4);
+                return;
+            }
+
             GD.Print("MechaMiner: run slice capture complete");
             GetTree().Quit(0);
             return;
         }
 
-        ApplyHeldKeys(_beats[_beatIndex].Held);
+        if (_beats[_beatIndex].Steering == Steering.FixedKeys)
+        {
+            ApplyHeldKeys(_beats[_beatIndex].Held);
+        }
+    }
+
+    /// <summary>Whether the current beat's goal has been reached, read from authoritative state.</summary>
+    private bool IsBeatConditionMet(Beat beat)
+    {
+        RunComposition? run = _runScene?.Run;
+        if (run is null)
+        {
+            return false;
+        }
+
+        switch (beat.Until)
+        {
+            case Until.Frames:
+                return _framesInBeat >= beat.FrameBound;
+            case Until.InsideTheSeam:
+                return run.World.MiningSiteAt(0).Zone.Contains(run.World.Player.Position);
+            case Until.AnInstallmentIsPaid:
+                return run.World.MiningSiteAt(0).InstallmentsPaid >= 1;
+            case Until.AnEnemyIsInWeaponRange:
+                return NearestEnemyDistance(run)
+                    <= MechaMiner.Simulation.Combat.PulseRepeaterBaseline.TargetingRangeMeters;
+            case Until.AnEnemyIsTouchingTheMech:
+                return NearestEnemyDistance(run)
+                    <= MechaMiner.Simulation.Player.PlayerBaseline.CollisionRadiusMeters
+                        + EnemyRoster.Skitterling.ContactRadiusMeters;
+            case Until.HullHasFallen:
+                return run.World.Player.Hull < MechaMiner.Simulation.Player.PlayerBaseline.MaximumHull;
+            case Until.TheRunHasEnded:
+                return run.World.HasEnded;
+            default:
+                return false;
+        }
+    }
+
+    /// <summary>
+    /// The movement keys whose combined direction points most nearly at the first seam.
+    /// </summary>
+    private Key[] KeysTowardTheSeam()
+    {
+        RunComposition? run = _runScene?.Run;
+        if (run is null)
+        {
+            return Array.Empty<Key>();
+        }
+
+        MiningSiteState seam = run.World.MiningSiteAt(0);
+        PlanarVector toSeam = seam.Centre - run.World.Player.Position;
+
+        // Stop once inside, so the mech stands on the seam instead of orbiting its centre.
+        if (toSeam.Magnitude <= GrayboxExtraction.ZoneRadiusMeters * 0.4)
+        {
+            return Array.Empty<Key>();
+        }
+
+        Key[] best = Array.Empty<Key>();
+        double bestAlignment = double.NegativeInfinity;
+        foreach ((Key[] keys, double x, double y) in EightDirections)
+        {
+            double alignment = ((toSeam.X * x) + (toSeam.Y * y)) / toSeam.Magnitude;
+            if (alignment <= bestAlignment)
+            {
+                continue;
+            }
+
+            bestAlignment = alignment;
+            best = keys;
+        }
+
+        return best;
+    }
+
+    /// <summary>The eight combinations of held movement keys, with the unit direction each produces.</summary>
+    private static readonly (Key[] Keys, double X, double Y)[] EightDirections =
+    {
+        (new[] { Key.D }, 1.0, 0.0),
+        (new[] { Key.A }, -1.0, 0.0),
+        (new[] { Key.W }, 0.0, 1.0),
+        (new[] { Key.S }, 0.0, -1.0),
+        (new[] { Key.W, Key.D }, 0.70710678118654752, 0.70710678118654752),
+        (new[] { Key.W, Key.A }, -0.70710678118654752, 0.70710678118654752),
+        (new[] { Key.S, Key.D }, 0.70710678118654752, -0.70710678118654752),
+        (new[] { Key.S, Key.A }, -0.70710678118654752, -0.70710678118654752),
+    };
+
+    private static double NearestEnemyDistance(RunComposition run)
+    {
+        double nearest = double.PositiveInfinity;
+        for (int index = 0; index < run.World.LiveEnemyCount; index++)
+        {
+            nearest = Math.Min(
+                nearest,
+                run.World.EnemyAt(index).Position.DistanceTo(run.World.Player.Position));
+        }
+
+        return nearest;
     }
 
     private void CaptureCurrentBeat()
@@ -263,8 +528,11 @@ public partial class RunSliceCaptureHarness : Node
         }
 
         Beat beat = _beats[_beatIndex];
-        var player = _runScene.Run.World.Player;
+        RunComposition run = _runScene.Run;
+        var player = run.World.Player;
         Node3D pivot = _runScene.GetNode<Node3D>("PlayerBody");
+        MiningSiteState seam = run.World.MiningSiteAt(0);
+        double nearest = NearestEnemyDistance(run);
 
         Vector2 composed = Input.GetVector(
             MovementInputAdapter.MoveWestAction,
@@ -275,8 +543,8 @@ public partial class RunSliceCaptureHarness : Node
 
         Log(
             beat.Label + "\t"
-            + (beat.Held.Length == 0 ? "none" : string.Join("+", beat.Held)) + "\t"
-            + _runScene.Run.World.CommittedTickCount.ToString(CultureInfo.InvariantCulture) + "\t"
+            + (_currentlyHeld.Length == 0 ? "none" : string.Join("+", _currentlyHeld)) + "\t"
+            + run.World.CommittedTickCount.ToString(CultureInfo.InvariantCulture) + "\t"
             + Invariant(player.Position.X) + "\t"
             + Invariant(player.Position.Y) + "\t"
             + Invariant(player.FacingRadians) + "\t"
@@ -284,7 +552,18 @@ public partial class RunSliceCaptureHarness : Node
             + Invariant(pivot.Position.Z) + "\t"
             + Invariant(Input.GetActionStrength(MovementInputAdapter.MoveEastAction)) + "\t"
             + Invariant(Input.GetActionStrength(MovementInputAdapter.MoveNorthAction)) + "\t"
-            + "(" + Invariant(composed.X) + "," + Invariant(composed.Y) + ")");
+            + "(" + Invariant(composed.X) + "," + Invariant(composed.Y) + ")\t"
+            + player.Hull.ToString(CultureInfo.InvariantCulture) + "\t"
+            + run.World.RunLocalCommonOre.ToString(CultureInfo.InvariantCulture) + "\t"
+            + run.World.LiveEnemyCount.ToString(CultureInfo.InvariantCulture) + "\t"
+            + (double.IsPositiveInfinity(nearest) ? "none" : Invariant(nearest)) + "\t"
+            + seam.Phase.ToString() + "\t"
+            + seam.InstallmentProgressTicks.ToString(CultureInfo.InvariantCulture) + "\t"
+            + seam.InstallmentsPaid.ToString(CultureInfo.InvariantCulture) + "\t"
+            + (run.World.HasEnded ? run.World.Terminal.Outcome.ToString() : "running") + "\t"
+            + _runScene.GetNode<Node3D>("SimulationEntities").GetChildCount()
+                .ToString(CultureInfo.InvariantCulture) + "\t"
+            + _framesInBeat.ToString(CultureInfo.InvariantCulture));
 
         Image image = GetViewport().GetTexture().GetImage();
         string path = Path.Combine(_outputDirectory, beat.Label + ".png");

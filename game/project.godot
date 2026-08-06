@@ -1,0 +1,32 @@
+; Engine configuration file.
+;
+; Authority: docs/technical/00-technical-foundation.md
+;              § Accepted stack (Godot 4.7.1 .NET, C# only, Mobile renderer)
+;              § Renderer baseline
+;            docs/technical/100-build-dependencies-and-release-operations.md
+;              § Godot import and export (this file is committed; .godot and
+;              export_credentials.cfg are not)
+; Requirements: TR-FND-001, TR-FND-002, TR-BLD-001, TR-BLD-006
+; Verification: VER-FND-001-012 (headless import), VER-FND-001-013 (headless launch)
+;
+; Owned by the FND-001 integration owner. Window/viewport sizes for the 1920x1080
+; and 1280x800 reference layouts belong to PRE-002 and UI-003; input actions
+; belong to UI-002; export presets belong to FND-006. FND-001 sets only what the
+; pinned engine, the C# assembly, and the Mobile renderer require.
+
+config_version=5
+
+[application]
+
+config/name="Mecha Miner Survivor"
+run/main_scene="res://scenes/Boot.tscn"
+config/features=PackedStringArray("4.7", "C#", "Mobile")
+
+[dotnet]
+
+project/assembly_name="MechaMiner.Game"
+
+[rendering]
+
+renderer/rendering_method="mobile"
+renderer/rendering_method.mobile="mobile"

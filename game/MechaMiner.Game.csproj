@@ -1,0 +1,62 @@
+<Project Sdk="Godot.NET.Sdk/4.7.1">
+
+  <!--
+    CMP-APP-001, CMP-PRE-001, CMP-PRE-002, CMP-UI-001, CMP-AUD-001, CMP-PLT-001.
+    The Godot composition root, input adapters, presentation, UI, audio, and
+    platform adapters.
+
+    Accepted project boundary (docs/technical/115 § Accepted project boundary):
+      allowed project dependencies: all pure projects plus Godot APIs
+      Godot types allowed:          Yes
+
+    This is the ONLY project in the repository allowed to reference Godot.
+    The engine version is pinned by the Sdk attribute above (TR-FND-001,
+    TR-BLD-001) and locked in packages.lock.json.
+
+    MechaMiner.Tools is deliberately not referenced: it is a build/tool-process
+    library, and the game must not depend on tool workflows.
+  -->
+
+  <PropertyGroup>
+    <!-- Required so Godot can load the game assembly into its own AssemblyLoadContext. -->
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <RootNamespace>MechaMiner.Game</RootNamespace>
+    <!--
+      Redundant with Directory.Build.props on purpose. The Godot editor's C#
+      project check reads the target framework from this file directly; when the
+      property is only inherited, a headless Godot import rewrites the csproj to
+      add it and leaves a MechaMiner.Game.csproj.old backup behind. Declaring it
+      here keeps a headless import from mutating a committed project file. It must
+      stay equal to the repository pin.
+    -->
+    <TargetFramework>net8.0</TargetFramework>
+    <!--
+      Reflection-based System.Text.Json is off, matching every test host under
+      tests/. This project emits a runtimeconfig.json despite being loaded as a
+      library, because EnableDynamicLoading above is true; the property lands in
+      its configProperties (verified against the emitted file).
+
+      Godot loads this assembly into its own AssemblyLoadContext inside the
+      Godot process, so at play time the switch that actually binds is the one in
+      the hosting process's runtimeconfig. Declaring it here is what makes the
+      constraint uniform across everything the repository builds and is what an
+      exported, self-hosted build reads; it is not a claim about the editor's
+      process.
+
+      Do not move this property onto a plain library such as those under src/:
+      those emit no runtimeconfig.json, so the switch goes silently dead in every
+      host (measured). A shared props file that each host imports - such as the
+      root Directory.Build.props - does bind and is allowed. Full rule, and the
+      runtime assertion the test hosts owe, in
+      tests/MechaMiner.Content.Tests/MechaMiner.Content.Tests.csproj.
+    -->
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../src/MechaMiner.Content/MechaMiner.Content.csproj" />
+    <ProjectReference Include="../src/MechaMiner.Simulation/MechaMiner.Simulation.csproj" />
+    <ProjectReference Include="../src/MechaMiner.Persistence/MechaMiner.Persistence.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,73 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Pure tests mirroring MechaMiner.Content: schema, codec, validation, and
+    catalog fixtures. Never launches Godot (docs/technical/91 § Test project
+    separation).
+
+    Shared deterministic fixture utilities and the first sample tests are owned
+    by TASK-FND-003-001; this file only establishes the project and its pinned
+    harness.
+  -->
+
+  <!--
+    Reflection-based System.Text.Json is off in this test host, matching the
+    constraint the shipping hosts run under.
+
+    This is a runtimeconfig.json feature switch, so it binds only where it is
+    evaluated for a project that emits an entry-point runtimeconfig.json - a
+    HOST. The rule is therefore "every host must evaluate it", not "it must be
+    written once per host". Both halves below were measured on this tree, by
+    moving the property and diffing the emitted configProperties.
+
+    Setting it on a referenced library does NOT work. A plain library emits no
+    runtimeconfig.json at all - MechaMiner.Content builds a .dll and a
+    .deps.json and nothing else - and a feature switch does not propagate across
+    a ProjectReference. Moving this property onto MechaMiner.Content.csproj drops
+    System.Text.Json.JsonSerializer.IsReflectionEnabledByDefault out of all five
+    host runtimeconfig.json files; AppContext.TryGetSwitch then reports the
+    switch absent and JsonSerializer.Serialize("x") returns "x" instead of
+    throwing. That is the move to guard against: it reads as a tidy-up and
+    silently re-enables reflection everywhere. (game/MechaMiner.Game.csproj is
+    not a counterexample - it sets EnableDynamicLoading, so it does emit a
+    runtimeconfig.json.)
+
+    Hoisting it into the root Directory.Build.props DOES work, and an earlier
+    version of this comment was wrong to forbid it. Directory.Build.props is
+    imported per project, so every host - the four test hosts and
+    MechaMiner.Game - evaluates the property and emits it. Measured: the
+    configProperties of all five runtimeconfig.json files are identical to the
+    per-host arrangement, and reflection-based serialization still throws. A
+    shared props file that each host imports is a legitimate place for this.
+
+    Without the switch, a reflection-based JsonSerializer call in a src/ library
+    passes under `dotnet test` and throws only in the real host - the exact
+    defect class the suite exists to catch.
+
+    Because the binding is invisible in C# source wherever the property lives,
+    each test host owes a runtime assertion that the switch is actually live:
+    AppContext.TryGetSwitch(
+    "System.Text.Json.JsonSerializer.IsReflectionEnabledByDefault", out var
+    value) returns true with value == false. It must fail with a message naming
+    this MSBuild property and the .csproj or props file carrying it, not just a
+    false boolean; whoever trips it moved a project property and has no reason to
+    expect a serialization switch to have an opinion about that
+    (TASK-FND-003-001). That obligation holds regardless of where the property is
+    declared - it is what makes a wrong move loud instead of silent.
+  -->
+  <PropertyGroup>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/MechaMiner.Content/MechaMiner.Content.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit3TestAdapter" />
+    <PackageReference Include="NUnit.Analyzers" />
+  </ItemGroup>
+
+</Project>

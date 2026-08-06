@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    CMP-RUN-001, CMP-SIM-001, CMP-SIM-002, CMP-SIM-003, CMP-GEO-001, CMP-COM-001,
+    CMP-ENC-001, CMP-MIN-001, CMP-PRG-001. Owns the run domain, geometry, combat,
+    encounters, mining, progression, commands, events, and snapshots.
+
+    Accepted project boundary (docs/technical/115 § Accepted project boundary):
+      allowed project dependencies: MechaMiner.Content
+      Godot types allowed:          No
+
+    First types land in the SIM work packages.
+  -->
+
+  <ItemGroup>
+    <ProjectReference Include="../MechaMiner.Content/MechaMiner.Content.csproj" />
+  </ItemGroup>
+
+</Project>

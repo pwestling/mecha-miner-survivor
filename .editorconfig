@@ -1,0 +1,209 @@
+# Formatting and naming policy for the whole repository.
+#
+# Authority: docs/technical/100-build-dependencies-and-release-operations.md
+#              § C# project standards ("Formatting and naming enforced through
+#              .editorconfig and one repository command.")
+#            docs/technical/114-autonomous-agent-execution-protocol.md
+#              § Naming and file-placement defaults, § C# and domain defaults
+# Requirements: TR-BLD-001
+# Verification: VER-FND-001-008 (build/policy-fixtures/naming)
+#
+# Severity split, recorded deliberately:
+#   * Naming rules are `error`. Naming crosses files and reviews, and doc 114
+#     makes it a default, so it is enforced at build time through
+#     EnforceCodeStyleInBuild.
+#   * Whitespace formatting (IDE0055) is `suggestion` at build time. Doc 100
+#     assigns formatting enforcement to "one repository command"; that command is
+#     the format / format-check verb owned by TASK-FND-002-002. Making whitespace
+#     a build error here would duplicate that gate in a second owner.
+#   * Style preferences that are readability choices rather than policy stay at
+#     `suggestion` so they guide without blocking.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+[*.{cs,csx}]
+indent_size = 4
+
+[*.{json,jsonc}]
+indent_size = 2
+
+[*.{props,targets,csproj,config,tscn,tres,godot,cfg,import,uid}]
+indent_size = 2
+
+[*.{md,markdown}]
+# Trailing whitespace is significant for Markdown hard line breaks.
+trim_trailing_whitespace = false
+
+[*.{sh,bash}]
+indent_size = 2
+
+[Makefile]
+indent_style = tab
+
+# ---------------------------------------------------------------------------
+# C# code style
+# ---------------------------------------------------------------------------
+
+[*.cs]
+
+# Whole-file formatting: guidance at build, enforced by the format verb.
+dotnet_diagnostic.IDE0055.severity = suggestion
+
+# --- using directives ------------------------------------------------------
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = false
+csharp_using_directive_placement = outside_namespace:suggestion
+dotnet_diagnostic.IDE0005.severity = suggestion
+
+# --- namespaces and file layout (doc 114: one primary type per file) --------
+csharp_style_namespace_declarations = file_scoped:suggestion
+
+# --- explicitness (doc 114 C# defaults) ------------------------------------
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = false:suggestion
+csharp_style_var_elsewhere = false:suggestion
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:warning
+dotnet_style_readonly_field = true:suggestion
+csharp_prefer_static_local_function = true:suggestion
+csharp_prefer_braces = true:suggestion
+
+# --- immutability at boundaries (doc 114) ----------------------------------
+csharp_style_prefer_readonly_struct = true:suggestion
+csharp_style_prefer_readonly_struct_member = true:suggestion
+
+# --- expression preferences ------------------------------------------------
+dotnet_style_object_initializer = true:suggestion
+dotnet_style_collection_initializer = true:suggestion
+dotnet_style_prefer_auto_properties = true:suggestion
+dotnet_style_coalesce_expression = true:suggestion
+dotnet_style_null_propagation = true:suggestion
+csharp_style_expression_bodied_methods = false:suggestion
+csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion
+csharp_style_pattern_matching_over_as_with_null_check = true:suggestion
+
+# --- new-line preferences --------------------------------------------------
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+
+# --- indentation and spacing ----------------------------------------------
+csharp_indent_case_contents = true
+csharp_indent_switch_labels = true
+csharp_space_after_cast = false
+csharp_space_after_keywords_in_control_flow_statements = true
+csharp_space_between_method_declaration_parameter_list_parentheses = false
+csharp_space_between_method_call_parameter_list_parentheses = false
+csharp_preserve_single_line_blocks = true
+
+# ---------------------------------------------------------------------------
+# Naming policy (enforced at build through EnforceCodeStyleInBuild)
+# ---------------------------------------------------------------------------
+
+# The naming analyzer must be enabled for the rules below to be reported during
+# build; each rule's own severity then selects its effective severity.
+dotnet_diagnostic.IDE1006.severity = error
+
+# Symbol groups
+dotnet_naming_symbols.interfaces.applicable_kinds = interface
+dotnet_naming_symbols.interfaces.applicable_accessibilities = *
+
+dotnet_naming_symbols.type_parameters.applicable_kinds = type_parameter
+dotnet_naming_symbols.type_parameters.applicable_accessibilities = *
+
+dotnet_naming_symbols.types_and_namespaces.applicable_kinds = namespace, class, struct, enum, delegate
+dotnet_naming_symbols.types_and_namespaces.applicable_accessibilities = *
+
+dotnet_naming_symbols.non_field_members.applicable_kinds = method, property, event
+dotnet_naming_symbols.non_field_members.applicable_accessibilities = *
+
+dotnet_naming_symbols.constant_fields.applicable_kinds = field
+dotnet_naming_symbols.constant_fields.applicable_accessibilities = *
+dotnet_naming_symbols.constant_fields.required_modifiers = const
+
+dotnet_naming_symbols.static_readonly_fields.applicable_kinds = field
+dotnet_naming_symbols.static_readonly_fields.applicable_accessibilities = *
+dotnet_naming_symbols.static_readonly_fields.required_modifiers = static, readonly
+
+dotnet_naming_symbols.visible_fields.applicable_kinds = field
+dotnet_naming_symbols.visible_fields.applicable_accessibilities = public, internal, protected, protected_internal, protected_friend
+
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private, private_protected
+
+dotnet_naming_symbols.parameters_and_locals.applicable_kinds = parameter, local
+dotnet_naming_symbols.parameters_and_locals.applicable_accessibilities = *
+
+dotnet_naming_symbols.local_functions.applicable_kinds = local_function
+dotnet_naming_symbols.local_functions.applicable_accessibilities = *
+
+# Naming styles
+dotnet_naming_style.pascal_case.capitalization = pascal_case
+
+dotnet_naming_style.camel_case.capitalization = camel_case
+
+dotnet_naming_style.interface_prefixed.capitalization = pascal_case
+dotnet_naming_style.interface_prefixed.required_prefix = I
+
+dotnet_naming_style.type_parameter_prefixed.capitalization = pascal_case
+dotnet_naming_style.type_parameter_prefixed.required_prefix = T
+
+dotnet_naming_style.underscore_camel_case.capitalization = camel_case
+dotnet_naming_style.underscore_camel_case.required_prefix = _
+
+# Rules
+dotnet_naming_rule.interfaces_are_i_prefixed_pascal_case.symbols = interfaces
+dotnet_naming_rule.interfaces_are_i_prefixed_pascal_case.style = interface_prefixed
+dotnet_naming_rule.interfaces_are_i_prefixed_pascal_case.severity = error
+
+dotnet_naming_rule.type_parameters_are_t_prefixed_pascal_case.symbols = type_parameters
+dotnet_naming_rule.type_parameters_are_t_prefixed_pascal_case.style = type_parameter_prefixed
+dotnet_naming_rule.type_parameters_are_t_prefixed_pascal_case.severity = error
+
+dotnet_naming_rule.types_and_namespaces_are_pascal_case.symbols = types_and_namespaces
+dotnet_naming_rule.types_and_namespaces_are_pascal_case.style = pascal_case
+dotnet_naming_rule.types_and_namespaces_are_pascal_case.severity = error
+
+dotnet_naming_rule.non_field_members_are_pascal_case.symbols = non_field_members
+dotnet_naming_rule.non_field_members_are_pascal_case.style = pascal_case
+dotnet_naming_rule.non_field_members_are_pascal_case.severity = error
+
+dotnet_naming_rule.constant_fields_are_pascal_case.symbols = constant_fields
+dotnet_naming_rule.constant_fields_are_pascal_case.style = pascal_case
+dotnet_naming_rule.constant_fields_are_pascal_case.severity = error
+
+dotnet_naming_rule.static_readonly_fields_are_pascal_case.symbols = static_readonly_fields
+dotnet_naming_rule.static_readonly_fields_are_pascal_case.style = pascal_case
+dotnet_naming_rule.static_readonly_fields_are_pascal_case.severity = error
+
+dotnet_naming_rule.visible_fields_are_pascal_case.symbols = visible_fields
+dotnet_naming_rule.visible_fields_are_pascal_case.style = pascal_case
+dotnet_naming_rule.visible_fields_are_pascal_case.severity = error
+
+dotnet_naming_rule.private_fields_are_underscore_camel_case.symbols = private_fields
+dotnet_naming_rule.private_fields_are_underscore_camel_case.style = underscore_camel_case
+dotnet_naming_rule.private_fields_are_underscore_camel_case.severity = error
+
+dotnet_naming_rule.parameters_and_locals_are_camel_case.symbols = parameters_and_locals
+dotnet_naming_rule.parameters_and_locals_are_camel_case.style = camel_case
+dotnet_naming_rule.parameters_and_locals_are_camel_case.severity = error
+
+dotnet_naming_rule.local_functions_are_pascal_case.symbols = local_functions
+dotnet_naming_rule.local_functions_are_pascal_case.style = pascal_case
+dotnet_naming_rule.local_functions_are_pascal_case.severity = error
+
+# ---------------------------------------------------------------------------
+# Generated code
+# ---------------------------------------------------------------------------
+
+[*.{g,generated,designer}.cs]
+generated_code = true
+dotnet_analyzer_diagnostic.severity = none

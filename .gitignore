@@ -1,3 +1,32 @@
+# Python helper tooling
 __pycache__/
 *.py[cod]
 .DS_Store
+
+# Local build output. docs/technical/100 § Repository structure: "artifacts/
+# ignored local outputs".
+artifacts/
+bin/
+obj/
+
+# Godot's local import/build cache. project.godot, *.import / *.uid import
+# sidecars, and export_presets.cfg are deliberately NOT ignored - doc 100
+# § Godot import and export requires them to be committed.
+.godot/
+
+# Godot documents export credentials as confidential (doc 100 § Godot import
+# and export, § Secrets and signing).
+export_credentials.cfg
+
+# Per-developer IDE and user state
+*.user
+
+# Git worktrees created when a session isolates parallel streams. Each holds a
+# .git gitlink, so git will not descend into it and collapses the whole tree to a
+# single "?? .clau...e/" line - one stream saw three complete checkouts of other
+# branches, 4098 files, hidden behind that one line. Anything that reacts to
+# "untracked files exist" by staging broadly would commit them.
+#
+# Scoped to the worktrees subdirectory on purpose: .claude/ itself may hold
+# committed configuration, and ignoring all of it would hide that.
+.claude/worktrees/

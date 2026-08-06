@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Deliberately invalid policy fixture. See ../README.md. Not in MechaMiner.sln. -->
+
+</Project>

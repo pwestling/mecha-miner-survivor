@@ -1,0 +1,22 @@
+<Project>
+
+  <!--
+    Policy fixtures inherit the real repository policy so that what they prove is
+    the policy the product builds under, not a local copy of it.
+
+    The import is explicit because MSBuild stops walking upward at the first
+    Directory.Build.props it finds. Directory.Build.targets has no counterpart
+    here, so the repository-root one still applies automatically - which is how
+    TreatWarningsAsErrors reaches these fixtures.
+  -->
+
+  <Import Project="../../Directory.Build.props" />
+
+  <PropertyGroup>
+    <!-- Fixtures must not contribute committed NuGet lock files. -->
+    <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
+    <!-- Fixtures are never packaged, tested, or shipped. -->
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+</Project>

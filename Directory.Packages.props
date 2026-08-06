@@ -1,0 +1,37 @@
+<Project>
+
+  <!--
+    Central package management. Every NuGet version used anywhere in the
+    repository is declared here exactly once, at an exact version.
+
+    Authority: docs/technical/100-build-dependencies-and-release-operations.md
+               (Toolchain pinning, Dependency policy: "Package versions are
+               exact locked.")
+    Requirements: TR-BLD-001
+
+    Adding a package requires the dependency request recorded in doc 100
+    § Dependency policy. Do not add one to make a build convenient.
+  -->
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+    <!-- A project may not locally override a central version. -->
+    <CentralPackageVersionOverrideEnabled>false</CentralPackageVersionOverrideEnabled>
+  </PropertyGroup>
+
+  <ItemGroup Label="Pure managed test harness (NUnit only, per doc 100 C# project standards)">
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
+    <PackageVersion Include="NUnit" Version="4.6.1" />
+    <PackageVersion Include="NUnit3TestAdapter" Version="6.2.0" />
+    <PackageVersion Include="NUnit.Analyzers" Version="4.14.0" />
+  </ItemGroup>
+
+  <!--
+    The Godot dependency is not listed here. game/MechaMiner.Game.csproj pins it
+    through Sdk="Godot.NET.Sdk/4.7.1", which supplies GodotSharp,
+    GodotSharpEditor, and Godot.SourceGenerators at exactly 4.7.1. That version
+    is resolved and locked in game/packages.lock.json.
+  -->
+
+</Project>

@@ -1,0 +1,285 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "FND-001",
+  "workPackageTitle": "Pin Godot/.NET versions, solution/project skeleton, repository layout, editor/analyzer settings",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91 § Verification registry).",
+    "The structural validator for this file is owned by TASK-FND-009-002; until it lands, the shape here is the FND-001 integration owner's declaration of the required fields listed in doc 91.",
+    "Selectors are repository scripts and commands because the pure NUnit harness does not exist until TASK-FND-003-001. TASK-FND-009-001 replaces the architecture selector with an architecture test.",
+    "VER-FND-001-012 and VER-FND-001-013 use build/verify-godot.sh rather than the bare godot commands: a headless Godot launch exits 0 even when the boot script fails to load, so the exit code alone is not a gate. The script also asserts the stable startup line and the absence of engine ERROR lines.",
+    "platforms lists only the platforms on which an entry has actually been exercised. Every entry here has been run on linux-x64 only. pendingPlatforms records platforms that the requirement covers but on which nothing has been executed yet; an entry must not claim one until it has been run there.",
+    "VER-FND-001-008 is PARTIAL, and this note is the durable record of what it does not cover; the entry's status stays 'implemented' because the gate does run and does fail on the violation it names. The naming fixture proves two things at once: EnforceCodeStyleInBuild, and the root .editorconfig's dotnet_diagnostic.IDE1006.severity = error. Only the first is an MSBuild property, so only the first is asserted from evaluated state (build/verify-policies.sh guard 3). The second is applied by Roslyn, which walks the .editorconfig chain itself and stops at the first file declaring root = true, and the EditorConfigFiles item holds only the SDK-generated file, so there is no evaluated item to read either. What IS asserted structurally is that no non-root .editorconfig exists in the working tree (guard 1, empty allowlist): a committed copy of the root file placed beside the naming fixture used to let the root severity be flipped to none while a real IDE1006 violation compiled clean and the whole gate printed PASS. Two cases remain uncovered: an untracked .editorconfig, and a change to the root file itself, whether removing root = true or lowering a severity in it. Closing those needs a reading of the severity Roslyn actually applied, which nothing in this work package provides.",
+    "VER-FND-001-006, -007 and -008 depend on the repository-root policy reaching the fixtures. That is asserted by the five inheritance guards in build/verify-policies.sh, not by the fixtures, because a fixture only measures the directory it sits in. Guard 3's evaluated-property list is a list of known switches and is NOT complete: per-category AnalysisMode<Category> properties, per-rule severities and future SDK switches are outside it. Guard 1b does one narrow thing: it rejects a suppressive declaration in the two kinds of file it reads, the permitted build/policy-fixtures/Directory.Build.props and each fixture .csproj. It is NOT a completeness argument for that family, and an earlier version of this note said it was - that a root-level suppression switch has 'nowhere local to be switched back on'. It does not need switching back on: a single Condition on a root PropertyGroup, or a sibling build/policy-fixtures/Directory.Packages.props, Directory.Build.rsp or fixture .csproj.user, leaves the switch simply never applied to the fixtures, and each compiled a real CA2200 in src/ at 0 warnings with the gate at exit 0. Completeness for the family rests on guard 4, which compares each fixture's whole evaluated MSBuild property set against src/MechaMiner.Content's and requires equality outside a measured allowlist of structural differences (project name, project paths, NuGet restore state, where the upward search for Directory.Build.props landed, and RestorePackagesWithLockFile). Any mechanism that decouples a fixture shows up there as a value difference without the gate having to know which mechanism it was."
+  ],
+  "entries": [
+    {
+      "id": "VER-FND-001-001",
+      "summary": "A clean checkout restores the exact locked NuGet graph and fails if any lock file would change.",
+      "task": "TASK-FND-001-001",
+      "requirements": ["TR-BLD-001", "TR-BLD-002"],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#toolchain-pinning",
+        "docs/technical/100-build-dependencies-and-release-operations.md#dependency-policy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "command",
+        "value": "dotnet restore MechaMiner.sln --locked-mode"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": ["command-exit-code", "command-output"],
+      "platforms": ["linux-x64"],
+      "pendingPlatforms": ["windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-001-002",
+      "summary": "The whole solution compiles from a clean checkout with zero warnings and zero errors under the pinned SDK, target framework, and language version.",
+      "task": "TASK-FND-001-001",
+      "requirements": ["TR-BLD-001", "TR-BLD-006", "TR-FND-001"],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#c-project-standards",
+        "docs/technical/00-technical-foundation.md#version-policy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "command",
+        "value": "dotnet build MechaMiner.sln --no-restore -warnaserror"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": ["command-exit-code", "command-output", "warning-count"],
+      "platforms": ["linux-x64"],
+      "pendingPlatforms": ["windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-001-003",
+      "summary": "The solution contains exactly the nine accepted projects at exactly the accepted repository paths, and every prescribed top-level ownership directory exists.",
+      "task": "TASK-FND-001-001",
+      "requirements": ["TR-BLD-006"],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#repository-structure",
+        "docs/technical/10-runtime-architecture.md#accepted-project-decomposition"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-architecture.sh"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": ["command-exit-code", "command-output"],
+      "platforms": ["linux-x64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-001-004",
+      "summary": "Project references match the accepted project boundary exactly, no pure project references Godot or MechaMiner.Game, and game/ is the only Godot-referencing project.",
+      "task": "TASK-FND-001-001",
+      "requirements": ["TR-CTR-001", "TR-FND-001"],
+      "technicalSources": [
+        "docs/technical/115-component-contract-and-schema-registry.md#accepted-project-boundary"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-architecture.sh"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": ["command-exit-code", "command-output"],
+      "platforms": ["linux-x64"],
+      "tier": "fast",
+      "status": "implemented",
+      "successor": "TASK-FND-009-001"
+    },
+    {
+      "id": "VER-FND-001-005",
+      "summary": "No GDScript source file exists outside documentation, so no runtime logic can use a second language.",
+      "task": "TASK-FND-001-001",
+      "requirements": ["TR-FND-002"],
+      "technicalSources": [
+        "docs/technical/00-technical-foundation.md#language-boundary"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-architecture.sh"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": ["command-exit-code", "command-output"],
+      "platforms": ["linux-x64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-001-006",
+      "summary": "Nullable reference checking is enabled repository-wide and a nullable violation is a build error, not a warning.",
+      "task": "TASK-FND-001-002",
+      "requirements": ["TR-BLD-001"],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#c-project-standards"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-policies.sh"
+      },
+      "fixtures": ["build/policy-fixtures/nullable"],
+      "scenarios": [],
+      "evidenceKinds": ["command-exit-code", "expected-diagnostic-id"],
+      "platforms": ["linux-x64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-001-007",
+      "summary": "Built-in .NET analyzers are enabled and an analyzer violation fails the build.",
+      "task": "TASK-FND-001-002",
+      "requirements": ["TR-BLD-001"],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#c-project-standards"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-policies.sh"
+      },
+      "fixtures": ["build/policy-fixtures/analyzer"],
+      "scenarios": [],
+      "evidenceKinds": ["command-exit-code", "expected-diagnostic-id"],
+      "platforms": ["linux-x64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-001-008",
+      "summary": "The .editorconfig naming policy is enforced during build and a naming violation fails the build. PARTIAL: half of this entry is proved by an evaluated MSBuild property and half is not, and the half that is not is recorded in the note on this entry below rather than only in the script.",
+      "task": "TASK-FND-001-002",
+      "requirements": ["TR-BLD-001"],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#c-project-standards",
+        "docs/technical/114-autonomous-agent-execution-protocol.md#naming-and-file-placement-defaults"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-policies.sh"
+      },
+      "fixtures": ["build/policy-fixtures/naming"],
+      "scenarios": [],
+      "evidenceKinds": ["command-exit-code", "expected-diagnostic-id"],
+      "platforms": ["linux-x64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-001-009",
+      "summary": "The C# language version is pinned, so a language feature newer than the pin fails the build instead of silently compiling.",
+      "task": "TASK-FND-001-002",
+      "requirements": ["TR-BLD-001"],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#c-project-standards"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-policies.sh"
+      },
+      "fixtures": ["build/policy-fixtures/langversion"],
+      "scenarios": [],
+      "evidenceKinds": ["command-exit-code", "expected-diagnostic-id"],
+      "platforms": ["linux-x64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-001-010",
+      "summary": "Unsafe code is disabled by default and an unsafe block fails the build.",
+      "task": "TASK-FND-001-002",
+      "requirements": ["TR-BLD-001"],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#c-project-standards"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-policies.sh"
+      },
+      "fixtures": ["build/policy-fixtures/unsafe"],
+      "scenarios": [],
+      "evidenceKinds": ["command-exit-code", "expected-diagnostic-id"],
+      "platforms": ["linux-x64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-001-011",
+      "summary": "Deterministic build is enabled: two independent clean builds of the same source produce byte-identical assemblies.",
+      "task": "TASK-FND-001-002",
+      "requirements": ["TR-BLD-001"],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#c-project-standards"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-policies.sh"
+      },
+      "fixtures": ["build/policy-fixtures/deterministic"],
+      "scenarios": [],
+      "evidenceKinds": ["command-exit-code", "assembly-sha256"],
+      "platforms": ["linux-x64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-001-012",
+      "summary": "A headless Godot import of game/ completes with exit code 0 from a clean checkout with no import cache.",
+      "task": "TASK-FND-001-003",
+      "requirements": ["TR-FND-001", "TR-BLD-002"],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#godot-import-and-export"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-godot.sh"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": ["command-exit-code", "import-log"],
+      "platforms": ["linux-x64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-001-013",
+      "summary": "A headless launch of the empty boot scene reaches the composition root, prints its stable startup line, and exits 0 with the Mobile renderer configured.",
+      "task": "TASK-FND-001-003",
+      "requirements": ["TR-FND-001", "TR-FND-002"],
+      "technicalSources": [
+        "docs/technical/00-technical-foundation.md#renderer-baseline",
+        "docs/technical/10-runtime-architecture.md#application-lifecycle"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-godot.sh"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": ["command-exit-code", "stdout-line"],
+      "platforms": ["linux-x64"],
+      "tier": "fast",
+      "status": "implemented"
+    }
+  ]
+}

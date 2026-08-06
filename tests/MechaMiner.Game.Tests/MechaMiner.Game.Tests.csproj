@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Engine integration, scene, rendering, input, and export smoke tests
+    (docs/technical/10 § Accepted project decomposition).
+
+    doc 10 records this project's Godot dependency as "Yes". That engine
+    dependency is deliberately NOT taken at FND-001: the shape of the harness -
+    whether it references MechaMiner.Game directly, hosts GodotSharp itself, or
+    drives a runner scene inside game/ through the pinned Godot executable - is
+    the observable outcome owned by TASK-FND-003-002. Adding a guessed engine
+    reference now would commit that contract before its task is Ready.
+
+    Until then this project mirrors MechaMiner.Game's pure surface only, so the
+    architecture check has exactly one Godot-referencing project (game/).
+  -->
+
+  <!--
+    Reflection-based System.Text.Json is off in this test host, matching the
+    constraint the shipping hosts run under.
+
+    This is a runtimeconfig.json feature switch, so it is only honoured by the
+    project that produces the entry-point runtimeconfig.json - the HOST. It does
+    NOT propagate from a referenced library: a plain library emits no
+    runtimeconfig.json at all, so setting the property beside the code it
+    constrains changes nothing (measured, not assumed). It therefore has to be
+    repeated in every test host.
+
+    Without this, a reflection-based JsonSerializer call in a src/ library passes
+    under `dotnet test` and throws only in the real host - the exact defect class
+    the suite exists to catch.
+
+    Do not move this property onto a library: a plain library emits no
+    runtimeconfig.json, so the switch goes silently dead in every host
+    (measured). A shared props file that each host imports - such as the root
+    Directory.Build.props - does bind and is allowed. Either way this host owes a
+    runtime assertion that the switch is live - full rule in
+    tests/MechaMiner.Content.Tests/MechaMiner.Content.Tests.csproj.
+  -->
+  <PropertyGroup>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/MechaMiner.Content/MechaMiner.Content.csproj" />
+    <ProjectReference Include="../../src/MechaMiner.Simulation/MechaMiner.Simulation.csproj" />
+    <ProjectReference Include="../../src/MechaMiner.Persistence/MechaMiner.Persistence.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit3TestAdapter" />
+    <PackageReference Include="NUnit.Analyzers" />
+  </ItemGroup>
+
+</Project>

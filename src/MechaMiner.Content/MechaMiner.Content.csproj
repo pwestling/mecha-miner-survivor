@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    CMP-CNT-001 (content compiler/validator) and CMP-CNT-002 (runtime content
+    registry). Owns strict source models, schemas, the compiler, immutable
+    runtime definitions, and behavior-registration contracts.
+
+    Accepted project boundary (docs/technical/115 § Accepted project boundary):
+      allowed project dependencies: .NET base libraries only
+      Godot types allowed:          No
+
+    Intentionally has no ProjectReference and no PackageReference. First types
+    land in TASK-DAT-001-001.
+  -->
+
+</Project>

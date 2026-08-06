@@ -125,27 +125,85 @@ checks:
 **What the footprint guard does not do.** Both rules match specific key-name patterns in specific
 directories. A derived value reintroduced under a name neither pattern matches, or in a directory
 neither rule covers, passes — the guard raises the cost of the mistake, it does not make it impossible.
-It is checked on key names rather than values so that a *rename* inside a covered directory cannot slip
-past, which is a narrower claim than "fails the build if the field reappears under any name".
+It is checked on key names rather than values, which catches a *rename inside the rule's own key-name
+pattern* and nothing beyond it. **It does not catch a rename generally** — an earlier draft of this
+paragraph said it did, and that was false: a rename to a name the pattern does not match is exactly the
+case that passes, which is the sentence immediately above. Both claims are narrower than "fails the
+build if the field reappears under any name". A28's value layer is the shape that closes this for the
+families it covers; A20 has no value layer yet, and adding one is the next design step.
 
-**A28 — the nine derived-value families, nine rules, nine scopes.** A20 generalised: 166 stored numbers
-across nine families were removed because the compiler owns them, and A28 asserts each family cannot
-return. It has the same shape as A20 and the same limits, with three differences:
+**A28 — the six derived-value families, six rules, six scopes, two layers.** A20 generalised: **115**
+stored numbers across **six** families were removed because the compiler owns them, and A28 asserts each
+family cannot return.
+
+**Six, not the nine an earlier draft of this pass claimed, and the arithmetic is 166 − 51 = 115.** Three
+families were built, verified to reproduce exactly, and then *pulled*:
+
+| Pulled family | Values | Why |
+| --- | ---: | --- |
+| damage-pressure survivability block | 32 | **Comparand, not a derived duplicate.** `40:114` has the compiler derive world speeds and footprints and "compare them with the survivability report". The report is the independent side of that comparison; authoring it in the compiler makes validation compare a derivation against itself — always agreeing, catching nothing, printing like a working cross-check. |
+| resonant-value hit count | 5 | Same reading of `40:114`: these five are rows of that same survivability report (`72:167`). |
+| stat upgrade price curve | 14 | **Would move checkable numbers into an unchecked string.** All 14 are restated in prose in the same file (`defining_prose`), and A28 only matches numeric leaves. Editing the prose is *not* the fix and was not done — it is a verified doc quotation, so rewriting its numerals would falsify the citation while every validator stayed green. |
+
+Reproducibility was never the issue for any of the three: all 51 reproduce exactly. **The
+operand/comparand distinction is orthogonal to reproducibility**, and the generator now records the same
+test applied to all six surviving families.
+
+It has the same shape as A20 and the same limits, with these differences:
 
 - rules are matched against every **name segment** of a pointer, not only the leaf key, because three
   families store their number under a generic leaf (`amount`, `minimum`, `maximum`) inside a
   specifically named parent — `total_payout_per_map.amount` is invisible to a leaf-key-only rule;
-- each family's pattern is a **word class**, not a name. `total|sum|aggregate|combined|overall|grand`
-  covers the four aggregate-total families, so renaming `total_payout_per_map` to
-  `aggregate_payout_per_map` still fails. That widening came out of the negative control: the first
-  draft used `total|jackpot` and the renamed injection passed;
-- the scopes differ per rule for the same reason A20's two do. An absolute metres-per-second value is
-  *always* derived under `content/enemies/` and `content/bosses/`, where a speed is authored as a
-  percentage of the mech baseline, and *always* authored under `content/weapons/`, where
-  `projectile_speed_m_per_s` is the real number — so the world-speed rule covers the first two only.
-  `content/powerups/` is the one family that cannot use the aggregate word class at all: `total_` is
-  authored twice over there (`total_cost_hyper_gold`, and every rank's `total_effect`), so the class
-  would flag 71 surviving fields. Its rule is `cumulative|running_total|to_date|so_far` instead.
+- each family's pattern is a **word class**, not a name, and every one of the nine was widened after a
+  negative control defeated it. Two rounds of controls were run. The first round *renamed* each removed
+  field and all nine guards of that draft fired. The second round injected, per guard, a field **semantically inside
+  the family but lexically outside the pattern** — the shape that had already walked
+  `aggregate_payout_per_map` past the mining-site draft `total|jackpot` — and **all nine guards missed**:
+  `traverse_rate_metres_per_second`, `survivability_pressure.hits_to_defeat_100_hull`,
+  `impacts_to_destroy_fresh_mech`, `accrued_cost_hyper_gold`, `accrued_rank_ore_cost`, `price_ladder`,
+  `yield_per_seam`, `rolled_up_payout_per_map`, `hyper_gold_from_all_sites`. Nine word lists written by
+  listing the spellings already in the tree had the same hole. The rules now name what the family is
+  *about*: the world-speed rule matches the **unit** (`m_per_s|metres_per_second|velocity|traverse`), the
+  damage-pressure **parent** is the class `pressure|survivability` rather than the one name
+  `damage_pressure`, the price-curve rule is a price-or-cost word crossed with a series word, and the four
+  aggregate families share `AGGREGATE_WORDS`, which carries the cumulative half
+  (`cumulative|accru|accumulat|rolled_up|to_date|so_far|subtotal|tally|…`) as well as the summation half.
+  Widening changed **no `content/` value**: each rule was re-controlled at the pinned `sweep_ref` and still
+  matches its own removal set and nothing else, so the 166-element prediction is byte-identical;
+- the scopes differ per rule for the same reason A20's two do, and so do two exclusions from the word
+  classes. An absolute metres-per-second value is *always* derived under `content/enemies/` and
+  `content/bosses/`, where a speed is authored as a percentage of the mech baseline, and *always* authored
+  under `content/weapons/`, where `projectile_speed_m_per_s` is the real number — so the world-speed rule
+  covers the first two only. `content/powerups/` is the one family that cannot use the summation half of
+  the aggregate class at all: `total_` is authored **71** times there and every one survives
+  (13 `total_cost_hyper_gold` + 58 `total_effect`; check with
+  `grep -ho '"total_[a-z_]*"' content/powerups/*.json | sort | uniq -c`), so the class would flag 71
+  surviving fields. Its rule is `AGGREGATE_WORDS_NO_TOTAL`. For the same reason `payout` is kept out of the
+  mining-site class (`payout_per_installment`, `completion_payout`,
+  `exposure_per_secured_payout_multiplier` are authored there) and a bare `all` is kept out of the
+  aggregate class (`content/maps/` authors `maximum_hyper_gold_sites_across_all_pockets` and
+  `maximum_share_of_all_geodes_per_major_region`, authored bounds on counts rather than sums — hence
+  `from_all` and `all_sites$`). **This is why the rules are per-family and not one.** Consolidating them
+  reintroduces the `total_` collision; the reason is stated in the code beside `AGGREGATE_WORDS`;
+- **a second, VALUE-KEYED layer, which is the one that does not depend on names at all.** For each
+  removed value, no non-operand numeric leaf inside its own derivation site may carry that value —
+  compared exactly as `Fraction`, with no tolerance. It survives a rename, a relocation within the site,
+  a different unit suffix, and a change of arity (`32.0` → `[32.0]`), because none of those change the
+  number. Its **radius is the limit, and it is stated rather than hidden**: the derivation site, not the
+  file and not the scope. That choice was measured — at file radius this tree has **55** coincidental
+  recurrences and at scope radius **400**, almost all magnitude coincidences between unrelated
+  quantities (a `1.5` m/s world speed against a `1.5` s control-immunity window; a hit count of `4`
+  against `maximum_simultaneous_bosses`). An exception list that size could not be justified entry by
+  entry, so the radius is narrow *and said to be narrow*. **One** exception is declared, with its
+  reason: `UTL-R1`'s removed `acquisition.total_rank_ore_cost` is `0` (the sum of an empty list) and its
+  `acquisition.rank_count` is independently `0`. A declared exception that stops colliding also fails,
+  because a stale justification is as much a defect as a missing one.
+
+**What A28 still does not do, after the widening.** A word class is still a word class. The nine guards
+moved from "catches renames" to "catches renames and the obvious semantic neighbours"; a tenth probe chosen
+adversarially against the *new* lists would pass some of them. Only the damage-pressure family is asserted
+structurally — no numeric leaf of **any** name may sit under a `pressure`/`survivability` block — and
+generalising that form to the other eight is the next design step, not a claim this rule set makes.
 
 Two segment names are allowlisted, exactly as `reference_diameter_m` is: `purchases` (the authored
 checkpoint index the removed cumulative cost derives *from*, which matches only by inheriting its
@@ -155,7 +213,7 @@ parent's name) and `total_seam_payout_multiplier` (left authored, because its si
 The rules, scopes and allowlists are **read from `expected_derived_value_removals.json`** rather than
 restated in `verify_content.py`, so the assertion and the prediction cannot drift apart.
 
-**A29 — the removal delta is the committed prediction, as set equality.** `166 == 166` would also hold
+**A29 — the removal delta is the committed prediction, as set equality, and it is now ONE row.** `115 == 115` would also hold
 if one value were removed by mistake and a different one kept by mistake. A29 therefore reads the
 sweep-ref tree out of git at the SHA the expectation file names, enumerates its numeric leaves,
 subtracts the worktree's, and compares **element by element**: every `(file, pointer, value)` predicted

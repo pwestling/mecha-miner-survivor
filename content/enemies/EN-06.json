@@ -46,6 +46,8 @@
     "global_contact_grace_after_resolved_contact_seconds": 0.2
   },
   "damage_pressure": {
+    "hits_to_defeat_100_hull": 13,
+    "continuous_overlap_time_to_defeat_seconds": 9.0,
     "assumptions": "100 Hull, zero Armor, no healing, no resonance, uninterrupted overlap with one attacker"
   },
   "movement_collision": {
@@ -112,7 +114,8 @@
     "resonant_damage_reference": {
       "base_damage": 14,
       "resonant_damage": 17,
-      "resonance_source": "Cinderglass"
+      "resonance_source": "Cinderglass",
+      "fresh_mech_hits_to_defeat_at_resonant_value": 6
     },
     "readability_requirements": [
       "bright body contraction",

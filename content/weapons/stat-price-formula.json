@@ -23,18 +23,34 @@
       "meaning": "current shared upgrade depth"
     }
   },
+  "first_ten_prices": [
+    10,
+    30,
+    60,
+    100,
+    150,
+    210,
+    280,
+    360,
+    450,
+    550
+  ],
   "cumulative_cost_checkpoints": [
     {
-      "purchases": 3
+      "purchases": 3,
+      "cumulative_cost": 100
     },
     {
-      "purchases": 4
+      "purchases": 4,
+      "cumulative_cost": 200
     },
     {
-      "purchases": 5
+      "purchases": 5,
+      "cumulative_cost": 350
     },
     {
-      "purchases": 10
+      "purchases": 10,
+      "cumulative_cost": 2200
     }
   ],
   "applies_to": "Every common-ore stat track of every base weapon; all three tracks of a weapon share one depth and therefore one next price.",

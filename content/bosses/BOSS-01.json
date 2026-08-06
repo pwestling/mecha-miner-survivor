@@ -55,6 +55,9 @@
     "added_attack_defines_own_damage_event": true
   },
   "damage_pressure": {
+    "contact_damage": 18,
+    "hits_to_defeat_100_hull": 6,
+    "continuous_overlap_time_to_defeat_seconds": 3.75,
     "assumptions": "100 Hull, zero Armor, no healing, no resonance, uninterrupted overlap with one attacker"
   },
   "target_time_to_kill_seconds": {
@@ -93,7 +96,8 @@
     "resonant_damage_reference": {
       "base_damage": 27,
       "resonant_damage": 33,
-      "resonance_source": "Asterite"
+      "resonance_source": "Asterite",
+      "fresh_mech_hits_to_defeat_at_resonant_value": 4
     },
     "design_role": "checks movement, facing awareness, and early single-target damage without adding projectiles or summons"
   },

@@ -41,6 +41,8 @@
     "global_contact_grace_after_resolved_contact_seconds": 0.2
   },
   "damage_pressure": {
+    "hits_to_defeat_100_hull": 5,
+    "continuous_overlap_time_to_defeat_seconds": 3.0,
     "assumptions": "100 Hull, zero Armor, no healing, no resonance, uninterrupted overlap with one attacker"
   },
   "movement_collision": {

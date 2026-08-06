@@ -63,6 +63,19 @@ from pathlib import Path
 # --------------------------------------------------------------------------
 SWEEP_REF = "fefb7a359041c1275f6b9739437458443bdfecf1"
 
+# Declared separately from what the builders produce, and asserted against it.
+# `total_removed` and `family_count` used to be written here and read by nothing,
+# which meant a family could be dropped, or fourteen values could stop being
+# removed, with every number in the file updating itself to agree. These two are
+# the independent statement of intent that the build must match.
+#
+# 115 across 6, not the 166 across 9 an earlier draft of this pass claimed:
+# 166 - 14 (stat price curve, pulled) - 32 (damage-pressure block, pulled)
+#     -  5 (resonant hit counts, pulled) = 115, and 9 - 3 = 6 families.
+# See PULLED_FROM_THIS_PASS for why each was pulled.
+DECLARED_FAMILY_COUNT = 6
+DECLARED_TOTAL_REMOVED = 115
+
 REPO = Path(__file__).resolve().parents[3]
 OUT = Path(__file__).resolve().parent / "expected_derived_value_removals.json"
 
@@ -81,10 +94,17 @@ RETAINED_BECAUSE_OPERAND = {
         "9,450. Removing it would delete an assertion's input to delete a redundancy."
     ),
     "content/enemies|bosses/*::resonant_damage_reference.resonant_damage": (
-        "Reproduces for all 5 as ceil(base_damage x 1.20), but RETAINED for two reasons: it is the "
-        "operand the removed fresh_mech_hits_to_defeat_at_resonant_value derives from, and no line "
-        "in docs/ states the rounding rule that ceil() assumes (40:203 fails only on divergence "
-        "'beyond documented rounding', and this rounding is not documented)."
+        "Reproduces for all 5 as ceil(base_damage x 1.20), and RETAINED because it is the operand "
+        "the removed fresh_mech_hits_to_defeat_at_resonant_value derives from. CORRECTION to this "
+        "note's earlier claim that 'no line in docs/ states the rounding': the rounding IS stated. "
+        "72:120 step 3 of the damage-resolution order says 'Round the result up to the next whole "
+        "Hull point', immediately after step 2 'Multiply listed base damage by current "
+        "attacker-side damage modifiers' - that is exactly ceil(base x modifier). 72:126 shows it "
+        "worked (38 x 1.20 = 45.6, rounded up to 46) and 61:92-101 states the 20% modifier. ceil "
+        "is also the ONLY rounding that reproduces all five: 32.4 -> 33 and 43.2 -> 44 rule out "
+        "both floor and round-half. So resonant_damage is fully documented arithmetic, and whether "
+        "it is removable turns only on whether a docs/ line assigns ITS recomputation to the "
+        "compiler - not on a missing rounding clause."
     ),
     "content/mining-sites/*::abundance_states[].geodes_on_map": (
         "Authored survey states (Scarce 8 / Moderate 9 / Rich 10) and the operand range the removed "
@@ -495,9 +515,18 @@ def fam_stat_price_curve(tree: Tree):
 
 
 def fam_resource_totals(tree: Tree):
+    """The one family whose totals are TIERED, so five of its records reproduce
+    only TRANSITIVELY - from operands that are themselves in the removal set.
+
+    That has to be stated, not left for a reader to notice: `operands` on those
+    five names a value this same pass deletes, so "every operand survives the
+    removal" is true only after the chain is unrolled to authored leaves.
+    `chains_through` names the removed pointers, and `arithmetic` carries the
+    fully unrolled form as well as the tiered one.
+    """
     out = []
 
-    def rec(path, pointer, value, operands, arithmetic, recomputed):
+    def rec(path, pointer, value, operands, arithmetic, recomputed, chains=()):
         out.append(
             dict(
                 file=path,
@@ -506,6 +535,7 @@ def fam_resource_totals(tree: Tree):
                 operands=operands,
                 arithmetic=arithmetic,
                 recomputed=recomputed,
+                chains_through=list(chains),
             )
         )
 
@@ -587,13 +617,16 @@ def fam_resource_totals(tree: Tree):
         "seam_total_per_map",
         doc["seam_total_per_map"],
         [
-            f"{ore}::sources[0] standard seam per-map total = {fmt(per_map['standard ore seam'])} "
-            f"(itself 10 x 10 x 20)",
-            f"{ore}::sources[1] rich seam per-map total = {fmt(per_map['rich ore seam'])} "
-            f"(itself 40 x 5 x 8)",
+            f"{ore}::sources[0].total_per_map = {fmt(per_map['standard ore seam'])} "
+            f"(ITSELF REMOVED BY THIS PASS - chained; unrolls to 10 x 10 x 20)",
+            f"{ore}::sources[1].total_per_map = {fmt(per_map['rich ore seam'])} "
+            f"(ITSELF REMOVED BY THIS PASS - chained; unrolls to 40 x 5 x 8)",
         ],
-        f"{fmt(per_map['standard ore seam'])} + {fmt(per_map['rich ore seam'])} = {fmt(seam_sum)}",
+        f"tiered: {fmt(per_map['standard ore seam'])} + {fmt(per_map['rich ore seam'])} = "
+        f"{fmt(seam_sum)}; unrolled to authored leaves: "
+        f"(10 x 10 x 20) + (40 x 5 x 8) = {fmt(seam_sum)}",
         seam_sum,
+        chains=["sources[0].total_per_map", "sources[1].total_per_map"],
     )
     for bound, geode_key in (("minimum", "geode-min"), ("maximum", "geode-max")):
         total = seam_sum + per_map[geode_key] + per_map["interval boss defeat"]
@@ -602,13 +635,24 @@ def fam_resource_totals(tree: Tree):
             f"complete_run_ceiling_before_relic_sales.{bound}",
             doc["complete_run_ceiling_before_relic_sales"][bound],
             [
-                f"{ore}::sources[0..1] seam per-map totals = {fmt(seam_sum)}",
-                f"{ore}::sources[2] geode per-map {bound} = {fmt(per_map[geode_key])}",
-                f"{ore}::sources[3] boss per-run total = {fmt(per_map['interval boss defeat'])}",
+                f"{ore}::seam_total_per_map = {fmt(seam_sum)} (ITSELF REMOVED BY THIS PASS - "
+                f"chained, and itself chained through sources[0..1].total_per_map)",
+                f"{ore}::sources[2].total_per_map.{bound} = {fmt(per_map[geode_key])} "
+                f"(ITSELF REMOVED BY THIS PASS - chained)",
+                f"{ore}::sources[3].total_per_run = "
+                f"{fmt(per_map['interval boss defeat'])} (ITSELF REMOVED BY THIS PASS - chained)",
             ],
-            f"{fmt(seam_sum)} + {fmt(per_map[geode_key])} + "
-            f"{fmt(per_map['interval boss defeat'])} = {fmt(total)}",
+            f"tiered: {fmt(seam_sum)} + {fmt(per_map[geode_key])} + "
+            f"{fmt(per_map['interval boss defeat'])} = {fmt(total)}; unrolled to authored leaves: "
+            f"(10 x 10 x 20) + (40 x 5 x 8) + "
+            f"({fmt(per_completion)} x {fmt(exact(doc['sources'][2]['geodes_per_map'][bound]))}) + "
+            f"({fmt(per_boss)} x {fmt(bosses)}) = {fmt(total)}",
             total,
+            chains=[
+                "seam_total_per_map",
+                f"sources[2].total_per_map.{bound}",
+                "sources[3].total_per_run",
+            ],
         )
 
     gold = "content/resources/hyper-gold.json"
@@ -652,11 +696,15 @@ def fam_resource_totals(tree: Tree):
         "run_ceiling",
         doc["run_ceiling"],
         [
-            f"{gold}::sources[0] site per-map total = {fmt(site_total)} (itself 100 x 3)",
-            f"{gold}::sources[1] boss per-run total = {fmt(boss_total)} (itself 25 x 4)",
+            f"{gold}::sources[0].total_per_map = {fmt(site_total)} "
+            f"(ITSELF REMOVED BY THIS PASS - chained; unrolls to 100 x 3)",
+            f"{gold}::sources[1].total_per_run = {fmt(boss_total)} "
+            f"(ITSELF REMOVED BY THIS PASS - chained; unrolls to 25 x 4)",
         ],
-        f"{fmt(site_total)} + {fmt(boss_total)} = {fmt(ceiling)}",
+        f"tiered: {fmt(site_total)} + {fmt(boss_total)} = {fmt(ceiling)}; unrolled to authored "
+        f"leaves: (100 x 3) + (25 x 4) = {fmt(ceiling)}",
         ceiling,
+        chains=["sources[0].total_per_map", "sources[1].total_per_run"],
     )
     return out
 
@@ -819,6 +867,45 @@ def fam_map_site_hyper_gold(tree: Tree):
 #             segments BELOW that parent.
 #   allow   - segment names exempted by name, each with a reason, exactly as A20
 #             allowlists reference_diameter_m.
+#
+# WHY THE AGGREGATE WORD CLASS IS SPELLED OUT ONCE AND THEN VARIED PER FAMILY,
+# INSTEAD OF ONE GLOBAL RULE
+# ==========================================================================
+# Four families are the same semantic thing - "a stored sum" - and share
+# AGGREGATE_WORDS below. They are still FOUR rules with FOUR scopes, and the
+# reason is `content/powerups/`: that directory authors `total_` 71 times and
+# every one of them SURVIVES this pass - 13 `total_cost_hyper_gold` (each
+# carrying its own DEC-120#decision citation, and the operand of A14's second
+# row) and 58 `total_effect` (44 `percent`, 5 `hull`, 5 `hull_per_second`,
+# 3 `armor`, 1 `revival_charges_per_run`). Verify with:
+#
+#   grep -ho '"total_[a-z_]*"' content/powerups/*.json | sort | uniq -c
+#
+# A single global aggregate rule would therefore flag 71 authored fields and be
+# unlandable. That is why PowerUp cumulative cost uses AGGREGATE_WORDS_NO_TOTAL
+# and why the nine rules are NOT consolidated into one. Consolidating them
+# reintroduces that collision. The same per-scope reasoning is why the
+# world-speed rule does not cover content/weapons/, and why the map rule spells
+# `from_all` rather than `all` (content/maps/ authors
+# `maximum_hyper_gold_sites_across_all_pockets` and
+# `maximum_share_of_all_geodes_per_major_region`, which are authored BOUNDS on
+# counts, not sums).
+#
+# Each class is a WORD CLASS, not a name list. Every one of these nine rules was
+# first drafted as a short name list, and a negative-control probe - a field
+# semantically inside the family but spelled with a word the list happened to
+# omit - passed all nine. The lists below are what those probes forced.
+AGGREGATE_WORDS = (
+    r"total|sum|aggregate|combined|overall|grand|cumulative|accru|accumulat"
+    r"|running_(total|sum|cost)|rolled?_up|to_date|so_far|thus_far|subtotal|tally"
+    r"|net_|lifetime|entire|whole_|full_(run|map|seam|set)|from_all|all_sites$"
+)
+AGGREGATE_WORDS_NO_TOTAL = (
+    r"sum|aggregate|combined|overall|grand|cumulative|accru|accumulat"
+    r"|running_(total|sum|cost)|rolled?_up|to_date|so_far|thus_far|subtotal|tally"
+    r"|net_|lifetime|entire|whole_|full_(run|map|seam|set)|spend|through_rank"
+)
+
 FAMILIES = [
     dict(
         name="enemy and boss world speed",
@@ -827,7 +914,8 @@ FAMILIES = [
         "speeds/footprints and compares them with the survivability report'",
         scopes=["enemies", "bosses"],
         parent=None,
-        segment=r"(?i)world_speed|_m_per_s$",
+        segment=r"(?i)world_speed|velocity|traverse|movement_rate|travel_rate"
+        r"|(^|_)(m|metres?|meters?)_per_(s|sec|second)$|_mps$",
         allow={},
         note="17, not the 14 the reconciliation named: three are ability/projectile speeds "
         "(EN-06 specialist projectile 2.25, BOSS-01 charge 5.4, BOSS-03 ability projectile 2.25) "
@@ -835,39 +923,9 @@ FAMILIES = [
         "per-second value in these two directories, not just the current spelling: an enemy or "
         "boss authors its speed as a percentage of the mech baseline, so an absolute one is "
         "always the compiler's. It does NOT cover content/weapons/, where projectile_speed_m_per_s "
-        "is authored.",
-    ),
-    dict(
-        name="damage-pressure survivability block",
-        builder=fam_damage_pressure_block,
-        doc="docs/technical/40-content-data-and-validation.md:114 - the survivability report the "
-        "compiler 'compares them with'; with 40:19, which classes reports as derived artifacts",
-        scopes=["enemies", "bosses"],
-        parent=r"^damage_pressure$",
-        segment=r".",
-        allow={},
-        note="One assertion, three derivations: the hit count is ceil(100/contact_damage), the "
-        "overlap time is (hits-1) x the repeat interval, and four boss blocks additionally restate "
-        "contact_damage verbatim. The rule is STRUCTURAL - no numeric leaf of any name may sit "
-        "under damage_pressure - which no rename can evade. The block itself and its `assumptions` "
-        "string are retained: the string states the 100-Hull/zero-Armor model the derivation "
-        "assumes, it is a verified doc quotation in the quote-evidence artifact, and "
-        "`damage_pressure:` is a source_refs scope prefix A22 requires to resolve.",
-    ),
-    dict(
-        name="resonant-value hit count",
-        builder=fam_resonant_hits,
-        doc="docs/technical/40-content-data-and-validation.md:114 - the survivability report the "
-        "compiler compares against; with 40:19",
-        scopes=["enemies", "bosses"],
-        parent=r"^(resonant_damage_reference|worked_examples)$",
-        segment=r"(?i)hit|defeat|strike|blow|swing",
-        allow={},
-        note="Parent-scoped rather than global because base_damage and resonant_damage live in the "
-        "same block and are RETAINED - resonant_damage is the operand, and its own "
-        "ceil(base x 1.20) rounding is nowhere documented. `worked_examples` is in the parent "
-        "pattern because shared-elite-modifiers.json holds the fifth instance under that name "
-        "rather than under resonant_damage_reference.",
+        "is authored. The rule matches the UNIT rather than the field name: the first draft was "
+        "`world_speed|_m_per_s$` and the probe `traverse_rate_metres_per_second` - the same "
+        "quantity, spelled out - passed it.",
     ),
     dict(
         name="PowerUp cumulative cost",
@@ -876,7 +934,7 @@ FAMILIES = [
         "catalog costs and maximum-account envelope'; with 40:203 'price curves, total costs'",
         scopes=["powerups"],
         parent=None,
-        segment=r"(?i)cumulative|running_total|to_date|so_far",
+        segment=r"(?i)" + AGGREGATE_WORDS_NO_TOTAL,
         allow={},
         note="total_cost_hyper_gold is RETAINED and the rule deliberately does not match it: it "
         "carries its own `total_cost_hyper_gold: DEC-120#decision` citation and is the operand of "
@@ -884,7 +942,10 @@ FAMILIES = [
         "ONE family whose rule cannot use the total/sum/aggregate word class the four "
         "aggregate-total families use, because in content/powerups/ `total_` is authored twice "
         "over - total_cost_hyper_gold and every rank's total_effect - so the class would flag 71 "
-        "surviving fields. Same reason A20 gives two rules two scopes, applied to patterns.",
+        "surviving fields. Same reason A20 gives two rules two scopes, applied to patterns. It "
+        "carries the rest of AGGREGATE_WORDS: the first draft was "
+        "`cumulative|running_total|to_date|so_far` and the probe `accrued_cost_hyper_gold` passed "
+        "it.",
     ),
     dict(
         name="utility total rank ore cost",
@@ -893,26 +954,12 @@ FAMILIES = [
         "total costs'",
         scopes=["utilities"],
         parent=None,
-        segment=r"(?i)total|sum|aggregate|combined|overall|grand",
+        segment=r"(?i)" + AGGREGATE_WORDS,
         allow={},
         note="13 of 13, including UTL-R1's 0, which is the sum of its empty rank_ore_costs list. "
-        "The per-rank rank_ore_costs arrays are the operands and stay.",
-    ),
-    dict(
-        name="stat upgrade price curve",
-        builder=fam_stat_price_curve,
-        doc="docs/technical/40-content-data-and-validation.md:203 - 'Recalculate ... price "
-        "curves'; with 40:99, which makes the registered formula the authored artefact",
-        scopes=["weapons"],
-        parent=None,
-        segment=r"(?i)^(first_ten|cumulative|price_table|price_curve)|prices$",
-        allow={
-            "purchases": "the authored checkpoint index n, which the removed cumulative cost is "
-            "derived FROM. Allowlisted the way A20 allowlists reference_diameter_m: it matches the "
-            "pattern only because it sits inside a matching parent."
-        },
-        note="The `formula` string '5n(n + 1)', each checkpoint's `purchases`, and `defining_prose` "
-        "(a verified doc quotation) are all retained as operands or evidence.",
+        "The per-rank rank_ore_costs arrays are the operands and stay. The first draft was "
+        "`total|sum|aggregate|combined|overall|grand` and the probe `accrued_rank_ore_cost` passed "
+        "it, which is what added the cumulative half of AGGREGATE_WORDS.",
     ),
     dict(
         name="resource aggregate total",
@@ -921,10 +968,13 @@ FAMILIES = [
         "totals'",
         scopes=["resources"],
         parent=None,
-        segment=r"(?i)total|sum|aggregate|combined|overall|grand|ceiling",
+        segment=r"(?i)" + AGGREGATE_WORDS + r"|ceiling|yield",
         allow={},
         note="sources[].depletion_seconds is NOT removed - a depletion duration is not a resource "
-        "total; see reproduces_but_not_assigned_by_docs.",
+        "total; see reproduces_but_not_assigned_by_docs. `yield` is in the class because the probe "
+        "`yield_per_seam` - a stored per-seam total spelled with no aggregate word at all - passed "
+        "the `total|sum|aggregate|combined|overall|grand|ceiling` draft. content/resources/ authors "
+        "no `yield` field; the per-installment operands are spelled ore_per_installment.",
     ),
     dict(
         name="mining-site aggregate total",
@@ -933,7 +983,7 @@ FAMILIES = [
         "exactly four accepted classes and their totals'; with 40:203",
         scopes=["mining-sites"],
         parent=None,
-        segment=r"(?i)total|sum|aggregate|combined|overall|grand|jackpot|geodes_per_standard_map",
+        segment=r"(?i)" + AGGREGATE_WORDS + r"|jackpot|geodes_per_standard_map",
         allow={
             "total_seam_payout_multiplier": "a comparison of the rich seam against the standard "
             "seam, whose operands live in another file and whose sibling "
@@ -941,7 +991,12 @@ FAMILIES = [
             "authored, so allowlisted rather than removed."
         },
         note="count_per_standard_map is authored and does not match this rule. "
-        "geodes_per_standard_map does, and both its bounds are removed - 8 x 4 and 10 x 4.",
+        "geodes_per_standard_map does, and both its bounds are removed - 8 x 4 and 10 x 4. `total|"
+        "jackpot` was the original draft and `aggregate_payout_per_map` passed it; the probe that "
+        "then passed `total|sum|aggregate|combined|overall|grand|jackpot` was "
+        "`rolled_up_payout_per_map`, which is what added the cumulative half of AGGREGATE_WORDS. "
+        "`payout` is deliberately NOT in the class: payout_per_installment, completion_payout and "
+        "exposure_per_secured_payout_multiplier are authored here and stay.",
     ),
     dict(
         name="map-contract site-based Hyper Gold",
@@ -950,12 +1005,114 @@ FAMILIES = [
         "totals'",
         scopes=["maps"],
         parent=None,
-        segment=r"(?i)total|sum|aggregate|combined|overall|grand",
+        segment=r"(?i)" + AGGREGATE_WORDS,
         allow={},
         note="reference_mech_speed_m_per_s in the same file is RETAINED: it is the operand of all "
-        "17 world speeds. The A13 world-prop values in this file do not match the rule.",
+        "17 world speeds. The A13 world-prop values in this file do not match the rule. The probe "
+        "that passed the `total|sum|aggregate|combined|overall|grand` draft was "
+        "`hyper_gold_from_all_sites`, which is why AGGREGATE_WORDS carries `from_all` and "
+        "`all_sites$` but NOT a bare `all`: content/maps/ authors "
+        "maximum_hyper_gold_sites_across_all_pockets, maximum_relic_caches_across_all_pockets and "
+        "maximum_share_of_all_geodes_per_major_region, which are authored bounds on counts and "
+        "stay.",
     ),
 ]
+
+# --------------------------------------------------------------------------
+# PULLED FROM THIS PASS. These three families were built, verified to reproduce
+# exactly, and then NOT removed. Their arithmetic is kept here because the
+# reason each was pulled is a finding, and a reader who only sees six families
+# cannot tell whether the other three were never found or were found and
+# rejected. They are enumerated into the output file under
+# `pulled_from_this_pass`, with counts, so the 115 can be reconciled to the 166
+# an earlier draft claimed.
+#
+# The `damage-pressure survivability block` and `resonant-value hit count`
+# families are pulled for ONE reason, and it is not reproducibility - both
+# reproduce exactly. `40:114` reads "Validation derives world speeds/footprints
+# and compares them with the survivability report". The object of "derives" is
+# world speeds and footprints; "them" is those derived values; the survivability
+# report is the COMPARAND. A comparand must be independent of the thing compared
+# against it or the comparison is a tautology - if the compiler authors the
+# report too, validation compares its own derivation against its own derivation,
+# reports agreement always, catches nothing ever, and reads in the output
+# exactly like a working cross-check. Removing the report removes the only
+# independent side of the check. This makes F1 (world speeds) STRONGER, not
+# weaker: the speeds stay removed, and the report is what catches it if the
+# derivation ever goes wrong.
+#
+# THE OPERAND/COMPARAND DISTINCTION IS ORTHOGONAL TO REPRODUCIBILITY. Every one
+# of the 115 reproduces exactly; that says nothing about whether it is a
+# comparand. `sweep_comparand_audit` below records the same test applied to all
+# six surviving families.
+# --------------------------------------------------------------------------
+PULLED_FROM_THIS_PASS = [
+    dict(
+        name="damage-pressure survivability block",
+        builder=fam_damage_pressure_block,
+        scopes=["enemies", "bosses"],
+        pulled_because=(
+            "COMPARAND, not a derived duplicate. 40:114 assigns the compiler the derivation of "
+            "world speeds and footprints and has it 'compare them with the survivability report'. "
+            "The report is the independent side of that comparison, and a comparand computed by the "
+            "same code it is compared against is a tautology that prints like a cross-check. All 32 "
+            "restored. CAVEAT MEASURED HERE, NOT ASSERTED AWAY: the report ALSO exists at "
+            "docs/data/contact-damage-pressure.csv, whose hits_to_defeat_100 and "
+            "continuous_overlap_ttd_s columns match all 28 content values exactly. So 40:114 has an "
+            "independent comparand either way, and the honest statement is not 'removing this makes "
+            "the comparison vacuous' but 'there are three writers on this report - the docs table, "
+            "the content block, and the compiler - and which of the first two is the accepted "
+            "gameplay table 40:203 compares against is unsettled'. Restoring is the conservative "
+            "move while that is unsettled; it is NOT a finding that the content copy is correct."
+        ),
+    ),
+    dict(
+        name="resonant-value hit count",
+        builder=fam_resonant_hits,
+        scopes=["enemies", "bosses"],
+        pulled_because=(
+            "COMPARAND, same reading of 40:114 and for the same reason as the damage-pressure "
+            "block: these five are rows of the same survivability report (72:167), which is what "
+            "the derivation is compared AGAINST. All 5 restored. Same caveat: 72:167 states all "
+            "five in docs/, so the comparand survives in docs/ regardless, and the third-writer "
+            "question is open rather than settled."
+        ),
+    ),
+    dict(
+        name="stat upgrade price curve",
+        builder=fam_stat_price_curve,
+        scopes=["weapons"],
+        pulled_because=(
+            "MOVES CHECKABLE NUMBERS INTO AN UNCHECKED STRING, which is strictly worse than "
+            "leaving them. All 14 values are still stated in the same file, in prose: "
+            "`defining_prose` reads 'The first ten prices are 10, 30, 60, 100, 150, 210, 280, 360, "
+            "450, and 550 ore. Cumulative cost reaches 100 after three purchases, 200 after four, "
+            "350 after five, and 2,200 after ten.' A28 matches numeric leaves, so removing the "
+            "leaves moved 14 checkable numbers somewhere no assertion looks. Editing the prose is "
+            "NOT the fix and was not done: that sentence is a verified doc quotation in the "
+            "quote-evidence artifact, so rewriting its numerals would falsify the citation while "
+            "every validator stayed green. Whether the prose should stop restating derived numbers "
+            "is a separate decision and not one to take inside a removal pass. All 14 restored."
+        ),
+    ),
+]
+
+# --------------------------------------------------------------------------
+# Coincidental value recurrences the VALUE-KEYED gate finds and that are NOT
+# second writers. Enumerated, not thresholded: the gate has no tolerance, no
+# rounding and no scope shortcut that could shrink this list silently. Every
+# entry is one line of justification, and the gate fails if an entry here stops
+# colliding (a stale exception is as much a defect as a missing one).
+# --------------------------------------------------------------------------
+VALUE_COLLISION_EXCEPTIONS = {
+    ("content/utilities/UTL-R1.json", "acquisition.total_rank_ore_cost",
+     "acquisition.rank_count"): (
+        "Coincidence of zero, and the only one in the tree. UTL-R1 is the ore-crafted radar: its "
+        "rank_ore_costs list is empty, so its removed total is the sum of no terms = 0, and it "
+        "independently has rank_count = 0 because it has no ranks. Two different quantities that "
+        "are both zero, not one quantity written twice."
+    ),
+}
 
 
 def pointer_segments(pointer: str) -> list[str]:
@@ -984,6 +1141,75 @@ def rule_matches(family: dict, pointer: str) -> bool:
                 return True
         return False
     return any(child_rx.search(seg) for seg in segments)
+
+
+OPERAND_RE = re.compile(r"(content/[\w./-]+\.json)::([A-Za-z_][\w.\[\]]*)")
+
+
+def operand_pointers(record: dict) -> list[str]:
+    """The record's operands as machine-readable (file, pointer) strings.
+
+    A28's value-keyed gate needs to know which leaves ARE the operands of a
+    derived value, because an operand holding the same value as the thing derived
+    from it is not a second writer. `ranks[0].cumulative_cost_hyper_gold` is the
+    sum of exactly one price, so it equals `ranks[0].price_hyper_gold` by
+    arithmetic necessity - a substring test on the operand prose misses that,
+    because the prose writes the range form `ranks[0..0].price_hyper_gold`.
+    """
+    out: list[str] = []
+    for text in record["operands"]:
+        for path, pointer in OPERAND_RE.findall(text):
+            rng = re.search(r"\[(\d+)\.\.(\d+)\]", pointer)
+            if rng:
+                lo, hi = int(rng.group(1)), int(rng.group(2))
+                for index in range(lo, hi + 1):
+                    out.append(f"{path}::{pointer[: rng.start()]}[{index}]"
+                               f"{pointer[rng.end():]}")
+            else:
+                out.append(f"{path}::{pointer}")
+    return out
+
+
+def value_collision_hits(family: dict, records: list[dict], tree: Tree) -> list[tuple]:
+    """A28's VALUE-KEYED gate, measured on the sweep-ref tree.
+
+    Asks the question the name rules cannot: is there a numeric leaf AT THE
+    DERIVATION SITE carrying the derived value? The site is the object that held
+    the removed leaf, and the walk descends into containers, so this survives a
+    rename, a relocation within the site, a different unit suffix, and a change
+    of arity (scalar -> [scalar]) - none of which changes the number.
+
+    NO TOLERANCE AND NO SHORTCUT. Values compare exactly, as Fractions. The only
+    exclusions are (a) the record's own declared operands and (b) the entries in
+    VALUE_COLLISION_EXCEPTIONS, which are enumerated and individually justified.
+    The radius is the derivation site rather than the file or the scope, and that
+    is a real limit, measured rather than assumed: at file radius this tree has
+    55 coincidental recurrences and at scope radius 400, almost all of them
+    magnitude coincidences between unrelated quantities (a 1.5 m/s world speed
+    against a 1.5 s control-immunity window, a hit count of 4 against
+    maximum_simultaneous_bosses). An exception list that size could not be
+    justified entry by entry, so the radius is narrow AND SAID TO BE NARROW.
+    """
+    hits = []
+    for record in records:
+        pointer = record["pointer"]
+        site = (pointer[: pointer.rindex("[")] if pointer.endswith("]")
+                else (pointer.rsplit(".", 1)[0] if "." in pointer else ""))
+        own_operands = {p.split("::", 1)[1] for p in record["operand_pointers"]
+                        if p.split("::", 1)[0] == record["file"]}
+        target = exact(record["value"])
+        for leaf, value in numeric_leaves(tree.load(record["file"])):
+            if leaf == pointer or exact(value) != target:
+                continue
+            if not (site and (leaf == site or leaf.startswith(site + ".")
+                              or leaf.startswith(site + "["))):
+                continue
+            if leaf in own_operands:
+                continue
+            if (record["file"], pointer, leaf) in VALUE_COLLISION_EXCEPTIONS:
+                continue
+            hits.append((record["file"], pointer, leaf, value))
+    return hits
 
 
 def build(sweep_ref: str) -> dict:
@@ -1017,6 +1243,8 @@ def build(sweep_ref: str) -> dict:
                     pointer=record["pointer"],
                     value=record["value"],
                     operands=record["operands"],
+                    operand_pointers=operand_pointers(record),
+                    chains_through=record.get("chains_through", []),
                     arithmetic=record["arithmetic"],
                 )
             )
@@ -1027,11 +1255,35 @@ def build(sweep_ref: str) -> dict:
         # removal set would let part of the family return.
         expected_pointers = {(r["file"], r["pointer"]) for r in emitted}
         matched = set()
+        corpus = 0
         for scope in family["scopes"]:
-            for path in tree.files(f"content/{scope}"):
+            paths = tree.files(f"content/{scope}")
+            if not paths:
+                failures.append(
+                    f"family '{family['name']}' scope content/{scope}/ contains NO json files on "
+                    f"{sweep_ref[:12]}. A rule over an empty corpus passes vacuously."
+                )
+            for path in paths:
                 for pointer, _ in numeric_leaves(tree.load(path)):
+                    corpus += 1
                     if rule_matches(family, pointer):
                         matched.add((path, pointer))
+        if corpus == 0:
+            failures.append(
+                f"family '{family['name']}' scopes {family['scopes']} hold NO numeric leaves on "
+                f"{sweep_ref[:12]} - the rule would pass vacuously."
+            )
+        family["corpus_numeric_leaves"] = corpus
+
+        # The VALUE-KEYED gate. Names can be renamed; the number cannot.
+        collisions = value_collision_hits(family, emitted, tree)
+        if collisions:
+            failures.append(
+                f"family '{family['name']}' value-keyed gate: {len(collisions)} derived value(s) "
+                f"also sit at a non-operand leaf inside their own derivation site on "
+                f"{sweep_ref[:12]}. Each is either a second writer (fix the tree) or a coincidence "
+                f"(add it to VALUE_COLLISION_EXCEPTIONS with a reason): {collisions[:6]}"
+            )
         if matched != expected_pointers:
             over = sorted(matched - expected_pointers)
             under = sorted(expected_pointers - matched)
@@ -1052,10 +1304,46 @@ def build(sweep_ref: str) -> dict:
                 allowlisted_segments=family["allow"],
                 note=family["note"],
                 count=len(emitted),
+                corpus_numeric_leaves=family["corpus_numeric_leaves"],
                 records=sorted(emitted, key=lambda r: (r["file"], r["pointer"])),
             )
         )
         all_records.extend(emitted)
+
+    # A stale exception is as much a defect as a missing one: if a declared
+    # coincidence stops colliding, the justification is no longer true.
+    declared = set(VALUE_COLLISION_EXCEPTIONS)
+    still_colliding = set()
+    for family in FAMILIES:
+        for record in next(f for f in families if f["name"] == family["name"])["records"]:
+            for key in declared:
+                if key[0] == record["file"] and key[1] == record["pointer"]:
+                    doc = tree.load(record["file"])
+                    for leaf, value in numeric_leaves(doc):
+                        if leaf == key[2] and exact(value) == exact(record["value"]):
+                            still_colliding.add(key)
+    for key in sorted(declared - still_colliding):
+        failures.append(
+            f"VALUE_COLLISION_EXCEPTIONS entry {key} no longer collides on {sweep_ref[:12]}. "
+            f"A stale exception silently widens the gate - delete it."
+        )
+
+    if not families:
+        failures.append(
+            "FAMILIES is empty. A28 would report '(nothing to report)' and PASS under a heading "
+            "that promises the derived-value families, which is a vacuous pass."
+        )
+    if len(families) != DECLARED_FAMILY_COUNT:
+        failures.append(
+            f"{len(families)} family/families built but DECLARED_FAMILY_COUNT is "
+            f"{DECLARED_FAMILY_COUNT}. The count is declared separately on purpose: it is what "
+            f"stops a family being dropped without anyone noticing."
+        )
+    if len(all_records) != DECLARED_TOTAL_REMOVED:
+        failures.append(
+            f"{len(all_records)} value(s) built but DECLARED_TOTAL_REMOVED is "
+            f"{DECLARED_TOTAL_REMOVED}."
+        )
 
     if failures:
         for line in failures:
@@ -1082,7 +1370,22 @@ def build(sweep_ref: str) -> dict:
         ),
         total_removed=len(all_records),
         family_count=len(families),
+        declared_family_count=DECLARED_FAMILY_COUNT,
+        declared_total_removed=DECLARED_TOTAL_REMOVED,
         families=families,
+        pulled_from_this_pass=[
+            dict(
+                name=pulled["name"],
+                scopes=[f"content/{s}/" for s in pulled["scopes"]],
+                count_restored=len(pulled["builder"](tree)),
+                pulled_because=pulled["pulled_because"],
+            )
+            for pulled in PULLED_FROM_THIS_PASS
+        ],
+        value_collision_exceptions=[
+            dict(file=k[0], derived_pointer=k[1], colliding_pointer=k[2], why_not_a_second_writer=v)
+            for k, v in sorted(VALUE_COLLISION_EXCEPTIONS.items())
+        ],
         removed_numeric_multiset=multiset,
         retained_because_operand=RETAINED_BECAUSE_OPERAND,
         reproduces_but_not_assigned_by_docs=[

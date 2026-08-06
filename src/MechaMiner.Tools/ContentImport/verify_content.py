@@ -365,22 +365,43 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       Mandate: content/quote-verification-audit.md (adopted rule and its
       stated corpus dependency)                                     FAILURE
 
-  A28 No definition carries a compiler-derived value from any of the nine
-      families removed by the derived-value pass. NINE RULES WITH NINE
+  A28 No definition carries a compiler-derived value from any of the SIX
+      families removed by the derived-value pass. SIX RULES WITH SIX
       DIFFERENT SCOPES, for the same reason A20 is two rules with two
-      scopes: three of these patterns flag legitimately AUTHORED fields in
+      scopes: some of these patterns flag legitimately AUTHORED fields in
       a directory they do not cover. An absolute metres-per-second value is
       always derived in content/enemies/ and content/bosses/, where a speed
       is authored as a percentage of the mech baseline - and always
       authored in content/weapons/, where projectile_speed_m_per_s is the
       real number. So the world-speed rule covers the first two and not the
       third.
-      Matched on pointer SEGMENT NAMES, never on values, so a rename cannot
-      reintroduce the field under a new spelling. Segments, not just the
-      leaf key, because three families store the number under a generic
-      leaf (`amount`, `minimum`, `maximum`) inside a specifically named
-      parent - a leaf-key-only rule would miss
+      SIX, not the nine an earlier draft asserted: the damage-pressure
+      block (32 values) and the resonant hit counts (5) are the COMPARAND
+      40:114 has the compiler compare its derivation against, not derived
+      duplicates, and the stat price curve (14) would have moved fourteen
+      checkable numbers into an unchecked prose string. All 51 restored.
+      See pulled_from_this_pass in the expectation file.
+      TWO LAYERS, and neither is a complete guard on its own:
+      (1) a NAME layer over pointer SEGMENT NAMES. It catches a rename only
+      within its own word class. It does NOT make a rename impossible: a
+      value reintroduced under a name the class does not carry passes, and
+      that was measured, not assumed - a semantic-neighbour probe defeated
+      all nine drafts of these rules before they were widened, and a probe
+      chosen against the widened classes would defeat some of them too.
+      Segments, not just the leaf key, because some families store the
+      number under a generic leaf (`amount`, `minimum`, `maximum`) inside a
+      specifically named parent - a leaf-key-only rule would miss
       total_payout_per_map.amount entirely.
+      (2) a VALUE layer, which is what a name rule cannot do: for each
+      removed value, no non-operand numeric leaf inside its own derivation
+      site may carry that value. Exact Fractions, no tolerance. This one
+      survives a rename, a relocation within the site, a different unit
+      suffix, and scalar -> [scalar]. Its RADIUS is the limit and is stated
+      rather than hidden: the derivation site, not the file and not the
+      scope, because at file radius this tree has 55 coincidental
+      recurrences and at scope radius 400 - magnitude coincidences between
+      unrelated quantities, which no honest exception list can absorb. One
+      exception is declared, enumerated and justified.
       Two segment names are ALLOWLISTED, in the shape A20 allowlists
       reference_diameter_m: `purchases` (the authored checkpoint index the
       removed cumulative cost derives FROM, which matches only by
@@ -427,6 +448,7 @@ import json
 import re
 import subprocess
 import sys
+from fractions import Fraction
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -2053,7 +2075,15 @@ def numeric_pointer_leaves(obj, prefix: str = ""):
 
 
 def check_derived_family_absence(docs: dict[Path, object]) -> list[tuple]:
-    """A28 - none of the nine removed families may reappear, matched on names."""
+    """A28 - none of the six removed families may reappear.
+
+    Two layers. This is the NAME layer, over pointer segment names; it catches a
+    rename only within its own word class and cannot make one impossible. The
+    VALUE layer - no non-operand leaf inside a derivation site may carry the
+    derived value - is asserted by the generator against the pinned sweep ref and
+    recorded in the expectation file, because it is a property of the removal set
+    rather than of the current tree.
+    """
     expectation = load_derived_expectation()
     rows = []
     for family in expectation.get("families", []):
@@ -2080,7 +2110,75 @@ def check_derived_family_absence(docs: dict[Path, object]) -> list[tuple]:
                 f"/{family['pointer_segment_rule']}/"
                 + (f" under /{family['pointer_parent_rule']}/" if family.get("pointer_parent_rule")
                    else "")
-                + f", so a rename does not evade it: {hits[:10]}"
+                + f". This is the NAME layer, which catches a rename only within its own word "
+                f"class - a value reintroduced under a name the class does not carry passes it, and "
+                f"the value layer is what covers that: {hits[:10]}"
+            )
+    return rows
+
+
+def check_derived_family_values(docs: dict[Path, object]) -> list[tuple]:
+    """A28's VALUE layer, over the CURRENT tree - the half a name rule cannot do.
+
+    For every value this pass removed, no non-operand numeric leaf inside its own
+    derivation site may carry that value. Compared exactly, as Fractions, with no
+    tolerance: a stored 32.0 and a stored 32 are the same number and both fail.
+
+    This is what makes the guard indifferent to spelling. A reintroduction
+    survives a rename, a relocation inside the site, a different unit suffix and a
+    change of arity (32.0 -> [32.0]) without changing the number, and all four are
+    caught here while all four defeat the name layer.
+
+    Its RADIUS IS ITS LIMIT AND IS STATED: the derivation site, not the file and
+    not the scope. A value relocated OUT of its site still passes. That choice was
+    measured rather than assumed - see VALUE_COLLISION_EXCEPTIONS in the generator,
+    and the 55/400 coincidence counts at file and scope radius that make a wider
+    radius unlandable without a hand-written exception list nobody can audit.
+    """
+    expectation = load_derived_expectation()
+    exceptions = {
+        (e["file"], e["derived_pointer"], e["colliding_pointer"])
+        for e in expectation.get("value_collision_exceptions", [])
+    }
+    by_path = {rel(p): d for p, d in docs.items()}
+    rows = []
+    for family in expectation.get("families", []):
+        hits: list[str] = []
+        for record in family["records"]:
+            doc = by_path.get(record["file"])
+            if doc is None:
+                continue
+            pointer = record["pointer"]
+            site = (pointer[: pointer.rindex("[")] if pointer.endswith("]")
+                    else (pointer.rsplit(".", 1)[0] if "." in pointer else ""))
+            own = {p.split("::", 1)[1] for p in record.get("operand_pointers", [])
+                   if p.split("::", 1)[0] == record["file"]}
+            target = Fraction(str(record["value"]))
+            for leaf, value in numeric_pointer_leaves(doc):
+                if Fraction(str(value)) != target:
+                    continue
+                if not (site and (leaf == site or leaf.startswith(site + ".")
+                                  or leaf.startswith(site + "["))):
+                    continue
+                if leaf in own or (record["file"], pointer, leaf) in exceptions:
+                    continue
+                hits.append(f"{record['file']}.{leaf} = {value!r} (the removed {pointer})")
+        rows.append(
+            (
+                f"no {family['name']} VALUE at its derivation site",
+                0,
+                len(hits),
+                "ok" if not hits else "FAIL",
+            )
+        )
+        if hits:
+            fail(
+                f"A28 value layer: {len(hits)} numeric leaf/leaves carry a value this pass removed "
+                f"as a '{family['name']}', inside that value's own derivation site and not as one "
+                f"of its operands. Matched on the NUMBER, so a rename, a relocation within the "
+                f"site, a new unit suffix and a scalar-to-list change all fail it. If a hit is a "
+                f"genuine coincidence, add it to VALUE_COLLISION_EXCEPTIONS with a reason: "
+                f"{sorted(hits)[:10]}"
             )
     return rows
 
@@ -2101,7 +2199,20 @@ def _numeric_multiset_at_ref(ref: str, paths: list[str]) -> dict[tuple[str, str]
 
 
 def check_derived_removal_delta() -> list[tuple]:
-    """A29 - the measured numeric delta IS the committed expectation, per element."""
+    """A29 - the measured numeric delta IS the committed expectation, per element.
+
+    ONE ROW, AND DELIBERATELY ONE. Earlier drafts also asserted "0 numeric leaves
+    added" and "0 surviving numeric leaves changed value" against the sweep ref.
+    Both are true of THIS diff and neither belongs in a standing validator: they
+    are one-shot properties of one commit range, so the first ordinary tuning
+    commit after merge - EN-01 hull 20 -> 25, an authored non-derived value -
+    would fail a rule about derived values. Worse, the only way to clear that
+    failure is to re-pin sweep_ref to a newer commit, which makes A29 compare the
+    tree against itself and destroys the prediction-first property that is the
+    whole point. Those two measurements are evidence for this pull request and
+    live in its body. Set equality over the removal set is the invariant that
+    holds for every future commit, so it is the one that stays here.
+    """
     expectation = load_derived_expectation()
     if not expectation:
         return []
@@ -2128,12 +2239,6 @@ def check_derived_removal_delta() -> list[tuple]:
             after[(rel(path), pointer)] = value
 
     measured_removed = {key: value for key, value in before.items() if key not in after}
-    measured_added = {key: value for key, value in after.items() if key not in before}
-    measured_changed = {
-        key: (before[key], after[key])
-        for key in before.keys() & after.keys()
-        if before[key] != after[key]
-    }
 
     predicted = {(f, p): v for f, p, v in expectation["removed_numeric_multiset"]}
     n = len(predicted)
@@ -2155,18 +2260,6 @@ def check_derived_removal_delta() -> list[tuple]:
             f"{len(wrong_value)} value mismatch(es)",
             "ok" if equal else "FAIL",
         ),
-        (
-            "numeric leaves ADDED by this pass",
-            0,
-            len(measured_added),
-            "ok" if not measured_added else "FAIL",
-        ),
-        (
-            "surviving numeric leaves whose value changed",
-            0,
-            len(measured_changed),
-            "ok" if not measured_changed else "FAIL",
-        ),
     ]
     if not equal:
         fail(
@@ -2175,18 +2268,6 @@ def check_derived_removal_delta() -> list[tuple]:
             f"{len(missing)} predicted-but-still-present {missing[:6]}, "
             f"{len(unexpected)} removed-but-unpredicted {unexpected[:6]}, "
             f"{len(wrong_value)} predicted with the wrong value {wrong_value[:6]}"
-        )
-    if measured_added:
-        fail(
-            f"A29 this pass ADDED {len(measured_added)} numeric leaf/leaves under content/. A "
-            f"derived-value removal introduces no numbers: "
-            f"{sorted(f'{f}.{p} = {v!r}' for (f, p), v in measured_added.items())[:10]}"
-        )
-    if measured_changed:
-        fail(
-            f"A29 {len(measured_changed)} surviving numeric leaf/leaves CHANGED value. Removing a "
-            f"derived value must not retune an operand: "
-            f"{sorted(f'{f}.{p}: {b!r} -> {a!r}' for (f, p), (b, a) in measured_changed.items())[:10]}"
         )
     return rows
 
@@ -2929,6 +3010,7 @@ def main() -> int:
     derived_rows = check_derived_values(docs)
     footprint_rows = check_derived_footprint_fields(docs)
     derived_family_rows = check_derived_family_absence(docs)
+    derived_value_rows = check_derived_family_values(docs)
     removal_delta_rows = check_derived_removal_delta()
     prefix_rows = check_scope_prefixes(docs)
     bound_rows = check_bound_spelling(docs)
@@ -2965,9 +3047,16 @@ def main() -> int:
         footprint_rows,
     )
     table(
-        "A28 Derived-value families the compiler owns (nine rules, nine scopes)",
+        "A28 layer 1 of 2 - NAME: no derived-value family reappears under a matching name "
+        "(six rules, six scopes; catches a rename only within its own word class)",
         ("check", "expected", "actual", "status"),
         derived_family_rows,
+    )
+    table(
+        "A28 layer 2 of 2 - VALUE: no removed value sits at a non-operand leaf inside its own "
+        "derivation site (exact Fractions; indifferent to name, unit suffix and arity)",
+        ("check", "expected", "actual", "status"),
+        derived_value_rows,
     )
     table(
         "A29 Removal delta == the expectation committed before the removals",

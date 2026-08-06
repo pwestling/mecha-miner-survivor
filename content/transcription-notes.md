@@ -2564,29 +2564,81 @@ expectation (which touches no `content/` file) to the commit making the change. 
   changes, which is the opposite of what it is for. The three Markdown files under `content/` are
   prose and are excluded from both multisets.
 
-#### Ruling 45 — 166 authored derived values removed, and what the reported figures actually were
+#### Ruling 45 — 115 authored derived values removed, after three families were pulled back
 
 `docs/technical/40-content-data-and-validation.md` assigns these to the compiler, so a stored copy puts a
 second writer on each one: `40:114` derives world speeds and compares them with the survivability report,
 `40:136` has validators "recompute total catalog costs", `40:140` validates the four mining-site classes
 "and their totals", and `40:203` recalculates "price curves, total costs ... resource totals". Two earlier
 instances of exactly this are already gone (Ruling 30's boss centre distances, and the health pack's
-collection distance). **Every one of the 166 reproduced exactly** from operands that survive the removal,
+collection distance). **Every one of the 115 reproduced exactly** from operands that survive the removal,
 computed in exact rational arithmetic rather than binary float, so this pass found **no new value defect** —
 unlike the two that were found this way before.
 
-**The reconciliation's figures were reported as ~154 across ~12 families. The measured set is 166 across 9,
-and three of the three named sub-counts needed correcting:**
+**The removal set is 115 across 6 families, and an earlier draft of this ruling claimed 166 across 9. The
+arithmetic is `166 − 32 − 5 − 14 = 115` and `9 − 3 = 6`, verified against the tree: the numeric leaf count
+under `content/` goes 2,303 → 2,188, with 115 removed, 0 added and 0 changed.** Three families were built,
+verified to reproduce exactly, and then **pulled back into the tree**:
 
-- **17 world speeds, not 14.** The reconciliation counted the ten enemy and four boss `movement_speed`
-  entries. Three more are built identically from `percent_of_mech_base_speed` and the `3.0 M/s` reference
-  speed: `EN-06 :: specialist_attack.projectile.speed` (75% → 2.25), `BOSS-01 :: ability.charge_speed`
-  (180% → 5.4), and `BOSS-03 :: ability.projectile.speed` (75% → 2.25).
-- **32 numbers in the 14 `damage_pressure` blocks, not 14.** "All 14 `damage_pressure` blocks" counts
-  blocks, not values. Each of the ten enemies stores two (`ceil(100 / contact_damage)`, and
-  `(hits − 1) × 0.75 s`); each of the four bosses stores three, because it additionally restates its own
-  top-level `contact_damage` inside the derived block.
+| Pulled | Values | Why it was wrong to remove |
+| --- | ---: | --- |
+| `damage_pressure` survivability block | 32 | **Comparand, not a derived duplicate** (see below). |
+| resonant-value hit counts | 5 | Same — rows of the same survivability report (`72:167`). |
+| stat upgrade price curve | 14 | **Would have moved 14 checkable numbers into an unchecked string.** |
+
+**The comparand argument, and the caveat that the measurement forced onto it.** `40:114` reads "Validation
+derives world speeds/footprints and compares them with the survivability report". The object of *derives*
+is world speeds and footprints; the report is what they are compared **against**. A comparand produced by
+the same code it is checked against is a tautology that agrees always, catches nothing, and prints exactly
+like a working cross-check. **But the report is not only in `content/`:**
+`docs/data/contact-damage-pressure.csv` carries `hits_to_defeat_100` and `continuous_overlap_ttd_s` for all
+14 actors, and **all 28 values match the content block exactly** — checked here in exact rational
+arithmetic, not assumed. `72:167` likewise states all five resonant hit counts. So the honest statement is
+**not** "removing these makes the comparison vacuous" — `docs/` would still supply a comparand. It is that
+**there are three writers on this report** (the docs table, the content block, and the compiler), and which
+of the first two is the "accepted gameplay table" `40:203` compares reports against is **unsettled**.
+Restoring is the conservative move while that is open; it is **not** a finding that the content copy is
+right. Recorded as an open item.
+
+**Why the price curve was wrong to remove, and why editing the prose is not the fix.** All 14 values are
+still stated in the same file, in `defining_prose`: "The first ten prices are 10, 30, 60, 100, 150, 210,
+280, 360, 450, and 550 ore. Cumulative cost reaches 100 after three purchases, 200 after four, 350 after
+five, and 2,200 after ten." A28 matches **numeric leaves**, so removing the leaves moved 14 checkable
+numbers to a place no assertion looks — strictly worse than leaving them, because the redundancy survived
+and the checkability did not. **The prose was not edited**: that sentence is a verified doc quotation in
+`quote_mismatch_evidence.json`, so rewriting its numerals would falsify the citation while every validator
+stayed green. Whether authored prose should restate derived numbers is a real question and not one to
+settle inside a removal pass.
+
+**Reproducibility was never the discriminator, and that is the general lesson.** All 51 pulled values
+reproduce exactly; so do all 115 kept ones. **The operand/comparand distinction is orthogonal to
+reproducibility**, and a pass that only asks "does it recompute?" cannot see it. The same test was
+therefore applied to all six surviving families:
+
+| Surviving family | Is the removed leaf a comparand? | Where the independent side lives |
+| --- | --- | --- |
+| enemy and boss world speed (17) | No — it is the **derived** side `40:114` names | the survivability report, now restored |
+| PowerUp cumulative cost (58) | No | the doc-stated 9,450 that A14 checks, in `docs/` |
+| utility total rank ore cost (13) | No | `40:203`; operands (`rank_ore_costs`) retained |
+| resource aggregate total (13) | No | the 400-unit run ceiling stated at `50:24` and `10:86` |
+| mining-site aggregate total (13) | No | `40:140` "their totals" |
+| map-contract site-based Hyper Gold (1) | No | the 300 per map stated at `50:24` |
+
+**None of the six is a comparand that lives only in `content/`** — in every case the independent side is a
+`docs/` line or table, which is what makes the compiler's recomputation a real check rather than a
+self-comparison. That is the structural test, not a search for matching digits: a literal grep for these
+values across `docs/` is uninformative, because small integers like `3`, `4` and `100` appear throughout.
+
+**One sub-count from the earlier draft stands and is worth keeping:**
+
+- **17 world speeds, not the 14 the reconciliation named.** It counted the ten enemy and four boss
+  `movement_speed` entries. Three more are built identically from `percent_of_mech_base_speed` and the
+  `3.0 M/s` reference speed: `EN-06 :: specialist_attack.projectile.speed` (75% → 2.25),
+  `BOSS-01 :: ability.charge_speed` (180% → 5.4), and `BOSS-03 :: ability.projectile.speed` (75% → 2.25).
 - **58 PowerUp cumulative costs — correct as reported.**
+- The earlier draft's third correction — "32 numbers in the 14 `damage_pressure` blocks, not 14, because
+  the reported figure counted **containers** rather than **contents**" — was arithmetically right and is
+  still the right way to read that figure. It is now moot for the removal set, since all 32 are restored.
 
 **Nothing whose derivation a document does not assign was removed, even where the arithmetic works.** Six
 such things reproduce exactly and stay, each recorded with its arithmetic in
@@ -2594,17 +2646,112 @@ such things reproduce exactly and stay, each recorded with its arithmetic in
 thresholds among a site's *authored* fields and gives the compiler only "their totals"),
 `sources[].depletion_seconds` in `content/resources/` (a duration is not a resource total — while the
 identically-derived `total_depletion_seconds` under `content/mining-sites/` *is* removed, because `40:140`
-names those totals), `resonant_damage` (reproduces as `ceil(base × 1.20)` for all five, but no document
-states that rounding and `40:203` tolerates divergence only "beyond documented rounding"),
-`BOSS-01 :: ability.ordinary_contact_damage_replaced_during_charge`, and the three
+names those totals), `resonant_damage` (see below — it is the cheapest open item, and it is *not* missing a
+rounding clause), `BOSS-01 :: ability.ordinary_contact_damage_replaced_during_charge`, and the three
 `relative_to_standard_seam` multipliers.
 
-**The largest exclusion is the 45 weapon DPS estimates, and it fails the arithmetic test rather than the
-document test.** `40:203` *does* assign "DPS estimates" to the compiler, and `W-AB` reproduces cleanly
-(`96 / 3.0 = 32.0` sustained, `ceil(10 / 3.0) × 96 / 10 = 38.4` burst, `32.0 × 4` pierce `= 128` horde). But
-the burst and horde rules vary with each weapon's behaviour kind, and this pass could not state one rule
-reproducing all 45 exactly. Removing a number whose recomputation cannot be stated is worse than leaving it,
-so the family is **out of scope, not cleared**. It needs its own pass.
+**`resonant_damage` is not one clause short — it is zero clauses short, and this note corrects an earlier
+claim in this file and in `derive_derived_value_expectations.py` that "no document states that rounding".**
+It reproduces as `ceil(base_damage × 1.20)` for **all five**, verified in exact rational arithmetic:
+`EN-06 :: specialist_attack` 14 → `16.8` → **17**; `BOSS-01 :: ability` 27 → `32.4` → **33**;
+`BOSS-03 :: ability` 18 → `21.6` → **22**; `BOSS-04 :: ability` 35 → `42.0` → **42**;
+`shared-elite-modifiers :: worked_examples[0]` 36 → `43.2` → **44**. Both halves are documented:
+
+- the **×1.20** at `61:92`–`61:101` (the accepted 20% modifier per material) and in the table at `72:167`,
+  which states all five results;
+- the **rounding** at `72:120`, step 3 of the damage-resolution order — "Round the result up to the next
+  whole Hull point" — immediately after step 2, "Multiply listed base damage by current attacker-side
+  damage modifiers". That composition *is* `ceil(base × modifier)`. `72:126` shows it worked through on a
+  sixth case (`38 × 1.20 = 45.6`, rounded up to 46).
+
+`ceil` is also the **only** rounding that reproduces all five: `32.4 → 33` and `43.2 → 44` rule out both
+`floor` and round-half. So nothing about this value is undecided. It stays only because it is the operand
+the removed `fresh_mech_hits_to_defeat_at_resonant_value` derives from, and the remaining question is
+narrow: no line in `40:` names *resonance damage* among what the compiler recomputes, the way `40:114` names
+world speeds. **This is the cheapest of the open items to close, and closing it is a documentation edit
+rather than a decision** — the arithmetic, the multiplier, the rounding and all five results are already
+written down; one `40:` line needs to say the compiler owns it.
+
+**The largest exclusion is the 45 weapon DPS estimates. State the gap precisely: `40:203` assigns the
+derivation to the compiler without stating a derivation that covers the set.** Not "45 values may be
+derived" — the assignment is explicit ("Recalculate DPS estimates"), and the set is 15 weapons × three
+fields (`burst_10_dps`, `sustained_30_dps`, `favorable_horde_dps`). What no document states is a rule, or a
+named set of rules, that reproduces all 45. That is a documentation gap at a specific line, not an open
+question about whether the values are derived.
+
+**The 45 do partition, and the partition is small. This pass measures 8 rules; the figure reported to it was
+12, and the difference is a counting convention, not a disagreement about any value.** All 45 reproduce
+either way. The 8 counts *distinct arithmetics*: 1 for `sustained_30_dps`, 6 for `burst_10_dps`, 1 shape for
+`favorable_horde_dps`. Counting the horde multiplier's documented cases as separate rules — four for
+line/contact, five for the mortar, eight for Gravity Projector, ten for Reactor Pulse, two per missile blast
+(`docs/71:68`) — turns that one shape into five, giving 12. **Neither number is wrong; the useful figure is
+whichever a validator has to implement**, and a validator implementing the horde column needs one
+multiplication plus a per-weapon constant it reads from `71:68`, so this ruling states 8 and shows the
+5-way split inside the horde entry rather than hiding it. The count is recorded both ways so a later reader
+does not have to reconcile them.
+
+**The partition, measured in exact rational
+arithmetic, never binary float; **no stored value was changed to make any of it fit**:
+
+- **`sustained_30_dps` — 15 of 15, one rule.** The steady-state ideal DPS of `70:52`
+  (`damage per hit × damaging hits per activation × activations per second`), rounded to one decimal place.
+  `W-AB` `96 / 3 = 32.0`; `W-AD` `36 × 1.5 / 2.5 = 21.6`; `W-BE` `3 × 8 × 1.4 = 33.6`;
+  `W-CF` `2 × 18 = 36.0` at the two-segment overlap cap; `W-AF` `18 × 2 = 36.0` at full focus;
+  `W-EF` `4 × 26 / 3 = 34.666… → 34.7`, the only one where the rounding is load-bearing.
+- **`burst_10_dps` — 6 rules, and they group by the warmup shapes `70:64` already names**
+  ("charge time, deployment buildup, actor capacity, delayed impacts, focus growth, mine setup"):
+  - **10 of 15 by one rule** — `ceil(10 / cadence)` activations land in the first 10 s counting the one at
+    t = 0, so `damage × ceil(10 / T) / 10`. `W-AB` `4 × 96 / 10 = 38.4`; `W-AC` `3 × 128 / 10 = 38.4`;
+    `W-AD` `4 × 54 / 10 = 21.6`; `W-BC` `27 × 12 / 10 = 32.4`; `W-BF` `10 × 32 / 10 = 32.0`;
+    `W-CD` and `W-DF` `20 × 16 / 10 = 32.0`; `W-CE` `7 × 27 / 10 = 18.9`; `W-DE` `10 × 45 / 10 = 45.0`;
+    `W-EF` `4 × 104 / 10 = 41.6`.
+  - **`W-AF`, focus growth:** `∫₀⁵ 18(1 + t/5) dt + 36 × 5 = 135 + 180 = 315`, `/10 = 31.5`. Operands all
+    authored: base rate 18, `focus_multiplier_minimum` 1, `focus_multiplier_maximum` 2,
+    `focus_fill_seconds_at_rank_zero` 5.0.
+  - **`W-BD`, mine setup:** `floor((10 − 0.5) / 1) = 9` mines detonate, `9 × 27 / 10 = 24.3`, from
+    `placement_interval_base_travel_seconds` 1 and `arm_seconds` 0.5.
+  - **`W-BE`, deployment buildup:** pod 1 covers 10 s and pod 2 covers 4 s for 14 pod-seconds,
+    `14 × 8 × 1.4 / 10 = 15.68 → 15.7`, from `deployment_cadence_seconds` 6.0 and
+    `first_pod_deploys_immediately`.
+  - **`W-CF`, overlap ramp:** the two-segment cap is reached after two 0.25 s placement intervals, so
+    `(10 − 2 × 0.25) × 2 × 18 / 10 = 34.2`.
+  - **`W-AE`, no warmup at all:** its burst is its steady rate, `3 × 8 / 0.75 = 32.0`. The general
+    activation-count rule would give `14 × 24 / 10 = 33.6`. `32.0` also falls out of the count rule if the
+    three drones fire staggered at third-cycle offsets (14 + 13 + 13 = 40 shots × 8 = 320), so `W-AE` is
+    genuinely ambiguous between two rules that agree on the answer — the stagger is stated nowhere.
+- **`favorable_horde_dps` — 15 of 15 by one *shape*, but the shape has a free parameter that is stored
+  nowhere.** Every value is `sustained_30_dps × k` for an integer `k`, rounded to a whole number where the
+  product is not one: `W-AB` `32 × 4 = 128`; `W-AC` `32 × 5 = 160`; `W-AD` `21.6 × 8 = 172.8 → 173`;
+  `W-BD` `27 × 5 = 135`; `W-BF` `32 × 4 = 128`; `W-CD` `32 × 5 = 160`; `W-CE` `18 × 10 = 180`;
+  `W-CF` `36 × 4 = 144`; `W-DF` `32 × 4 = 128`; `W-EF` `34.666… × 2 = 69.33 → 69`; and `k = 1` for
+  `W-AE`, `W-AF`, `W-BC`, `W-BE`, `W-DE`. **An earlier draft of this ruling claimed the 15 `k` values
+  "appear nowhere in `docs/` or in `content/`". That was wrong, and `docs/71:68` states all of them**:
+  "The favorable-horde column uses approximately four simultaneous victims for line/contact weapons, five
+  for the mortar, eight for Gravity Projector, ten for Reactor Pulse, and two victims per missile blast. It
+  exists to catch order-of-magnitude errors; benchmark-scene captures supersede it once a playable build
+  exists." That maps onto the measured `k` exactly: four for the line/contact weapons (`W-AB` pierce line,
+  `W-BF` cutters, `W-CF` wake trail, `W-DF` ram contact), five for the mortar (`W-AC`), eight for
+  `W-AD`, ten for `W-CE`, and two **per missile blast** for `W-EF`, whose four missiles × two victims × 26
+  gives `208 / 3 = 69.33 → 69`. `W-CD`'s five is its own authored chain cap ("maximum five total targets"),
+  and the five `k = 1` weapons each carry a limitation clause saying so ("Total output is split rather than
+  multiplied by crowds", "One automatically selected target per projectile", and so on). **The negative
+  claim was the defect, not the arithmetic** — searching `content/` and stopping there is not searching
+  `docs/`, and the figures were sitting in the same document as the DPS table itself. The same line settles
+  the field's status: it "exists to catch order-of-magnitude errors" and "benchmark-scene captures supersede
+  it", so `favorable_horde_dps` is an **analytic placeholder for a measurement**, which is also what
+  `70:78` says when it defines horde throughput as counting "actual hits rather than multiplying
+  single-target DPS by a theoretical unlimited target count".
+
+**What that means for the two candidate readings.** The set does *not* need something close to 45 rules, so
+this is not an ad-hoc-computation problem. It needs **one rule for `sustained_30_dps`, six for
+`burst_10_dps` grouped by the warmup families `70:64` already names, and an admission that
+`favorable_horde_dps` is an analytic placeholder for a measurement, per `71:68`**. The documentation edit is
+correspondingly small: `40:203` should say DPS estimates are derived **per warmup family**, name each
+family's rule, cross-reference `71:68` for the horde multipliers it already states, state
+the one-decimal rounding (load-bearing only for `W-EF` sustained and `W-BE` burst), and stop assigning
+`favorable_horde_dps` to the compiler until its per-weapon `k` is authored somewhere. Until that exists,
+removing these 45 would replace a stated number with an unstated one, so the family stays **out of scope,
+not cleared** — but the pass that closes it is now a documentation pass, not an investigation.
 
 **Six values are derived AND operands, so they stay, and the operand role wins.** Chief among them
 `total_cost_hyper_gold`, which carries its own `DEC-120#decision` citation and is the operand A14's second
@@ -2617,14 +2764,107 @@ in the removal set, so both still recompute 9,450, and the option-unlock 2,150 r
 PowerUps at all. Negative control: `PU-C01 :: ranks[0].price_hyper_gold` 50 → 60 → **FAIL**, "PowerUp rank
 prices sum to 9460 Hyper Gold across 58 rank rows, expected 9450".
 
-**A28 is nine rules with nine scopes, for A20's reason, and its word classes came out of a failed control.**
+**A28 is now two layers, and the second one is the point: names are widenable forever, values are not.**
+The word-class widening below is kept as the record of how the name layer got where it is, but **widening
+word lists was the wrong response to the hole and has stopped.** Nine drafts of a name rule were defeated
+by nine semantic-neighbour probes; widening them would be defeated by a tenth probe chosen against the new
+lists, and there is no draft at which that stops. The rule now also asks the question a name cannot: **for
+each removed value, no non-operand numeric leaf inside its own derivation site may carry that value**,
+compared exactly as `Fraction` with no tolerance. That survives a rename, a relocation within the site, a
+different unit suffix, and a change of arity (`32.0` → `[32.0]`), because none of those change the number.
+
+**Its radius is the limit, and the radius was chosen by measurement rather than asserted.** The site is the
+object that held the removed leaf — not the file, not the scope. At **file** radius this tree has **55**
+coincidental recurrences and at **scope** radius **400**, almost all magnitude coincidences between
+unrelated quantities: a `1.5` m/s world speed against a `1.5`-second control-immunity window, a hit count
+of `4` against `maximum_simultaneous_bosses`. An exception list of that size cannot be justified entry by
+entry, so the radius is narrow **and is stated to be narrow**. At site radius the list is **one entry**:
+`UTL-R1`'s removed `acquisition.total_rank_ore_cost` is `0`, being the sum of an empty `rank_ore_costs`
+list, and its `acquisition.rank_count` is independently `0` — two quantities that are both zero, not one
+quantity written twice. A declared exception that **stops** colliding also fails the generator, because a
+stale justification is as much a defect as a missing one.
+
+**Both layers were probed, per family, with four attack classes — 24 injections, each into a real
+`content/` file, measured with the real `verify_content.py`, and reverted.** The value layer is what fires;
+the name layer fires on none of them, because each probe name sits outside its word class, which is the
+whole reason the value layer exists:
+
+| Attack | What it changes | Name layer | Value layer | Result |
+| --- | --- | ---: | ---: | --- |
+| **rename** — a name the word class does not carry, same site, same number | spelling | 0/6 | **6/6** | caught |
+| **unit suffix** — `…_in_units` appended, same site, same number | spelling | 0/6 | **6/6** | caught |
+| **arity** — the number wrapped as `[value]`, same site | shape | 0/6 | **6/6** | caught |
+| **relocation** — same file, same number, moved *out* of the derivation site | position | 0/6 | **0/6** | **misses, by design** |
+
+**The relocation row is the radius, reported rather than buried.** It is not a bug to fix by widening: file
+radius costs 55 coincidental recurrences and scope radius 400, and an exception list that size is not
+auditable. The honest claim is "indifferent to name, unit and arity within the derivation site", and that is
+now what the code, the tool README and this record all say.
+
+**What A28 still does not do.** The name layer catches a rename only within its own word class; the value
+layer catches relocation only within the derivation site. Neither makes reintroduction impossible, and the
+three places that previously claimed otherwise have been corrected — `verify_content.py`'s assertion table
+("so a rename cannot reintroduce the field under a new spelling"), its A28 failure message ("so a rename
+does not evade it"), and the tool README's A20 paragraph ("so that a *rename* inside a covered directory
+cannot slip past"). All three were false in the same way, and the notes had already recorded the correct
+limitation for A20 under Ruling 27 — "a value injected under an unmatched name passes" — so the code
+contradicted the record rather than extending it.
+
+**The history: A28 was nine rules with nine scopes, for A20's reason, and its word classes came out of a
+failed control.**
 The first draft of the mining-site rule was `total|jackpot`; the negative control renamed
 `total_payout_per_map` to `aggregate_payout_per_map` and **passed**. The four aggregate-total families now
 match the word class `total|sum|aggregate|combined|overall|grand`. `content/powerups/` deliberately does not
 use that class — `total_` is authored twice over there, as `total_cost_hyper_gold` and as every rank's
-`total_effect`, so the class would flag 71 surviving fields — and uses
-`cumulative|running_total|to_date|so_far` instead. All nine controls were then run and reverted
-**individually**, each reintroducing its field under a *different* name; all nine failed.
+`total_effect`, so the class would flag 71 surviving fields (verifiable with
+`grep -ho '"total_[a-z_]*"' content/powerups/*.json | sort | uniq -c`: 13 `total_cost_hyper_gold` +
+58 `total_effect`). All nine controls were then run and reverted **individually**, each reintroducing its
+field under a *different* name; all nine failed.
+
+**Then the nine controls were re-run against a harder probe, and all nine passed — meaning all nine guards
+missed.** The nine renames above were renames: the same field spelled differently, still inside the guard's
+word list. The second round injected, per guard, a field that is **semantically inside the family but
+lexically outside the pattern** — the shape that had already defeated the mining-site rule once, when
+`aggregate_payout_per_map` walked past `total|jackpot`. F8 was not an isolated slip. **Nine of nine word
+lists had the same hole**, because nine word lists were written the same way: by listing the spellings
+already present in the tree rather than by naming what the family is about. Per guard, probe → result:
+
+| Guard | Probe injected | Before | After widening |
+| --- | --- | --- | --- |
+| enemy and boss world speed | `movement_speed.traverse_rate_metres_per_second` | missed | fires |
+| damage-pressure survivability block | `survivability_pressure.hits_to_defeat_100_hull` | missed | fires |
+| resonant-value hit count | `…resonant_damage_reference.impacts_to_destroy_fresh_mech` | missed | fires |
+| PowerUp cumulative cost | `ranks[0].accrued_cost_hyper_gold` | missed | fires |
+| utility total rank ore cost | `acquisition.accrued_rank_ore_cost` | missed | fires |
+| stat upgrade price curve | `price_ladder` | missed | fires |
+| resource aggregate total | `sources[0].yield_per_seam` | missed | fires |
+| mining-site aggregate total | `rolled_up_payout_per_map` | missed | fires |
+| map-contract site-based Hyper Gold | `site_placement.hyper_gold_sites.hyper_gold_from_all_sites` | missed | fires |
+
+Each was injected into a real `content/` file, measured with the real `verify_content.py`, and reverted;
+the harness was itself positively controlled first by re-injecting `acquisition.total_rank_ore_cost`, which
+fired. Each rule was then rewritten to match **what the family is about** rather than the spellings in the
+tree: the world-speed rule now matches the *unit* (`m_per_s`, `metres_per_second`, `velocity`, `traverse`)
+rather than the field name; the damage-pressure parent is now the word class `pressure|survivability`
+instead of the single name `damage_pressure`; the price-curve rule is now a price-or-cost word crossed with
+a series word (`curve|table|ladder|schedule|steps|series|…`) rather than the two spellings in use; and the
+four aggregate families share one `AGGREGATE_WORDS` class that adds the cumulative half
+(`cumulative|accru|accumulat|rolled_up|to_date|so_far|subtotal|tally|…`) to the summation half. **Every
+widened rule was re-controlled at the pinned `sweep_ref`: each still matches its own removal set and nothing
+else in its scope, so the 166-element prediction is byte-identical and no `content/` value moved.**
+
+Two exclusions from the widened classes are deliberate and recorded beside the rules, because they are the
+same collision `total_` is in `content/powerups/`: `payout` is **not** in the mining-site class
+(`payout_per_installment`, `completion_payout` and `exposure_per_secured_payout_multiplier` are authored
+there), and a bare `all` is **not** in the aggregate class (`content/maps/` authors
+`maximum_hyper_gold_sites_across_all_pockets` and `maximum_share_of_all_geodes_per_major_region`, which are
+authored bounds on counts, not sums — so the class carries `from_all` and `all_sites$` instead).
+
+**The limit is unchanged and is worth stating plainly: a word class is still a word class.** Widening moved
+each guard from "catches renames" to "catches renames and the obvious semantic neighbours", not to "cannot
+be evaded". A tenth probe chosen adversarially against the *new* lists would pass some of them too. The
+guard raises the cost of the mistake; only a structural rule does better, which is why the damage-pressure
+family is asserted structurally (no numeric leaf of any name under the block) rather than by leaf name.
 
 #### Value-preservation record — tenth pass
 
@@ -2638,25 +2878,33 @@ touched files. The file count is unchanged at 139, so A21 is unaffected.
 
 - **Numeric multiset — changed, and the expected difference was committed one commit earlier, in a commit
   containing no `content/` file at all.** Scope: numeric leaves (`int`/`float`, `bool` excluded).
-  **2,303 → 2,137, −166 net = 0 added, 166 removed**, and the measured multiset equals the committed
-  expectation as **set equality over 166 elements** — every `(file, pointer, value)` predicted is missing,
+  **2,303 → 2,188, −115 net = 0 added, 115 removed**, and the measured multiset equals the committed
+  expectation as **set equality over 115 elements** — every `(file, pointer, value)` predicted is missing,
   nothing unpredicted is missing, and no predicted element had a different value in the tree than the
-  expectation recorded. `166 == 166` would also hold if one value were removed by mistake and a different
+  expectation recorded. `115 == 115` would also hold if one value were removed by mistake and a different
   one kept by mistake; element-wise equality would not.
 - **String multiset — unchanged. Scope: string leaves. 5,275 → 5,275, difference added `{}`, removed `{}`.**
   **No prose, citation or quotation changed in this pass**, which is what keeps
   `check_quote_mismatch_evidence.py` at 394/394 with zero cases moving. This proof says nothing about the
   numbers.
-- **0 surviving `(file, JSON path)` pairs changed value.** Asserted, not just measured: removing a derived
-  value must not retune an operand, and A29 fails if any surviving numeric leaf moved.
-- **0 numeric leaves added.** Also asserted. A removal pass that quietly introduced a number would
-  otherwise satisfy every other rule here.
+- **0 surviving `(file, JSON path)` pairs changed value, and 0 numeric leaves added.** Both **measured over
+  this range and reported here, and both deliberately NOT left as standing assertions in A29.** They are
+  one-shot properties of one commit range, not invariants: the first ordinary tuning commit after merge —
+  `EN-01` hull 20 → 25, an authored non-derived value — would fail a rule about derived values, and the only
+  way to clear that failure is to re-pin `sweep_ref` to a newer commit, which makes A29 compare the tree
+  against itself and destroys the prediction-first property that is the entire point of the ordering.
+  **A29 is now one row: set equality over the removal set**, which does hold for every future commit.
 - **`null` count: 0 → 0**, still with no declared exceptions.
-- **One list was emptied and therefore dropped: `stat-price-formula.json :: first_ten_prices`.** All ten of
-  its elements are in the removal set, and an empty array carries no information. Lists that were *already*
-  empty at the sweep ref — five utility `external_numerics`, and `UTL-R1`'s `effect.stat_names` and
-  `acquisition.rank_ore_costs` — were left exactly as they were; a first draft of the removal pruned those
-  too, which would have deleted `rank_ore_costs`, **an operand**.
+- **No list was emptied, and no object was left empty.** `first_ten_prices` — the one list an earlier draft
+  emptied and dropped — is **restored** with all ten elements, so the question of what to do with a
+  container the removal empties **does not arise in this pass**. That is worth stating because the earlier
+  draft resolved it inconsistently: it dropped the emptied `first_ten_prices` array while leaving four
+  `cumulative_cost_checkpoints[]` objects as `{"purchases": n}` shells, which is two different answers to
+  one question. Lists that were *already* empty at the sweep ref — five utility `external_numerics`, and
+  `UTL-R1`'s `effect.stat_names` and `acquisition.rank_ore_costs` — were left exactly as they were; a first
+  draft of the removal pruned those too, which would have deleted `rank_ore_costs`, **an operand**. **The
+  policy is therefore still unwritten**, and it is recorded as an open item rather than settled silently by
+  whichever containers this pass happened to touch.
 - **No `source_refs` scope prefix was left dangling (A22 still 0).** Every removal takes leaves out of an
   object that survives: `damage_pressure` keeps its `assumptions` string, `movement_speed` keeps
   `percent_of_mech_base_speed`, and `total_cost_hyper_gold` — the one prefixed field in the PowerUp
@@ -4212,10 +4460,53 @@ misdescribes a measurement from a name that correctly describes a classification
 naming defect from a design ambiguity wearing a naming defect's clothes. Both need a citation check before
 a rename, which is why every ruling above quotes the line it relied on.
 
+### Corrected claim about the tree — `content/README.md` on behavior kinds
+
+**This one is ours, not a design source's.** The two contradictions above are between the code and the
+documents it cites; this is a false statement in a file this stream owns, so it is recorded separately.
+
+`content/README.md` step 3 of the `DAT-004` walkthrough read: "No behavior kinds are named in this tree
+yet; they must be assigned with the registry." **The first clause is true of minted registry tokens and
+false of the field.** `behavior_kind` exists on every ordinary enemy and every boss and already holds a
+value — a prose sentence — at **14 sites**, so `DAT-004` faces a 14-site migration, not a greenfield.
+
+**The count was measured here rather than taken on report; the figure supplied was 15 and the tree says
+14.** All 14 are top-level `behavior_kind`: `EN-01`–`EN-10` and `BOSS-01`–`BOSS-04`. Nine read
+`"pure contact pursuer"`; `EN-06` reads `"pursuit and contact plus one telegraphed straight projectile"`;
+all four bosses read `"persistent giant pursuer with exactly one additional behavior"`. Zero of the 14 hold
+a single token, which is why the original sentence was defensible about tokens and misleading about work
+remaining.
+
+**Widening to all six spaces `CTR-CNT-002` names** — `behavior_kind`, targeting policy, formula, modifier
+hook, formation, effect — gives **65 prose value positions and 24 single-token ones**. The 24 are
+`effect.value_kind` on all 13 utilities, `unlocks.kind` on the six option unlocks, and five of the seven
+`spawn_formations[].formation` names, so the tree does already carry minted tokens in registry-token
+positions; the README's own token census at lines 177–186 counts them, which makes the old sentence
+inconsistent with the same file two hundred lines earlier.
+
+**Nothing was annotated and no value changed.** The registry vocabulary is being re-keyed by field space
+and token together because a flat namespace collides in this tree, and both collisions cited in the
+correction were verified here rather than restated: `UTL-E1` holds the identical string
+`"Recovery sources add in Hull Integrity per second."` at both `effect.stacking_classification` and
+`catalog_wide_rules.modifier_and_timing_rules[2]`, and the bare value `"damage"` sits at 36 sites under 7
+distinct leaf names, meaning a stat name, a unit, a display label and a snapshot-field enumerator. The
+figure offered for that second one was "three things across five field paths"; the tree says seven leaf
+names across thirty-six sites, so the correction records the measured pair. Annotating before the field
+spaces settle would be annotate-twice churn, so the README now states the migration size and stops there.
+**65 is an upper bound on sites to annotate, not a settled classification.**
+
 ### Findings still open after this pass
 
 | Finding | Owner needed |
 | --- | --- |
+| **Cheapest open item.** `resonant_damage` reproduces as `ceil(base × 1.20)` for all five and both halves are already documented (`61:92`/`72:167` for the ×1.20, `72:120` step 3 for the round-up). Only a `40:` line assigning its recomputation to the compiler is missing. **Documentation edit, not a decision.** | document owner (`docs/technical/40`) |
+| `40:203` assigns "Recalculate DPS estimates" without stating a derivation covering the 45. They partition into **8 rules** — 1 for `sustained_30_dps`, 6 for `burst_10_dps` by the warmup families `70:64` already names, and 1 shape for `favorable_horde_dps` whose per-weapon `k` is stored nowhere. `40:203` should name the families per rule and stop assigning `favorable_horde_dps`, which `70:78` defines as a measurement. | document owner (`docs/technical/40`, `docs/70`) |
+| `favorable_horde_dps` is an analytic placeholder, not a derivation: `71:68` states every simultaneous-victim count and says "benchmark-scene captures supersede it once a playable build exists". `40:203` should stop assigning it to the compiler. *(An earlier draft of this table said the counts were authored nowhere — that was false; they are at `71:68`.)* | document owner (`docs/70`, `docs/71`) |
+| **Three writers on the survivability report.** `docs/data/contact-damage-pressure.csv`, the `damage_pressure` blocks in `content/`, and the compiler all carry it; all 28 overlapping values agree exactly. Which of the first two is the "accepted gameplay table" `40:203` compares reports against is unsettled, and until it is, the content copy stays. | document owner (`docs/technical/40`) |
+| **No written policy for a container the removal pass empties.** This pass empties none, but the earlier draft answered the question two ways at once — dropped an emptied array, kept four `{"purchases": n}` object shells. Needs one rule before the next removal pass. | validator stream |
+| A28's value layer has a **derivation-site radius**, chosen because file radius costs 55 coincidental recurrences and scope radius 400. Relocation outside the site still passes. Widening the radius needs a way to classify magnitude coincidences that is not a hand-written exception list. | validator stream |
+| A20 still has **no value layer** — it is key-name patterns only, so the limitation Ruling 27 records for it still stands in full. A28's value layer is the shape that closes this; porting it to A20 is the next design step. | validator stream |
+| `DAT-004` behavior-registry migration is **14 sites**, all `behavior_kind` on the ten enemies and four bosses, each holding prose where a token will go. Blocked on the registry being re-keyed by field space *and* token, because a flat namespace collides in this tree (`UTL-E1`'s duplicated string; `"damage"` at 36 sites under 7 leaf names). 65 prose sites across all six `CTR-CNT-002` spaces is the upper bound. | schema stream / registry owner |
 | `obstacle_free_radius_in_mining_zone_diameters` — radius or diameter? Factor of two. | document owner (`docs/51`) |
 | `REL-07 :: effects.explosion_area_multiplier` is still `null` from the same sentence whose sibling was omitted | integration owner |
 | One focus ceiling under two names across `W-AF.json` and `W-AF-coherence-memory.json`, plus a boolean named `changes_focus_maximum_multiplier` | schema stream |

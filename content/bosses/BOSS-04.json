@@ -55,6 +55,9 @@
     "added_attack_defines_own_damage_event": true
   },
   "damage_pressure": {
+    "contact_damage": 38,
+    "hits_to_defeat_100_hull": 3,
+    "continuous_overlap_time_to_defeat_seconds": 1.5,
     "assumptions": "100 Hull, zero Armor, no healing, no resonance, uninterrupted overlap with one attacker"
   },
   "target_time_to_kill_seconds": {
@@ -88,7 +91,8 @@
     "resonant_damage_reference": {
       "base_damage": 35,
       "resonant_damage": 42,
-      "resonance_source": "Asterite"
+      "resonance_source": "Asterite",
+      "fresh_mech_hits_to_defeat_at_resonant_value": 3
     },
     "design_role": "provides the boss's anti-distance pressure without adding a second ability"
   },

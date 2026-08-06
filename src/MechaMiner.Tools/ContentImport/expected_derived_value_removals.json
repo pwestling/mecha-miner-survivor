@@ -2,9 +2,11 @@
   "schema": "expected-derived-value-removals/1",
   "sweep_ref": "fefb7a359041c1275f6b9739437458443bdfecf1",
   "generated_by": "src/MechaMiner.Tools/ContentImport/derive_derived_value_expectations.py",
-  "claim": "Exactly these 166 numeric leaves, and no others, are removed from content/ by this pass. Each reproduces exactly from operands that survive the removal, in exact rational arithmetic. A29 in verify_content.py asserts SET EQUALITY between this list and the numeric multiset the tree actually lost relative to fefb7a359041c1275f6b9739437458443bdfecf1 - element by element over all 166 elements, not by matching totals.",
-  "total_removed": 166,
-  "family_count": 9,
+  "claim": "Exactly these 115 numeric leaves, and no others, are removed from content/ by this pass. Each reproduces exactly from operands that survive the removal, in exact rational arithmetic. A29 in verify_content.py asserts SET EQUALITY between this list and the numeric multiset the tree actually lost relative to fefb7a359041c1275f6b9739437458443bdfecf1 - element by element over all 115 elements, not by matching totals.",
+  "total_removed": 115,
+  "family_count": 6,
+  "declared_family_count": 6,
+  "declared_total_removed": 115,
   "families": [
     {
       "name": "enemy and boss world speed",
@@ -14,10 +16,11 @@
         "content/bosses/"
       ],
       "pointer_parent_rule": null,
-      "pointer_segment_rule": "(?i)world_speed|_m_per_s$",
+      "pointer_segment_rule": "(?i)world_speed|velocity|traverse|movement_rate|travel_rate|(^|_)(m|metres?|meters?)_per_(s|sec|second)$|_mps$",
       "allowlisted_segments": {},
-      "note": "17, not the 14 the reconciliation named: three are ability/projectile speeds (EN-06 specialist projectile 2.25, BOSS-01 charge 5.4, BOSS-03 ability projectile 2.25) built the same way from percent_of_mech_base_speed. The rule bans ANY absolute metres-per-second value in these two directories, not just the current spelling: an enemy or boss authors its speed as a percentage of the mech baseline, so an absolute one is always the compiler's. It does NOT cover content/weapons/, where projectile_speed_m_per_s is authored.",
+      "note": "17, not the 14 the reconciliation named: three are ability/projectile speeds (EN-06 specialist projectile 2.25, BOSS-01 charge 5.4, BOSS-03 ability projectile 2.25) built the same way from percent_of_mech_base_speed. The rule bans ANY absolute metres-per-second value in these two directories, not just the current spelling: an enemy or boss authors its speed as a percentage of the mech baseline, so an absolute one is always the compiler's. It does NOT cover content/weapons/, where projectile_speed_m_per_s is authored. The rule matches the UNIT rather than the field name: the first draft was `world_speed|_m_per_s$` and the probe `traverse_rate_metres_per_second` - the same quantity, spelled out - passed it.",
       "count": 17,
+      "corpus_numeric_leaves": 366,
       "records": [
         {
           "file": "content/bosses/BOSS-01.json",
@@ -27,6 +30,11 @@
             "content/bosses/BOSS-01.json::ability.charge_speed.percent_of_mech_base_speed.percent = 180",
             "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s = 3"
           ],
+          "operand_pointers": [
+            "content/bosses/BOSS-01.json::ability.charge_speed.percent_of_mech_base_speed.percent",
+            "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s"
+          ],
+          "chains_through": [],
           "arithmetic": "180 / 100 x 3 = 5.4"
         },
         {
@@ -37,6 +45,11 @@
             "content/bosses/BOSS-01.json::movement_speed.percent_of_mech_base_speed.percent = 42",
             "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s = 3"
           ],
+          "operand_pointers": [
+            "content/bosses/BOSS-01.json::movement_speed.percent_of_mech_base_speed.percent",
+            "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s"
+          ],
+          "chains_through": [],
           "arithmetic": "42 / 100 x 3 = 1.26"
         },
         {
@@ -47,6 +60,11 @@
             "content/bosses/BOSS-02.json::movement_speed.percent_of_mech_base_speed.percent = 38",
             "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s = 3"
           ],
+          "operand_pointers": [
+            "content/bosses/BOSS-02.json::movement_speed.percent_of_mech_base_speed.percent",
+            "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s"
+          ],
+          "chains_through": [],
           "arithmetic": "38 / 100 x 3 = 1.14"
         },
         {
@@ -57,6 +75,11 @@
             "content/bosses/BOSS-03.json::ability.projectile.speed.percent_of_mech_base_speed.percent = 75",
             "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s = 3"
           ],
+          "operand_pointers": [
+            "content/bosses/BOSS-03.json::ability.projectile.speed.percent_of_mech_base_speed.percent",
+            "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s"
+          ],
+          "chains_through": [],
           "arithmetic": "75 / 100 x 3 = 2.25"
         },
         {
@@ -67,6 +90,11 @@
             "content/bosses/BOSS-03.json::movement_speed.percent_of_mech_base_speed.percent = 45",
             "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s = 3"
           ],
+          "operand_pointers": [
+            "content/bosses/BOSS-03.json::movement_speed.percent_of_mech_base_speed.percent",
+            "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s"
+          ],
+          "chains_through": [],
           "arithmetic": "45 / 100 x 3 = 1.35"
         },
         {
@@ -77,6 +105,11 @@
             "content/bosses/BOSS-04.json::movement_speed.percent_of_mech_base_speed.percent = 50",
             "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s = 3"
           ],
+          "operand_pointers": [
+            "content/bosses/BOSS-04.json::movement_speed.percent_of_mech_base_speed.percent",
+            "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s"
+          ],
+          "chains_through": [],
           "arithmetic": "50 / 100 x 3 = 1.5"
         },
         {
@@ -87,6 +120,11 @@
             "content/enemies/EN-01.json::movement_speed.percent_of_mech_base_speed.percent = 42",
             "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s = 3"
           ],
+          "operand_pointers": [
+            "content/enemies/EN-01.json::movement_speed.percent_of_mech_base_speed.percent",
+            "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s"
+          ],
+          "chains_through": [],
           "arithmetic": "42 / 100 x 3 = 1.26"
         },
         {
@@ -97,6 +135,11 @@
             "content/enemies/EN-02.json::movement_speed.percent_of_mech_base_speed.percent = 62",
             "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s = 3"
           ],
+          "operand_pointers": [
+            "content/enemies/EN-02.json::movement_speed.percent_of_mech_base_speed.percent",
+            "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s"
+          ],
+          "chains_through": [],
           "arithmetic": "62 / 100 x 3 = 1.86"
         },
         {
@@ -107,6 +150,11 @@
             "content/enemies/EN-03.json::movement_speed.percent_of_mech_base_speed.percent = 34",
             "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s = 3"
           ],
+          "operand_pointers": [
+            "content/enemies/EN-03.json::movement_speed.percent_of_mech_base_speed.percent",
+            "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s"
+          ],
+          "chains_through": [],
           "arithmetic": "34 / 100 x 3 = 1.02"
         },
         {
@@ -117,6 +165,11 @@
             "content/enemies/EN-04.json::movement_speed.percent_of_mech_base_speed.percent = 52",
             "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s = 3"
           ],
+          "operand_pointers": [
+            "content/enemies/EN-04.json::movement_speed.percent_of_mech_base_speed.percent",
+            "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s"
+          ],
+          "chains_through": [],
           "arithmetic": "52 / 100 x 3 = 1.56"
         },
         {
@@ -127,6 +180,11 @@
             "content/enemies/EN-05.json::movement_speed.percent_of_mech_base_speed.percent = 58",
             "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s = 3"
           ],
+          "operand_pointers": [
+            "content/enemies/EN-05.json::movement_speed.percent_of_mech_base_speed.percent",
+            "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s"
+          ],
+          "chains_through": [],
           "arithmetic": "58 / 100 x 3 = 1.74"
         },
         {
@@ -137,6 +195,11 @@
             "content/enemies/EN-06.json::movement_speed.percent_of_mech_base_speed.percent = 40",
             "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s = 3"
           ],
+          "operand_pointers": [
+            "content/enemies/EN-06.json::movement_speed.percent_of_mech_base_speed.percent",
+            "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s"
+          ],
+          "chains_through": [],
           "arithmetic": "40 / 100 x 3 = 1.2"
         },
         {
@@ -147,6 +210,11 @@
             "content/enemies/EN-06.json::specialist_attack.projectile.speed.percent_of_mech_base_speed.percent = 75",
             "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s = 3"
           ],
+          "operand_pointers": [
+            "content/enemies/EN-06.json::specialist_attack.projectile.speed.percent_of_mech_base_speed.percent",
+            "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s"
+          ],
+          "chains_through": [],
           "arithmetic": "75 / 100 x 3 = 2.25"
         },
         {
@@ -157,6 +225,11 @@
             "content/enemies/EN-07.json::movement_speed.percent_of_mech_base_speed.percent = 85",
             "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s = 3"
           ],
+          "operand_pointers": [
+            "content/enemies/EN-07.json::movement_speed.percent_of_mech_base_speed.percent",
+            "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s"
+          ],
+          "chains_through": [],
           "arithmetic": "85 / 100 x 3 = 2.55"
         },
         {
@@ -167,6 +240,11 @@
             "content/enemies/EN-08.json::movement_speed.percent_of_mech_base_speed.percent = 55",
             "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s = 3"
           ],
+          "operand_pointers": [
+            "content/enemies/EN-08.json::movement_speed.percent_of_mech_base_speed.percent",
+            "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s"
+          ],
+          "chains_through": [],
           "arithmetic": "55 / 100 x 3 = 1.65"
         },
         {
@@ -177,6 +255,11 @@
             "content/enemies/EN-09.json::movement_speed.percent_of_mech_base_speed.percent = 28",
             "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s = 3"
           ],
+          "operand_pointers": [
+            "content/enemies/EN-09.json::movement_speed.percent_of_mech_base_speed.percent",
+            "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s"
+          ],
+          "chains_through": [],
           "arithmetic": "28 / 100 x 3 = 0.84"
         },
         {
@@ -187,412 +270,12 @@
             "content/enemies/EN-10.json::movement_speed.percent_of_mech_base_speed.percent = 70",
             "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s = 3"
           ],
+          "operand_pointers": [
+            "content/enemies/EN-10.json::movement_speed.percent_of_mech_base_speed.percent",
+            "content/maps/standard-map-generation-contract.json::reference_mech_speed_m_per_s"
+          ],
+          "chains_through": [],
           "arithmetic": "70 / 100 x 3 = 2.1"
-        }
-      ]
-    },
-    {
-      "name": "damage-pressure survivability block",
-      "doc_assignment": "docs/technical/40-content-data-and-validation.md:114 - the survivability report the compiler 'compares them with'; with 40:19, which classes reports as derived artifacts",
-      "scopes": [
-        "content/enemies/",
-        "content/bosses/"
-      ],
-      "pointer_parent_rule": "^damage_pressure$",
-      "pointer_segment_rule": ".",
-      "allowlisted_segments": {},
-      "note": "One assertion, three derivations: the hit count is ceil(100/contact_damage), the overlap time is (hits-1) x the repeat interval, and four boss blocks additionally restate contact_damage verbatim. The rule is STRUCTURAL - no numeric leaf of any name may sit under damage_pressure - which no rename can evade. The block itself and its `assumptions` string are retained: the string states the 100-Hull/zero-Armor model the derivation assumes, it is a verified doc quotation in the quote-evidence artifact, and `damage_pressure:` is a source_refs scope prefix A22 requires to resolve.",
-      "count": 32,
-      "records": [
-        {
-          "file": "content/bosses/BOSS-01.json",
-          "pointer": "damage_pressure.contact_damage",
-          "value": 18,
-          "operands": [
-            "content/bosses/BOSS-01.json::contact_damage = 18"
-          ],
-          "arithmetic": "identity restatement of the definition's own contact_damage = 18"
-        },
-        {
-          "file": "content/bosses/BOSS-01.json",
-          "pointer": "damage_pressure.continuous_overlap_time_to_defeat_seconds",
-          "value": 3.75,
-          "operands": [
-            "content/bosses/BOSS-01.json::contact_damage = 18",
-            "content/bosses/BOSS-01.json::contact_cadence.same_enemy_repeat_interval_seconds = 0.75",
-            "content/bosses/BOSS-01.json::contact_cadence.first_hit = 'immediately when an eligible overlap begins' (string, retained: it is why the count is hits-1)"
-          ],
-          "arithmetic": "(ceil(100 / 18) - 1) x 0.75 = (6 - 1) x 0.75 = 3.75"
-        },
-        {
-          "file": "content/bosses/BOSS-01.json",
-          "pointer": "damage_pressure.hits_to_defeat_100_hull",
-          "value": 6,
-          "operands": [
-            "content/bosses/BOSS-01.json::contact_damage = 18",
-            "content/bosses/BOSS-01.json::damage_pressure.assumptions states the 100 Hull baseline (string, retained)"
-          ],
-          "arithmetic": "ceil(100 / 18) = 6"
-        },
-        {
-          "file": "content/bosses/BOSS-02.json",
-          "pointer": "damage_pressure.contact_damage",
-          "value": 24,
-          "operands": [
-            "content/bosses/BOSS-02.json::contact_damage = 24"
-          ],
-          "arithmetic": "identity restatement of the definition's own contact_damage = 24"
-        },
-        {
-          "file": "content/bosses/BOSS-02.json",
-          "pointer": "damage_pressure.continuous_overlap_time_to_defeat_seconds",
-          "value": 3.0,
-          "operands": [
-            "content/bosses/BOSS-02.json::contact_damage = 24",
-            "content/bosses/BOSS-02.json::contact_cadence.same_enemy_repeat_interval_seconds = 0.75",
-            "content/bosses/BOSS-02.json::contact_cadence.first_hit = 'immediately when an eligible overlap begins' (string, retained: it is why the count is hits-1)"
-          ],
-          "arithmetic": "(ceil(100 / 24) - 1) x 0.75 = (5 - 1) x 0.75 = 3"
-        },
-        {
-          "file": "content/bosses/BOSS-02.json",
-          "pointer": "damage_pressure.hits_to_defeat_100_hull",
-          "value": 5,
-          "operands": [
-            "content/bosses/BOSS-02.json::contact_damage = 24",
-            "content/bosses/BOSS-02.json::damage_pressure.assumptions states the 100 Hull baseline (string, retained)"
-          ],
-          "arithmetic": "ceil(100 / 24) = 5"
-        },
-        {
-          "file": "content/bosses/BOSS-03.json",
-          "pointer": "damage_pressure.contact_damage",
-          "value": 30,
-          "operands": [
-            "content/bosses/BOSS-03.json::contact_damage = 30"
-          ],
-          "arithmetic": "identity restatement of the definition's own contact_damage = 30"
-        },
-        {
-          "file": "content/bosses/BOSS-03.json",
-          "pointer": "damage_pressure.continuous_overlap_time_to_defeat_seconds",
-          "value": 2.25,
-          "operands": [
-            "content/bosses/BOSS-03.json::contact_damage = 30",
-            "content/bosses/BOSS-03.json::contact_cadence.same_enemy_repeat_interval_seconds = 0.75",
-            "content/bosses/BOSS-03.json::contact_cadence.first_hit = 'immediately when an eligible overlap begins' (string, retained: it is why the count is hits-1)"
-          ],
-          "arithmetic": "(ceil(100 / 30) - 1) x 0.75 = (4 - 1) x 0.75 = 2.25"
-        },
-        {
-          "file": "content/bosses/BOSS-03.json",
-          "pointer": "damage_pressure.hits_to_defeat_100_hull",
-          "value": 4,
-          "operands": [
-            "content/bosses/BOSS-03.json::contact_damage = 30",
-            "content/bosses/BOSS-03.json::damage_pressure.assumptions states the 100 Hull baseline (string, retained)"
-          ],
-          "arithmetic": "ceil(100 / 30) = 4"
-        },
-        {
-          "file": "content/bosses/BOSS-04.json",
-          "pointer": "damage_pressure.contact_damage",
-          "value": 38,
-          "operands": [
-            "content/bosses/BOSS-04.json::contact_damage = 38"
-          ],
-          "arithmetic": "identity restatement of the definition's own contact_damage = 38"
-        },
-        {
-          "file": "content/bosses/BOSS-04.json",
-          "pointer": "damage_pressure.continuous_overlap_time_to_defeat_seconds",
-          "value": 1.5,
-          "operands": [
-            "content/bosses/BOSS-04.json::contact_damage = 38",
-            "content/bosses/BOSS-04.json::contact_cadence.same_enemy_repeat_interval_seconds = 0.75",
-            "content/bosses/BOSS-04.json::contact_cadence.first_hit = 'immediately when an eligible overlap begins' (string, retained: it is why the count is hits-1)"
-          ],
-          "arithmetic": "(ceil(100 / 38) - 1) x 0.75 = (3 - 1) x 0.75 = 1.5"
-        },
-        {
-          "file": "content/bosses/BOSS-04.json",
-          "pointer": "damage_pressure.hits_to_defeat_100_hull",
-          "value": 3,
-          "operands": [
-            "content/bosses/BOSS-04.json::contact_damage = 38",
-            "content/bosses/BOSS-04.json::damage_pressure.assumptions states the 100 Hull baseline (string, retained)"
-          ],
-          "arithmetic": "ceil(100 / 38) = 3"
-        },
-        {
-          "file": "content/enemies/EN-01.json",
-          "pointer": "damage_pressure.continuous_overlap_time_to_defeat_seconds",
-          "value": 14.25,
-          "operands": [
-            "content/enemies/EN-01.json::contact_damage = 5",
-            "content/enemies/EN-01.json::contact_cadence.same_enemy_repeat_interval_seconds = 0.75",
-            "content/enemies/EN-01.json::contact_cadence.first_hit = 'immediately when an eligible overlap begins' (string, retained: it is why the count is hits-1)"
-          ],
-          "arithmetic": "(ceil(100 / 5) - 1) x 0.75 = (20 - 1) x 0.75 = 14.25"
-        },
-        {
-          "file": "content/enemies/EN-01.json",
-          "pointer": "damage_pressure.hits_to_defeat_100_hull",
-          "value": 20,
-          "operands": [
-            "content/enemies/EN-01.json::contact_damage = 5",
-            "content/enemies/EN-01.json::damage_pressure.assumptions states the 100 Hull baseline (string, retained)"
-          ],
-          "arithmetic": "ceil(100 / 5) = 20"
-        },
-        {
-          "file": "content/enemies/EN-02.json",
-          "pointer": "damage_pressure.continuous_overlap_time_to_defeat_seconds",
-          "value": 9.0,
-          "operands": [
-            "content/enemies/EN-02.json::contact_damage = 8",
-            "content/enemies/EN-02.json::contact_cadence.same_enemy_repeat_interval_seconds = 0.75",
-            "content/enemies/EN-02.json::contact_cadence.first_hit = 'immediately when an eligible overlap begins' (string, retained: it is why the count is hits-1)"
-          ],
-          "arithmetic": "(ceil(100 / 8) - 1) x 0.75 = (13 - 1) x 0.75 = 9"
-        },
-        {
-          "file": "content/enemies/EN-02.json",
-          "pointer": "damage_pressure.hits_to_defeat_100_hull",
-          "value": 13,
-          "operands": [
-            "content/enemies/EN-02.json::contact_damage = 8",
-            "content/enemies/EN-02.json::damage_pressure.assumptions states the 100 Hull baseline (string, retained)"
-          ],
-          "arithmetic": "ceil(100 / 8) = 13"
-        },
-        {
-          "file": "content/enemies/EN-03.json",
-          "pointer": "damage_pressure.continuous_overlap_time_to_defeat_seconds",
-          "value": 5.25,
-          "operands": [
-            "content/enemies/EN-03.json::contact_damage = 14",
-            "content/enemies/EN-03.json::contact_cadence.same_enemy_repeat_interval_seconds = 0.75",
-            "content/enemies/EN-03.json::contact_cadence.first_hit = 'immediately when an eligible overlap begins' (string, retained: it is why the count is hits-1)"
-          ],
-          "arithmetic": "(ceil(100 / 14) - 1) x 0.75 = (8 - 1) x 0.75 = 5.25"
-        },
-        {
-          "file": "content/enemies/EN-03.json",
-          "pointer": "damage_pressure.hits_to_defeat_100_hull",
-          "value": 8,
-          "operands": [
-            "content/enemies/EN-03.json::contact_damage = 14",
-            "content/enemies/EN-03.json::damage_pressure.assumptions states the 100 Hull baseline (string, retained)"
-          ],
-          "arithmetic": "ceil(100 / 14) = 8"
-        },
-        {
-          "file": "content/enemies/EN-04.json",
-          "pointer": "damage_pressure.continuous_overlap_time_to_defeat_seconds",
-          "value": 6.75,
-          "operands": [
-            "content/enemies/EN-04.json::contact_damage = 10",
-            "content/enemies/EN-04.json::contact_cadence.same_enemy_repeat_interval_seconds = 0.75",
-            "content/enemies/EN-04.json::contact_cadence.first_hit = 'immediately when an eligible overlap begins' (string, retained: it is why the count is hits-1)"
-          ],
-          "arithmetic": "(ceil(100 / 10) - 1) x 0.75 = (10 - 1) x 0.75 = 6.75"
-        },
-        {
-          "file": "content/enemies/EN-04.json",
-          "pointer": "damage_pressure.hits_to_defeat_100_hull",
-          "value": 10,
-          "operands": [
-            "content/enemies/EN-04.json::contact_damage = 10",
-            "content/enemies/EN-04.json::damage_pressure.assumptions states the 100 Hull baseline (string, retained)"
-          ],
-          "arithmetic": "ceil(100 / 10) = 10"
-        },
-        {
-          "file": "content/enemies/EN-05.json",
-          "pointer": "damage_pressure.continuous_overlap_time_to_defeat_seconds",
-          "value": 6.75,
-          "operands": [
-            "content/enemies/EN-05.json::contact_damage = 10",
-            "content/enemies/EN-05.json::contact_cadence.same_enemy_repeat_interval_seconds = 0.75",
-            "content/enemies/EN-05.json::contact_cadence.first_hit = 'immediately when an eligible overlap begins' (string, retained: it is why the count is hits-1)"
-          ],
-          "arithmetic": "(ceil(100 / 10) - 1) x 0.75 = (10 - 1) x 0.75 = 6.75"
-        },
-        {
-          "file": "content/enemies/EN-05.json",
-          "pointer": "damage_pressure.hits_to_defeat_100_hull",
-          "value": 10,
-          "operands": [
-            "content/enemies/EN-05.json::contact_damage = 10",
-            "content/enemies/EN-05.json::damage_pressure.assumptions states the 100 Hull baseline (string, retained)"
-          ],
-          "arithmetic": "ceil(100 / 10) = 10"
-        },
-        {
-          "file": "content/enemies/EN-06.json",
-          "pointer": "damage_pressure.continuous_overlap_time_to_defeat_seconds",
-          "value": 9.0,
-          "operands": [
-            "content/enemies/EN-06.json::contact_damage = 8",
-            "content/enemies/EN-06.json::contact_cadence.same_enemy_repeat_interval_seconds = 0.75",
-            "content/enemies/EN-06.json::contact_cadence.first_hit = 'immediately when an eligible overlap begins' (string, retained: it is why the count is hits-1)"
-          ],
-          "arithmetic": "(ceil(100 / 8) - 1) x 0.75 = (13 - 1) x 0.75 = 9"
-        },
-        {
-          "file": "content/enemies/EN-06.json",
-          "pointer": "damage_pressure.hits_to_defeat_100_hull",
-          "value": 13,
-          "operands": [
-            "content/enemies/EN-06.json::contact_damage = 8",
-            "content/enemies/EN-06.json::damage_pressure.assumptions states the 100 Hull baseline (string, retained)"
-          ],
-          "arithmetic": "ceil(100 / 8) = 13"
-        },
-        {
-          "file": "content/enemies/EN-07.json",
-          "pointer": "damage_pressure.continuous_overlap_time_to_defeat_seconds",
-          "value": 6.75,
-          "operands": [
-            "content/enemies/EN-07.json::contact_damage = 10",
-            "content/enemies/EN-07.json::contact_cadence.same_enemy_repeat_interval_seconds = 0.75",
-            "content/enemies/EN-07.json::contact_cadence.first_hit = 'immediately when an eligible overlap begins' (string, retained: it is why the count is hits-1)"
-          ],
-          "arithmetic": "(ceil(100 / 10) - 1) x 0.75 = (10 - 1) x 0.75 = 6.75"
-        },
-        {
-          "file": "content/enemies/EN-07.json",
-          "pointer": "damage_pressure.hits_to_defeat_100_hull",
-          "value": 10,
-          "operands": [
-            "content/enemies/EN-07.json::contact_damage = 10",
-            "content/enemies/EN-07.json::damage_pressure.assumptions states the 100 Hull baseline (string, retained)"
-          ],
-          "arithmetic": "ceil(100 / 10) = 10"
-        },
-        {
-          "file": "content/enemies/EN-08.json",
-          "pointer": "damage_pressure.continuous_overlap_time_to_defeat_seconds",
-          "value": 4.5,
-          "operands": [
-            "content/enemies/EN-08.json::contact_damage = 16",
-            "content/enemies/EN-08.json::contact_cadence.same_enemy_repeat_interval_seconds = 0.75",
-            "content/enemies/EN-08.json::contact_cadence.first_hit = 'immediately when an eligible overlap begins' (string, retained: it is why the count is hits-1)"
-          ],
-          "arithmetic": "(ceil(100 / 16) - 1) x 0.75 = (7 - 1) x 0.75 = 4.5"
-        },
-        {
-          "file": "content/enemies/EN-08.json",
-          "pointer": "damage_pressure.hits_to_defeat_100_hull",
-          "value": 7,
-          "operands": [
-            "content/enemies/EN-08.json::contact_damage = 16",
-            "content/enemies/EN-08.json::damage_pressure.assumptions states the 100 Hull baseline (string, retained)"
-          ],
-          "arithmetic": "ceil(100 / 16) = 7"
-        },
-        {
-          "file": "content/enemies/EN-09.json",
-          "pointer": "damage_pressure.continuous_overlap_time_to_defeat_seconds",
-          "value": 3.0,
-          "operands": [
-            "content/enemies/EN-09.json::contact_damage = 24",
-            "content/enemies/EN-09.json::contact_cadence.same_enemy_repeat_interval_seconds = 0.75",
-            "content/enemies/EN-09.json::contact_cadence.first_hit = 'immediately when an eligible overlap begins' (string, retained: it is why the count is hits-1)"
-          ],
-          "arithmetic": "(ceil(100 / 24) - 1) x 0.75 = (5 - 1) x 0.75 = 3"
-        },
-        {
-          "file": "content/enemies/EN-09.json",
-          "pointer": "damage_pressure.hits_to_defeat_100_hull",
-          "value": 5,
-          "operands": [
-            "content/enemies/EN-09.json::contact_damage = 24",
-            "content/enemies/EN-09.json::damage_pressure.assumptions states the 100 Hull baseline (string, retained)"
-          ],
-          "arithmetic": "ceil(100 / 24) = 5"
-        },
-        {
-          "file": "content/enemies/EN-10.json",
-          "pointer": "damage_pressure.continuous_overlap_time_to_defeat_seconds",
-          "value": 3.75,
-          "operands": [
-            "content/enemies/EN-10.json::contact_damage = 18",
-            "content/enemies/EN-10.json::contact_cadence.same_enemy_repeat_interval_seconds = 0.75",
-            "content/enemies/EN-10.json::contact_cadence.first_hit = 'immediately when an eligible overlap begins' (string, retained: it is why the count is hits-1)"
-          ],
-          "arithmetic": "(ceil(100 / 18) - 1) x 0.75 = (6 - 1) x 0.75 = 3.75"
-        },
-        {
-          "file": "content/enemies/EN-10.json",
-          "pointer": "damage_pressure.hits_to_defeat_100_hull",
-          "value": 6,
-          "operands": [
-            "content/enemies/EN-10.json::contact_damage = 18",
-            "content/enemies/EN-10.json::damage_pressure.assumptions states the 100 Hull baseline (string, retained)"
-          ],
-          "arithmetic": "ceil(100 / 18) = 6"
-        }
-      ]
-    },
-    {
-      "name": "resonant-value hit count",
-      "doc_assignment": "docs/technical/40-content-data-and-validation.md:114 - the survivability report the compiler compares against; with 40:19",
-      "scopes": [
-        "content/enemies/",
-        "content/bosses/"
-      ],
-      "pointer_parent_rule": "^(resonant_damage_reference|worked_examples)$",
-      "pointer_segment_rule": "(?i)hit|defeat|strike|blow|swing",
-      "allowlisted_segments": {},
-      "note": "Parent-scoped rather than global because base_damage and resonant_damage live in the same block and are RETAINED - resonant_damage is the operand, and its own ceil(base x 1.20) rounding is nowhere documented. `worked_examples` is in the parent pattern because shared-elite-modifiers.json holds the fifth instance under that name rather than under resonant_damage_reference.",
-      "count": 5,
-      "records": [
-        {
-          "file": "content/bosses/BOSS-01.json",
-          "pointer": "ability.resonant_damage_reference.fresh_mech_hits_to_defeat_at_resonant_value",
-          "value": 4,
-          "operands": [
-            "content/bosses/BOSS-01.json::ability.resonant_damage_reference.resonant_damage = 33 (retained)"
-          ],
-          "arithmetic": "ceil(100 / 33) = 4"
-        },
-        {
-          "file": "content/bosses/BOSS-03.json",
-          "pointer": "ability.resonant_damage_reference.fresh_mech_hits_to_defeat_at_resonant_value",
-          "value": 5,
-          "operands": [
-            "content/bosses/BOSS-03.json::ability.resonant_damage_reference.resonant_damage = 22 (retained)"
-          ],
-          "arithmetic": "ceil(100 / 22) = 5"
-        },
-        {
-          "file": "content/bosses/BOSS-04.json",
-          "pointer": "ability.resonant_damage_reference.fresh_mech_hits_to_defeat_at_resonant_value",
-          "value": 3,
-          "operands": [
-            "content/bosses/BOSS-04.json::ability.resonant_damage_reference.resonant_damage = 42 (retained)"
-          ],
-          "arithmetic": "ceil(100 / 42) = 3"
-        },
-        {
-          "file": "content/enemies/EN-06.json",
-          "pointer": "specialist_attack.resonant_damage_reference.fresh_mech_hits_to_defeat_at_resonant_value",
-          "value": 6,
-          "operands": [
-            "content/enemies/EN-06.json::specialist_attack.resonant_damage_reference.resonant_damage = 17 (retained)"
-          ],
-          "arithmetic": "ceil(100 / 17) = 6"
-        },
-        {
-          "file": "content/enemies/shared-elite-modifiers.json",
-          "pointer": "worked_examples[0].fresh_mech_hits_to_defeat_at_resonant_value",
-          "value": 3,
-          "operands": [
-            "content/enemies/shared-elite-modifiers.json::worked_examples[0].resonant_damage = 44 (retained)"
-          ],
-          "arithmetic": "ceil(100 / 44) = 3"
         }
       ]
     },
@@ -603,10 +286,11 @@
         "content/powerups/"
       ],
       "pointer_parent_rule": null,
-      "pointer_segment_rule": "(?i)cumulative|running_total|to_date|so_far",
+      "pointer_segment_rule": "(?i)sum|aggregate|combined|overall|grand|cumulative|accru|accumulat|running_(total|sum|cost)|rolled?_up|to_date|so_far|thus_far|subtotal|tally|net_|lifetime|entire|whole_|full_(run|map|seam|set)|spend|through_rank",
       "allowlisted_segments": {},
-      "note": "total_cost_hyper_gold is RETAINED and the rule deliberately does not match it: it carries its own `total_cost_hyper_gold: DEC-120#decision` citation and is the operand of A14's second row, which sums the 13 per-entry totals to the doc-stated 9,450. This is the ONE family whose rule cannot use the total/sum/aggregate word class the four aggregate-total families use, because in content/powerups/ `total_` is authored twice over - total_cost_hyper_gold and every rank's total_effect - so the class would flag 71 surviving fields. Same reason A20 gives two rules two scopes, applied to patterns.",
+      "note": "total_cost_hyper_gold is RETAINED and the rule deliberately does not match it: it carries its own `total_cost_hyper_gold: DEC-120#decision` citation and is the operand of A14's second row, which sums the 13 per-entry totals to the doc-stated 9,450. This is the ONE family whose rule cannot use the total/sum/aggregate word class the four aggregate-total families use, because in content/powerups/ `total_` is authored twice over - total_cost_hyper_gold and every rank's total_effect - so the class would flag 71 surviving fields. Same reason A20 gives two rules two scopes, applied to patterns. It carries the rest of AGGREGATE_WORDS: the first draft was `cumulative|running_total|to_date|so_far` and the probe `accrued_cost_hyper_gold` passed it.",
       "count": 58,
+      "corpus_numeric_leaves": 339,
       "records": [
         {
           "file": "content/powerups/PU-C01.json",
@@ -615,6 +299,10 @@
           "operands": [
             "content/powerups/PU-C01.json::ranks[0..0].price_hyper_gold = 50"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-C01.json::ranks[0].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 = 50"
         },
         {
@@ -624,6 +312,11 @@
           "operands": [
             "content/powerups/PU-C01.json::ranks[0..1].price_hyper_gold = 50, 75"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-C01.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-C01.json::ranks[1].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 75 = 125"
         },
         {
@@ -633,6 +326,12 @@
           "operands": [
             "content/powerups/PU-C01.json::ranks[0..2].price_hyper_gold = 50, 75, 125"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-C01.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-C01.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-C01.json::ranks[2].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 75 + 125 = 250"
         },
         {
@@ -642,6 +341,13 @@
           "operands": [
             "content/powerups/PU-C01.json::ranks[0..3].price_hyper_gold = 50, 75, 125, 175"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-C01.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-C01.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-C01.json::ranks[2].price_hyper_gold",
+            "content/powerups/PU-C01.json::ranks[3].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 75 + 125 + 175 = 425"
         },
         {
@@ -651,6 +357,14 @@
           "operands": [
             "content/powerups/PU-C01.json::ranks[0..4].price_hyper_gold = 50, 75, 125, 175, 250"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-C01.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-C01.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-C01.json::ranks[2].price_hyper_gold",
+            "content/powerups/PU-C01.json::ranks[3].price_hyper_gold",
+            "content/powerups/PU-C01.json::ranks[4].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 75 + 125 + 175 + 250 = 675"
         },
         {
@@ -660,6 +374,10 @@
           "operands": [
             "content/powerups/PU-C02.json::ranks[0..0].price_hyper_gold = 75"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-C02.json::ranks[0].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "75 = 75"
         },
         {
@@ -669,6 +387,11 @@
           "operands": [
             "content/powerups/PU-C02.json::ranks[0..1].price_hyper_gold = 75, 125"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-C02.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-C02.json::ranks[1].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "75 + 125 = 200"
         },
         {
@@ -678,6 +401,12 @@
           "operands": [
             "content/powerups/PU-C02.json::ranks[0..2].price_hyper_gold = 75, 125, 175"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-C02.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-C02.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-C02.json::ranks[2].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "75 + 125 + 175 = 375"
         },
         {
@@ -687,6 +416,13 @@
           "operands": [
             "content/powerups/PU-C02.json::ranks[0..3].price_hyper_gold = 75, 125, 175, 250"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-C02.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-C02.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-C02.json::ranks[2].price_hyper_gold",
+            "content/powerups/PU-C02.json::ranks[3].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "75 + 125 + 175 + 250 = 625"
         },
         {
@@ -696,6 +432,14 @@
           "operands": [
             "content/powerups/PU-C02.json::ranks[0..4].price_hyper_gold = 75, 125, 175, 250, 350"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-C02.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-C02.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-C02.json::ranks[2].price_hyper_gold",
+            "content/powerups/PU-C02.json::ranks[3].price_hyper_gold",
+            "content/powerups/PU-C02.json::ranks[4].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "75 + 125 + 175 + 250 + 350 = 975"
         },
         {
@@ -705,6 +449,10 @@
           "operands": [
             "content/powerups/PU-C03.json::ranks[0..0].price_hyper_gold = 50"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-C03.json::ranks[0].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 = 50"
         },
         {
@@ -714,6 +462,11 @@
           "operands": [
             "content/powerups/PU-C03.json::ranks[0..1].price_hyper_gold = 50, 75"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-C03.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-C03.json::ranks[1].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 75 = 125"
         },
         {
@@ -723,6 +476,12 @@
           "operands": [
             "content/powerups/PU-C03.json::ranks[0..2].price_hyper_gold = 50, 75, 125"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-C03.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-C03.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-C03.json::ranks[2].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 75 + 125 = 250"
         },
         {
@@ -732,6 +491,13 @@
           "operands": [
             "content/powerups/PU-C03.json::ranks[0..3].price_hyper_gold = 50, 75, 125, 175"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-C03.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-C03.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-C03.json::ranks[2].price_hyper_gold",
+            "content/powerups/PU-C03.json::ranks[3].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 75 + 125 + 175 = 425"
         },
         {
@@ -741,6 +507,14 @@
           "operands": [
             "content/powerups/PU-C03.json::ranks[0..4].price_hyper_gold = 50, 75, 125, 175, 250"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-C03.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-C03.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-C03.json::ranks[2].price_hyper_gold",
+            "content/powerups/PU-C03.json::ranks[3].price_hyper_gold",
+            "content/powerups/PU-C03.json::ranks[4].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 75 + 125 + 175 + 250 = 675"
         },
         {
@@ -750,6 +524,10 @@
           "operands": [
             "content/powerups/PU-C04.json::ranks[0..0].price_hyper_gold = 50"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-C04.json::ranks[0].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 = 50"
         },
         {
@@ -759,6 +537,11 @@
           "operands": [
             "content/powerups/PU-C04.json::ranks[0..1].price_hyper_gold = 50, 75"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-C04.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-C04.json::ranks[1].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 75 = 125"
         },
         {
@@ -768,6 +551,12 @@
           "operands": [
             "content/powerups/PU-C04.json::ranks[0..2].price_hyper_gold = 50, 75, 125"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-C04.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-C04.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-C04.json::ranks[2].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 75 + 125 = 250"
         },
         {
@@ -777,6 +566,13 @@
           "operands": [
             "content/powerups/PU-C04.json::ranks[0..3].price_hyper_gold = 50, 75, 125, 175"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-C04.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-C04.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-C04.json::ranks[2].price_hyper_gold",
+            "content/powerups/PU-C04.json::ranks[3].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 75 + 125 + 175 = 425"
         },
         {
@@ -786,6 +582,10 @@
           "operands": [
             "content/powerups/PU-E01.json::ranks[0..0].price_hyper_gold = 75"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-E01.json::ranks[0].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "75 = 75"
         },
         {
@@ -795,6 +595,11 @@
           "operands": [
             "content/powerups/PU-E01.json::ranks[0..1].price_hyper_gold = 75, 125"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-E01.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-E01.json::ranks[1].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "75 + 125 = 200"
         },
         {
@@ -804,6 +609,12 @@
           "operands": [
             "content/powerups/PU-E01.json::ranks[0..2].price_hyper_gold = 75, 125, 175"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-E01.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-E01.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-E01.json::ranks[2].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "75 + 125 + 175 = 375"
         },
         {
@@ -813,6 +624,13 @@
           "operands": [
             "content/powerups/PU-E01.json::ranks[0..3].price_hyper_gold = 75, 125, 175, 250"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-E01.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-E01.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-E01.json::ranks[2].price_hyper_gold",
+            "content/powerups/PU-E01.json::ranks[3].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "75 + 125 + 175 + 250 = 625"
         },
         {
@@ -822,6 +640,14 @@
           "operands": [
             "content/powerups/PU-E01.json::ranks[0..4].price_hyper_gold = 75, 125, 175, 250, 350"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-E01.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-E01.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-E01.json::ranks[2].price_hyper_gold",
+            "content/powerups/PU-E01.json::ranks[3].price_hyper_gold",
+            "content/powerups/PU-E01.json::ranks[4].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "75 + 125 + 175 + 250 + 350 = 975"
         },
         {
@@ -831,6 +657,10 @@
           "operands": [
             "content/powerups/PU-E02.json::ranks[0..0].price_hyper_gold = 50"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-E02.json::ranks[0].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 = 50"
         },
         {
@@ -840,6 +670,11 @@
           "operands": [
             "content/powerups/PU-E02.json::ranks[0..1].price_hyper_gold = 50, 75"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-E02.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-E02.json::ranks[1].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 75 = 125"
         },
         {
@@ -849,6 +684,12 @@
           "operands": [
             "content/powerups/PU-E02.json::ranks[0..2].price_hyper_gold = 50, 75, 125"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-E02.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-E02.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-E02.json::ranks[2].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 75 + 125 = 250"
         },
         {
@@ -858,6 +699,13 @@
           "operands": [
             "content/powerups/PU-E02.json::ranks[0..3].price_hyper_gold = 50, 75, 125, 175"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-E02.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-E02.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-E02.json::ranks[2].price_hyper_gold",
+            "content/powerups/PU-E02.json::ranks[3].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 75 + 125 + 175 = 425"
         },
         {
@@ -867,6 +715,14 @@
           "operands": [
             "content/powerups/PU-E02.json::ranks[0..4].price_hyper_gold = 50, 75, 125, 175, 250"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-E02.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-E02.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-E02.json::ranks[2].price_hyper_gold",
+            "content/powerups/PU-E02.json::ranks[3].price_hyper_gold",
+            "content/powerups/PU-E02.json::ranks[4].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 75 + 125 + 175 + 250 = 675"
         },
         {
@@ -876,6 +732,10 @@
           "operands": [
             "content/powerups/PU-E03.json::ranks[0..0].price_hyper_gold = 75"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-E03.json::ranks[0].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "75 = 75"
         },
         {
@@ -885,6 +745,11 @@
           "operands": [
             "content/powerups/PU-E03.json::ranks[0..1].price_hyper_gold = 75, 125"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-E03.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-E03.json::ranks[1].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "75 + 125 = 200"
         },
         {
@@ -894,6 +759,12 @@
           "operands": [
             "content/powerups/PU-E03.json::ranks[0..2].price_hyper_gold = 75, 125, 175"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-E03.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-E03.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-E03.json::ranks[2].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "75 + 125 + 175 = 375"
         },
         {
@@ -903,6 +774,13 @@
           "operands": [
             "content/powerups/PU-E03.json::ranks[0..3].price_hyper_gold = 75, 125, 175, 250"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-E03.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-E03.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-E03.json::ranks[2].price_hyper_gold",
+            "content/powerups/PU-E03.json::ranks[3].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "75 + 125 + 175 + 250 = 625"
         },
         {
@@ -912,6 +790,14 @@
           "operands": [
             "content/powerups/PU-E03.json::ranks[0..4].price_hyper_gold = 75, 125, 175, 250, 350"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-E03.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-E03.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-E03.json::ranks[2].price_hyper_gold",
+            "content/powerups/PU-E03.json::ranks[3].price_hyper_gold",
+            "content/powerups/PU-E03.json::ranks[4].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "75 + 125 + 175 + 250 + 350 = 975"
         },
         {
@@ -921,6 +807,10 @@
           "operands": [
             "content/powerups/PU-M01.json::ranks[0..0].price_hyper_gold = 75"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-M01.json::ranks[0].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "75 = 75"
         },
         {
@@ -930,6 +820,11 @@
           "operands": [
             "content/powerups/PU-M01.json::ranks[0..1].price_hyper_gold = 75, 125"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-M01.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-M01.json::ranks[1].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "75 + 125 = 200"
         },
         {
@@ -939,6 +834,12 @@
           "operands": [
             "content/powerups/PU-M01.json::ranks[0..2].price_hyper_gold = 75, 125, 175"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-M01.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-M01.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-M01.json::ranks[2].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "75 + 125 + 175 = 375"
         },
         {
@@ -948,6 +849,13 @@
           "operands": [
             "content/powerups/PU-M01.json::ranks[0..3].price_hyper_gold = 75, 125, 175, 250"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-M01.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-M01.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-M01.json::ranks[2].price_hyper_gold",
+            "content/powerups/PU-M01.json::ranks[3].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "75 + 125 + 175 + 250 = 625"
         },
         {
@@ -957,6 +865,14 @@
           "operands": [
             "content/powerups/PU-M01.json::ranks[0..4].price_hyper_gold = 75, 125, 175, 250, 350"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-M01.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-M01.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-M01.json::ranks[2].price_hyper_gold",
+            "content/powerups/PU-M01.json::ranks[3].price_hyper_gold",
+            "content/powerups/PU-M01.json::ranks[4].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "75 + 125 + 175 + 250 + 350 = 975"
         },
         {
@@ -966,6 +882,10 @@
           "operands": [
             "content/powerups/PU-M02.json::ranks[0..0].price_hyper_gold = 25"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-M02.json::ranks[0].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "25 = 25"
         },
         {
@@ -975,6 +895,11 @@
           "operands": [
             "content/powerups/PU-M02.json::ranks[0..1].price_hyper_gold = 25, 50"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-M02.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-M02.json::ranks[1].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "25 + 50 = 75"
         },
         {
@@ -984,6 +909,12 @@
           "operands": [
             "content/powerups/PU-M02.json::ranks[0..2].price_hyper_gold = 25, 50, 75"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-M02.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-M02.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-M02.json::ranks[2].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "25 + 50 + 75 = 150"
         },
         {
@@ -993,6 +924,13 @@
           "operands": [
             "content/powerups/PU-M02.json::ranks[0..3].price_hyper_gold = 25, 50, 75, 100"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-M02.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-M02.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-M02.json::ranks[2].price_hyper_gold",
+            "content/powerups/PU-M02.json::ranks[3].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "25 + 50 + 75 + 100 = 250"
         },
         {
@@ -1002,6 +940,14 @@
           "operands": [
             "content/powerups/PU-M02.json::ranks[0..4].price_hyper_gold = 25, 50, 75, 100, 150"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-M02.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-M02.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-M02.json::ranks[2].price_hyper_gold",
+            "content/powerups/PU-M02.json::ranks[3].price_hyper_gold",
+            "content/powerups/PU-M02.json::ranks[4].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "25 + 50 + 75 + 100 + 150 = 400"
         },
         {
@@ -1011,6 +957,10 @@
           "operands": [
             "content/powerups/PU-S01.json::ranks[0..0].price_hyper_gold = 50"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-S01.json::ranks[0].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 = 50"
         },
         {
@@ -1020,6 +970,11 @@
           "operands": [
             "content/powerups/PU-S01.json::ranks[0..1].price_hyper_gold = 50, 75"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-S01.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-S01.json::ranks[1].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 75 = 125"
         },
         {
@@ -1029,6 +984,12 @@
           "operands": [
             "content/powerups/PU-S01.json::ranks[0..2].price_hyper_gold = 50, 75, 125"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-S01.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-S01.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-S01.json::ranks[2].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 75 + 125 = 250"
         },
         {
@@ -1038,6 +999,13 @@
           "operands": [
             "content/powerups/PU-S01.json::ranks[0..3].price_hyper_gold = 50, 75, 125, 175"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-S01.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-S01.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-S01.json::ranks[2].price_hyper_gold",
+            "content/powerups/PU-S01.json::ranks[3].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 75 + 125 + 175 = 425"
         },
         {
@@ -1047,6 +1015,14 @@
           "operands": [
             "content/powerups/PU-S01.json::ranks[0..4].price_hyper_gold = 50, 75, 125, 175, 250"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-S01.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-S01.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-S01.json::ranks[2].price_hyper_gold",
+            "content/powerups/PU-S01.json::ranks[3].price_hyper_gold",
+            "content/powerups/PU-S01.json::ranks[4].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 75 + 125 + 175 + 250 = 675"
         },
         {
@@ -1056,6 +1032,10 @@
           "operands": [
             "content/powerups/PU-S02.json::ranks[0..0].price_hyper_gold = 125"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-S02.json::ranks[0].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "125 = 125"
         },
         {
@@ -1065,6 +1045,11 @@
           "operands": [
             "content/powerups/PU-S02.json::ranks[0..1].price_hyper_gold = 125, 225"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-S02.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-S02.json::ranks[1].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "125 + 225 = 350"
         },
         {
@@ -1074,6 +1059,12 @@
           "operands": [
             "content/powerups/PU-S02.json::ranks[0..2].price_hyper_gold = 125, 225, 350"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-S02.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-S02.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-S02.json::ranks[2].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "125 + 225 + 350 = 700"
         },
         {
@@ -1083,6 +1074,10 @@
           "operands": [
             "content/powerups/PU-S03.json::ranks[0..0].price_hyper_gold = 50"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-S03.json::ranks[0].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 = 50"
         },
         {
@@ -1092,6 +1087,11 @@
           "operands": [
             "content/powerups/PU-S03.json::ranks[0..1].price_hyper_gold = 50, 100"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-S03.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-S03.json::ranks[1].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 100 = 150"
         },
         {
@@ -1101,6 +1101,12 @@
           "operands": [
             "content/powerups/PU-S03.json::ranks[0..2].price_hyper_gold = 50, 100, 150"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-S03.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-S03.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-S03.json::ranks[2].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 100 + 150 = 300"
         },
         {
@@ -1110,6 +1116,13 @@
           "operands": [
             "content/powerups/PU-S03.json::ranks[0..3].price_hyper_gold = 50, 100, 150, 225"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-S03.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-S03.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-S03.json::ranks[2].price_hyper_gold",
+            "content/powerups/PU-S03.json::ranks[3].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 100 + 150 + 225 = 525"
         },
         {
@@ -1119,6 +1132,14 @@
           "operands": [
             "content/powerups/PU-S03.json::ranks[0..4].price_hyper_gold = 50, 100, 150, 225, 300"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-S03.json::ranks[0].price_hyper_gold",
+            "content/powerups/PU-S03.json::ranks[1].price_hyper_gold",
+            "content/powerups/PU-S03.json::ranks[2].price_hyper_gold",
+            "content/powerups/PU-S03.json::ranks[3].price_hyper_gold",
+            "content/powerups/PU-S03.json::ranks[4].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 100 + 150 + 225 + 300 = 825"
         },
         {
@@ -1128,6 +1149,10 @@
           "operands": [
             "content/powerups/PU-S04.json::ranks[0..0].price_hyper_gold = 500"
           ],
+          "operand_pointers": [
+            "content/powerups/PU-S04.json::ranks[0].price_hyper_gold"
+          ],
+          "chains_through": [],
           "arithmetic": "500 = 500"
         }
       ]
@@ -1139,10 +1164,11 @@
         "content/utilities/"
       ],
       "pointer_parent_rule": null,
-      "pointer_segment_rule": "(?i)total|sum|aggregate|combined|overall|grand",
+      "pointer_segment_rule": "(?i)total|sum|aggregate|combined|overall|grand|cumulative|accru|accumulat|running_(total|sum|cost)|rolled?_up|to_date|so_far|thus_far|subtotal|tally|net_|lifetime|entire|whole_|full_(run|map|seam|set)|from_all|all_sites$",
       "allowlisted_segments": {},
-      "note": "13 of 13, including UTL-R1's 0, which is the sum of its empty rank_ore_costs list. The per-rank rank_ore_costs arrays are the operands and stay.",
+      "note": "13 of 13, including UTL-R1's 0, which is the sum of its empty rank_ore_costs list. The per-rank rank_ore_costs arrays are the operands and stay. The first draft was `total|sum|aggregate|combined|overall|grand` and the probe `accrued_rank_ore_cost` passed it, which is what added the cumulative half of AGGREGATE_WORDS.",
       "count": 13,
+      "corpus_numeric_leaves": 194,
       "records": [
         {
           "file": "content/utilities/UTL-A1.json",
@@ -1151,6 +1177,10 @@
           "operands": [
             "content/utilities/UTL-A1.json::acquisition.rank_ore_costs = [50, 100, 150]"
           ],
+          "operand_pointers": [
+            "content/utilities/UTL-A1.json::acquisition.rank_ore_costs"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 100 + 150 = 300"
         },
         {
@@ -1160,6 +1190,10 @@
           "operands": [
             "content/utilities/UTL-A2.json::acquisition.rank_ore_costs = [50, 100, 150]"
           ],
+          "operand_pointers": [
+            "content/utilities/UTL-A2.json::acquisition.rank_ore_costs"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 100 + 150 = 300"
         },
         {
@@ -1169,6 +1203,10 @@
           "operands": [
             "content/utilities/UTL-B1.json::acquisition.rank_ore_costs = [50, 100, 150]"
           ],
+          "operand_pointers": [
+            "content/utilities/UTL-B1.json::acquisition.rank_ore_costs"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 100 + 150 = 300"
         },
         {
@@ -1178,6 +1216,10 @@
           "operands": [
             "content/utilities/UTL-B2.json::acquisition.rank_ore_costs = [50, 100, 150]"
           ],
+          "operand_pointers": [
+            "content/utilities/UTL-B2.json::acquisition.rank_ore_costs"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 100 + 150 = 300"
         },
         {
@@ -1187,6 +1229,10 @@
           "operands": [
             "content/utilities/UTL-C1.json::acquisition.rank_ore_costs = [50, 100, 150]"
           ],
+          "operand_pointers": [
+            "content/utilities/UTL-C1.json::acquisition.rank_ore_costs"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 100 + 150 = 300"
         },
         {
@@ -1196,6 +1242,10 @@
           "operands": [
             "content/utilities/UTL-C2.json::acquisition.rank_ore_costs = [50, 100, 150]"
           ],
+          "operand_pointers": [
+            "content/utilities/UTL-C2.json::acquisition.rank_ore_costs"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 100 + 150 = 300"
         },
         {
@@ -1205,6 +1255,10 @@
           "operands": [
             "content/utilities/UTL-D1.json::acquisition.rank_ore_costs = [50, 100, 150]"
           ],
+          "operand_pointers": [
+            "content/utilities/UTL-D1.json::acquisition.rank_ore_costs"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 100 + 150 = 300"
         },
         {
@@ -1214,6 +1268,10 @@
           "operands": [
             "content/utilities/UTL-D2.json::acquisition.rank_ore_costs = [50, 100, 150]"
           ],
+          "operand_pointers": [
+            "content/utilities/UTL-D2.json::acquisition.rank_ore_costs"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 100 + 150 = 300"
         },
         {
@@ -1223,6 +1281,10 @@
           "operands": [
             "content/utilities/UTL-E1.json::acquisition.rank_ore_costs = [50, 100, 150]"
           ],
+          "operand_pointers": [
+            "content/utilities/UTL-E1.json::acquisition.rank_ore_costs"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 100 + 150 = 300"
         },
         {
@@ -1232,6 +1294,10 @@
           "operands": [
             "content/utilities/UTL-E2.json::acquisition.rank_ore_costs = [50, 100, 150]"
           ],
+          "operand_pointers": [
+            "content/utilities/UTL-E2.json::acquisition.rank_ore_costs"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 100 + 150 = 300"
         },
         {
@@ -1241,6 +1307,10 @@
           "operands": [
             "content/utilities/UTL-F1.json::acquisition.rank_ore_costs = [50, 100, 150]"
           ],
+          "operand_pointers": [
+            "content/utilities/UTL-F1.json::acquisition.rank_ore_costs"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 100 + 150 = 300"
         },
         {
@@ -1250,6 +1320,10 @@
           "operands": [
             "content/utilities/UTL-F2.json::acquisition.rank_ore_costs = [50, 100, 150]"
           ],
+          "operand_pointers": [
+            "content/utilities/UTL-F2.json::acquisition.rank_ore_costs"
+          ],
+          "chains_through": [],
           "arithmetic": "50 + 100 + 150 = 300"
         },
         {
@@ -1259,153 +1333,11 @@
           "operands": [
             "content/utilities/UTL-R1.json::acquisition.rank_ore_costs = [(empty)]"
           ],
+          "operand_pointers": [
+            "content/utilities/UTL-R1.json::acquisition.rank_ore_costs"
+          ],
+          "chains_through": [],
           "arithmetic": "sum of the empty rank_ore_costs list = 0"
-        }
-      ]
-    },
-    {
-      "name": "stat upgrade price curve",
-      "doc_assignment": "docs/technical/40-content-data-and-validation.md:203 - 'Recalculate ... price curves'; with 40:99, which makes the registered formula the authored artefact",
-      "scopes": [
-        "content/weapons/"
-      ],
-      "pointer_parent_rule": null,
-      "pointer_segment_rule": "(?i)^(first_ten|cumulative|price_table|price_curve)|prices$",
-      "allowlisted_segments": {
-        "purchases": "the authored checkpoint index n, which the removed cumulative cost is derived FROM. Allowlisted the way A20 allowlists reference_diameter_m: it matches the pattern only because it sits inside a matching parent."
-      },
-      "note": "The `formula` string '5n(n + 1)', each checkpoint's `purchases`, and `defining_prose` (a verified doc quotation) are all retained as operands or evidence.",
-      "count": 14,
-      "records": [
-        {
-          "file": "content/weapons/stat-price-formula.json",
-          "pointer": "cumulative_cost_checkpoints[0].cumulative_cost",
-          "value": 100,
-          "operands": [
-            "content/weapons/stat-price-formula.json::formula = '5n(n + 1)' (retained)",
-            "content/weapons/stat-price-formula.json::cumulative_cost_checkpoints[0].purchases = 3 (retained)"
-          ],
-          "arithmetic": "sum of 5n(n+1) for n = 1..3 = 10 + 30 + 60 = 100"
-        },
-        {
-          "file": "content/weapons/stat-price-formula.json",
-          "pointer": "cumulative_cost_checkpoints[1].cumulative_cost",
-          "value": 200,
-          "operands": [
-            "content/weapons/stat-price-formula.json::formula = '5n(n + 1)' (retained)",
-            "content/weapons/stat-price-formula.json::cumulative_cost_checkpoints[1].purchases = 4 (retained)"
-          ],
-          "arithmetic": "sum of 5n(n+1) for n = 1..4 = 10 + 30 + 60 + 100 = 200"
-        },
-        {
-          "file": "content/weapons/stat-price-formula.json",
-          "pointer": "cumulative_cost_checkpoints[2].cumulative_cost",
-          "value": 350,
-          "operands": [
-            "content/weapons/stat-price-formula.json::formula = '5n(n + 1)' (retained)",
-            "content/weapons/stat-price-formula.json::cumulative_cost_checkpoints[2].purchases = 5 (retained)"
-          ],
-          "arithmetic": "sum of 5n(n+1) for n = 1..5 = 10 + 30 + 60 + 100 + 150 = 350"
-        },
-        {
-          "file": "content/weapons/stat-price-formula.json",
-          "pointer": "cumulative_cost_checkpoints[3].cumulative_cost",
-          "value": 2200,
-          "operands": [
-            "content/weapons/stat-price-formula.json::formula = '5n(n + 1)' (retained)",
-            "content/weapons/stat-price-formula.json::cumulative_cost_checkpoints[3].purchases = 10 (retained)"
-          ],
-          "arithmetic": "sum of 5n(n+1) for n = 1..10 = 10 + 30 + 60 + 100 + 150 + 210 + 280 + 360 + 450 + 550 = 2200"
-        },
-        {
-          "file": "content/weapons/stat-price-formula.json",
-          "pointer": "first_ten_prices[0]",
-          "value": 10,
-          "operands": [
-            "content/weapons/stat-price-formula.json::formula = '5n(n + 1)' (retained)"
-          ],
-          "arithmetic": "5 x 1 x (1 + 1) = 10"
-        },
-        {
-          "file": "content/weapons/stat-price-formula.json",
-          "pointer": "first_ten_prices[1]",
-          "value": 30,
-          "operands": [
-            "content/weapons/stat-price-formula.json::formula = '5n(n + 1)' (retained)"
-          ],
-          "arithmetic": "5 x 2 x (2 + 1) = 30"
-        },
-        {
-          "file": "content/weapons/stat-price-formula.json",
-          "pointer": "first_ten_prices[2]",
-          "value": 60,
-          "operands": [
-            "content/weapons/stat-price-formula.json::formula = '5n(n + 1)' (retained)"
-          ],
-          "arithmetic": "5 x 3 x (3 + 1) = 60"
-        },
-        {
-          "file": "content/weapons/stat-price-formula.json",
-          "pointer": "first_ten_prices[3]",
-          "value": 100,
-          "operands": [
-            "content/weapons/stat-price-formula.json::formula = '5n(n + 1)' (retained)"
-          ],
-          "arithmetic": "5 x 4 x (4 + 1) = 100"
-        },
-        {
-          "file": "content/weapons/stat-price-formula.json",
-          "pointer": "first_ten_prices[4]",
-          "value": 150,
-          "operands": [
-            "content/weapons/stat-price-formula.json::formula = '5n(n + 1)' (retained)"
-          ],
-          "arithmetic": "5 x 5 x (5 + 1) = 150"
-        },
-        {
-          "file": "content/weapons/stat-price-formula.json",
-          "pointer": "first_ten_prices[5]",
-          "value": 210,
-          "operands": [
-            "content/weapons/stat-price-formula.json::formula = '5n(n + 1)' (retained)"
-          ],
-          "arithmetic": "5 x 6 x (6 + 1) = 210"
-        },
-        {
-          "file": "content/weapons/stat-price-formula.json",
-          "pointer": "first_ten_prices[6]",
-          "value": 280,
-          "operands": [
-            "content/weapons/stat-price-formula.json::formula = '5n(n + 1)' (retained)"
-          ],
-          "arithmetic": "5 x 7 x (7 + 1) = 280"
-        },
-        {
-          "file": "content/weapons/stat-price-formula.json",
-          "pointer": "first_ten_prices[7]",
-          "value": 360,
-          "operands": [
-            "content/weapons/stat-price-formula.json::formula = '5n(n + 1)' (retained)"
-          ],
-          "arithmetic": "5 x 8 x (8 + 1) = 360"
-        },
-        {
-          "file": "content/weapons/stat-price-formula.json",
-          "pointer": "first_ten_prices[8]",
-          "value": 450,
-          "operands": [
-            "content/weapons/stat-price-formula.json::formula = '5n(n + 1)' (retained)"
-          ],
-          "arithmetic": "5 x 9 x (9 + 1) = 450"
-        },
-        {
-          "file": "content/weapons/stat-price-formula.json",
-          "pointer": "first_ten_prices[9]",
-          "value": 550,
-          "operands": [
-            "content/weapons/stat-price-formula.json::formula = '5n(n + 1)' (retained)"
-          ],
-          "arithmetic": "5 x 10 x (10 + 1) = 550"
         }
       ]
     },
@@ -1416,42 +1348,71 @@
         "content/resources/"
       ],
       "pointer_parent_rule": null,
-      "pointer_segment_rule": "(?i)total|sum|aggregate|combined|overall|grand|ceiling",
+      "pointer_segment_rule": "(?i)total|sum|aggregate|combined|overall|grand|cumulative|accru|accumulat|running_(total|sum|cost)|rolled?_up|to_date|so_far|thus_far|subtotal|tally|net_|lifetime|entire|whole_|full_(run|map|seam|set)|from_all|all_sites$|ceiling|yield",
       "allowlisted_segments": {},
-      "note": "sources[].depletion_seconds is NOT removed - a depletion duration is not a resource total; see reproduces_but_not_assigned_by_docs.",
+      "note": "sources[].depletion_seconds is NOT removed - a depletion duration is not a resource total; see reproduces_but_not_assigned_by_docs. `yield` is in the class because the probe `yield_per_seam` - a stored per-seam total spelled with no aggregate word at all - passed the `total|sum|aggregate|combined|overall|grand|ceiling` draft. content/resources/ authors no `yield` field; the per-installment operands are spelled ore_per_installment.",
       "count": 13,
+      "corpus_numeric_leaves": 56,
       "records": [
         {
           "file": "content/resources/common-ore.json",
           "pointer": "complete_run_ceiling_before_relic_sales.maximum",
           "value": 6800,
           "operands": [
-            "content/resources/common-ore.json::sources[0..1] seam per-map totals = 3600",
-            "content/resources/common-ore.json::sources[2] geode per-map maximum = 2000",
-            "content/resources/common-ore.json::sources[3] boss per-run total = 1200"
+            "content/resources/common-ore.json::seam_total_per_map = 3600 (ITSELF REMOVED BY THIS PASS - chained, and itself chained through sources[0..1].total_per_map)",
+            "content/resources/common-ore.json::sources[2].total_per_map.maximum = 2000 (ITSELF REMOVED BY THIS PASS - chained)",
+            "content/resources/common-ore.json::sources[3].total_per_run = 1200 (ITSELF REMOVED BY THIS PASS - chained)"
           ],
-          "arithmetic": "3600 + 2000 + 1200 = 6800"
+          "operand_pointers": [
+            "content/resources/common-ore.json::seam_total_per_map",
+            "content/resources/common-ore.json::sources[2].total_per_map.maximum",
+            "content/resources/common-ore.json::sources[3].total_per_run"
+          ],
+          "chains_through": [
+            "seam_total_per_map",
+            "sources[2].total_per_map.maximum",
+            "sources[3].total_per_run"
+          ],
+          "arithmetic": "tiered: 3600 + 2000 + 1200 = 6800; unrolled to authored leaves: (10 x 10 x 20) + (40 x 5 x 8) + (50 x 40) + (300 x 4) = 6800"
         },
         {
           "file": "content/resources/common-ore.json",
           "pointer": "complete_run_ceiling_before_relic_sales.minimum",
           "value": 6400,
           "operands": [
-            "content/resources/common-ore.json::sources[0..1] seam per-map totals = 3600",
-            "content/resources/common-ore.json::sources[2] geode per-map minimum = 1600",
-            "content/resources/common-ore.json::sources[3] boss per-run total = 1200"
+            "content/resources/common-ore.json::seam_total_per_map = 3600 (ITSELF REMOVED BY THIS PASS - chained, and itself chained through sources[0..1].total_per_map)",
+            "content/resources/common-ore.json::sources[2].total_per_map.minimum = 1600 (ITSELF REMOVED BY THIS PASS - chained)",
+            "content/resources/common-ore.json::sources[3].total_per_run = 1200 (ITSELF REMOVED BY THIS PASS - chained)"
           ],
-          "arithmetic": "3600 + 1600 + 1200 = 6400"
+          "operand_pointers": [
+            "content/resources/common-ore.json::seam_total_per_map",
+            "content/resources/common-ore.json::sources[2].total_per_map.minimum",
+            "content/resources/common-ore.json::sources[3].total_per_run"
+          ],
+          "chains_through": [
+            "seam_total_per_map",
+            "sources[2].total_per_map.minimum",
+            "sources[3].total_per_run"
+          ],
+          "arithmetic": "tiered: 3600 + 1600 + 1200 = 6400; unrolled to authored leaves: (10 x 10 x 20) + (40 x 5 x 8) + (50 x 32) + (300 x 4) = 6400"
         },
         {
           "file": "content/resources/common-ore.json",
           "pointer": "seam_total_per_map",
           "value": 3600,
           "operands": [
-            "content/resources/common-ore.json::sources[0] standard seam per-map total = 2000 (itself 10 x 10 x 20)",
-            "content/resources/common-ore.json::sources[1] rich seam per-map total = 1600 (itself 40 x 5 x 8)"
+            "content/resources/common-ore.json::sources[0].total_per_map = 2000 (ITSELF REMOVED BY THIS PASS - chained; unrolls to 10 x 10 x 20)",
+            "content/resources/common-ore.json::sources[1].total_per_map = 1600 (ITSELF REMOVED BY THIS PASS - chained; unrolls to 40 x 5 x 8)"
           ],
-          "arithmetic": "2000 + 1600 = 3600"
+          "operand_pointers": [
+            "content/resources/common-ore.json::sources[0].total_per_map",
+            "content/resources/common-ore.json::sources[1].total_per_map"
+          ],
+          "chains_through": [
+            "sources[0].total_per_map",
+            "sources[1].total_per_map"
+          ],
+          "arithmetic": "tiered: 2000 + 1600 = 3600; unrolled to authored leaves: (10 x 10 x 20) + (40 x 5 x 8) = 3600"
         },
         {
           "file": "content/resources/common-ore.json",
@@ -1462,6 +1423,12 @@
             "content/resources/common-ore.json::sources[0].installment_count = 10",
             "content/resources/common-ore.json::sources[0].seams_per_map = 20"
           ],
+          "operand_pointers": [
+            "content/resources/common-ore.json::sources[0].ore_per_installment",
+            "content/resources/common-ore.json::sources[0].installment_count",
+            "content/resources/common-ore.json::sources[0].seams_per_map"
+          ],
+          "chains_through": [],
           "arithmetic": "10 x 10 x 20 = 2000"
         },
         {
@@ -1472,6 +1439,11 @@
             "content/resources/common-ore.json::sources[0].ore_per_installment = 10",
             "content/resources/common-ore.json::sources[0].installment_count = 10"
           ],
+          "operand_pointers": [
+            "content/resources/common-ore.json::sources[0].ore_per_installment",
+            "content/resources/common-ore.json::sources[0].installment_count"
+          ],
+          "chains_through": [],
           "arithmetic": "10 x 10 = 100"
         },
         {
@@ -1483,6 +1455,12 @@
             "content/resources/common-ore.json::sources[1].installment_count = 5",
             "content/resources/common-ore.json::sources[1].seams_per_map = 8"
           ],
+          "operand_pointers": [
+            "content/resources/common-ore.json::sources[1].ore_per_installment",
+            "content/resources/common-ore.json::sources[1].installment_count",
+            "content/resources/common-ore.json::sources[1].seams_per_map"
+          ],
+          "chains_through": [],
           "arithmetic": "40 x 5 x 8 = 1600"
         },
         {
@@ -1493,6 +1471,11 @@
             "content/resources/common-ore.json::sources[1].ore_per_installment = 40",
             "content/resources/common-ore.json::sources[1].installment_count = 5"
           ],
+          "operand_pointers": [
+            "content/resources/common-ore.json::sources[1].ore_per_installment",
+            "content/resources/common-ore.json::sources[1].installment_count"
+          ],
+          "chains_through": [],
           "arithmetic": "40 x 5 = 200"
         },
         {
@@ -1503,6 +1486,11 @@
             "content/resources/common-ore.json::sources[2].ore_per_completion = 50",
             "content/resources/common-ore.json::sources[2].geodes_per_map.maximum = 40"
           ],
+          "operand_pointers": [
+            "content/resources/common-ore.json::sources[2].ore_per_completion",
+            "content/resources/common-ore.json::sources[2].geodes_per_map.maximum"
+          ],
+          "chains_through": [],
           "arithmetic": "50 x 40 = 2000"
         },
         {
@@ -1513,6 +1501,11 @@
             "content/resources/common-ore.json::sources[2].ore_per_completion = 50",
             "content/resources/common-ore.json::sources[2].geodes_per_map.minimum = 32"
           ],
+          "operand_pointers": [
+            "content/resources/common-ore.json::sources[2].ore_per_completion",
+            "content/resources/common-ore.json::sources[2].geodes_per_map.minimum"
+          ],
+          "chains_through": [],
           "arithmetic": "50 x 32 = 1600"
         },
         {
@@ -1523,6 +1516,11 @@
             "content/resources/common-ore.json::sources[3].ore_per_boss = 300",
             "content/resources/common-ore.json::sources[3].boss_count = 4"
           ],
+          "operand_pointers": [
+            "content/resources/common-ore.json::sources[3].ore_per_boss",
+            "content/resources/common-ore.json::sources[3].boss_count"
+          ],
+          "chains_through": [],
           "arithmetic": "300 x 4 = 1200"
         },
         {
@@ -1530,10 +1528,18 @@
           "pointer": "run_ceiling",
           "value": 400,
           "operands": [
-            "content/resources/hyper-gold.json::sources[0] site per-map total = 300 (itself 100 x 3)",
-            "content/resources/hyper-gold.json::sources[1] boss per-run total = 100 (itself 25 x 4)"
+            "content/resources/hyper-gold.json::sources[0].total_per_map = 300 (ITSELF REMOVED BY THIS PASS - chained; unrolls to 100 x 3)",
+            "content/resources/hyper-gold.json::sources[1].total_per_run = 100 (ITSELF REMOVED BY THIS PASS - chained; unrolls to 25 x 4)"
           ],
-          "arithmetic": "300 + 100 = 400"
+          "operand_pointers": [
+            "content/resources/hyper-gold.json::sources[0].total_per_map",
+            "content/resources/hyper-gold.json::sources[1].total_per_run"
+          ],
+          "chains_through": [
+            "sources[0].total_per_map",
+            "sources[1].total_per_run"
+          ],
+          "arithmetic": "tiered: 300 + 100 = 400; unrolled to authored leaves: (100 x 3) + (25 x 4) = 400"
         },
         {
           "file": "content/resources/hyper-gold.json",
@@ -1543,6 +1549,11 @@
             "content/resources/hyper-gold.json::sources[0].award_per_completion = 100",
             "content/resources/hyper-gold.json::sources[0].sites_per_map = 3"
           ],
+          "operand_pointers": [
+            "content/resources/hyper-gold.json::sources[0].award_per_completion",
+            "content/resources/hyper-gold.json::sources[0].sites_per_map"
+          ],
+          "chains_through": [],
           "arithmetic": "100 x 3 = 300"
         },
         {
@@ -1553,6 +1564,11 @@
             "content/resources/hyper-gold.json::sources[1].award_per_boss = 25",
             "content/resources/hyper-gold.json::sources[1].boss_count = 4"
           ],
+          "operand_pointers": [
+            "content/resources/hyper-gold.json::sources[1].award_per_boss",
+            "content/resources/hyper-gold.json::sources[1].boss_count"
+          ],
+          "chains_through": [],
           "arithmetic": "25 x 4 = 100"
         }
       ]
@@ -1564,12 +1580,13 @@
         "content/mining-sites/"
       ],
       "pointer_parent_rule": null,
-      "pointer_segment_rule": "(?i)total|sum|aggregate|combined|overall|grand|jackpot|geodes_per_standard_map",
+      "pointer_segment_rule": "(?i)total|sum|aggregate|combined|overall|grand|cumulative|accru|accumulat|running_(total|sum|cost)|rolled?_up|to_date|so_far|thus_far|subtotal|tally|net_|lifetime|entire|whole_|full_(run|map|seam|set)|from_all|all_sites$|jackpot|geodes_per_standard_map",
       "allowlisted_segments": {
         "total_seam_payout_multiplier": "a comparison of the rich seam against the standard seam, whose operands live in another file and whose sibling exposure_per_secured_payout_multiplier has no stated derivation at all. Left authored, so allowlisted rather than removed."
       },
-      "note": "count_per_standard_map is authored and does not match this rule. geodes_per_standard_map does, and both its bounds are removed - 8 x 4 and 10 x 4.",
+      "note": "count_per_standard_map is authored and does not match this rule. geodes_per_standard_map does, and both its bounds are removed - 8 x 4 and 10 x 4. `total|jackpot` was the original draft and `aggregate_payout_per_map` passed it; the probe that then passed `total|sum|aggregate|combined|overall|grand|jackpot` was `rolled_up_payout_per_map`, which is what added the cumulative half of AGGREGATE_WORDS. `payout` is deliberately NOT in the class: payout_per_installment, completion_payout and exposure_per_secured_payout_multiplier are authored here and stay.",
       "count": 13,
+      "corpus_numeric_leaves": 60,
       "records": [
         {
           "file": "content/mining-sites/hyper-gold-sites.json",
@@ -1579,6 +1596,11 @@
             "content/mining-sites/hyper-gold-sites.json::completion_payout.amount = 100",
             "content/mining-sites/hyper-gold-sites.json::count_per_standard_map = 3"
           ],
+          "operand_pointers": [
+            "content/mining-sites/hyper-gold-sites.json::completion_payout.amount",
+            "content/mining-sites/hyper-gold-sites.json::count_per_standard_map"
+          ],
+          "chains_through": [],
           "arithmetic": "100 x 3 = 300"
         },
         {
@@ -1589,6 +1611,11 @@
             "content/mining-sites/rich-ore-seams.json::installment_duration_seconds = 3",
             "content/mining-sites/rich-ore-seams.json::installment_count = 5"
           ],
+          "operand_pointers": [
+            "content/mining-sites/rich-ore-seams.json::installment_duration_seconds",
+            "content/mining-sites/rich-ore-seams.json::installment_count"
+          ],
+          "chains_through": [],
           "arithmetic": "3 x 5 = 15"
         },
         {
@@ -1600,6 +1627,12 @@
             "content/mining-sites/rich-ore-seams.json::installment_count = 5",
             "content/mining-sites/rich-ore-seams.json::count_per_standard_map = 8"
           ],
+          "operand_pointers": [
+            "content/mining-sites/rich-ore-seams.json::payout_per_installment.amount",
+            "content/mining-sites/rich-ore-seams.json::installment_count",
+            "content/mining-sites/rich-ore-seams.json::count_per_standard_map"
+          ],
+          "chains_through": [],
           "arithmetic": "40 x 5 x 8 = 1600"
         },
         {
@@ -1610,6 +1643,11 @@
             "content/mining-sites/rich-ore-seams.json::payout_per_installment.amount = 40",
             "content/mining-sites/rich-ore-seams.json::installment_count = 5"
           ],
+          "operand_pointers": [
+            "content/mining-sites/rich-ore-seams.json::payout_per_installment.amount",
+            "content/mining-sites/rich-ore-seams.json::installment_count"
+          ],
+          "chains_through": [],
           "arithmetic": "40 x 5 = 200"
         },
         {
@@ -1621,6 +1659,12 @@
             "content/mining-sites/rich-ore-seams.json::installment_count = 5",
             "content/mining-sites/rich-ore-seams.json::count_per_standard_map = 8"
           ],
+          "operand_pointers": [
+            "content/mining-sites/rich-ore-seams.json::installment_duration_seconds",
+            "content/mining-sites/rich-ore-seams.json::installment_count",
+            "content/mining-sites/rich-ore-seams.json::count_per_standard_map"
+          ],
+          "chains_through": [],
           "arithmetic": "3 x 5 x 8 = 120"
         },
         {
@@ -1632,6 +1676,12 @@
             "content/mining-sites/specialized-material-geodes.json::geodes_per_present_material.maximum = 10",
             "content/mining-sites/specialized-material-geodes.json::present_materials_per_run = 4"
           ],
+          "operand_pointers": [
+            "content/mining-sites/specialized-material-geodes.json::completion_payout[]",
+            "content/mining-sites/specialized-material-geodes.json::geodes_per_present_material.maximum",
+            "content/mining-sites/specialized-material-geodes.json::present_materials_per_run"
+          ],
+          "chains_through": [],
           "arithmetic": "50 x 10 x 4 = 2000"
         },
         {
@@ -1643,6 +1693,12 @@
             "content/mining-sites/specialized-material-geodes.json::geodes_per_present_material.minimum = 8",
             "content/mining-sites/specialized-material-geodes.json::present_materials_per_run = 4"
           ],
+          "operand_pointers": [
+            "content/mining-sites/specialized-material-geodes.json::completion_payout[]",
+            "content/mining-sites/specialized-material-geodes.json::geodes_per_present_material.minimum",
+            "content/mining-sites/specialized-material-geodes.json::present_materials_per_run"
+          ],
+          "chains_through": [],
           "arithmetic": "50 x 8 x 4 = 1600"
         },
         {
@@ -1653,6 +1709,11 @@
             "content/mining-sites/specialized-material-geodes.json::geodes_per_present_material.maximum = 10",
             "content/mining-sites/specialized-material-geodes.json::present_materials_per_run = 4"
           ],
+          "operand_pointers": [
+            "content/mining-sites/specialized-material-geodes.json::geodes_per_present_material.maximum",
+            "content/mining-sites/specialized-material-geodes.json::present_materials_per_run"
+          ],
+          "chains_through": [],
           "arithmetic": "10 x 4 = 40"
         },
         {
@@ -1663,6 +1724,11 @@
             "content/mining-sites/specialized-material-geodes.json::geodes_per_present_material.minimum = 8",
             "content/mining-sites/specialized-material-geodes.json::present_materials_per_run = 4"
           ],
+          "operand_pointers": [
+            "content/mining-sites/specialized-material-geodes.json::geodes_per_present_material.minimum",
+            "content/mining-sites/specialized-material-geodes.json::present_materials_per_run"
+          ],
+          "chains_through": [],
           "arithmetic": "8 x 4 = 32"
         },
         {
@@ -1673,6 +1739,11 @@
             "content/mining-sites/standard-ore-seams.json::installment_duration_seconds = 1.5",
             "content/mining-sites/standard-ore-seams.json::installment_count = 10"
           ],
+          "operand_pointers": [
+            "content/mining-sites/standard-ore-seams.json::installment_duration_seconds",
+            "content/mining-sites/standard-ore-seams.json::installment_count"
+          ],
+          "chains_through": [],
           "arithmetic": "1.5 x 10 = 15"
         },
         {
@@ -1684,6 +1755,12 @@
             "content/mining-sites/standard-ore-seams.json::installment_count = 10",
             "content/mining-sites/standard-ore-seams.json::count_per_standard_map = 20"
           ],
+          "operand_pointers": [
+            "content/mining-sites/standard-ore-seams.json::payout_per_installment.amount",
+            "content/mining-sites/standard-ore-seams.json::installment_count",
+            "content/mining-sites/standard-ore-seams.json::count_per_standard_map"
+          ],
+          "chains_through": [],
           "arithmetic": "10 x 10 x 20 = 2000"
         },
         {
@@ -1694,6 +1771,11 @@
             "content/mining-sites/standard-ore-seams.json::payout_per_installment.amount = 10",
             "content/mining-sites/standard-ore-seams.json::installment_count = 10"
           ],
+          "operand_pointers": [
+            "content/mining-sites/standard-ore-seams.json::payout_per_installment.amount",
+            "content/mining-sites/standard-ore-seams.json::installment_count"
+          ],
+          "chains_through": [],
           "arithmetic": "10 x 10 = 100"
         },
         {
@@ -1705,6 +1787,12 @@
             "content/mining-sites/standard-ore-seams.json::installment_count = 10",
             "content/mining-sites/standard-ore-seams.json::count_per_standard_map = 20"
           ],
+          "operand_pointers": [
+            "content/mining-sites/standard-ore-seams.json::installment_duration_seconds",
+            "content/mining-sites/standard-ore-seams.json::installment_count",
+            "content/mining-sites/standard-ore-seams.json::count_per_standard_map"
+          ],
+          "chains_through": [],
           "arithmetic": "1.5 x 10 x 20 = 300"
         }
       ]
@@ -1716,10 +1804,11 @@
         "content/maps/"
       ],
       "pointer_parent_rule": null,
-      "pointer_segment_rule": "(?i)total|sum|aggregate|combined|overall|grand",
+      "pointer_segment_rule": "(?i)total|sum|aggregate|combined|overall|grand|cumulative|accru|accumulat|running_(total|sum|cost)|rolled?_up|to_date|so_far|thus_far|subtotal|tally|net_|lifetime|entire|whole_|full_(run|map|seam|set)|from_all|all_sites$",
       "allowlisted_segments": {},
-      "note": "reference_mech_speed_m_per_s in the same file is RETAINED: it is the operand of all 17 world speeds. The A13 world-prop values in this file do not match the rule.",
+      "note": "reference_mech_speed_m_per_s in the same file is RETAINED: it is the operand of all 17 world speeds. The A13 world-prop values in this file do not match the rule. The probe that passed the `total|sum|aggregate|combined|overall|grand` draft was `hyper_gold_from_all_sites`, which is why AGGREGATE_WORDS carries `from_all` and `all_sites$` but NOT a bare `all`: content/maps/ authors maximum_hyper_gold_sites_across_all_pockets, maximum_relic_caches_across_all_pockets and maximum_share_of_all_geodes_per_major_region, which are authored bounds on counts and stay.",
       "count": 1,
+      "corpus_numeric_leaves": 92,
       "records": [
         {
           "file": "content/maps/standard-map-generation-contract.json",
@@ -1729,9 +1818,50 @@
             "content/maps/standard-map-generation-contract.json::site_placement.hyper_gold_sites.count = 3",
             "content/mining-sites/hyper-gold-sites.json::completion_payout.amount = 100"
           ],
+          "operand_pointers": [
+            "content/maps/standard-map-generation-contract.json::site_placement.hyper_gold_sites.count",
+            "content/mining-sites/hyper-gold-sites.json::completion_payout.amount"
+          ],
+          "chains_through": [],
           "arithmetic": "3 x 100 = 300"
         }
       ]
+    }
+  ],
+  "pulled_from_this_pass": [
+    {
+      "name": "damage-pressure survivability block",
+      "scopes": [
+        "content/enemies/",
+        "content/bosses/"
+      ],
+      "count_restored": 32,
+      "pulled_because": "COMPARAND, not a derived duplicate. 40:114 assigns the compiler the derivation of world speeds and footprints and has it 'compare them with the survivability report'. The report is the independent side of that comparison, and a comparand computed by the same code it is compared against is a tautology that prints like a cross-check. All 32 restored. CAVEAT MEASURED HERE, NOT ASSERTED AWAY: the report ALSO exists at docs/data/contact-damage-pressure.csv, whose hits_to_defeat_100 and continuous_overlap_ttd_s columns match all 28 content values exactly. So 40:114 has an independent comparand either way, and the honest statement is not 'removing this makes the comparison vacuous' but 'there are three writers on this report - the docs table, the content block, and the compiler - and which of the first two is the accepted gameplay table 40:203 compares against is unsettled'. Restoring is the conservative move while that is unsettled; it is NOT a finding that the content copy is correct."
+    },
+    {
+      "name": "resonant-value hit count",
+      "scopes": [
+        "content/enemies/",
+        "content/bosses/"
+      ],
+      "count_restored": 5,
+      "pulled_because": "COMPARAND, same reading of 40:114 and for the same reason as the damage-pressure block: these five are rows of the same survivability report (72:167), which is what the derivation is compared AGAINST. All 5 restored. Same caveat: 72:167 states all five in docs/, so the comparand survives in docs/ regardless, and the third-writer question is open rather than settled."
+    },
+    {
+      "name": "stat upgrade price curve",
+      "scopes": [
+        "content/weapons/"
+      ],
+      "count_restored": 14,
+      "pulled_because": "MOVES CHECKABLE NUMBERS INTO AN UNCHECKED STRING, which is strictly worse than leaving them. All 14 values are still stated in the same file, in prose: `defining_prose` reads 'The first ten prices are 10, 30, 60, 100, 150, 210, 280, 360, 450, and 550 ore. Cumulative cost reaches 100 after three purchases, 200 after four, 350 after five, and 2,200 after ten.' A28 matches numeric leaves, so removing the leaves moved 14 checkable numbers somewhere no assertion looks. Editing the prose is NOT the fix and was not done: that sentence is a verified doc quotation in the quote-evidence artifact, so rewriting its numerals would falsify the citation while every validator stayed green. Whether the prose should stop restating derived numbers is a separate decision and not one to take inside a removal pass. All 14 restored."
+    }
+  ],
+  "value_collision_exceptions": [
+    {
+      "file": "content/utilities/UTL-R1.json",
+      "derived_pointer": "acquisition.total_rank_ore_cost",
+      "colliding_pointer": "acquisition.rank_count",
+      "why_not_a_second_writer": "Coincidence of zero, and the only one in the tree. UTL-R1 is the ore-crafted radar: its rank_ore_costs list is empty, so its removed total is the sum of no terms = 0, and it independently has rank_count = 0 because it has no ranks. Two different quantities that are both zero, not one quantity written twice."
     }
   ],
   "removed_numeric_multiset": [
@@ -1742,43 +1872,8 @@
     ],
     [
       "content/bosses/BOSS-01.json",
-      "ability.resonant_damage_reference.fresh_mech_hits_to_defeat_at_resonant_value",
-      4
-    ],
-    [
-      "content/bosses/BOSS-01.json",
-      "damage_pressure.contact_damage",
-      18
-    ],
-    [
-      "content/bosses/BOSS-01.json",
-      "damage_pressure.continuous_overlap_time_to_defeat_seconds",
-      3.75
-    ],
-    [
-      "content/bosses/BOSS-01.json",
-      "damage_pressure.hits_to_defeat_100_hull",
-      6
-    ],
-    [
-      "content/bosses/BOSS-01.json",
       "movement_speed.world_speed_m_per_s",
       1.26
-    ],
-    [
-      "content/bosses/BOSS-02.json",
-      "damage_pressure.contact_damage",
-      24
-    ],
-    [
-      "content/bosses/BOSS-02.json",
-      "damage_pressure.continuous_overlap_time_to_defeat_seconds",
-      3.0
-    ],
-    [
-      "content/bosses/BOSS-02.json",
-      "damage_pressure.hits_to_defeat_100_hull",
-      5
     ],
     [
       "content/bosses/BOSS-02.json",
@@ -1792,63 +1887,13 @@
     ],
     [
       "content/bosses/BOSS-03.json",
-      "ability.resonant_damage_reference.fresh_mech_hits_to_defeat_at_resonant_value",
-      5
-    ],
-    [
-      "content/bosses/BOSS-03.json",
-      "damage_pressure.contact_damage",
-      30
-    ],
-    [
-      "content/bosses/BOSS-03.json",
-      "damage_pressure.continuous_overlap_time_to_defeat_seconds",
-      2.25
-    ],
-    [
-      "content/bosses/BOSS-03.json",
-      "damage_pressure.hits_to_defeat_100_hull",
-      4
-    ],
-    [
-      "content/bosses/BOSS-03.json",
       "movement_speed.world_speed_m_per_s",
       1.35
     ],
     [
       "content/bosses/BOSS-04.json",
-      "ability.resonant_damage_reference.fresh_mech_hits_to_defeat_at_resonant_value",
-      3
-    ],
-    [
-      "content/bosses/BOSS-04.json",
-      "damage_pressure.contact_damage",
-      38
-    ],
-    [
-      "content/bosses/BOSS-04.json",
-      "damage_pressure.continuous_overlap_time_to_defeat_seconds",
-      1.5
-    ],
-    [
-      "content/bosses/BOSS-04.json",
-      "damage_pressure.hits_to_defeat_100_hull",
-      3
-    ],
-    [
-      "content/bosses/BOSS-04.json",
       "movement_speed.world_speed_m_per_s",
       1.5
-    ],
-    [
-      "content/enemies/EN-01.json",
-      "damage_pressure.continuous_overlap_time_to_defeat_seconds",
-      14.25
-    ],
-    [
-      "content/enemies/EN-01.json",
-      "damage_pressure.hits_to_defeat_100_hull",
-      20
     ],
     [
       "content/enemies/EN-01.json",
@@ -1857,28 +1902,8 @@
     ],
     [
       "content/enemies/EN-02.json",
-      "damage_pressure.continuous_overlap_time_to_defeat_seconds",
-      9.0
-    ],
-    [
-      "content/enemies/EN-02.json",
-      "damage_pressure.hits_to_defeat_100_hull",
-      13
-    ],
-    [
-      "content/enemies/EN-02.json",
       "movement_speed.world_speed_m_per_s",
       1.86
-    ],
-    [
-      "content/enemies/EN-03.json",
-      "damage_pressure.continuous_overlap_time_to_defeat_seconds",
-      5.25
-    ],
-    [
-      "content/enemies/EN-03.json",
-      "damage_pressure.hits_to_defeat_100_hull",
-      8
     ],
     [
       "content/enemies/EN-03.json",
@@ -1887,43 +1912,13 @@
     ],
     [
       "content/enemies/EN-04.json",
-      "damage_pressure.continuous_overlap_time_to_defeat_seconds",
-      6.75
-    ],
-    [
-      "content/enemies/EN-04.json",
-      "damage_pressure.hits_to_defeat_100_hull",
-      10
-    ],
-    [
-      "content/enemies/EN-04.json",
       "movement_speed.world_speed_m_per_s",
       1.56
     ],
     [
       "content/enemies/EN-05.json",
-      "damage_pressure.continuous_overlap_time_to_defeat_seconds",
-      6.75
-    ],
-    [
-      "content/enemies/EN-05.json",
-      "damage_pressure.hits_to_defeat_100_hull",
-      10
-    ],
-    [
-      "content/enemies/EN-05.json",
       "movement_speed.world_speed_m_per_s",
       1.74
-    ],
-    [
-      "content/enemies/EN-06.json",
-      "damage_pressure.continuous_overlap_time_to_defeat_seconds",
-      9.0
-    ],
-    [
-      "content/enemies/EN-06.json",
-      "damage_pressure.hits_to_defeat_100_hull",
-      13
     ],
     [
       "content/enemies/EN-06.json",
@@ -1936,34 +1931,9 @@
       2.25
     ],
     [
-      "content/enemies/EN-06.json",
-      "specialist_attack.resonant_damage_reference.fresh_mech_hits_to_defeat_at_resonant_value",
-      6
-    ],
-    [
-      "content/enemies/EN-07.json",
-      "damage_pressure.continuous_overlap_time_to_defeat_seconds",
-      6.75
-    ],
-    [
-      "content/enemies/EN-07.json",
-      "damage_pressure.hits_to_defeat_100_hull",
-      10
-    ],
-    [
       "content/enemies/EN-07.json",
       "movement_speed.world_speed_m_per_s",
       2.55
-    ],
-    [
-      "content/enemies/EN-08.json",
-      "damage_pressure.continuous_overlap_time_to_defeat_seconds",
-      4.5
-    ],
-    [
-      "content/enemies/EN-08.json",
-      "damage_pressure.hits_to_defeat_100_hull",
-      7
     ],
     [
       "content/enemies/EN-08.json",
@@ -1972,38 +1942,13 @@
     ],
     [
       "content/enemies/EN-09.json",
-      "damage_pressure.continuous_overlap_time_to_defeat_seconds",
-      3.0
-    ],
-    [
-      "content/enemies/EN-09.json",
-      "damage_pressure.hits_to_defeat_100_hull",
-      5
-    ],
-    [
-      "content/enemies/EN-09.json",
       "movement_speed.world_speed_m_per_s",
       0.84
     ],
     [
       "content/enemies/EN-10.json",
-      "damage_pressure.continuous_overlap_time_to_defeat_seconds",
-      3.75
-    ],
-    [
-      "content/enemies/EN-10.json",
-      "damage_pressure.hits_to_defeat_100_hull",
-      6
-    ],
-    [
-      "content/enemies/EN-10.json",
       "movement_speed.world_speed_m_per_s",
       2.1
-    ],
-    [
-      "content/enemies/shared-elite-modifiers.json",
-      "worked_examples[0].fresh_mech_hits_to_defeat_at_resonant_value",
-      3
     ],
     [
       "content/maps/standard-map-generation-contract.json",
@@ -2494,81 +2439,11 @@
       "content/utilities/UTL-R1.json",
       "acquisition.total_rank_ore_cost",
       0
-    ],
-    [
-      "content/weapons/stat-price-formula.json",
-      "cumulative_cost_checkpoints[0].cumulative_cost",
-      100
-    ],
-    [
-      "content/weapons/stat-price-formula.json",
-      "cumulative_cost_checkpoints[1].cumulative_cost",
-      200
-    ],
-    [
-      "content/weapons/stat-price-formula.json",
-      "cumulative_cost_checkpoints[2].cumulative_cost",
-      350
-    ],
-    [
-      "content/weapons/stat-price-formula.json",
-      "cumulative_cost_checkpoints[3].cumulative_cost",
-      2200
-    ],
-    [
-      "content/weapons/stat-price-formula.json",
-      "first_ten_prices[0]",
-      10
-    ],
-    [
-      "content/weapons/stat-price-formula.json",
-      "first_ten_prices[1]",
-      30
-    ],
-    [
-      "content/weapons/stat-price-formula.json",
-      "first_ten_prices[2]",
-      60
-    ],
-    [
-      "content/weapons/stat-price-formula.json",
-      "first_ten_prices[3]",
-      100
-    ],
-    [
-      "content/weapons/stat-price-formula.json",
-      "first_ten_prices[4]",
-      150
-    ],
-    [
-      "content/weapons/stat-price-formula.json",
-      "first_ten_prices[5]",
-      210
-    ],
-    [
-      "content/weapons/stat-price-formula.json",
-      "first_ten_prices[6]",
-      280
-    ],
-    [
-      "content/weapons/stat-price-formula.json",
-      "first_ten_prices[7]",
-      360
-    ],
-    [
-      "content/weapons/stat-price-formula.json",
-      "first_ten_prices[8]",
-      450
-    ],
-    [
-      "content/weapons/stat-price-formula.json",
-      "first_ten_prices[9]",
-      550
     ]
   ],
   "retained_because_operand": {
     "content/powerups/*::total_cost_hyper_gold": "Derived (it is the last cumulative cost, and the sum of the rank prices) but RETAINED. It carries its own citation - `total_cost_hyper_gold: DEC-120#decision` - and it is the operand A14's second row checks when it sums the 13 per-entry totals to the doc-stated 9,450. Removing it would delete an assertion's input to delete a redundancy.",
-    "content/enemies|bosses/*::resonant_damage_reference.resonant_damage": "Reproduces for all 5 as ceil(base_damage x 1.20), but RETAINED for two reasons: it is the operand the removed fresh_mech_hits_to_defeat_at_resonant_value derives from, and no line in docs/ states the rounding rule that ceil() assumes (40:203 fails only on divergence 'beyond documented rounding', and this rounding is not documented).",
+    "content/enemies|bosses/*::resonant_damage_reference.resonant_damage": "Reproduces for all 5 as ceil(base_damage x 1.20), and RETAINED because it is the operand the removed fresh_mech_hits_to_defeat_at_resonant_value derives from. CORRECTION to this note's earlier claim that 'no line in docs/ states the rounding': the rounding IS stated. 72:120 step 3 of the damage-resolution order says 'Round the result up to the next whole Hull point', immediately after step 2 'Multiply listed base damage by current attacker-side damage modifiers' - that is exactly ceil(base x modifier). 72:126 shows it worked (38 x 1.20 = 45.6, rounded up to 46) and 61:92-101 states the 20% modifier. ceil is also the ONLY rounding that reproduces all five: 32.4 -> 33 and 43.2 -> 44 rule out both floor and round-half. So resonant_damage is fully documented arithmetic, and whether it is removable turns only on whether a docs/ line assigns ITS recomputation to the compiler - not on a missing rounding clause.",
     "content/mining-sites/*::abundance_states[].geodes_on_map": "Authored survey states (Scarce 8 / Moderate 9 / Rich 10) and the operand range the removed geodes_per_standard_map bounds are built from. Retained.",
     "content/enemies|bosses/*::movement_speed.percent_of_mech_base_speed.percent": "The authored half of the world speed. Retained - it is the operand.",
     "content/utilities/*::acquisition.rank_ore_costs[]": "The authored per-rank ore prices. Retained - they are the operands of the removed total.",

@@ -57,6 +57,7 @@
       "base_damage": 36,
       "resonant_damage": 44,
       "resonance_source": "Asterite",
+      "fresh_mech_hits_to_defeat_at_resonant_value": 3,
       "derivation": "EN-09 contact 24 x the 1.50 elite contact-damage multiplier is 36"
     }
   ]

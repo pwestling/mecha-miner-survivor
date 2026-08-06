@@ -151,8 +151,11 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
            carry a unit suffix.
       A name "says _percent" wherever the token appears, not only at the
       end - 40:95 constrains what the name says and 40:96's terminal-unit
-      rule is about unit suffixes, so the 52 mid-name spellings such as
-      percent_of_mech_base_speed are correct and are not flagged. Rule 4
+      rule is about unit suffixes, so the mid-name spellings such as
+      percent_of_mech_base_speed are correct and are not flagged. Measured
+      with PERCENT_TOKEN_KEY, this tree holds 50 such occurrences across 33
+      distinct property names; the figure here read 52 and matched neither
+      quantity, so it is now stated with the unit it is counted in. Rule 4
       excludes a unit-or-kind token wherever it appears too, for the
       mirror-image reason: the tree's
       single_target_ceiling_multiplier_at_full_bonus has `multiplier` as
@@ -229,18 +232,39 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       ("Validation derives world speeds/footprints and compares them with
       the survivability report")                                      FAILURE
 
-  A21 content/ holds exactly EXPECTED_CONTENT_JSON_FILES (139) *.json
-      files, so a file in a directory no A12 row covers is still caught,
-      AND the non-JSON files under content/ are exactly the three named in
-      EXPECTED_CONTENT_NON_JSON (README.md, quote-verification-audit.md,
-      transcription-notes.md).
+  A21 content/ holds exactly as many DEFINITION *.json files as the A28
+      manifest has pairs, so a definition in a directory no A12 row covers is
+      still caught, AND the non-JSON files under content/ are
+      exactly the three named in EXPECTED_CONTENT_NON_JSON (README.md,
+      quote-verification-audit.md, transcription-notes.md).
+      The count's expectation is len() of the A28 manifest, not a literal.
+      There was a literal 138 here; A28 is the record of WHICH 138, and two
+      independent literals asserted by a comment to be the same number is a
+      defect this repository has already been burned by. The count row is
+      therefore redundant BY CONSTRUCTION - it still reddens on an added or
+      deleted definition, but it cannot disagree with the manifest. A21 no
+      longer sees a RENAME at all; that is A28's row, and the count row
+      staying green under a rename is exactly the hole A28 was added for.
+      BOTH rows exclude every directory in NON_DEFINITION_DIRS, via
+      in_non_definition_dir(), which is the population load_definitions()
+      loads. The count row used to be a bare CONTENT.rglob("*.json") that
+      never consulted NON_DEFINITION_DIRS, so content/localization/en.json
+      was counted (139) and the first file under content/schemas/ - a
+      directory this script itself declares is not a catalog of definitions
+      - failed the row with "content/ holds 140 *.json file(s), expected
+      139" on a branch that had added no definition. The expectation is
+      rebased onto the definition population rather than raised to agree
+      with the polluted one.
       The non-JSON row used to PRINT the file list next to a blank
       expectation and a hardcoded "ok" - it could not fail, so a stray file
       under content/ was reported and tolerated in the same breath. It now
       asserts the exact list.
       Negative control: an empty content/probe.txt -> FAIL, "content/ holds
       non-JSON files [... 'content/probe.txt' ...], expected exactly
-      [...]".                                                         FAILURE
+      [...]". A file under content/schemas/ -> verdict UNCHANGED, which is
+      the control that distinguishes this row from the one it replaced; a
+      definition added under a real catalog directory still FAILS with the
+      count.                                                          FAILURE
 
   A22 Every source_refs scope prefix resolves to a field that EXISTS in the
       definition it annotates. The optional "<json.path>: " prefix attributes
@@ -493,6 +517,95 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       ("Validation derives world speeds/footprints and compares them with
       the survivability report") and :203 ("Reports compare with accepted
       gameplay tables")                                     FAILURE
+  !! ASSERTION-LABEL COLLISION, UNRESOLVED AND DELIBERATELY VISIBLE. Two
+     streams independently claimed the label A28 while this branch was under
+     review: the six derived-value families above (this branch, PR #10) and
+     the definition (path, id) manifest below (master, PR #12). Both rules
+     are real, both are asserted, and both are kept intact by this merge.
+     Only the LABEL collides. Renumbering either side is a mechanical
+     find-and-replace, but it is not this merge's call to make: renumbering
+     master's breaks the reference in its own A21 docstring and README on
+     the trunk, and renumbering this branch's three dangles every reference
+     in the review currently in flight. Escalated with the merge. Until it
+     is decided, read A28 by its table title, not by its number.
+
+  A28 The definition population's (relative_path, id) PAIRS equal the
+      committed manifest at content-definition-manifest.txt, compared in both
+      directions: a path in the tree and not the manifest, a path in the
+      manifest and not the tree, and a path in both whose id differs are each
+      a separate failure naming the files. A fourth row compares the committed
+      file's BYTES against the generator's output byte-for-byte, so the header,
+      the line ORDER, whitespace padding and the line endings cannot drift
+      either. That row is the ONLY guard for reordering and padding: the three
+      pair rows compare two sets and a mapping, so a manifest whose lines are
+      reordered or padded still holds the same pairs.
+      The comparison reads with read_bytes() and the generator writes with
+      write_bytes(), both deliberately. Path.read_text() applies universal
+      newlines, so a manifest rewritten entirely in CRLF decoded to exactly the
+      generator's LF text: it passed with 0 failures while this very row
+      reported "identical", and every line of the file could be rewritten with
+      the gate green. Path.write_text() has the mirror defect - it translates
+      "\\n" to os.linesep, so the generator would emit CRLF on Windows and a byte
+      comparison against its own output could never converge there. A byte
+      comparison is the strict one: it keeps the reordering and padding guards
+      and adds line-ending drift, whereas relabelling the row as a TEXT
+      comparison would have kept the escape and merely described it.
+      .gitattributes pins the manifest to eol=lf so a checkout cannot
+      manufacture a false failure on a platform that would otherwise convert it.
+      WHY PAIRS AND NOT NAMES. Two edits were invisible to every other
+      assertion here. (1) Renaming a definition inside its own directory:
+      A21's count row compared a NUMBER and was blind to which files those
+      were, so `mv content/bosses/BOSS-01.json
+      content/bosses/ZZZ-not-a-boss.json` exited 0 with zero failures while
+      the non-JSON row beside it asserted an exact named tuple. (2) Editing
+      the id inside a file: BOSS-01 -> BOSS-99 still matched A12's
+      ^BOSS-\\d{2}$ selector, left the per-directory count at 4 and kept
+      uniqueness, so it too exited 0. A name roster closes only the first; the
+      pair closes both, and it also catches two files SWAPPING ids, which
+      changes no count, no pattern and no uniqueness fact.
+      NOT a relocation check - moving a file between directories was already
+      caught by A12's per-directory counts and was never open. A28 does redden
+      on a relocation too, because the path changed, but it is not what makes
+      that case fail.
+      WHY A MANIFEST AND NOT stem == id. That was measured and rejected: 130
+      of the 138 definitions have stem == id byte-for-byte and 8 do not, and
+      the mapping for those 8 is not a function of the string - four
+      mining-site classes are SITE-01..04 in DOCUMENT order (alphabetically
+      their stems give SITE-03, 02, 04, 01, so it is not even ordinal), plus
+      WAV-01, MGC-01, ELT-01 and FORMULA-01. Exempting those directories would
+      remove the check from precisely the eight files whose names are prose and
+      are therefore the ones anyone would actually rename: nobody tidies
+      BOSS-01.json, and standard-ore-seams.json is exactly the file someone
+      would.
+      THE MANIFEST IS AN EDIT TAX, NOT EVIDENCE, and its header says so.
+      Regenerating it makes this check agree with the tree again, so someone
+      who renames a file or edits an id and regenerates PASSES. What the
+      manifest buys is that the change cannot happen without a reviewable diff
+      in the same commit. It does not establish that any path or id is
+      correct; the design documents and the A12 rows that cite them do that.
+      REGENERATION follows the repository's existing convention rather than a
+      new one - tests/shared/GoldenText.cs, where MECHAMINER_GOLDEN_UPDATE=1
+      rewrites a golden AND THE TEST STILL FAILS. Same variable, same
+      semantics, including failing when the switch is set but the manifest
+      already matches. A regeneration can therefore never be the thing that
+      turns a run green.
+      The population is definition_paths(), which is in_non_definition_dir()
+      - the same predicate A21's two rows and load_definitions() use. There is
+      no second definition of what counts as a definition file.
+      Negative controls, each run and reverted: the rename above -> FAIL (2
+      failures, one per direction); the BOSS-01 -> BOSS-99 id edit -> FAIL (1
+      failure naming `BOSS-01 -> BOSS-99`); swapping BOSS-01 and BOSS-02's ids
+      -> FAIL (1 failure naming both), all three having been PASS/exit 0
+      before this check existed.
+      Mandate: docs/technical/40-content-data-and-validation.md:80 (`id` is an
+      envelope field, "stable category-valid ID") with :185, where the
+      canonical bundle "is ordered by category and stable ID" and hashes
+      identically "regardless of source file enumeration order". That last
+      clause is why the pair is the thing to record: the ID carries the
+      bundle's identity and the FILENAME does not, so the file stem is a human
+      handle that no compiled output would notice changing. Nothing downstream
+      of the compiler can catch a rename, which is precisely why it has to be
+      caught here.                                                   FAILURE
 
 Not asserted here: no structural JSON Schema validation happens, because
 content/schemas/ (40:36) does not exist yet. Domain field names outside the
@@ -503,6 +616,7 @@ the schemas land. See content/transcription-notes.md.
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 import sys
@@ -518,21 +632,83 @@ LOCALIZATION = CONTENT / "localization" / "en.json"
 # Directories under content/ that are not catalogs of definitions.
 NON_DEFINITION_DIRS = ("localization", "schemas")
 
-# A21 - total *.json inventory under content/. This is the sum of the A12 rows
-# plus content/localization/en.json, and it is asserted separately so that a
-# file appearing in a directory A12 does not cover is still caught.
+# A28 - the committed (path, id) manifest of the definition population.
+#
+# It lives beside this script rather than under content/ deliberately: a file
+# under content/ would have to be either a definition (and count itself) or a
+# non-JSON file (and join EXPECTED_CONTENT_NON_JSON), and a manifest is neither.
+# The two sibling data files expected_citation_deltas.json and
+# quote_mismatch_evidence.json already establish that committed tool data lives
+# here.
+#
+# It is TEXT, tab-separated and sorted by path, for the reason
+# docs/technical/91-verification-strategy.md gives for goldens generally -
+# "canonical, ordered, and reviewable text". One line per definition means a
+# rename is one removed line plus one added line and an edited id is a one-line
+# change, which is what makes the diff the reviewable artifact.
+CONTENT_DEFINITION_MANIFEST = (
+    Path(__file__).resolve().parent / "content-definition-manifest.txt"
+)
+
+# The repository's convention for regenerating a committed expectation, taken
+# from tests/shared/GoldenText.cs: the switch rewrites the file AND the check
+# still fails, so a regeneration can never be the thing that makes a run green.
+# The variable name is deliberately the same one, because this is the same act.
+GOLDEN_UPDATE_VARIABLE = "MECHAMINER_GOLDEN_UPDATE"
+
+# Placeholders for a definition whose id cannot be read. Neither can collide
+# with a real id, and neither appears in the committed manifest today: every
+# definition parses and every one carries an id (ID_NULL_EXPECTED is empty).
+MANIFEST_ID_ABSENT = "<no-id>"
+MANIFEST_ID_UNPARSEABLE = "<unparseable>"
+
+# A21 - the DEFINITION *.json inventory under content/. This is the sum of the
+# A12 rows, and it is asserted separately so that a definition file appearing in
+# a directory A12 does not cover is still caught.
+#
+# The population is the same one load_definitions() loads: every *.json under
+# content/ EXCEPT those beneath a NON_DEFINITION_DIRS directory. It used to be a
+# bare CONTENT.rglob("*.json") that never consulted NON_DEFINITION_DIRS, so the
+# count was definitions + localization/en.json = 139 and a directory this script
+# already declares is not a catalog of definitions still counted toward the
+# definition total. The first file authored under content/schemas/ - the
+# directory DAT-006 owns, and the one the README notes "does not exist yet" -
+# therefore reddened this row as "content/ holds 140 *.json file(s), expected
+# 139" on a branch that had added no definition at all. That is a false failure
+# charged to the wrong stream, and bumping 139 to 140 would only have laundered
+# it by agreeing with the polluted population; the expectation is instead rebased
+# onto the population the name now describes.
+#
+# THE EXPECTED COUNT IS NO LONGER A LITERAL. It is len() of the A28 manifest,
+# which is the committed record of WHICH definitions exist. There was a literal
+# 138 here, and the manifest would have been a second statement of the same
+# number; two independent literals that a comment claims agree is a defect this
+# repository has already been burned by, so the count is derived and the two
+# cannot drift apart. The count row survives derivation because it is the
+# readable summary of the population's size and it still reddens on an added or
+# deleted definition - it is redundant BY CONSTRUCTION rather than
+# independently, which is the difference that matters.
+#
+# content/localization/en.json is outside that population along with
+# content/schemas/, because NON_DEFINITION_DIRS names them both. en.json loses no
+# coverage by leaving - A10/A11 assert it parses, is flat, is lexically sorted,
+# is duplicate-free, resolves every referenced key and orphans none, which is
+# strictly more than membership in a total - and A26 still scans it for nulls,
+# because "no null anywhere under content/" is deliberately a whole-tree claim
+# rather than a definition-only one.
 #
 # content/ also holds three Markdown files - README.md, transcription-notes.md
 # and quote-verification-audit.md - which are documentation, not content. So
-# `find content -type f` reports 142 while this count is 139; that difference is
-# correct and is not a discrepancy.
+# `find content -type f` reports 142 while the definition count is 138; that
+# difference is correct and is not a discrepancy.
 #
 # The non-JSON files are NAMED rather than counted, and the A21 row asserts the
 # exact list. It previously printed the list beside a blank expectation and a
 # hardcoded "ok", which reported a stray file under content/ and tolerated it in
 # the same breath. Adding a documentation file here is a deliberate act and
-# updating this tuple is the record of it.
-EXPECTED_CONTENT_JSON_FILES = 139
+# updating this tuple is the record of it. That row is scoped to definition
+# directories for the same reason the count is: a README beside a schema is the
+# schema directory's business, not a stray file under a catalog.
 EXPECTED_CONTENT_NON_JSON = (
     "content/README.md",
     "content/quote-verification-audit.md",
@@ -718,9 +894,16 @@ EXPECTATIONS = [
         items=10,
         aggregates=1,
         # The one aggregate is shared-elite-modifiers.json, the shared elite
-        # constants block. It is not an eleventh enemy: it has no id and no
-        # name_key (see ID_NULL_EXPECTED), so the id_regex selector correctly
-        # buckets it as the directory's aggregate. The former
+        # constants block. It is not an eleventh enemy: it carries the id
+        # ELT-01, which does not match this row's ^EN-\d{2}$ item selector, so
+        # the id_regex selector buckets it as the directory's aggregate. What
+        # makes it the aggregate is that its ID is not an item ID - NOT the
+        # absence of an id. It used to have none, and this comment used to say
+        # "it has no id and no name_key (see ID_NULL_EXPECTED)"; the integration
+        # owner has since minted ELT-01 and ID_NULL_EXPECTED is now empty, so
+        # only the name_key half of that was still true. It does still omit
+        # name_key, as a constants block with no player-facing name, and is
+        # listed in NAME_KEY_OMITTED for that. The former
         # elite-modifier-profile.json definition it replaced is deleted.
         label="ordinary enemies (+ 1 shared elite modifier constants block)",
         source="docs/31-initial-alien-roster.md:37 + docs/31-initial-alien-roster.md:104",
@@ -1103,6 +1286,19 @@ def load_json(path: Path):
         return None
 
 
+def in_non_definition_dir(path: Path) -> bool:
+    """True when path sits beneath one of the NON_DEFINITION_DIRS.
+
+    The single place that decides whether a path under content/ belongs to the
+    definition population. It exists because that decision was previously made
+    inline here and NOT made at all in check_file_inventory(), which enumerated
+    content/ bare and so counted a non-definition directory toward the definition
+    total. Every enumeration that means "the definitions" goes through this.
+    """
+    parts = path.relative_to(CONTENT).parts
+    return bool(parts) and parts[0] in NON_DEFINITION_DIRS
+
+
 def load_definitions() -> dict[Path, object]:
     """All *.json under content/ except the non-definition directories."""
     docs: dict[Path, object] = {}
@@ -1110,8 +1306,7 @@ def load_definitions() -> dict[Path, object]:
         fail(f"content/ directory not found at {CONTENT}")
         return docs
     for path in sorted(CONTENT.rglob("*.json")):
-        parts = path.relative_to(CONTENT).parts
-        if parts and parts[0] in NON_DEFINITION_DIRS:
+        if in_non_definition_dir(path):
             continue
         doc = load_json(path)
         if doc is not None:
@@ -1987,17 +2182,403 @@ DEPLOYMENT_KEY = re.compile(r"(?i)deploy|ramp")
 DEPLOYMENT_INTERVAL_KEY = re.compile(r"(?i)deploy.*(?:interval|cadence|seconds|period)")
 
 
-def check_file_inventory() -> list[tuple]:
-    """A21 - the total *.json inventory under content/."""
-    json_files = sorted(CONTENT.rglob("*.json"))
-    other_files = sorted(p for p in CONTENT.rglob("*") if p.is_file() and p.suffix != ".json")
-    actual = len(json_files)
+MANIFEST_HEADER = """\
+# Committed manifest of the content/ definition population: one line per
+# definition file, "<path>\\t<id>", sorted by path.
+#
+# WHAT THIS IS FOR. Three edits used to be invisible to every assertion in
+# verify_content.py: renaming a definition file inside its own directory,
+# editing the id inside one, and swapping two ids between files. The inventory
+# assertion compared a COUNT, so a rename left the count unchanged and passed;
+# the id assertions checked a REGEX, per-directory counts and uniqueness, all of
+# which a plausible wrong id satisfies. Pairing the path with the id closes both
+# halves: the path set catches the rename and the id beside it catches the edit.
+#
+# WHAT THIS IS NOT. This manifest is an EDIT TAX, not evidence. It records what
+# the tree currently says, not what any document says it should say. Someone who
+# renames a file or changes an id and then regenerates this manifest passes the
+# check, and nothing here contradicts them - the manifest agrees with the tree
+# again by construction. Its whole value is that the change becomes LOUD: it
+# cannot happen without a diff to this file in the same commit, and that diff is
+# what a reviewer reads. It does not establish that any path or id is correct.
+# The authority for that is the design documents and the A12 per-directory rows
+# that cite them.
+#
+# HOW TO REGENERATE. Run verify_content.py with MECHAMINER_GOLDEN_UPDATE=1. That
+# rewrites this file AND STILL FAILS, deliberately: a regeneration can never be
+# the thing that turns a run green. Review the diff, confirm the rename or the
+# id change was intended, commit this file with it, then rerun without the
+# switch. Do not hand-edit - the generator is the only writer.
+#
+# Two placeholders can appear in the id column and neither is a real id:
+# <no-id> for a definition with no id (A5/A6 also fail) and <unparseable> for
+# one that did not parse (A1 also fails).
+"""
+
+
+def definition_paths() -> list[Path]:
+    """The definition population, as paths, in sorted order.
+
+    The single enumeration behind both A21 rows and the A28 manifest, scoped by
+    in_non_definition_dir() - the same rule load_definitions() uses. There is
+    deliberately no second notion of what counts as a definition file.
+    """
+    return sorted(p for p in CONTENT.rglob("*.json") if not in_non_definition_dir(p))
+
+
+def manifest_id(path: Path, docs: dict[Path, object]) -> str:
+    """The id to record for path, or a placeholder saying why there is none."""
+    if path not in docs:
+        return MANIFEST_ID_UNPARSEABLE
+    doc = docs[path]
+    if not isinstance(doc, dict):
+        return MANIFEST_ID_UNPARSEABLE
+    value = doc.get("id")
+    if isinstance(value, str) and value:
+        return value
+    return MANIFEST_ID_ABSENT
+
+
+def actual_manifest(docs: dict[Path, object]) -> list[tuple[str, str]]:
+    """The (path, id) pairs the tree currently holds, sorted by path."""
+    return [(rel(p), manifest_id(p, docs)) for p in definition_paths()]
+
+
+def render_manifest(pairs: list[tuple[str, str]]) -> str:
+    """The manifest's canonical text: header, then one tab-separated pair a line."""
+    lines = [f"{path}\t{identifier}" for path, identifier in sorted(pairs)]
+    return MANIFEST_HEADER + "\n".join(lines) + "\n"
+
+
+def parse_manifest(text: str) -> tuple[list[tuple[str, str]], list[str]]:
+    """Parse manifest text into sorted pairs, plus a list of malformed lines."""
+    pairs: list[tuple[str, str]] = []
+    malformed: list[str] = []
+    for number, raw in enumerate(text.splitlines(), start=1):
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        fields = raw.split("\t")
+        if len(fields) != 2 or not fields[0].strip() or not fields[1].strip():
+            malformed.append(f"line {number}: {raw!r}")
+            continue
+        pairs.append((fields[0].strip(), fields[1].strip()))
+    return sorted(pairs), malformed
+
+
+def write_manifest(pairs: list[tuple[str, str]]) -> bool:
+    """Write the manifest as UTF-8 with LF endings. True when it was written.
+
+    write_bytes, not write_text: Path.write_text opens in text mode with
+    newline=None, which translates every "\\n" to os.linesep - so the generator
+    would emit CRLF on Windows and LF elsewhere, and a byte comparison against
+    its own output could never converge there. The manifest's bytes are the
+    thing being asserted, so the writer pins them.
+    """
+    try:
+        CONTENT_DEFINITION_MANIFEST.write_bytes(render_manifest(pairs).encode("utf-8"))
+        return True
+    except OSError as exc:
+        fail(
+            f"A28 could not write {rel(CONTENT_DEFINITION_MANIFEST)}: {exc}. The manifest path "
+            f"must be a writable regular file."
+        )
+        return False
+
+
+def _byte_difference(committed: bytes, expected: bytes) -> str:
+    """Name the kind of byte difference, so the failure is a diagnosis.
+
+    A byte comparison that only said "differs" would be a worse gate than the
+    newline-normalising one it replaced: line endings are invisible in a terminal,
+    and so is a trailing space. This says which it is.
+    """
+    crlf = b"\r\n"
+    cr = b"\r"
+    notes: list[str] = []
+    if crlf in committed:
+        notes.append(f"the committed file has {committed.count(crlf)} CRLF line ending(s)")
+    elif cr in committed:
+        notes.append(f"the committed file has {committed.count(cr)} lone CR(s)")
+    if committed.replace(crlf, b"\n").replace(cr, b"\n") == expected:
+        notes.append("line endings are the ONLY difference")
+    elif sorted(committed.split(b"\n")) == sorted(expected.split(b"\n")):
+        notes.append("the same lines are present but their ORDER differs")
+    else:
+        stripped = b"\n".join(line.rstrip() for line in committed.split(b"\n"))
+        if stripped == expected:
+            notes.append("trailing whitespace is the ONLY difference")
+        for offset, (a, b) in enumerate(zip(committed, expected)):
+            if a != b:
+                notes.append(
+                    f"first difference at byte {offset}: committed {bytes([a])!r} vs expected "
+                    f"{bytes([b])!r}"
+                )
+                break
+        else:
+            notes.append(
+                f"one is a prefix of the other: committed {len(committed)} byte(s) vs expected "
+                f"{len(expected)}"
+            )
+    return ("; ".join(notes) + ".") if notes else ""
+
+
+def check_definition_manifest(docs: dict[Path, object]) -> tuple[list[tuple], int | None]:
+    """A28 - the tree's (path, id) pairs equal the committed manifest, both ways.
+
+    Returns the rows and the manifest's length, which A21's count row uses as its
+    expectation so that the size and the membership record cannot disagree.
+
+    The comparison is deliberately three-sided rather than a set equality, so the
+    failure text names the edit that happened: a path only in the tree is an
+    added or renamed-to file, a path only in the manifest is a deleted or
+    renamed-from file, and a path in both with a different id is an edited id.
+    A rename inside one directory produces one of each of the first two, which is
+    exactly the shape the old count-only row could not see.
+    """
+    actual_pairs = actual_manifest(docs)
+    actual_by_path = dict(actual_pairs)
+    update_requested = os.environ.get(GOLDEN_UPDATE_VARIABLE) == "1"
+
+    if not CONTENT_DEFINITION_MANIFEST.is_file():
+        # is_file() is False for a directory or a special file at this path too, not
+        # only for an absent one. write_manifest() reports the OSError in that case
+        # rather than raising, so absurd input fails with a diagnosis instead of a
+        # traceback, and this message does not claim a write that did not happen.
+        existed = CONTENT_DEFINITION_MANIFEST.exists()
+        if write_manifest(actual_pairs):
+            fail(
+                f"A28 manifest {rel(CONTENT_DEFINITION_MANIFEST)} did not exist and has been "
+                f"written with the {len(actual_pairs)} (path, id) pair(s) found in the tree. It "
+                f"records what the tree says, not what the documents say - review it against the "
+                f"A12 rows and the design documents before committing it, then rerun. This check "
+                f"fails on a freshly written manifest on purpose."
+            )
+        return (
+            [
+                (
+                    "committed (path, id) manifest",
+                    f"{rel(CONTENT_DEFINITION_MANIFEST)} present, a regular file",
+                    "exists but is not a regular file" if existed else "absent",
+                    "FAIL",
+                )
+            ],
+            None,
+        )
+
+    # read_bytes, not read_text: text mode applies universal newlines, so a
+    # manifest rewritten with CRLF - all 168 lines of it - decoded to exactly the
+    # generator's LF text and the comparison below passed while the row claimed
+    # the bytes were identical. The bytes are read raw and decoded explicitly.
+    try:
+        committed_bytes = CONTENT_DEFINITION_MANIFEST.read_bytes()
+    except OSError as exc:
+        fail(
+            f"A28 could not read {rel(CONTENT_DEFINITION_MANIFEST)}: {exc}. The manifest path "
+            f"must be a readable regular file; a directory or a special file there is not a "
+            f"manifest."
+        )
+        return (
+            [
+                (
+                    "committed (path, id) manifest",
+                    "readable regular file",
+                    f"unreadable: {type(exc).__name__}",
+                    "FAIL",
+                )
+            ],
+            None,
+        )
+    try:
+        committed_text = committed_bytes.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        fail(
+            f"A28 manifest {rel(CONTENT_DEFINITION_MANIFEST)} is not valid UTF-8: {exc}. "
+            f"Regenerate it with {GOLDEN_UPDATE_VARIABLE}=1."
+        )
+        return (
+            [
+                (
+                    "committed (path, id) manifest",
+                    "valid UTF-8",
+                    "undecodable",
+                    "FAIL",
+                )
+            ],
+            None,
+        )
+    manifest_pairs, malformed = parse_manifest(committed_text)
+    manifest_by_path = dict(manifest_pairs)
+    if malformed:
+        fail(
+            f"A28 manifest {rel(CONTENT_DEFINITION_MANIFEST)} has {len(malformed)} malformed "
+            f"line(s); each data line must be '<path>\\t<id>': {malformed[:10]}"
+        )
+    if len(manifest_by_path) != len(manifest_pairs):
+        counted: dict[str, int] = {}
+        for path, _ in manifest_pairs:
+            counted[path] = counted.get(path, 0) + 1
+        duplicates = sorted(path for path, n in counted.items() if n > 1)
+        fail(
+            f"A28 manifest {rel(CONTENT_DEFINITION_MANIFEST)} lists a path more than once, so "
+            f"one of its rows is unreachable: {len(manifest_pairs)} row(s) over "
+            f"{len(manifest_by_path)} distinct path(s). Regenerate it. Paths: {duplicates[:10]}"
+        )
+
+    only_in_tree = sorted(set(actual_by_path) - set(manifest_by_path))
+    only_in_manifest = sorted(set(manifest_by_path) - set(actual_by_path))
+    changed_ids = sorted(
+        (path, manifest_by_path[path], actual_by_path[path])
+        for path in set(actual_by_path) & set(manifest_by_path)
+        if manifest_by_path[path] != actual_by_path[path]
+    )
+    # The committed BYTES must equal what the generator produces, the way a
+    # golden does. Pair equality alone would leave the header and the line format
+    # uncompared, so a stale header - including this file's own statement of what
+    # it does and does not prove - could sit there indefinitely, and
+    # GOLDEN_UPDATE_VARIABLE would refuse to rewrite it on the grounds that the
+    # pairs already agree.
+    #
+    # This row is also the ONLY guard for two edits the three pair rows cannot
+    # see, because those are set and dict comparisons: the data lines REORDERED
+    # while holding the same pairs, and whitespace PADDING before a tab. Both
+    # survive a newline-normalising comparison, so the fix for the CRLF escape was
+    # to compare more strictly rather than to relabel the row - a byte comparison
+    # keeps both of those guards and adds line-ending drift on top.
+    rendered_bytes = render_manifest(actual_pairs).encode("utf-8")
+    bytes_match = committed_bytes == rendered_bytes
+    pairs_match = not (only_in_tree or only_in_manifest or changed_ids or malformed)
+    matches = bytes_match and pairs_match
+
     rows = [
         (
-            "*.json files under content/",
-            EXPECTED_CONTENT_JSON_FILES,
+            "definition paths in the tree but not in the manifest",
+            0,
+            f"{len(only_in_tree)}{': ' + ', '.join(only_in_tree[:5]) if only_in_tree else ''}",
+            "ok" if not only_in_tree else "FAIL",
+        ),
+        (
+            "definition paths in the manifest but not in the tree",
+            0,
+            f"{len(only_in_manifest)}"
+            f"{': ' + ', '.join(only_in_manifest[:5]) if only_in_manifest else ''}",
+            "ok" if not only_in_manifest else "FAIL",
+        ),
+        (
+            "paths whose id differs from the manifest",
+            0,
+            f"{len(changed_ids)}"
+            + (
+                ": " + ", ".join(f"{p} {was} -> {now}" for p, was, now in changed_ids[:5])
+                if changed_ids
+                else ""
+            ),
+            "ok" if not changed_ids else "FAIL",
+        ),
+        (
+            "committed bytes byte-for-byte equal the generator's output "
+            "(header, line order, padding, LF endings)",
+            "identical",
+            "identical" if bytes_match else "differs",
+            "ok" if bytes_match else "FAIL",
+        ),
+        (
+            "(path, id) pairs recorded [an edit tax, not evidence the ids are right]",
+            len(manifest_by_path),
+            len(actual_by_path),
+            "ok" if matches else "FAIL",
+        ),
+    ]
+
+    if only_in_tree:
+        fail(
+            f"A28 {len(only_in_tree)} definition file(s) are in the tree but not in "
+            f"{rel(CONTENT_DEFINITION_MANIFEST)}: {only_in_tree[:10]}. A file was added, or "
+            f"renamed to this name. If it was renamed, the matching 'in the manifest but not "
+            f"in the tree' row names the old name - a rename inside one directory shows as both, "
+            f"and used to show as nothing at all because the inventory compared only a count."
+        )
+    if only_in_manifest:
+        fail(
+            f"A28 {len(only_in_manifest)} definition file(s) are in "
+            f"{rel(CONTENT_DEFINITION_MANIFEST)} but not in the tree: {only_in_manifest[:10]}. "
+            f"A file was deleted, or renamed away from this name."
+        )
+    if changed_ids:
+        fail(
+            f"A28 {len(changed_ids)} definition file(s) carry an id that differs from "
+            f"{rel(CONTENT_DEFINITION_MANIFEST)}: "
+            f"{[f'{p}: {was} -> {now}' for p, was, now in changed_ids[:10]]}. Nothing else here "
+            f"sees this: the A12 selectors match an id PATTERN, the per-directory count is "
+            f"unchanged and uniqueness still holds, so a wrong-but-plausible id passed every "
+            f"other assertion. If the new id is intended, regenerate the manifest with "
+            f"{GOLDEN_UPDATE_VARIABLE}=1 and commit the diff."
+        )
+    if pairs_match and not bytes_match:
+        fail(
+            f"A28 {rel(CONTENT_DEFINITION_MANIFEST)} records the right (path, id) pairs but its "
+            f"bytes are not what the generator produces - the header, the line ORDER, whitespace "
+            f"padding or the line endings have drifted, or the file was hand-edited. This row is "
+            f"the only one that sees any of those: the three rows above compare sets and a "
+            f"mapping, so a reordered or padded manifest holds the same pairs. "
+            f"{_byte_difference(committed_bytes, rendered_bytes)} Regenerate it with "
+            f"{GOLDEN_UPDATE_VARIABLE}=1 and commit the result."
+        )
+
+    if update_requested:
+        if matches:
+            fail(
+                f"{GOLDEN_UPDATE_VARIABLE} was set but {rel(CONTENT_DEFINITION_MANIFEST)} "
+                f"already matches the tree. Unset it: regenerating the manifest is a deliberate "
+                f"act with a reviewed rename or id change behind it, not a routine step."
+            )
+        elif write_manifest(actual_pairs):
+            fail(
+                f"{rel(CONTENT_DEFINITION_MANIFEST)} has been rewritten because "
+                f"{GOLDEN_UPDATE_VARIABLE}=1, and this check STILL FAILS on purpose - a "
+                f"regeneration may never be what turns a run green. Review the diff above "
+                f"against the A12 rows and the design documents, confirm the change was "
+                f"intended, commit the new manifest with it, then rerun without "
+                f"{GOLDEN_UPDATE_VARIABLE}. Regenerating makes the check agree with the tree "
+                f"again; it does not make the tree right."
+            )
+
+    return rows, len(manifest_by_path)
+
+
+def check_file_inventory(manifest_size: int | None) -> list[tuple]:
+    """A21 - the definition *.json inventory under content/.
+
+    Both rows are scoped to the definition population by in_non_definition_dir(),
+    the same rule load_definitions() uses, via definition_paths(). Neither may go
+    back to enumerating content/ bare: NON_DEFINITION_DIRS names directories this
+    script has already decided are not catalogs of definitions, and a count that
+    ignores that decision charges the next branch to author content/schemas/ with
+    a definition it never added.
+
+    The count's expectation is manifest_size - len() of the A28 manifest - not a
+    literal. Two literals asserted to be the same number is a defect, and the
+    manifest is the one that says WHICH files those are. When the manifest is
+    missing A28 has already failed, so the row reports that rather than comparing
+    against a number it does not have.
+    """
+    definitions = definition_paths()
+    other_files = sorted(
+        p
+        for p in CONTENT.rglob("*")
+        if p.is_file() and p.suffix != ".json" and not in_non_definition_dir(p)
+    )
+    actual = len(definitions)
+    count_ok = manifest_size is not None and actual == manifest_size
+    rows = [
+        (
+            "definition *.json files under content/ (excluding "
+            f"{', '.join(NON_DEFINITION_DIRS)})",
+            "n/a - A28 manifest missing"
+            if manifest_size is None
+            else f"{manifest_size} (= len(A28 manifest))",
             actual,
-            "ok" if actual == EXPECTED_CONTENT_JSON_FILES else "FAIL",
+            "ok" if count_ok else "FAIL",
         ),
         (
             "non-JSON files (documentation, not content)",
@@ -2014,12 +2595,14 @@ def check_file_inventory() -> list[tuple]:
             f"content/ was reported and tolerated in the same breath. It is now an expectation: a "
             f"new documentation file is added here deliberately, and anything else is a finding."
         )
-    if actual != EXPECTED_CONTENT_JSON_FILES:
+    if manifest_size is not None and actual != manifest_size:
         fail(
-            f"content/ holds {actual} *.json file(s), expected "
-            f"{EXPECTED_CONTENT_JSON_FILES}. Either a definition was added or removed without "
-            f"updating EXPECTED_CONTENT_JSON_FILES and the matching A12 row, or a file is in a "
-            f"directory no A12 row covers."
+            f"content/ holds {actual} definition *.json file(s), expected {manifest_size} - the "
+            f"number of pairs in {rel(CONTENT_DEFINITION_MANIFEST)}. A definition was added or "
+            f"removed without regenerating the manifest and updating the matching A12 row, or a "
+            f"file is in a directory no A12 row covers. A28 names the files; this row only counts "
+            f"them. Files under content/{{{','.join(NON_DEFINITION_DIRS)}}}/ are NOT in this count "
+            f"and cannot cause this failure."
         )
     return rows
 
@@ -3349,7 +3932,23 @@ def null_paths(obj, path="$"):
 
 
 def check_no_nulls() -> list[tuple]:
-    """A26 - no null anywhere under content/, with no declared exceptions."""
+    """A26 - no null anywhere under content/, with no declared exceptions.
+
+    This rglob is deliberately NOT filtered by in_non_definition_dir(). "No null
+    anywhere under content/" is a whole-tree claim, and localization/en.json - which
+    the definition loader skips - is named in the README as covered here on purpose.
+    Do not "fix" it to match A21: A21 counts a population, A26 scans a directory.
+
+    Known consequence for DAT-006, recorded rather than pre-solved: JSON Schema
+    authors nulls legally, so the first content/schemas/*.json carrying
+    "default": null or null inside an enum will fail this assertion. Measured, not
+    predicted - a probe file with {"properties":{"presentation_id":{"default":null}}}
+    fails as `...probe.schema.json.properties.presentation_id.default`. The mandate
+    behind A26 (40:90) is about absent optional fields in DEFINITIONS, so the
+    resolution is a scope decision that belongs to whoever lands the schemas; it is
+    not this assertion silently acquiring an exception set, which is the one thing
+    A26's docstring rules out.
+    """
     hits: list[str] = []
     scanned = 0
     for path in sorted(CONTENT.rglob("*.json")):
@@ -3636,7 +4235,8 @@ def main() -> int:
     removal_delta_rows = check_derived_removal_delta()
     prefix_rows = check_scope_prefixes(docs)
     bound_rows = check_bound_spelling(docs)
-    inventory_rows = check_file_inventory()
+    manifest_rows, manifest_size = check_definition_manifest(docs)
+    inventory_rows = check_file_inventory(manifest_size)
     percent_rows = check_percentage_point_policy(docs)
     doc_path_rows = check_no_doc_paths_in_values(docs)
     polarity_rows = check_polarity_agreement(docs)
@@ -3737,6 +4337,13 @@ def main() -> int:
     )
     table("A10/A11 Localization", ("check", "expected", "actual", "status"), loc_rows)
     table("A19 Expected exception sets", ("set", "expected", "actual", "status"), set_rows)
+    table(
+        "A28 Definition (path, id) manifest "
+        f"[{rel(CONTENT_DEFINITION_MANIFEST)}; regenerate with {GOLDEN_UPDATE_VARIABLE}=1, "
+        "which rewrites it and still fails]",
+        ("check", "expected", "actual", "status"),
+        manifest_rows,
+    )
     table("A21 File inventory", ("check", "expected", "actual", "status"), inventory_rows)
 
     print(f"\nA2-A9 envelope/naming: {stats['checked']} definition(s) checked, "

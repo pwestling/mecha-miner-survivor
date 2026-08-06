@@ -152,6 +152,15 @@ public readonly struct EntityId : IEquatable<EntityId>
     /// live. A caller outside this assembly that could mint one could mint a well-formed
     /// identity naming nothing, and doc 20 § Entity identity's uniqueness scope would
     /// then rest on convention rather than on construction.
+    ///
+    /// <b>Three call sites, all inside this assembly.</b> Two are in
+    /// <see cref="EntityIdAllocator.TryAllocate(PopulationCategory, out EntityId)"/>, which
+    /// passes the run session its own constructor already refused zero for. The third is
+    /// <see cref="ReservedPlayerIn(ulong)"/> immediately below, which is itself internal and
+    /// has no caller at all. Counting the two and stopping - as an earlier note did - reads
+    /// as though the third did not exist; what makes the zero-run-session guard here
+    /// unreachable is that all three are internal and the third is uncalled, not that there
+    /// are only two.
     /// </remarks>
     internal static EntityId Create(ulong runSession, int index, uint generation)
     {

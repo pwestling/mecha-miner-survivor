@@ -1,0 +1,564 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "DAT-001",
+  "workPackageTitle": "Common definition envelope, stable-ID rules, schema infrastructure, diagnostic format",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91 § Verification registry).",
+    "Fixture IDs are file names beneath tests/MechaMiner.Content.Tests/Fixtures/. Every invalid fixture asserts the one diagnostic code it is named for; a fixture that fails with a different code fails the suite, because a gate that passes on the wrong error is not a gate.",
+    "VER-DAT-001-022 is the over-strict control: the valid fixtures must produce zero diagnostics. Without it the invalid corpus could be satisfied by a validator that rejects everything.",
+    "VER-DAT-001-021 is the mechanism doc 40 § JSON codec and schema baseline asks for by name: 'a fixture corpus proves the schema and typed validator accept/reject the same structural cases'. The typed validator stays authoritative; the draft 2020-12 schema is the interoperability mirror.",
+    "VER-DAT-001-023 exists because a string field carrying a mini-language drifts unless its shape is pinned structurally. The envelope schema's source_refs pattern must reject a malformed element on its own, with the typed parser removed from the path.",
+    "The size, depth, and count limits verified by VER-DAT-001-007 are injected rather than global, so a boundary fixture stays a small reviewable file instead of a megabyte of generated JSON. VER-DAT-001-007 also asserts the shipped default limit values.",
+    "TR-DAT-003's full gate is DAT-006's ('source-order permutation yields identical hash' over a compiled bundle). VER-DAT-001-010 proves the same property at the single-payload level that DAT-006 builds on."
+  ],
+  "entries": [
+    {
+      "id": "VER-DAT-001-001",
+      "summary": "The strict JSON codec rejects a comment anywhere in a source definition and reports the codec comment diagnostic with the exact byte location.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Fixtures.InvalidFixtureCorpusTests"
+      },
+      "fixtures": ["tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-comment.json"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-002",
+      "summary": "The strict JSON codec rejects a trailing comma and distinguishes it from every other lexical fault.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Fixtures.InvalidFixtureCorpusTests"
+      },
+      "fixtures": ["tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-trailing-comma.json"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-003",
+      "summary": "The strict JSON codec rejects a duplicate object property, which System.Text.Json tolerates by default, and points at the second occurrence.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Fixtures.InvalidFixtureCorpusTests"
+      },
+      "fixtures": ["tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-duplicate-property.json"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-004",
+      "summary": "The strict JSON codec rejects the nonfinite number tokens NaN, Infinity, and -Infinity, and rejects a finite-looking literal whose value is not finite as a double.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Fixtures.InvalidFixtureCorpusTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-nonfinite-nan.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-nonfinite-overflow.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-005",
+      "summary": "An unknown envelope field is an error rather than a silently ignored property, reported with its JSON Pointer.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-002"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#common-definition-envelope",
+        "docs/technical/115-component-contract-and-schema-registry.md#schema-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Fixtures.InvalidFixtureCorpusTests"
+      },
+      "fixtures": ["tests/MechaMiner.Content.Tests/Fixtures/invalid/structural-unknown-field.json"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-006",
+      "summary": "A JSON null is rejected as a type error wherever it appears, so absence is expressible only by omitting the key.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-002"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#declared-optional-envelope-fields"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Fixtures.InvalidFixtureCorpusTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-null-value.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-null-nested.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-007",
+      "summary": "The codec enforces document size, nesting depth, object property count, array element count, node count, and string length limits, accepting the boundary value and rejecting the first value past it; the shipped default limits are the documented ones.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/115-component-contract-and-schema-registry.md#schema-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Codec.StrictJsonLimitsTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/limit-depth.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/limit-object-properties.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/limit-array-elements.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/limit-node-count.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/limit-string-length.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/limit-document-bytes.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-008",
+      "summary": "The canonical writer implements doc 40's three ordering rules as three distinct mechanisms: schema-declared field order, ordinal-sorted dictionary keys, and authored order preserved for semantically ordered arrays.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-003", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Codec.CanonicalJsonWriterTests"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-009",
+      "summary": "Canonical numeric formatting writes integers without padding, writes finite doubles in invariant shortest round-trip form that reparses to the same bits, normalizes negative zero to zero, and refuses to write a nonfinite double.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline",
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Codec.CanonicalNumberTests"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-010",
+      "summary": "Definitions that differ only in source property order, indentation, and line endings produce byte-identical canonical payloads and the identical SHA-256 hex digest.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-003", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline",
+        "docs/technical/40-content-data-and-validation.md#compilation-pipeline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Fixtures.CanonicalPermutationTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/canonical/permutation-authored-order.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/canonical/permutation-reversed-order.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/canonical/permutation-reindented.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/canonical/permutation-compact.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "golden-text"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-011",
+      "summary": "Every diagnostic carries the five elements doc 40 requires as first-class fields - stable code, repo-relative source path plus JSON Pointer, content ID, expected constraint, related IDs - and a warning cannot be constructed without an owner and an expiration date.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-002"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#compilation-pipeline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Diagnostics.ContentDiagnosticTests"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-012",
+      "summary": "Diagnostic codes are declared in exactly one place, no two collide, every declared code carries a human description, and the set of codes the DAT-001 validators actually emit over the fixture corpus equals the declared set.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-002"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#compilation-pipeline",
+        "docs/technical/conventions.md#stable-identifiers"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Diagnostics.ContentDiagnosticCodesTests"
+      },
+      "fixtures": ["tests/MechaMiner.Content.Tests/Fixtures/invalid"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-013",
+      "summary": "JSON Pointers follow RFC 6901: tokens escape ~ as ~0 and / as ~1 in that order, array indices are unpadded decimals, and the root pointer is the empty string.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-002"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#compilation-pipeline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Codec.JsonPointerTests"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-014",
+      "summary": "Every stable ID in the accepted catalog is accepted by its own category's pattern and rejected by every other category's pattern; IDs are case-sensitive ASCII and a lowercased or localized form is rejected.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-004"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#stable-id-policy"
+      ],
+      "gameplaySources": [
+        "docs/33-initial-mech-catalog.md",
+        "docs/34-initial-alien-roster.md",
+        "docs/40-weapon-catalog.md",
+        "docs/45-utility-catalog.md"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Ids.ContentIdTests"
+      },
+      "fixtures": ["tests/MechaMiner.Content.Tests/Fixtures/invalid/identity-bad-id-for-category.json"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-015",
+      "summary": "Removing shipped content leaves a tombstone: a retired ID cannot be reused by a new definition, the tombstone records the retiring content version and its replacement or migration note, and a retired-ID lookup resolves to that entry.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-004"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#stable-id-policy",
+        "docs/technical/115-component-contract-and-schema-registry.md#contract-change-rules"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Ids.RetiredIdRegistryTests"
+      },
+      "fixtures": ["tests/MechaMiner.Content.Tests/Fixtures/invalid/identity-retired-id-reused.json"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-016",
+      "summary": "The SCH-CNT-001 envelope has exactly nine fields; the six required ones are errors when missing; presentation_id, name_key, and summary_key are expressed absent by omitting the key and materialize their documented defaults; schema_version and content_version reject a non-integer and a nonpositive value.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-002"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#common-definition-envelope",
+        "docs/technical/40-content-data-and-validation.md#declared-optional-envelope-fields",
+        "docs/technical/40-content-data-and-validation.md#initial-versions",
+        "docs/technical/115-component-contract-and-schema-registry.md#schema-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Envelope.EnvelopeValidatorTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/valid/envelope-minimal.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/valid/envelope-maximal.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/valid/envelope-optionals-omitted.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/structural-missing-required.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/version-non-integer.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/version-nonpositive.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/structural-unknown-status.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/structural-wrong-type.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/codec-camel-case-property.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-017",
+      "summary": "The tags vocabulary is closed and currently empty, an empty array is accepted, and any term is rejected until it is added to the vocabulary in the change that first uses it.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-002"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#tags-vocabulary"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Envelope.TagVocabularyTests"
+      },
+      "fixtures": ["tests/MechaMiner.Content.Tests/Fixtures/invalid/structural-tag-outside-vocabulary.json"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-018",
+      "summary": "Each source_refs element parses into a structured SourceRef carrying its optional scope, reference kind, document ID, and anchor; a malformed element is a diagnostic, and a file path or path:line pair is rejected under its own distinct diagnostic code.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-002", "TR-DAT-004"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#source_refs-element-grammar",
+        "docs/technical/conventions.md#stable-identifiers",
+        "docs/conventions.md#stable-identifiers"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Envelope.SourceRefTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/traceability-source-ref-malformed.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/traceability-source-ref-path-line.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-019",
+      "summary": "A source_refs scope prefix must resolve to a path that actually exists in the definition it annotates, including through array wildcard, index, and range forms; a scope naming a field the definition does not have is a diagnostic.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-002", "TR-DAT-005"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#source_refs-element-grammar",
+        "docs/technical/40-content-data-and-validation.md#agent-content-change-workflow"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Envelope.SourceRefScopeResolutionTests"
+      },
+      "fixtures": ["tests/MechaMiner.Content.Tests/Fixtures/invalid/traceability-scope-unresolved.json"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-020",
+      "summary": "The draft 2020-12 evaluator fails loudly on a schema keyword it does not implement, on an unresolvable $ref, and on a malformed schema document, rather than ignoring the keyword and silently ceasing to be a gate.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline",
+        "docs/technical/115-component-contract-and-schema-registry.md#schema-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.JsonSchemaEvaluatorTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/unsupported-keyword.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/unresolvable-ref.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/malformed.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-021",
+      "summary": "For every fixture in the corpus the project-owned typed structural validator and content/schemas/envelope.schema.json evaluated as draft 2020-12 reach the same accept/reject verdict.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Fixtures.SchemaAgreementTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/valid",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid",
+        "content/schemas/envelope.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-022",
+      "summary": "The valid fixtures produce zero diagnostics of any severity, so an over-strict validator fails the suite as loudly as an under-strict one.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-002"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#verification",
+        "docs/technical/91-verification-strategy.md"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Fixtures.ValidFixtureCorpusTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/valid/envelope-minimal.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/valid/envelope-maximal.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/valid/envelope-optionals-omitted.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/valid/envelope-aggregate.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-023",
+      "summary": "The envelope schema's source_refs element pattern rejects a malformed element on its own, with the typed parser removed from the path, so the mini-language is pinned structurally rather than only after the fact.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-002", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#source_refs-element-grammar",
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.EnvelopeSchemaPatternTests"
+      },
+      "fixtures": ["content/schemas/envelope.schema.json"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-024",
+      "summary": "name_key and summary_key are localization keys of the form <category>.<stable_id>.<role> and never literal player-facing text; the role must match the field.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-002"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#common-definition-envelope",
+        "docs/technical/40-content-data-and-validation.md#source-catalog-format-and-key-pattern"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Envelope.LocalizationKeyTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/structural-name-key-literal-text.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/invalid/structural-name-key-role-mismatch.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    }
+  ]
+}

@@ -7,7 +7,8 @@
   "source_refs": [
     "GDD-MAP-GENERATION#standard-map-generation-contract",
     "destructible_rock_rules.destructible_rock: GDD-PLAYER-SURVIVABILITY-BASELINE#health-packs-and-destructible-rocks",
-    "destructible_rock_rules.health_pack: GDD-PLAYER-SURVIVABILITY-BASELINE#health-packs-and-destructible-rocks"
+    "destructible_rock_rules.health_pack: GDD-PLAYER-SURVIVABILITY-BASELINE#health-packs-and-destructible-rocks",
+    "destructible_rock_rules.health_pack.persistence: GDD-CORE-LOOP#combat-pressure"
   ],
   "mode": "standard",
   "distance_language": "Map distances are expressed as base-travel time: the time the shared unmodified mech would need to follow the shortest valid route between two points with no enemies or stops. Account PowerUps, mech traits, utilities, relics, and temporary effects do not change which distance band a location occupies during generation. These bands express route distance through traversable ground, not straight-line distance through obstacles.",

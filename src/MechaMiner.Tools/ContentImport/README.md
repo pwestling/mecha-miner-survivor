@@ -170,21 +170,75 @@ mismatch, four rules is a finite list rather than the first four steps of a slop
 
 Verifying it by re-implementation does not work, because a second matcher that disagreed would not
 establish which of the two was right. So the measurement is committed instead.
-`quote_mismatch_evidence.json` holds all 378 records — the stored string as measured, every citation it
-failed against, where the string *was* found under maximal normalization, and its maximally-normalized
-form — and the script re-derives every normalized form from the stored value, re-reads every cited
-section out of `docs/` at its current content, re-runs the containment test, and exits non-zero if any
-case moves.
+`quote_mismatch_evidence.json` holds **394 records in two populations that are never added together** —
+the **378** audit §5 is a claim about, and the **16** of audit §13 that the frozen 378 cannot see. Per
+record: the stored string as measured, every citation it failed against, where the string *was* found
+under maximal normalization, and its maximally-normalized form. The script re-derives every normalized
+form from the stored value, re-reads every cited section out of `docs/` at its current content, re-runs
+the containment test, and exits non-zero if any case moves.
 
-**The stored strings are frozen and everything else is recomputed.** Seven of the 378 have since been
-repaired in `content/` (six `UNL-0*` rules and `relics/REL-09.json`, the audit's one genuine drift), so
-reading them back out of the tree today would silently turn a 378-record claim into a 371-record one;
-the artifact records what each has become in `verdict_on_this_tree`. `docs/` is the half of the
+### `disagreements: 0` is the weakest claim in this output — read this before quoting it
+
+`stored verdict_on_this_tree disagreements: 0` is **true by construction on the commit that generates
+the artifact**: the stored verdicts *are* this script's own output at that commit. It detects drift
+*after* that commit. **It can never establish that a citation is correct**, and it must not be cited as
+corroboration that one is. It was quoted that way on PR #8, and it did not corroborate what it was
+offered for.
+
+The same care applies to "the recomputation reproduces `master`'s 371 `no-match` / 7 `exact`", which
+sounds like 378 agreeing data points:
+
+- a **degenerate matcher** returning `no-match` unconditionally reproduces **371 of the 378** labels,
+  because `no-match` is the recomputation's default return and 371 of the stored labels are
+  `no-match` — so only **7** records discriminate on the positive side;
+- the one informative control is the **specificity rule**: replacing "equally most specific" with
+  "every covering citation" disagrees on exactly **4** records, and they are exactly the four
+  `BOSS-01`…`BOSS-04 :: persistence.reentry.behavior` records the audit names. That is real evidence
+  because it is an external disagreement the artifact could not have been fitted to.
+
+**11 of 378 records carry information** about a matcher now asserting 248 positives. Those two controls
+are the load-bearing evidence; the agreement count is not.
+
+### What is frozen, what is re-baselined by hand, what is recomputed
+
+**Each record's `value` is frozen** — reading these strings back out of the tree today would silently
+shrink the claim — and it is the needle of the maximal-normalization test. `docs/` is the half of the
 comparison this repository can still change, so it is read live: if a design document is ever edited
-such that one of these 378 becomes findable, the script fails and audit §5 needs re-measuring. That is
-the correct outcome, not a false alarm.
+such that one of these becomes findable, the script fails and audit §5 needs re-measuring. That is the
+correct outcome, not a false alarm.
+
+**`refreshed_value` + `refreshed_reason` re-baseline one record at a time, by hand.** They are present
+on exactly the records whose live string has legitimately changed since the measurement (two, today),
+and the count is printed on every run. There is deliberately **no code path** that re-baselines: if a
+refresh were an automatic consequence of the live string verifying, any future change that happened to
+verify would silently move the baseline, and a drift detector whose baseline follows the tree never
+fires.
+
+**Everything else is recomputed**, including `verdict_on_this_tree` per record — and that recomputation
+is anchored to the record twice, because for two passes it was anchored to nothing: the live value must
+**equal** the record's expected live value, and its normalized form must clear the population's stored
+**containment gate**. Without the first, `exact` says only that whatever string sits at that pointer now
+is a substring of the cited section — which a single character satisfies, as it did.
 
 It is not wired into `verify_content.py`, and deliberately so. `verify_content.py` asserts properties of
 `content/` against `docs/`; this asserts a property of a *measurement* the audit reports. Its negative
-controls are recorded in audit §5: injecting a verbatim source line into one record makes a case move,
-and corrupting one frozen normalized form makes the reproduction check fail. Both were run and reverted.
+controls are recorded per assertion in `content/transcription-notes.md`, Ruling 42, each run and
+reverted individually.
+
+## `derive_citation_pass_expectations.py` and `expected_citation_deltas.json`
+
+```sh
+python3 src/MechaMiner.Tools/ContentImport/derive_citation_pass_expectations.py           # derive
+python3 src/MechaMiner.Tools/ContentImport/derive_citation_pass_expectations.py --verify  # measure
+```
+
+Derives, from the frozen evidence artifact and a live sweep at a named git ref — **never from a diff** —
+what a citation pass is expected to change: the `(file, scope)` pairs, and the exact string and numeric
+multiset deltas with multiplicity kept. The derivation and its committed output go in a commit that
+touches **zero files under `content/`**, so `git show <that commit> --stat` is itself the ordering
+proof; the change lands in a second commit and `--verify` fails unless the measured delta equals the
+committed expectation element by element. `content/transcription-notes.md`, Ruling 43 records why this
+replaced a narrated "enumerated before it was measured" claim that no commit supported.
+
+It also carries the live sweep that found the 16 mis-citations of audit §13 — the ones a frozen
+394-record list structurally cannot see. Audit §14 records that limitation as the next design step.

@@ -1,16 +1,6 @@
 {
- "schema": "quote-mismatch-evidence/1",
+ "schema": "quote-mismatch-evidence/2",
  "generated_for": "content/quote-verification-audit.md section 5 (the anti-golden proof)",
- "record_count": 378,
- "located_breakdown": {
-  "nowhere": 130,
-  "different-doc": 20,
-  "other-section-same-doc": 228
- },
- "verdict_on_this_tree": {
-  "no-match": 371,
-  "exact": 7
- },
  "records": [
   {
    "file": "content/bosses/BOSS-01.json",
@@ -27,7 +17,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/bosses/BOSS-01.json",
@@ -50,7 +42,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/bosses/BOSS-01.json",
@@ -67,7 +61,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/bosses/BOSS-01.json",
@@ -84,7 +80,9 @@
     }
    ],
    "located": "different-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/bosses/BOSS-01.json",
@@ -101,7 +99,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/bosses/BOSS-02.json",
@@ -118,7 +118,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/bosses/BOSS-02.json",
@@ -141,7 +143,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/bosses/BOSS-02.json",
@@ -158,7 +162,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/bosses/BOSS-02.json",
@@ -175,7 +181,9 @@
     }
    ],
    "located": "different-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/bosses/BOSS-02.json",
@@ -192,7 +200,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/bosses/BOSS-03.json",
@@ -209,7 +219,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/bosses/BOSS-03.json",
@@ -232,7 +244,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/bosses/BOSS-03.json",
@@ -249,7 +263,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/bosses/BOSS-03.json",
@@ -266,7 +282,9 @@
     }
    ],
    "located": "different-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/bosses/BOSS-03.json",
@@ -283,7 +301,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/bosses/BOSS-04.json",
@@ -300,7 +320,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/bosses/BOSS-04.json",
@@ -317,7 +339,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/bosses/BOSS-04.json",
@@ -334,7 +358,9 @@
     }
    ],
    "located": "different-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/bosses/BOSS-04.json",
@@ -351,7 +377,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/branches/W-AC-danger-close-protocol.json",
@@ -368,7 +396,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/branches/W-AD-gravity-slingshot.json",
@@ -385,7 +415,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/branches/W-BC-zero-lag-emitter.json",
@@ -402,7 +434,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/branches/W-BE-battery-overclock.json",
@@ -419,7 +453,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/branches/W-BF-tethered-reaper.json",
@@ -436,7 +472,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/branches/W-CD-total-conduction.json",
@@ -453,7 +491,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/branches/W-CD-total-conduction.json",
@@ -470,7 +510,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/branches/W-CF-carrier-ignition.json",
@@ -487,7 +529,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/branches/W-CF-circuit-closure.json",
@@ -504,7 +548,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/branches/W-EF-guardian-reserve.json",
@@ -521,7 +567,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/encounters/standard-encounter-schedule.json",
@@ -538,7 +586,11 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely",
+   "refreshed_value": "The source cell's timing token 'at 33:15 intervals' parses neither as a timestamp nor as a period; the column's contract is 'at the listed time' (GDD-STANDARD-WAVE-SCHEDULE#complete-35-minute-schedule) and every other repeat row enumerates its times explicitly, so the four quarter-minute times are a provisional reconstruction and are not authored values. The reconstruction is recorded in the transcription notes beside this catalog.",
+   "refreshed_reason": "Re-baselined explicitly, and on a DIFFERENT kind of evidence from REL-09's - stated so a reader can judge it separately. This field is AUTHORED prose, not a quotation, so there is no cited section to verify it against and it reads `no-match` before and after. What justifies the refresh is that the frozen string ends `See content/transcription-notes.md.`, embedding a repo path in a value, which A24 in verify_content.py forbids unconditionally - so the frozen string cannot legally exist in this tree. The live string is the A24-compliant replacement made by Rulings 25/26/31 and recorded in Ruling 40. Verified against A24 and the ruling, NOT against a cited section."
   },
   {
    "file": "content/encounters/standard-encounter-schedule.json",
@@ -555,7 +607,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/enemies/EN-01.json",
@@ -572,7 +626,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/enemies/EN-02.json",
@@ -589,7 +645,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/enemies/EN-03.json",
@@ -606,7 +664,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/enemies/EN-04.json",
@@ -623,7 +683,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/enemies/EN-05.json",
@@ -640,7 +702,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/enemies/EN-06.json",
@@ -657,7 +721,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/enemies/EN-06.json",
@@ -674,7 +740,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/enemies/EN-06.json",
@@ -691,7 +759,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/enemies/EN-06.json",
@@ -708,7 +778,9 @@
     }
    ],
    "located": "different-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/enemies/EN-06.json",
@@ -725,7 +797,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/enemies/EN-06.json",
@@ -742,7 +816,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/enemies/EN-06.json",
@@ -759,7 +835,9 @@
     }
    ],
    "located": "different-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "match-under-a-named-rule",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/enemies/EN-07.json",
@@ -776,7 +854,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/enemies/EN-08.json",
@@ -793,7 +873,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/enemies/EN-09.json",
@@ -810,7 +892,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/enemies/EN-10.json",
@@ -827,7 +911,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/enemies/shared-elite-modifiers.json",
@@ -844,7 +930,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/maps/standard-map-generation-contract.json",
@@ -861,7 +949,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/maps/standard-map-generation-contract.json",
@@ -878,7 +968,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/mechs/MCH-01.json",
@@ -895,7 +987,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-01.json",
@@ -912,7 +1006,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-01.json",
@@ -929,7 +1025,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-01.json",
@@ -946,7 +1044,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-01.json",
@@ -963,7 +1063,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-01.json",
@@ -980,7 +1082,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-01.json",
@@ -997,7 +1101,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-02.json",
@@ -1014,7 +1120,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-02.json",
@@ -1031,7 +1139,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-02.json",
@@ -1048,7 +1158,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-02.json",
@@ -1065,7 +1177,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-02.json",
@@ -1082,7 +1196,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-02.json",
@@ -1099,7 +1215,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-02.json",
@@ -1116,7 +1234,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-03.json",
@@ -1133,7 +1253,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-03.json",
@@ -1150,7 +1272,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-03.json",
@@ -1167,7 +1291,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-03.json",
@@ -1184,7 +1310,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-03.json",
@@ -1201,7 +1329,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-03.json",
@@ -1218,7 +1348,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-03.json",
@@ -1235,7 +1367,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-03.json",
@@ -1252,7 +1386,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-04.json",
@@ -1269,7 +1405,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-04.json",
@@ -1286,7 +1424,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-04.json",
@@ -1303,7 +1443,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-04.json",
@@ -1320,7 +1462,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-04.json",
@@ -1337,7 +1481,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-04.json",
@@ -1354,7 +1500,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-04.json",
@@ -1371,7 +1519,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-04.json",
@@ -1388,7 +1538,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-05.json",
@@ -1405,7 +1557,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-05.json",
@@ -1422,7 +1576,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-05.json",
@@ -1439,7 +1595,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-05.json",
@@ -1456,7 +1614,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-05.json",
@@ -1473,7 +1633,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-05.json",
@@ -1490,7 +1652,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-05.json",
@@ -1507,7 +1671,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-06.json",
@@ -1524,7 +1690,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-06.json",
@@ -1541,7 +1709,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-06.json",
@@ -1558,7 +1728,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-06.json",
@@ -1575,7 +1747,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-06.json",
@@ -1592,7 +1766,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-06.json",
@@ -1609,7 +1785,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-06.json",
@@ -1626,7 +1804,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mechs/MCH-06.json",
@@ -1643,7 +1823,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mining-sites/hyper-gold-sites.json",
@@ -1660,7 +1842,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/mining-sites/hyper-gold-sites.json",
@@ -1677,7 +1861,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mining-sites/hyper-gold-sites.json",
@@ -1694,7 +1880,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/mining-sites/rich-ore-seams.json",
@@ -1711,7 +1899,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mining-sites/rich-ore-seams.json",
@@ -1728,7 +1918,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/mining-sites/specialized-material-geodes.json",
@@ -1745,7 +1937,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/mining-sites/specialized-material-geodes.json",
@@ -1762,7 +1956,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/mining-sites/specialized-material-geodes.json",
@@ -1779,7 +1975,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/mining-sites/specialized-material-geodes.json",
@@ -1796,7 +1994,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/mining-sites/standard-ore-seams.json",
@@ -1813,7 +2013,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/mining-sites/standard-ore-seams.json",
@@ -1830,7 +2032,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/powerups/PU-S04.json",
@@ -1847,7 +2051,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-01.json",
@@ -1864,7 +2070,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/relics/REL-01.json",
@@ -1923,7 +2131,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-01.json",
@@ -1982,7 +2192,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-01.json",
@@ -2041,7 +2253,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-01.json",
@@ -2070,7 +2284,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-01.json",
@@ -2087,7 +2303,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-02.json",
@@ -2146,7 +2364,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-02.json",
@@ -2169,7 +2389,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-02.json",
@@ -2228,7 +2450,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-02.json",
@@ -2287,7 +2511,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-02.json",
@@ -2316,7 +2542,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-02.json",
@@ -2351,7 +2579,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-02.json",
@@ -2368,7 +2598,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-03.json",
@@ -2427,7 +2659,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-03.json",
@@ -2450,7 +2684,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-03.json",
@@ -2509,7 +2745,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-03.json",
@@ -2568,7 +2806,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-03.json",
@@ -2597,7 +2837,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-03.json",
@@ -2614,7 +2856,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-04.json",
@@ -2673,7 +2917,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-04.json",
@@ -2732,7 +2978,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-04.json",
@@ -2791,7 +3039,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-04.json",
@@ -2820,7 +3070,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-04.json",
@@ -2837,7 +3089,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-05.json",
@@ -2854,7 +3108,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-05.json",
@@ -2913,7 +3169,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-05.json",
@@ -2936,7 +3194,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-05.json",
@@ -2995,7 +3255,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-05.json",
@@ -3054,7 +3316,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-05.json",
@@ -3083,7 +3347,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-05.json",
@@ -3118,7 +3384,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-05.json",
@@ -3135,7 +3403,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-06.json",
@@ -3152,7 +3422,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/relics/REL-06.json",
@@ -3169,7 +3441,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-06.json",
@@ -3228,7 +3502,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-06.json",
@@ -3287,7 +3563,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-06.json",
@@ -3346,7 +3624,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-06.json",
@@ -3375,7 +3655,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-06.json",
@@ -3392,7 +3674,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-07.json",
@@ -3409,7 +3693,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-07.json",
@@ -3468,7 +3754,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-07.json",
@@ -3527,7 +3815,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-07.json",
@@ -3586,7 +3876,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-07.json",
@@ -3615,7 +3907,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-07.json",
@@ -3632,7 +3926,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-08.json",
@@ -3649,7 +3945,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/relics/REL-08.json",
@@ -3666,7 +3964,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-08.json",
@@ -3725,7 +4025,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-08.json",
@@ -3748,7 +4050,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-08.json",
@@ -3807,7 +4111,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-08.json",
@@ -3866,7 +4172,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-08.json",
@@ -3895,7 +4203,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-08.json",
@@ -3912,7 +4222,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-09.json",
@@ -3929,7 +4241,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-09.json",
@@ -3946,7 +4260,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-09.json",
@@ -3963,7 +4279,11 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "exact"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely",
+   "refreshed_value": "The increase begins with forward progress and ends immediately when mining stops because the mech leaves, the point completes, or the simulation pauses.",
+   "refreshed_reason": "Re-baselined explicitly. The frozen string is the pre-fix DRIFTED text of audit §3: it dropped the clause stating when the effect begins. The live string is the corrected quotation and was verified character-for-character against the cited section - docs/69-initial-relic-catalog.md:153, inside GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core, the citation this record already carries. Verified against the source; refreshed by hand for this record only. The as-measured string stays in `value` because audit §5's claim is about the string as measured."
   },
   {
    "file": "content/relics/REL-09.json",
@@ -4022,7 +4342,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-09.json",
@@ -4081,7 +4403,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-09.json",
@@ -4140,7 +4464,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-09.json",
@@ -4169,7 +4495,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-09.json",
@@ -4186,7 +4514,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-10.json",
@@ -4203,7 +4533,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/relics/REL-10.json",
@@ -4220,7 +4552,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-10.json",
@@ -4237,7 +4571,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-10.json",
@@ -4296,7 +4632,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-10.json",
@@ -4319,7 +4657,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-10.json",
@@ -4378,7 +4718,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-10.json",
@@ -4437,7 +4779,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-10.json",
@@ -4466,7 +4810,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-10.json",
@@ -4501,7 +4847,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/relics/REL-10.json",
@@ -4518,7 +4866,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/resources/A.json",
@@ -4535,7 +4885,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/resources/B.json",
@@ -4552,7 +4904,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/resources/B.json",
@@ -4569,7 +4923,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/resources/C.json",
@@ -4586,7 +4942,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/resources/C.json",
@@ -4603,7 +4961,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/resources/D.json",
@@ -4620,7 +4980,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/resources/E.json",
@@ -4637,7 +4999,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/resources/F.json",
@@ -4654,7 +5018,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/unlocks/UNL-01.json",
@@ -4683,7 +5049,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "exact"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/unlocks/UNL-02.json",
@@ -4706,7 +5074,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "exact"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/unlocks/UNL-03.json",
@@ -4729,7 +5099,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "exact"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/unlocks/UNL-04.json",
@@ -4752,7 +5124,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "exact"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/unlocks/UNL-05.json",
@@ -4775,7 +5149,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "exact"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/unlocks/UNL-06.json",
@@ -4798,7 +5174,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "exact"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-A1.json",
@@ -4815,7 +5193,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-A1.json",
@@ -4832,7 +5212,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-A1.json",
@@ -4849,7 +5231,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-A1.json",
@@ -4866,7 +5250,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-A1.json",
@@ -4883,7 +5269,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-A1.json",
@@ -4900,7 +5288,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-A1.json",
@@ -4917,7 +5307,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-A1.json",
@@ -4934,7 +5326,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-A1.json",
@@ -4951,7 +5345,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-A1.json",
@@ -4968,7 +5364,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-A1.json",
@@ -4985,7 +5383,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-A1.json",
@@ -5002,7 +5402,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-A1.json",
@@ -5019,7 +5421,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-A1.json",
@@ -5036,7 +5440,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-A2.json",
@@ -5053,7 +5459,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-A2.json",
@@ -5070,7 +5478,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-A2.json",
@@ -5087,7 +5497,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-A2.json",
@@ -5104,7 +5516,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-A2.json",
@@ -5121,7 +5535,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-A2.json",
@@ -5138,7 +5554,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-A2.json",
@@ -5155,7 +5573,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-A2.json",
@@ -5172,7 +5592,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-A2.json",
@@ -5189,7 +5611,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-A2.json",
@@ -5206,7 +5630,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-A2.json",
@@ -5223,7 +5649,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-A2.json",
@@ -5240,7 +5668,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-A2.json",
@@ -5257,7 +5687,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-A2.json",
@@ -5274,7 +5706,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-B1.json",
@@ -5291,7 +5725,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-B1.json",
@@ -5308,7 +5744,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-B1.json",
@@ -5325,7 +5763,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-B1.json",
@@ -5342,7 +5782,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-B1.json",
@@ -5359,7 +5801,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-B1.json",
@@ -5376,7 +5820,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-B1.json",
@@ -5393,7 +5839,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-B1.json",
@@ -5410,7 +5858,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-B1.json",
@@ -5427,7 +5877,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-B1.json",
@@ -5444,7 +5896,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-B1.json",
@@ -5461,7 +5915,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-B1.json",
@@ -5478,7 +5934,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-B1.json",
@@ -5495,7 +5953,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-B1.json",
@@ -5512,7 +5972,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-B2.json",
@@ -5529,7 +5991,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-B2.json",
@@ -5546,7 +6010,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-B2.json",
@@ -5563,7 +6029,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-B2.json",
@@ -5580,7 +6048,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-B2.json",
@@ -5597,7 +6067,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-B2.json",
@@ -5614,7 +6086,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-B2.json",
@@ -5631,7 +6105,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-B2.json",
@@ -5648,7 +6124,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-B2.json",
@@ -5665,7 +6143,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-B2.json",
@@ -5682,7 +6162,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-B2.json",
@@ -5699,7 +6181,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-B2.json",
@@ -5716,7 +6200,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-B2.json",
@@ -5733,7 +6219,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-B2.json",
@@ -5750,7 +6238,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-C1.json",
@@ -5767,7 +6257,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-C1.json",
@@ -5784,7 +6276,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-C1.json",
@@ -5801,7 +6295,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-C1.json",
@@ -5818,7 +6314,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-C1.json",
@@ -5835,7 +6333,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-C1.json",
@@ -5852,7 +6352,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-C1.json",
@@ -5869,7 +6371,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-C1.json",
@@ -5886,7 +6390,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-C1.json",
@@ -5903,7 +6409,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-C1.json",
@@ -5920,7 +6428,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-C1.json",
@@ -5937,7 +6447,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-C1.json",
@@ -5954,7 +6466,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-C1.json",
@@ -5971,7 +6485,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-C1.json",
@@ -5988,7 +6504,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-C2.json",
@@ -6005,7 +6523,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-C2.json",
@@ -6022,7 +6542,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-C2.json",
@@ -6039,7 +6561,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-C2.json",
@@ -6056,7 +6580,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-C2.json",
@@ -6073,7 +6599,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-C2.json",
@@ -6090,7 +6618,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-C2.json",
@@ -6107,7 +6637,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-C2.json",
@@ -6124,7 +6656,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-C2.json",
@@ -6141,7 +6675,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-C2.json",
@@ -6158,7 +6694,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-C2.json",
@@ -6175,7 +6713,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-C2.json",
@@ -6192,7 +6732,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-C2.json",
@@ -6209,7 +6751,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-C2.json",
@@ -6226,7 +6770,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-D1.json",
@@ -6243,7 +6789,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-D1.json",
@@ -6260,7 +6808,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-D1.json",
@@ -6277,7 +6827,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-D1.json",
@@ -6294,7 +6846,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-D1.json",
@@ -6311,7 +6865,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-D1.json",
@@ -6328,7 +6884,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-D1.json",
@@ -6345,7 +6903,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-D1.json",
@@ -6362,7 +6922,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-D1.json",
@@ -6379,7 +6941,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-D1.json",
@@ -6396,7 +6960,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-D1.json",
@@ -6413,7 +6979,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-D1.json",
@@ -6430,7 +6998,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-D1.json",
@@ -6447,7 +7017,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-D1.json",
@@ -6464,7 +7036,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-D2.json",
@@ -6481,7 +7055,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-D2.json",
@@ -6498,7 +7074,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-D2.json",
@@ -6515,7 +7093,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-D2.json",
@@ -6532,7 +7112,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-D2.json",
@@ -6549,7 +7131,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-D2.json",
@@ -6566,7 +7150,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-D2.json",
@@ -6583,7 +7169,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-D2.json",
@@ -6600,7 +7188,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-D2.json",
@@ -6617,7 +7207,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-D2.json",
@@ -6634,7 +7226,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-D2.json",
@@ -6651,7 +7245,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-D2.json",
@@ -6668,7 +7264,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-D2.json",
@@ -6685,7 +7283,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-D2.json",
@@ -6702,7 +7302,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E1.json",
@@ -6719,7 +7321,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E1.json",
@@ -6736,7 +7340,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E1.json",
@@ -6753,7 +7359,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E1.json",
@@ -6770,7 +7378,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E1.json",
@@ -6787,7 +7397,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E1.json",
@@ -6804,7 +7416,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E1.json",
@@ -6821,7 +7435,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E1.json",
@@ -6838,7 +7454,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E1.json",
@@ -6855,7 +7473,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E1.json",
@@ -6872,7 +7492,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E1.json",
@@ -6889,7 +7511,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E1.json",
@@ -6906,7 +7530,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E1.json",
@@ -6923,7 +7549,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E1.json",
@@ -6940,7 +7568,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E2.json",
@@ -6957,7 +7587,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E2.json",
@@ -6974,7 +7606,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E2.json",
@@ -6991,7 +7625,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E2.json",
@@ -7008,7 +7644,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E2.json",
@@ -7025,7 +7663,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E2.json",
@@ -7042,7 +7682,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E2.json",
@@ -7059,7 +7701,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E2.json",
@@ -7076,7 +7720,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E2.json",
@@ -7093,7 +7739,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E2.json",
@@ -7110,7 +7758,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E2.json",
@@ -7127,7 +7777,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E2.json",
@@ -7144,7 +7796,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E2.json",
@@ -7161,7 +7815,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E2.json",
@@ -7178,7 +7834,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-E2.json",
@@ -7195,7 +7853,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-F1.json",
@@ -7212,7 +7872,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-F1.json",
@@ -7229,7 +7891,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-F1.json",
@@ -7246,7 +7910,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-F1.json",
@@ -7263,7 +7929,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-F1.json",
@@ -7280,7 +7948,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-F1.json",
@@ -7297,7 +7967,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-F1.json",
@@ -7314,7 +7986,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-F1.json",
@@ -7331,7 +8005,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-F1.json",
@@ -7348,7 +8024,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-F1.json",
@@ -7365,7 +8043,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-F1.json",
@@ -7382,7 +8062,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-F1.json",
@@ -7399,7 +8081,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-F1.json",
@@ -7416,7 +8100,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-F1.json",
@@ -7433,7 +8119,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-F2.json",
@@ -7450,7 +8138,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-F2.json",
@@ -7467,7 +8157,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-F2.json",
@@ -7484,7 +8176,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-F2.json",
@@ -7501,7 +8195,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-F2.json",
@@ -7518,7 +8214,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-F2.json",
@@ -7535,7 +8233,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-F2.json",
@@ -7552,7 +8252,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-F2.json",
@@ -7569,7 +8271,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-F2.json",
@@ -7586,7 +8290,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-F2.json",
@@ -7603,7 +8309,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-F2.json",
@@ -7620,7 +8328,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-F2.json",
@@ -7637,7 +8347,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-F2.json",
@@ -7654,7 +8366,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-F2.json",
@@ -7671,7 +8385,9 @@
     }
    ],
    "located": "other-section-same-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-R1.json",
@@ -7688,7 +8404,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/utilities/UTL-R1.json",
@@ -7705,7 +8423,9 @@
     }
    ],
    "located": "different-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-R1.json",
@@ -7722,7 +8442,9 @@
     }
    ],
    "located": "different-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-R1.json",
@@ -7739,7 +8461,9 @@
     }
    ],
    "located": "different-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-R1.json",
@@ -7756,7 +8480,9 @@
     }
    ],
    "located": "different-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-R1.json",
@@ -7773,7 +8499,9 @@
     }
    ],
    "located": "different-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-R1.json",
@@ -7790,7 +8518,9 @@
     }
    ],
    "located": "different-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-R1.json",
@@ -7807,7 +8537,9 @@
     }
    ],
    "located": "different-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-R1.json",
@@ -7824,7 +8556,9 @@
     }
    ],
    "located": "different-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-R1.json",
@@ -7841,7 +8575,9 @@
     }
    ],
    "located": "different-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-R1.json",
@@ -7858,7 +8594,9 @@
     }
    ],
    "located": "different-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-R1.json",
@@ -7875,7 +8613,9 @@
     }
    ],
    "located": "different-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-R1.json",
@@ -7892,7 +8632,9 @@
     }
    ],
    "located": "different-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-R1.json",
@@ -7909,7 +8651,9 @@
     }
    ],
    "located": "different-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/utilities/UTL-R1.json",
@@ -7926,7 +8670,9 @@
     }
    ],
    "located": "different-doc",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "exact",
+   "population": "audit-5-378",
+   "cohort": "the 248 re-pointing targets"
   },
   {
    "file": "content/weapons/stat-price-formula.json",
@@ -7943,7 +8689,9 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
   },
   {
    "file": "content/weapons/stat-price-formula.json",
@@ -7960,7 +8708,441 @@
     }
    ],
    "located": "nowhere",
-   "verdict_on_this_tree": "no-match"
+   "verdict_on_this_tree": "no-match",
+   "population": "audit-5-378",
+   "cohort": "the 130 absent from docs/ entirely"
+  },
+  {
+   "file": "content/bosses/BOSS-01.json",
+   "pointer": "persistence.reentry.trigger",
+   "field": "trigger",
+   "value": "remains far outside the combat area",
+   "maximal_normalized": "remains far outside the combat area",
+   "cited": [
+    {
+     "ref": "persistence.reentry: TDD-ENCOUNTERS#boss-re-entry",
+     "doc_id": "TDD-ENCOUNTERS",
+     "anchor": "boss-re-entry",
+     "span": "TDD-ENCOUNTERS#boss-re-entry (23-encounter-director-and-enemy-runtime.md:157-168)"
+    }
+   ],
+   "located": "different-doc",
+   "verdict_on_this_tree": "exact",
+   "population": "live-sweep-16",
+   "cohort": "the 13 mis-citations the live sweep re-pointed",
+   "sweep_classification": "mis-citation - re-point",
+   "repointed_to": "GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward"
+  },
+  {
+   "file": "content/bosses/BOSS-02.json",
+   "pointer": "persistence.reentry.trigger",
+   "field": "trigger",
+   "value": "remains far outside the combat area",
+   "maximal_normalized": "remains far outside the combat area",
+   "cited": [
+    {
+     "ref": "persistence.reentry: TDD-ENCOUNTERS#boss-re-entry",
+     "doc_id": "TDD-ENCOUNTERS",
+     "anchor": "boss-re-entry",
+     "span": "TDD-ENCOUNTERS#boss-re-entry (23-encounter-director-and-enemy-runtime.md:157-168)"
+    }
+   ],
+   "located": "different-doc",
+   "verdict_on_this_tree": "exact",
+   "population": "live-sweep-16",
+   "cohort": "the 13 mis-citations the live sweep re-pointed",
+   "sweep_classification": "mis-citation - re-point",
+   "repointed_to": "GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward"
+  },
+  {
+   "file": "content/bosses/BOSS-03.json",
+   "pointer": "persistence.reentry.trigger",
+   "field": "trigger",
+   "value": "remains far outside the combat area",
+   "maximal_normalized": "remains far outside the combat area",
+   "cited": [
+    {
+     "ref": "persistence.reentry: TDD-ENCOUNTERS#boss-re-entry",
+     "doc_id": "TDD-ENCOUNTERS",
+     "anchor": "boss-re-entry",
+     "span": "TDD-ENCOUNTERS#boss-re-entry (23-encounter-director-and-enemy-runtime.md:157-168)"
+    }
+   ],
+   "located": "different-doc",
+   "verdict_on_this_tree": "exact",
+   "population": "live-sweep-16",
+   "cohort": "the 13 mis-citations the live sweep re-pointed",
+   "sweep_classification": "mis-citation - re-point",
+   "repointed_to": "GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward"
+  },
+  {
+   "file": "content/bosses/BOSS-04.json",
+   "pointer": "persistence.reentry.trigger",
+   "field": "trigger",
+   "value": "remains far outside the combat area",
+   "maximal_normalized": "remains far outside the combat area",
+   "cited": [
+    {
+     "ref": "persistence.reentry: TDD-ENCOUNTERS#boss-re-entry",
+     "doc_id": "TDD-ENCOUNTERS",
+     "anchor": "boss-re-entry",
+     "span": "TDD-ENCOUNTERS#boss-re-entry (23-encounter-director-and-enemy-runtime.md:157-168)"
+    }
+   ],
+   "located": "different-doc",
+   "verdict_on_this_tree": "exact",
+   "population": "live-sweep-16",
+   "cohort": "the 13 mis-citations the live sweep re-pointed",
+   "sweep_classification": "mis-citation - re-point",
+   "repointed_to": "GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward"
+  },
+  {
+   "file": "content/branches/W-BC-suppressive-sequencer.json",
+   "pointer": "effects.target_preference",
+   "field": "target_preference",
+   "value": "any valid enemy not in the memory set",
+   "maximal_normalized": "any valid enemy not in the memory set",
+   "cited": [
+    {
+     "ref": "GDD-WEAPON-NUMERIC-CATALOG#suppressive-sequencer--functional--2-cinderglass",
+     "doc_id": "GDD-WEAPON-NUMERIC-CATALOG",
+     "anchor": "suppressive-sequencer--functional--2-cinderglass",
+     "span": "GDD-WEAPON-NUMERIC-CATALOG#suppressive-sequencer--functional--2-cinderglass (71-initial-weapon-numeric-catalog.md:264-270)"
+    },
+    {
+     "ref": "rules[]: GDD-WEAPON-NUMERIC-CATALOG#suppressive-sequencer--functional--2-cinderglass",
+     "doc_id": "GDD-WEAPON-NUMERIC-CATALOG",
+     "anchor": "suppressive-sequencer--functional--2-cinderglass",
+     "span": "GDD-WEAPON-NUMERIC-CATALOG#suppressive-sequencer--functional--2-cinderglass (71-initial-weapon-numeric-catalog.md:264-270)"
+    }
+   ],
+   "located": "nowhere",
+   "verdict_on_this_tree": "no-match",
+   "population": "live-sweep-16",
+   "cohort": "the 3 the live sweep found are not mis-citations",
+   "sweep_classification": "NOT a mis-citation - value is not a verbatim quotation",
+   "repointed_to": null
+  },
+  {
+   "file": "content/branches/W-BF-tethered-reaper.json",
+   "pointer": "effects.single_target_ceiling_at_zero_blade_speed",
+   "field": "single_target_ceiling_at_zero_blade_speed",
+   "value": "the same as four ordinary cutters",
+   "maximal_normalized": "the same as four ordinary cutters",
+   "cited": [
+    {
+     "ref": "GDD-WEAPON-NUMERIC-CATALOG#tethered-reaper--conversion--2-eidolon-coral",
+     "doc_id": "GDD-WEAPON-NUMERIC-CATALOG",
+     "anchor": "tethered-reaper--conversion--2-eidolon-coral",
+     "span": "GDD-WEAPON-NUMERIC-CATALOG#tethered-reaper--conversion--2-eidolon-coral (71-initial-weapon-numeric-catalog.md:344-350)"
+    },
+    {
+     "ref": "rules[]: GDD-WEAPON-NUMERIC-CATALOG#tethered-reaper--conversion--2-eidolon-coral",
+     "doc_id": "GDD-WEAPON-NUMERIC-CATALOG",
+     "anchor": "tethered-reaper--conversion--2-eidolon-coral",
+     "span": "GDD-WEAPON-NUMERIC-CATALOG#tethered-reaper--conversion--2-eidolon-coral (71-initial-weapon-numeric-catalog.md:344-350)"
+    }
+   ],
+   "located": "nowhere",
+   "verdict_on_this_tree": "no-match",
+   "population": "live-sweep-16",
+   "cohort": "the 3 the live sweep found are not mis-citations",
+   "sweep_classification": "NOT a mis-citation - value is not a verbatim quotation",
+   "repointed_to": null
+  },
+  {
+   "file": "content/maps/standard-map-generation-contract.json",
+   "pointer": "destructible_rock_rules.health_pack.persistence",
+   "field": "persistence",
+   "value": "persists until collected or run end",
+   "maximal_normalized": "persists until collected or run end",
+   "cited": [
+    {
+     "ref": "destructible_rock_rules.destructible_rock: GDD-PLAYER-SURVIVABILITY-BASELINE#health-packs-and-destructible-rocks",
+     "doc_id": "GDD-PLAYER-SURVIVABILITY-BASELINE",
+     "anchor": "health-packs-and-destructible-rocks",
+     "span": "GDD-PLAYER-SURVIVABILITY-BASELINE#health-packs-and-destructible-rocks (72-player-survivability-and-damage-baseline.md:178-222)"
+    },
+    {
+     "ref": "destructible_rock_rules.health_pack: GDD-PLAYER-SURVIVABILITY-BASELINE#health-packs-and-destructible-rocks",
+     "doc_id": "GDD-PLAYER-SURVIVABILITY-BASELINE",
+     "anchor": "health-packs-and-destructible-rocks",
+     "span": "GDD-PLAYER-SURVIVABILITY-BASELINE#health-packs-and-destructible-rocks (72-player-survivability-and-damage-baseline.md:178-222)"
+    }
+   ],
+   "located": "different-doc",
+   "verdict_on_this_tree": "exact",
+   "population": "live-sweep-16",
+   "cohort": "the 13 mis-citations the live sweep re-pointed",
+   "sweep_classification": "mis-citation - re-point",
+   "repointed_to": "GDD-CORE-LOOP#combat-pressure"
+  },
+  {
+   "file": "content/mechs/MCH-02.json",
+   "pointer": "inherent_trait.effect_detail",
+   "field": "effect_detail",
+   "value": "+15% damage to all equipped weapons",
+   "maximal_normalized": "+15% damage to all equipped weapons",
+   "cited": [
+    {
+     "ref": "GDD-INITIAL-MECH-CATALOG#catalog-overview",
+     "doc_id": "GDD-INITIAL-MECH-CATALOG",
+     "anchor": "catalog-overview",
+     "span": "GDD-INITIAL-MECH-CATALOG#catalog-overview (36-initial-mech-catalog.md:43-53)"
+    }
+   ],
+   "located": "other-section-same-doc",
+   "verdict_on_this_tree": "exact",
+   "population": "live-sweep-16",
+   "cohort": "the 13 mis-citations the live sweep re-pointed",
+   "sweep_classification": "mis-citation - re-point",
+   "repointed_to": "GDD-INITIAL-MECH-CATALOG#signature-and-trait-1"
+  },
+  {
+   "file": "content/mining-sites/specialized-material-geodes.json",
+   "pointer": "partial_payout",
+   "field": "partial_payout",
+   "value": "none; no partial material or ore payout",
+   "maximal_normalized": "none; no partial material or ore payout",
+   "cited": [
+    {
+     "ref": "GDD-MINING#specialized-material-geodes",
+     "doc_id": "GDD-MINING",
+     "anchor": "specialized-material-geodes",
+     "span": "GDD-MINING#specialized-material-geodes (40-mining-and-extraction.md:76-97)"
+    }
+   ],
+   "located": "nowhere",
+   "verdict_on_this_tree": "no-match",
+   "population": "live-sweep-16",
+   "cohort": "the 3 the live sweep found are not mis-citations",
+   "sweep_classification": "NOT a mis-citation - value is not a verbatim quotation",
+   "repointed_to": null
+  },
+  {
+   "file": "content/relics/REL-09.json",
+   "pointer": "core_tradeoff",
+   "field": "core_tradeoff",
+   "value": "Enemies move 50% faster during mining",
+   "maximal_normalized": "enemies move 50% faster during mining",
+   "cited": [
+    {
+     "ref": "GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core",
+     "doc_id": "GDD-INITIAL-RELIC-CATALOG",
+     "anchor": "rel-09--claim-jumper-core",
+     "span": "GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core (69-initial-relic-catalog.md:147-156)"
+    },
+    {
+     "ref": "summary_key: GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core",
+     "doc_id": "GDD-INITIAL-RELIC-CATALOG",
+     "anchor": "rel-09--claim-jumper-core",
+     "span": "GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core (69-initial-relic-catalog.md:147-156)"
+    },
+    {
+     "ref": "trigger: GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core",
+     "doc_id": "GDD-INITIAL-RELIC-CATALOG",
+     "anchor": "rel-09--claim-jumper-core",
+     "span": "GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core (69-initial-relic-catalog.md:147-156)"
+    },
+    {
+     "ref": "pause_behavior: GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core",
+     "doc_id": "GDD-INITIAL-RELIC-CATALOG",
+     "anchor": "rel-09--claim-jumper-core",
+     "span": "GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core (69-initial-relic-catalog.md:147-156)"
+    },
+    {
+     "ref": "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core",
+     "doc_id": "GDD-INITIAL-RELIC-CATALOG",
+     "anchor": "rel-09--claim-jumper-core",
+     "span": "GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core (69-initial-relic-catalog.md:147-156)"
+    }
+   ],
+   "located": "other-section-same-doc",
+   "verdict_on_this_tree": "exact",
+   "population": "live-sweep-16",
+   "cohort": "the 13 mis-citations the live sweep re-pointed",
+   "sweep_classification": "mis-citation - re-point",
+   "repointed_to": "GDD-INITIAL-RELIC-CATALOG#catalog-overview"
+  },
+  {
+   "file": "content/utilities/UTL-B1.json",
+   "pointer": "installed_to_rank_3",
+   "field": "installed_to_rank_3",
+   "value": "+15 → +45 maximum Hull Integrity",
+   "maximal_normalized": "+15 → +45 maximum hull integrity",
+   "cited": [
+    {
+     "ref": "GDD-UTILITY-CATALOG#utl-b1--reinforced-bulkhead",
+     "doc_id": "GDD-UTILITY-CATALOG",
+     "anchor": "utl-b1--reinforced-bulkhead",
+     "span": "GDD-UTILITY-CATALOG#utl-b1--reinforced-bulkhead (68-utility-catalog.md:86-100)"
+    }
+   ],
+   "located": "other-section-same-doc",
+   "verdict_on_this_tree": "exact",
+   "population": "live-sweep-16",
+   "cohort": "the 13 mis-citations the live sweep re-pointed",
+   "sweep_classification": "mis-citation - re-point",
+   "repointed_to": "GDD-UTILITY-CATALOG#catalog-overview"
+  },
+  {
+   "file": "content/utilities/UTL-B2.json",
+   "pointer": "installed_to_rank_3",
+   "field": "installed_to_rank_3",
+   "value": "+5% → +20% forward extraction rate",
+   "maximal_normalized": "+5% → +20% forward extraction rate",
+   "cited": [
+    {
+     "ref": "GDD-UTILITY-CATALOG#utl-b2--extraction-accelerator",
+     "doc_id": "GDD-UTILITY-CATALOG",
+     "anchor": "utl-b2--extraction-accelerator",
+     "span": "GDD-UTILITY-CATALOG#utl-b2--extraction-accelerator (68-utility-catalog.md:101-116)"
+    }
+   ],
+   "located": "other-section-same-doc",
+   "verdict_on_this_tree": "exact",
+   "population": "live-sweep-16",
+   "cohort": "the 13 mis-citations the live sweep re-pointed",
+   "sweep_classification": "mis-citation - re-point",
+   "repointed_to": "GDD-UTILITY-CATALOG#catalog-overview"
+  },
+  {
+   "file": "content/utilities/UTL-C1.json",
+   "pointer": "installed_to_rank_3",
+   "field": "installed_to_rank_3",
+   "value": "+8% → +20% weapon attack rate",
+   "maximal_normalized": "+8% → +20% weapon attack rate",
+   "cited": [
+    {
+     "ref": "GDD-UTILITY-CATALOG#utl-c1--cycle-capacitor",
+     "doc_id": "GDD-UTILITY-CATALOG",
+     "anchor": "utl-c1--cycle-capacitor",
+     "span": "GDD-UTILITY-CATALOG#utl-c1--cycle-capacitor (68-utility-catalog.md:119-134)"
+    }
+   ],
+   "located": "other-section-same-doc",
+   "verdict_on_this_tree": "exact",
+   "population": "live-sweep-16",
+   "cohort": "the 13 mis-citations the live sweep re-pointed",
+   "sweep_classification": "mis-citation - re-point",
+   "repointed_to": "GDD-UTILITY-CATALOG#catalog-overview"
+  },
+  {
+   "file": "content/utilities/UTL-C2.json",
+   "pointer": "installed_to_rank_3",
+   "field": "installed_to_rank_3",
+   "value": "Negate one hit every 24s → 15s",
+   "maximal_normalized": "negate one hit every 24s → 15s",
+   "cited": [
+    {
+     "ref": "GDD-UTILITY-CATALOG#utl-c2--capacitor-screen",
+     "doc_id": "GDD-UTILITY-CATALOG",
+     "anchor": "utl-c2--capacitor-screen",
+     "span": "GDD-UTILITY-CATALOG#utl-c2--capacitor-screen (68-utility-catalog.md:135-151)"
+    }
+   ],
+   "located": "other-section-same-doc",
+   "verdict_on_this_tree": "exact",
+   "population": "live-sweep-16",
+   "cohort": "the 13 mis-citations the live sweep re-pointed",
+   "sweep_classification": "mis-citation - re-point",
+   "repointed_to": "GDD-UTILITY-CATALOG#catalog-overview"
+  },
+  {
+   "file": "content/utilities/UTL-E1.json",
+   "pointer": "installed_to_rank_3",
+   "field": "installed_to_rank_3",
+   "value": "+0.10 → +0.25 Hull Integrity per second",
+   "maximal_normalized": "+0.10 → +0.25 hull integrity per second",
+   "cited": [
+    {
+     "ref": "GDD-UTILITY-CATALOG#utl-e1--repair-swarm",
+     "doc_id": "GDD-UTILITY-CATALOG",
+     "anchor": "utl-e1--repair-swarm",
+     "span": "GDD-UTILITY-CATALOG#utl-e1--repair-swarm (68-utility-catalog.md:186-201)"
+    }
+   ],
+   "located": "other-section-same-doc",
+   "verdict_on_this_tree": "exact",
+   "population": "live-sweep-16",
+   "cohort": "the 13 mis-citations the live sweep re-pointed",
+   "sweep_classification": "mis-citation - re-point",
+   "repointed_to": "GDD-UTILITY-CATALOG#catalog-overview"
+  },
+  {
+   "file": "content/utilities/UTL-F1.json",
+   "pointer": "installed_to_rank_3",
+   "field": "installed_to_rank_3",
+   "value": "+10% → +25% mined common ore",
+   "maximal_normalized": "+10% → +25% mined common ore",
+   "cited": [
+    {
+     "ref": "GDD-UTILITY-CATALOG#utl-f1--ore-catalyzer",
+     "doc_id": "GDD-UTILITY-CATALOG",
+     "anchor": "utl-f1--ore-catalyzer",
+     "span": "GDD-UTILITY-CATALOG#utl-f1--ore-catalyzer (68-utility-catalog.md:220-235)"
+    }
+   ],
+   "located": "other-section-same-doc",
+   "verdict_on_this_tree": "exact",
+   "population": "live-sweep-16",
+   "cohort": "the 13 mis-citations the live sweep re-pointed",
+   "sweep_classification": "mis-citation - re-point",
+   "repointed_to": "GDD-UTILITY-CATALOG#catalog-overview"
   }
- ]
+ ],
+ "populations": {
+  "audit-5-378": {
+   "record_count": 378,
+   "what_it_is": "the 378 mismatches audit §5's anti-golden proof is a claim ABOUT, frozen as measured",
+   "containment_gate": {
+    "min_characters": 40,
+    "min_words": 6,
+    "why": "audit §2's decidability gate. Every one of the 378 clears it; the smallest is 43 characters / 7 words"
+   },
+   "located_breakdown": {
+    "nowhere": 130,
+    "different-doc": 20,
+    "other-section-same-doc": 228
+   }
+  },
+  "live-sweep-16": {
+   "record_count": 16,
+   "what_it_is": "the 16 mis-cited prose leaves the frozen 378 CANNOT SEE, found by the live sweep of audit §13 at >= 6 words",
+   "containment_gate": {
+    "min_characters": 25,
+    "min_words": 6,
+    "why": "the word half of audit §2's decidability gate, which is how this population was selected, plus a 25-character floor so containment is never trivial. The smallest of the 16 is 28 characters / 6 words. The 40-character half is deliberately absent: with it the sweep finds nothing outside the 378, which is exactly the blind spot"
+   },
+   "located_breakdown": {
+    "different-doc": 5,
+    "nowhere": 3,
+    "other-section-same-doc": 8
+   }
+  }
+ },
+ "refreshed_record_count": 2,
+ "disagreements_is_the_weakest_claim": "`stored verdict_on_this_tree disagreements: 0` is TRUE BY CONSTRUCTION on the commit that generates this artifact - the stored verdicts ARE the checker's own output at that commit. It detects drift afterwards; it can never establish that a citation is correct, and it must not be quoted as corroboration that one is. A degenerate matcher returning `no-match` unconditionally reproduces 371 of master's 378 labels, so only 7 records discriminate on the positive side; the one informative control is the specificity rule, which disagrees on exactly the 4 BOSS-0* persistence.reentry.behavior records. 11 of 378 records carry information about a matcher asserting 248 positives.",
+ "cohort_notes": {
+  "the 248 re-pointing targets": "247 exact + 1 match-under-a-named-rule (EN-06 :: specialist_attack.hard_control_interaction, under R7a-initial-case). 248 of 248 covered. This cohort - NOT the printed total - is what the re-pointing pass claims.",
+  "the 130 absent from docs/ entirely": "The 1 exact is content/relics/REL-09.json :: pause_behavior.rule, and it is exact ONLY because its value was explicitly re-baselined after the §3 drift fix. Before the identity test existed this record's exact silently made the printed total read 248, coinciding with the 248 of the other cohort and hiding the off-by-one.",
+  "the 13 mis-citations the live sweep re-pointed": "13 exact. These were invisible to the frozen 378 because the artifact iterates a fixed list; see audit §14 on replacing the frozen list with a live sweep.",
+  "the 3 the live sweep found are not mis-citations": "Still no-match, correctly. Their citations already name the right section; the VALUES are not verbatim quotations (a one-word substitution, a mid-sentence elision, and an authored prefix). Re-pointing them would be citation-shopping, so they are recorded as audit §11 items instead of fixed here."
+ },
+ "verdict_on_this_tree_by_cohort": {
+  "the 13 mis-citations the live sweep re-pointed": {
+   "exact": 13
+  },
+  "the 130 absent from docs/ entirely": {
+   "no-match": 129,
+   "exact": 1
+  },
+  "the 248 re-pointing targets": {
+   "exact": 247,
+   "match-under-a-named-rule": 1
+  },
+  "the 3 the live sweep found are not mis-citations": {
+   "no-match": 3
+  }
+ }
 }

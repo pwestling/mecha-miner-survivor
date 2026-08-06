@@ -147,7 +147,7 @@ list, and the verifier under
   copied verbatim from the design docs and never re-cased or re-numbered
   (`docs/technical/40-content-data-and-validation.md:67`: "Reuse accepted gameplay IDs exactly").
 - **Kebab-case file names for cohesive aggregates** — `shared-elite-modifiers.json`,
-  `stat-price-formula.json`, `standard-encounter-schedule.json` (`WAV-01`),
+  `stat-price-formula.json` (`FORMULA-01`), `standard-encounter-schedule.json` (`WAV-01`),
   `standard-map-generation-contract.json` (`MGC-01`), and the four `*-seams`/`*-geodes`/`*-sites`
   mining-site files (`SITE-01`–`SITE-04`). A file carries a kebab-case name because no *document*
   assigns it an ID token; **minting an ID does not force a rename.** The four mining-site files and
@@ -174,6 +174,17 @@ rule:
   `"MCH-01"`, `"BOSS-02"`, `"UTL-C2"`, `"PU-S04"`, `"REL-07"`, `"UNL-03"`, `"WAV-01"`, `"MGC-01"`, and
   the resource letters `"A"`–`"F"` are transcribed verbatim. `docs/technical/40-content-data-and-validation.md:69`
   makes this explicit: "IDs are case-sensitive ASCII tokens ... and never localized."
+- **Most value tokens this tree mints are lower-kebab-case, and eight camelCase tokens are a known
+  unresolved exception.** Measured over every string leaf of every `*.json` under `content/`:
+  **37 kebab-case value tokens across five token spaces** — `inventory_scope` (`run-local`,
+  `cross-run`), `pool_availability`, `site_class`, `value_kind`, and the two resource `id`s
+  `common-ore` and `hyper-gold` — against **12 occurrences of 8 camelCase tokens across four spaces**
+  (`kind` on `UNL-01`…`UNL-06`, `snapshot_at_creation` on `EN-06`, `unchanged_stats` on `W-AB`,
+  `clone_inherits_current` on `W-AE`). **The camelCase eight are deliberately left as they are**
+  (`content/transcription-notes.md`, Ruling 39): whether they were transcribed from a document — in
+  which case the bullet above protects them — or minted here, has not been established, and the
+  schema stream has not yet fixed the token grammar a converted value would have to satisfy. This
+  bullet describes **values**, not property names.
 - **Units live in key-name suffixes**, per
   `docs/technical/40-content-data-and-validation.md:94` (`_m`, `_m_per_s`, `_seconds`, `_per_second`,
   `_hull`, `_degrees`, `_fraction`, `_count`): `movement_speed_m_per_s`,
@@ -242,7 +253,7 @@ independently addressable definition. The literal values this tree carries today
 
 | Field | Mandate | In this tree |
 | --- | --- | --- |
-| `id` | `40:80` — stable category-valid ID | present as a non-empty string on **all 138** definitions, including the aggregates (`WAV-01`, `MGC-01`) and the five IDs the integration owner minted rather than transcribed: the four prose-only mining-site classes (`docs/40-mining-and-extraction.md:58-132`) are `SITE-01`–`SITE-04` in document order, and `enemies/shared-elite-modifiers.json` is `ELT-01`. Nothing here carries `"id": null` or omits the field, so the verifier treats a missing or null `id` as an unconditional failure |
+| `id` | `40:80` — stable category-valid ID | present as a non-empty string on **all 138** definitions, including the aggregates (`WAV-01`, `MGC-01`) and the six IDs the integration owner minted rather than transcribed: the four prose-only mining-site classes (`docs/40-mining-and-extraction.md:58-132`) are `SITE-01`–`SITE-04` in document order, `enemies/shared-elite-modifiers.json` is `ELT-01`, and `weapons/stat-price-formula.json` is `FORMULA-01` (`content/transcription-notes.md`, Ruling 38 — it previously carried `weapon-stat-price-formula`, the only *minted* ID that was not `<PREFIX>-<NN>`; lower-kebab `id`s do exist here, but only as the two transcribed resource IDs `common-ore` and `hyper-gold`). Nothing here carries `"id": null` or omits the field, so the verifier treats a missing or null `id` as an unconditional failure |
 | `schema_version` | `40:81` — integer version of its definition schema | `1` everywhere; no schema exists to version yet |
 | `content_version` | `40:82` — monotonic revision | `1` everywhere; this is the first authored revision |
 | `status` | `40:83` — exactly one of `development`, `enabled`, `disabled`, `retired` | `"enabled"` everywhere; nothing here is gated or retired |

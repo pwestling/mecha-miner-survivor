@@ -8,7 +8,10 @@
   "tags": [],
   "source_refs": [
     "GDD-UTILITY-CATALOG#utl-f1--ore-catalyzer",
-    "effect.stacking_classification: GDD-UTILITY-CATALOG#modifier-and-timing-rules"
+    "effect.stacking_classification: GDD-UTILITY-CATALOG#modifier-and-timing-rules",
+    "catalog_wide_rules.modifier_and_timing_rules[]: GDD-UTILITY-CATALOG#modifier-and-timing-rules",
+    "catalog_wide_rules.shared_acquisition_and_rank_rules[]: GDD-UTILITY-CATALOG#shared-acquisition-and-rank-rules",
+    "installed_to_rank_3: GDD-UTILITY-CATALOG#catalog-overview"
   ],
   "material": "Flux Amber",
   "primary_role": "Economy",

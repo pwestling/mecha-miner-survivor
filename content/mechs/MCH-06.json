@@ -11,7 +11,10 @@
     "signature_weapon_id: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
     "trait_stacking: GDD-INITIAL-MECH-CATALOG#trait-comparison-and-stacking",
     "initial_availability: GDD-INITIAL-MECH-CATALOG#initial-availability",
-    "cross_doc_notes[]: GDD-PLAYER-SURVIVABILITY-BASELINE#movement-and-speed-modifiers"
+    "cross_doc_notes[]: GDD-PLAYER-SURVIVABILITY-BASELINE#movement-and-speed-modifiers",
+    "player_facing_identity: GDD-INITIAL-MECH-CATALOG#player-facing-identity-5",
+    "top_down_silhouette[]: GDD-INITIAL-MECH-CATALOG#top-down-silhouette-5",
+    "trait_notes[]: GDD-INITIAL-MECH-CATALOG#signature-and-trait-5"
   ],
   "signature": "Ram Field",
   "signature_weapon_id": "W-DF",

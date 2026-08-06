@@ -27,7 +27,8 @@
     "behavior_registration: TDD-COMBAT-RUNTIME#relic-integration",
     "summary_key: GDD-INITIAL-RELIC-CATALOG#rel-01--retrograde-engine",
     "trigger: GDD-INITIAL-RELIC-CATALOG#rel-01--retrograde-engine",
-    "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-01--retrograde-engine"
+    "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-01--retrograde-engine",
+    "core_tradeoff: GDD-INITIAL-RELIC-CATALOG#catalog-overview"
   ],
   "primary_transformation": "Triple weapon tempo",
   "core_tradeoff": "Directional and targeted attacks operate oppositely",

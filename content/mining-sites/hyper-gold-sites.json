@@ -7,7 +7,8 @@
   "tags": [],
   "source_refs": [
     "GDD-MINING#hyper-gold-sites",
-    "beacon_response_source: GDD-STANDARD-WAVE-SCHEDULE#hyper-gold-threat-beacon-response"
+    "beacon_response_source: GDD-STANDARD-WAVE-SCHEDULE#hyper-gold-threat-beacon-response",
+    "depleted_state: GDD-MINING#specialized-material-geodes"
   ],
   "site_class": "hyper-gold-site",
   "count_per_standard_map": 3,

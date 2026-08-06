@@ -33,7 +33,8 @@
     "summary_key: GDD-INITIAL-RELIC-CATALOG#rel-10--sequential-reactor",
     "trigger: GDD-INITIAL-RELIC-CATALOG#rel-10--sequential-reactor",
     "pause_behavior: GDD-INITIAL-RELIC-CATALOG#rel-10--sequential-reactor",
-    "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-10--sequential-reactor"
+    "rules[]: GDD-INITIAL-RELIC-CATALOG#rel-10--sequential-reactor",
+    "core_tradeoff: GDD-INITIAL-RELIC-CATALOG#catalog-overview"
   ],
   "primary_transformation": "Extreme rotating weapon phases",
   "core_tradeoff": "Only one equipped weapon operates at a time",

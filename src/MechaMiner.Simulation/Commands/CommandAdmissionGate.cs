@@ -54,8 +54,12 @@ namespace MechaMiner.Simulation.Commands;
 /// statement of the commit, so it fires after the domain event has been appended, after the replacement
 /// snapshot has been published, and after the state version has advanced. It turns a second application that
 /// has already completed into an exception after the fact; it refuses nothing, and an exception thrown once a
-/// state has been published is the case <c>docs/technical/20-simulation-core.md</c> § Tick transaction rules
-/// out, since an invariant failure there belongs "before commit" and "never publishes a partial state". The
+/// state has been published is the one shape this type cannot recover from.
+/// <c>docs/technical/20-simulation-core.md</c> § Tick transaction does not settle that case: it rules on a
+/// failure "before commit" and says nothing about one raised inside a commit. What forbids it is
+/// <c>TR-RUN-007</c> in <c>docs/technical/112-normative-requirement-index.md</c> § Foundation and runtime -
+/// "A run technical failure preserves the existing profile and does not publish partial state" - stated
+/// without qualifying where in the commit the failure arose. The
 /// refusal is the idempotency check, and inside the commit it is the precondition
 /// <see cref="CommitApplied"/> is called behind; both run before anything moves. The <c>Add</c> stays
 /// because a history nothing may rewrite should not have a write that can silently rewrite it, which is a
@@ -138,6 +142,7 @@ public sealed class CommandAdmissionGate
     private long _rejectedInRun;
     private long _transactionStateVersion = InitialTransactionStateVersion;
     private long _appliedTransactionCount;
+    private long _abandonedCommitCount;
 
     /// <summary>Creates a gate fenced to one run session.</summary>
     /// <param name="runSession">The run session. Must not be zero.</param>
@@ -229,6 +234,18 @@ public sealed class CommandAdmissionGate
 
     /// <summary>How many paused transactions have been applied in this run.</summary>
     public long AppliedTransactionCount => _appliedTransactionCount;
+
+    /// <summary>
+    /// How many paused-transaction commits threw part way through and were abandoned through
+    /// <see cref="Apply"/>'s invalidation path.
+    /// </summary>
+    /// <remarks>
+    /// A diagnostic, not authoritative state, so it appears in <see cref="Render"/> and not in
+    /// <see cref="RenderAuthoritative"/> - doc 90 § Frame metrics, on the same footing as
+    /// <c>SnapshotPublisher.InvalidatedTickCount</c>, which counts the tick this path invalidates. Non-zero
+    /// means the run is ending through the technical-failure path; it is never a recoverable condition.
+    /// </remarks>
+    public long AbandonedCommitCount => _abandonedCommitCount;
 
     /// <summary>How many transaction actions are registered.</summary>
     public int RegisteredTransactionActionCount => _transactionActions.Count;
@@ -603,11 +620,29 @@ public sealed class CommandAdmissionGate
     /// </para>
     /// <para>
     /// <b>What "all-or-nothing" means when the commit block itself throws.</b> Every refusal happens before
-    /// the first mutation, so a refused transaction changes nothing at all. If the staging callback or the
-    /// publication throws part way through the commit, doc 20 § Tick transaction already fixes the answer: the
-    /// transaction "never publishes a partial state" and the run ends through the safe technical-failure path.
-    /// The state version is advanced only after the publication has succeeded, so a failure mid-commit leaves
-    /// the authoritative version where it was.
+    /// the first mutation, so a refused transaction changes nothing at all. A throw <em>inside</em> the commit
+    /// is a separate case, and doc 20 § Tick transaction does not settle it: that section rules on "an
+    /// exception or invariant failure before commit" and is silent on a failure raised once a commit has
+    /// begun. The requirement that governs it is <c>TR-RUN-007</c> in
+    /// <c>docs/technical/112-normative-requirement-index.md</c> § Foundation and runtime - "A run technical
+    /// failure preserves the existing profile and does not publish partial state" - which is stated
+    /// unqualified, so it binds a mid-commit failure as much as a pre-commit one. Doc 20 gives the machinery
+    /// for the case it does cover and this method reuses it for the case it does not, which is the gap
+    /// <see cref="AbandonPartialCommit"/> closes.
+    /// </para>
+    /// <para>
+    /// <b>The rule, exactly.</b> Any exception raised between the moment this commit opens the publisher's
+    /// tick and the moment publication completes invalidates that tick, releases only the buffers this commit
+    /// itself opened and left with nothing unconsumed, and is then rethrown unchanged, so the run leaves
+    /// through the technical-failure path with no snapshot published, no state version advanced, and no
+    /// tick left open. Two limits are part of the rule rather than exceptions to it. A buffer this commit did
+    /// not open, or that holds an unconsumed record, is left exactly as it is: its records are the failure's
+    /// evidence and <c>CTR-SIM-001</c> forbids dropping an authoritative event, which is also why
+    /// <c>SnapshotPublisher.InvalidateTick</c> touches neither buffer. And the guarantee ends where
+    /// invalidation does - once publication has completed the snapshot is observable and the tick is closed,
+    /// so there is nothing left to invalidate; that window is kept throw-free by construction rather than by
+    /// recovery, which <see cref="CommitApplied"/> explains and
+    /// <c>PostPublicationRegionTests</c> pins.
     /// </para>
     /// <para>
     /// <b>The commit's precondition is checked here, not at the write that records the result.</b> A second
@@ -743,14 +778,125 @@ public sealed class CommandAdmissionGate
                     + "partial state");
         }
 
-        return CommitApplied(
-            request,
-            action,
-            stageReplacementState,
-            publisher,
-            domainEvents,
-            presentationEvents,
-            coalescingPolicy);
+        // ---- the commit, and the only recovery path there is ----
+        // What each collaborator held before the commit touched it, so the recovery can tell "this commit
+        // opened it" from "it was already open", and undo only its own half.
+        bool publisherTickWasOpen = publisher.IsTickOpen;
+        bool domainBufferWasOpen = domainEvents.IsOpenForTick;
+        bool presentationBufferWasOpen = presentationEvents.IsOpenForTick;
+
+        try
+        {
+            return CommitApplied(
+                request,
+                action,
+                stageReplacementState,
+                publisher,
+                domainEvents,
+                presentationEvents,
+                coalescingPolicy);
+        }
+        catch (Exception failure)
+        {
+            AbandonPartialCommit(
+                request,
+                failure,
+                publisher,
+                domainEvents,
+                presentationEvents,
+                publisherTickWasOpen,
+                domainBufferWasOpen,
+                presentationBufferWasOpen);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Abandons a commit that threw part way through: invalidates the tick this commit opened, releases the
+    /// buffers this commit opened and can release, and leaves the caller's exception to propagate.
+    /// </summary>
+    /// <param name="request">The request whose commit failed, for the invalidation reason.</param>
+    /// <param name="failure">The exception that ended the commit, for the invalidation reason.</param>
+    /// <param name="publisher">The run's publisher.</param>
+    /// <param name="domainEvents">The domain event buffer.</param>
+    /// <param name="presentationEvents">The presentation event buffer.</param>
+    /// <param name="publisherTickWasOpen">Whether a tick was already open before the commit began.</param>
+    /// <param name="domainBufferWasOpen">Whether the domain buffer was already open before the commit began.</param>
+    /// <param name="presentationBufferWasOpen">
+    /// Whether the presentation buffer was already open before the commit began.
+    /// </param>
+    /// <remarks>
+    /// <para>
+    /// <b>Why this exists at all.</b> Without it a mid-commit throw left the publisher's tick open forever:
+    /// no later <c>BeginTick</c> could succeed, no retry of the transaction could succeed, and
+    /// <c>InvalidatedTickCount</c> stayed at zero, so the run neither continued nor ended through the
+    /// technical-failure path - it wedged. Nothing published and nothing advanced, which is the easy half of
+    /// all-or-nothing; the hard half is that the failure has to be able to <em>end</em>, and that is what an
+    /// invalidated tick is for.
+    /// </para>
+    /// <para>
+    /// <b>Only this commit's own half is undone.</b> Each of the three conditions pairs "was not open before"
+    /// with "is open now", so a tick or a buffer that belonged to someone else before the commit began is left
+    /// alone. That matters for the second way a commit can throw: a domain buffer handed in already open for
+    /// another tick makes <c>DomainEventBuffer.BeginTick</c> throw after the publisher's tick has been opened,
+    /// and releasing that buffer here would discard records this transaction never owned.
+    /// </para>
+    /// <para>
+    /// <b>The domain buffer is released only when it holds nothing unconsumed.</b>
+    /// <c>DomainEventBuffer.Release</c> refuses while a record is unconsumed, because releasing then would
+    /// drop an authoritative event, which <c>CTR-SIM-001</c> in doc 115 § Cross-boundary contract registry
+    /// forbids: "invariant failure ends run safely rather than omitting authoritative event". So a buffer
+    /// still holding the applied event is deliberately left open and full - its records are the failure's
+    /// evidence, exactly as <c>SnapshotPublisher.InvalidateTick</c> leaves them. The presentation buffer has
+    /// no such obligation, so it is discarded outright; doc 20 § Domain and presentation events makes
+    /// presentation records disposable.
+    /// </para>
+    /// <para>
+    /// <b>Nothing here can throw, so the original failure is never replaced.</b> Each call is guarded by the
+    /// condition that call requires: <c>InvalidateTick</c> needs an open tick and a non-blank reason, and the
+    /// reason is built from literals; <c>Release</c> and <c>Discard</c> need an open buffer, and the domain
+    /// release additionally needs every record consumed. A recovery path that threw would hide the defect it
+    /// was recovering from, which is worse than the wedge it replaced.
+    /// </para>
+    /// </remarks>
+    private void AbandonPartialCommit(
+        in PausedTransactionRequest request,
+        Exception failure,
+        SnapshotPublisher publisher,
+        DomainEventBuffer domainEvents,
+        PresentationEventBuffer presentationEvents,
+        bool publisherTickWasOpen,
+        bool domainBufferWasOpen,
+        bool presentationBufferWasOpen)
+    {
+        _abandonedCommitCount++;
+
+        if (!publisherTickWasOpen && publisher.IsTickOpen)
+        {
+            publisher.InvalidateTick(
+                "the paused transaction commit for action '"
+                    + request.ActionId
+                    + "' at client command sequence "
+                    + request.ClientCommandSequence.ToString(CultureInfo.InvariantCulture)
+                    + " threw "
+                    + failure.GetType().Name
+                    + " before its publication completed, so the tick is invalidated and nothing was "
+                    + "published. TR-RUN-007 in doc 112 "
+                    + "§ Foundation and runtime requires a run technical failure to publish no partial "
+                    + "state, and doc 20 § Tick transaction gives the mechanism an invalidated tick is");
+        }
+
+        if (!domainBufferWasOpen
+            && domainEvents.IsOpenForTick
+            && domainEvents.ConsumedCount == domainEvents.Count)
+        {
+            domainEvents.Release();
+        }
+
+        if (!presentationBufferWasOpen && presentationEvents.IsOpenForTick)
+        {
+            presentationEvents.Discard();
+        }
     }
 
     /// <summary>
@@ -779,10 +925,36 @@ public sealed class CommandAdmissionGate
     /// appended, the snapshot published, and the version advanced.
     /// </para>
     /// <para>
-    /// It is not a rollback and does not claim to be one. <c>docs/technical/20-simulation-core.md</c> § Tick
-    /// transaction already fixes the answer for a failure raised inside the commit rather than before it: the
-    /// run ends through the safe technical-failure path. What this shape guarantees is the antecedent - that a
-    /// duplicate is never the thing that fails inside the commit, because it cannot get in.
+    /// It is not a rollback and does not claim to be one, and the authority for that is not the one this
+    /// remark used to cite. <c>docs/technical/20-simulation-core.md</c> § Tick transaction rules on a failure
+    /// "before commit" and is silent on one raised inside a commit, so it does not fix the answer here;
+    /// <c>TR-RUN-007</c> in <c>docs/technical/112-normative-requirement-index.md</c> § Foundation and runtime
+    /// does, unqualified, and <see cref="Apply"/>'s catch is what carries it out. What this shape guarantees
+    /// is the antecedent - that a duplicate is never the thing that fails inside the commit, because it cannot
+    /// get in.
+    /// </para>
+    /// <para>
+    /// <b>Where the recovery stops, and why the stopping point is where it is.</b> Everything up to and
+    /// including <c>SnapshotPublisher.Publish</c> is recoverable: the publisher's tick is open, so
+    /// <see cref="Apply"/>'s catch can invalidate it and nothing outside this call has seen anything. The
+    /// statements after that call are not: the page has flipped, the snapshot is readable through
+    /// <c>SnapshotPublisher.Buffer</c>, the tick is closed, and <c>InvalidateTick</c> would throw rather than
+    /// retract. That region is therefore kept throw-free, and it is kept so by a gate rather than by a
+    /// promise - <c>PostPublicationRegionTests</c> reads this method's compiled body and fails
+    /// if a statement after the publication call constructs an object, throws, or calls any simulation member
+    /// beyond the seven listed there. It cannot be kept throw-free by being empty: the release ends the buffer
+    /// lease the publication opened and so cannot precede it, the version advance and the applied counter must
+    /// follow a publication that succeeded or an all-or-nothing commit would count a publication that did not
+    /// happen, and the result and the history entry are built from the publication's own version and event
+    /// count. Each of the five is throw-free for a reason the commit establishes itself rather than assumes:
+    /// the release is over buffers this method opened and whose records <c>Publish</c> has just marked
+    /// consumed; the version arithmetic was done under <c>checked</c> before the publication;
+    /// <see cref="PausedTransactionResult.Accepted"/>'s four preconditions are the request's presence, which
+    /// <see cref="Apply"/> established, the event's completeness, which <c>DomainEventBuffer.Append</c>
+    /// established, a positive version and a non-blank detail, both built here; and the history <c>Add</c>
+    /// sits behind <see cref="Apply"/>'s duplicate-key precondition, which no statement between the two can
+    /// falsify because the only outward call in that span is the staging callback and a re-entrant
+    /// <see cref="Apply"/> from it fails at <c>SnapshotPublisher.BeginTick</c> before touching the history.
     /// </para>
     /// </remarks>
     private PausedTransactionResult CommitApplied(
@@ -796,6 +968,10 @@ public sealed class CommandAdmissionGate
     {
         long pausedAtTick = publisher.Latest?.Tick ?? 0L;
         long newStateVersion = checked(_transactionStateVersion + 1);
+
+        // Rendered here rather than in the detail below, so the region after the publication holds no
+        // formatting call. The arithmetic above is checked here for the same reason.
+        string newStateVersionText = newStateVersion.ToString(CultureInfo.InvariantCulture);
 
         publisher.BeginTick(pausedAtTick);
         stageReplacementState(publisher);
@@ -820,6 +996,14 @@ public sealed class CommandAdmissionGate
                 request.SelectionId));
         domainEvents.Append(appliedEvent);
 
+        // ---- the point of no return ----
+        // Up to and including this call a throw is recoverable: the publisher's tick is open, so Apply's
+        // catch invalidates it and nothing outside this call has seen anything. Past it the page has
+        // flipped, the snapshot is readable, and the tick is closed, so InvalidateTick would throw rather
+        // than retract. The region below therefore has to be throw-free, it cannot be empty - see the
+        // remarks - and it is enforced rather than promised: PostPublicationRegionTests reads this method's
+        // compiled body and fails if a statement after this call site constructs an object, throws, or calls
+        // any simulation member beyond the seven named there.
         TickPublication publication = publisher.Publish(
             domainEvents,
             presentationEvents,
@@ -838,7 +1022,7 @@ public sealed class CommandAdmissionGate
             "action '"
                 + request.ActionId
                 + "' applied at state version "
-                + newStateVersion.ToString(CultureInfo.InvariantCulture)
+                + newStateVersionText
                 + " and published snapshot "
                 + publication.Version.ToString());
         // Add rather than an indexer, so this history can never be silently rewritten. The precondition in
@@ -945,6 +1129,11 @@ public sealed class CommandAdmissionGate
                 .Append(_transactionRejectionCounts[(int)reason].ToString(CultureInfo.InvariantCulture));
         }
 
+        builder
+            .Append('\n')
+            .Append("abandonedCommits=")
+            .Append(_abandonedCommitCount.ToString(CultureInfo.InvariantCulture));
+
         return builder.Append('\n').ToString();
     }
 
@@ -977,7 +1166,15 @@ public sealed class CommandAdmissionGate
     /// </para>
     /// <para>
     /// Ahead of the window is a caller running early: it built a command for a tick the run has not reached,
-    /// so a window for that tick will open later and the same envelope will be admissible then. Behind the
+    /// so a window for that tick will open later. What the detail must <em>not</em> say is that the same
+    /// envelope is therefore admissible then, flatly. The check order above puts the monotonic high-water
+    /// mark ahead of this one, so a resubmission of the identical envelope is refused as
+    /// <see cref="CommandRejectionReason.SequenceRegression"/> the moment any envelope at or above its
+    /// sequence has been admitted in between - which is the ordinary case, since a caller that kept producing
+    /// input has raised the mark while waiting. The detail says exactly that condition instead of promising
+    /// re-admission the gate will usually refuse. The check order is not moved to make the simpler promise
+    /// true: it is the contract <c>VER-SIM-004-003</c> pins, and reporting an early envelope as a regression
+    /// when it is the first one seen would be worse than the wording bug. Behind the
     /// window is a different fault: doc 10 § System phase ordering opens a window in phase 1 of every tick,
     /// and a tick before the open one was either never opened or was closed without freezing, so no window
     /// for it will ever exist and the envelope has to be rebuilt against a reachable tick. The stale check
@@ -999,7 +1196,12 @@ public sealed class CommandAdmissionGate
                 + " is ahead of the open admission window at tick "
                 + _openTick.ToString()
                 + "; a window opens in phase 1 of the tick it admits for, so this envelope is early rather "
-                + "than wrong and the same identity is admissible once that tick opens";
+                + "than wrong. Resubmitting it unchanged once that tick opens is admissible only while no "
+                + "envelope at or above sequence "
+                + envelope.Sequence.ToString(CultureInfo.InvariantCulture)
+                + " has been admitted in the meantime: the monotonic sequence check runs before this one, so "
+                + "once the high-water mark has passed that sequence the same identity is refused as a "
+                + "sequence regression and the intent has to be resubmitted under a fresh sequence";
         }
 
         return "tick "

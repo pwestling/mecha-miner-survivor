@@ -44,6 +44,18 @@ internal sealed class CommandFixture
     /// <summary>The confirmation token an irreversible action is submitted with.</summary>
     internal const string ConfirmationToken = "T-CONFIRM-ABANDON";
 
+    /// <summary>
+    /// The message <see cref="StageReplacementState"/> throws with while <see cref="StagingThrows"/> is set.
+    /// </summary>
+    /// <remarks>
+    /// Distinctive enough that a test can tell this failure from the gate's own
+    /// <see cref="InvalidOperationException"/>s, which is what the mid-commit tests need in order to assert
+    /// that the exception the caller sees is the one the staging callback raised and not one the recovery
+    /// path substituted.
+    /// </remarks>
+    internal const string StagingFailureMessage =
+        "the staging callback refused to stage the replacement state";
+
     private HudViewModel _hud;
     private int _stagedStep;
 
@@ -112,6 +124,17 @@ internal sealed class CommandFixture
     /// that checks it also drives a case that raises it.
     /// </remarks>
     internal int DomainValidatorInvocations { get; private set; }
+
+    /// <summary>
+    /// Whether <see cref="StageReplacementState"/> throws instead of staging anything.
+    /// </summary>
+    /// <remarks>
+    /// The staging callback is the only outward call a commit makes, so it is the one place a technical
+    /// failure can be injected part way through a commit without a stub standing in for a production type.
+    /// It throws before staging anything, so the failure is genuinely mid-commit: the publisher's tick is
+    /// open and nothing has been staged into it.
+    /// </remarks>
+    internal bool StagingThrows { get; set; }
 
     /// <summary>Builds an envelope for this run session.</summary>
     /// <param name="targetTick">The tick the intent is for.</param>
@@ -208,6 +231,11 @@ internal sealed class CommandFixture
     internal void StageReplacementState(SnapshotPublisher publisher)
     {
         ArgumentNullException.ThrowIfNull(publisher);
+        if (StagingThrows)
+        {
+            throw new InvalidOperationException(StagingFailureMessage);
+        }
+
         _stagedStep++;
         publisher.StagePlayer(_stagedStep * 0.25, _stagedStep * -0.25, facingRadians: 0.0);
         _hud = HudViewModel.Next(

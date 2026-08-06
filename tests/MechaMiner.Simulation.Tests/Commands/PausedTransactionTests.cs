@@ -331,6 +331,271 @@ internal sealed class PausedTransactionTests
     }
 
     /// <summary>
+    /// Verification: <c>VER-SIM-004-013</c>.
+    ///
+    /// A commit that throws part way through invalidates the tick instead of leaving it open: for a throw from
+    /// the staging callback and for a domain buffer handed in already open for another tick, nothing is
+    /// published, the whole authoritative rendering is byte-identical, the publisher's tick is invalidated and
+    /// counted, and both a subsequent <c>BeginTick</c> and a retry of the same transaction succeed.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>The last of those assertions is the point of the test.</b> "Nothing was published" held before this
+    /// path existed; what did not hold was that the failure could end. A commit that threw left the
+    /// publisher's tick open forever, so every later <c>BeginTick</c> and every retry threw "tick N is still
+    /// open", <c>InvalidatedTickCount</c> stayed at zero, and the run wedged instead of ending through the
+    /// technical-failure path. A test that only asserted the absence of a publication would have passed
+    /// against that.
+    /// </para>
+    /// <para>
+    /// <c>TR-RUN-007</c> in <c>docs/technical/112-normative-requirement-index.md</c> § Foundation and runtime
+    /// states the requirement unqualified: "A run technical failure preserves the existing profile and does
+    /// not publish partial state". <c>docs/technical/20-simulation-core.md</c> § Tick transaction is the
+    /// mechanism, and rules only on a failure "before commit", so it does not settle the mid-commit case and
+    /// is not cited here as though it did.
+    /// </para>
+    /// <para>
+    /// <b>Two routes, because they fail at different depths.</b> The staging callback throws with the
+    /// publisher's tick open and neither event buffer opened yet, which is the shallowest possible failure
+    /// past the point of no recovery. The already-open domain buffer throws one statement later, with a
+    /// buffer the transaction does not own in play, which is what makes "release only what this commit
+    /// opened" observable rather than a claim.
+    /// </para>
+    /// </remarks>
+    [Test]
+    public void AFailedCommitInvalidatesTheTickInsteadOfWedgingTheRun()
+    {
+        AssertAThrowingStagingCallbackInvalidatesTheTick();
+        AssertADomainBufferOpenForAnotherTickInvalidatesTheTick();
+    }
+
+    /// <summary>
+    /// The staging callback throws: the shallowest mid-commit failure, with the publisher's tick open and
+    /// neither event buffer touched.
+    /// </summary>
+    private static void AssertAThrowingStagingCallbackInvalidatesTheTick()
+    {
+        CommandFixture fixture = new();
+        OpenAPauseAfterOneTick(fixture);
+
+        string before = fixture.Gate.RenderAuthoritative();
+        SnapshotVersion snapshotBefore = fixture.Publisher.LatestVersion;
+        long versionBefore = fixture.Gate.TransactionStateVersion;
+        long appendedBefore = fixture.DomainEvents.AppendedInRun;
+        long invalidatedBefore = fixture.Publisher.InvalidatedTickCount;
+        PresentationSnapshot? latestBefore = fixture.Publisher.Latest;
+
+        PausedTransactionRequest request = CommandFixture.InstallRequest(
+            versionBefore,
+            clientCommandSequence: 300);
+
+        fixture.StagingThrows = true;
+        InvalidOperationException failure = Expect.Throws<InvalidOperationException>(
+            () => fixture.Apply(request));
+        fixture.StagingThrows = false;
+
+        string after = fixture.Gate.RenderAuthoritative();
+
+        CommandContractAssertions.NothingAuthoritativeChanged(
+            "a commit whose staging callback threw",
+            before,
+            after);
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                failure.Message,
+                Does.Contain(CommandFixture.StagingFailureMessage),
+                "the caller must see the failure the staging callback raised, unchanged: the recovery path "
+                    + "rethrows rather than wrapping, so a diagnostic names the real defect");
+            Assert.That(
+                fixture.Publisher.LatestVersion,
+                Is.EqualTo(snapshotBefore),
+                "nothing was published");
+            Assert.That(
+                fixture.Publisher.Latest,
+                Is.SameAs(latestBefore),
+                "and the snapshot presentation holds is the same object, not a page rewritten in place");
+            Assert.That(
+                fixture.Gate.TransactionStateVersion,
+                Is.EqualTo(versionBefore),
+                "the authoritative state version did not advance");
+            Assert.That(
+                fixture.DomainEvents.AppendedInRun,
+                Is.EqualTo(appendedBefore),
+                "and no domain event reached the buffer, because the failure preceded the append");
+            Assert.That(
+                fixture.Publisher.IsTickOpen,
+                Is.False,
+                "the tick the commit opened must not be left open, or no later tick and no retry can run");
+            Assert.That(
+                fixture.Publisher.InvalidatedTickCount,
+                Is.EqualTo(invalidatedBefore + 1),
+                "it must be invalidated and counted, which is how the run ends through the "
+                    + "technical-failure path rather than wedging");
+            Assert.That(
+                fixture.Gate.AbandonedCommitCount,
+                Is.EqualTo(1L),
+                "and the gate must record the abandoned commit as its own diagnostic");
+            Assert.That(
+                fixture.Gate.Render(),
+                Does.Contain("abandonedCommits=1"),
+                "observable to CMP-OBS-001, not only to this test");
+            Assert.That(
+                fixture.DomainEvents.IsOpenForTick,
+                Is.False,
+                "the domain buffer was never opened by this commit, so it is left closed");
+            Assert.That(
+                fixture.PresentationEvents.IsOpenForTick,
+                Is.False,
+                "and neither was the presentation buffer");
+        });
+
+        AssertTheRunCanContinueAfterTheAbandonedCommit(fixture, request, expectedAbandonedCommits: 1L);
+    }
+
+    /// <summary>
+    /// A domain buffer handed in already open for another tick: <c>DomainEventBuffer.BeginTick</c> throws
+    /// after the publisher's tick has been opened.
+    /// </summary>
+    /// <remarks>
+    /// The second route the reviewer found, and the one that shows the recovery undoes only its own half: the
+    /// stray buffer belongs to whatever opened it, so it must be left open and untouched rather than
+    /// released, which would drop records this transaction never owned.
+    /// </remarks>
+    private static void AssertADomainBufferOpenForAnotherTickInvalidatesTheTick()
+    {
+        CommandFixture fixture = new();
+        OpenAPauseAfterOneTick(fixture);
+
+        const long strayTick = 41L;
+        fixture.DomainEvents.BeginTick(strayTick);
+
+        string before = fixture.Gate.RenderAuthoritative();
+        SnapshotVersion snapshotBefore = fixture.Publisher.LatestVersion;
+        long versionBefore = fixture.Gate.TransactionStateVersion;
+        long invalidatedBefore = fixture.Publisher.InvalidatedTickCount;
+
+        PausedTransactionRequest request = CommandFixture.InstallRequest(
+            versionBefore,
+            clientCommandSequence: 301);
+
+        InvalidOperationException failure = Expect.Throws<InvalidOperationException>(
+            () => fixture.Apply(request));
+
+        string after = fixture.Gate.RenderAuthoritative();
+
+        CommandContractAssertions.NothingAuthoritativeChanged(
+            "a commit handed a domain buffer already open for another tick",
+            before,
+            after);
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                failure.Message,
+                Does.Contain("is still open"),
+                "the tick-local buffer must be what refused, so the failure is the one this route injects");
+            Assert.That(
+                fixture.Publisher.LatestVersion,
+                Is.EqualTo(snapshotBefore),
+                "nothing was published");
+            Assert.That(
+                fixture.Gate.TransactionStateVersion,
+                Is.EqualTo(versionBefore),
+                "the authoritative state version did not advance");
+            Assert.That(
+                fixture.Publisher.IsTickOpen,
+                Is.False,
+                "the tick the commit opened must not be left open");
+            Assert.That(
+                fixture.Publisher.InvalidatedTickCount,
+                Is.EqualTo(invalidatedBefore + 1),
+                "it must be invalidated and counted");
+            Assert.That(
+                fixture.Gate.AbandonedCommitCount,
+                Is.EqualTo(1L),
+                "and the abandoned commit recorded");
+            Assert.That(
+                fixture.DomainEvents.IsOpenForTick,
+                Is.True,
+                "the stray buffer was not opened by this commit, so the recovery must leave it open rather "
+                    + "than releasing a buffer it does not own");
+            Assert.That(
+                fixture.DomainEvents.Tick,
+                Is.EqualTo(strayTick),
+                "still open for the tick it was open for, untouched");
+            Assert.That(
+                fixture.PresentationEvents.IsOpenForTick,
+                Is.False,
+                "while the presentation buffer, which this commit never reached, stays closed");
+        });
+
+        // The host clears its own stray buffer; the gate never does. Only then can the run continue, which is
+        // the honest limit of the recovery rather than something it papers over.
+        fixture.DomainEvents.Release();
+        AssertTheRunCanContinueAfterTheAbandonedCommit(fixture, request, expectedAbandonedCommits: 1L);
+    }
+
+    /// <summary>
+    /// Asserts that after an abandoned commit a later tick can open and the same transaction can be retried
+    /// and applied.
+    /// </summary>
+    /// <param name="fixture">The fixture whose commit was abandoned.</param>
+    /// <param name="request">The request whose commit failed, resubmitted unchanged.</param>
+    /// <param name="expectedAbandonedCommits">How many commits were abandoned before the retry.</param>
+    /// <remarks>
+    /// The explicit <c>BeginTick</c> and the retry are both asserted because they fail for the same reason and
+    /// read differently: the first is the direct statement that no tick is left open, the second is that the
+    /// transaction the run was in the middle of is not permanently unrepeatable. Before this path existed
+    /// both threw "tick 0 is still open; publish or invalidate it first".
+    /// </remarks>
+    private static void AssertTheRunCanContinueAfterTheAbandonedCommit(
+        CommandFixture fixture,
+        PausedTransactionRequest request,
+        long expectedAbandonedCommits)
+    {
+        const long laterTick = 8L;
+        Expect.DoesNotThrow(() => fixture.Publisher.BeginTick(laterTick));
+        TickPublication probe = fixture.Publisher.InvalidateTick(
+            "the probe tick exists only to prove BeginTick succeeds after an abandoned commit");
+
+        PausedTransactionResult retry = fixture.Apply(request);
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                probe.IsPublished,
+                Is.False,
+                "the probe tick published nothing, so it changed no authoritative state");
+            Assert.That(
+                retry.IsAccepted,
+                Is.True,
+                "the same request resubmitted unchanged applies, so the abandoned commit left no residue "
+                    + "that makes the transaction permanently unrepeatable");
+            Assert.That(
+                retry.StateVersion,
+                Is.EqualTo(CommandAdmissionGate.InitialTransactionStateVersion + 1),
+                "advancing the authoritative version exactly once, from where the failed commit left it");
+            Assert.That(
+                fixture.Gate.AppliedTransactionCount,
+                Is.EqualTo(1L),
+                "one application in total: the failed commit counted as none");
+            Assert.That(
+                fixture.Gate.AbandonedCommitCount,
+                Is.EqualTo(expectedAbandonedCommits),
+                "and the retry did not add another abandoned commit");
+            Assert.That(
+                fixture.DomainEvents.IsOpenForTick,
+                Is.False,
+                "the retry released the buffers it opened, so the run is back in a clean state");
+            Assert.That(
+                fixture.PresentationEvents.IsOpenForTick,
+                Is.False);
+        });
+    }
+
+    /// <summary>
     /// Runs one ordinary tick and opens a fabrication pause over it, which is the state doc 10 § Pause
     /// contract describes: "Opening fabrication or relic resolution captures an immutable view of the relevant
     /// authoritative state."

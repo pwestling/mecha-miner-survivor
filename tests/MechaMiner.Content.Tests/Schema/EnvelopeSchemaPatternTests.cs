@@ -83,6 +83,14 @@ internal sealed class EnvelopeSchemaPatternTests
     /// Every category's grammar appears in the schema and nothing else does, so a new
     /// category cannot be added to the code without the schema noticing.
     /// </summary>
+    /// <remarks>
+    /// This compares two sets that both derive from doc 40 and is therefore blind on its
+    /// own to a grammar deleted from both sides, which doc 91 § Negative control adequacy
+    /// forbids leaving unanchored. The third anchor is
+    /// <see cref="DocumentGrammarAgreementTests"/>, which names every grammar
+    /// independently of either side: the five doc 40 mints and implements, and the eleven
+    /// it does not mint.
+    /// </remarks>
     [Test]
     public void TheStableIdAlternativesAreExactlyTheDeclaredCategoryGrammars()
     {

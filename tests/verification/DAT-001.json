@@ -923,27 +923,33 @@
     },
     {
       "id": "VER-DAT-001-039",
-      "summary": "REGISTERED, NOT IMPLEMENTED. The content-ID grammars minted in docs/technical/40-content-data-and-validation.md must agree with the id patterns in content/schemas/** and with the grammars in ContentCategories. Today nothing reads the document. EnvelopeSchemaPatternTests holds the schema patterns and the C# constants equal to each other, which stops those two drifting apart and does nothing to stop them drifting from the document together - two-party agreement is not verification when both parties derive from a third thing and neither reads it. They already have: resource IDs currently carry three mutually disagreeing grammars, which is what this class of hole looks like once it has been open a while. Design constraints the implementation has to honour. (1) It reads the document's machine-readable grammar table - prefix, pattern, category, where instances live - and not its prose. A check that scrapes English breaks on the first editorial rewrite and is then deleted as flaky, which leaves the repository worse off than never having had it. (2) The agreement is three-way and must be asserted pairwise across all three of document, schemas, and C#; a check that compares two of them passes while both drift from the third, which is the present failure restated. (3) A prefix minted in prose with no row in the table is a coverage gap the check reports, not a case it skips - a gate that quietly ignores what it cannot represent has stopped being one. Route covered: every content-ID prefix present in the document's grammar table. Route not covered: a prefix minted in prose without a table row, which is reported as a gap rather than checked. Why this is registered rather than written: the document's minting statements live on a branch this one does not descend from, and the machine-readable grammar table the check reads is still being written. The entry records the obligation so the merge carries it, instead of it being something two sessions remember agreeing to.",
+      "summary": "The content-ID grammars minted in docs/technical/40-content-data-and-validation.md must agree with the id patterns in content/schemas/** and with the grammars in ContentCategories. The document is the anchor and the other two are asserted against it rather than against each other. EnvelopeSchemaPatternTests holds the schema patterns and the C# constants equal to each other, which stops those two drifting apart and does nothing to stop them drifting from the document together - two-party agreement is not verification when both parties derive from a third thing and neither reads it, which doc 91 Negative control adequacy states as the rule that a two-set invariant needs a third anchor naming the expected members independently of either side. How the design constraints are honoured. (1) The check reads only the machine-readable grammar table under doc 40 'Minted content-ID grammars' - prefix, pattern, category, directory - and never its prose; a check that scraped English would break on the first editorial rewrite and be deleted as flaky. (2) Agreement is three-way: for each minted prefix the document's grammar is compared against the category schema's properties/id pattern, against the envelope schema's stable_id alternative, and against the ContentCategories descriptor. (3) A prefix the document mints that no schema implements is reported by name rather than skipped - eleven aggregate prefixes have no definition extracted yet and are asserted as an explicit list, so the day one gains a schema the assertion fails and forces it to be wired in. Route covered: every content-ID prefix in the document's grammar table - the five with an implementation compared three ways, the eleven without one asserted as a named coverage gap. Covered in reverse too: every grammar ContentCategories declares that the document does not mint is recorded by name, which is how SITE-, ELT- and PLAYER- stay visible as unminted rather than passing as documented. Route not covered: whether the corpus under content/ satisfies these grammars - content/resources/ still carries the pre-migration slug and letter IDs that doc 40's RSC- migration replaces, and corpus conformance is DAT-002's population rule rather than this grammar agreement. Negative controls, each a coherent well-formed violation per doc 91: changing the document's RSC- row to a three-digit grammar failed TheDocumentSchemaAndCodeStateOneGrammarFor_RSC, naming the schema, the envelope and ContentCategories as the three disagreeing artifacts; deleting the FORMULA- grammar from both envelope.schema.json and ContentCategories - the correlated deletion that leaves EnvelopeSchemaPatternTests green, confirmed green - failed TheDocumentSchemaAndCodeStateOneGrammarFor_FORMULA; deleting the SIEGE- row from the document failed TheDocumentTableIsExactlyTheSixteenPrefixesNamedHere reporting 'Missing (1): SIEGE-'.",
       "task": "TASK-DAT-001-001",
       "requirements": ["TR-DAT-002", "TR-DAT-004"],
       "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#minted-content-id-grammars",
         "docs/technical/40-content-data-and-validation.md#stable-id-policy",
         "docs/technical/40-content-data-and-validation.md#content-catalogs"
       ],
       "gameplaySources": [],
       "selector": {
         "kind": "nunit",
-        "value": "MechaMiner.Content.Tests.Schema.EnvelopeSchemaPatternTests"
+        "value": "MechaMiner.Content.Tests.Schema.DocumentGrammarAgreementTests"
       },
       "fixtures": [
+        "docs/technical/40-content-data-and-validation.md",
         "content/schemas/envelope.schema.json",
-        "docs/technical/40-content-data-and-validation.md"
+        "content/schemas/resource.schema.json",
+        "content/schemas/utility.schema.json",
+        "content/schemas/encounter-schedule.schema.json",
+        "content/schemas/map-generation-contract.schema.json",
+        "content/schemas/weapon-stat-price-formula.schema.json"
       ],
       "scenarios": [],
       "evidenceKinds": ["test-output"],
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-DAT-001-040",

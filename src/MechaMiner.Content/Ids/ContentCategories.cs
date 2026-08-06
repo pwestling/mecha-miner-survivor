@@ -9,7 +9,7 @@ namespace MechaMiner.Content.Ids;
 /// </summary>
 /// <remarks>
 /// <para>
-/// <b>Most of these prefixes come from an accepted document; five were minted here.</b>
+/// <b>Most of these prefixes come from an accepted document; three were minted here.</b>
 /// <c>docs/technical/40-content-data-and-validation.md</c> § Stable ID policy requires
 /// reusing accepted gameplay IDs "exactly", and the list below says which prefixes that
 /// covers and which it does not, because "derived from an accepted document" and "minted
@@ -23,14 +23,32 @@ namespace MechaMiner.Content.Ids;
 /// schedule and § Map generation mint <c>WAV-01</c> and <c>MGC-01</c>.
 /// </para>
 /// <para>
+/// <b><c>RSC-</c> and <c>FORMULA-</c> are now minted too.</b> Doc 40 § Minted content-ID
+/// grammars states "every prefix in the table below is minted by this document" and gives
+/// both a row: <c>RSC-</c> as <c>^RSC-[0-9]{2}$</c> over <c>content/resources/</c>, and
+/// <c>FORMULA-</c> as <c>^FORMULA-[0-9]{2}$</c> over <c>content/weapons/</c>. The prose
+/// beside the table says why - "<c>RSC-</c> identifies ordinary embodied content and omits
+/// neither field" and "<c>FORMULA-01</c> is a shared definition players read the effect
+/// of". Neither is this file's own claim any more, and the grammars above restate the
+/// document rather than standing in for it.
+/// </para>
+/// <para>
 /// <b>Minted by this implementation, with no accepted document behind them.</b>
-/// <c>RSC-</c>, <c>SITE-</c>, <c>ELT-</c>, and <c>PLAYER-</c> were minted by decision of
-/// the integration owner because the definitions exist and every schema references other
-/// definitions by stable ID; <c>FORMULA-</c> was minted by <c>DAT-002</c> for the weapon
-/// stat price curve, whose authored stem matched no grammar at all. Document minting
-/// statements for all five are in flight, and until they land these grammars are this
-/// file's own claim rather than a restatement of somebody else's. A prefix here is not
+/// <c>SITE-</c>, <c>ELT-</c>, and <c>PLAYER-</c>. They were minted by decision of the
+/// integration owner because the definitions exist and every schema references other
+/// definitions by stable ID, and no document in this tree mints them: they are absent
+/// from doc 40's table, and doc 40 accounts for its absentees as prefixes "reused from
+/// the accepted gameplay register", which these are not - the register § Stable ID policy
+/// names is <c>MCH-01</c>, <c>EN-01</c>, <c>BOSS-01</c>, <c>W-AB</c>, <c>REL-01</c> "and
+/// equivalent utility/PowerUp/unlock IDs", and no gameplay catalog assigns an ID to a
+/// mining site, an elite modifier set, or the player baseline. A prefix here is not
 /// evidence that a document mints it; this paragraph is the list of the ones it does not.
+/// </para>
+/// <para>
+/// Which of these three states a prefix is in is asserted, not just described:
+/// <c>DocumentGrammarAgreementTests</c> reads doc 40's table and holds this file, the
+/// category schemas, and the document to one grammar per prefix, with the three above
+/// recorded by name as the ones no document mints.
 /// </para>
 /// <para>
 /// Two things this registry deliberately does not do. It does not bound a grammar to
@@ -57,12 +75,12 @@ public static class ContentCategories
 
         // A weapon ID is its unordered material pair, so the two letters are the ID.
         // The second grammar is the weapons catalog's own aggregate: the stat price
-        // curve, FORMULA-01. Its authored stem matched no grammar at all, and it needs
-        // one for the same reason WAV-01 and MGC-01 do - every schema references other
-        // definitions by stable ID. It stays in content/weapons/ because the price
-        // curve is a shared rule *within* the weapon domain, which is the reasoning
-        // that already keeps ELT-01 in content/enemies/ rather than in a constants
-        // directory.
+        // curve, FORMULA-01, which doc 40 § Minted content-ID grammars mints and
+        // places in content/weapons/ under its rule that "an aggregate lives in the
+        // catalog directory it serves". Placement is not exclusion: the same section
+        // requires content/weapons/ to exclude FORMULA-01 from its 15-recipe
+        // population assertion *by name*, and that is DAT-002's rule to enforce, not
+        // this grammar's.
         Declare(ContentCategory.Weapon, "weapons", "^W-[A-F]{2}$", "^FORMULA-[0-9]{2}$"),
 
         // A branch ID is its parent weapon plus a kebab-case name, which is what makes

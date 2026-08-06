@@ -10,7 +10,7 @@ namespace MechaMiner.Diagnostics.Identity;
 /// and domain defaults. A stale or missing manifest is expected: it is exactly what a
 /// staleness gate is looking for.
 /// </remarks>
-internal sealed class BuildManifestComparison
+public sealed class BuildManifestComparison
 {
     private readonly List<string> _differences = new();
 
@@ -21,28 +21,28 @@ internal sealed class BuildManifestComparison
     }
 
     /// <summary>The manifest on disk matches the compiled identity exactly.</summary>
-    internal const string CurrentStatus = "current";
+    public const string CurrentStatus = "current";
 
     /// <summary>No manifest exists on disk.</summary>
-    internal const string MissingStatus = "missing";
+    public const string MissingStatus = "missing";
 
     /// <summary>A manifest exists but does not match the compiled identity.</summary>
-    internal const string StaleStatus = "stale";
+    public const string StaleStatus = "stale";
 
     /// <summary>A manifest exists but is not a readable <c>SCH-BLD-001</c> document.</summary>
-    internal const string UnreadableStatus = "unreadable";
+    public const string UnreadableStatus = "unreadable";
 
     /// <summary>One of <see cref="CurrentStatus"/>, <see cref="MissingStatus"/>, <see cref="StaleStatus"/>, or <see cref="UnreadableStatus"/>.</summary>
-    internal string Status { get; }
+    public string Status { get; }
 
     /// <summary>A single human-readable sentence naming the outcome.</summary>
-    internal string Detail { get; }
+    public string Detail { get; }
 
     /// <summary>Field-level differences, empty unless <see cref="Status"/> is stale.</summary>
-    internal IReadOnlyList<string> Differences => _differences;
+    public IReadOnlyList<string> Differences => _differences;
 
     /// <summary>Whether the on-disk manifest is current.</summary>
-    internal bool IsCurrent => string.Equals(Status, CurrentStatus, StringComparison.Ordinal);
+    public bool IsCurrent => string.Equals(Status, CurrentStatus, StringComparison.Ordinal);
 
     /// <summary>The manifest matches.</summary>
     internal static BuildManifestComparison Current(string path)
@@ -97,16 +97,16 @@ internal sealed class BuildManifestComparison
 /// (<c>TR-PST-006</c>, doc 70 § Local file layout and encoding).
 /// </para>
 /// </remarks>
-internal static class BuildManifestFile
+public static class BuildManifestFile
 {
     /// <summary>The repository-relative path of the generated manifest.</summary>
-    internal const string RepositoryRelativePath = "generated/build-manifest.json";
+    public const string RepositoryRelativePath = "generated/build-manifest.json";
 
     /// <summary>
     /// Writes the compiled identity to <paramref name="absolutePath"/> and returns the
     /// exact text written.
     /// </summary>
-    internal static string Write(string absolutePath)
+    public static string Write(string absolutePath)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(absolutePath);
 
@@ -127,8 +127,33 @@ internal static class BuildManifestFile
         return json;
     }
 
+    /// <summary>
+    /// Reads only the canonical identity line out of a manifest on disk.
+    /// </summary>
+    /// <remarks>
+    /// The consumer of the equality gate needs one string, not the typed manifest, so this is
+    /// the whole of the read surface. The line is recomputed from the document's own fields and
+    /// compared with the stored line, so a manifest whose identity line disagrees with its own
+    /// contents is rejected here rather than quietly compared.
+    /// </remarks>
+    public static string ReadIdentityLine(string absolutePath)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(absolutePath);
+
+        BuildManifest manifest = DiagnosticsJsonContext.DeserializeManifest(File.ReadAllText(absolutePath));
+        string derived = BuildIdentity.RenderIdentityLine(manifest);
+        if (!string.Equals(derived, manifest.IdentityLine, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException(
+                "the manifest at " + absolutePath + " carries an identity line that is not derivable from its "
+                + "own fields: stored '" + manifest.IdentityLine + "', derived '" + derived + "'");
+        }
+
+        return manifest.IdentityLine;
+    }
+
     /// <summary>Compares the manifest at <paramref name="absolutePath"/> with the compiled identity.</summary>
-    internal static BuildManifestComparison Compare(string absolutePath, string displayPath)
+    public static BuildManifestComparison Compare(string absolutePath, string displayPath)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(absolutePath);
 

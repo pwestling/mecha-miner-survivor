@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
-using MechaMiner.Diagnostics;
 using MechaMiner.Diagnostics.Identity;
 using MechaMiner.Tests.Support;
 using NUnit.Framework;
@@ -117,12 +116,10 @@ internal sealed class BuildIdentityEqualityTests
             BuildManifestFile.RepositoryRelativePath.Replace('/', Path.DirectorySeparatorChar));
         EnsureManifestExists(absolute);
 
-        BuildManifest manifest = DiagnosticsJsonContext.DeserializeManifest(File.ReadAllText(absolute));
-        Assert.That(
-            manifest.IdentityLine,
-            Is.EqualTo(BuildIdentity.RenderIdentityLine(manifest)),
-            "the manifest's identity line must be derivable from its own fields");
-        return manifest.IdentityLine;
+        // ReadIdentityLine recomputes the line from the document's own fields and rejects a
+        // manifest whose stored line disagrees with its contents, so that check is part of the
+        // read rather than something this fixture has to remember to repeat.
+        return BuildManifestFile.ReadIdentityLine(absolute);
     }
 
     /// <summary>

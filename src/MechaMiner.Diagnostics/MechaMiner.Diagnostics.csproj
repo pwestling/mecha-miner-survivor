@@ -37,12 +37,26 @@
     <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
   </PropertyGroup>
 
-  <ItemGroup Label="Consumers that read build identity from this assembly">
+  <ItemGroup Label="Test-only access to internals (doc 91 § Test project separation)">
+    <!--
+      Exactly one grant, to this project's own mirror test project. doc 91: "Test-only
+      access occurs through explicit diagnostic APIs/assemblies, not reflection into private
+      state", and the assembly route is the sanctioned one.
+
+      No production project appears here. MechaMiner.Tools and MechaMiner.Game read build
+      identity through the deliberately small PUBLIC surface of Identity/BuildIdentity.cs and
+      Identity/BuildManifestFile.cs, because doc 114 § C# and domain defaults makes a type
+      public exactly when "a documented cross-project contract requires visibility", and
+      SCH-BLD-001 plus doc 115 § Initialization order step 1 are that documented contract.
+      Granting a production project access to another's internals instead would make the
+      whole assembly the contract, which is the opposite of a small surface.
+
+      This exists for behaviour that genuinely cannot be observed through the public
+      contract. A repeated need for it is a missing diagnostic API - QUA-003 needs one anyway
+      for the debug overlay and command palette - not a reason to widen test coupling to
+      implementation detail.
+    -->
     <InternalsVisibleTo Include="MechaMiner.Diagnostics.Tests" />
-    <InternalsVisibleTo Include="MechaMiner.Tools" />
-    <InternalsVisibleTo Include="MechaMiner.Tools.Tests" />
-    <InternalsVisibleTo Include="MechaMiner.Game" />
-    <InternalsVisibleTo Include="MechaMiner.Game.Tests" />
   </ItemGroup>
 
   <!--

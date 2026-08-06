@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MechaMiner.Diagnostics.Identity;
+using MechaMiner.Diagnostics.Logging;
 
 namespace MechaMiner.Diagnostics;
 
@@ -30,6 +31,7 @@ namespace MechaMiner.Diagnostics;
     NumberHandling = JsonNumberHandling.Strict,
     DefaultIgnoreCondition = JsonIgnoreCondition.Never)]
 [JsonSerializable(typeof(BuildManifest))]
+[JsonSerializable(typeof(DiagnosticRunRecord))]
 internal sealed partial class DiagnosticsJsonContext : JsonSerializerContext
 {
     /// <summary>Writes the <c>SCH-BLD-001</c> manifest as canonical UTF-8 JSON text with a trailing newline.</summary>
@@ -44,4 +46,55 @@ internal sealed partial class DiagnosticsJsonContext : JsonSerializerContext
         return JsonSerializer.Deserialize(json, Default.BuildManifest)
             ?? throw new JsonException("the SCH-BLD-001 build manifest deserialized to null");
     }
+
+    /// <summary>Writes the <c>SCH-OBS-001</c> diagnostic run record.</summary>
+    internal static string Serialize(DiagnosticRunRecord record)
+    {
+        return JsonSerializer.Serialize(record, Default.DiagnosticRunRecord) + "\n";
+    }
+
+    /// <summary>Reads a <c>SCH-OBS-001</c> diagnostic run record, rejecting unknown fields.</summary>
+    internal static DiagnosticRunRecord DeserializeRunRecord(string json)
+    {
+        return JsonSerializer.Deserialize(json, Default.DiagnosticRunRecord)
+            ?? throw new JsonException("the SCH-OBS-001 diagnostic run record deserialized to null");
+    }
+
+    /// <summary>
+    /// Writes one log record as a single JSON line.
+    /// </summary>
+    /// <remarks>
+    /// A second context, not a second options object on the first, because a line-delimited
+    /// log cannot be indented and <c>WriteIndented</c> is fixed per context. The rotating log
+    /// file counts bytes per line and a crash that truncates the tail must cost one record
+    /// rather than the whole file.
+    /// </remarks>
+    internal static string SerializeLine(LogRecord record)
+    {
+        return JsonSerializer.Serialize(record, CompactLogJsonContext.Default.LogRecord);
+    }
+
+    /// <summary>Reads one log line, rejecting unknown fields.</summary>
+    internal static LogRecord DeserializeLogLine(string json)
+    {
+        return JsonSerializer.Deserialize(json, CompactLogJsonContext.Default.LogRecord)
+            ?? throw new JsonException("a log line deserialized to null");
+    }
+}
+
+/// <summary>The log-record shape written on one line.</summary>
+/// <remarks>
+/// Separate from <see cref="DiagnosticsJsonContext"/> only because
+/// <c>WriteIndented</c> is a per-context option and a line-delimited log must not be
+/// indented. Every other option matches, so a record round-trips through either.
+/// </remarks>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower,
+    UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
+    WriteIndented = false,
+    NumberHandling = JsonNumberHandling.Strict,
+    DefaultIgnoreCondition = JsonIgnoreCondition.Never)]
+[JsonSerializable(typeof(LogRecord))]
+internal sealed partial class CompactLogJsonContext : JsonSerializerContext
+{
 }

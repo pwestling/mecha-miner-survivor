@@ -38,19 +38,19 @@ namespace MechaMiner.Diagnostics.Identity;
 /// An assembly compiled without its identity metadata is exactly invalid build data.
 /// </para>
 /// </remarks>
-internal static class BuildIdentity
+public static class BuildIdentity
 {
     /// <summary>The stable schema ID of the emitted manifest.</summary>
-    internal const string SchemaId = "SCH-BLD-001";
+    public const string SchemaId = "SCH-BLD-001";
 
     /// <summary>The version of the manifest's shape.</summary>
-    internal const int SchemaVersion = 1;
+    public const int SchemaVersion = 1;
 
-    /// <summary>The value <see cref="SourceIdentity.Commit"/> carries outside a git working tree.</summary>
-    internal const string SourceUnavailable = "unavailable";
+    /// <summary>The value the source commit carries outside a git working tree.</summary>
+    public const string SourceUnavailable = "unavailable";
 
-    /// <summary>The value <see cref="SourceIdentity.Dirty"/> carries when the working tree cannot be inspected.</summary>
-    internal const string DirtyUnknown = "unknown";
+    /// <summary>The value the dirty flag carries when the working tree cannot be inspected.</summary>
+    public const string DirtyUnknown = "unknown";
 
     private const int ShortCommitLength = 12;
 
@@ -65,11 +65,17 @@ internal static class BuildIdentity
     internal static BuildManifest Current => Lazy.Value;
 
     /// <summary>
-    /// The single canonical line every diagnostic header, about surface, and report
-    /// prints. Ordered, delimiter-separated, and stable, so two surfaces can be
-    /// compared for equality as text.
+    /// The single canonical line every diagnostic header, about surface, and report prints.
+    /// Ordered, delimiter-separated, and stable, so two surfaces can be compared for equality
+    /// as text.
     /// </summary>
-    internal static string IdentityLine => Lazy.Value.IdentityLine;
+    /// <remarks>
+    /// Public because this is the cross-project contract: the workflow host, the Godot
+    /// process, and every diagnostic header report the same line, and
+    /// <c>VER-FND-004-004</c> compares them. The typed manifest behind it stays internal, so
+    /// the contract is one string rather than a mutable object graph.
+    /// </remarks>
+    public static string IdentityLine => Lazy.Value.IdentityLine;
 
     /// <summary>Returns an independent copy of the identity, safe to serialize or extend.</summary>
     internal static BuildManifest ToManifest()

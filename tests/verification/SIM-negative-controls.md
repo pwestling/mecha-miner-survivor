@@ -232,7 +232,9 @@ The fourteen sections above were the first batch committed. Everything below is 
 remainder of the perturbation work, brought in from the session evidence files it used to
 live in. Those files were outside the repository, so every claim resting on them was a
 pointer rather than a claim; `docs/technical/91-verification-strategy.md` § Claim and
-measurement discipline's fourth rule is why that is not good enough.
+measurement discipline's fourth rule is why that is not good enough. The one exception is
+§ The seventh permanent negative control, which is new work rather than an import: it was
+run after all of this was committed, to close the one gap the import exposed.
 
 Three things about the form of what follows.
 
@@ -3197,6 +3199,161 @@ the publisher's tick is left open and `InvalidatedTickCount` stays at zero. The 
 about nothing being published and no version advancing still pass under the perturbation,
 which is why a test asserting only those would not have caught it.
 
+## The seventh permanent negative control
+
+One control, run at `4ece54f` after every transcript above was already committed. Six of the
+seven packages' permanent negative-control entries had had their stub repaired and re-run and
+`VER-SIM-005-016`'s had not, which is the gap § Attributions that did not survive the rule
+recorded as six of seven. This is the seventh, and it closes it.
+
+The runner is `dotnet test` with a `--filter`, for the reason § The final batch: run-session
+fences, comparator keys, and one control per guard gives. The perturbed file is a test-side one,
+so the assembly whose hash has to move under § Why a forced rebuild is part of the method is the
+test assembly rather than `MechaMiner.Simulation.dll`. Setup, perturbation and forced rebuild,
+with the perturbation itself shown in the section below:
+
+```
+$ git rev-parse HEAD
+4ece54f5095c3cf4ac6081614e514493d6ac4f48
+$ git hash-object tests/MechaMiner.Simulation.Tests/Random/ReferenceVectorEngine.cs
+df74abf6420edd769a3a95dcd93daeef694d7d5c
+$ sha256sum tests/MechaMiner.Simulation.Tests/bin/Debug/net8.0/MechaMiner.Simulation.Tests.dll
+64f1292776826fdc75705e7d2d692933765cf0fb4be0382715d3cc1c8b94aaa9  tests/MechaMiner.Simulation.Tests/bin/Debug/net8.0/MechaMiner.Simulation.Tests.dll
+$ touch tests/MechaMiner.Simulation.Tests/Random/ReferenceVectorEngine.cs
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:n 2>&1 | grep -E 'CoreCompile|Warning\(s\)|Error\(s\)'
+       CoreCompile:
+       Skipping target "CoreCompile" because all output files are up-to-date with respect to the input files.
+       CoreCompile:
+       Skipping target "CoreCompile" because all output files are up-to-date with respect to the input files.
+       CoreCompile:
+    0 Warning(s)
+    0 Error(s)
+$ sha256sum tests/MechaMiner.Simulation.Tests/bin/Debug/net8.0/MechaMiner.Simulation.Tests.dll
+d0eb1ceba44a5a1d5894b1f077016c00eee8999c84a489e15745d0de244991d6  tests/MechaMiner.Simulation.Tests/bin/Debug/net8.0/MechaMiner.Simulation.Tests.dll
+```
+
+Two of the three `CoreCompile` targets in that log report skipping and the log does not say
+which project the third belongs to, which is exactly why the method does not rest on a
+`CoreCompile` line. The hash moved, from `64f12927` to `d0eb1ceb`, and the probe then ran with
+`--no-build` against the assembly that was proved new.
+
+The abort branch was exercised rather than assumed. The same before/build/after sequence run
+with no perturbation applied leaves the hash where it was and stops without reporting anything:
+
+```
+before: 64f1292776826fdc75705e7d2d692933765cf0fb4be0382715d3cc1c8b94aaa9
+after:  64f1292776826fdc75705e7d2d692933765cf0fb4be0382715d3cc1c8b94aaa9
+ABORT: the output assembly did not change, so this probe would measure the previous build
+exit: 3
+```
+
+`MECHAMINER_GOLDEN_UPDATE` was never set and no golden was written, edited or regenerated: the
+`git status --short` over `Goldens/` in the transcript below reads 0 lines.
+
+### SIM-005's permanent negative control, with its reference stub repaired
+
+**Entries controlled.** `VER-SIM-005-016`
+
+**Perturbation** (`tests/MechaMiner.Simulation.Tests/Random/ReferenceVectorEngine.cs`, in
+`ReferenceVectorStream`'s constructor). The deliberately broken stub is *repaired*. This entry's
+stub is the independent reference engine driven by a mutated constant set, and the mutation
+repaired here is the one § Randomness: the algorithm constants calls the interesting one, the
+increment's mandatory low bit: the reference stops dropping it, so it builds the odd increment
+doc 20 § Authoritative random-number contract requires whatever constant set it is handed. The
+mutation the entry's test injects then produces a stream that agrees with the committed vector,
+and the assertion has nothing left to catch.
+
+Filter: `Pcg32NegativeControlTests`
+
+Perturbed from:
+
+```csharp
+            this._increment = constants.ForceEvenIncrement ? increment & 0xFFFFFFFFFFFFFFFEUL : increment;
+```
+
+to:
+
+```csharp
+            this._increment = increment;
+```
+
+Verbatim failure:
+
+```
+$ dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj --no-build --nologo --filter 'FullyQualifiedName~Pcg32NegativeControlTests'
+Test run for <repo>/tests/MechaMiner.Simulation.Tests/bin/Debug/net8.0/MechaMiner.Simulation.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+  Failed GoldenAndIndependenceAssertionsFailAgainstOneBitMutations [69 ms]
+  Error Message:
+     mutation "increment's mandatory low bit dropped" must be caught by random-stream-initialization.txt
+Assert.That(divergent, Does.Contain(expectedBrokenGolden))
+  Expected: some item equal to "random-stream-initialization.txt"
+  But was:  <empty>
+
+  Stack Trace:
+     at MechaMiner.Tests.Support.Expect.Multiple(Action assertions) in <repo>/tests/shared/Expect.cs:line 24
+   at MechaMiner.Simulation.Tests.Random.Pcg32NegativeControlTests.GoldenAndIndependenceAssertionsFailAgainstOneBitMutations() in <repo>/tests/MechaMiner.Simulation.Tests/Random/Pcg32NegativeControlTests.cs:line 43
+
+1)    at MechaMiner.Simulation.Tests.Random.Pcg32NegativeControlTests.AssertBreaks(ReferenceRandomConstants mutation, String expectedBrokenGolden) in <repo>/tests/MechaMiner.Simulation.Tests/Random/Pcg32NegativeControlTests.cs:line 222
+   at MechaMiner.Simulation.Tests.Random.Pcg32NegativeControlTests.<>c.<GoldenAndIndependenceAssertionsFailAgainstOneBitMutations>b__0_0() in <repo>/tests/MechaMiner.Simulation.Tests/Random/Pcg32NegativeControlTests.cs:line 102
+   at NUnit.Framework.Assert.Multiple(Action action)
+   at MechaMiner.Tests.Support.Expect.Multiple(Action assertions) in <repo>/tests/shared/Expect.cs:line 24
+   at MechaMiner.Simulation.Tests.Random.Pcg32NegativeControlTests.GoldenAndIndependenceAssertionsFailAgainstOneBitMutations() in <repo>/tests/MechaMiner.Simulation.Tests/Random/Pcg32NegativeControlTests.cs:line 43
+
+
+
+Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 69 ms - MechaMiner.Simulation.Tests.dll (net8.0)
+probe exit: 1
+```
+
+The failing method is the one this entry's `selector` names, and `divergent` is `<empty>`: the
+repaired reference reproduced all six committed vectors while carrying a constant set doc 20 §
+Authoritative random-number contract forbids, so the assertion that the mutation is caught had
+nothing to report. Exactly one of the fixture's twenty assertions failed, and because
+`Assert.Multiple` reports every failure rather than the first, that is positive evidence the
+other nineteen passed: this is a control on one mutation of the battery, not a demonstration
+that the fixture can be broken wholesale. The last line of the block is the harness reporting
+the probe's exit code, which is `1`; a `0` there would mean the assertion had nothing to catch
+even with the stub broken, which is the vacuity this control exists to rule out.
+
+Restore, and the state after it:
+
+```
+$ git status --short tests/MechaMiner.Simulation.Tests/Goldens/ | wc -l
+0
+$ git checkout -- tests/MechaMiner.Simulation.Tests/Random/ReferenceVectorEngine.cs && touch tests/MechaMiner.Simulation.Tests/Random/ReferenceVectorEngine.cs
+$ git hash-object tests/MechaMiner.Simulation.Tests/Random/ReferenceVectorEngine.cs
+df74abf6420edd769a3a95dcd93daeef694d7d5c
+$ git status --short | wc -l
+0
+$ dotnet build tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj -v:q --nologo 2>&1 | grep -E 'Warning\(s\)|Error\(s\)'
+    0 Warning(s)
+    0 Error(s)
+$ sha256sum tests/MechaMiner.Simulation.Tests/bin/Debug/net8.0/MechaMiner.Simulation.Tests.dll
+64f1292776826fdc75705e7d2d692933765cf0fb4be0382715d3cc1c8b94aaa9  tests/MechaMiner.Simulation.Tests/bin/Debug/net8.0/MechaMiner.Simulation.Tests.dll
+$ dotnet test tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj --no-build --nologo --filter 'FullyQualifiedName~Pcg32NegativeControlTests' | tail -1
+Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 49 ms - MechaMiner.Simulation.Tests.dll (net8.0)
+```
+
+The blob is the pre-edit blob and the tree is clean, and the rebuilt assembly returns to
+`64f12927`, the hash it carried before the perturbation, so the revert is proved at the assembly
+as well as at the file. The four gates after the revert:
+
+```
+$ ./build.sh build | grep -E '^(OK|FAILED|verb:)'
+OK [MMT-0000] build debug (MSBuild Debug) succeeded with 0 warnings, 0 errors, and an intact project boundary
+verb:    build   exit class 0 (success)   owner FND-002
+$ ./build.sh format-check | grep -E '^(OK|FAILED|verb:)'
+OK [MMT-0000] format-check passed all three gates; nothing was written
+verb:    format-check   exit class 0 (success)   owner FND-002
+$ ./build.sh test-fast | grep -E '^(OK|FAILED|verb:)'
+OK [MMT-0000] test-fast: total 147, passed 147, failed 0, skipped 0
+verb:    test-fast   exit class 0 (success)   owner FND-003
+$ bash build/verify-architecture.sh | tail -1
+verify-architecture: PASS
+arch exit: 0
+```
+
 ## Attributions that did not survive the rule
 
 Crediting a section with an entry only when the entry's own test is shown failing moved
@@ -3222,11 +3379,14 @@ distinction, not the pointer.
 
 `VER-SIM-006-010` also gains the section that does show its own test failing,
 § Event ordering drops the system-phase key, where its selector is the first failure recorded.
-`VER-SIM-005-016` gains nothing, because no section anywhere shows its test failing: the
-one-bit mutations it carries are applied to the test-side independent reference, so the battery
-lives inside a green suite with no gate disabled, and nobody ran the repair-the-stub control
-that the other six packages' permanent negative-control entries have. Six of seven, not seven
-of seven, and § Which entry each section controls is where that shows.
+`VER-SIM-005-016` gained nothing when this was written, because no section then showed its test
+failing: the one-bit mutations it carries are applied to the test-side independent reference, so
+the battery lives inside a green suite with no gate disabled, and nobody had run the
+repair-the-stub control that the other six packages' permanent negative-control entries have.
+Six of seven, not seven of seven. That control has since been run and is recorded under
+§ SIM-005's permanent negative control, with its reference stub repaired, so the count is now
+seven of seven, and this entry keeps the algorithm-constants pointer beside it as the
+cross-reference it is rather than as the control it is not.
 
 **Five section-level gate claims were narrowed.** In each case the original record named a
 gate the transcript does not show failing. Two of the five are provable over-claims rather
@@ -3324,7 +3484,7 @@ diff rather than a `Failed <method>` line, and the credit rests on the command n
 | `VER-SIM-005-013` | implemented | § Controls for the second review pass; § Recovery re-derives the stream instead of carrying its live state |
 | `VER-SIM-005-014` | implemented | No control transcript. Schema-version rejection on recovery was never perturbed. |
 | `VER-SIM-005-015` | implemented | No control transcript. Source injectability is a structural assertion about production having no algorithm choice; it was never perturbed. |
-| `VER-SIM-005-016` | implemented | § Randomness: the algorithm constants *(same perturbation against production)* |
+| `VER-SIM-005-016` | implemented | § SIM-005's permanent negative control, with its reference stub repaired; § Randomness: the algorithm constants *(same perturbation against production)* |
 | `VER-SIM-006-001` | implemented | § Events: the domain buffer drops at its ceiling |
 | `VER-SIM-006-002` | implemented | § The coalescing policy merges every kind |
 | `VER-SIM-006-003` | retired | retired, and deliberately not pointed at this file. Its selector is now `VER-SIM-006-011`'s, and § The event comparator loses its tick key is the transcript of why this entry was retired rather than a control for what it claimed |
@@ -3352,7 +3512,9 @@ diff rather than a `Failed <method>` line, and the credit rests on the command n
 
 68 entries name this file. 20 are recorded above as having no control transcript
 anywhere and name it nowhere. One is retired and points at nothing. That accounts for all
-89 entries across the seven files.
+89 entries across the seven files. All seven packages' permanent negative-control entries now
+have a section that shows the entry's own test failing, `VER-SIM-005-016`'s being the last of
+the seven to be run, so no entry's only credit here is a qualified cross-reference.
 
 The 20 without a control are not a backlog with a plan attached, and this file does not
 pretend otherwise. They are what the perturbation work did not reach. Seven of them are in

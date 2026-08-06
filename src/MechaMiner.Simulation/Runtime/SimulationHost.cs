@@ -49,7 +49,9 @@ namespace MechaMiner.Simulation.Runtime;
 /// Once the tick target has returned, the world has moved and the clock has not, so a refused
 /// commit cannot be retried: a later step that re-ran the same tick would break
 /// <c>VER-SIM-001-010</c>'s "no gap and no repeat". <see cref="HasEndedInTechnicalFailure"/> is
-/// the recorded fact, and every later <see cref="Step(double)"/> refuses.
+/// the recorded fact, and every later <see cref="Step(double)"/> refuses. doc 20 § Where the end
+/// of a technically failed run is recorded is why that fact lives here rather than in the pause
+/// set or the run's terminal state.
 /// </para>
 /// <para>
 /// Cross-boundary consumer (doc 115 § Component registry): <c>CMP-PRS-001</c> in <c>game/</c>
@@ -133,11 +135,12 @@ public sealed class SimulationHost
     /// carry the disagreement forward, and <c>VER-SIM-001-010</c> forbids the first.
     /// </para>
     /// <para>
-    /// <b>Why this is host state and not run-clock state.</b> <see cref="RunClock"/> owns the
-    /// run's terminal state, and doc 20 § Scope and invariants makes a terminal result something
-    /// "assigned once" and "immutable". A technical failure is not a terminal result: doc 20
-    /// § Tick transaction says such a failure "never publishes a partial state", so it must not
-    /// occupy the field a real extraction outcome will be written to, and
+    /// <b>Why this is host state and not run-clock state.</b> The whole argument is doc 20
+    /// § Where the end of a technically failed run is recorded, which rules out a blocking reason
+    /// and rules out the run's terminal state before arriving here. In short:
+    /// <see cref="RunClock"/> owns terminal state and doc 20 § Scope and invariants makes a
+    /// terminal result "assigned once" and "immutable", while a technical failure has no result
+    /// to assign because doc 20 § Tick transaction forbids publishing a partial state, so
     /// <see cref="ISimulationWorld.EvaluateTerminalBoundary(SimulationTick)"/> is deliberately
     /// not called. The host owns step ordering across ticks, and refusing to run another tick is
     /// a step-ordering fact.

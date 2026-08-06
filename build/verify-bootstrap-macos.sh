@@ -25,7 +25,7 @@
 # FORWARD-COMPATIBLE HALF
 #
 #   build/toolchain.json is NOT present on master; it belongs to the FND-002
-#   branch chain (14 of 21 remote heads carry it, master is not one of them). So
+#   branch chain (14 of 23 remote heads carry it, master is not one of them). So
 #   the macOS artifact hashes this repository now knows live in
 #   build/bootstrap-macos.sh, and nothing else on master can hold them.
 #
@@ -74,6 +74,15 @@ skip() {
   printf 'SKIP  %s\n' "$*"
   skipped=$((skipped + 1))
   skipped_names+=("$1")
+}
+
+# Prefixes each line of a captured block for reporting. A loop, not
+# `sed 's/^/      /'`, so shellcheck stays silent on a variable substitution.
+indent_lines() {
+  local line
+  while IFS= read -r line; do
+    printf '      %s\n' "${line}"
+  done <<<"$1"
 }
 
 # Reads a `readonly NAME="value"` constant out of the script by text, not by
@@ -156,6 +165,42 @@ else
     "with no DOTNET_ROOT set. A different directory breaks the headless launch."
 fi
 
+# Asserting the DECLARATION alone was not enough, and this is the single failure
+# this section's comment says it exists to prevent. constant_of() reads
+# `^readonly DOTNET_INSTALL_DIR="..."` by text, so leaving that line untouched and
+# pointing the install code at a second variable passed this check green: the
+# declaration still said /usr/local/share/dotnet while the SDK was extracted to
+# $HOME/.dotnet, off hostfxr's probe path. `bash -n` was clean, `shellcheck` was
+# clean, the gate reported zero failures, and the symptom on the developer's Mac is
+# a game that will not launch and looks like a Godot bug.
+#
+# So assert that the code which actually creates and fills the install directory
+# names ${DOTNET_INSTALL_DIR} literally. A shadow variable now fails here.
+assert_targets_install_dir() {
+  local label="$1" pattern="$2" lines
+  # Comment lines are dropped so the script may still discuss these operations in
+  # prose; `|| true` because no match is a distinct, separately-reported failure.
+  lines="$(grep -nE "${pattern}" "${SCRIPT}" | grep -vE '^[0-9]+:[[:space:]]*#' || true)"
+  if [[ -z "${lines}" ]]; then
+    fail "${label} is not present in the script at all; this check cannot confirm the install target"
+    printf '      %s\n' "searched for: ${pattern}"
+    return
+  fi
+  # A here-string, deliberately: `grep -qv` fed by a pipe from a file-reading grep
+  # is the exact SIGPIPE race that section 8 documents.
+  if grep -qvF "\${DOTNET_INSTALL_DIR}" <<<"${lines}"; then
+    fail "${label} does not target \${DOTNET_INSTALL_DIR}"
+    indent_lines "${lines}"
+    printf '      %s\n' \
+      "The declaration above can be correct while the install goes somewhere else." \
+      "An SDK outside ${MACOS_DOTNET_PROBE_PATH} is not on hostfxr's probe path."
+  else
+    pass "${label} targets \${DOTNET_INSTALL_DIR}"
+  fi
+}
+assert_targets_install_dir "the privilege-escalation call" 'ensure_install_dir_writable[[:space:]]+"'
+assert_targets_install_dir "the tar extraction" 'tar[[:space:]]+-xzf'
+
 echo
 echo "=== 7. DOTNET_ROOT is not substituted for the probe path"
 # Setting DOTNET_ROOT instead of using the probe path is the specific wrong fix
@@ -173,9 +218,40 @@ echo "=== 8. it does not demand root"
 # bootstrap-linux.sh legitimately hard-fails on EUID != 0. This script must not:
 # a Mac developer is not root, and a bootstrap that refuses to start is one
 # nobody runs. Narrowly-scoped sudo for mkdir/chown is the intended shape.
-if grep -nE 'EUID.*-ne[[:space:]]+0' "${SCRIPT}" | grep -qv 'warn'; then
+#
+# This check was `grep -nE 'EUID.*-ne[[:space:]]+0' "${SCRIPT}" | grep -qv 'warn'`,
+# and it had two independent holes.
+#
+#   1. SIGPIPE. Under `set -o pipefail` the right-hand `grep -qv` exits at its
+#      first non-matching line; the left-hand grep is then killed by SIGPIPE and
+#      the pipeline yields 141, which `if` reads as FALSE and falls through to
+#      pass. On a script carrying 1500 hard-fail-on-non-root lines this printed
+#      "ok no root requirement" in 10 runs out of 12 - and FAILed in the other 2.
+#      It was a race, not a check. The single-line negative control passed only
+#      because one line is too little output to make the left grep block.
+#      So: capture into variables and match with here-strings. No pipe, no signal,
+#      no race.
+#   2. One spelling. `-ne 0` was the only form recognised, so the equally
+#      idiomatic `[[ "${EUID}" -eq 0 ]] || fail ...` walked straight through, as
+#      did anything phrased with `$(id -u)`.
+#
+# The warn_if_root exclusion is kept, but by ENCLOSING FUNCTION rather than by
+# looking for the word "warn" on the matched line. That text test only ever worked
+# by accident: warn_if_root's condition line is `if [[ "${EUID}" -eq 0 ]]; then`,
+# which contains no "warn" at all, and it escaped the old check purely because the
+# old pattern could not see `-eq 0`. Widening the pattern without fixing the
+# exclusion would have turned this check into a permanent false FAIL.
+root_gate_hits="$(awk '
+  /^[[:space:]]*#/ { next }
+  /^[a-zA-Z_][a-zA-Z0-9_]*\(\)[[:space:]]*\{/ { fn = $0; sub(/\(\).*/, "", fn); next }
+  /(EUID|id -u)/ &&
+  /(-ne[[:space:]]+0|-eq[[:space:]]+0|!=[[:space:]]*"?0|==[[:space:]]*"?0)/ {
+    if (fn != "warn_if_root") { printf "%d:%s\n", NR, $0 }
+  }
+' "${SCRIPT}")"
+if [[ -n "${root_gate_hits}" ]]; then
   fail "the script appears to hard-fail on a non-root EUID"
-  grep -nE 'EUID.*-ne[[:space:]]+0' "${SCRIPT}" | sed 's/^/      /'
+  indent_lines "${root_gate_hits}"
 else
   pass "no root requirement"
 fi
@@ -287,7 +363,20 @@ echo "=== 12. no GNU-only or Linux-only idiom outside comments"
 # Each of these parses fine on Linux and fails at runtime on macOS, which is the
 # worst possible place to find out. Comments are excluded so the script can
 # explain the difference.
-stripped="$(sed 's/[[:space:]]*#.*$//' "${SCRIPT}")"
+#
+# WHOLE-LINE comments only. The previous `sed 's/[[:space:]]*#.*$//'` cut the line
+# at any '#' whatsoever, including the '#' of a ${#array[@]} parameter expansion:
+# on bootstrap-macos.sh's own `if [[ "${#missing[@]}" -gt 0 ]]; then` it left
+# `  if [[ "${` and threw the rest away. Any GNU-only idiom sharing a line with a
+# ${#...} was therefore invisible, and `sha256sum` - which does not exist on macOS
+# - was demonstrated shipping past this check with the gate fully green.
+#
+# Dropping only whole-line comments also fails SAFE. A trailing comment that
+# happens to name one of the idioms below now produces a FALSE FAILURE, which is
+# loud and gets fixed, rather than a false pass, which is silent and does not.
+# NOTE, because of that: trailing comments in build/bootstrap-macos.sh must not
+# name any idiom in the list below. Put such a mention on its own comment line.
+stripped="$(grep -vE '^[[:space:]]*#' "${SCRIPT}")"
 gnuisms=0
 for pattern in 'sha256sum' 'sha512sum' 'mktemp --suffix' 'stat -c' 'apt-get' 'readlink -f' '/opt/godot'; do
   if grep -qF -- "${pattern}" <<<"${stripped}"; then

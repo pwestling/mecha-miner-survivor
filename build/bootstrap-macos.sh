@@ -28,16 +28,30 @@
 #     pins below agree with global.json and that the script keeps the properties
 #     this header claims (no EUID gate, no GNU-only flags, hash check present).
 #   * Every SHA-256 and SHA-512 constant below was obtained by downloading the
-#     actual artifact on Linux and hashing it, cross-checked against the vendor's
-#     own published hash where the vendor publishes one. Those are measured, not
-#     asserted. See build/verify-bootstrap-macos.sh for the provenance table.
+#     actual artifact on Linux and hashing it, and every one is cross-checked
+#     against a hash the vendor publishes. Both vendors publish one: Microsoft in
+#     releases.json, and Godot in a per-release SHA512-SUMS.txt. Those are
+#     measured, not asserted. See build/verify-bootstrap-macos.sh for the
+#     provenance table.
 #
 # The first developer to run this on a Mac is its first execution. Treat an
 # unexpected failure as a defect in this script, not in their machine.
 # ============================================================================
 #
-# It is idempotent: re-running it revalidates and skips already-correct
-# installations.
+# It is idempotent, and both halves revalidate rather than trusting that a path
+# exists. The two halves do it differently, and only one of them self-heals:
+#
+#   * Godot: the installed executable is re-hashed against its pin on every run.
+#     A corrupted, truncated or wrong-version app therefore does not survive a
+#     re-run - it is detected and replaced. This is genuine self-healing, not
+#     skip-if-present.
+#   * .NET: the pinned SDK counts as present only when ${DOTNET_INSTALL_DIR}/dotnet
+#     is executable AND reports that exact version in --list-sdks. It does NOT
+#     re-hash the installed tree, so it is weaker than the Godot half: it proves
+#     the SDK is complete enough to run, not that every file is the pinned bytes.
+#     Bare directory existence was the earlier check and was not enough - a tar
+#     that created sdk/<version>/ and then died left every later run skipping and
+#     calling a half-extracted SDK present.
 #
 # ---------------------------------------------------------------------------
 # Install locations, and why they are not free choice
@@ -143,11 +157,25 @@ readonly GODOT_EXPECTED_VERSION_PREFIX="4.7.1.stable.mono.official"
 #     method applied to the linux_x86_64 archive reproduces the archive_sha256
 #     and archive_size_bytes already recorded for linux-x64 on the FND-002 branch
 #     chain, byte for byte, which is what makes the method trustworthy here.
-#   Godot executable sha256: extracted from that archive and hashed.
+#   Godot archive, vendor cross-check: Godot publishes a per-release checksum file,
+#     https://github.com/godotengine/godot-builds/releases/download/4.7.1-stable/SHA512-SUMS.txt
+#     which lists for Godot_v4.7.1-stable_mono_macos.universal.zip
+#       7708863cb3ed22000cda423a3b067c7b882f1434c7854242e2fab6cead45ae321b5004075adc76c32a73411ccc96b4fa655158d72cbbbb5ba58651c2a7c3763e
+#     Fetching that file and sha512-ing the downloaded archive reproduces it
+#     exactly, so the archive pin below is vendor-anchored and not merely
+#     self-consistent. The SHA-256 pinned here is of those same cross-checked bytes.
+#     (The archive is pinned by sha256 rather than the vendor's sha512 only
+#     because GODOT_EXECUTABLE_SHA256 and the linux-x64 records are sha256; the
+#     vendor sha512 is the cross-check, not a second pin.)
+#   Godot executable sha256: extracted from that archive and hashed. The extracted
+#     Contents/MacOS/Godot is a 2-slice universal Mach-O (x86_64 + arm64), which is
+#     why one archive and one hash serve both host architectures.
 #   .NET tarball sha512/size: taken from Microsoft's own release metadata at
 #     https://builds.dotnet.microsoft.com/dotnet/release-metadata/10.0/releases.json
 #     (release 10.0.10, 2026-07-14) AND independently reproduced by downloading
-#     each tarball and running sha512sum. Published and measured agree.
+#     each tarball and running sha512sum. Published and measured agree. The two
+#     size constants below are the same tarballs' byte counts, which Microsoft's
+#     own Content-Length for each download URL also reports.
 # Retrieved 2026-08-06 UTC.
 readonly GODOT_ARCHIVE_NAME="Godot_v${GODOT_VERSION}-stable_mono_macos.universal.zip"
 readonly GODOT_ARCHIVE_URL="https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/${GODOT_ARCHIVE_NAME}"
@@ -157,6 +185,14 @@ readonly GODOT_EXECUTABLE_SHA256="d11dc4a241ec29a347e13c8c7706e49433379ae1f9fc6a
 
 readonly DOTNET_SHA512_ARM64="b2286dec9177e8b5543ff2fe95c84db358b87ec2a36a0d34a29033d70279940fd1134af56c4299648f8950db2d6ce35237698cf2818d9abc670c2c1664c92ac0"
 readonly DOTNET_SHA512_X64="48d5861dc0d6c9c782c6d163d6b334ecac2ebd65a1ae59e9ce5b93dd080a31d7ecfc4e4d47e0e35b201ce63661218d641e154022266294a3a8b84593a019cfbc"
+
+# The .NET half is size-checked as well as hash-checked, for symmetry with the
+# Godot half. A size check is redundant against a matching sha512 and is kept
+# anyway because it fails EARLIER and more legibly: a truncated download or an
+# HTML error page served with a 200 reports a byte count a human can recognise,
+# instead of a hash mismatch that reads identically to a tampered artifact.
+readonly DOTNET_SIZE_BYTES_ARM64="226536510"
+readonly DOTNET_SIZE_BYTES_X64="234313427"
 
 # --- user-scoped install locations ----------------------------------------
 readonly GODOT_APP_DIR="${HOME}/Applications"
@@ -191,6 +227,20 @@ require_macos() {
   if [[ "${kernel}" != "Darwin" ]]; then
     fail "this is the macOS bootstrap and the host is ${kernel}; on Linux run build/bootstrap-linux.sh" \
       "$EXIT_ENVIRONMENT"
+  fi
+
+  # `set -u` catches an UNSET variable; it does not catch a set-but-EMPTY one. With
+  # HOME="" every ${HOME}-derived path in this script collapses to an absolute
+  # system path: GODOT_APP becomes /Applications/Godot_mono.app, so the "replace a
+  # Godot that does not match the pin" branch would rm -rf the SYSTEM-WIDE install
+  # rather than this user's copy, and the symlink would target /.local/bin. Those
+  # constants are assigned at file scope, before any function runs, so this check
+  # cannot repair them - it exists to stop the script before anything is deleted.
+  if [[ -z "${HOME:-}" ]]; then
+    fail "HOME is empty or unset. Every path this script installs to is derived from
+it, and with an empty HOME the Godot replacement step would target the system-wide
+/Applications/Godot_mono.app instead of your own. Nothing was written. Set HOME to
+your home directory and re-run." "$EXIT_ENVIRONMENT"
   fi
 }
 
@@ -293,13 +343,58 @@ dotnet_expected_sha512() {
   esac
 }
 
+dotnet_expected_size() {
+  case "$(dotnet_rid)" in
+    osx-arm64) printf '%s' "${DOTNET_SIZE_BYTES_ARM64}" ;;
+    *) printf '%s' "${DOTNET_SIZE_BYTES_X64}" ;;
+  esac
+}
+
 # Escalates for the two operations that genuinely need it, and only when the
 # target is not already writable. Printing the command first is the doc 100
 # "never mutates global developer configuration silently" requirement.
+# `-w` on the install root says nothing about what is INSIDE it, and the `sudo
+# chown` below is deliberately not recursive. Microsoft's .pkg leaves
+# /usr/local/share/dotnet root-owned all the way down, so after chowning the top
+# level the root is writable while every subdirectory a new SDK must write into is
+# still not. Extracting into that state does not fail cleanly: tar creates the
+# top-level subtrees it CAN, writes a large fraction of the new SDK, and only then
+# fails on the ones it cannot - leaving a pre-existing install half-updated, with
+# the ownership of a directory the developer never created permanently changed.
+# Worse, a re-run cannot repair it: the root is writable by then, so the escalation
+# branch is skipped and the identical partial extraction happens again. Refuse
+# instead, before tar can run, and name the two ways out.
+#
+# A bash loop, NOT `find -writable`: that predicate is a GNU extension and macOS
+# find does not have it, so the check would break on the only platform that runs
+# this script. build/verify-bootstrap-macos.sh check 12 does not know that
+# spelling either, so the breakage would ship green.
+assert_install_dir_children_writable() {
+  local directory="$1"
+  local child
+  # An unmatched glob stays literal, and `[[ -d ]]` rejects it, so an empty install
+  # directory needs no nullglob and is correctly treated as fine.
+  for child in "${directory}"/*; do
+    [[ -d "${child}" ]] || continue
+    [[ -w "${child}" ]] && continue
+    fail "${directory} is writable but '${child}' inside it is not.
+This is what a .NET SDK installed by Microsoft's .pkg looks like: root-owned
+underneath a directory this script can chown only at the top level. Extracting the
+pinned SDK over it would write part of the new SDK and then fail partway, leaving
+the existing install half-updated and unrepairable by re-running.
+Nothing was written. Choose one, then re-run:
+    sudo chown -R '$(id -un)' '${directory}'
+  to take ownership of the existing install and keep it, or
+    sudo rm -rf '${directory}'
+  to discard it and let this script lay down a clean SDK." "$EXIT_ENVIRONMENT"
+  done
+}
+
 ensure_install_dir_writable() {
   local directory="$1"
   if [[ -d "${directory}" && -w "${directory}" ]]; then
     log "${directory} already exists and is writable; no privilege needed"
+    assert_install_dir_children_writable "${directory}"
     return
   fi
 
@@ -316,15 +411,39 @@ then re-run this script." "$EXIT_ENVIRONMENT"
   sudo mkdir -p "${directory}" || fail "sudo mkdir -p ${directory} failed" "$EXIT_ENVIRONMENT"
   sudo chown "$(id -un)" "${directory}" || fail "sudo chown ${directory} failed" "$EXIT_ENVIRONMENT"
   [[ -w "${directory}" ]] || fail "${directory} still not writable after chown" "$EXIT_ENVIRONMENT"
+  # The chown above is not recursive, so this is exactly the path on which a
+  # pre-existing root-owned install surfaces. Same refusal as the already-writable
+  # branch.
+  assert_install_dir_children_writable "${directory}"
 }
 
 # ---------------------------------------------------------------------------
 # .NET SDK
 # ---------------------------------------------------------------------------
 
+# Whether the pinned SDK is ALREADY INSTALLED AND USABLE. The earlier version of
+# this test was `[[ -d "${DOTNET_INSTALL_DIR}/sdk/${DOTNET_SDK_VERSION}" ]]`, which
+# revalidated nothing: a tar that created sdk/<version>/ and then died - exactly
+# what a half-privileged extraction does - left that directory behind, so every
+# later run skipped the install and reported the SDK present. Asking the muxer to
+# enumerate its SDKs is a test a half-extracted tree fails.
+dotnet_sdk_present() {
+  local dotnet_bin="${DOTNET_INSTALL_DIR}/dotnet"
+  [[ -x "${dotnet_bin}" ]] || return 1
+  [[ -d "${DOTNET_INSTALL_DIR}/sdk/${DOTNET_SDK_VERSION}" ]] || return 1
+
+  local sdks
+  # A broken install makes this exit non-zero rather than printing; that is a
+  # "not present" answer, not an error to abort on, hence the guard.
+  sdks="$("${dotnet_bin}" --list-sdks 2>/dev/null)" || return 1
+  # A here-string, not `printf | grep -q`: see the note in verify() for why piping
+  # into grep -q under pipefail can report a found line as missing.
+  grep -q "^${DOTNET_SDK_VERSION} " <<<"${sdks}"
+}
+
 install_dotnet_sdk() {
-  if [[ -d "${DOTNET_INSTALL_DIR}/sdk/${DOTNET_SDK_VERSION}" ]]; then
-    log ".NET SDK ${DOTNET_SDK_VERSION} already present in ${DOTNET_INSTALL_DIR}"
+  if dotnet_sdk_present; then
+    log ".NET SDK ${DOTNET_SDK_VERSION} already present in ${DOTNET_INSTALL_DIR} and reports itself runnable"
     return
   fi
 
@@ -335,6 +454,7 @@ install_dotnet_sdk() {
 
   log "installing .NET SDK ${DOTNET_SDK_VERSION} (${rid}) into ${DOTNET_INSTALL_DIR}"
   download "${url}" "${tarball}"
+  verify_size ".NET SDK ${rid} tarball" "${tarball}" "$(dotnet_expected_size)"
   verify_digest ".NET SDK ${rid} tarball" "${tarball}" 512 "$(dotnet_expected_sha512)"
 
   ensure_install_dir_writable "${DOTNET_INSTALL_DIR}"
@@ -343,8 +463,12 @@ install_dotnet_sdk() {
   # shared/, host/ at the top level - so it extracts directly into the install
   # directory with no strip-components. Extracting over an existing older SDK is
   # the supported side-by-side shape: sdk/<version>/ directories coexist.
+  # Explicitly EXIT_ENVIRONMENT. With no exit class this defaulted to
+  # EXIT_INTERNAL (8), reporting "the machine's install directory is not writable
+  # by me" as an unexpected failure inside this tool, which sends the developer
+  # looking in the wrong place.
   tar -xzf "${tarball}" -C "${DOTNET_INSTALL_DIR}" \
-    || fail "could not extract the .NET SDK tarball into ${DOTNET_INSTALL_DIR}"
+    || fail "could not extract the .NET SDK tarball into ${DOTNET_INSTALL_DIR}" "$EXIT_ENVIRONMENT"
 
   [[ -x "${DOTNET_INSTALL_DIR}/dotnet" ]] \
     || fail "expected ${DOTNET_INSTALL_DIR}/dotnet after extraction" "$EXIT_ENVIRONMENT"
@@ -364,16 +488,22 @@ install_godot() {
     return
   fi
 
-  if [[ -e "${GODOT_APP}" ]]; then
-    log "replacing ${GODOT_APP}: present but not matching the pinned executable hash"
-    rm -rf "${GODOT_APP}"
-  fi
-
   local archive="${WORK_DIR}/${GODOT_ARCHIVE_NAME}"
   log "installing Godot ${GODOT_VERSION} .NET (universal) into ${GODOT_APP_DIR}"
   download "${GODOT_ARCHIVE_URL}" "${archive}"
   verify_size "Godot archive" "${archive}" "${GODOT_ARCHIVE_SIZE_BYTES}"
   verify_digest "Godot archive" "${archive}" 256 "${GODOT_ARCHIVE_SHA256}"
+
+  # Deliberately AFTER the download and both verifications, never before. This
+  # block used to sit above them, so a dropped connection, a hash mismatch or a
+  # full disk during a 197 MB download destroyed the developer's working Godot and
+  # installed nothing in its place. By here the replacement bytes are on disk and
+  # have matched their pin, so the old app is only removed once there is a
+  # hash-matched replacement in hand.
+  if [[ -e "${GODOT_APP}" ]]; then
+    log "replacing ${GODOT_APP}: present but not matching the pinned executable hash"
+    rm -rf "${GODOT_APP}"
+  fi
 
   mkdir -p "${GODOT_APP_DIR}"
   # The archive contains exactly one top-level entry, Godot_mono.app/, and no
@@ -406,6 +536,38 @@ clear_quarantine() {
 
 link_godot() {
   mkdir -p "${USER_BIN_DIR}"
+
+  # `ln -sfn` on its own replaces whatever occupies this path - including a wrapper
+  # script a developer wrote by hand to pass extra flags, or a symlink to a
+  # different engine build they are deliberately testing against. Doc 100's "never
+  # mutates global developer configuration silently" applies: only ever replace a
+  # symlink that already points where we are about to point it, and move anything
+  # else aside, loudly, instead of deleting it.
+  #
+  # `readlink` with no -f: -f is a GNU extension that stock macOS readlink does not
+  # accept. One level is all that is needed to recognise our own link.
+  if [[ -L "${GODOT_SYMLINK}" || -e "${GODOT_SYMLINK}" ]]; then
+    local current=""
+    if [[ -L "${GODOT_SYMLINK}" ]]; then
+      current="$(readlink "${GODOT_SYMLINK}")"
+    fi
+    if [[ "${current}" != "${GODOT_BIN}" ]]; then
+      local moved
+      moved="${GODOT_SYMLINK}.replaced-by-bootstrap.$(date -u +%Y%m%dT%H%M%SZ)"
+      if [[ -L "${GODOT_SYMLINK}" ]]; then
+        warn "${GODOT_SYMLINK} is a symlink to '${current}', not to the Godot this"
+        warn "script installed."
+      else
+        warn "${GODOT_SYMLINK} already exists and is not a symlink - it may be a"
+        warn "wrapper script you wrote."
+      fi
+      warn "Moving it to ${moved} rather than overwriting it. Delete it yourself if"
+      warn "you do not want it back."
+      mv "${GODOT_SYMLINK}" "${moved}" \
+        || fail "could not move the existing ${GODOT_SYMLINK} aside" "$EXIT_ENVIRONMENT"
+    fi
+  fi
+
   ln -sfn "${GODOT_BIN}" "${GODOT_SYMLINK}"
   log "linked ${GODOT_SYMLINK} -> ${GODOT_BIN}"
 }

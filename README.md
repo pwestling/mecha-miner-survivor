@@ -6,7 +6,7 @@ Godot 4.7.1 (.NET / C#), authoritative 60 Hz simulation, Windows and Steam Deck 
 
 ## Where the project is
 
-Measured against `master` at `c3bc8fc`, 6 Aug 2026. This block is refreshed after major merges rather than continuously — assume it is good to within a merge or two.
+Measured against `master` at `3016fbc`, 6 Aug 2026. This block is refreshed after major merges rather than continuously; `git log --oneline 3016fbc..origin/master` shows exactly what has landed since, which is exactly what this block has not accounted for.
 
 **Playable today: a mech you can drive around an empty test arena.** No enemies, no weapons, no mining, no HUD. It is also not on `master` yet — see [Try it out](#try-it-out) for the branch to check out.
 
@@ -34,7 +34,11 @@ Full definitions: `docs/technical/110-implementation-plan-for-ai-agents.md` § M
 | **M6** | Content and performance production readiness | ⬜ |
 | **M7** | Release candidate — exports, Steam staging, release checklist | ⬜ |
 
-Everything executable is currently stacked behind [#3](https://github.com/pwestling/mecha-miner-survivor/pull/3), the pull request that puts the `./build.sh` command surface on `master`. Until it lands, `master` holds the specification, the content catalog, and an empty Godot shell.
+Everything executable is stacked in a chain of unmerged branches, each one based on the next rather than on `master`:
+
+`claude/ui-002-first-playable` ([#19](https://github.com/pwestling/mecha-miner-survivor/pull/19)) → `claude/hearth-thread-3aamx2` ([#11](https://github.com/pwestling/mecha-miner-survivor/pull/11)) → `claude/hearth-thread-2vmaro-fnd-002` ([#3](https://github.com/pwestling/mecha-miner-survivor/pull/3)) → `claude/hearth-thread-2vmaro` → `master`
+
+So #19 merging does not put the playable scene on `master`; it moves it one link along. The `./build.sh` command surface and CI both live on `claude/hearth-thread-2vmaro-fnd-002` and arrive on `master` in the same reconcile, which is why `master` currently has neither — it holds the specification, the content catalog, and an empty Godot shell. The last hop, `claude/hearth-thread-2vmaro` → `master`, has no open pull request yet.
 
 ## Try it out
 
@@ -51,8 +55,12 @@ You will need `git`, `curl` and `unzip`, and then two pinned tools:
 sudo apt-get update && sudo apt-get install -y git curl unzip
 git clone https://github.com/pwestling/mecha-miner-survivor.git
 cd mecha-miner-survivor
-git checkout claude/ui-002-first-playable   # the playable branch; not needed once #19 reaches master
+git checkout claude/ui-002-first-playable   # exists only until the scene reaches master
+```
 
+If that checkout fails with `did not match any file(s) known to git`, the branch is gone because the work landed — stay on the default branch and carry on with the next block. This branch exists for exactly as long as the merge chain above is unfinished, and disappears when it completes. To pin the precise tree the verification below describes, `git checkout dccc9588` instead — a sha never disappears, but it leaves you on a detached HEAD.
+
+```bash
 sudo build/bootstrap-linux.sh   # once per machine, about a minute
 ./build.sh doctor               # expect exit 0: "pinned toolchain verified; 10 probes, 0 mismatches"
 ./build.sh build
@@ -101,12 +109,12 @@ godot --version   # expect 4.7.1.stable.mono.official.a13da4feb
 
 The bundle is named `Godot_mono.app`, not `Godot.app`. Godot publishes SHA512 sums for this release and no SHA256, so there is nothing to compare against `build/toolchain.json`, which records Linux hashes only.
 
-**4. Then the same sequence as Linux, without the bootstrap script.**
+**4. Clone the playable branch and run the verbs.** There is no bootstrap step here; steps 2 and 3 already installed both pinned tools.
 
 ```bash
 git clone https://github.com/pwestling/mecha-miner-survivor.git
 cd mecha-miner-survivor
-git checkout claude/ui-002-first-playable
+git checkout claude/ui-002-first-playable   # if this fails, the work landed; stay on the default branch
 ./build.sh doctor
 ./build.sh build
 ./build.sh godot-import
@@ -135,12 +143,12 @@ What you give up is `doctor`, so check the two pins by hand: `dotnet --version` 
 
 ## What has and hasn't been verified
 
-Run on Linux x86-64 from a fresh HTTPS clone on 6 Aug 2026, at `master` `c3bc8fc` and `claude/ui-002-first-playable` `91714b0`:
+Run on Linux x86-64 from a fresh HTTPS clone on 6 Aug 2026, at `master` `3016fbc` and `claude/ui-002-first-playable` `dccc9588`:
 
-- ✅ `build/bootstrap-linux.sh` — exit 0 in 63 s, installing .NET SDK 10.0.302 and Godot 4.7.1.stable.mono.official.a13da4feb
+- ✅ `build/bootstrap-linux.sh` — exit 0 in 63 s, installing .NET SDK 10.0.302 and Godot 4.7.1.stable.mono.official.a13da4feb. Run once, at the earlier tip `91714b0`; the script is byte-identical at both commits, and `doctor` re-confirmed the toolchain it produced. Note it is *not* the same file as `build/bootstrap-linux.sh` on `master`, so run it after the checkout, not before.
 - ✅ `./build.sh doctor` — exit 0, 10 probes, 0 mismatches
 - ✅ `./build.sh build` — exit 0; `./build.sh test-fast` — exit 0, 260 of 260 tests passing; `./build.sh godot-import` — exit 0
-- ✅ `godot --path game res://scenes/Run.tscn` — launched and stayed up under Xvfb, rendering on Vulkan Forward Mobile with no scene, script or render errors, and exited 0 after `--quit-after 120` frames. A capture harness produced screenshots showing the mech rendered, displaced and rotated.
+- ✅ `godot --path game res://scenes/Run.tscn` — launched and stayed up under Xvfb, rendering on Vulkan Forward Mobile with no scene, script or render errors, and exited 0 after `--quit-after 120` frames. The capture harness in `game/tests/` produced screenshots showing the mech rendered, displaced and rotated, and asserted that all four movement actions carry bound events and all eight physical keys resolve to the action they drive.
 
 Not verified, and not claimed:
 

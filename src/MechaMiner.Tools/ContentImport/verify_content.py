@@ -681,11 +681,24 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
            set is NAMED (A.json..F.json), not counted. A count of 6 passes
            when the key is deleted from D.json and added to common-ore.json
            in the same edit; the named set does not.
-        2. In each of those six, canonical_letter == that file's own id. The
-           six comparisons are NAMED on the passing run, not counted: a
-           green "6 agree, 0 disagree" tells the reader how many files the
+        2. Each file's (id, canonical_letter) pair is one row of an EXPLICIT
+           EIGHT-ROW TABLE transcribed from 40:111 - RSC-01 -> A through
+           RSC-06 -> F, with RSC-07 and RSC-08 carrying NO letter. Until the
+           RSC- migration this row read "canonical_letter == that file's own
+           id", which held only while the two were the same string; the ids
+           are now RSC-01..RSC-08 and that comparison is gone. The table is
+           literal on purpose: 40:109 states "The ID and the letter are two
+           fields; neither is derived from the other", so computing the
+           letter from the id (chr(ord("A") + int(id[-2:]) - 1)) would
+           re-derive the document's mapping instead of checking it - it
+           would agree with itself for any tree and would keep passing if
+           40:111 were reassigned, which is the edit this row exists to
+           catch. The two no-letter rows are asserted with the same weight,
+           because arithmetic over "07" and "08" would invent "G" and "H".
+           The eight comparisons are NAMED on the passing run, not counted:
+           a green "8 agree, 0 disagree" tells the reader how many files the
            row's argument rests on but not which, and the set is the half
-           worth auditing. Predicate unchanged - only the display.
+           worth auditing.
         3. The six values are six DISTINCT letters and cover exactly
            {A,B,C,D,E,F}. Redundant while rows 1 and 2 both hold, but what
            it is redundant WITH is asymmetric and the earlier wording here
@@ -710,24 +723,34 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
            the absence of a null.
         5. content/resources/ holds exactly 8 definition files, because
            rows 1-4 are all satisfied by a tree with a ninth resource in it.
-      WHY A VALUE MULTISET WOULD HAVE PROVEN NOTHING. The six added values
-      are the six ids, so they were already leaves of this tree before the
-      field existed: a multiset over content/'s leaf values is by
-      construction unchanged by this commit and would have reported "no
-      values gained or lost" having checked nothing about the only thing
-      that changed. Row 2 is the one that binds the new leaf to its
-      neighbour, and row 1 is the one that binds the population.
+      WHY A VALUE MULTISET WOULD HAVE PROVEN NOTHING when the field was
+      ADDED. The six added values were the six ids, so they were already
+      leaves of this tree before the field existed: a multiset over
+      content/'s leaf values was by construction unchanged by that commit
+      and would have reported "no values gained or lost" having checked
+      nothing about the only thing that changed. That argument is about the
+      commit that added canonical_letter, and it is why rows 1 and 2 are
+      NAMED rather than counted. The RSC- migration is the opposite case: it
+      DOES move the multiset (each letter loses its id copy, the two slugs
+      lose theirs, eight RSC-0n arrive), and 40:113 states that delta, so
+      the migration has a multiset proof and this table has the placement
+      proof. Neither substitutes for the other.
       Negative controls, each injected alone, run, and reverted:
-      delete D.json's key -> row 1 FAILs naming the carrier set; swap
-      B.json's and C.json's values (multiset preserved) -> row 2 FAILs
-      naming both files; A.json "A" -> "B" -> row 3 FAILs on distinctness;
-      canonical_letter added to common-ore.json -> row 4 FAILs naming it;
+      delete D.json's key -> row 1 FAILs naming the carrier set; swap the
+      letters of the RSC-01 and RSC-02 files, i.e. RSC-01 -> "B" and
+      RSC-02 -> "A" (value multiset preserved) -> row 2 FAILs naming both
+      files; A.json "A" -> "B" -> row 3 FAILs on distinctness;
+      canonical_letter added to the RSC-07 file -> row 4 FAILs naming it,
+      and row 2 FAILs too, because RSC-07 takes no letter in the table;
       a ninth resources/*.json -> row 5 FAILs on the count. A.json's value
       set to null FAILs rows 2 and 3 here in addition to A26.
       Mandate: docs/technical/40-content-data-and-validation.md:106, blob
       4cded84 ("Resource definition fields include ID, canonical letter,
-      localization keys ..."). NOT the RSC- ID grammar, which is not on this
-      ref: no id value is asserted or changed by this row.       FAILURE
+      localization keys ...") for the field itself, PLUS 40:111 for row 2's
+      mapping table and 40:86 for the grammar A12's resources selector
+      transcribes. Row 2 DOES read the eight id values - it is the only row
+      here that reads one - and an earlier version of this line said no row
+      did, which was true only before the RSC- migration. FAILURE
 
 Not asserted here: no structural JSON Schema validation happens, because
 content/schemas/ (40:36) does not exist yet. Domain field names outside the
@@ -993,11 +1016,20 @@ FORBIDDEN_KEYS = (
 EXPECTATIONS = [
     dict(
         dir="resources",
-        selector=("id_regex", r"^(?:[A-F]|common-ore|hyper-gold)$"),
+        # The selector is the MINTED GRAMMAR ROW, transcribed verbatim from
+        # 40:86 ("| `RSC-` | `^RSC-[0-9]{2}$` | resource | `content/resources/`
+        # | this section |"), and deliberately NOT the narrower ^RSC-0[1-8]$
+        # that this population would also satisfy. The point of copying the row
+        # is that the selector and the grammar cannot drift: a reader comparing
+        # the two sees one string. Admitting RSC-09..RSC-99 on PATTERN is not a
+        # hole, because `items` below is pinned at 8 - a ninth resource fails on
+        # the COUNT rather than sliding in on a pattern widened to fit it.
+        selector=("id_regex", r"^RSC-[0-9]{2}$"),
         items=8,
         aggregates=None,
         label="resources (6 specialized + common ore + Hyper Gold)",
-        source="docs/61-specialized-resource-identities.md:20 + docs/60-resources-crafting-progression.md:18",
+        source="docs/technical/40-content-data-and-validation.md:86 grammar row + :111 mapping; "
+               "docs/61-specialized-resource-identities.md:20 + docs/60-resources-crafting-progression.md:18",
     ),
     dict(
         dir="mechs",
@@ -2738,11 +2770,14 @@ def check_file_inventory(manifest_size: int | None) -> list[tuple]:
 # currencies and have no letter to carry. Their omission is therefore authored
 # content, not an oversight, and row 4 asserts it as such.
 #
-# NOTHING HERE READS OR ASSERTS AN id VALUE except by comparing a file's
-# canonical_letter against its own id (row 2). The RSC- prefixed ID grammar is
-# not on this ref and no row of this check anticipates it: if the ids later
-# become RSC-A..RSC-F, row 2 is the row that will need re-stating, deliberately,
-# and rows 1/3/4/5 are unaffected.
+# ROW 2 READS THE id VALUES, and since the RSC- migration it is the only row
+# that does. It used to compare each file's canonical_letter against its own id,
+# which worked only while the two were the same string. The ids are now
+# RSC-01..RSC-08 (40:86 grammar, 40:111 mapping), so that comparison is gone and
+# row 2 is the transcribed mapping table below instead. Rows 1/3/4/5 never read
+# an id and are unaffected. An earlier draft of this comment predicted the ids
+# would become "RSC-A..RSC-F"; 40:111 assigns RSC-01..RSC-08, and the prediction
+# was wrong about the form as well as needing re-statement.
 # --------------------------------------------------------------------------
 
 RESOURCES_DIR = CONTENT / "resources"
@@ -2753,9 +2788,42 @@ CANONICAL_LETTER_CARRIERS = tuple(f"{letter}.json" for letter in CANONICAL_LETTE
 CANONICAL_LETTER_OMITTERS = ("common-ore.json", "hyper-gold.json")
 RESOURCE_DEFINITION_COUNT = 8
 
+# Row 2's comparand: the eight-row mapping table, TRANSCRIBED from 40:111.
+#
+# THE ORDERING SENTENCE THIS TRANSCRIBES, quoted so the table can be audited
+# without leaving this file: "Which number goes to which resource is fixed here:
+# `RSC-01` through `RSC-06` take `A` through `F` in letter order, `RSC-07` is
+# `common-ore`, and `RSC-08` is `hyper-gold`. Both halves are **assigned here**
+# and neither is transcribed." (40:111) The same paragraph records WHY the two
+# currency rows are stated rather than inferred from the order the resources
+# appear in the catalog: "no assertion can catch a wrong choice of mapping - only
+# a wrong implementation of one - so the choice closes in this section or
+# nowhere."
+#
+# WHY EIGHT LITERAL ROWS AND NOT chr(ord("A") + int(id[-2:]) - 1). Arithmetic
+# was considered and is wrong here, not merely verbose. 40:109 states that "The
+# ID and the letter are two fields; neither is derived from the other", so a
+# computed letter would RE-DERIVE the document's mapping instead of CHECKING it:
+# it would agree with itself for any tree, and it would keep passing unchanged if
+# 40:111 were ever edited to assign the numbers differently - which is the one
+# edit this row exists to catch. Eight literal rows disagree with the tree the
+# moment either side moves. The two None rows carry the same weight: they assert
+# that 40:111 gives RSC-07 and RSC-08 no letter, which arithmetic over "07" and
+# "08" would silently invent as "G" and "H".
+RESOURCE_ID_TO_CANONICAL_LETTER = {
+    "RSC-01": "A",
+    "RSC-02": "B",
+    "RSC-03": "C",
+    "RSC-04": "D",
+    "RSC-05": "E",
+    "RSC-06": "F",
+    "RSC-07": None,   # common ore - no canonical letter (40:111)
+    "RSC-08": None,   # Hyper Gold - no canonical letter (40:111)
+}
+
 
 def check_canonical_letters(docs: dict[Path, object]) -> list[tuple]:
-    """A32 - canonical_letter is on exactly A-F and equals each file's own id."""
+    """A32 - canonical_letter is on exactly A-F and pairs with the id per 40:111."""
     paths = sorted(RESOURCES_DIR.glob("*.json")) if RESOURCES_DIR.is_dir() else []
     carried: dict[str, object] = {}
     ids: dict[str, object] = {}
@@ -2772,24 +2840,53 @@ def check_canonical_letters(docs: dict[Path, object]) -> list[tuple]:
     expected_carriers = sorted(CANONICAL_LETTER_CARRIERS)
     row1_ok = carriers == expected_carriers
 
-    # ---- row 2: each of the six equals its OWN id. `agreed` is collected for
-    # the PASSING display only: a green run used to print "6 agree, 0 disagree"
+    # ---- row 2: each file's (id, canonical_letter) pair is one row of the
+    # transcribed 40:111 table. Keyed by the id, so a file whose id and letter
+    # were BOTH edited in step still has to land on a table row. `agreed` is
+    # collected for the PASSING display only: a green run used to print a count
     # and name the files solely on failure, so the reader auditing a passing run
-    # met a count and had to take the comparand set on trust. The predicate is
-    # unchanged - `mismatches` alone still decides the status.
+    # had to take the comparand set on trust. `mismatches` alone decides status.
     mismatches: list[str] = []
     agreed: list[str] = []
-    for name in CANONICAL_LETTER_CARRIERS:
+    seen_ids: dict[object, str] = {}
+    for name in sorted(set(CANONICAL_LETTER_CARRIERS) | set(CANONICAL_LETTER_OMITTERS)):
         if name not in ids:
             mismatches.append(f"{name}: not a parsed definition")
-        elif name not in carried:
-            mismatches.append(f"{name}: {CANONICAL_LETTER_KEY} is absent, id is {ids[name]!r}")
-        elif carried[name] != ids[name]:
+            continue
+        rid = ids[name]
+        actual = carried.get(name, None)
+        if rid in seen_ids:
             mismatches.append(
-                f"{name}: {CANONICAL_LETTER_KEY} is {carried[name]!r}, id is {ids[name]!r}"
+                f"{name}: id {rid!r} is already carried by {seen_ids[rid]}; "
+                f"each table row is one file"
+            )
+            continue
+        seen_ids[rid] = name
+        if not isinstance(rid, str) or rid not in RESOURCE_ID_TO_CANONICAL_LETTER:
+            mismatches.append(
+                f"{name}: id is {rid!r}, which is not one of the eight ids the 40:111 "
+                f"table assigns ({', '.join(RESOURCE_ID_TO_CANONICAL_LETTER)})"
+            )
+            continue
+        expected_letter = RESOURCE_ID_TO_CANONICAL_LETTER[rid]
+        if actual != expected_letter:
+            mismatches.append(
+                f"{name}: id {rid!r} takes {CANONICAL_LETTER_KEY}="
+                f"{expected_letter!r} in the 40:111 table, but this file has "
+                f"{actual!r}" + ("" if name in carried else " (key absent)")
             )
         else:
-            agreed.append(f"{name}={carried[name]!r}")
+            agreed.append(
+                f"{name}: {rid}"
+                + (f"={expected_letter!r}" if expected_letter is not None else "=no letter")
+            )
+    # Every row of the table must be claimed by exactly one file, so a missing
+    # id cannot pass by simply not being looked for.
+    unclaimed = [rid for rid in RESOURCE_ID_TO_CANONICAL_LETTER if rid not in seen_ids]
+    if unclaimed:
+        mismatches.append(
+            f"no definition carries {', '.join(unclaimed)}, which the 40:111 table assigns"
+        )
 
     # ---- row 3: six distinct letters covering exactly {A..F}. repr() so a
     # non-string value (null, a number, an object) cannot raise in sorted().
@@ -2818,8 +2915,9 @@ def check_canonical_letters(docs: dict[Path, object]) -> list[tuple]:
             "ok" if row1_ok else "FAIL",
         ),
         (
-            "row 2: canonical_letter == that file's own id, in each of the six",
-            "6 agree, named",
+            "row 2: (id, canonical_letter) matches the transcribed 40:111 table, "
+            "all eight rows",
+            f"{len(RESOURCE_ID_TO_CANONICAL_LETTER)} agree, named",
             (
                 f"{len(agreed)} agree: " + ", ".join(agreed)
                 if not mismatches
@@ -2859,11 +2957,17 @@ def check_canonical_letters(docs: dict[Path, object]) -> list[tuple]:
         )
     if mismatches:
         fail(
-            f"A32 row 2: {len(mismatches)} resource(s) whose {CANONICAL_LETTER_KEY} is not that "
-            f"file's own id: {mismatches}. The letter IS the identity of a specialized material, "
-            f"so the two must agree in the same file. This row is the only one that catches two "
-            f"letter files SWAPPING values: the set of values is unchanged by a swap, so rows 1 "
-            f"and 3 both still pass."
+            f"A32 row 2: {len(mismatches)} resource(s) whose (id, {CANONICAL_LETTER_KEY}) pair "
+            f"is not the pair 40:111 assigns: {mismatches}. The table in this file is a verbatim "
+            f"transcription of that paragraph - `RSC-01` through `RSC-06` take `A` through `F` in "
+            f"letter order, `RSC-07` is common ore and `RSC-08` is Hyper Gold, and the last two "
+            f"take no letter. Fix the tree to match the document, or - if the DOCUMENT changed - "
+            f"re-transcribe the table deliberately in the same commit. Do not replace the table "
+            f"with arithmetic over the id: 40:109 states the ID and the letter are two fields "
+            f"with neither derived from the other, so a computed letter would agree with itself "
+            f"for any tree and would not notice 40:111 being reassigned. This row is also the "
+            f"only one that catches two letter files SWAPPING values: a swap leaves the value "
+            f"SET unchanged, so rows 1 and 3 both still pass."
         )
     if not row3_ok:
         fail(
@@ -4949,16 +5053,21 @@ def main() -> int:
     )
     table("A21 File inventory", ("check", "expected", "actual", "status"), inventory_rows)
     table(
-        "A32 canonical_letter on exactly the six letter resources (40:106, blob 4cded84); "
-        "five rows, each blind to a different edit",
+        "A32 canonical_letter on exactly the six letter resources (40:106, blob 4cded84), "
+        "paired with the id per the transcribed 40:111 table; five rows, each blind to a "
+        "different edit",
         ("check", "expected", "actual", "status"),
         canonical_letter_rows,
         (
-            "A value multiset over content/ proves NOTHING about this field: the six added values "
-            "are the six ids, so they were already leaves of this tree and a leaf-value comparison "
-            "reports 'nothing gained or lost' having checked nothing that changed. Row 2 binds the "
-            "new leaf to its own id; row 1 binds the carrier population by NAME, which is the only "
-            "row that survives a correlated delete-here/add-there edit keeping the count at 6.",
+            "A value multiset proved NOTHING about this field when it was ADDED: the six added "
+            "values were the six ids, so they were already leaves of this tree and a leaf-value "
+            "comparison reported 'nothing gained or lost' having checked nothing that changed. "
+            "That is why rows 1 and 2 NAME their files instead of counting them. Row 2 binds each "
+            "file's letter to its id through the eight-row 40:111 table - never by arithmetic on "
+            "the id, which 40:109 forbids in substance by stating the two fields derive from each "
+            "other in neither direction; row 1 binds the carrier population by NAME, which is the "
+            "only row that survives a correlated delete-here/add-there edit keeping the count "
+            "at 6.",
         ),
     )
 

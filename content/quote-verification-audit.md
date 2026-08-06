@@ -553,11 +553,28 @@ The nine MIXED-USE names: `qualitative`, `persistence`, `effect`, `behavior_kind
 in its own right — the same name carries a quotation in one file and an authored sentence
 in another, so no schema declaration can bind it correctly as it stands.
 
-**`behavior_kind` needs renaming in one of its two uses regardless of how the quotation
-question is settled**, because a registry is minting it as a token: it holds registered
-behavior identifiers on enemies and bosses (`"pure contact pursuer"`, `"persistent giant
-pursuer with exactly one additional behavior"`) while elsewhere carrying prose. A field
-that is simultaneously a registry key and a sentence cannot be declared as either.
+**`behavior_kind` has only one use, and the "rename one of its two uses" recommendation this
+section used to make rested on a distinction that does not exist.** Measured over the whole
+tree on 2026-08-06: the field occurs **14 times and nowhere outside `content/enemies/` (10)
+and `content/bosses/` (4)**, and all 14 hold a lowercase prose phrase —
+`"pure contact pursuer"` ×9, `"persistent giant pursuer with exactly one additional
+behavior"` ×4, and `"pursuit and contact plus one telegraphed straight projectile"` ×1
+(EN-06). No occurrence anywhere in `content/` holds a registry token, and no directory other
+than those two carries the field at all, so there is no "elsewhere" and no second use to
+rename. The two strings this section previously offered as evidence of a registry —
+`"pure contact pursuer"` and `"persistent giant pursuer with exactly one additional
+behavior"` — are themselves two of those prose values, so they were being read as both
+halves of a contrast they cannot supply. Nothing is "simultaneously a registry key and a
+sentence": all 14 are sentences.
+
+What is actually true, and what remains open, is narrower. `behavior_kind` is uniform in
+FORM and still appears in the MIXED-USE row above, which is a claim about how many of its
+occurrences are provably lifted from a design document — a different axis from
+registry-versus-prose, and one this correction does not disturb. The open decision is
+therefore whether these phrases should later be minted as a closed vocabulary and the prose
+moved to a sibling field, which is ordinary schema work under the grant rule in
+[Minted value vocabularies](../docs/technical/40-content-data-and-validation.md#minted-value-vocabularies),
+not the repair of a naming defect. No rename is owed today.
 
 `text` is the decisive row and deserves its own statement, over all 382 occurrences rather
 than only the 305 that entered the candidate population or the 265 that are decidable. The
@@ -582,7 +599,7 @@ field rather than to except it from a declaration.
 | --: | --- | --- | --- |
 | 1 | ~~**Re-point the 248 wrong-citation quotations.**~~ **Done** — 59 new scoped `source_refs` elements across 31 files (`content/transcription-notes.md`, Ruling 36); enumeration gave 65 groups across 37 files, of which 6 were already correct on `master`. Coverage went 6/248 → 248/248. Item 2 still blocks turning the check on as a hard failure | 31 files | content/integration |
 | 2 | **Add the 21 missing anchors** on `external_numerics[].quote`, after which the highest-confidence quotation field in the tree becomes checkable | 21 refs | content/integration |
-| 3 | **Fix the 9 MIXED-USE field names**, and rename `behavior_kind` in one of its uses regardless (§10) | 9 names | schema |
+| 3 | **Fix the 9 MIXED-USE field names.** The rider this row used to carry — "and rename `behavior_kind` in one of its uses regardless" — is **withdrawn**: all 14 of its occurrences hold prose and it has no second use, measured 2026-08-06 (§10). `behavior_kind` stays in this row on the MIXED-USE count alone | 9 names | schema |
 | 4 | **Rename `maximum_effect.text` on the 13 `PU-*` files** — bare numeric tokens under a name that promises prose | 13 files | schema |
 | 5 | **Re-file `specialized-material-geodes.json → progress_decay.rule`** — authored prose under a quotation field name (§3) | 1 field | content/integration |
 | 6 | **Implement the §6 rule in `verify_content.py`** as a refinement of R8-period, keeping R8's legitimate use passing. Currently the rule is measured and its 2 hits are fixed, but nothing enforces it | 1 assertion | tooling |

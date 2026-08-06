@@ -1,8 +1,19 @@
 #!/usr/bin/env python3
 """Derive — before the change is made — what a citation pass is expected to change.
 
-    python3 src/MechaMiner.Tools/ContentImport/derive_citation_pass_expectations.py
     python3 src/MechaMiner.Tools/ContentImport/derive_citation_pass_expectations.py --verify
+    python3 src/MechaMiner.Tools/ContentImport/derive_citation_pass_expectations.py --write
+
+A BARE INVOCATION DECIDES NOTHING AND WRITES NOTHING - it exits 2 with a usage
+error naming both verbs. Writing is `--write` and only `--write`. Until then bare
+WAS the generator: it rewrote expected_citation_deltas.json and exited 0, so a
+reader who guessed this tool's checking verb was `--check` (which is its sibling's
+verb, one file over, for the same job) spent their guess on a silent rewrite of
+the committed artifact rather than on an error message. Measured before the change,
+on a clean tree at 3b4703b: bare exited 0 and left the artifact 31 insertions and
+731 deletions away from what was committed. Nothing about which mode CHECKS moved
+here - `--verify` still measures the pinned range exactly as it did, and the
+sibling's `--check` is still spelled `--check`; only the cost of guessing wrong did.
 
 ================================================================================
 WHY THIS FILE EXISTS, AND WHY IT IS COMMITTED BEFORE THE CHANGE
@@ -576,6 +587,10 @@ def main() -> int:
     ap.add_argument("--previous-ref", default=PREVIOUS_PASS_REF)
     ap.add_argument("--verify", action="store_true",
                     help="measure the pass's own pinned range against the committed expectation")
+    ap.add_argument("--write", action="store_true",
+                    help=f"derive the expectation afresh and REWRITE {OUTPUT.name}. The only mode "
+                         f"that touches the worktree, and it must be asked for by name: this is "
+                         f"what a bare invocation used to do silently, at exit 0")
     ap.add_argument("--after-ref", default=PASS_REF,
                     help=f"the 'after' side of the measured range (default the pinned {PASS_REF}, "
                          f"the commit that landed the pass; passing HEAD asks a one-shot claim to "
@@ -587,6 +602,17 @@ def main() -> int:
             print(f"FAIL: no committed expectation at {OUTPUT}")
             return 1
         return verify(json.loads(OUTPUT.read_text(encoding="utf-8")), args.after_ref)
+
+    if not args.write:
+        # Checked BEFORE build() so the usage error costs nothing but the message.
+        # `--verify` is handled above and is untouched by this guard; what used to
+        # fall through to here was a bare invocation, which rewrote OUTPUT.
+        ap.error(
+            f"no mode given. This tool does not default to writing: pass --verify to measure the "
+            f"pinned range against the committed {OUTPUT.name}, or --write to regenerate it. "
+            f"Note that --verify is this tool's checking verb; "
+            f"derive_derived_value_expectations.py spells the same job --check."
+        )
 
     payload = build(args.ref, args.previous_ref)
     OUTPUT.write_text(json.dumps(payload, indent=1, ensure_ascii=False) + "\n",

@@ -388,6 +388,17 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       sentence ("first.", "specialist.", "cost.", ... 21 forms) and "ver."
       inside 5 ("forever.", "solver.", "hover."). None of those 98 is an
       abbreviation. The bounded form finds zero today.
+      RE-MEASURED 2026-08-06, and only one of those figures held: "ver."
+      inside 5 reproduces exactly across docs/**/*.md, its three named
+      forms being the whole set. The "st." figures do not - unbounded
+      matching finds it inside 100 words today, or 79 setting the
+      hyphenated doc slugs aside, across 22 forms rather than 21 - and no
+      counting rule tried reaches either 93 or 21, so the rule behind them
+      is not recoverable from this text and neither is restated above as a
+      new number. What the bound is FOR survives the discrepancy intact:
+      every form either count matches is an ordinary word and none is an
+      abbreviation, and no assertion recomputes any of it - what a green
+      run asserts is that the bounded form finds zero today.
       THE FAILURE MESSAGE POINTS AT THE MATCHER, NOT AT A QUOTATION. The
       day someone writes "e.g." in a design document, nothing is wrong with
       any content string; what is wrong is that the quotation rule's
@@ -2983,7 +2994,7 @@ def load_derived_expectation() -> dict:
             f"A29/A31: {rel(DERIVED_EXPECTATION)} is missing. It is the committed prediction of "
             f"exactly which derived values this tree no longer authors, and both rules read their "
             f"scopes and patterns from it. Regenerate it with "
-            f"derive_derived_value_expectations.py."
+            f"derive_derived_value_expectations.py --write."
         )
         return {}
     return json.loads(DERIVED_EXPECTATION.read_text())

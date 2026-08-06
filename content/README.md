@@ -103,10 +103,14 @@ validated, compiled, hashed, or delivered, and no row of the table records a com
 will *own* each directory, not work this branch closed.
 
 **138 definition files plus `content/localization/en.json`** — 139 `*.json` files under `content/` in
-total. The two numbers are different things and are stated separately on purpose: the definition count
-is what the per-directory rows above sum to, and the 139 total is what the verifier asserts as
-`EXPECTED_CONTENT_JSON_FILES`. `content/` also holds two Markdown files (this one and
-`transcription-notes.md`) which are documentation, not content, and are counted in neither figure.
+total. The two numbers are different things and are stated separately on purpose. The definition count
+is what the per-directory rows above sum to, and **138 is what the verifier asserts**, as
+`EXPECTED_CONTENT_DEFINITION_JSON_FILES`: `A21`'s inventory covers the population `load_definitions()`
+loads, which is every `*.json` under `content/` except those beneath a `NON_DEFINITION_DIRS` directory
+(`localization`, `schemas`). The 139 total is asserted by nothing; it is the whole-tree number, and the
+whole tree is what `A26` scans for `null`, which is why `en.json` leaves the definition count without
+losing coverage. `content/` also holds three Markdown files (this one, `transcription-notes.md` and
+`quote-verification-audit.md`) which are documentation, not content, and are counted in neither figure.
 `content/schemas/`, `content/presentation/`, and `generated/` are absent from this tree because they
 belong to other streams, not because they are optional.
 

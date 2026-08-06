@@ -149,6 +149,16 @@ stem, so the file name is not load-bearing. See `content/transcription-notes.md`
 
 It performs no JSON Schema validation: `content/schemas/` does not exist yet, so domain field names
 outside the envelope are unvalidated and will need one reconciliation pass when the schemas land.
+Landing that directory does not redden anything: `NON_DEFINITION_DIRS` already names `schemas`
+alongside `localization`, and the `A21` inventory rows now honour it through
+`in_non_definition_dir()`. Both rows count **138 definition files** and the three documentation
+Markdown files, and files beneath `content/schemas/` are outside both populations. `A21` previously
+enumerated `content/` bare, which put `localization/en.json` in the definition total (139) and made
+the first schema authored under `content/schemas/` fail as though a definition had appeared in an
+uncovered directory. `en.json` loses nothing by leaving that total: `A10`/`A11` assert far more about
+it than membership in a count, and `A26` still reads it, because "no `null` anywhere under
+`content/`" is a whole-tree claim and not a definition-only one — which is why `A26` is the one
+enumeration that is *supposed* to ignore `NON_DEFINITION_DIRS`.
 
 When an expected count changes because a design document changed, edit the `EXPECTATIONS`/`PROBES`
 table and update the `source` citation on that row in the same commit.

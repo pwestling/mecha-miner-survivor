@@ -31,7 +31,13 @@ namespace MechaMiner.Content.Tests.Schema;
 /// without having looked at anything is the most comfortable kind of broken.
 /// </para>
 /// <para>
-/// Verification: <c>VER-DAT-001-027</c>.
+/// <b>The aggregate.</b> A count summed over the corpus is satisfied by one document. One
+/// schema with a bound answered for every schema, so a document could lose every bound it
+/// had and the total would stay positive. That count is now taken per document, against
+/// <see cref="DocumentsDeclaredBoundFree"/>.
+/// </para>
+/// <para>
+/// Verification: <c>VER-DAT-001-027</c>, <c>VER-DAT-001-030</c>.
 /// </para>
 /// </remarks>
 [TestFixture]
@@ -170,8 +176,16 @@ internal sealed class SchemaAuthorityCoverageTests
     /// nonzero number of bounds.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// "No unattributed bounds" and "no bounds" are the same sentence to an emptiness
     /// assertion, and only one of them means the gate ran.
+    /// </para>
+    /// <para>
+    /// The bound count here is the aggregate, and it is kept only because it is free: it
+    /// is satisfied by any one document in the corpus. The assertion that actually holds
+    /// the corpus is per document, in
+    /// <see cref="EverySchemaDocumentCarriesABoundOrIsDeclaredBoundFree"/>.
+    /// </para>
     /// </remarks>
     [Test]
     public void TheWalkOverTheProjectCorpusVisitsDocumentsAndBounds()
@@ -191,13 +205,237 @@ internal sealed class SchemaAuthorityCoverageTests
             Assert.That(
                 walk.BoundsSeen,
                 Is.GreaterThan(0),
-                "the gate must have passed at least one numeric bound. If content/schemas "
-                    + "genuinely declares no bound anywhere, the attribution gate is asserting "
-                    + "nothing and this test is the only thing that would say so");
+                "the gate must have passed at least one numeric bound. This is the aggregate, "
+                    + "so it is satisfied by any single document; "
+                    + nameof(EverySchemaDocumentCarriesABoundOrIsDeclaredBoundFree)
+                    + " is the assertion that answers for each of them");
             Assert.That(
                 walk.Unattributed,
                 Is.Empty,
                 () => "unattributed bounds: " + string.Join(", ", walk.Unattributed));
+        });
+    }
+
+    /// <summary>
+    /// Every document under <c>content/schemas/</c> that declares no numeric bound, named
+    /// one by one.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>This is a list of file names. It is not a pattern, a prefix, or a predicate.</b>
+    /// A schema that loses every bound it had must fail until somebody writes its name
+    /// here, because writing a name here is a line in a diff that a reviewer can argue
+    /// with. A rule that matched names instead would grant the same waiver to files nobody
+    /// has read yet.
+    /// </para>
+    /// <para>
+    /// <b>Why an exemption list is right here, when the attribution gate deliberately has
+    /// none.</b> This reads as a contradiction of
+    /// <see cref="TheBoundKeywordListIsExactlyTheNineStatedHere"/>, which exists to say
+    /// that the <c>x-authority</c> rule has no exemptions and that removing a keyword from
+    /// it is not an exemption but a deletion. The two are exemptions over different things.
+    /// An exemption there would be over <em>keyword kinds</em>: it would say "bounds of
+    /// this sort need no authority", which is a claim about the rule, and it widens the
+    /// rule's blind spot everywhere at once, in every document, including the ones written
+    /// after it. Nobody can check such a claim by reading, because what it exempts has not
+    /// been written yet. An exemption here is over <em>documents</em>: it says "this file,
+    /// today, declares no bound", which is a claim about the corpus and is settled by
+    /// opening the file. Its blind spot is exactly one file wide, and
+    /// <see cref="AnExemptionForADocumentThatHasBoundsIsReported"/> and
+    /// <see cref="AnExemptionForADocumentNotInTheCorpusIsReported"/> shut it again the
+    /// moment the claim stops being true.
+    /// </para>
+    /// <para>
+    /// <b>The list makes the assertion stronger, not weaker.</b> What it replaced was
+    /// <c>BoundsSeen &gt; 0</c> over the aggregate corpus, which says only "some schema
+    /// somewhere had a bound" - one document vouching for all of them. What stands here
+    /// says "every schema either has a bound or is declared not to", which is a statement
+    /// about each document by name. The stronger assertion cannot be written at all
+    /// without somewhere to put the documents that are legitimately bound-free; the list
+    /// is not the exception to the gate, it is the thing that lets the gate exist.
+    /// </para>
+    /// </remarks>
+    private static readonly string[] DocumentsDeclaredBoundFree = [];
+
+    /// <summary>
+    /// Every schema document in the project corpus either carries a numeric bound or is
+    /// named in <see cref="DocumentsDeclaredBoundFree"/>.
+    /// </summary>
+    /// <remarks>
+    /// The list is checked in both directions at once: an entry naming no document, and an
+    /// entry naming a document that does have bounds, both fail here. An exemption is a
+    /// claim about the corpus, and a claim that has quietly stopped being true is the one
+    /// thing worse than no claim, because it reads as though somebody checked.
+    /// </remarks>
+    [Test]
+    public void EverySchemaDocumentCarriesABoundOrIsDeclaredBoundFree()
+    {
+        SchemaBoundCoverage.Result coverage =
+            SchemaBoundCoverage.Of(TheCorpusDocuments(), DocumentsDeclaredBoundFree);
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                coverage.DocumentsChecked,
+                Is.GreaterThan(0),
+                "a per-document check over zero documents passes every one of its "
+                    + "assertions, which is the fail-open this whole fixture exists for");
+            Assert.That(
+                coverage.UndeclaredBoundFree,
+                Is.Empty,
+                () => "these schema documents under content/schemas declare no numeric bound "
+                    + "and are named by no exemption: "
+                    + string.Join(", ", coverage.UndeclaredBoundFree)
+                    + ". Either the document lost its bounds, which is the accident this "
+                    + "gate exists to catch, or it genuinely has none and its file name "
+                    + "belongs in " + nameof(DocumentsDeclaredBoundFree)
+                    + " as a deliberate, reviewable line");
+            Assert.That(
+                coverage.StaleExemptions,
+                Is.Empty,
+                () => "these names in " + nameof(DocumentsDeclaredBoundFree)
+                    + " match no document under content/schemas: "
+                    + string.Join(", ", coverage.StaleExemptions)
+                    + ". An exemption for a file that is not there exempts nothing today and "
+                    + "silently exempts whatever file takes that name tomorrow");
+            Assert.That(
+                coverage.UnnecessaryExemptions,
+                Is.Empty,
+                () => "these names in " + nameof(DocumentsDeclaredBoundFree)
+                    + " are declared bound-free but their documents do carry bounds: "
+                    + string.Join(", ", coverage.UnnecessaryExemptions)
+                    + ". The list is a factual claim about the corpus; an exemption nobody "
+                    + "needs is a false one, and it would absorb that document losing every "
+                    + "bound it has");
+        });
+    }
+
+    /// <summary>
+    /// The positive control: a corpus of one bounded and one bound-free document, with the
+    /// bound-free one declared, is clean on all three findings.
+    /// </summary>
+    /// <remarks>
+    /// Without this the three negative controls below would be satisfied by a check that
+    /// simply reports everything.
+    /// </remarks>
+    [Test]
+    public void ADeclaredBoundFreeDocumentIsAccepted()
+    {
+        SchemaBoundCoverage.Result coverage = SchemaBoundCoverage.Of(
+            TheTwoDocumentFixtureCorpus(),
+            new[] { "no-bounds.schema.json" });
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(coverage.DocumentsChecked, Is.EqualTo(2));
+            Assert.That(
+                coverage.UndeclaredBoundFree,
+                Is.Empty,
+                () => "the bound-free document is declared, and the other has bounds: "
+                    + string.Join(", ", coverage.UndeclaredBoundFree));
+            Assert.That(
+                coverage.StaleExemptions,
+                Is.Empty,
+                () => "the exempted name is in the corpus: "
+                    + string.Join(", ", coverage.StaleExemptions));
+            Assert.That(
+                coverage.UnnecessaryExemptions,
+                Is.Empty,
+                () => "the exempted document really does declare no bound: "
+                    + string.Join(", ", coverage.UnnecessaryExemptions));
+        });
+    }
+
+    /// <summary>
+    /// The negative control the gate exists for: a bound-free document nobody declared is
+    /// reported, by name.
+    /// </summary>
+    /// <remarks>
+    /// This is the case the aggregate count could not see. Both documents together report
+    /// a positive total, so a corpus-wide <c>BoundsSeen &gt; 0</c> passes on exactly this
+    /// input, and the assertion here has to name the offending file rather than merely
+    /// fail.
+    /// </remarks>
+    [Test]
+    public void AnUndeclaredBoundFreeDocumentIsReportedByName()
+    {
+        IReadOnlyList<SchemaBoundCoverage.Document> corpus = TheTwoDocumentFixtureCorpus();
+
+        SchemaBoundCoverage.Result coverage =
+            SchemaBoundCoverage.Of(corpus, System.Array.Empty<string>());
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                coverage.UndeclaredBoundFree,
+                Is.EqualTo(new[] { "no-bounds.schema.json" }),
+                () => "the bound-free document must be reported by name, and it must be the "
+                    + "only one reported: " + string.Join(", ", coverage.UndeclaredBoundFree));
+            Assert.That(
+                Aggregate(corpus).BoundsSeen,
+                Is.GreaterThan(0),
+                "the aggregate count is positive on this very corpus, which is why it cannot "
+                    + "be the gate");
+        });
+    }
+
+    /// <summary>
+    /// A name on the exemption list matching no document in the corpus is reported.
+    /// </summary>
+    /// <remarks>
+    /// A stale exemption is an exemption for nothing, and it does not stay harmless: it is
+    /// a waiver already granted to whichever file is next given that name, decided by
+    /// somebody who never saw it.
+    /// </remarks>
+    [Test]
+    public void AnExemptionForADocumentNotInTheCorpusIsReported()
+    {
+        SchemaBoundCoverage.Result coverage = SchemaBoundCoverage.Of(
+            TheTwoDocumentFixtureCorpus(),
+            new[] { "no-bounds.schema.json", "deleted-long-ago.schema.json" });
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                coverage.StaleExemptions,
+                Is.EqualTo(new[] { "deleted-long-ago.schema.json" }),
+                () => "the exemption naming no document must be reported, and the live one "
+                    + "must not be: " + string.Join(", ", coverage.StaleExemptions));
+            Assert.That(
+                coverage.UndeclaredBoundFree,
+                Is.Empty,
+                () => "a stale exemption must not be reported as a second, unrelated finding: "
+                    + string.Join(", ", coverage.UndeclaredBoundFree));
+        });
+    }
+
+    /// <summary>
+    /// A name on the exemption list whose document does carry bounds is reported.
+    /// </summary>
+    /// <remarks>
+    /// An exemption that is not needed is a false statement about the corpus, and it is
+    /// pre-positioned to hide the exact accident the gate is for: the day that document
+    /// loses every bound it has, the waiver is already in place and nothing says so.
+    /// </remarks>
+    [Test]
+    public void AnExemptionForADocumentThatHasBoundsIsReported()
+    {
+        SchemaBoundCoverage.Result coverage = SchemaBoundCoverage.Of(
+            TheTwoDocumentFixtureCorpus(),
+            new[] { "no-bounds.schema.json", "attributed-bound.schema.json" });
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                coverage.UnnecessaryExemptions,
+                Is.EqualTo(new[] { "attributed-bound.schema.json" }),
+                () => "the exemption for a bounded document must be reported, and the needed "
+                    + "one must not be: " + string.Join(", ", coverage.UnnecessaryExemptions));
+            Assert.That(
+                coverage.StaleExemptions,
+                Is.Empty,
+                () => "both names are in the corpus, so neither is stale: "
+                    + string.Join(", ", coverage.StaleExemptions));
         });
     }
 
@@ -256,6 +494,55 @@ internal sealed class SchemaAuthorityCoverageTests
             Assert.That(walk.DocumentsSeen, Is.Zero);
             Assert.That(walk.BoundsSeen, Is.Zero);
         });
+    }
+
+    /// <summary>
+    /// Every document the gate walks, named as <see cref="DocumentsDeclaredBoundFree"/>
+    /// names them: by file name, so that an exemption reads as the file a reviewer would
+    /// open.
+    /// </summary>
+    private static IReadOnlyList<SchemaBoundCoverage.Document> TheCorpusDocuments()
+    {
+        List<SchemaBoundCoverage.Document> documents = new();
+        foreach (string path in Glob())
+        {
+            documents.Add(new SchemaBoundCoverage.Document(
+                Path.GetFileName(path), File.ReadAllBytes(path)));
+        }
+
+        return documents;
+    }
+
+    /// <summary>
+    /// The corpus the three exemption controls run against: one document with a bound and
+    /// one with none, so every finding has a document that must be reported and a document
+    /// that must not.
+    /// </summary>
+    private static IReadOnlyList<SchemaBoundCoverage.Document> TheTwoDocumentFixtureCorpus()
+    {
+        return new[]
+        {
+            FixtureDocument("attributed-bound.schema.json"),
+            FixtureDocument("no-bounds.schema.json"),
+        };
+    }
+
+    private static SchemaBoundCoverage.Document FixtureDocument(string name)
+    {
+        return new SchemaBoundCoverage.Document(
+            name, File.ReadAllBytes(Path.Combine(FixtureCorpus.Root, "schema", name)));
+    }
+
+    private static SchemaBoundWalk.Result Aggregate(
+        IEnumerable<SchemaBoundCoverage.Document> documents)
+    {
+        List<byte[]> bytes = new();
+        foreach (SchemaBoundCoverage.Document document in documents)
+        {
+            bytes.Add(document.Bytes);
+        }
+
+        return SchemaBoundWalk.OfAll(bytes);
     }
 
     private static SchemaBoundWalk.Result WalkTheCorpus()

@@ -71,6 +71,16 @@ internal sealed class JsonSchemaNode
 
     internal JsonSchemaNode? Not { get; set; }
 
-    /// <summary>The provenance of this subschema's numeric bound, if it declares one.</summary>
-    internal SchemaAuthority? Authority { get; set; }
+    /// <summary>
+    /// The provenance of each of this subschema's numeric bounds, keyed by the bound
+    /// keyword it explains. Null when the subschema declares no <c>x-authority</c> at all,
+    /// which is a different thing from declaring an empty one.
+    /// </summary>
+    /// <remarks>
+    /// Keyed rather than single because a subschema may declare several bounds and each
+    /// number has its own provenance. One authority standing for the whole subschema meant
+    /// that attributing <c>minLength</c> silently licensed an unattributed <c>maxLength</c>
+    /// beside it.
+    /// </remarks>
+    internal IReadOnlyDictionary<string, SchemaAuthority>? Authorities { get; set; }
 }

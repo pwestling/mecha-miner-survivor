@@ -60,10 +60,12 @@
       "type": "integer",
       "minimum": 1,
       "x-authority": {
-        "source": "TDD-CONTENT-DATA",
-        "section": "Initial versions",
-        "kind": "sourced",
-        "derivation": "the initial value of every first-authored definition is 1 and both versions only ever increment, so no valid version is below 1; there is no upper bound because a definition may be revised without limit"
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Initial versions",
+          "kind": "sourced",
+          "derivation": "the initial value of every first-authored definition is 1 and both versions only ever increment, so no valid version is below 1; there is no upper bound because a definition may be revised without limit"
+        }
       }
     },
     "status": {
@@ -115,7 +117,9 @@
       "type": "string",
       "minLength": 1,
       "x-authority": {
-        "kind": "structural"
+        "minLength": {
+          "kind": "structural"
+        }
       }
     }
   }

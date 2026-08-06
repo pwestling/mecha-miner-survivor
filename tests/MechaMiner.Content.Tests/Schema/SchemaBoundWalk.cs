@@ -31,6 +31,13 @@ namespace MechaMiner.Content.Tests.Schema;
 /// blind to what is a keyword at all, which is a defect.
 /// </para>
 /// <para>
+/// Attribution is asked per bound keyword, against the <c>x-authority</c> map's entry for
+/// that keyword. It was once asked per subschema - does this object declare a bound, does
+/// this object carry an authority - and the two questions are not the same one: a
+/// subschema asserting <c>minLength</c> and <c>maxLength</c> satisfied it with a single
+/// authority, so the second number was attributed to the first number's provenance.
+/// </para>
+/// <para>
 /// <see cref="Result.BoundsSeen"/> and <see cref="Result.ObjectsSeen"/> exist so that
 /// "the walk found nothing wrong" can be told apart from "the walk found nothing". A
 /// gate that reports success over zero documents, or over documents with zero bounds, is
@@ -97,9 +104,7 @@ internal static class SchemaBoundWalk
         if (element.ValueKind == JsonValueKind.Object)
         {
             result.ObjectsSeen++;
-            bool hasAuthority = element.TryGetProperty(SchemaAuthority.Keyword, out JsonElement authority);
-            bool statesDerivation = hasAuthority && StatesDerivation(authority);
-            bool citesASource = hasAuthority && CitesASource(authority);
+            element.TryGetProperty(SchemaAuthority.Keyword, out JsonElement authorities);
 
             foreach (string keyword in SchemaAuthority.BoundKeywords())
             {
@@ -109,11 +114,18 @@ internal static class SchemaBoundWalk
                 }
 
                 result.BoundsSeen++;
-                if (!hasAuthority)
+
+                // Per keyword, not per subschema. Asking only whether the subschema
+                // carries an authority let one x-authority licence every bound beside it,
+                // so an unattributed maxLength added next to an attributed minLength was
+                // reported by nothing.
+                if (!TryAuthorityFor(authorities, keyword, out JsonElement authority))
                 {
                     result.Unattributed.Add(at.AppendProperty(keyword).Value);
+                    continue;
                 }
-                else if (citesASource && !statesDerivation)
+
+                if (CitesASource(authority) && !StatesDerivation(authority))
                 {
                     result.MissingDerivations.Add(at.AppendProperty(keyword).Value);
                 }
@@ -121,6 +133,16 @@ internal static class SchemaBoundWalk
 
             foreach (JsonProperty property in element.EnumerateObject())
             {
+                // x-authority's value is a map keyed by bound keyword, so descending into
+                // it as a subschema reads "minimum" as a bound the schema asserts. That is
+                // the SubschemaMapKeywords confusion again, arriving through the very
+                // annotation that answers it: the walk would count a phantom bound and
+                // report it unattributed at a pointer inside the annotation.
+                if (string.Equals(property.Name, SchemaAuthority.Keyword, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
                 if (IsSubschemaMap(property))
                 {
                     WalkSubschemaMap(property.Value, at.AppendProperty(property.Name), result);
@@ -182,6 +204,29 @@ internal static class SchemaBoundWalk
         {
             Walk(member.Value, at.AppendProperty(member.Name), result);
         }
+    }
+
+    /// <summary>
+    /// The authority for one bound keyword, out of the <c>x-authority</c> map.
+    /// </summary>
+    /// <remarks>
+    /// A malformed <c>x-authority</c> - absent, a non-object, or an object with no entry
+    /// for this keyword - yields no authority, so the bound is reported unattributed. The
+    /// walk's job is to notice a bound nobody vouched for; saying precisely how the
+    /// annotation is malformed is the loader's.
+    /// </remarks>
+    private static bool TryAuthorityFor(
+        JsonElement authorities,
+        string keyword,
+        out JsonElement authority)
+    {
+        if (authorities.ValueKind != JsonValueKind.Object)
+        {
+            authority = default;
+            return false;
+        }
+
+        return authorities.TryGetProperty(keyword, out authority);
     }
 
     private static bool CitesASource(JsonElement authority)

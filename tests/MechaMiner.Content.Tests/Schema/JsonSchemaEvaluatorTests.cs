@@ -12,7 +12,9 @@ namespace MechaMiner.Content.Tests.Schema;
 /// <summary>
 /// The draft 2020-12 evaluator, including the ways it refuses to be a silent no-op.
 /// </summary>
-/// <remarks>Verification: <c>VER-DAT-001-020</c>.</remarks>
+/// <remarks>
+/// Verification: <c>VER-DAT-001-020</c>, <c>VER-DAT-001-033</c>.
+/// </remarks>
 [TestFixture]
 internal sealed class JsonSchemaEvaluatorTests
 {
@@ -88,18 +90,18 @@ internal sealed class JsonSchemaEvaluatorTests
     [TestCase("{\"const\":5}", "6", false)]
     [TestCase("{\"pattern\":\"^a+$\"}", "\"aaa\"", true)]
     [TestCase("{\"pattern\":\"^a+$\"}", "\"ab\"", false)]
-    [TestCase("{\"minLength\":2,\"description\":\"bound under test\",\"x-authority\":{\"kind\":\"structural\"}}", "\"ab\"", true)]
-    [TestCase("{\"minLength\":2,\"description\":\"bound under test\",\"x-authority\":{\"kind\":\"structural\"}}", "\"a\"", false)]
-    [TestCase("{\"maxLength\":2,\"description\":\"bound under test\",\"x-authority\":{\"kind\":\"structural\"}}", "\"abc\"", false)]
-    [TestCase("{\"minimum\":1,\"description\":\"bound under test\",\"x-authority\":{\"kind\":\"structural\"}}", "1", true)]
-    [TestCase("{\"minimum\":1,\"description\":\"bound under test\",\"x-authority\":{\"kind\":\"structural\"}}", "0", false)]
-    [TestCase("{\"exclusiveMinimum\":1,\"description\":\"bound under test\",\"x-authority\":{\"kind\":\"structural\"}}", "1", false)]
-    [TestCase("{\"maximum\":1,\"description\":\"bound under test\",\"x-authority\":{\"kind\":\"structural\"}}", "2", false)]
-    [TestCase("{\"exclusiveMaximum\":1,\"description\":\"bound under test\",\"x-authority\":{\"kind\":\"structural\"}}", "1", false)]
-    [TestCase("{\"multipleOf\":3,\"description\":\"bound under test\",\"x-authority\":{\"kind\":\"structural\"}}", "9", true)]
-    [TestCase("{\"multipleOf\":3,\"description\":\"bound under test\",\"x-authority\":{\"kind\":\"structural\"}}", "10", false)]
-    [TestCase("{\"minItems\":2,\"description\":\"bound under test\",\"x-authority\":{\"kind\":\"structural\"}}", "[1]", false)]
-    [TestCase("{\"maxItems\":1,\"description\":\"bound under test\",\"x-authority\":{\"kind\":\"structural\"}}", "[1,2]", false)]
+    [TestCase("{\"minLength\":2,\"description\":\"bound under test\",\"x-authority\":{\"minLength\":{\"kind\":\"structural\"}}}", "\"ab\"", true)]
+    [TestCase("{\"minLength\":2,\"description\":\"bound under test\",\"x-authority\":{\"minLength\":{\"kind\":\"structural\"}}}", "\"a\"", false)]
+    [TestCase("{\"maxLength\":2,\"description\":\"bound under test\",\"x-authority\":{\"maxLength\":{\"kind\":\"structural\"}}}", "\"abc\"", false)]
+    [TestCase("{\"minimum\":1,\"description\":\"bound under test\",\"x-authority\":{\"minimum\":{\"kind\":\"structural\"}}}", "1", true)]
+    [TestCase("{\"minimum\":1,\"description\":\"bound under test\",\"x-authority\":{\"minimum\":{\"kind\":\"structural\"}}}", "0", false)]
+    [TestCase("{\"exclusiveMinimum\":1,\"description\":\"bound under test\",\"x-authority\":{\"exclusiveMinimum\":{\"kind\":\"structural\"}}}", "1", false)]
+    [TestCase("{\"maximum\":1,\"description\":\"bound under test\",\"x-authority\":{\"maximum\":{\"kind\":\"structural\"}}}", "2", false)]
+    [TestCase("{\"exclusiveMaximum\":1,\"description\":\"bound under test\",\"x-authority\":{\"exclusiveMaximum\":{\"kind\":\"structural\"}}}", "1", false)]
+    [TestCase("{\"multipleOf\":3,\"description\":\"bound under test\",\"x-authority\":{\"multipleOf\":{\"kind\":\"structural\"}}}", "9", true)]
+    [TestCase("{\"multipleOf\":3,\"description\":\"bound under test\",\"x-authority\":{\"multipleOf\":{\"kind\":\"structural\"}}}", "10", false)]
+    [TestCase("{\"minItems\":2,\"description\":\"bound under test\",\"x-authority\":{\"minItems\":{\"kind\":\"structural\"}}}", "[1]", false)]
+    [TestCase("{\"maxItems\":1,\"description\":\"bound under test\",\"x-authority\":{\"maxItems\":{\"kind\":\"structural\"}}}", "[1,2]", false)]
     [TestCase("{\"uniqueItems\":true}", "[1,2]", true)]
     [TestCase("{\"uniqueItems\":true}", "[1,1]", false)]
     [TestCase("{\"uniqueItems\":true}", "[\"a\",\"a\"]", false)]
@@ -113,12 +115,12 @@ internal sealed class JsonSchemaEvaluatorTests
     [TestCase("{\"items\":{\"type\":\"string\"}}", "[1]", false)]
     [TestCase("{\"prefixItems\":[{\"type\":\"string\"}]}", "[\"a\",1]", true)]
     [TestCase("{\"prefixItems\":[{\"type\":\"string\"}]}", "[1]", false)]
-    [TestCase("{\"allOf\":[{\"type\":\"string\"},{\"minLength\":2,\"description\":\"bound under test\",\"x-authority\":{\"kind\":\"structural\"}}]}", "\"ab\"", true)]
-    [TestCase("{\"allOf\":[{\"type\":\"string\"},{\"minLength\":2,\"description\":\"bound under test\",\"x-authority\":{\"kind\":\"structural\"}}]}", "\"a\"", false)]
+    [TestCase("{\"allOf\":[{\"type\":\"string\"},{\"minLength\":2,\"description\":\"bound under test\",\"x-authority\":{\"minLength\":{\"kind\":\"structural\"}}}]}", "\"ab\"", true)]
+    [TestCase("{\"allOf\":[{\"type\":\"string\"},{\"minLength\":2,\"description\":\"bound under test\",\"x-authority\":{\"minLength\":{\"kind\":\"structural\"}}}]}", "\"a\"", false)]
     [TestCase("{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"integer\"}]}", "1", true)]
     [TestCase("{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"integer\"}]}", "true", false)]
     [TestCase("{\"oneOf\":[{\"type\":\"string\"},{\"type\":\"integer\"}]}", "1", true)]
-    [TestCase("{\"oneOf\":[{\"minimum\":1,\"description\":\"bound under test\",\"x-authority\":{\"kind\":\"structural\"}},{\"minimum\":2,\"description\":\"bound under test\",\"x-authority\":{\"kind\":\"structural\"}}]}", "3", false)]
+    [TestCase("{\"oneOf\":[{\"minimum\":1,\"description\":\"bound under test\",\"x-authority\":{\"minimum\":{\"kind\":\"structural\"}}},{\"minimum\":2,\"description\":\"bound under test\",\"x-authority\":{\"minimum\":{\"kind\":\"structural\"}}}]}", "3", false)]
     [TestCase("{\"not\":{\"type\":\"string\"}}", "1", true)]
     [TestCase("{\"not\":{\"type\":\"string\"}}", "\"a\"", false)]
     [TestCase("true", "1", true)]
@@ -157,6 +159,104 @@ internal sealed class JsonSchemaEvaluatorTests
             Assert.That(load.IsValid, Is.False);
             Assert.That(load.Diagnostics[0].Code, Is.EqualTo(ContentDiagnosticCodes.SchemaMalformed));
         });
+    }
+
+    /// <summary>
+    /// <c>propertyNames</c> evaluates each property name as a string instance, including
+    /// names that have to be escaped to be written as JSON at all.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The path lifts a <see cref="string"/> back into a <see cref="JsonElement"/>, which
+    /// means quoting it. That was done with the <c>JsonSerializer.Serialize</c> overload
+    /// that takes no <c>JsonTypeInfo</c>, and so went through the reflection-based contract
+    /// resolver. <c>JsonSerializerIsReflectionEnabledByDefault</c> is a
+    /// <em>per-application</em> runtimeconfig property rather than a per-assembly one, so
+    /// the same assembly that passed under this test host threw
+    /// <c>InvalidOperationException: Reflection-based serialization has been disabled</c>
+    /// under the host that runs the content-compile verb. Doc 40 forbids runtime contract
+    /// reflection outright, so this was not merely a portability hazard.
+    /// </para>
+    /// <para>
+    /// The cases below are the ones where the quoting has to be right rather than merely
+    /// present: a name containing a quote, a backslash, a control character, and non-ASCII
+    /// text. A hand-rolled replacement that concatenated quotes would pass a test using
+    /// <c>a_b</c> and corrupt every one of these.
+    /// </para>
+    /// <para>
+    /// <b>What this does not prove.</b> This test project does not set
+    /// <c>JsonSerializerIsReflectionEnabledByDefault</c>, so the suite still cannot see a
+    /// reflection-based call of this class; it would pass on the old code too. It proves
+    /// this call site is fixed and its behaviour unchanged, not that the class is closed.
+    /// Closing it means setting that property on the library and test projects so the suite
+    /// runs under the consumer's constraint.
+    /// </para>
+    /// </remarks>
+    [TestCase("a_b", true)]
+    [TestCase("aB", false)]
+    [TestCase("say \"what\"", false)]
+    [TestCase("back\\slash", false)]
+    [TestCase("tab\there", false)]
+    [TestCase("naïve", false)]
+    [TestCase("", false)]
+    public void PropertyNamesEvaluatesEachNameAsAStringInstance(string name, bool expected)
+    {
+        JsonSchemaLoadResult load = JsonSchemaLoader.Load(
+            Encoding.UTF8.GetBytes("{\"propertyNames\":{\"pattern\":\"^[a-z_]+$\"}}"),
+            "inline.schema.json");
+        Assert.That(load.IsValid, Is.True, () => Describe(load));
+
+        using JsonDocument instance = BuildObjectWithOneProperty(name);
+        JsonSchemaEvaluationResult result =
+            JsonSchemaEvaluator.Evaluate(load.Schema!, instance.RootElement);
+
+        Assert.That(
+            result.IsValid,
+            Is.EqualTo(expected),
+            () => "property name <" + name + "> against ^[a-z_]+$: " + result);
+    }
+
+    /// <summary>
+    /// The same path reports the offending name back, so a rejection is actionable.
+    /// </summary>
+    [Test]
+    public void PropertyNamesReportsTheNameItRejected()
+    {
+        JsonSchemaLoadResult load = JsonSchemaLoader.Load(
+            Encoding.UTF8.GetBytes("{\"propertyNames\":{\"minLength\":4,\"description\":\"d\","
+                + "\"x-authority\":{\"minLength\":{\"kind\":\"structural\"}}}}"),
+            "inline.schema.json");
+        Assert.That(load.IsValid, Is.True, () => Describe(load));
+
+        using JsonDocument instance = BuildObjectWithOneProperty("ab");
+        JsonSchemaEvaluationResult result =
+            JsonSchemaEvaluator.Evaluate(load.Schema!, instance.RootElement);
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(result.IsValid, Is.False);
+            Assert.That(
+                result.ToString(),
+                Does.Contain("ab"),
+                "the error must name the property whose name failed");
+        });
+    }
+
+    /// <summary>
+    /// Builds <c>{"&lt;name&gt;": 1}</c> without going through a reflection-based
+    /// serializer, so the test does not depend on the very thing under test.
+    /// </summary>
+    private static JsonDocument BuildObjectWithOneProperty(string name)
+    {
+        System.Buffers.ArrayBufferWriter<byte> buffer = new();
+        using (Utf8JsonWriter writer = new(buffer))
+        {
+            writer.WriteStartObject();
+            writer.WriteNumber(name, 1);
+            writer.WriteEndObject();
+        }
+
+        return JsonDocument.Parse(buffer.WrittenMemory);
     }
 
     [Test]

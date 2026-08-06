@@ -116,18 +116,46 @@ proves it stays rejected.
 
 ## `x-authority`: where a numeric bound came from
 
-Every numeric bound in a schema here carries an adjacent `x-authority`:
+Every numeric bound in a schema here carries an adjacent `x-authority`, and
+`x-authority` is **a map keyed by the bound each entry explains**:
 
 ```json
 { "maximum": 2048,
   "x-authority": {
-    "source": "TDD-COMBAT",
-    "section": "Performance and capacity",
-    "kind": "sourced",
-    "derivation": "legal worst case ~1010; x2 headroom; rounded to a power of two" } }
+    "maximum": {
+      "source": "TDD-COMBAT",
+      "section": "Performance and capacity",
+      "kind": "sourced",
+      "derivation": "legal worst case ~1010; x2 headroom; rounded to a power of two" } } }
 ```
 
-| Field | Meaning |
+A subschema that asserts several numbers writes several entries, one per bound:
+
+```json
+{ "minLength": 1,
+  "maxLength": 4096,
+  "description": "the empty string is what an omitted field materializes as",
+  "x-authority": {
+    "minLength": { "kind": "structural" },
+    "maxLength": {
+      "source": "TDD-CONTENT-DATA",
+      "section": "Limits",
+      "kind": "sourced",
+      "derivation": "the document limit divided by the worst-case field count" } } }
+```
+
+The key is the identity of what is attributed. Attribution used to be per
+*subschema* — one `x-authority` beside any number of bounds — so a single entry
+licensed every bound next to it, and adding a bare `"maxLength": 4096` beside an
+attributed `minLength` was accepted by the loader and by the corpus walk alike.
+Provenance is a property of a number, and a subschema can assert several.
+
+Every key must be one of the nine bound keywords, every declared bound must have
+an entry, and every entry must have a declared bound: an authority for a bound
+that is not there is provenance for nothing, and it would silently cover that
+bound the day someone adds it.
+
+| Field of one entry | Meaning |
 | --- | --- |
 | `kind` | `sourced` (comes from a document), `derived` (follows from other content), or `structural` (an implementation limit with no external authority) |
 | `source` | the document ID, in the **same vocabulary as `source_refs`** and validated by the same parser — no scope prefix, no anchor |
@@ -147,19 +175,45 @@ derivation someone can re-check.
 `section` is a heading rather than a line number for the same reason
 `source_refs` rejects a `path:line` pair: a heading survives an edit.
 
+A `structural` entry states its rationale in the subschema's `description`, and
+`description` has to be a string with something in it. Presence alone was the
+rule once, which made `""`, `"   "`, `0`, `false`, `{}` and `[]` all count as a
+justification.
+
+The annotation keywords — `title`, `description`, `$comment`, and likewise
+`$schema` and `$id` — hold strings. A non-string annotation is a
+subschema-shaped value that nothing walks: `{"title": {"if": {"maximum": 5}}}`
+loaded clean and hid a bound behind a keyword's name.
+
 **The gate.** `SchemaAuthorityTests` asserts that every `minimum`, `maximum`,
 `exclusiveMinimum`, `exclusiveMaximum`, `minItems`, `maxItems`, `minLength`,
-`maxLength`, and `multipleOf` under `content/schemas/**` has an adjacent
-`x-authority`, and that every sourced or derived one states a derivation. Four
-negative-control fixtures — a bare bound, a bare exclusive bound, a bare length
-bound, and a bound with a source but no derivation — prove the gate can fail,
-and the loader half of the control is parameterised over the keyword list so a
-tenth keyword arrives with its control already written. The schema loader
-enforces the same rules, so the gate holds from both directions.
+`maxLength`, and `multipleOf` under `content/schemas/**` has its own entry in
+the adjacent `x-authority` map — per bound, not per subschema — and that every
+sourced or derived entry states a derivation. Negative-control fixtures prove
+the gate can fail: a bare bound, a bare exclusive bound, a bare length bound, a
+bound with a source but no derivation, and a subschema with two bounds that
+attributes one of them. The loader half of the control is parameterised over the
+keyword list, so a tenth keyword arrives with its control already written. The
+schema loader enforces the same rules, so the gate holds from both directions.
+
+`SchemaAuthorityCoverageTests` additionally asserts, per document, that every
+schema under `content/schemas/` either declares a bound or is named in an
+enumerated list of documents declared bound-free.
+
+**When adding or changing a gate here, write a negative control with two of the
+guarded thing where only one satisfies the rule.** Checking that the walk
+reaches a position is a different question from checking how much one answer
+licenses, and this gate was hardened six times on the first question before the
+second one turned up a hole: a single `x-authority` was licensing every bound in
+its subschema.
 
 **No exemption list.** The nine are one list: every bound that may be attributed
-must be. Two earlier candidates for exemption are worth recording, because both
-arguments will be made again.
+must be. (The per-document bound-free list above is a different kind of thing:
+it enumerates *documents*, a factual claim about the corpus that is settled by
+opening the file, rather than *keyword kinds*, which would widen the rule
+everywhere at once including in schemas nobody has written yet.) Two earlier
+candidates for exemption are worth recording, because both arguments will be
+made again.
 
 The exclusive bounds are gated because there is no principled line between "at
 most 2048" and "strictly less than 2049" — the same number is being asserted,

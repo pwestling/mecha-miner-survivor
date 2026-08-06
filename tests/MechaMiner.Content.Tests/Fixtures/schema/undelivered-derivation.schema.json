@@ -8,9 +8,11 @@
       "type": "integer",
       "maximum": 2048,
       "x-authority": {
-        "source": "TDD-COMBAT",
-        "section": "Performance and capacity",
-        "kind": "sourced"
+        "maximum": {
+          "source": "TDD-COMBAT",
+          "section": "Performance and capacity",
+          "kind": "sourced"
+        }
       }
     }
   }

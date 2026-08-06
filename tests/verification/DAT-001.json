@@ -12,7 +12,8 @@
     "The size, depth, and count limits verified by VER-DAT-001-007 are injected rather than global, so a boundary fixture stays a small reviewable file instead of a megabyte of generated JSON. VER-DAT-001-007 also asserts the shipped default limit values.",
     "VER-DAT-001-026 and VER-DAT-001-027 exist because the failure this project keeps repeating is a control that covers only the routes its author enumerated by hand. 026 attacks the walk's reach position by position; 027 attacks the two ways a list-driven control fails silently - a keyword deleted from the list, and an empty set that satisfies every emptiness assertion.",
     "VER-DAT-001-028 and VER-DAT-001-029 continue that pass. 028 attacks the input set itself: a fixture no table row claims is tested by nothing, and a code proved by two fixtures can lose one while every set-equality assertion stays true. 029 attacks the walk's model of what a schema object is - every keyword is a legal property name, so a map keyed by author-chosen names cannot be read as a subschema.",
-    "TR-DAT-003's full gate is DAT-006's ('source-order permutation yields identical hash' over a compiled bundle). VER-DAT-001-010 proves the same property at the single-payload level that DAT-006 builds on."
+    "TR-DAT-003's full gate is DAT-006's ('source-order permutation yields identical hash' over a compiled bundle). VER-DAT-001-010 proves the same property at the single-payload level that DAT-006 builds on.",
+    "VER-DAT-001-030 through 033 come from review of the first pass, and 031 is the one that matters. Every control before it put one guarded thing in one position and proved the walk reached it; none asked how much a single answer licensed, and the answer was 'every bound in the subschema'. The rule is now written down in content/schemas/README.md: when hardening a gate, add a control with two of the guarded thing where only one satisfies the rule."
   ],
   "entries": [
     {
@@ -699,6 +700,101 @@
       },
       "fixtures": [
         "tests/MechaMiner.Content.Tests/Fixtures/schema/keyword-named-properties.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-030",
+      "summary": "Bound coverage is asserted per document against an enumerated list of documents declared bound-free, replacing an aggregate BoundsSeen > 0 over the whole corpus. The aggregate was satisfied by any one schema, so one document with a bound vouched for every other and a schema could lose every bound it had while the total stayed positive. The list is file names written out one by one - not a pattern, a prefix, or a predicate - so a document that loses its bounds fails until somebody adds its name in a line a reviewer can argue with. This exemption is over documents, a factual claim about the corpus settled by opening the file, which is why it is right here while the x-authority gate over keyword kinds deliberately has none: an exemption there would widen the rule everywhere at once, including in schemas nobody has written yet. Three negative controls over a two-document fixture corpus: a bound-free document on no list is reported by name, while the aggregate count over that same corpus stays positive; an exemption naming no document in the corpus is reported, because a waiver for nothing is a standing waiver for whatever file next takes that name; and an exemption whose document does carry bounds is reported, because an unneeded exemption is a false claim that would absorb that document losing every bound it has. A positive control asserts that a declared bound-free document is accepted, so the three cannot be satisfied by a check that reports everything.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy",
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.SchemaAuthorityCoverageTests"
+      },
+      "fixtures": [
+        "content/schemas/envelope.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/no-bounds.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/attributed-bound.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-031",
+      "summary": "Attribution is per bound keyword, not per subschema. x-authority was read as a flag on the enclosing object by both the loader and the structure-blind corpus walk, so one authority licensed every bound beside it: a bare maxLength added next to the attributed minLength in content/schemas/envelope.schema.json left the whole suite green. x-authority is now a map keyed by the bound each entry explains, chosen over a flat authority carrying a bound field or an array of those because a map cannot express the same keyword attributed twice with two different derivations. The relation is a bijection, reported keyword by keyword in both directions: a declared bound with no entry fails naming the keyword, and an entry for a bound the subschema does not declare fails too, since provenance for an absent bound silently covers that bound the day someone adds it. The committed control is a subschema declaring minLength and maxLength and attributing one of them; the loader and the walk must each name maxLength and neither may name minLength. Keying the annotation by bound keyword puts the string 'minimum' one level inside the annotation, so the walk is asserted not to count an authority map's own keys as bounds - the same phantom the properties map produced, arriving through the fix for a different hole.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy",
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.SchemaAuthorityTests"
+      },
+      "fixtures": [
+        "content/schemas/envelope.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/partly-attributed-bounds.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-032",
+      "summary": "Two rules that were satisfied by something which is not an answer. The annotation keywords title, description and $comment - and $schema and $id, accepted just as loosely - returned true for any JSON value, so a title holding {\"if\":{\"maximum\":5}} loaded clean: an unevaluated subschema parked under a recognised keyword's name, which every parse-time rule including x-authority placement stopped at the edge of. That is the same hiding place a $defs on a subschema was, reached by a shorter route, and the structure-blind corpus walk is asserted to find the bound the loader stepped over. Separately, the structural-bound rationale check tested only that a description property was present, so the empty string, whitespace, 0, false, {} and [] all counted as justifying a limit; it now requires a string with non-whitespace content. Both are asserted with the accepting case alongside the rejecting one, so neither is a ban rather than a type.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy",
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.SchemaAuthorityTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/annotation-hiding-a-subschema.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-033",
+      "summary": "The propertyNames path quotes a property name with Utf8JsonWriter rather than the JsonSerializer.Serialize overload that takes no JsonTypeInfo. That overload resolves a contract by reflection, and JsonSerializerIsReflectionEnabledByDefault is a per-application runtimeconfig property rather than a per-assembly one, so the same assembly threw InvalidOperationException under the host that runs the content-compile verb while passing under the test host; doc 40 forbids runtime contract reflection outright. Asserted over the names where the quoting has to be right rather than merely present - a name containing a quote, a backslash, a control character, non-ASCII text, and the empty name - each instance built with Utf8JsonWriter so the test does not depend on the mechanism under test, plus the rejection naming the property it rejected. Recorded limitation: this test project does not set JsonSerializerIsReflectionEnabledByDefault, so the suite still cannot see a reflection-based call of this class, and this entry proves the call site rather than the class. Setting that property on the library and test projects is integration-owner scope.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy",
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.JsonSchemaEvaluatorTests"
+      },
+      "fixtures": [
+        "content/schemas/envelope.schema.json"
       ],
       "scenarios": [],
       "evidenceKinds": ["test-output", "negative-control"],

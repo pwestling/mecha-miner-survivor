@@ -171,6 +171,22 @@ public static class JsonSchemaLoader
     /// Enforces the rules that relate <c>x-authority</c> to its siblings, which can only
     /// be checked once the whole subschema has been read.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The relation is a bijection: every bound keyword the subschema declares has an
+    /// entry in <c>x-authority</c>, and every entry in <c>x-authority</c> names a bound
+    /// keyword the subschema declares. Both halves are reported keyword by keyword, so a
+    /// subschema with three bounds and two authorities fails naming the third.
+    /// </para>
+    /// <para>
+    /// This used to be a single flag. The subschema was asked only whether it declared
+    /// <em>a</em> bound and whether it carried <em>an</em> authority, so one
+    /// <c>x-authority</c> licensed every bound beside it: adding an unattributed
+    /// <c>maxLength</c> next to an attributed <c>minLength</c> was accepted by the loader
+    /// and by the corpus walk together. Provenance is a property of a number, and a
+    /// subschema can assert several numbers.
+    /// </para>
+    /// </remarks>
     private static void ValidateAuthorityPlacement(
         JsonSchemaNode node,
         JsonElement element,
@@ -178,55 +194,82 @@ public static class JsonSchemaLoader
         string sourcePath,
         DiagnosticBag bag)
     {
-        bool declaresBound = false;
+        List<string> declaredBounds = new();
         foreach (string keyword in SchemaAuthority.BoundKeywords())
         {
             if (element.TryGetProperty(keyword, out _))
             {
-                declaresBound = true;
-                break;
+                declaredBounds.Add(keyword);
             }
         }
 
-        if (declaresBound && node.Authority is null)
+        IReadOnlyDictionary<string, SchemaAuthority> authorities =
+            node.Authorities ?? EmptyAuthorities;
+
+        foreach (string keyword in declaredBounds)
         {
+            if (authorities.ContainsKey(keyword))
+            {
+                continue;
+            }
+
             bag.Add(Malformed(
                 sourcePath,
-                pointer,
-                "a numeric bound carries an adjacent '" + SchemaAuthority.Keyword
-                    + "' recording where the number came from; without one, "
-                    + "\"which bounds need re-deriving now that a document changed\" is "
-                    + "answerable only from memory"));
+                pointer.AppendProperty(keyword),
+                "'" + keyword + "' is a numeric bound, so '" + SchemaAuthority.Keyword
+                    + "' carries an entry keyed '" + keyword + "' recording where that number "
+                    + "came from. An authority on a neighbouring bound does not cover it: "
+                    + "without an entry of its own, \"which bounds need re-deriving now that a "
+                    + "document changed\" is answerable only from memory"));
         }
 
-        if (node.Authority is null)
+        bool structural = false;
+        foreach (KeyValuePair<string, SchemaAuthority> attributed in authorities)
         {
-            return;
-        }
+            if (!declaredBounds.Contains(attributed.Key))
+            {
+                bag.Add(Malformed(
+                    sourcePath,
+                    pointer.AppendProperty(SchemaAuthority.Keyword)
+                        .AppendProperty(attributed.Key),
+                    "'" + SchemaAuthority.Keyword + "' explains a bound this subschema "
+                        + "declares, and this subschema declares no '" + attributed.Key
+                        + "'. An authority for a bound that is not there is provenance for "
+                        + "nothing, and it would silently cover that bound the day someone "
+                        + "adds it"));
+                continue;
+            }
 
-        if (!declaresBound)
-        {
-            bag.Add(Malformed(
-                sourcePath,
-                pointer.AppendProperty(SchemaAuthority.Keyword),
-                "'" + SchemaAuthority.Keyword + "' annotates a numeric bound, so it belongs "
-                    + "next to one of "
-                    + string.Join(", ", SchemaAuthority.BoundKeywords())));
-            return;
+            structural |= attributed.Value.Kind == SchemaAuthorityKind.Structural;
         }
 
         // A structural bound has no citation to go stale, but it still has to be
         // justified, and description is where a reader looks for the justification.
-        if (node.Authority.Kind == SchemaAuthorityKind.Structural
-            && !element.TryGetProperty("description", out _))
+        // Presence is not enough: "", "   ", 0, false, {} and [] are all present and none
+        // of them justifies anything.
+        if (structural && !StatesRationale(element))
         {
             bag.Add(Malformed(
                 sourcePath,
                 pointer.AppendProperty(SchemaAuthority.Keyword),
-                "a structural bound states its rationale in 'description'; a limit nobody can "
-                    + "justify is indistinguishable from one chosen to make something pass"));
+                "a structural bound states its rationale in 'description', as a string with "
+                    + "something in it; a limit nobody can justify is indistinguishable from "
+                    + "one chosen to make something pass"));
         }
     }
+
+    /// <summary>
+    /// Whether the subschema's <c>description</c> is a string that actually says something.
+    /// </summary>
+    private static bool StatesRationale(JsonElement element)
+    {
+        return element.TryGetProperty("description", out JsonElement description)
+            && description.ValueKind == JsonValueKind.String
+            && !string.IsNullOrWhiteSpace(description.GetString());
+    }
+
+    private static readonly IReadOnlyDictionary<string, SchemaAuthority> EmptyAuthorities =
+        new Dictionary<string, SchemaAuthority>(StringComparer.Ordinal);
 
     private static bool ApplyKeyword(
         JsonSchemaNode node,
@@ -244,7 +287,21 @@ public static class JsonSchemaLoader
             case "title":
             case "description":
             case "$comment":
-                // Identity and documentation: no assertion.
+                // Identity and documentation: no assertion, but still a type. An
+                // annotation that accepted any JSON value would be a hiding place with a
+                // keyword's name on it: {"title":{"if":{"maximum":5}}} loaded clean, and
+                // the subschema under it was walked by nothing and evaluated by nothing.
+                // That is the same hole a nested $defs was, reached by a shorter route.
+                if (value.ValueKind != JsonValueKind.String)
+                {
+                    bag.Add(Malformed(
+                        sourcePath,
+                        at,
+                        "'" + property.Name + "' is a string; a non-string annotation is a "
+                            + "subschema-shaped value that nothing checks"));
+                    return false;
+                }
+
                 return true;
 
             case "$defs":
@@ -260,8 +317,8 @@ public static class JsonSchemaLoader
                 return atRoot || ParseSubschemaMapForValidation(value, at, sourcePath, bag);
 
             case SchemaAuthority.Keyword:
-                node.Authority = ReadAuthority(value, at, sourcePath, bag);
-                return node.Authority is not null;
+                node.Authorities = ReadAuthorities(value, at, sourcePath, bag);
+                return node.Authorities is not null;
 
             case "$ref":
                 if (value.ValueKind != JsonValueKind.String)
@@ -712,6 +769,79 @@ public static class JsonSchemaLoader
     /// drift from the first, and then a citation legal in one place would be illegal in
     /// the other.
     /// </remarks>
+    /// <summary>
+    /// Reads <c>x-authority</c> as a map from bound keyword to the authority for that one
+    /// bound.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The key is the identity of what is being attributed, so a subschema asserting three
+    /// numbers writes three authorities and no number can borrow its neighbour's. The
+    /// alternative shapes were a flat authority carrying a <c>bound</c> field, and an array
+    /// of those: both allow the same keyword to be attributed twice, with two different
+    /// derivations and no rule saying which one is the provenance. A map cannot express
+    /// that.
+    /// </para>
+    /// <para>
+    /// The map's keys are the closed bound-keyword list, so the earlier flat shape fails
+    /// here naming <c>kind</c> rather than loading as an authority for a bound called
+    /// "kind". A shape change that failed silently would be worse than the defect it fixes.
+    /// </para>
+    /// </remarks>
+    private static IReadOnlyDictionary<string, SchemaAuthority>? ReadAuthorities(
+        JsonElement value,
+        JsonPointer at,
+        string sourcePath,
+        DiagnosticBag bag)
+    {
+        if (value.ValueKind != JsonValueKind.Object)
+        {
+            bag.Add(Malformed(
+                sourcePath,
+                at,
+                "x-authority is an object keyed by the bound keyword each authority explains"));
+            return null;
+        }
+
+        Dictionary<string, SchemaAuthority> authorities = new(StringComparer.Ordinal);
+        foreach (JsonProperty entry in value.EnumerateObject())
+        {
+            if (Array.IndexOf(SchemaAuthority.BoundKeywords(), entry.Name) < 0)
+            {
+                bag.Add(Malformed(
+                    sourcePath,
+                    at.AppendProperty(entry.Name),
+                    "'" + entry.Name + "' is not a bound keyword. x-authority is keyed by the "
+                        + "bound each authority explains, one of "
+                        + string.Join(", ", SchemaAuthority.BoundKeywords())
+                        + ", because a subschema may assert several numbers and each has its "
+                        + "own provenance"));
+                return null;
+            }
+
+            SchemaAuthority? authority =
+                ReadAuthority(entry.Value, at.AppendProperty(entry.Name), sourcePath, bag);
+            if (authority is null)
+            {
+                return null;
+            }
+
+            authorities[entry.Name] = authority;
+        }
+
+        if (authorities.Count == 0)
+        {
+            bag.Add(Malformed(
+                sourcePath,
+                at,
+                "x-authority attributes at least one bound; an empty one records nothing and "
+                    + "reads as though a bound had been attributed"));
+            return null;
+        }
+
+        return authorities;
+    }
+
     private static SchemaAuthority? ReadAuthority(
         JsonElement value,
         JsonPointer at,
@@ -720,7 +850,7 @@ public static class JsonSchemaLoader
     {
         if (value.ValueKind != JsonValueKind.Object)
         {
-            bag.Add(Malformed(sourcePath, at, "x-authority is an object"));
+            bag.Add(Malformed(sourcePath, at, "each x-authority entry is an object"));
             return null;
         }
 

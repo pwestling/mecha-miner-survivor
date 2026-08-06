@@ -72,6 +72,27 @@ implemented later inherits the control instead of needing a new fixture. The
 loader's structure-aware walk reads `properties` through `ReadSubschemaMap` and
 never had the confusion; it is asserted on the same file.
 
+`partly-attributed-bounds.schema.json` is the control none of the above was.
+Every one of them puts **one** guarded thing in **one** position and proves the
+gate reaches it; none of them asks how much one answer licenses. The answer was
+"everything in the subschema": `x-authority` was read as a flag on the object,
+so `presentation_id` declaring `minLength` and `maxLength` satisfied the whole
+gate by attributing either one. This file is that shape — two bounds, one
+authority — and both the loader and the corpus walk must name the unattributed
+`maxLength`. When you harden a gate here, write the two-of-the-guarded-thing
+control alongside the reach control; they are different questions.
+
+`annotation-hiding-a-subschema.schema.json` carries `"title": {"if": {"maximum":
+5}}`. An annotation keyword that accepted any JSON value was a hiding place with
+a recognised keyword's name on it: the loader never parsed the value as a
+subschema, so every parse-time rule stopped at its edge, while the
+structure-blind corpus walk went straight in and found the bound. That
+disagreement is the fixture's point.
+
+`attributed-bound.schema.json` is the counterpart to `no-bounds.schema.json` for
+the per-document coverage check: a document that unambiguously has a bound, so
+that an exemption naming it is unambiguously a false claim about the corpus.
+
 ## What binds a fixture to its expectation
 
 `FixtureCorpus.cs` holds the table mapping each invalid fixture to the one

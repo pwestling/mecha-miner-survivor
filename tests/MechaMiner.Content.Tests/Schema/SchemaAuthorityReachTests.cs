@@ -265,12 +265,36 @@ internal sealed class SchemaAuthorityReachTests
     /// <see cref="SchemaAuthority.BoundKeywords"/>, each asserted to be unimplemented.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// This is the hole the nine-keyword list would otherwise have. <c>minProperties</c>,
     /// <c>maxProperties</c>, <c>minContains</c>, and <c>maxContains</c> are every bit as
     /// much "a number someone chose" as <c>maxItems</c> is, and they are absent from the
-    /// bound list only because the evaluator refuses them outright. If one is ever
-    /// implemented and this test is not updated, it becomes an unattributed number the
-    /// gate has no opinion about. Failing here is how that gets noticed.
+    /// bound list only because the evaluator refuses them outright.
+    /// </para>
+    /// <para>
+    /// <b>If you are reading this because it just failed, you did not break anything and
+    /// deleting it is the wrong repair.</b> It is an alarm in a file you were not editing,
+    /// and it fires for a consequence of your change rather than a defect in it, which is
+    /// the kind of alarm that gets removed as tidying. Here is the consequence. The
+    /// attribution rule is "every numeric bound records where its number came from", and
+    /// the machine-checkable version of that sentence is
+    /// <see cref="SchemaAuthority.BoundKeywords"/> - nine names, and a number asserted by
+    /// any other keyword is invisible to it. Today that gap is closed by refusal: these
+    /// four keywords cannot appear in a schema at all, because
+    /// <c>JsonSchemaKeywords</c> makes an unimplemented keyword a load failure. The moment
+    /// one of them is implemented, that closure is gone, and unless it is added to
+    /// <c>BoundKeywords</c> in the same change it becomes a number a schema can assert with
+    /// no provenance and nothing to say so - not the loader, not the corpus walk, not this
+    /// fixture. Nobody would notice, because the gate would still be green over the eight
+    /// or nine keywords it does know.
+    /// </para>
+    /// <para>
+    /// So the repair is: add the keyword to <see cref="SchemaAuthority.BoundKeywords"/>,
+    /// add it to the list stated independently in
+    /// <c>SchemaAuthorityCoverageTests.TheBoundKeywordListIsExactlyTheNineStatedHere</c>,
+    /// and delete its case from here. Three lines, in the change that earns them. This
+    /// test exists to make that a decision somebody takes rather than one that happens.
+    /// </para>
     /// </remarks>
     [TestCase("minProperties")]
     [TestCase("maxProperties")]
@@ -281,9 +305,16 @@ internal sealed class SchemaAuthorityReachTests
         Assert.That(
             JsonSchemaKeywords.IsRecognised(keyword),
             Is.False,
-            keyword + " asserts a number, so implementing it means adding it to "
-                + "SchemaAuthority.BoundKeywords() in the same change. Until then it must be "
-                + "a load failure rather than a keyword the attribution gate ignores");
+            keyword + " is implemented now, and it asserts a number. Nothing else in this "
+                + "repository will tell you that it is outside the attribution rule: the "
+                + "loader and the corpus walk both read provenance off "
+                + "SchemaAuthority.BoundKeywords(), so a bound spelled '" + keyword
+                + "' would be one a schema can assert with no x-authority and no complaint. "
+                + "Until now it was unreachable because an unimplemented keyword is a load "
+                + "failure, and implementing it removed that cover. Add '" + keyword
+                + "' to SchemaAuthority.BoundKeywords() and to the list stated in "
+                + "SchemaAuthorityCoverageTests, then delete this case - do not delete this "
+                + "case on its own");
     }
 
     private static IReadOnlyList<string> CodesOf(JsonSchemaLoadResult load)

@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
@@ -330,8 +331,7 @@ public static class JsonSchemaEvaluator
             {
                 // propertyNames validates each NAME as if it were a string instance.
                 List<JsonSchemaError> nameErrors = new();
-                using (JsonDocument nameDocument = JsonDocument.Parse(
-                    JsonSerializer.Serialize(property.Name)))
+                using (JsonDocument nameDocument = QuoteAsJsonString(property.Name))
                 {
                     EvaluateNode(
                         schema,
@@ -547,6 +547,38 @@ public static class JsonSchemaEvaluator
         }
 
         return accepted;
+    }
+
+    /// <summary>
+    /// Wraps a property name as a one-value JSON document holding that string, so
+    /// <c>propertyNames</c> can evaluate the name as an instance.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Written with <see cref="Utf8JsonWriter"/> rather than
+    /// <c>JsonSerializer.Serialize(name)</c>. The serializer overload with no
+    /// <c>JsonTypeInfo</c> goes through the reflection-based contract resolver, and
+    /// <c>JsonSerializerIsReflectionEnabledByDefault</c> is a <em>per-application</em>
+    /// runtimeconfig property, not a per-assembly one: the same assembly that passes here
+    /// throws <c>InvalidOperationException: Reflection-based serialization has been
+    /// disabled</c> the moment it is loaded by a host that sets the property false, which
+    /// the content-compile verb's host does. A call that works or does not depending on
+    /// who loaded the DLL is not a call this layer may make.
+    /// </para>
+    /// <para>
+    /// The writer escapes exactly as the serializer did, so the quoting is unchanged; what
+    /// changes is that nothing on this path resolves a contract at runtime.
+    /// </para>
+    /// </remarks>
+    private static JsonDocument QuoteAsJsonString(string value)
+    {
+        ArrayBufferWriter<byte> buffer = new();
+        using (Utf8JsonWriter writer = new(buffer))
+        {
+            writer.WriteStringValue(value);
+        }
+
+        return JsonDocument.Parse(buffer.WrittenMemory);
     }
 
     private static string NameOf(JsonElement instance)

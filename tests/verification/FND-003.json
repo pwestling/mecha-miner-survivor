@@ -1,0 +1,391 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "FND-003",
+  "workPackageTitle": "Pure NUnit test projects and Godot integration-test harness",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91 \u00a7 Verification registry).",
+    "The structural validator for this file is owned by TASK-FND-009-002. Until it lands, the shape here matches tests/verification/FND-001.json exactly.",
+    "The pure tiers (MechaMiner.Simulation.Tests, MechaMiner.Content.Tests, MechaMiner.Persistence.Tests) never launch Godot. The engine tier (MechaMiner.Game.Tests) launches the pinned Godot executable as an external process and asserts the emitted report; it holds no Godot type, so game/ remains the only Godot-referencing project (docs/technical/115 \u00a7 Accepted project boundary).",
+    "VER-FND-003-007 through VER-FND-003-010 deliberately assert the runner report rather than the Godot process exit code. A headless Godot launch exits 0 even when the C# script on the boot node fails to load, so exit status alone is not a gate; FND-001 hit this empirically and recorded it in tests/verification/FND-001.json.",
+    "The sample tests prove the harness pattern, not domain behavior: at FND-003 the pure production projects contain no domain code. Every later stream replaces these samples with real subject tests using the same shared support types.",
+    "Status is current status: an entry whose implementing task has not landed yet is 'registered'. TASK-FND-003-001 entries are implemented in this revision; TASK-FND-003-002 entries flip to 'implemented' when the Godot integration runner lands. Both sets of entries were written before either implementation."
+  ],
+  "entries": [
+    {
+      "id": "VER-FND-003-001",
+      "summary": "All three pure test projects discover and execute a nonzero number of NUnit tests through the standard test-fast verb without launching Godot.",
+      "task": "TASK-FND-003-001",
+      "requirements": [
+        "TR-QUA-001",
+        "TR-BLD-005"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#test-project-separation",
+        "docs/technical/100-build-dependencies-and-release-operations.md#c-project-standards"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "command",
+        "value": "./build.sh test-fast"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "test-counts",
+        "verb-result-json"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-003-002",
+      "summary": "Every randomized test logs its seed and version identity before the randomized body executes, so an aborted or hanging run still names its seed.",
+      "task": "TASK-FND-003-001",
+      "requirements": [
+        "TR-QUA-002"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#determinism-and-fixture-policy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Support.DeterministicCaseTests"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "seed-identity"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented",
+      "successor": "TASK-FND-004-001"
+    },
+    {
+      "id": "VER-FND-003-003",
+      "summary": "A randomized failure prints a one-command reproduction description and preserves the minimized failing input as a file beneath artifacts/.",
+      "task": "TASK-FND-003-001",
+      "requirements": [
+        "TR-QUA-002",
+        "TR-AGT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#determinism-and-fixture-policy",
+        "docs/technical/114-autonomous-agent-execution-protocol.md#failure-and-retry-policy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-test-harness.sh"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Simulation.Tests deliberate-failure fixture (NUnit Explicit)"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "test-output",
+        "minimized-input-artifact"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-003-004",
+      "summary": "Floating-point comparison in the shared harness is only reachable through an explicitly named tolerance; no unnamed approximate-equality helper exists, and a tolerance constructed without a name or with a nonpositive magnitude is rejected.",
+      "task": "TASK-FND-003-001",
+      "requirements": [
+        "TR-QUA-001"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#numeric-tolerance"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Support.ToleranceContractTests"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-003-005",
+      "summary": "Golden comparison uses canonical ordered reviewable text, reports a reviewable line diff on mismatch, and an update run rewrites the golden but still fails so a golden can never be accepted merely to make a run green.",
+      "task": "TASK-FND-003-001",
+      "requirements": [
+        "TR-QUA-001",
+        "TR-AGT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#determinism-and-fixture-policy",
+        "docs/technical/114-autonomous-agent-execution-protocol.md#failure-and-retry-policy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Support.GoldenTextTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Goldens"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "golden-text",
+        "text-diff"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-003-006",
+      "summary": "A property test compares an optimized implementation against a deliberately simple reference model over generated inputs, within a named tolerance where the comparison is not exact.",
+      "task": "TASK-FND-003-001",
+      "requirements": [
+        "TR-QUA-001",
+        "TR-QUA-002"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#reference-models"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Persistence.Tests.Support.ReferenceModelPropertyTests"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "seed-identity"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-003-007",
+      "summary": "The Godot integration runner executes a passing case headlessly and the host test accepts it only from the emitted report, which carries the engine version, renderer, case ID, and assertion list.",
+      "task": "TASK-FND-003-002",
+      "requirements": [
+        "TR-QUA-001",
+        "TR-FND-001"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#test-project-separation",
+        "docs/technical/100-build-dependencies-and-release-operations.md#godot-import-and-export"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Game.Tests.GodotIntegrationRunnerTests.PassingCaseIsReportedAsPassed"
+      },
+      "fixtures": [
+        "game/tests/GodotTestRunner.tscn"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "runner-report-json",
+        "engine-log",
+        "test-counts"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "main",
+      "status": "registered"
+    },
+    {
+      "id": "VER-FND-003-008",
+      "summary": "A deliberately failing engine case is reported as failed with its failing assertion, and the host test fails, proving the runner cannot pass a broken case.",
+      "task": "TASK-FND-003-002",
+      "requirements": [
+        "TR-QUA-001",
+        "TR-AGT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#test-project-separation"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-godot-runner.sh"
+      },
+      "fixtures": [
+        "game/tests/GodotTestRunner.tscn case=fail"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "runner-report-json",
+        "command-exit-code",
+        "engine-log"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "main",
+      "status": "registered"
+    },
+    {
+      "id": "VER-FND-003-009",
+      "summary": "A hanging engine case is terminated at its bounded timeout, produces no report, and is classified as timed out rather than passed, because a headless Godot process can exit 0 or never exit at all.",
+      "task": "TASK-FND-003-002",
+      "requirements": [
+        "TR-QUA-001",
+        "TR-QUA-003"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#flake-policy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-godot-runner.sh"
+      },
+      "fixtures": [
+        "game/tests/GodotTestRunner.tscn case=hang"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "engine-log",
+        "timeout-observation"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "main",
+      "status": "registered"
+    },
+    {
+      "id": "VER-FND-003-010",
+      "summary": "An engine case that declares an artifact writes it beneath artifacts/ and references it from its report, and the host test asserts both the reference and the file.",
+      "task": "TASK-FND-003-002",
+      "requirements": [
+        "TR-QUA-001",
+        "TR-BLD-005"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#acceptance-evidence",
+        "docs/technical/114-autonomous-agent-execution-protocol.md#required-evidence-bundle"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Game.Tests.GodotIntegrationRunnerTests.ArtifactCaseWritesAndReferencesItsArtifact"
+      },
+      "fixtures": [
+        "game/tests/GodotTestRunner.tscn case=artifact"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "runner-report-json",
+        "captured-artifact"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "main",
+      "status": "registered"
+    },
+    {
+      "id": "VER-FND-003-011",
+      "summary": "test-fast runs the pure tiers and the build-policy fixtures only, and launches no Godot process at all, observed with a tripwire: an executable named godot is placed first on PATH and in MECHAMINER_GODOT for every pure test process, and the tier fails if it was ever invoked. A negative control proves the assertion can fail.",
+      "task": "TASK-FND-003-001",
+      "requirements": [
+        "TR-BLD-005",
+        "TR-QUA-001"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#test-project-separation",
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-test-harness.sh"
+      },
+      "fixtures": [
+        "build/verify-test-harness.sh godot-launching fixture"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output",
+        "tripwire-sentinel",
+        "negative-control"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-003-012",
+      "summary": "test-main runs the pure tiers plus the Godot engine tier after a headless import, and returns the owning tier's exit class rather than success after partial work.",
+      "task": "TASK-FND-003-002",
+      "requirements": [
+        "TR-BLD-005",
+        "TR-QUA-001"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface",
+        "docs/technical/91-verification-strategy.md#ci-suites"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "command",
+        "value": "./build.sh test-main"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "test-counts",
+        "verb-result-json"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "main",
+      "status": "registered"
+    }
+  ]
+}

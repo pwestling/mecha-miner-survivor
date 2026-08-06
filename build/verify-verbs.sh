@@ -17,9 +17,9 @@
 # eighteen verbs.
 #
 # The matrix rows record the current implemented/awaiting-owner state and are updated
-# by the task that implements each verb. At TASK-FND-002-002 that is doctor,
-# bootstrap, format, format-check, build, and godot-import; test-fast and test-main
-# name FND-003 until its tasks land.
+# by the task that implements each verb. At TASK-FND-003-001 the implemented verbs are
+# doctor, bootstrap, format, format-check, build, godot-import, and test-fast;
+# test-main names FND-003 until TASK-FND-003-002 lands.
 #
 # Exit classes follow doc 100 § Standard command surface: 0 success,
 # 4 validation failure.
@@ -42,7 +42,7 @@ readonly VERB_MATRIX=(
   "format|0|MMT-0000|"
   "format-check|0|MMT-0000|"
   "build|0|MMT-0000|"
-  "test-fast|2|MMT-2002|FND-003"
+  "test-fast|0|MMT-0000|"
   "test-main|2|MMT-2002|FND-003"
   "test-nightly|2|MMT-2002|OPS-001"
   "content|2|MMT-2002|DAT-006"
@@ -65,6 +65,7 @@ readonly SLOW_IMPLEMENTED=(
   "format-check"
   "build"
   "godot-import"
+  "test-fast"
 )
 
 failures=0

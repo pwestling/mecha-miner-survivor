@@ -21,4 +21,13 @@
     <PackageReference Include="NUnit.Analyzers" />
   </ItemGroup>
 
+  <ItemGroup Label="Shared deterministic fixture utilities (TASK-FND-003-001)">
+    <!--
+      Linked, not referenced. doc 100 § Repository structure prescribes exactly four
+      test projects and no shared test library, so the utilities are compiled into
+      each test assembly and stay internal. See tests/shared/README.md.
+    -->
+    <Compile Include="../shared/**/*.cs" LinkBase="Support/Shared" />
+  </ItemGroup>
+
 </Project>

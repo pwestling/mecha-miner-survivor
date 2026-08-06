@@ -54,10 +54,11 @@ internal static class VerbRegistry
             "FND-002",
             BuildVerb.Execute,
             VerbArgument.OptionalChoice("configuration", "debug", "debug", "development", "release")),
-        VerbDescriptor.AwaitingOwner(
+        VerbDescriptor.Implemented(
             "test-fast",
             "pure bounded tests, content validation, representative headless fixtures",
-            "FND-003"),
+            "FND-003",
+            TestVerb.RunFastTier),
         VerbDescriptor.AwaitingOwner(
             "test-main",
             "fast suite plus Godot integration, package smoke prerequisites, broader matrices",

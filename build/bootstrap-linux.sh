@@ -113,7 +113,7 @@ verify() {
   log "verifying pinned versions"
   local sdks
   sdks="$(/usr/local/bin/dotnet --list-sdks)"
-  printf '%s\n' "${sdks}" | grep -q "^${DOTNET_SDK_VERSION} " \
+  grep -q "^${DOTNET_SDK_VERSION} " <<<"${sdks}" \
     || fail "SDK ${DOTNET_SDK_VERSION} not reported by dotnet --list-sdks" "$EXIT_ENVIRONMENT"
   local godot_version
   godot_version="$(/usr/local/bin/godot --headless --version)"

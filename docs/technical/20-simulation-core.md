@@ -101,6 +101,18 @@ An entity ID contains a reusable storage index and a generation. Reusing a slot 
 - Invalid, expired, or generation-mismatched references fail closed and produce a diagnostic counter.
 - Stable ordering uses the full entity ID after a system's authored priority keys.
 
+The identity carries the run session as well as the reusable storage index and the generation. The two components named at the head of this section are the ones a session reuses, not the whole identity; the run session is the third, and carrying it inside the identity is how the uniqueness scope stated above is enforced rather than merely asserted. Two runs legitimately allocate the same storage index at the same generation, so an identity that leaked across a run boundary is indistinguishable from a live one unless the run session travels inside the identity itself. The run session is also what makes the type fail closed: a default or unset run session leaves the identity structurally invalid, so a default-constructed identity is rejected instead of becoming an accidentally valid reference to whatever currently occupies the first slot.
+
+The full entity ID compares by run session, then storage index, then generation. Storage index must precede generation because it is the only component that discriminates among simultaneously live entities: two live records in one run session never share a storage index, so a comparison over a live entity set resolves on storage index and never reaches the generation. Generation exists to order records that share a recycled slot, which arises only where records from different lifetimes of one slot coexist: recovery snapshots, persisted history, and retained diagnostic or statistics records, never a live entity set. Run session leads because it is the outermost component of the identity, so the comparison order follows the same nesting the identity has.
+
+Generation is therefore not exercised by any fixture whose records all carry distinct storage indices; such a fixture pins the storage-index comparison and nothing more. A fixture that intends to cover generation ordering must reuse one storage index across two generations.
+
+Comparing identities from two different run sessions is a defect rather than an ordering question, and it is rejected where an identity is resolved or freed rather than where one is admitted: nothing in the entity path accepts an externally supplied identity, because a store mints the identity it admits from the allocator. A store resolving an identity that carries a foreign or unset run session fails closed. It resolves nothing and records one diagnostic counter, per the failing-reference rule above. An allocator asked about such an identity returns false and records nothing, deliberately: its predicates are side-effect free, and that same one-diagnostic-per-failed-resolution rule is the store's to satisfy. Neither throws, and neither returns a typed rejection reason, unlike the command path, where a foreign run session on an inbound envelope or transaction is a typed rejection, because that boundary does accept externally supplied identity. A reader who knows the command path should not expect the symmetry here.
+
+The comparator is therefore not the place to detect it. A redundant session check there would only make the boundary check look unnecessary, and the leading run-session comparison exists to keep the order aligned with the identity's structure, not to police session provenance.
+
+Three ordered collections sort on the full entity ID, and each enforces this property at a different place: a packed store by construction, since every identity it holds was minted by its own allocator; a tick's event batch at the boundary that assembles it, since a batch belongs to exactly one tick and therefore to exactly one run; and presentation staging at the point an entity is staged. A fourth ordered collection appearing without an enforcement point named here is an omission rather than an exemption.
+
 The implementation uses purpose-built packed stores by population category, not a general reflection-driven ECS framework. A new generic abstraction is justified only when at least three concrete systems require the same lifecycle and query semantics.
 
 ## Authoritative population categories
@@ -196,6 +208,10 @@ Domain events are immutable facts used by other authoritative or application sys
 - Presentation events may be coalesced by an explicit visual policy; domain events may not be dropped.
 - Statistics consume domain/damage records before their buffers are released.
 - Event schemas are versioned when written to diagnostic artifacts.
+
+The sequence is global to one tick. It begins at the tick's first emitted event and increments monotonically across the entire tick regardless of which system phase or which emitter produced the event, so `(tick, sequence)` is by itself a total order over every event the tick publishes and no further tiebreak key exists. Per-phase and per-emitter numbering are both rejected: either scheme lets two events of one tick share a counter value and so reintroduces the ties this ordering exists to remove, and presentation's detection of missed event sequence numbers requires one contiguous run of numbers per tick.
+
+Two events published by one tick that carry the same sequence are a defect, not a tie. An implementation must fail loudly on a duplicate rather than falling through to a further sort key, because silently ordering an impossible state hides the emission bug that produced it. This rule governs event ordering only; damage instances retain the separate resolution order defined under [Boundary and tie ordering](#boundary-and-tie-ordering).
 
 ## Presentation snapshot
 

@@ -34,8 +34,30 @@
 
   <ItemGroup>
     <ProjectReference Include="../MechaMiner.Content/MechaMiner.Content.csproj" />
+    <!--
+      CMP-OBS-001. The tool reads build identity, emits the SCH-BLD-001 manifest, and
+      renders SCH-OBS-002 reports from the one diagnostics owner rather than deriving
+      any of them a second time (FND-004, FND-007, FND-008).
+    -->
+    <ProjectReference Include="../MechaMiner.Diagnostics/MechaMiner.Diagnostics.csproj" />
     <ProjectReference Include="../MechaMiner.Simulation/MechaMiner.Simulation.csproj" />
     <ProjectReference Include="../MechaMiner.Persistence/MechaMiner.Persistence.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Label="Test-only access to internals (doc 91 § Test project separation)">
+    <!--
+      Exactly one grant, to this project's own mirror test project. Every type here is
+      internal, so without it no behaviour of this project is testable at all. doc 91:
+      "Test-only access occurs through explicit diagnostic APIs/assemblies, not reflection
+      into private state", and the assembly route is the sanctioned one.
+
+      It is for behaviour that genuinely cannot be observed through the public contract. A
+      repeated need for it is a missing diagnostic API - QUA-003 needs one anyway for the
+      debug overlay and command palette - not a reason to widen test coupling to
+      implementation detail. No other project appears here: MechaMiner.Game.Tests
+      deliberately consumes the public contract, which is the point of that project.
+    -->
+    <InternalsVisibleTo Include="MechaMiner.Tools.Tests" />
   </ItemGroup>
 
 </Project>

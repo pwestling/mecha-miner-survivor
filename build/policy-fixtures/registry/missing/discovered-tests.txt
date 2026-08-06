@@ -1,0 +1,10 @@
+# The test inventory this fixture pretends the NUnit harness discovered, read by
+# RegistrySources.ReadFixture. It exists so an nunit selector in FIX-001.json resolves
+# against a declared list rather than against whatever the real repository happens to
+# contain: a fixture that proves one injected defect must not also fail because a real
+# test was renamed.
+#
+# Nonempty on purpose. An empty inventory is itself a validator failure
+# (RegistryRule.EmptyTestInventory), because a selector resolved against nothing can
+# never be contradicted.
+MechaMiner.Tools.Tests.Audit.RegistryValidatorTests.TheCompliantFixtureProducesNoFindings

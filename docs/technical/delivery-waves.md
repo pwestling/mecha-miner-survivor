@@ -260,16 +260,77 @@ Two things the harness deliberately does not provide, so nobody builds on a gues
 | `FND-008` | Profiler marker/metric registry and benchmark report format | `FND-004` | sample CPU/count/allocation report produced | diagnostics metric owner, `SCH-OBS-002` |
 | `FND-009` | Architecture dependency tests plus complete documentation/requirement/component/contract/schema/verification/work ID registry validator | `FND-001`, `FND-003` | forbidden project edges and missing/duplicate/dangling registry IDs/links fail fixtures | architecture tests, registry/document validation tooling, `SCH-QUA-001` validator |
 
-**Step 3 is Ready on the same readiness basis.** `FND-004` depends only on `FND-001`,
-and `FND-009` depends on `FND-001` and `FND-003`. All three are landed and usable, and
-none of them is formally Done; see § Two different claims. Doc 110 makes `FND-007` and `FND-008`
-depend on `FND-004`, so inside this step `FND-004` lands first and then
-`FND-007`/`FND-008` can run in parallel with `FND-009`. `FND-004` also has two waiting
-consumers already recorded in code: `HarnessIdentity` in `tests/shared/` says
-`build-identity=pending:TASK-FND-004-001`, and `game/BootCompositionRoot.cs` names
-`FND-004` as its first successor. `FND-009` replaces `build/verify-architecture.sh`'s reference-graph
-assertions with real architecture tests (`TASK-FND-009-001`) and takes over
-validating `tests/verification/*.json` (`TASK-FND-009-002`).
+**Step 3 is landing in one PR of task commits, on the same readiness basis.** `FND-004`
+depends only on `FND-001`, and `FND-009` depends on `FND-001` and `FND-003`. All three are
+landed and usable, and none of them is formally Done; see § Two different claims. Doc 110
+makes `FND-007` and `FND-008` depend on `FND-004`, so inside this step `FND-004` lands
+first. `FND-004` had two consumers already recorded in code before it landed:
+`HarnessIdentity` in `tests/shared/`, which still says
+`build-identity=pending:TASK-FND-004-001` deliberately - see the table below for why that
+token cannot be replaced by `FND-004` alone - and `game/BootCompositionRoot.cs`, which now
+reads the real identity from `CMP-OBS-001`.
+`FND-009` replaces `build/verify-architecture.sh`'s reference-graph assertions with real
+architecture tests (`TASK-FND-009-001`) and takes over validating
+`tests/verification/*.json` (`TASK-FND-009-002`); the script stays, because CI and the
+`build` verb both call it.
+
+`FND-004` added a fourth pure project, **`src/MechaMiner.Diagnostics`**, as the home of
+`CMP-OBS-001`, plus `tests/MechaMiner.Diagnostics.Tests`. `CMP-OBS-001` had no project in
+the accepted boundary: its consumers are `game/` (build identity is initialization step 1
+and bounded logging step 2, both before content loads) and `MechaMiner.Tools`, and no game
+or pure project may depend on the tool host, so it could not live there; and Content,
+Simulation, and Persistence each own different semantics. Doc 115 § Accepted project
+boundary, doc 100 § Repository structure, and doc 10 § Accepted project decomposition were
+corrected in the same commit. The new project is a dependency leaf, so a later owner may
+reference it without a cycle, and `Simulation` deliberately does not: it publishes
+`CTR-SIM-001` batches that `CMP-OBS-001` consumes.
+
+### What the sixth project did to the gates, and why the count moved rather than relaxed
+
+Doc 100 § Repository structure requires that "changing these top-level ownership
+directories requires updating the Component, Contract, and Schema Registry and
+architecture tests in the same task", so the gate half is recorded here alongside the
+document half.
+
+The accepted decomposition went from **nine** C# projects to **twelve** — `FND-004` added
+`src/MechaMiner.Diagnostics` and `tests/MechaMiner.Diagnostics.Tests`, and `FND-009` added
+`tests/MechaMiner.Tools.Tests`. Neither gate expresses that as a number. Both hold the
+**enumerated set**: `EXPECTED_PROJECTS` in `build/verify-architecture.sh` and
+`AcceptedArchitecture.Projects` plus `AcceptedArchitecture.RequiredPaths` in
+`MechaMiner.Tools`. Solution membership is then a set comparison in both readers, so an
+omission and an addition are separate findings and a project the decomposition does not
+name still fails. That is deliberately stronger than a count: `9` becoming `12` is one
+character of edit and no reviewer can tell a legitimate new project from a stray one, while
+a name has to be written down and justified. The count in the script's own `ok` line is
+derived from the array length for the same reason — it cannot drift away from the list it
+reports on.
+
+The one place a bare count survived was prose. Four `.csproj` comments and
+`tests/shared/README.md` each asserted that doc 100 "prescribes exactly four test
+projects", which stopped being true and failed silently because no gate reads a comment.
+They now point at the enumerated set instead of restating its size.
+
+`build/verify-architecture.sh` also gained the negative control it never had
+(`VER-FND-009-013`, fixtures in `build/policy-fixtures/architecture/`). Its § 3 and § 4
+comparisons had only ever been run against compliant projects, so nothing distinguished a
+working comparison from one that always printed `ok`. `MechaMiner.Diagnostics` made that
+matter: its row is the strictest in the repository — `.NET base libraries only`, Godot
+`No`, zero references — and that row is the only thing keeping the leaf a leaf, so the
+first consumer wanting a content type inside a log record would otherwise have met no
+resistance. Five fixture projects named `MechaMiner.Diagnostics.csproj` now go through the
+same comparison functions the real projects use: four carry one violation each and must be
+rejected, and the fifth is compliant and must be accepted, because four controls that all
+pass by producing a *difference* would also all pass against a comparison that had broken
+into rejecting everything.
+
+Consequences every stream should know:
+
+| Surface | Where | Notes for consumers |
+| --- | --- | --- |
+| build identity | `MechaMiner.Diagnostics.Identity.BuildIdentity` | one owner, baked into that assembly at compile time. Never re-derive product version, commit, tool versions, or configuration anywhere else |
+| the `SCH-BLD-001` manifest | `generated/build-manifest.json`, written by `./build.sh build` | a build output, deliberately not committed: it names the commit of the build that produced it |
+| identity pins | `build/version-identity.props` | product version, CI build number, Godot pin, and the schema/map/random/save versions. `MAP-007`, `SIM-005`, `PST-006`, and `DAT-006` each own their own row |
+| `HarnessIdentity` | `tests/shared/` | still prints `build-identity=pending:TASK-FND-004-001`, deliberately. `MechaMiner.Simulation.Tests.Support.DeterministicCaseTests` asserts that exact token and that test file is `W1-SIM`'s scope, so replacing the token and the assertion is one atomic change `FND-004` cannot make alone. A test project that wants the real identity line adds a `ProjectReference` to `MechaMiner.Diagnostics`; `MechaMiner.Diagnostics.Tests` and `MechaMiner.Game.Tests` already have it. The follow-up is recorded on `VER-FND-003-002` |
 
 ### Step 4
 
@@ -1049,6 +1110,78 @@ scope, so the request goes through the integration owner.
   implication from where the log ends. "Red at stage 1" is otherwise read as "the rest
   passed", which is the same conflation of *unproved* with *satisfied* that Decision 11 is
   about.
+
+## Integration-owner rulings recorded for the parallel streams
+
+These are decided values, not proposals. Four streams inherit them, so each is recorded with
+its derivation: a bare number invites a later reader to tidy it.
+
+### `src/MechaMiner.Simulation/` directory split
+
+| Owner | Directories |
+| --- | --- |
+| `W1-SIM` | `Time/`, `Runtime/`, `Entities/`, `Commands/`, `Events/`, `Snapshots/`, `Random/` |
+| `W2-GEO` | `Geometry/`, `Spatial/`, `Navigation/` |
+
+`Primitives/` was proposed by `W1-SIM` and **rejected**. `GEO-001` is "Planar math,
+primitives, inclusive overlap, swept queries, terrain collision", so `W2-GEO` has the claim;
+and a shared bucket for cross-cutting value types conflicts with
+[placing a type with the project that owns its semantics](./114-autonomous-agent-execution-protocol.md#naming-and-file-placement-defaults).
+Cross-cutting value types are seated with their owning concept instead: an entity ID under
+`Entities/`, a tick index under `Time/`.
+
+Test-tree ownership follows the same rule: each pure test project's `Goldens/` and per-stream
+test subtrees belong to the consuming stream, while `tests/shared/` and every `.csproj` stay
+with `FND-003` and the integration owner.
+
+### Tick catch-up limit: 4 whole ticks per host step (provisional)
+
+Doc 90 gives the 16.67 ms frame and the 5.00 ms simulation allocation but no catch-up budget,
+so the bound derives from [TDR-003](./decisions/TDR-003-require-sixty-fps-on-steam-deck.md)
+§ Performance contract instead: no repeatable active-play stall may exceed 50 ms, which is
+exactly three ticks of debt at 60 Hz, plus one tick of headroom so a frame sitting at
+tolerance cannot trip the bound on a fractional remainder.
+
+Checked the other way, a bound-hitting frame costs `11.67 + 4 x 5.00 = 31.67 ms`, comfortably
+under 50; eight ticks would cost `51.67 ms` and would itself be the stall the bound exists to
+prevent. So 4 is the smallest admissible value, and reaching the bound means the stall was
+already a `TDR-003` defect rather than a catch-up policy failure.
+
+**Proof gate:** `VER-SIM-001-013`, `./build.sh benchmark PERF-04`, tier `main` — a warmed
+ten-minute capture shows zero bound hits against doc 90's existing catch-up-count metric.
+`VER-SIM-001-006` pins the derivation as a unit test so the constant cannot drift before
+`PERF-04` is runnable.
+
+### Snapshot interpolation-snap threshold: 0.18 M
+
+Riftjaw's 5.40 M/s charge is the fastest documented authoritative movement, giving 0.090 M per
+tick, doubled because `CTR-SIM-003` permits a consumer to drop a stale snapshot. 0.18 M is
+0.75% of the 24 m camera height — about 6 px at 800 px, so a snap at the bound is
+imperceptible — and 0.022% of the 810 M longest route, so a genuine teleport clears it by
+orders of magnitude.
+
+### Store capacities: twelve categories with an explicit margin rule
+
+Hard capacity is soft capacity plus one largest authored single materialization. The margin
+exists so that a director bug fails the invariant **with the offending batch resident**,
+which is diagnosable, rather than being masked by a rejected spawn, which is not. Ordinary
+enemy 700 → 730, elite 13 → 15, boss 4 → 4 (a closed set, where no margin is defensible).
+
+Two are recorded as **weakly sourced** and should be revisited when their owners land:
+
+| Category | Capacity | Why it is weak | Revisit at |
+| --- | --- | --- | --- |
+| Pickup | 45 → 87 | rests on the rock-replenishment binomial plus *assumed* boss loot groups | `PRG-001` |
+| Static world object | manifest count | the manifest states no total, because doc 23 deliberately leaves the pickup-entity count open | `MAP-004` |
+
+### Planar position, interim representation
+
+The simulation stores two `double` components locally in `MovementIntent`, both event types,
+and `PresentationSnapshot`, converting at the geometry boundary when `GEO-001` lands. `double`
+because doc 20 § Derived statistics and modifiers allows single precision only after tests
+confirm the map scale is safely inside precision bounds. No competing vector type is
+introduced, because `GEO-001` owns planar primitives. All four change sites carry a grep-able
+`GEO-001` marker so the swap is found mechanically rather than from memory.
 
 ## Note on the four test projects
 

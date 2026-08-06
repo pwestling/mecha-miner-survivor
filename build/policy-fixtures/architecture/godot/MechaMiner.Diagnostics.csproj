@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    NEGATIVE control. Deliberately violates doc 115 § Accepted project boundary: the
+    MechaMiner.Diagnostics row records "Godot types allowed: No", and doc 00 § Language
+    boundary makes game/ the only project permitted an engine dependency.
+
+    The version is declared inline rather than through Directory.Packages.props on
+    purpose: central package management pins the versions the product may restore, and a
+    fixture must not be able to add an entry to that pin. Never restored or built, only
+    evaluated. See ../README.md. Not in MechaMiner.sln.
+  -->
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GodotSharp" Version="4.7.1" />
+  </ItemGroup>
+
+</Project>

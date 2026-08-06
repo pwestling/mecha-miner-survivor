@@ -180,6 +180,24 @@ section "6. an unobtainable file set fails instead of passing vacuously (VER-FND
 # here-string form measured 0 of 300 at every one of those sizes.
 readonly STALE_GIT_DIR="/nonexistent/verify-format-stale.git"
 
+# THREE OUTCOMES, NOT TWO, and the third is why the loop below tests `${output}` for
+# emptiness before it reads it. `|| problems+=("no owned-text-file-set failure was
+# recorded")` appends that same sentence whether the verb printed a report that LACKS the
+# line or printed NOTHING AT ALL; driving the logic with both inputs gave byte-identical
+# messages, and the two are different findings. A report without the line is the gate
+# failing to record the failure, which is a defect in the gate. No output at all means the
+# verb never got far enough to report anything, so the failure could not be looked for and
+# the run establishes nothing either way - reading that as an absent failure line is a
+# false accusation against working code. Compounding it, `${status}` was interpolated into
+# the pass line and not the fail line, so the one signal separating "exit 4, a real report"
+# from "exit 137, killed" printed only on success. It is in all three branches now, with
+# the line count beside it.
+#
+# No retry is added anywhere in this section. The empty capture did not reproduce - 0 of 40
+# invocations under load - so nothing here is a flake known to be fixed. The defect fixed
+# is an unattributable message, which is a defect whether or not the empty capture recurs.
+# The SIGPIPE cause documented above is a separate, independently sufficient one.
+
 # The two reads, factored out so § 6b's controls drive the identical predicate rather
 # than a paraphrase of it. Prints one problem per line and nothing when the output has
 # the shape an unobtainable file set must produce.
@@ -198,14 +216,20 @@ unobtained_set_problems() {
 for verb in format-check format; do
   output="$(GIT_DIR="${STALE_GIT_DIR}" "${WRAPPER}" "${verb}" 2>&1)"
   status=$?
+  output_lines="$(grep -c . <<<"${output}" || true)"
+
+  if [[ -z "${output}" ]]; then
+    fail "${verb} with an unreadable git: exit ${status} and NO OUTPUT AT ALL. The owned-text-file-set failure could not be looked for, so this run establishes nothing about the gate - it is not evidence that the failure line is absent, and it is not evidence that it is present. Rerun; if it repeats, the verb is dying before it reports."
+    continue
+  fi
 
   mapfile -t problems < <(unobtained_set_problems "${output}" "${status}")
 
   if [[ "${#problems[@]}" -eq 0 ]]; then
-    pass "${verb} with an unreadable git: exit ${status}, and the file set is reported as not obtained"
+    pass "${verb} with an unreadable git: exit ${status}, ${output_lines} line(s) of output, and the file set is reported as not obtained"
   else
-    fail "${verb} with an unreadable git: $(printf '%s; ' "${problems[@]}")"
-    printf '%s\n' "${output}" | grep -E 'owned-text|MMT-' | sed 's/^/      /'
+    fail "${verb} with an unreadable git: exit ${status}, ${output_lines} line(s) of output: $(printf '%s; ' "${problems[@]}")"
+    printf '%s\n' "${output}" | sed 's/^/      /'
   fi
 done
 

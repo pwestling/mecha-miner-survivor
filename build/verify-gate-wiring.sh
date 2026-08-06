@@ -362,6 +362,8 @@ readonly INVENTORY=(
   "build/verify-configurations.sh|gate||asserts the Godot project builds in all three configurations"
   "build/verify-format.sh|gate||asserts owned text files satisfy the .editorconfig rules"
   "build/verify-gate-wiring.sh|gate||this file: asserts the partition below. It is a gate about gates and is subject to its own rule, which is why it appears in its own inventory rather than being special-cased out of it"
+  "build/verify-build-identity.sh|gate||asserts the three build-identity surfaces read one baked assembly and agree, through the boot scene rather than the test runner (FND-004). Arrived with the FND-004 merge, which is the change that created the unclassified condition and is therefore the change that resolves it"
+  "build/verify-registry.sh|gate||asserts the identifier, cross-link and tests/verification/*.json registry and the retained audit evidence (FND-009). Arrived with the same merge and is classified by it for the same reason"
   "build/verify-godot-runner.sh|gate||asserts the Godot integration-test runner emits the report the engine tier asserts"
   "build/verify-godot.sh|gate||asserts the Godot import step produced the expected artifacts"
   "build/verify-policies.sh|gate||asserts the compiler and analyzer policy fixtures fail as designed"
@@ -979,11 +981,38 @@ def entry_points(registry_text, members):
     return entries
 
 
+# The verb dispatch table. The closure below must not walk INTO it, and that is not a
+# convenience: it is the one type that names every verb's entry point, so any edge that
+# lands in it merges every verb's closure into one set. The seeds already come out of it
+# - entry_points() reads it - so traversing back in can only add edges that are not calls.
+#
+# This was measured, not anticipated. Over the FND-004 tree the closure of the `bootstrap`
+# verb reached BuildVerb.Execute by this exact path:
+#
+#   BootstrapVerb.Execute --[bare 'Build', 4 members of that name]--> BenchmarkReportBuilder.Build
+#   BenchmarkReportBuilder.Build --[bare 'All', 5 members]---------> VerbRegistry.All
+#   VerbRegistry.All --[same-type 'Verbs']-------------------------> VerbRegistry.Verbs
+#   VerbRegistry.Verbs --[qualified BuildVerb.Execute]-------------> BuildVerb.Execute
+#
+# so every script was attributed to every verb - "(verb bootstrap,build,doctor,format,
+# format-check,godot-import,test-fast,test-main)" on all seven rows - and § 3 and § 4 then
+# both failed on build/verify-godot-runner.sh, which is reached only from test-main and is
+# correctly exempt on the ground that no workflow runs test-main. THE DOCSTRING BELOW USED
+# TO CLAIM over-approximating "can only make this gate weaker ... never redder than the
+# truth". That is false wherever an exemption exists: § 4 requires reached and exempt to be
+# exclusive, so a false positive on "reached" turns a correct exemption into a failure.
+# Excluding the dispatch table is the narrowest fix, and it is a precision improvement in
+# the direction the two checks need - no real call path runs from one verb's code into
+# another verb THROUGH the registry, because the registry is what dispatches them.
+_DISPATCH_TABLE = "VerbRegistry"
+
+
 def closure(seeds, members, by_name):
     """Members reachable from seeds. A qualified T.N is an edge to T.N; a bare N is
     an edge to this type's N when it has one, and otherwise to every N there is.
-    Over-approximating widens what counts as reached, which can only make this gate
-    weaker in a way a reader can see, never redder than the truth."""
+    Over-approximating widens what counts as reached, which makes this gate weaker in a
+    way a reader can see - except through the dispatch table, where it makes it wrongly
+    RED, so that one type is excluded. See the note above."""
     reached = set()
     queue = [seed for seed in seeds if seed in members]
     while queue:
@@ -994,7 +1023,8 @@ def closure(seeds, members, by_name):
         member = members[key]
         for type_name, member_name in _QUALIFIED.findall(member.text):
             candidate = (type_name, member_name)
-            if candidate in members and candidate not in reached:
+            if (candidate in members and candidate not in reached
+                    and candidate[0] != _DISPATCH_TABLE):
                 queue.append(candidate)
         for name in set(_IDENTIFIER.findall(member.text)):
             same_type = (member.type_name, name)
@@ -1003,7 +1033,7 @@ def closure(seeds, members, by_name):
                     queue.append(same_type)
                 continue
             for candidate in by_name.get(name, ()):
-                if candidate not in reached:
+                if candidate not in reached and candidate[0] != _DISPATCH_TABLE:
                     queue.append(candidate)
     return reached
 
@@ -1293,7 +1323,7 @@ gate_add_failures "${partition_failures}"
 section "5. negative controls: each check above can actually fail (VER-FND-005-010)"
 
 controls_run=0
-readonly EXPECTED_CONTROLS=8
+readonly EXPECTED_CONTROLS=9
 
 # expect_red <name> <expected-failure-count-at-least> <report> <count>
 # Every line this prints is manufactured by a control's fixture, INCLUDING the FAIL lines
@@ -1476,6 +1506,49 @@ else
   count=$?
   expect_red "a gate whose inventory entry requires --verify, reached only bare" 1 \
     "${report}" "${count}"
+fi
+
+# Control 9: the closure does not walk into the verb dispatch table, so verb attribution
+# still discriminates between verbs.
+#
+# THIS IS THE FALSIFICATION OF A DOCSTRING CLAIM, MADE RUNNABLE. `closure()` said that
+# over-approximating reachability "can only make this gate weaker in a way a reader can see,
+# never redder than the truth". That was unfalsified rather than true, and it is false
+# wherever an exemption exists: § 4 requires reached and exempt to be mutually exclusive, so
+# a FALSE POSITIVE on "reached" turns a correct exemption into a failure. It happened - on
+# the FND-004 tree the closure of `bootstrap` reached `BuildVerb.Execute` through
+# `BenchmarkReportBuilder.Build` (a bare-identifier edge to every member named `Build`) and
+# then `VerbRegistry.All`, so every script was attributed to every verb and
+# build/verify-godot-runner.sh was reported both "exempted but in fact reached" and "both
+# reached and exempt" while its exemption was correct.
+#
+# The signature of that collapse is a single row attributed to verbs that no single call
+# path can reach: `bootstrap` and `godot-import` are different entry points that do not
+# invoke one another, so a gate script attributed to BOTH is attribution that has stopped
+# discriminating. Asserted per row, and asserted a second way - that the rows do not all
+# carry one identical verb list - because a collapse makes every row the same.
+#
+# Removing the `_DISPATCH_TABLE` exclusion from `closure()` turns this control red. A
+# docstring nobody can check is where claims like the original one accumulate, so this is
+# the check.
+collapse_offenders=()
+distinct_verb_lists="$(cut -f3 "${sites_table}" | sort -u | grep -c . || true)"
+while IFS=$'\t' read -r path _where verbs _reached _verdict; do
+  [[ -n "${path}" ]] || continue
+  if [[ ",${verbs}," == *,bootstrap,* && ",${verbs}," == *,godot-import,* ]]; then
+    collapse_offenders+=("${path} -> [${verbs}]")
+  fi
+done <"${sites_table}"
+
+if [[ "${#collapse_offenders[@]}" -gt 0 ]]; then
+  control_fail "control: verb attribution has collapsed - $(printf '%s; ' "${collapse_offenders[@]}") - bootstrap and godot-import are separate entry points, so a script reached from both means closure() is walking through the dispatch table and § 4's reached/exempt exclusivity is unsound"
+  controls_run=$((controls_run + 1))
+elif [[ "${distinct_verb_lists}" -le 1 ]]; then
+  control_fail "control: every gate row carries the same verb list, so verb attribution is not discriminating between verbs and § 4 cannot tell a test-main-only gate from a build gate"
+  controls_run=$((controls_run + 1))
+else
+  control_pass "control: verb attribution discriminates - ${distinct_verb_lists} distinct verb list(s) across the gate rows and no row reached from both bootstrap and godot-import, so closure() is not walking through the dispatch table"
+  controls_run=$((controls_run + 1))
 fi
 
 # A control set that quietly shrinks proves less than it claims, so the count is

@@ -1,0 +1,242 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "FND-008",
+  "workPackageTitle": "Profiler marker/metric registry and benchmark report format",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91-verification-strategy.md § Verification registry).",
+    "FND-008 owns the allocation, the metric registry, and the SCH-OBS-002 format. It deliberately does not implement PERF-01 through PERF-08 or their runner; those are QUA-005's, and the benchmark verb stays registered to that package and returns a typed nonzero status until it lands.",
+    "Doc 90's CPU frame budget is encoded as data in one place so no later PERF-* work re-derives a number from prose. Doc 90 says agents 'treat these allocations as failure thresholds from the first measurable implementation', which only works if there is exactly one place the thresholds live.",
+    "The sum of the allocation rows is asserted against the 16.67 ms frame rather than trusted. A transcription error in a budget table is silent: every individual number looks plausible and only the total gives it away.",
+    "Report order comes from the registry, not from the order a caller recorded samples in. VER-FND-008-005 proves that by building the same report twice with the recording order reversed and requiring byte-identical output; a two-run comparison that recorded in the same order both times would pass even if the order were the caller's, and would then diff noisily against a baseline produced by a different caller.",
+    "Percentiles use nearest rank and the method name is written into every report. Every value nearest rank returns was actually observed, so a worst-frame investigation is chasing a real frame; and doc 90 § Performance regression policy compares a build against a stored baseline distribution, which is only meaningful if both were computed the same way.",
+    "A metric with no producer is reported as unmeasured and names the owning work package rather than as a measured zero. At FND-008 almost nothing produces values, and 'unmeasured, owned by PRE-004' and 'measured 0.00 ms' are different claims.",
+    "Values are rounded to two decimals, which is finer than any allocation doc 90 states, so a report is stable text rather than differing in the last binary-double digit between runs."
+  ],
+  "entries": [
+    {
+      "id": "VER-FND-008-001",
+      "summary": "The CPU frame budget allocation is exactly doc 90's eight rows with their stated p95 targets, its rows sum to the 16.67 ms frame TDR-003 requires, the allocated rows sum to 12.80 ms, and the unallocated margin starts above the 2.0 ms measured margin doc 90 requires before an agent may rebalance sub-budgets.",
+      "task": "TASK-FND-008-001",
+      "requirements": [
+        "TR-OBS-001",
+        "TR-FND-004"
+      ],
+      "technicalSources": [
+        "docs/technical/90-performance-diagnostics-and-observability.md#cpu-initial-enforceable-allocation",
+        "docs/technical/decisions/TDR-003-require-sixty-fps-on-steam-deck.md"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Diagnostics.Tests.Metrics.BenchmarkReportTests.TheFrameBudgetIsDocNinetysTableAndItsPartsSumToTheFrame"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "frame-budget-table"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-008-002",
+      "summary": "The GPU and memory targets are doc 90's numbers: GPU p95 14.0 ms, p99 18.0 ms, working set 2.5 GiB, managed heap 256 MiB, aggregate allocation 1 KiB per frame, run transition peak 3.5 GiB, and recovery artifact 16 MiB.",
+      "task": "TASK-FND-008-001",
+      "requirements": [
+        "TR-OBS-001",
+        "TR-FND-004"
+      ],
+      "technicalSources": [
+        "docs/technical/90-performance-diagnostics-and-observability.md#gpu-and-memory"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Diagnostics.Tests.Metrics.BenchmarkReportTests.TheGpuAndMemoryTargetsAreDocNinetysNumbers"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-008-003",
+      "summary": "The metric and profiler-marker registry is internally consistent: every ID is unique and carries the registered prefix, every unit matches its metric kind, every metric names the work package that will produce it so an empty report column is attributable, and every declared budget area resolves to a frame budget row. An unregistered metric or budget area throws rather than reaching a report.",
+      "task": "TASK-FND-008-001",
+      "requirements": [
+        "TR-OBS-001",
+        "TR-BLD-001"
+      ],
+      "technicalSources": [
+        "docs/technical/90-performance-diagnostics-and-observability.md#frame-metrics",
+        "docs/technical/100-build-dependencies-and-release-operations.md#c-project-standards"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Diagnostics.Tests.Metrics.BenchmarkReportTests.TheMetricRegistryIsConsistent"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "negative-control"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-008-004",
+      "summary": "Every allocated frame budget area has at least one registered metric that rolls up to it, so no allocation is unmeasurable by construction. The unallocated margin is excluded deliberately: it is the remainder, not a measured area.",
+      "task": "TASK-FND-008-001",
+      "requirements": [
+        "TR-OBS-001"
+      ],
+      "technicalSources": [
+        "docs/technical/90-performance-diagnostics-and-observability.md#cpu-initial-enforceable-allocation",
+        "docs/technical/90-performance-diagnostics-and-observability.md#frame-metrics"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Diagnostics.Tests.Metrics.BenchmarkReportTests.EveryAllocatedBudgetAreaHasAMetricThatRollsUpToIt"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-008-005",
+      "summary": "A sample SCH-OBS-002 report carrying CPU distributions, counts, and allocations is produced as a retained artifact, and its field order and every value are byte-identical across two independent builds of the same samples with the recording order reversed the second time. The report round-trips byte-exactly, top-level field order is declaration order, and it carries the build identity of the binary under test.",
+      "task": "TASK-FND-008-001",
+      "requirements": [
+        "TR-OBS-001",
+        "TR-DAT-006",
+        "TR-BLD-004"
+      ],
+      "technicalSources": [
+        "docs/technical/115-component-contract-and-schema-registry.md#schema-registry",
+        "docs/technical/90-performance-diagnostics-and-observability.md#frame-metrics",
+        "docs/technical/91-verification-strategy.md#determinism-and-fixture-policy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Diagnostics.Tests.Metrics.BenchmarkReportTests.ASampleReportIsProducedWithAFieldOrderStableAcrossTwoRuns"
+      },
+      "fixtures": [
+        "artifacts/benchmark/sample-report.json",
+        "artifacts/benchmark/sample-report-second-run.json",
+        "artifacts/benchmark/frame-budget.txt"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "benchmark-report-json",
+        "canonical-ordering",
+        "artifact-sha256"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-008-006",
+      "summary": "A budget area with no producing metric is reported as unmeasured with its owning work package and a measured value of -1, never as a measured zero, and a report with no measured frame reads as incomplete rather than as a pass.",
+      "task": "TASK-FND-008-001",
+      "requirements": [
+        "TR-OBS-001",
+        "TR-AGT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/90-performance-diagnostics-and-observability.md#performance-regression-policy",
+        "docs/technical/114-autonomous-agent-execution-protocol.md#failure-and-retry-policy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Diagnostics.Tests.Metrics.BenchmarkReportTests.AnUnmeasuredBudgetAreaIsReportedAsUnmeasuredWithItsOwner"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "benchmark-report-json"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-008-007",
+      "summary": "A measured p95 above its allocation fails that budget line, is listed in the exceeded set, and fails the whole report, while a value exactly at the allocation passes. An allocation above its per-frame ceiling fails on the worst frame rather than being averaged away. Percentiles are nearest rank and return only values that were observed.",
+      "task": "TASK-FND-008-001",
+      "requirements": [
+        "TR-OBS-001",
+        "TR-AGT-006",
+        "TR-FND-004"
+      ],
+      "technicalSources": [
+        "docs/technical/90-performance-diagnostics-and-observability.md#performance-regression-policy",
+        "docs/technical/90-performance-diagnostics-and-observability.md#gpu-and-memory",
+        "docs/technical/114-autonomous-agent-execution-protocol.md#performance-response-ladder"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Diagnostics.Tests.Metrics.BenchmarkReportTests"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "negative-control",
+        "benchmark-report-json"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    }
+  ]
+}

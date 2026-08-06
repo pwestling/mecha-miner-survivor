@@ -50,8 +50,37 @@
 
   <ItemGroup>
     <ProjectReference Include="../src/MechaMiner.Content/MechaMiner.Content.csproj" />
+    <!--
+      CMP-OBS-001. doc 115 § Initialization order makes build identity step 1 and
+      bounded local logging step 2, both before content loads, so the composition
+      root needs the diagnostics owner from its first line (FND-004, FND-007).
+    -->
+    <ProjectReference Include="../src/MechaMiner.Diagnostics/MechaMiner.Diagnostics.csproj" />
     <ProjectReference Include="../src/MechaMiner.Simulation/MechaMiner.Simulation.csproj" />
     <ProjectReference Include="../src/MechaMiner.Persistence/MechaMiner.Persistence.csproj" />
   </ItemGroup>
+
+  <!--
+    Test-only access to internals (doc 91 § Test project separation): deliberately NONE.
+
+    Every other production project grants exactly one InternalsVisibleTo, to its own mirror
+    test project. This project is the exception, and the exception is recorded rather than
+    left as an inconsistency for a later reader to "fix":
+    `InternalsVisibleTo("MechaMiner.Game.Tests")` here would be inert configuration. The
+    attribute only grants access to an assembly that actually references this one, and
+    MechaMiner.Game.Tests deliberately does not - build/verify-architecture.sh § 5 and
+    ArchitectureRule.ReverseGodotEdge make "no project references MechaMiner.Game" an
+    enforced assertion, because a reference would pull Godot assemblies into a pure test
+    process. MechaMiner.Game.Tests instead drives the pinned Godot executable as an external
+    process (TASK-FND-003-002) and observes this assembly's behaviour through the runner's
+    report contract, which is a process boundary that no compile-time grant can cross.
+
+    So a grant would be a permission nobody can use, and dead configuration that looks like
+    a working gate is worse than none: the next reader would assume internals are reachable
+    from the engine tier and write a test that cannot compile. Behaviour of this project
+    that is unobservable through the runner report needs a diagnostic API on the runner
+    contract - QUA-003 needs one anyway for the debug overlay and command palette - not a
+    widened assembly grant.
+  -->
 
 </Project>

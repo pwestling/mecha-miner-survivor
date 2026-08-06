@@ -41,6 +41,7 @@ readonly CONFIGURATION_MAP=(
 
 readonly PROBED_PROJECTS=(
   "src/MechaMiner.Content/MechaMiner.Content.csproj"
+  "src/MechaMiner.Diagnostics/MechaMiner.Diagnostics.csproj"
   "src/MechaMiner.Simulation/MechaMiner.Simulation.csproj"
   "src/MechaMiner.Persistence/MechaMiner.Persistence.csproj"
   "src/MechaMiner.Tools/MechaMiner.Tools.csproj"
@@ -182,19 +183,28 @@ section "4. no committed lock file changed (restore stays configuration-independ
 # that "an invariant asserting that two sets match is blind to a correlated deletion from
 # both sides": deleting a project AND its lock file together keeps the two sets equal. So
 # the count is asserted against EXPECTED_LOCK_FILE_COUNT, a literal independent of both.
-readonly EXPECTED_LOCK_FILE_COUNT=9
+# Twelve, not nine, from the FND-004/FND-009 merge: src/MechaMiner.Diagnostics,
+# tests/MechaMiner.Diagnostics.Tests and tests/MechaMiner.Tools.Tests are three new
+# accepted projects and each carries a committed lock file. The literal fired on all three
+# by name, which is the third anchor doing exactly its job - a set-equality check alone
+# would have been blind to it. Adding a project means editing this number and the list
+# below in the same change; that is the cost of the anchor and it is the point of it.
+readonly EXPECTED_LOCK_FILE_COUNT=12
 
 # The project set this section requires a lock file for: every project probed above, plus
-# the four test projects, which restore under the same three configurations.
+# the six test projects, which restore under the same three configurations.
 readonly LOCK_FILE_PROJECT_DIRECTORIES=(
   "src/MechaMiner.Content"
+  "src/MechaMiner.Diagnostics"
   "src/MechaMiner.Simulation"
   "src/MechaMiner.Persistence"
   "src/MechaMiner.Tools"
   "game"
   "tests/MechaMiner.Content.Tests"
+  "tests/MechaMiner.Diagnostics.Tests"
   "tests/MechaMiner.Simulation.Tests"
   "tests/MechaMiner.Persistence.Tests"
+  "tests/MechaMiner.Tools.Tests"
   "tests/MechaMiner.Game.Tests"
 )
 
@@ -244,6 +254,26 @@ lock_file_set_problems() {
 
   return 0
 }
+
+# The literal and the list encode the same fact, and that is a drift risk - so it is
+# asserted rather than left to memory. What it is NOT is a reason to derive the literal
+# from the list: the list is one of the two sets anchors 2 and 3 compare, so a count taken
+# from it agrees with it by construction and anchor 1 stops being an independent anchor.
+# That would reopen exactly the hole the comment above names from doc 91 § Negative control
+# adequacy - deleting a project, its lock file and its list entry together keeps both sets
+# equal and would then satisfy all three checks. The independent third artifact here is the
+# literal, which is the role a committed manifest plays in the content gate; the list is
+# the analogue of that gate's scan, not of its manifest.
+#
+# So both stay, and disagreement between them is a named failure instead of a silent one.
+# Adding a project now costs three edits - the list, this literal, and the lock file - and
+# the ceiling is stated: three consistent edits still pass, which makes an ACCIDENTAL
+# change loud and is not evidence the set is the right size.
+if [[ "${EXPECTED_LOCK_FILE_COUNT}" -ne "${#LOCK_FILE_PROJECT_DIRECTORIES[@]}" ]]; then
+  fail "EXPECTED_LOCK_FILE_COUNT is ${EXPECTED_LOCK_FILE_COUNT} but LOCK_FILE_PROJECT_DIRECTORIES lists ${#LOCK_FILE_PROJECT_DIRECTORIES[@]}; the two encode one fact and have drifted, so § 4's count anchor is measuring a set nobody declared"
+else
+  pass "the count anchor (${EXPECTED_LOCK_FILE_COUNT}) and the accepted project list agree, so anchor 1 is independent of the two sets without being stale"
+fi
 
 mapfile -t lock_set_problems < <(lock_file_set_problems "${LOCK_FILE_PROJECT_DIRECTORIES[@]}")
 if [[ "${#lock_set_problems[@]}" -eq 0 ]]; then

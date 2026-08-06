@@ -17,6 +17,12 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/MechaMiner.Content/MechaMiner.Content.csproj" />
+    <!--
+      CMP-OBS-001. The build-identity equality fixture (VER-FND-004-004) compares the
+      identity the Godot process reports with the identity this host process reads from
+      the same diagnostics assembly, so the host needs that assembly (FND-004).
+    -->
+    <ProjectReference Include="../../src/MechaMiner.Diagnostics/MechaMiner.Diagnostics.csproj" />
     <ProjectReference Include="../../src/MechaMiner.Simulation/MechaMiner.Simulation.csproj" />
     <ProjectReference Include="../../src/MechaMiner.Persistence/MechaMiner.Persistence.csproj" />
   </ItemGroup>
@@ -30,9 +36,14 @@
 
   <ItemGroup Label="Shared deterministic fixture utilities (TASK-FND-003-001)">
     <!--
-      Linked, not referenced. doc 100 § Repository structure prescribes exactly four
-      test projects and no shared test library, so the utilities are compiled into
-      each test assembly and stay internal. See tests/shared/README.md.
+      Linked, not referenced. doc 100 § Repository structure prescribes a fixed,
+      enumerated set of test projects and no shared test library, so the utilities are
+      compiled into each test assembly and stay internal. The count is deliberately not
+      restated here: doc 100's list grew from four to six when MechaMiner.Diagnostics.Tests
+      and MechaMiner.Tools.Tests landed, and a number copied into six files is a claim that
+      goes stale silently. build/verify-architecture.sh § 2 and
+      AcceptedArchitecture.RequiredPaths hold the enumerated set instead, and both fail on a
+      project the accepted decomposition does not name. See tests/shared/README.md.
     -->
     <Compile Include="../shared/**/*.cs" LinkBase="Support/Shared" />
   </ItemGroup>

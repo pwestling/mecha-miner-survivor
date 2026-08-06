@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    POSITIVE control. Deliberately compliant: no ProjectReference and no Godot
+    PackageReference, exactly like the real src/MechaMiner.Diagnostics row in doc 115
+    § Accepted project boundary. See ../README.md.
+
+    build/verify-architecture.sh requires this fixture to compare EQUAL to the accepted
+    Diagnostics row. Without it, a harness that reported a difference for every input
+    would pass every negative control beside it. Not in MechaMiner.sln.
+  -->
+
+</Project>

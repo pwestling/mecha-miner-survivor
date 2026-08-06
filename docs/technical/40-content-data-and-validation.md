@@ -36,6 +36,7 @@ The same codec policy is reused by content, saves, recovery, manifests, diagnost
 ```text
 content/
   schemas/
+  player/
   resources/
   mechs/
   enemies/
@@ -60,6 +61,8 @@ generated/
   reports/
 ```
 
+`content/player/` holds the shared player baseline. It exists because a mech definition carries base Hull, Armor, Recovery, movement, and footprint **overrides** (see [Mechs](#mechs) below), and a value that is overridden is by definition not mech data, so the accepted layout previously had nowhere for the values being overridden to live. The baseline itself is [Player Survivability and Damage Baseline](../72-player-survivability-and-damage-baseline.md) § Shared Player Baseline — 100 Hull, 0 Armor, 0 Recovery, 3.0 M/s, a 1.0 M collision circle — accepted by `DEC-126`, with initial facing east from [Presentation and Rendering](./30-presentation-and-rendering.md) and `DEC-042`.
+
 Catalog directories are the authoring boundary. Definitions are grouped by stable item or the smallest cohesive aggregate such as the standard encounter schedule; generated/source separation is mandatory. A layout change must update build tooling, schemas, importers, documentation, and clean-checkout tests atomically rather than adding a second search path.
 
 ## Stable ID policy
@@ -77,9 +80,9 @@ Several of the prefixes below were agreed between working sessions in conversati
 
 Every prefix in the table below is minted by this document. No accepted gameplay document minted an identifier for any of them, and each needs one because every schema in this document references other definitions by stable ID. They follow [Stable ID policy](#stable-id-policy) above: case-sensitive ASCII, never localized, never reassigned. Each numbers from `-01`. Prefixes reused from the accepted gameplay register are governed by the reuse bullet above and are deliberately absent here.
 
-Eleven of them — `FAB-`, `STACK-`, `CACHE-`, `EXCL-`, `HOOK-`, `RESPEC-`, `DEED-`, `HORDE-`, `FOOTPRINT-`, `SIEGE-`, and `BOUNTY-` — name **aggregates** on the same terms as `WAV-01` and `MGC-01`: not embodied in the world and never read by players, so they omit `presentation_id` and `name_key` under [Declared-optional envelope fields](#declared-optional-envelope-fields). `FAB-01` is the utility fabrication and rank contract. `STACK-01` states how modifiers compose and when a new value takes effect. `CACHE-01` is the relic-cache economy: placement, draw, and install-or-sell. `EXCL-01` states that one installed mech-level effect applies at a time, run-local, after additive modifiers. `HOOK-01` is the relic runtime registration model. `RESPEC-01` is the refundable account-rank purchase policy and `DEED-01` the permanent nonrefundable entitlement policy. `HORDE-01` states what every ordinary alien identity is. `FOOTPRINT-01` is the reference geometry every contact circle derives from. `SIEGE-01` states how a boss occupies the field, and `BOUNTY-01` the loot burst every boss death produces.
+Thirteen of them — `FAB-`, `STACK-`, `CACHE-`, `EXCL-`, `HOOK-`, `RESPEC-`, `DEED-`, `HORDE-`, `FOOTPRINT-`, `SIEGE-`, `BOUNTY-`, `ELT-`, and `PLAYER-` — name **aggregates** on the same terms as `WAV-01` and `MGC-01`: not embodied in the world and never read by players, so they omit `presentation_id` and `name_key` under [Declared-optional envelope fields](#declared-optional-envelope-fields). `FAB-01` is the utility fabrication and rank contract. `STACK-01` states how modifiers compose and when a new value takes effect. `CACHE-01` is the relic-cache economy: placement, draw, and install-or-sell. `EXCL-01` states that one installed mech-level effect applies at a time, run-local, after additive modifiers. `HOOK-01` is the relic runtime registration model. `RESPEC-01` is the refundable account-rank purchase policy and `DEED-01` the permanent nonrefundable entitlement policy. `HORDE-01` states what every ordinary alien identity is. `FOOTPRINT-01` is the reference geometry every contact circle derives from. `SIEGE-01` states how a boss occupies the field, and `BOUNTY-01` the loot burst every boss death produces.
 
-The remaining two are not aggregates on those terms. `RSC-` identifies ordinary embodied content and omits neither field. `FORMULA-01` is a shared definition players read the effect of, so it carries a `name_key` and omits only `presentation_id`.
+`ELT-01` and `PLAYER-01` are stated under [Map generation](#map-generation) rather than here, and are aggregates on the same terms; the sentence counts them because this paragraph is a partition of the table and a partition that omits two rows is not one. The remaining two of the nineteen are not aggregates on those terms. `RSC-` identifies ordinary embodied content and omits neither field. `FORMULA-01` is a shared definition players read the effect of, so it carries a `name_key` and omits only `presentation_id`. `UTL-`, `WAV-`, `MGC-` and `SITE-` are minted in the catalog subsections named in their rows, which state their category there.
 
 | Prefix | Grammar | Category | Instances live in | Minted in |
 | --- | --- | --- | --- | --- |
@@ -99,8 +102,13 @@ The remaining two are not aggregates on those terms. `RSC-` identifies ordinary 
 | `FOOTPRINT-` | `^FOOTPRINT-[0-9]{2}$` | reference contact geometry | `content/enemies/` | this section |
 | `SIEGE-` | `^SIEGE-[0-9]{2}$` | boss field occupation | `content/bosses/` | this section |
 | `BOUNTY-` | `^BOUNTY-[0-9]{2}$` | boss death loot burst | `content/bosses/` | this section |
+| `SITE-` | `^SITE-[0-9]{2}$` | mining site class | `content/maps/` | [Map generation](#map-generation) |
+| `ELT-` | `^ELT-[0-9]{2}$` | shared elite modifiers | `content/enemies/` | [Map generation](#map-generation) |
+| `PLAYER-` | `^PLAYER-[0-9]{2}$` | shared player baseline | `content/player/` | [Map generation](#map-generation) |
 
-Three further prefixes — `SITE-`, `ELT-` and `PLAYER-` — are minted not in another document but in this document's own FND-004 revision, under [Map generation](#map-generation), and are deliberately not restated here. This table is therefore complete only once that work package has merged. Until then a reader on a branch without FND-004 should treat those three as minted there rather than as unminted, and any check that reads this table must assert them by name, so that the mint's arrival breaks the build rather than passing silently.
+The last three rows are the three this section used to name in a paragraph instead of a row. That paragraph said `SITE-`, `ELT-` and `PLAYER-` were minted in this document's own FND-004 revision under [Map generation](#map-generation), that this table was "complete only once that work package has merged", and that any check reading the table "must assert them by name, so that the mint's arrival breaks the build rather than passing silently". FND-004 has merged, so the paragraph is replaced by the rows it was standing in for, which is the outcome it asked for. `SITE-01` through `SITE-04` are the four accepted mining site classes and the set is **closed**; `ELT-01` is the shared elite modifiers and `PLAYER-01` the shared player baseline, both **aggregates** on the same terms as `WAV-01`. [Map generation](#map-generation) below states each in full and is where they are minted; these rows are the machine-readable half the rule in the next paragraph requires.
+
+The merge that brought them together is worth one sentence, because git reported no conflict for it. The branch carrying this table did not mint those three, and the branch that minted them had no table at all — the two edits sit in different regions of one file — so taking either side whole would have dropped content silently. The union of minted prefixes was enumerated from both parents and committed before the merge, in `build/doc40-minted-content-prefixes.expected`, and the merged document was checked against it: nineteen prefixes, no more and no fewer. A union computed after the merge could not have been told apart from one fitted to the result.
 
 The table is the **machine-readable** form of what the prose in this section and in the sections it cites states in sentences, and the two **must agree**. The prose is what a reader needs in order to know why an ID exists and what it identifies; the row is what a check reads to detect that a schema `pattern` or an implementation category table has drifted from this document. Neither is redundant with the other and neither may be deleted in favor of the other: a check that scraped English would break on the first editorial rewrite, and a table with no prose would leave the next author guessing what an ID means. Every prefix this document mints anywhere owes a row here, including any minted in a catalog subsection below, and the row's **Minted in** cell must name the one section that mints it: no other section may claim to mint the same prefix. Two claimed authorities for one prefix leave a reader no way to tell which section governs it, and leave a check that reads only the row set unable to see the disagreement at all.
 
@@ -202,8 +210,11 @@ The initial `schema_version` is `1` and the initial `content_version` is `1` for
 
 - a gameplay document ID with an optional anchor, for example `GDD-COMBAT` or `GDD-COMBAT#contact-damage`;
 - a gameplay decision ID, `DEC-###`;
-- a technical decision ID, `TDR-###`; or
-- a technical requirement ID, `TR-<DOMAIN>-###`.
+- a technical decision ID, `TDR-###`;
+- a technical requirement ID, `TR-<DOMAIN>-###`; or
+- a technical document ID with an optional anchor, for example `TDD-ENCOUNTERS` or `TDD-ENCOUNTERS#elite-construction`.
+
+The technical document form is legal because [Technical Documentation Conventions](./conventions.md#stable-identifiers) mints `TDD-<DOMAIN>` as a stable identifier; the earlier four-element list omitted it, which was an incomplete enumeration rather than a decision to exclude it.
 
 The grammar for each is the one declared in [Documentation Conventions](../conventions.md#stable-identifiers) and [Technical Documentation Conventions](./conventions.md#stable-identifiers).
 
@@ -296,7 +307,13 @@ The map-generation version is deliberately absent from that list. [Content compa
 
 The standard map generation contract has the stable ID `MGC-01`, and it is an aggregate on the same terms as `WAV-01`.
 
-`MGC-01` is minted here; `WAV-01` is minted under [Encounter schedule](#encounter-schedule) above, which is the section its row in [Minted content-ID grammars](#minted-content-id-grammars) names. No accepted document previously granted a content-ID grammar for the map generation contract, and it needs one because every schema in this document references other definitions by stable ID. It follows [Stable ID policy](#stable-id-policy) above: case-sensitive ASCII, never localized, never reassigned.
+The four accepted mining site classes have the stable IDs `SITE-01` (standard ore seams), `SITE-02` (rich ore seams), `SITE-03` (Hyper Gold sites), and `SITE-04` (specialized material geodes). The set is **closed**: this document validates exactly four accepted mining classes, so a fifth `SITE-` ID is a gameplay change and not a content-authoring one.
+
+The shared elite modifiers have the stable ID `ELT-01`, and the shared player baseline described in [Accepted content repository layout](#accepted-content-repository-layout) has the stable ID `PLAYER-01`. Both are aggregates on the same terms as `WAV-01`.
+
+`MGC-01`, `SITE-01` through `SITE-04`, `ELT-01`, and `PLAYER-01` are minted here. `WAV-01` is **not**: it is minted under [Encounter schedule](#encounter-schedule) above, which is the section its row in [Minted content-ID grammars](#minted-content-id-grammars) names. No accepted document previously granted a content-ID grammar for any of the six minted here, and each needs one because every schema in this document references other definitions by stable ID. They follow [Stable ID policy](#stable-id-policy) above: case-sensitive ASCII, never localized, never reassigned.
+
+The prefixes `MIN-`, `PLY-`, `ENC-`, and `MAP-` were considered for these aggregates and **rejected**: each collides with an implementation work-package prefix registered in [Implementation Plan for AI Agents](./110-implementation-plan-for-ai-agents.md), so a reference like `MIN-001` would be ambiguous between a content definition and a work package in exactly the places both appear — commit messages, task briefs, and the identifier validator. The next person minting a content-aggregate ID inherits that constraint rather than rediscovering it.
 
 ### Presentation and audio
 

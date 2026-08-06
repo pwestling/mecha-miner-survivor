@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    NEGATIVE control. Deliberately violates doc 115 § Accepted project boundary: the
+    MechaMiner.Diagnostics row allows ".NET base libraries only", so any project
+    reference at all is forbidden. See ../README.md. Not in MechaMiner.sln.
+  -->
+
+  <ItemGroup>
+    <ProjectReference Include="../../../../src/MechaMiner.Content/MechaMiner.Content.csproj" />
+  </ItemGroup>
+
+</Project>

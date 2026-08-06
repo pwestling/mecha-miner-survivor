@@ -65,6 +65,19 @@ internal sealed class InvocationRecord
     /// <summary>The MSBuild configuration the workflow configuration maps onto.</summary>
     public string? MsbuildConfiguration { get; set; }
 
+    /// <summary>
+    /// The canonical <c>SCH-BLD-001</c> build identity of the workflow host that ran
+    /// this verb.
+    /// </summary>
+    /// <remarks>
+    /// doc 100 § Version and build identity requires every diagnostic header to carry
+    /// build identity, and this document is the tool's diagnostic header. It comes from
+    /// the one diagnostics owner (<c>CMP-OBS-001</c>) rather than being re-derived here,
+    /// which is what makes it equal to the identity the game and the diagnostics
+    /// surfaces report (<c>VER-FND-004-004</c>).
+    /// </remarks>
+    public string BuildIdentity { get; set; } = string.Empty;
+
     /// <summary>The source revision, or <c>unknown</c> when git is unavailable.</summary>
     public string SourceRevision { get; set; } = "unknown";
 

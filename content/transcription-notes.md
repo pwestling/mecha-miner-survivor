@@ -4848,3 +4848,301 @@ Both edits were reverted and the file is byte-identical to `b7aea04`; the suite 
 | `world_scale`, `eruption_damage_as_seconds_of_current_segment_damage`, `forward_reach_m`, bare `range`, `barrier_thickness_source`, `shockwave_reach_per_side_m`, `link_length_and_formation_size_scale_with` | schema stream / document owners |
 | Formula strings versus a registered formula kind (`40:99`) — already an A17 warning | schema stream |
 | Extraction-zone / resonance-field radii (3.0 M / 6.0 M) awaiting a decision-record citation; minute 33's reconstruction markers awaiting a doc correction | document owner (Ruling 22) |
+
+## Behavior-token grant handoff — decision material for the mint
+
+**What this section is.** The decision material behind a **behavior-token grant** that another stream is
+writing into a design document. It is not the grant, it mints nothing, and it changes no value under
+`content/`: everything below is a measurement, landed here so the stream that writes the grant reads it at
+a ref rather than taking it by message. Where the material recommends a token it says on what evidence;
+where it declines to mint one it says what would settle the question instead of guessing.
+
+**Measured 2026-08-06, at `origin/master` = `3016fbc9a0df3e7bcf77eaa3a79d78e069f68b2a`.** Every count,
+every quoted phrase and every "granted but unused" claim below is a measurement of *that* tree and of no
+other tree. Two classes of fact come from a second ref and are marked where they appear: the **schema
+shapes, the definition-reader call sites and the fixture-coverage figures** were measured at
+`origin/claude/hearth-thread-hrufl9` = `551d0ebecedb7e22444d4ccf65342b2553265719`, because
+`content/schemas/` and the readers exist on that ref and on no other — the same absence this file's own
+header records, and the same absence `40:125` runs into when it cites two `content/schemas/*.json` files.
+
+**This section deliberately carries no resource `id`, in any of its spellings.** A resource `id` is a
+per-ref fact rather than a property of the vocabulary being granted, so decision material that quotes one
+goes stale the moment an id migration merges; where the material needed to point at a resource it names
+that resource's own field instead, and the six geode rows below are identified by their `effect_name`.
+**The one apparent counterexample is not one:** `common-ore-yield-amplifier` (assignment 11 below) contains
+`common-ore` because it is a proposed behavior token slugged from `UTL-F1`'s own `effect.stat_names` value
+`["Mined common ore"]`, which is byte-identical at `3016fbc` and at `c503db1` — across the very id migration
+that renamed the resources — so it is a behavior token and not a resource reference.
+
+**Citation shorthand.** `40:NNN` is `docs/technical/40-content-data-and-validation.md:NNN`, as everywhere
+above in this file. `22:NNN` is `docs/technical/22-combat-and-weapon-runtime.md:NNN`, used here for the
+first time in this file.
+
+**The population — 141 instances across twelve fields.**
+
+| disposition | instances |
+| --- | --: |
+| transcribed (a phrase already in the tree or in doc 22, slugged) | 100 |
+| assigned (a token this material proposes, with a justification) | 32 |
+| declined (no token can be minted yet, and why) | 8 |
+| omitted (the field has no referent at this level) | 1 |
+| **total** | **141** |
+
+`weapon.targeting_policy` is 15 of those: 8 transcribed, **0 assigned**, 6 declined, 1 omitted. Its
+`assigned` cell is deliberately empty — the last candidate for it was withdrawn (see "the eleven flagged
+inconsistencies", I-3) — and an empty cell there is an acceptable outcome rather than a defect.
+
+### The 32 assignments
+
+#### `utility.behavior_kind` (13)
+
+Shared rule, stated once: the **qualifier is verbatim** from the definition's `effect.stat_names` (which
+hrufl9 renames `affected_stat_names`, top-level and required); only the **head noun** is granted, from a
+three-way choice — `-expander` for a radius, area or capacity, `-amplifier` for a magnitude,
+`-accelerator` for a rate. A reader who rejects the three-way choice can substitute one uniform
+`-modifier` without touching a single qualifier.
+
+1. `UTL-A1` → `weapon-damage-amplifier` — `stat_names` is `["Weapon damage"]` alone, so the one statistic raised fully describes the behavior, and damage is a magnitude rather than a rate or a volume.
+2. `UTL-A2` → `discovery-radius-expander` — `["Discovery radius"]`; naming the statistic is exactly what separates it from `UTL-A1`, with which the struck `additive-percent` derivation would have collapsed it.
+3. `UTL-B1` → `maximum-hull-expander` — `["Maximum Hull Integrity"]`; the token names the ceiling raised, not the `flat-additive-hull` arithmetic that raises it, and a maximum is a capacity.
+4. `UTL-B2` → `forward-extraction-accelerator` — `["Forward extraction rate"]` supplies the head noun itself; "forward" stays because it distinguishes this from `UTL-D2`'s extraction-zone geometry.
+5. `UTL-C1` → `attack-rate-accelerator` — `["Weapon attack rate"]`, a rate; "weapon" is dropped because every weapon-facing utility would carry it. A strict-verbatim reader should prefer `weapon-attack-rate-accelerator`.
+6. `UTL-C2` → `stored-charge-recharger` — the only two-entry list, `["Recharge time","Stored charges"]`, and the only utility with no `stacking_classification` key; the token names the refilling pool, not either statistic alone.
+7. `UTL-D1` → `movement-speed-accelerator` — `["Movement speed"]`; this also keeps the fixture corpus's `extraction-zone-expander` off this ID, which here is not an arguable classification but a wrong one.
+8. `UTL-D2` → `extraction-zone-expander` — `["Extraction-zone radius"]`, a radius, so both halves come from the definition; the fixture corpus guessed this same spelling, which is corroboration and never authority (`40:125`).
+9. `UTL-E1` → `hull-recovery-regenerator` — `["Recovery"]` alone is too bare to name a behavior, so "hull" is borrowed from `value_kind`'s `additive-hull-per-second`, the sibling that says what recovers.
+10. `UTL-E2` → `elite-and-boss-damage-amplifier` — `["Weapon damage to elites and bosses"]`; the conditional audience *is* the behavior, and dropping it makes this token a synonym of `UTL-A1`'s.
+11. `UTL-F1` → `common-ore-yield-amplifier` — `["Mined common ore"]` names a material while the utility modifies a quantity, so "yield" is what makes the token a behavior rather than a resource.
+12. `UTL-F2` → `weapon-area-expander` — `["Weapon area"]`; an area is a volume, and "weapon" is kept — unlike `UTL-C1` — because bare "area" would collide with the extraction-zone and discovery-radius geometries.
+13. `UTL-R1` → `directional-resource-radar` — the only utility whose `stat_names` is **empty**, which is why the struck `directional-bearings` named an output format instead; `40:273`'s "assigned material or ore-only radar exception" licenses "radar".
+
+#### `weapon.rock_targeting_behavior` (15) — both spellings assigned
+
+Criterion, stated once, from `22:90`: does the attack, at the weapon's level *or* at the level of an actor
+it spawns, select a target from enemy candidates? `fallback-when-no-enemy-in-domain` takes all four
+content words from `22:90`'s own sentence ("A rock becomes an eligible fallback only when no valid enemy
+lies in that weapon's acquisition domain"); `incidental-geometry-only` takes "geometric" and "incidentally"
+from the next sentence and adds "only" to mark that this side has no other route to a rock.
+
+14. `W-AC` → `fallback-when-no-enemy-in-domain` — "selects the densest enemy concentration within 12M" plus `fixed_properties.targeting_range_m` is an acquisition domain by definition, so a rock enters only when that domain is empty.
+15. `W-AD` → `fallback-when-no-enemy-in-domain` — "places a field at the current center of the densest enemy concentration within 10M" with its own `targeting_range_m` makes the empty-domain state evaluable.
+16. `W-AE` → `fallback-when-no-enemy-in-domain` — the drones "acquire targets independently", so the domain is the spawned actor's; answering the rock field at the actor level is exactly what its declined `targeting_policy` refuses to do (I-5).
+17. `W-AF` → `fallback-when-no-enemy-in-domain` — "locks to one target in range" plus `fixed_properties.focus_resets_on_target_loss` proves it tracks target identity, which makes "no valid enemy in domain" a real state for it.
+18. `W-BC` → `fallback-when-no-enemy-in-domain` — "selects the nearest enemy within current range" is an explicit selection step, so the fallback applies exactly when that selection returns nothing.
+19. `W-BE` → `fallback-when-no-enemy-in-domain` — pods "fire independently", so the pod's empty domain is the condition; the untargeted deployment step is not the attack, and `22:90` governs attacks.
+20. `W-CD` → `fallback-when-no-enemy-in-domain` — "strikes the nearest target within 8M" plus `initial_acquisition_range_m` names acquisition and domain in one sentence, and `22:90`'s "Rocks never consume enemy-only chain slots" is written for it.
+21. `W-EF` → `fallback-when-no-enemy-in-domain` — "dividing them across valid targets when possible" plus `acquire_range_m: 12` makes the salvo enemy-targeting, so a rock must not eat a missile an enemy could have taken.
+22. `W-AB` → `incidental-geometry-only` — "fires down the mech's current facing line" with no selection step, and `22:45` selects a *direction* rather than a target, so there is no domain that could be empty.
+23. `W-BD` → `incidental-geometry-only` — a mine triggers "on the first valid enemy entering their radius", a proximity trigger rather than an acquisition domain, so a rock inside the radius can only be incidental.
+24. `W-BF` → `incidental-geometry-only` — "four cutters orbit the mech" damaging an enemy "while their collision shapes overlap" is pure geometry, with no candidate list for a fallback to substitute into.
+25. `W-CE` → `incidental-geometry-only` — `damages_every_valid_target_in_radius: true` with `has_target_or_overlap_maximum: false` says the pulse selects nobody, and a weapon that selects nobody has no empty-domain state.
+26. `W-CF` → `incidental-geometry-only` — "movement leaves damaging trail segments", limited only by `simultaneous_segment_overlap_maximum_per_target`, so contact is decided by overlap rather than by acquisition.
+27. `W-DE` → `incidental-geometry-only` — "fires five pellets across a 60° facing cone" and "each pellet ends on its first target": the cone is aimed, the pellets are not, so a rock hit follows from the spread.
+28. `W-DF` → `incidental-geometry-only` — "projects a short damaging field in front of the mech", gated on `activation_movement_speed_threshold_of_base`, is a facing-aligned volume with no candidate list at any level.
+
+#### `branch.behavior_kind` (3)
+
+29. `W-BD-seed-charges` → `seeded-micro-mines` — built from `micro_mines_per_parent_explosion: 4` and `micro_mine_placement: "evenly around the blast edge"`; doc 22's leftover fragment "arming/lifetime" describes the parent mine, though the branch does carry its own `micro_mine_arm_seconds`, so a reader may argue the fragment fits.
+30. `W-DF-momentum-cascade` → `momentum-stacks` — keeps doc 22's noun from `22:58`'s "movement stacks" but takes its qualifier from the branch's own `stack_name: "Momentum"`, because "movement stacks" is shared verbatim with `22:56`.
+31. `W-CF-runaway-wake` → `wake-movement-ramp` — this branch has no stack counter, only `ramp_starts_after_continuous_movement_seconds` and `maximum_reached_at_continuous_movement_seconds`, so "stacks" is inaccurate and "ramp" names the continuous function; flatter alternative `wake-movement-stacks`.
+
+#### `weapon-stat-price-formula.formula_kind` (1)
+
+32. `FORMULA-01` → `quadratic-in-purchase-number` — `formula: "5n(n + 1)"` with `variable.meaning` "purchase number…"; the token names the curve's degree and its variable, leaving the coefficient 5 a parameter. `quadratic-price-curve` is shorter but drops the variable.
+
+### The 8 declinations — what is missing, and what would settle each
+
+- **`weapon.behavior_kind` · `W-AB`.** `22:45`'s "fast finite piercing **projectile/trace** along selected direction" names two members of `22:35` at once (`finite projectile`, `hitscan trace`) and the rule may neither pick one nor concatenate them; both readings are live (`projectile_speed_m_per_s: 30` argues finite projectile, while branch `W-BC-zero-lag-emitter` exists to convert a projectile *to* a trace). The slug rule cannot help — it would happily mint a sixteenth primitive. **Settled by:** an edit to `22:45` replacing `projectile/trace` with one member, or, if the slash is deliberate, a doc-22 sentence permitting two primitives per weapon *plus* a ruling on what `40:311`'s "exactly one registered descriptor" then means.
+- **`weapon.behavior_kind` · `W-DF`.** `22:58`'s "persistent facing-aligned contact capsule/rectangle" matches no member of the fifteen: `persistent field` is placed in the world while `W-DF`'s volume is rigidly attached to facing and gated on movement, and `orbit contact` is an orbiting actor. **Settled by:** a sixteenth member on `22:35` naming a mech-attached contact volume, or a doc-22 sentence filing `W-DF` under `persistent field`. A schema change cannot settle it.
+- **`weapon.targeting_policy` · `W-AF`.** Retention, not acquisition: `22:85` lists "current target retention/hysteresis" as a bullet separate from `22:34`'s six policies, `22:92` says "Beams and homing actors use behavior-specific retention hysteresis", and the file says "locks to one target in range" without saying which. **Settled by:** a seventh member on `22:34` naming retention/hysteresis targeting, or a separately granted `target_retention` field, so the two concerns `22:85` keeps apart are not forced into one token.
+- **`weapon.targeting_policy` · `W-AE`.** The policy belongs to the spawned actor: drones "acquire targets independently" and "Several drones may choose the same target", and `22:48` books "actor transforms and targets" as the persistent state, so `nearest` would be true of the drone and false of the weapon. **Settled by:** a decision on where two-level targeting lives — an `actor_targeting_policy` field, or a nested actor block for weapons that spawn autonomous actors — or a doc-22 sentence stating that a weapon's `targeting_policy` is the policy of whatever actor performs the attack.
+- **`weapon.targeting_policy` · `W-BD`.** No member covers a trigger volume: `facing` fails (the mine is dropped at the mech's own position on a travel interval, no direction chosen), `nearest` fails ("the first valid enemy entering their radius" is temporal, not metric), `radial` fails (the radius is a trigger threshold, not a direction of fire). **Settled by:** a seventh member on `22:34` for proximity or trigger-volume targeting, or a doc-22 sentence that a weapon whose attack is performed by a placed child has no weapon-level policy — which converts this into an omission. **Settle with `W-CF` or not at all.**
+- **`weapon.targeting_policy` · `W-BF`.** `radial` is the near miss and fails on geometry: radial motion runs *along* the radius outward, whereas four cutters at a fixed `orbit_radius_m: 2.2` (`cutter_count: 4`) move tangentially, orthogonal to it; `facing` fails because the orbit is unchanged by where the mech points. **Settled by:** a member on `22:34` for fixed-radius tangential sweep, or a doc-22 sentence declaring `radial` to cover any mech-centred geometry regardless of direction of motion — which must then also rule on `W-CF`.
+- **`weapon.targeting_policy` · `W-CF`.** `facing` fails on direction: a trail is laid at positions the mech has *already occupied*, so its orientation is the mech's history rather than its current aim, and `simultaneous_segment_overlap_maximum_per_target` exists precisely because the two diverge when the mech turns. **Settled by:** a member on `22:34` for path-history geometry, or a doc-22 sentence that `facing` covers direction of travel as well as of aim — which must then also rule on `W-BD`. **Settle with `W-BD` or not at all.**
+- **`weapon.targeting_policy` · `W-EF`** *(newly declined; was assigned `nearest`)*. The weapon's own fields state a **distribution** rule and decline an ordering: `base_behavior` "dividing them across valid targets when possible", branch `W-EF-mirv-saturation.effects.micro_missile_targeting` "They select distinct nearby targets before assigning extras", branch `W-EF-guardian-reserve.effects.reserve_full_behavior` "newly produced missiles launch normally at **any target** in acquisition range". `22:34` has no distribution member. Targeting is also booked at the missile rather than the weapon: `22:59` "**missile target/turn state**", `global_attack_rate_mapping.unaffected_timing` "Missile movement, reserve life, and **targeting**", and `22:92`'s "**homing actors** use behavior-specific retention hysteresis" covers "A missile can retarget if its target dies". The only route to `nearest` was `22:88`'s global tie-break ("then distance squared"), which applies to every target request in the game and so discriminates nothing. **Settled by:** *either* an edit to `content/weapons/W-EF.json`'s `base_behavior` naming which target a missile takes (which converts the site to a **transcription** outright), *or* a member on `22:34` for multi-target salvo distribution, *or* the same two-level-actor decision as `W-AE` and `W-BE`, since `22:59` books target state at the missile.
+
+**The omission (1) — `weapon.targeting_policy` · `W-BE`.** Not a declination. Pods "fire independently" and
+`22:52` books "creation order, life, target/fire state" as the pod's state, so this is a positive finding
+that the pod owns the targeting and the weapon-level field has no referent — a claim about where the field
+belongs, not about what the vocabulary lacks. **Settled by** the same decision as `W-AE`.
+
+### The 100 transcription sources as text, under six rules
+
+Every phrase below is quoted verbatim from `3016fbc`. Where a rule maps many phrases mechanically the rule
+is stated once. **All slugs are the character rules of the next subsection applied to the quoted phrase and
+to nothing else.**
+
+**R-A — in-field retokenisation (15).** The source field is the very field being minted, so the only act is
+the slug rule. `enemy.behavior_kind`, `boss.behavior_kind`, `enemy.specialist_attack.kind`.
+
+| verbatim source phrase | token | instances |
+| --- | --- | --- |
+| `pure contact pursuer` | `pure-contact-pursuer` | `EN-01`…`EN-05`, `EN-07`…`EN-10` (9) |
+| `pursuit and contact plus one telegraphed straight projectile` | `pursuit-and-contact-plus-one-telegraphed-straight-projectile` | `EN-06` (1) |
+| `persistent giant pursuer with exactly one additional behavior` | `persistent-giant-pursuer-with-exactly-one-additional-behavior` | `BOSS-01`…`BOSS-04` (4) |
+| `telegraphed straight non-homing projectile` | `telegraphed-straight-non-homing-projectile` | `EN-06` `specialist_attack.kind` (1) |
+
+**R-B — sibling name field in the same file (12).** `mech.inherent_trait.behavior_kind` from that trait's
+`name`; `resource.resonance_behavior.behavior_kind` from that block's `effect_name`. **Both of these are
+the two call sites with zero fixture coverage** — see their own rows in "the two optional fields" below,
+where the coverage fact is recorded per row rather than as a footnote.
+
+The six mech traits: `Accelerated Feed` → `accelerated-feed` (`MCH-01`) · `Heavy Calibration` →
+`heavy-calibration` (`MCH-02`) · `Industrial Extractors` → `industrial-extractors` (`MCH-03`) ·
+`Field Geometry` → `field-geometry` (`MCH-04`) · `Reinforced Chassis` → `reinforced-chassis` (`MCH-05`) ·
+`Overdrive Treads` → `overdrive-treads` (`MCH-06`).
+
+The six geode resonance effects, one per geode resource and named by `effect_name` rather than by any
+resource `id`: `Focused Assault` → `focused-assault` · `Dense Plating` → `dense-plating` ·
+`Charged Payloads` → `charged-payloads` · `Vector Lock` → `vector-lock` · `Synchronized Aggression` →
+`synchronized-aggression` · `Overclocked Motion` → `overclocked-motion`.
+
+**Both halves are one-time authoring-input derivations, and the mech half is the stronger case.** At
+hrufl9, `mech.schema.json` replaces `inherent_trait.name` with `name_key` under
+`additionalProperties: false`, so the mech source field **does not exist after the mint** — the same
+constraint the relic hooks carry. The resource source `effect_name` **does** survive (declared and
+required on hrufl9's `resource.schema.json`). Neither may ever be written as a validator-time
+recomputation.
+
+**R-C — the whole `behavior_registration.hook` string slugged into one `relic.behavior_kind` (10).**
+Invents zero names, asserts no hook vocabulary, asserts no one-hook-per-relic shape. Each string is also
+byte-identical to the left cell of doc 22's hook table (`22:154`–`22:163`), so both sources are available
+and an edit to either is detectable. `behavior_registration` does not survive the mint — one-time
+derivation only. 10 of 10 slugs distinct, 10 of 10 match the pattern.
+
+| verbatim hook | token | relic |
+| --- | --- | --- |
+| `activation-rate transformation and opposite geometry` | `activation-rate-transformation-and-opposite-geometry` | `REL-01` |
+| `delayed transform history and attack duplication` | `delayed-transform-history-and-attack-duplication` | `REL-02` |
+| `targeting replacement and facing conversion` | `targeting-replacement-and-facing-conversion` | `REL-03` |
+| `cadence/damage/area/duration transformation` | `cadence-damage-area-duration-transformation` | `REL-04` |
+| `output capture and global beat release` | `output-capture-and-global-beat-release` | `REL-05` |
+| `per-hit pull and clustered target multiplier` | `per-hit-pull-and-clustered-target-multiplier` | `REL-06` |
+| `direct-damage reduction and generational death explosion` | `direct-damage-reduction-and-generational-death-explosion` | `REL-07` |
+| `position-history heat and conditional modifiers/self-damage` | `position-history-heat-and-conditional-modifiers-self-damage` | `REL-08` |
+| `mining-rate and conditional enemy-speed transformation` | `mining-rate-and-conditional-enemy-speed-transformation` | `REL-09` |
+| `weapon-slot activation gate and rotating phase` | `weapon-slot-activation-gate-and-rotating-phase` | `REL-10` |
+
+**R-D — `weapon.behavior_kind` is the member of `22:35` that doc 22's own "Primary runtime model" cell
+names (13).** `22:35` verbatim, the stated set: `finite projectile, homing projectile, hitscan trace, beam,
+sector volley, chain, circle pulse, delayed impact, persistent field, trail segment, orbit contact,
+deployable, drone, mine, and explosion`. Matching is by the model cell, never by the weapon's flavour text.
+
+`choose ground target, schedule delayed circular impact` → `delayed-impact` (`W-AC`) ·
+`targeted persistent circle with damage ticks and inward pull` → `persistent-field` (`W-AD`) ·
+`three persistent autonomous actors that reposition and fire` → `drone` (`W-AE`) ·
+`continuous target lock and damage-rate accumulator` → `beam` (`W-AF`) ·
+`repeated nearest-target projectile` → `finite-projectile` (`W-BC`; the file adds "continues on its fired
+trajectory **without homing**") · `distance-traveled production, arming, proximity detonation` → `mine`
+(`W-BD`) · `timed deployment of capacity-limited persistent turrets` → `deployable` (`W-BE`) ·
+`four analytic orbit actors with per-target contact cadence` → `orbit-contact` (`W-BF`) ·
+`discrete chain chosen from spatial candidates` → `chain` (`W-CD`) ·
+`periodic mech-centered circle` → `circle-pulse` (`W-CE`) ·
+`distance-traveled trail-segment production` → `trail-segment` (`W-CF`) ·
+`facing/targeted five-projectile sector volley` → `sector-volley` (`W-DE`) ·
+`four-missile homing salvo` → `homing-projectile` (`W-EF`).
+Granted but unused members: `hitscan trace`, `explosion`. `W-AB` and `W-DF` are the two declinations.
+
+**R-E — `weapon.targeting_policy` is the member of `22:34` whose own word appears in a source sentence
+(8).** `22:34` verbatim, the stated set: `nearest, priority, concentration, facing, radial, and
+fallback-rock targeting;`. The test is the member *word*, present, not a paraphrase.
+
+`fires down the mech's current facing line` → `facing` (`W-AB`) ·
+`selects the densest enemy concentration within 12M` → `concentration` (`W-AC`) ·
+`the densest enemy concentration within 10M` → `concentration` (`W-AD`) ·
+`selects the nearest enemy within current range` → `nearest` (`W-BC`) ·
+`strikes the nearest target within 8M` → `nearest` (`W-CD`) ·
+`emits a radial pulse centered on the mech` → `radial` (`W-CE`) ·
+`fires five pellets across a 60° facing cone` → `facing` (`W-DE`) ·
+`persistent facing-aligned contact capsule/rectangle` (`22:58`) **and** `pushed along the mech's facing
+direction` (the definition's own `base_behavior`) → `facing` (`W-DF`).
+Granted but unused members: `priority`, `fallback-rock`.
+
+**R-F — `branch.behavior_kind` is the branch obligation fragment in doc 22's third column, slugged (42).**
+Each weapon row lists exactly three fragments after the `;`, matched to the three branch definitions
+semantically, and each match is confirmed against the branch's own `effects` keys. 42 of 45; the three
+mismatches are assignments 29–31 above.
+
+| weapon | fragment → token, three per row |
+| --- | --- |
+| `W-AB` (`22:45`) | `shockwaves` → `shockwaves` (fracture-lance) · `charge-by-travel` → `charge-by-travel` (kinetic-capacitor) · `unlimited pierce` → `unlimited-pierce` (unbounded-bore) |
+| `W-AC` (`22:46`) | `seeded secondary blasts` → `seeded-secondary-blasts` (saturation-cascade) · `lingering field` → `lingering-field` (interdiction-payload) · `danger-close center replacement` → `danger-close-center-replacement` (danger-close-protocol) |
+| `W-AD` (`22:47`) | `delayed echo` → `delayed-echo` (echo-well) · `end burst/launch` → `end-burst-launch` (gravity-slingshot) · `collection mass and singularity cycle` → `collection-mass-and-singularity-cycle` (singularity-forge) |
+| `W-AE` (`22:48`) | `temporary clone cap` → `temporary-clone-cap` (replicator-swarm) · `shared focus` → `shared-focus` (wolfpack-protocol) · `rotating containment links` → `rotating-containment-links` (containment-lattice) |
+| `W-AF` (`22:49`) | `memory decay` → `memory-decay` (coherence-memory) · `exposure debuff` → `exposure-debuff` (target-designator) · `facing beam hysteresis` → `facing-beam-hysteresis` (cutting-vector) |
+| `W-BC` (`22:50`) | `hitscan replacement` → `hitscan-replacement` (zero-lag-emitter) · `recent-hit preference/slow` → `recent-hit-preference-slow` (suppressive-sequencer) · `fixed lateral pair` → `fixed-lateral-pair` (broadside-oscillator) |
+| `W-BD` (`22:51`) | `selective population trigger` → `selective-population-trigger` (selective-detonators) · `hunter state` → `hunter-state` (hunter-mines) · *third fragment `arming/lifetime` is assignment 29* |
+| `W-BE` (`22:52`) | `overclock count` → `overclock-count` (battery-overclock) · `guardian priority` → `guardian-priority` (guardian-firmware) · `anchored bastion packing` → `anchored-bastion-packing` (forward-bastion) |
+| `W-BF` (`22:53`) | `flywheel stacks` → `flywheel-stacks` (kinetic-flywheel) · `projectile interception` → `projectile-interception` (deflection-ring) · `delayed-path reaper` → `delayed-path-reaper` (tethered-reaper) |
+| `W-CD` (`22:54`) | `unlimited dense chain` → `unlimited-dense-chain` (total-conduction) · `hard control` → `hard-control` (disruption-current) · `moving ball-lightning actor` → `moving-ball-lightning-actor` (ball-lightning-projector) |
+| `W-CE` (`22:55`) | `victim charge` → `victim-charge` (critical-mass-cycle) · `push/slow` → `push-slow` (kinetic-vent) · `long-charge supernova cycle` → `long-charge-supernova-cycle` (supernova-cycle) |
+| `W-CF` (`22:56`) | `enemy-carried trails` → `enemy-carried-trails` (carrier-ignition) · `loop detection/consumption` → `loop-detection-consumption` (circuit-closure) · *third fragment `movement stacks` is assignment 31* |
+| `W-DE` (`22:57`) | `all-target cone wave` → `all-target-cone-wave` (saturation-choke) · `once-per-volley control` → `once-per-volley-control` (concussive-fan) · `focal convergence` → `focal-convergence` (focal-array) |
+| `W-DF` (`22:58`) | `transferred launched-enemy collision` → `transferred-launched-enemy-collision` (impact-transfer) · `stationary ring` → `stationary-ring` (siege-anchor) · *third fragment `movement stacks` is assignment 30* |
+| `W-EF` (`22:59`) | `split children` → `split-children` (mirv-saturation) · `reserve queue` → `reserve-queue` (guardian-reserve) · `rotating radial spiral` → `rotating-radial-spiral` (spiral-barrage) |
+
+**Row count check.** 15 + 12 + 10 + 13 + 8 + 42 = **100**, which is the transcribed cell of the population
+table above.
+
+### The granted character rules, each with the case that forces it
+
+No document mandates any of this. Every clause is granted, and the grant should say so.
+
+1. **Space becomes `-`.** *Forced by* every one of the 141 sources; shortest case `pure contact pursuer` (`EN-01`), which without the rule is not a token at all. The one clause no reader will contest.
+2. **`/` becomes `-` — replace, never drop, never interpret.** *Forced by* `REL-04`'s `cadence/damage/area/duration transformation` (three slashes; without the rule the slug fails the pattern outright) **and** by `REL-08`'s `position-history heat and conditional modifiers/self-damage`, where the slash joins a compound rather than separating alternatives. Two forcing cases for two different reasons, and **the rule is deliberately blind to the difference**: `cadence-damage-area-duration-transformation` reads as four things and `modifiers-self-damage` as two, and the token cannot say which. A reader who wants that distinction must ask for a different field, not a different slug rule. Forced again four times in the branch set — `end burst/launch`, `recent-hit preference/slow`, `push/slow`, `loop detection/consumption`.
+3. **Capitals become lowercase.** *Forced by* `Accelerated Feed` (an `inherent_trait.name`), `Focused Assault` (a `resonance_behavior.effect_name`), and `["Maximum Hull Integrity"]` (`UTL-B1`'s `effect.stat_names`). **Not** forced by the ten relic hooks or by any doc-22 fragment — all of those are already lowercase — so the relic and branch tranches cannot validate this clause and the mech, resource and utility tranches must.
+4. **An existing `-` passes through unchanged and is never doubled.** *Forced by* six of the ten hooks (`activation-rate`, `per-hit`, `direct-damage`, `position-history`, `mining-rate`, `weapon-slot`), by `["Extraction-zone radius"]` (`UTL-D2`), and by ten branch fragments (`charge-by-travel`, `danger-close…`, `recent-hit…`, `delayed-path…`, `all-target…`, `once-per-volley…`, `enemy-carried…`, `moving ball-lightning…`, `long-charge…`, `transferred launched-enemy…`). A naive "replace non-alphanumerics with `-`" reading is fine; an "insert `-` at word boundaries" reading yields `activation--rate` and fails the pattern.
+5. **Runs of separators collapse to one; leading and trailing separators are stripped.** *Forced by* **nothing in the corpus** — no source string in any of the twelve fields has adjacent, leading or trailing separators. **This clause is DEFENSIVE and must be labelled as such in the grant**, so that no reader hunts for the case that motivated it.
+6. **No clause is granted for any other character**, because none is needed: across all 141 sources the only non-alphanumerics are space, `/` and `-`. No digit-initial string occurs (the pattern requires `^[a-z]`), no apostrophe, no non-ASCII. **Two near-misses that must never become token sources:** a geode resource's `short_modifier` contains a Unicode minus (`−20%`), and `W-DE`'s `base_behavior` contains `60°`. If either field is ever promoted to a source, this clause list is incomplete.
+
+The pattern being satisfied throughout, identically on all twelve fields:
+`^[a-z][a-z0-9]*(-[a-z0-9]+)*$`.
+
+### The eleven flagged inconsistencies — these go into the grant as flagged, not smoothed
+
+- **I-1.** The ruling that hrufl9 is the transcription source has an **empty antecedent**: no definition on that ref carries a minted behavior token — every one lives under `tests/**/Fixtures/` — and `40:125` denies fixture strings authority anyway ("a token that has only ever appeared in a schema `enum`, a code comment, or a chat log carries no authority here"). An earlier pass applied that ruling five times; all five applications are withdrawn. What hrufl9 legitimately supplies is the grammar and the field names, not tokens.
+- **I-2.** hrufl9's `relic.schema.json` says a relic-to-hook mapping "is therefore not derivable today", yet the same sentence's tail permits the slug ("this token asserts neither a hook vocabulary nor a one-hook-per-relic shape"). The grant must **quote the tail clause, not the head**, or a reader who quotes only the head will conclude the mint defied the schema author.
+- **I-3.** `W-EF` was assigned under one ruling and declined under another; **the discriminator test resolves it to declined**, which is what empties `weapon.targeting_policy`'s `assigned` cell. An empty `assigned` cell is an acceptable outcome, not a defect.
+- **I-4.** `22:58` is unusable for one of `W-DF`'s fields and authoritative for another: its `behavior_kind` is declined because the eleven words match no member of `22:35`, while `targeting_policy` transcribes `facing` from the same words. This is weaker than previously stated — `W-DF`'s own `base_behavior` also contains "pushed along the mech's **facing** direction", so the site survives on the definition and not only on doc 22.
+- **I-5.** The two-level-actor finding is answered on `rock_targeting_behavior` and refused on `targeting_policy` for the **same four** weapons (`W-AE`, `W-BE`, `W-AF`, and now `W-EF`): each gets a rock token reasoned at the spawned actor's or the retained target's level, while its policy is declined or omitted because the weapon level is the wrong level. Defensible, because `22:90` is written about *attacks* and `22:34` about *weapons* — but the grant must say so, or one defect appears to get two dispositions.
+- **I-6.** The framing paragraph's citation and count were both wrong: the compiler assertion is at **`40:311`**, not `40:307`, and it asserts the one-descriptor check over **seven** kinds of thing (`behavior_kind`, targeting policy, formula, modifier hook, formation, effect, presentation recipe), two of which are outside this family and one of which is not the relic hook. State it as **four granted, seven asserted, zero overlap** — stronger, and true.
+- **I-7.** Five of the twelve fields end with a vocabulary `40:127` will not call grounded (`branch`, `relic`, `utility`, `mech.inherent_trait`, `resource.resonance_behavior` — 80 of the 141 instances): "A vocabulary is **grounded** only when the document it cites **states the set**. A resolving citation is necessary and not sufficient." Use doc 40's own "Token provenance" column (`40:159`) and record `branch` as fragments rather than as a vocabulary.
+- **I-8.** The utility head nouns `-expander`, `-amplifier` and `-accelerator` appear in no document and in no definition — the only place in the package where a morpheme has no source at all. Only the qualifiers are transcribed. The utility vocabulary must not be presented on the same footing as `enemy.behavior_kind`'s, whose tokens are the authored strings themselves.
+- **I-9.** `boss.behavior_kind`'s single token is shared by all four bosses, so `40:311`'s "exactly one registered descriptor" gives four bosses with differing abilities one descriptor whose parameter schema must then carry the ability. Correct as a transcription — what differs per boss lives in the excluded field `boss.ability.kind` — but a registry-shape consequence to raise before the grant lands, not after the manifest is emitted.
+- **I-10.** The registry namespace is undeclared. `SemanticCheck.BehaviorToken` applies one grammar with **no per-field namespace**, and `40:311` speaks of "every content `behavior_kind`" as one population, so `facing` as a targeting policy and any future `facing` as a behavior kind would be one descriptor. No collision exists today (`facing`, `facing-beam-hysteresis` and `targeting-replacement-and-facing-conversion` are distinct). The grant must say whether the registry is one namespace or twelve: it reads as one and is authored as twelve.
+- **I-11.** Four survivors, one line each: `22:34`'s unused `fallback-rock` member covers the same distinction as the whole of `rock_targeting_behavior`, which `22:86` frames as a **boolean** ("whether destructible rocks are fallback candidates") rather than as a token pair; granting lower-kebab on twelve fields settles the eight camelCase value tokens' grammar by implication unless the grant says it binds only the fields it names (those eight are measured in Ruling 39 above, and Ruling 39's reason for leaving them alone still stands); and `40:125` still cites two `content/schemas/*.json` files that exist on no ref but hrufl9 — a defect doc 40 now names in its own text, which is the model to copy.
+
+**Ruling A, offered to resolve I-4 and the two "movement stacks" assignments.** That `22:58` names a
+movement effect usable as a `behavior_kind` source, **and** that its phrase "movement stacks" fails to
+uniquely identify a behavior, are **two different properties of one line, both true**: the line is a usable
+source for `W-DF`'s fields, while the three-word fragment it shares verbatim with `22:56` cannot name two
+different branches. Non-uniqueness of a fragment is not unusability of the line.
+
+**Ruling B, offered to resolve I-10.** The grammar check is **field-blind** — `SemanticCheck.BehaviorToken`
+is a `TokenGrammar.IsWellFormed` call emitting `BehaviorTokenMalformed`, with no vocabulary parameter and
+no field parameter. Per-field vocabularies are therefore a **documentary convention that no check
+enforces**. The existing instance is `boss.behavior_kind`'s one token four ways: nothing in the twelve
+schemas prevents it and nothing detects it.
+
+### The two optional fields — values ready for coupling, with coverage recorded per row
+
+Both fields already have a reader and a guard, and **neither guard has ever run**. The coverage fact is
+recorded **inside each row**, deliberately and not as a footnote, because a reader who takes one row on its
+own must not come away believing the vocabulary is enforced there. Call sites, guards, `required` lists and
+fixture counts in this table were measured at hrufl9 (`551d0be`), not at `3016fbc`; the tokens were
+measured at `3016fbc`.
+
+| field | reader, pointer and guard (at `551d0be`) | fixture coverage (at `551d0be`) | tokens ready (at `3016fbc`) | how it should land |
+| --- | --- | --- | --- | --- |
+| `mech.inherent_trait.behavior_kind` | `MechDefinition.cs`, pointer `/inherent_trait/behavior_kind`, guarded by `if (trait.BehaviorKind is not null)`; absent from `mech.schema.json`'s `inherent_trait.required`, which is `[name_key, affected_statistic, modifier_kind, modifier_value]` | **UNEXERCISED — zero fixture coverage.** All four mech fixtures carry an `inherent_trait` block and not one of them sets `behavior_kind`, so this call site has never run and nothing in the corpus would catch a wrong token here | **6**, from `inherent_trait.name`: `accelerated-feed`, `heavy-calibration`, `industrial-extractors`, `field-geometry`, `reinforced-chassis`, `overdrive-treads` — 6 of 6 distinct, 6 of 6 match the pattern | as **populated optional fields**; `required` is **not** being flipped |
+| `resource.resonance_behavior.behavior_kind` | `ResourceDefinition.cs`, pointer `/resonance_behavior/behavior_kind`, guarded by `if (resonance.BehaviorKind is not null)`; optional by its own schema prose | **UNEXERCISED — zero fixture coverage.** All five resource fixtures carry a `resonance_behavior` block and not one of them sets `behavior_kind`, so this call site has never run and nothing in the corpus would catch a wrong token here | **6**, from `resonance_behavior.effect_name`: `focused-assault`, `dense-plating`, `charged-payloads`, `vector-lock`, `synchronized-aggression`, `overclocked-motion` — 6 of 6 distinct, 6 of 6 match the pattern; the two currency resources correctly have no `resonance_behavior` block and so contribute none | as **populated optional fields**; `required` is **not** being flipped |
+
+**On flipping `required`, for the schema owner and for nobody else.** hrufl9's `resource.schema.json` says
+the field "becomes required in the change that mints the vocabulary". **That precondition is now met** —
+values exist for all six instances — so requiring the field in the same change would redden nothing. The
+same is true of the mech field. This is reported, not proposed; the decision is the schema owner's.
+
+**The consequence of zero coverage, worth one sentence in the grant.** These are the only two of the twelve
+call sites whose guard has never been exercised, so they are the two places where a token that is wrong, or
+a guard that misbehaves on an absent field, would not be caught by the existing corpus — which is why the
+two rows above carry the fact themselves.

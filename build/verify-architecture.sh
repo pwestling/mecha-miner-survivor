@@ -32,6 +32,32 @@
 # skip every remaining section - matching every other gate script in build/.
 # Helpers that can fail return nonzero and their callers count a failure and
 # continue, so one broken project cannot hide the checks that follow it.
+#
+# PRECONDITION: `dotnet restore` MUST have run against this checkout first.
+#
+# Section 6 reads the resolved reference set via `dotnet msbuild
+# -getItem:ReferencePath -t:ResolveAssemblyReferences`, and
+# ResolveAssemblyReferences cannot run without obj/project.assets.json, which
+# only a restore produces. On a plain checkout with no obj/ this script
+# therefore exits 4 with NINE failures - one per project in the solution,
+# MechaMiner.Game included - all reading "the resolved compile-time reference
+# set could not be evaluated". That is the gate failing closed rather than
+# passing something it could not measure, and it is working as intended.
+#
+# Sequence it AFTER restore wherever it is wired. Measured on master 5805908 in
+# one fresh worktree on a quiet box, single variable: with zero
+# project.assets.json it exits 4 with 9 failures; after `dotnet restore
+# MechaMiner.sln --locked-mode` produced 9 assets files, the same tree exits 0
+# with 74 assertions.
+#
+# Known wording defect, recorded rather than silently changed: those nine
+# assertions report the THIRD outcome ("I could not measure") when the actual
+# condition is the SECOND ("a precondition was not met"). A reader who meets
+# "could not be evaluated" on a loaded machine will reach for contention and be
+# wrong - that misdiagnosis has already cost one round, twice. The message
+# should say that no restore has been performed. The wording is left to the
+# FND-001 gate owner because it changes assertion text that round evidence
+# quotes verbatim.
 
 set -uo pipefail
 

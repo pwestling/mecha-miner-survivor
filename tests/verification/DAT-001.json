@@ -559,6 +559,31 @@
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-025",
+      "summary": "Every numeric bound in content/schemas/** records its provenance in an adjacent x-authority, and every sourced or derived bound states the derivation by which the number follows from its source.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-005", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy",
+        "docs/technical/40-content-data-and-validation.md#agent-content-change-workflow"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.SchemaAuthorityTests"
+      },
+      "fixtures": [
+        "content/schemas/envelope.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/unattributed-bound.schema.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/schema/undelivered-derivation.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
     }
   ]
 }

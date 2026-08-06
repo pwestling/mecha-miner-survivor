@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
+using MechaMiner.Content.Codec;
 
 namespace MechaMiner.Content.Ids;
 
@@ -28,8 +29,6 @@ namespace MechaMiner.Content.Ids;
 /// </remarks>
 public sealed class ContentCategoryDescriptor
 {
-    private static readonly TimeSpan MatchTimeout = TimeSpan.FromSeconds(1);
-
     private readonly Regex[] _patterns;
 
     internal ContentCategoryDescriptor(
@@ -44,10 +43,7 @@ public sealed class ContentCategoryDescriptor
         _patterns = new Regex[idPatterns.Count];
         for (int index = 0; index < idPatterns.Count; index++)
         {
-            _patterns[index] = new Regex(
-                idPatterns[index],
-                RegexOptions.CultureInvariant | RegexOptions.ExplicitCapture,
-                MatchTimeout);
+            _patterns[index] = AnchoredPattern.Compile(idPatterns[index]);
         }
     }
 

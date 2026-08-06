@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Negative control for the x-authority gate",
+  "description": "A bare numeric bound with no adjacent x-authority. This file exists to prove the attribution gate can fail; it is never loaded as a real schema.",
+  "type": "object",
+  "properties": {
+    "capacity": {
+      "type": "integer",
+      "maximum": 2048
+    }
+  }
+}

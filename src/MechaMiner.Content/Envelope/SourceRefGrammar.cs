@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using MechaMiner.Content.Codec;
 
 namespace MechaMiner.Content.Envelope;
 
@@ -103,34 +104,23 @@ public static class SourceRefGrammar
     /// </remarks>
     public const string ElementPattern = "^(?:" + ScopePattern + ": )?" + ReferencePattern + "$";
 
-    private static readonly TimeSpan MatchTimeout = TimeSpan.FromSeconds(1);
-
-    private static readonly Regex CapturingElement = new(
-        "^(?:(?<scope>" + ScopePattern + "): )?(?<reference>" + ReferencePattern + ")$",
-        RegexOptions.CultureInvariant,
-        MatchTimeout);
+    private static readonly Regex CapturingElement = AnchoredPattern.Compile(
+        "^(?:(?<scope>" + ScopePattern + "): )?(?<reference>" + ReferencePattern + ")$");
 
     /// <summary>
     /// A file name followed by a line number, which is the <c>path:line</c> form doc 40
     /// rejects even when it contains no directory separator.
     /// </summary>
-    private static readonly Regex FileAndLine = new(
-        "^[^\\s:]+\\.[A-Za-z0-9]{1,6}:[0-9]+$",
-        RegexOptions.CultureInvariant,
-        MatchTimeout);
+    private static readonly Regex FileAndLine = AnchoredPattern.Compile(
+        "^[^\\s:]+\\.[A-Za-z0-9]{1,6}:[0-9]+$");
 
-    private static readonly Regex ScopeStep = new(
+    private static readonly Regex ScopeStep = AnchoredPattern.Compile(
         "\\G(?:\\.(?<member>" + Segment + ")"
         + "|(?<any>\\[\\])"
         + "|\\[(?<index>[0-9]+)\\]"
-        + "|\\[(?<low>[0-9]+)\\.\\.(?<high>[0-9]+)\\])",
-        RegexOptions.CultureInvariant,
-        MatchTimeout);
+        + "|\\[(?<low>[0-9]+)\\.\\.(?<high>[0-9]+)\\])");
 
-    private static readonly Regex LeadingSegment = new(
-        "^" + Segment,
-        RegexOptions.CultureInvariant,
-        MatchTimeout);
+    private static readonly Regex LeadingSegment = AnchoredPattern.Compile("^" + Segment);
 
     /// <summary>Parses one <c>source_refs</c> element.</summary>
     /// <exception cref="ArgumentNullException"><paramref name="element"/> is null.</exception>

@@ -1,4 +1,3 @@
-using System;
 using MechaMiner.Content.Codec;
 
 namespace MechaMiner.Content.Schema;

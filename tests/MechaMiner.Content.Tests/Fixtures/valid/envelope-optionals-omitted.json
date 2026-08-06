@@ -1,0 +1,13 @@
+{
+  "id": "W-CD",
+  "schema_version": 3,
+  "content_version": 11,
+  "status": "development",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "TDD-COMBAT-RUNTIME#weapon-actors",
+    "id: GDD-WEAPON-INDEX#design-state",
+    "tags: TDD-CONTENT-DATA#tags-vocabulary"
+  ]
+}

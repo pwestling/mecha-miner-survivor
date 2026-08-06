@@ -1,5 +1,6 @@
 using System;
 using System.Text.RegularExpressions;
+using MechaMiner.Content.Codec;
 
 namespace MechaMiner.Content.Envelope;
 
@@ -35,18 +36,49 @@ namespace MechaMiner.Content.Envelope;
 /// </remarks>
 public sealed class LocalizationKey
 {
-    private static readonly TimeSpan MatchTimeout = TimeSpan.FromSeconds(1);
+    private const string CategoryPart = "[a-z][a-z0-9_]*";
+
+    /// <remarks>
+    /// The stable ID appears verbatim in its own case, so this part is deliberately
+    /// case-permissive where the category part is not: <c>weapon.W-AB.name</c> is
+    /// correct and <c>weapon.w_ab.name</c> is not, because a key that transforms an ID
+    /// is no longer traceable to it.
+    /// </remarks>
+    private const string StableIdPart = "[A-Za-z0-9][A-Za-z0-9_-]*";
+
+    private const string Prefix = "^" + CategoryPart + "\\." + StableIdPart + "\\.";
+
+    /// <summary>The pattern for a key in any role.</summary>
+    public const string Pattern = Prefix + "(name|summary)$";
 
     /// <summary>
-    /// The key pattern, stated once and mirrored verbatim in
+    /// The pattern for a <c>name_key</c>, mirrored verbatim in
     /// <c>content/schemas/envelope.schema.json</c>.
     /// </summary>
-    public const string Pattern = "^[a-z][a-z0-9_]*\\.[A-Za-z0-9][A-Za-z0-9_-]*\\.(name|summary)$";
+    /// <remarks>
+    /// The per-role patterns exist so the schema can enforce the role/field match that
+    /// the typed validator reports as <c>MMC-2008</c>. A single shared pattern would
+    /// let the schema accept <c>"name_key": "weapon.W-AB.summary"</c> while the typed
+    /// validator rejected it, and the fixture corpus would then be proving a
+    /// disagreement rather than an agreement.
+    /// </remarks>
+    public const string NamePattern = Prefix + "name$";
 
-    private static readonly Regex KeyPattern = new(
-        Pattern,
-        RegexOptions.CultureInvariant,
-        MatchTimeout);
+    /// <summary>The pattern for a <c>summary_key</c>, mirrored verbatim in the schema.</summary>
+    public const string SummaryPattern = Prefix + "summary$";
+
+    /// <summary>The pattern a key in <paramref name="role"/> must match.</summary>
+    public static string PatternFor(LocalizationRole role)
+    {
+        return role switch
+        {
+            LocalizationRole.Name => NamePattern,
+            LocalizationRole.Summary => SummaryPattern,
+            _ => throw new ArgumentOutOfRangeException(nameof(role), role, "unknown role"),
+        };
+    }
+
+    private static readonly Regex KeyPattern = AnchoredPattern.Compile(Pattern);
 
     private LocalizationKey(string value, string category, string stableId, LocalizationRole role)
     {

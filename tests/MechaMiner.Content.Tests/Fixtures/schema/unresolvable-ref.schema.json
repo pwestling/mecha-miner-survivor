@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "$ref": "#/$defs/does_not_exist"
+    }
+  },
+  "$defs": {
+    "stable_id": {
+      "type": "string"
+    }
+  }
+}

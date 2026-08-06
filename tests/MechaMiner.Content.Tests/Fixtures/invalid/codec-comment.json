@@ -1,0 +1,9 @@
+{
+  "id": "W-AB",
+  // the rationale for a value belongs in the owning document, not the data
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "tags": [],
+  "source_refs": ["GDD-WEAPON-CATALOG#accepted-base-catalog-assignment"]
+}

@@ -1,0 +1,21 @@
+{
+  "id": "W-AB",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "weapon.W-AB.name",
+  "summary_key": "weapon.W-AB.summary",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "TDD-COMBAT-RUNTIME#weapon-actors",
+    "DEC-120#decision",
+    "TDR-006",
+    "TR-DAT-006#codec",
+    "id: GDD-WEAPON-INDEX#design-state",
+    "status: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "source_refs[]: TDD-CONTENT-DATA#source-refs-element-grammar",
+    "source_refs[2..3]: DEC-120#consequences"
+  ],
+  "presentation_id": "weapon-ab-emitter"
+}

@@ -1,0 +1,15 @@
+{
+        "id": "W-AB",
+        "schema_version": 1,
+        "content_version": 1,
+        "status": "enabled",
+        "name_key": "weapon.W-AB.name",
+        "summary_key": "weapon.W-AB.summary",
+        "tags": [],
+        "source_refs": [
+                "GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+                "TDD-COMBAT-RUNTIME#weapon-actors",
+                "DEC-120#decision"
+        ],
+        "presentation_id": "weapon-ab-emitter"
+}

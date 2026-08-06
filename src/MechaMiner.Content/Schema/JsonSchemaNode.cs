@@ -70,4 +70,7 @@ internal sealed class JsonSchemaNode
     internal IReadOnlyList<JsonSchemaNode>? OneOf { get; set; }
 
     internal JsonSchemaNode? Not { get; set; }
+
+    /// <summary>The provenance of this subschema's numeric bound, if it declares one.</summary>
+    internal SchemaAuthority? Authority { get; set; }
 }

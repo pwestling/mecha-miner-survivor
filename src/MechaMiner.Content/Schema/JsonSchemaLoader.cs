@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using MechaMiner.Content.Codec;
 using MechaMiner.Content.Diagnostics;
+using MechaMiner.Content.Envelope;
 
 namespace MechaMiner.Content.Schema;
 
@@ -19,8 +19,6 @@ namespace MechaMiner.Content.Schema;
 /// </remarks>
 public static class JsonSchemaLoader
 {
-    private static readonly TimeSpan MatchTimeout = TimeSpan.FromSeconds(1);
-
     /// <summary>Loads a schema from UTF-8 bytes.</summary>
     /// <exception cref="ArgumentNullException"><paramref name="sourcePath"/> is null.</exception>
     public static JsonSchemaLoadResult Load(ReadOnlySpan<byte> utf8, string sourcePath)
@@ -54,12 +52,26 @@ public static class JsonSchemaLoader
             JsonElement root = document.RootElement;
             Dictionary<string, JsonSchemaNode> definitions = new(StringComparer.Ordinal);
 
+            // Draft 2020-12 § 4.3.2: a schema is "an object or a boolean", and that
+            // applies at the root as much as to a subschema. A boolean root is not
+            // useful in a project schema, but rejecting it would be this evaluator
+            // disagreeing with the specification rather than implementing a subset of it.
+            if (root.ValueKind is JsonValueKind.True or JsonValueKind.False)
+            {
+                return new JsonSchemaLoadResult(
+                    new JsonSchemaDocument(
+                        sourcePath,
+                        new JsonSchemaNode { BooleanSchema = root.ValueKind == JsonValueKind.True },
+                        definitions),
+                    bag.Diagnostics);
+            }
+
             if (root.ValueKind != JsonValueKind.Object)
             {
                 bag.Add(Malformed(
                     sourcePath,
                     JsonPointer.Root,
-                    "the root of a schema document is a JSON object"));
+                    "the root of a schema document is a JSON object or a boolean"));
                 return new JsonSchemaLoadResult(null, bag.Diagnostics);
             }
 
@@ -150,7 +162,79 @@ public static class JsonSchemaLoader
             }
         }
 
+        ValidateAuthorityPlacement(node, element, pointer, sourcePath, bag);
         return node;
+    }
+
+    /// <summary>
+    /// Enforces the rules that relate <c>x-authority</c> to its siblings, which can only
+    /// be checked once the whole subschema has been read.
+    /// </summary>
+    private static void ValidateAuthorityPlacement(
+        JsonSchemaNode node,
+        JsonElement element,
+        JsonPointer pointer,
+        string sourcePath,
+        DiagnosticBag bag)
+    {
+        bool declaresBound = false;
+        foreach (string keyword in SchemaAuthority.BoundKeywords())
+        {
+            if (element.TryGetProperty(keyword, out _))
+            {
+                declaresBound = true;
+                break;
+            }
+        }
+
+        if (declaresBound && node.Authority is null)
+        {
+            bag.Add(Malformed(
+                sourcePath,
+                pointer,
+                "a numeric bound carries an adjacent '" + SchemaAuthority.Keyword
+                    + "' recording where the number came from; without one, "
+                    + "\"which bounds need re-deriving now that a document changed\" is "
+                    + "answerable only from memory"));
+        }
+
+        if (node.Authority is null)
+        {
+            return;
+        }
+
+        bool declaresAttributable = false;
+        foreach (string keyword in SchemaAuthority.AttributableKeywords())
+        {
+            if (element.TryGetProperty(keyword, out _))
+            {
+                declaresAttributable = true;
+                break;
+            }
+        }
+
+        if (!declaresAttributable)
+        {
+            bag.Add(Malformed(
+                sourcePath,
+                pointer.AppendProperty(SchemaAuthority.Keyword),
+                "'" + SchemaAuthority.Keyword + "' annotates a numeric bound, so it belongs "
+                    + "next to one of "
+                    + string.Join(", ", SchemaAuthority.AttributableKeywords())));
+            return;
+        }
+
+        // A structural bound has no citation to go stale, but it still has to be
+        // justified, and description is where a reader looks for the justification.
+        if (node.Authority.Kind == SchemaAuthorityKind.Structural
+            && !element.TryGetProperty("description", out _))
+        {
+            bag.Add(Malformed(
+                sourcePath,
+                pointer.AppendProperty(SchemaAuthority.Keyword),
+                "a structural bound states its rationale in 'description'; a limit nobody can "
+                    + "justify is indistinguishable from one chosen to make something pass"));
+        }
     }
 
     private static bool ApplyKeyword(
@@ -169,12 +253,13 @@ public static class JsonSchemaLoader
             case "title":
             case "description":
             case "$comment":
-            case "examples":
-            case "default":
-            case "deprecated":
-                // Identity, definitions, and annotations: no assertion. $defs is parsed
-                // separately at the root and ignored on a subschema.
+                // Identity and documentation: no assertion. $defs is parsed separately at
+                // the root and ignored on a subschema.
                 return true;
+
+            case SchemaAuthority.Keyword:
+                node.Authority = ReadAuthority(value, at, sourcePath, bag);
+                return node.Authority is not null;
 
             case "$ref":
                 if (value.ValueKind != JsonValueKind.String)
@@ -234,10 +319,9 @@ public static class JsonSchemaLoader
                 node.PatternText = value.GetString();
                 try
                 {
-                    node.Pattern = new Regex(
-                        node.PatternText!,
-                        RegexOptions.CultureInvariant,
-                        MatchTimeout);
+                    // Compiled with ECMA-262 anchor semantics so the evaluator and an
+                    // external JSON Schema tool agree on what the same pattern accepts.
+                    node.Pattern = AnchoredPattern.Compile(node.PatternText!);
                 }
                 catch (ArgumentException exception)
                 {
@@ -579,6 +663,139 @@ public static class JsonSchemaLoader
         }
 
         return value.GetDouble();
+    }
+
+    /// <summary>
+    /// Reads an <c>x-authority</c> annotation.
+    /// </summary>
+    /// <remarks>
+    /// <c>source</c> is validated with <see cref="SourceRefGrammar"/>, the same parser
+    /// <c>source_refs</c> uses. A second, separately maintained document-ID grammar would
+    /// drift from the first, and then a citation legal in one place would be illegal in
+    /// the other.
+    /// </remarks>
+    private static SchemaAuthority? ReadAuthority(
+        JsonElement value,
+        JsonPointer at,
+        string sourcePath,
+        DiagnosticBag bag)
+    {
+        if (value.ValueKind != JsonValueKind.Object)
+        {
+            bag.Add(Malformed(sourcePath, at, "x-authority is an object"));
+            return null;
+        }
+
+        foreach (JsonProperty property in value.EnumerateObject())
+        {
+            if (property.NameEquals("source")
+                || property.NameEquals("section")
+                || property.NameEquals("kind")
+                || property.NameEquals("derivation"))
+            {
+                continue;
+            }
+
+            bag.Add(Malformed(
+                sourcePath,
+                at.AppendProperty(property.Name),
+                "x-authority declares only source, section, kind, and derivation"));
+            return null;
+        }
+
+        if (!value.TryGetProperty("kind", out JsonElement kindElement)
+            || kindElement.ValueKind != JsonValueKind.String)
+        {
+            bag.Add(Malformed(
+                sourcePath, at, "x-authority.kind is sourced, derived, or structural"));
+            return null;
+        }
+
+        SchemaAuthorityKind kind;
+        switch (kindElement.GetString())
+        {
+            case "sourced":
+                kind = SchemaAuthorityKind.Sourced;
+                break;
+            case "derived":
+                kind = SchemaAuthorityKind.Derived;
+                break;
+            case "structural":
+                kind = SchemaAuthorityKind.Structural;
+                break;
+            default:
+                bag.Add(Malformed(
+                    sourcePath,
+                    at.AppendProperty("kind"),
+                    "x-authority.kind is sourced, derived, or structural"));
+                return null;
+        }
+
+        string? source = value.TryGetProperty("source", out JsonElement sourceElement)
+            && sourceElement.ValueKind == JsonValueKind.String
+                ? sourceElement.GetString()
+                : null;
+        string? section = value.TryGetProperty("section", out JsonElement sectionElement)
+            && sectionElement.ValueKind == JsonValueKind.String
+                ? sectionElement.GetString()
+                : null;
+        string? derivation = value.TryGetProperty("derivation", out JsonElement derivationElement)
+            && derivationElement.ValueKind == JsonValueKind.String
+                ? derivationElement.GetString()
+                : null;
+
+        if (kind == SchemaAuthorityKind.Structural)
+        {
+            if (source is not null || section is not null || derivation is not null)
+            {
+                bag.Add(Malformed(
+                    sourcePath,
+                    at,
+                    "a structural bound has no external authority, so it declares no source, "
+                        + "section, or derivation; its rationale lives in 'description'. Use "
+                        + "kind 'sourced' if the number does come from a document"));
+                return null;
+            }
+
+            return new SchemaAuthority(kind, null, null, null);
+        }
+
+        if (string.IsNullOrWhiteSpace(source) || string.IsNullOrWhiteSpace(section))
+        {
+            bag.Add(Malformed(
+                sourcePath,
+                at,
+                "a " + kindElement.GetString() + " bound names the source document and the "
+                    + "section within it"));
+            return null;
+        }
+
+        if (string.IsNullOrWhiteSpace(derivation))
+        {
+            bag.Add(Malformed(
+                sourcePath,
+                at,
+                "a " + kindElement.GetString() + " bound states its 'derivation': how the number "
+                    + "follows from its source. The source says where the number came from; the "
+                    + "derivation says why it is that number, and the two go stale independently"));
+            return null;
+        }
+
+        if (SourceRefGrammar.Parse(source!, out SourceRef? reference)
+                != SourceRefParseOutcome.Parsed
+            || reference!.Scope is not null
+            || reference.Anchor is not null)
+        {
+            bag.Add(Malformed(
+                sourcePath,
+                at.AppendProperty("source"),
+                "x-authority.source is a bare document ID in the same vocabulary source_refs "
+                    + "uses, with no scope prefix and no anchor; the section is named separately "
+                    + "so it stays a heading rather than becoming a slug"));
+            return null;
+        }
+
+        return new SchemaAuthority(kind, source, section, derivation);
     }
 
     private static ContentDiagnostic Malformed(

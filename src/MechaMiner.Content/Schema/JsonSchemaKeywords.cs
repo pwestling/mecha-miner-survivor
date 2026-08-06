@@ -62,18 +62,22 @@ public static class JsonSchemaKeywords
     };
 
     /// <summary>
-    /// Keywords that carry documentation rather than a constraint. They are accepted
-    /// because a schema without them is unreadable, and they are enumerated rather than
-    /// pattern-matched so that a misspelled assertion keyword cannot hide among them.
+    /// Keywords that carry documentation or provenance rather than a constraint.
     /// </summary>
+    /// <remarks>
+    /// Exactly four, enumerated rather than pattern-matched, so that a misspelled
+    /// assertion keyword cannot hide among them and an <c>x-</c> prefix does not become
+    /// an escape hatch for arbitrary unvalidated content. <c>examples</c>,
+    /// <c>default</c>, and <c>deprecated</c> are deliberately absent: no project schema
+    /// uses them, and adding a keyword before something needs it is how an allowlist
+    /// stops meaning anything.
+    /// </remarks>
     private static readonly string[] AnnotationKeywords =
     {
         "title",
         "description",
         "$comment",
-        "examples",
-        "default",
-        "deprecated",
+        SchemaAuthority.Keyword,
     };
 
     private static readonly HashSet<string> Recognised = BuildRecognised();

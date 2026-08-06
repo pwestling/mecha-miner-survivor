@@ -419,11 +419,11 @@ check_enumerators() {
 
   while IFS= read -r path; do
     [[ -z "${path}" ]] && continue
-    cfail "${path} starts with '#!' but has no extension in SCRIPT_EXTENSIONS, so only one of the two enumerators sees it. Give it a known extension, or add the extension to SCRIPT_EXTENSIONS."
+    cfail "${path} starts with '#!' but has no extension in SCRIPT_EXTENSIONS, so only one of the two enumerators sees it. Give it a known extension, or add the extension to SCRIPT_EXTENSIONS. If it is not a script at all and merely begins with those two bytes, this gate has no escape for that and adding one is a deliberate change to what 'script' means here, not a workaround to reach for in passing."
   done <<<"${only_shebang}"
 
   if [[ "${check_failures}" -eq 0 ]]; then
-    pass "the extension enumerator and the shebang enumerator agree exactly, on ${#scripts[@]} file(s)"
+    pass "the extension enumerator and the shebang enumerator agree exactly, on $(printf '%s\n' "${left[@]}" | grep -c -v '^$') file(s)"
   fi
   return "${check_failures}"
 }
@@ -445,7 +445,7 @@ check_inventory() {
   local -n inventory="$1"
   local -n enumerated="$2"
   local check_failures=0
-  local entry path kind invocation note found seen_kinds
+  local entry path kind invocation note found seen_kinds candidate hits
 
   local -a inventory_paths=()
   for entry in "${inventory[@]}"; do
@@ -495,7 +495,7 @@ check_inventory() {
 
   # Direction 2: every enumerated script is classified, exactly once.
   for path in "${enumerated[@]}"; do
-    local hits=0
+    hits=0
     for candidate in "${inventory_paths[@]}"; do
       [[ "${candidate}" == "${path}" ]] && hits=$((hits + 1))
     done

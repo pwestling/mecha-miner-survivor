@@ -45,7 +45,7 @@ This diagram describes unfinished extraction progress. Ore seams repeat the flow
 
 When the player enters a mining point's clearly visible circular zone, mining begins automatically. It continues for as long as the player remains inside. This preserves the movement-focused control model: the player expresses commitment through position rather than through a held button or separate mining action.
 
-The boundary must be readable before the player commits and must provide immediate feedback when the player crosses it in either direction. Exact radius and any resource-specific size variation remain open.
+The boundary must be readable before the player commits and must provide immediate feedback when the player crosses it in either direction. The zone has a 3.0M radius — a 6.0M diameter — for every mining-point class under [DEC-128](./decisions/DEC-128-set-extraction-zone-and-resonance-field-radii.md). Whether any resource class should later use a different size remains open.
 
 ## Progress decay
 
@@ -97,7 +97,7 @@ Opening every material geode on a standard map would take 10:40–13:20 of unint
 
 ### Geode resonance fields
 
-An unopened material geode projects a visible circular resonance field larger than its extraction zone. Enemies physically inside the resonance field receive the geode's thematic modifier. The field exists before extraction begins, remains active during interruptions, and ends immediately when the geode opens. Enemies do not retain the modifier after leaving the field or after its collapse.
+An unopened material geode projects a visible circular resonance field larger than its extraction zone. The field has a 6.0M radius under [DEC-128](./decisions/DEC-128-set-extraction-zone-and-resonance-field-radii.md), twice the extraction zone's, so it stays larger than the zone at every Extraction Tether and Tether Amplifier rank. Enemies physically inside the resonance field receive the geode's thematic modifier. The field exists before extraction begins, remains active during interruptions, and ends immediately when the geode opens. Enemies do not retain the modifier after leaving the field or after its collapse.
 
 | Geode | Resonance effect on enemies within the field |
 | --- | --- |
@@ -222,3 +222,4 @@ The first mining interaction must teach automatic activation, the valid area, an
 - [DEC-099 — Use single-player pause and results flow](./decisions/DEC-099-use-single-player-pause-and-results-flow.md)
 - [DEC-104 — Show a compact survivor-like active HUD](./decisions/DEC-104-show-a-compact-survivor-like-active-hud.md)
 - [DEC-111 — Make bosses explode into collectible resources](./decisions/DEC-111-make-bosses-explode-into-resources.md)
+- [DEC-128 — Set the extraction-zone and resonance-field radii](./decisions/DEC-128-set-extraction-zone-and-resonance-field-radii.md)

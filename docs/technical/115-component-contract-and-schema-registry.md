@@ -80,6 +80,12 @@ Each mutable datum has exactly one row owner. Other components receive immutable
 
 Cross-boundary payloads never expose mutable collections. Producers may reuse internal buffers only after the consumer-facing snapshot/batch lifetime has ended under an explicit buffer-lease contract.
 
+## What the bundle hash attests
+
+This scopes the `hash/version identified` property of `CTR-CNT-001` and the `bundle hash` field of `SCH-CNT-004`.
+
+The canonical bundle hash attests the identity of the compiled content and nothing more. Two builds with the same hash compiled semantically identical source; two builds with different hashes did not. It does not attest that any value in the bundle is correct, accepted, balanced, or supported by an authoritative document. A consumer may cite the hash as evidence that two artifacts carry the same content. A consumer may not cite the hash as evidence that a value within them was authored rather than assumed. Provenance and acceptance status are carried by each definition's `source_refs` and by the documents those resolve to, never by the hash.
+
 ## Schema registry
 
 Schema IDs identify durable or machine-consumed structures. The implementation assigns each a version and fixture corpus before the first consumer lands.

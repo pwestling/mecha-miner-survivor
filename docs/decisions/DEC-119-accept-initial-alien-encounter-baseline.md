@@ -8,7 +8,7 @@ validation: prototype-and-playtest
 
 # DEC-119 — Accept the Initial Alien Encounter Baseline
 
-> **Completion note:** DEC-125 revises boss Hull for legal-build feasibility, and DEC-126 fixes movement scale, collision footprints, damage resolution, recovery, control stacking, and failure margins. Encounter values remain playtest-tunable.
+> **Completion note:** DEC-125 revises boss Hull for legal-build feasibility, and DEC-126 fixes movement scale, collision footprints, damage resolution, recovery, control stacking, and failure margins. [DEC-128](./DEC-128-set-extraction-zone-and-resonance-field-radii.md) fixes the 6.0M geode resonance-field radius left open here; independent modifier tuning remains open. Encounter values remain playtest-tunable.
 
 ## Decision
 

@@ -527,6 +527,35 @@ Many streams, but they are more coupled than wave 2, so each PR must name the
 performance and readability) and doc 110 wants it early: "PRE-001/002/004,
 UI-001 through UI-003: establish M2 and performance direction early."
 
+The extraction-zone radius (3.0M) and geode resonance-field radius (6.0M) are
+design-confirmed and accepted in `DEC-128`, so `MAP-003`, `MAP-006`, and `MIN-001`
+are no longer blocked on them and owe no proof gate for the values. Three notes for
+whoever picks those packages up:
+
+- **Doc 24 never labelled the radius provisional.** It owned the per-site
+  extraction radius and geode field radius as ordinary site state with no
+  deferral and no provisional label, so accepting the values called for a
+  citation, not a de-provisionalising edit. There is no provisional-baseline
+  section to retire and none was invented.
+- **Do not store a scaled extraction radius per site.** Occupancy uses the
+  baseline radius scaled by the run's *current* additive extraction-zone
+  modifiers; the resonance-field radius is never scaled, because no utility or
+  PowerUp changes resonance-field size. Extraction Tether can be installed
+  partway through a run, so a radius scaled once at map creation and stored on
+  the site is wrong from the moment the player installs it. Doc 24 states the
+  rule about occupancy deliberately and says nothing about what the site
+  stores.
+- **Nothing marks provisional or reconstructed values inside the content
+  bundle, and that is deliberate.** A per-build flag reading "authored only" is
+  indistinguishable between a genuinely clean tree and a dirty tree where
+  nobody set the flag, which reintroduces the same laundering with
+  machine-readable assurance behind it; and after the minute-33 confirmation
+  there are zero live instances to mark. The guarantee that was actually wanted
+  is doc 115 § What the bundle hash attests, which cannot rot the way a
+  mechanism can. Two things would justify revisiting: a definition shipping
+  with a value no document states, or a second consumer beginning to treat the
+  bundle hash as evidence about content rather than about bytes.
+
 ---
 
 ## Wave 4 - catalog breadth

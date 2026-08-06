@@ -71,6 +71,34 @@
 #   Verifying assembly timestamps against sources instead was considered and rejected: it
 #   would have to re-implement MSBuild's up-to-date rules, and its failure mode is a false
 #   staleness alarm, which is the failure mode that gets a check deleted.
+#
+# TWO CONSEQUENCES OF STAGE 0 THAT WILL SURPRISE SOMEONE, STATED HERE SO THE DEBUGGING
+# STARTS IN THE RIGHT PLACE:
+#
+#   1. THIS GATE IS BLOCKED BY PROJECTS IT DOES NOT READ. Stage 0 builds MechaMiner.sln,
+#      so breaking game/MechaMiner.Game.csproj alone gives:
+#
+#        verify-registry: FAIL (the solution does not build, so no registry verdict is
+#        available) [MMT-5001]                                                  exit 5
+#
+#      even though game/ contributes nothing to registry discovery - the registry's
+#      selectors resolve against the accepted TEST projects, and the Godot project is not
+#      one of them. A registry typo and a broken Godot csproj therefore look the same from
+#      the outside: no registry verdict at all. That is deliberate and it is the safe
+#      direction. Narrowing stage 0 to the six test projects would replace one roster with
+#      two - the sln's and this script's - and a project missing from the second roster is
+#      a project whose citations go unresolved while the gate reports PASS, which is the
+#      exact defect stage 0 exists to close. The cost is that a Godot-side break withholds
+#      an unrelated verdict; the cost of the alternative is a false verdict. If exit 5
+#      appears here, read stage 0's build output first and do not look for a registry
+#      defect.
+#
+#   2. STAGE 0 SHOWS ONLY THE LAST 6 LINES of the build. `tail -6` is enough for the usual
+#      case, where MSBuild's summary carries the one error, and it is NOT enough for a
+#      build with many errors: the tail is then the warning/error counts and the elapsed
+#      time, and every diagnostic has scrolled past. The full output is not retained
+#      anywhere either. Re-run `dotnet build MechaMiner.sln` directly rather than reading
+#      more into the six lines than they can carry.
 
 set -uo pipefail
 

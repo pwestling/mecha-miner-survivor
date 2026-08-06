@@ -218,7 +218,7 @@
         "linux-x64"
       ],
       "tier": "fast",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-FND-002-008",
@@ -309,7 +309,7 @@
         "linux-x64"
       ],
       "tier": "fast",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-FND-002-011",
@@ -340,7 +340,7 @@
         "linux-x64"
       ],
       "tier": "fast",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-FND-002-012",
@@ -372,7 +372,7 @@
         "linux-x64"
       ],
       "tier": "fast",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-FND-002-013",
@@ -401,7 +401,7 @@
         "linux-x64"
       ],
       "tier": "fast",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-FND-002-014",
@@ -433,7 +433,7 @@
         "linux-x64"
       ],
       "tier": "fast",
-      "status": "registered"
+      "status": "implemented"
     },
     {
       "id": "VER-FND-002-015",
@@ -462,7 +462,7 @@
         "linux-x64"
       ],
       "tier": "fast",
-      "status": "registered"
+      "status": "implemented"
     }
   ]
 }

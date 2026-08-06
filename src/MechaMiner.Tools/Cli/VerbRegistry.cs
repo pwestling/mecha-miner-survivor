@@ -38,18 +38,21 @@ internal static class VerbRegistry
             "restore/download allowed repository-local tools, then run doctor",
             "FND-002",
             BootstrapVerb.Execute),
-        VerbDescriptor.AwaitingOwner(
+        VerbDescriptor.Implemented(
             "format",
             "format owned text/code and fail if the resulting tree still violates policy",
-            "FND-002"),
-        VerbDescriptor.AwaitingOwner(
+            "FND-002",
+            FormatVerb.Format),
+        VerbDescriptor.Implemented(
             "format-check",
             "validate formatting without writes",
-            "FND-002"),
-        VerbDescriptor.AwaitingOwner(
+            "FND-002",
+            FormatVerb.Check),
+        VerbDescriptor.Implemented(
             "build",
             "locked restore, analyzers, warnings-as-errors compilation",
             "FND-002",
+            BuildVerb.Execute,
             VerbArgument.OptionalChoice("configuration", "debug", "debug", "development", "release")),
         VerbDescriptor.AwaitingOwner(
             "test-fast",
@@ -67,10 +70,11 @@ internal static class VerbRegistry
             "content",
             "compile/validate canonical content and emit generated reports/hash",
             "DAT-006"),
-        VerbDescriptor.AwaitingOwner(
+        VerbDescriptor.Implemented(
             "godot-import",
             "clean headless import/check with captured warnings",
-            "FND-002"),
+            "FND-002",
+            GodotImportVerb.Execute),
         VerbDescriptor.AwaitingOwner(
             "run",
             "launch the normal local development build",

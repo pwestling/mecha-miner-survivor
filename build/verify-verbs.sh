@@ -9,18 +9,17 @@
 #              § Standard command surface
 # Requirements: TR-BLD-005, TR-BLD-001, TR-BLD-002
 # Verification: VER-FND-002-002, VER-FND-002-003, VER-FND-002-004,
-#               VER-FND-002-006, VER-FND-002-007, VER-FND-002-009
+#               VER-FND-002-006, VER-FND-002-007, VER-FND-002-009, VER-FND-002-013
 #
 # This script deliberately does NOT run implemented verbs that do slow real work as
 # part of the matrix; each has its own gate and its own verification entry. What the
 # matrix proves is registration, argument validation, and exit classification for all
 # eighteen verbs.
 #
-# At TASK-FND-002-001 the implemented verbs are doctor and bootstrap. format,
-# format-check, build, and godot-import are registered with their final argument
-# contracts and return the typed unavailable-owner status naming FND-002 until
-# TASK-FND-002-002 lands them; test-fast and test-main name FND-003. The matrix rows
-# below record that state and are updated by the task that implements each verb.
+# The matrix rows record the current implemented/awaiting-owner state and are updated
+# by the task that implements each verb. At TASK-FND-002-002 that is doctor,
+# bootstrap, format, format-check, build, and godot-import; test-fast and test-main
+# name FND-003 until its tasks land.
 #
 # Exit classes follow doc 100 § Standard command surface: 0 success,
 # 4 validation failure.
@@ -40,14 +39,14 @@ readonly EXIT_VALIDATION=4
 readonly VERB_MATRIX=(
   "doctor|0|MMT-0000|"
   "bootstrap|0|MMT-0000|"
-  "format|2|MMT-2002|FND-002"
-  "format-check|2|MMT-2002|FND-002"
-  "build|2|MMT-2002|FND-002"
+  "format|0|MMT-0000|"
+  "format-check|0|MMT-0000|"
+  "build|0|MMT-0000|"
   "test-fast|2|MMT-2002|FND-003"
   "test-main|2|MMT-2002|FND-003"
   "test-nightly|2|MMT-2002|OPS-001"
   "content|2|MMT-2002|DAT-006"
-  "godot-import|2|MMT-2002|FND-002"
+  "godot-import|0|MMT-0000|"
   "run|2|MMT-2002|FND-006"
   "scenario M2-ARENA|2|MMT-2002|SIM-009"
   "map --seed 0|2|MMT-2002|MAP-009"
@@ -58,10 +57,14 @@ readonly VERB_MATRIX=(
   "release-validate|2|MMT-2002|OPS-002"
 )
 
-# Implemented verbs that do slow real work own their own gate, so the matrix asserts
-# their registration and does not execute them here.
+# Implemented verbs are slow and each owns its own gate, so the matrix asserts their
+# registration and skips executing them here.
 readonly SLOW_IMPLEMENTED=(
   "bootstrap"
+  "format"
+  "format-check"
+  "build"
+  "godot-import"
 )
 
 failures=0
@@ -227,6 +230,65 @@ else
 fi
 
 echo
+echo "=== 8. build returns exit class 5 when solution compilation fails (VER-FND-002-013)"
+#
+# The fixture must break a project that is in MechaMiner.sln but is NOT the verb
+# host. A broken verb host is a different, also-correct outcome: the launcher cannot
+# reach any verb, so it returns 8. Both paths are asserted, in that order.
+#
+readonly SOLUTION_FIXTURE="${REPO_ROOT}/tests/MechaMiner.Game.Tests/DeliberatelyUncompilableFixture.cs"
+readonly HOST_FIXTURE="${REPO_ROOT}/src/MechaMiner.Tools/DeliberatelyUncompilableFixture.cs"
+
+cleanup_fixtures() {
+  rm -f "${SOLUTION_FIXTURE}" "${HOST_FIXTURE}"
+}
+trap cleanup_fixtures EXIT
+
+write_uncompilable() {
+  cat >"$1" <<'BROKEN'
+// Deliberately uncompilable fixture written and removed by build/verify-verbs.sh.
+namespace MechaMiner.DeliberatelyUncompilable;
+
+internal static class DeliberatelyUncompilableFixture
+{
+    internal static int Value()
+    {
+        return "not an int";
+    }
+}
+BROKEN
+}
+
+write_uncompilable "${SOLUTION_FIXTURE}"
+output="$("${WRAPPER}" build 2>&1)"
+status=$?
+rm -f "${SOLUTION_FIXTURE}"
+if [[ "${status}" -eq 5 ]] && printf '%s' "${output}" | grep -q 'MMT-5001'; then
+  pass "an uncompilable file in a solution project makes build exit 5 with MMT-5001"
+else
+  fail "uncompilable solution project: build exited ${status} (expected 5 with MMT-5001)"
+  printf '%s\n' "${output}" | tail -6 | sed 's/^/      /'
+fi
+
+echo
+echo "=== 9. a broken verb host exits 8 rather than leaking the tool's own 1"
+write_uncompilable "${HOST_FIXTURE}"
+output="$("${WRAPPER}" doctor 2>&1)"
+status=$?
+rm -f "${HOST_FIXTURE}"
+if [[ "${status}" -eq 8 ]] && printf '%s' "${output}" | grep -q 'MMT-8001'; then
+  pass "a verb host that does not build makes the wrapper exit 8 with MMT-8001"
+else
+  fail "broken verb host: wrapper exited ${status} (expected 8 with MMT-8001)"
+  printf '%s\n' "${output}" | tail -6 | sed 's/^/      /'
+fi
+
+if "${WRAPPER}" doctor >/dev/null 2>&1; then
+  pass "the tree builds again after both fixtures were removed"
+else
+  fail "the repository did not return to a buildable state after the fixtures"
+fi
+
 echo
 if [[ "${failures}" -eq 0 ]]; then
   echo "verify-verbs: PASS"

@@ -125,6 +125,7 @@ public sealed class GameplayWorld : ISimulationWorld
     private long _contactInstancesResolved;
     private long _projectilesFired;
     private long _installmentsPaid;
+    private long _enemiesRemovedInPhaseTwelve;
     private double _publishedExtractionFraction;
 
     /// <summary>
@@ -342,6 +343,25 @@ public sealed class GameplayWorld : ISimulationWorld
 
     /// <summary>Every mining installment this run has paid.</summary>
     public long InstallmentsPaid => _installmentsPaid;
+
+    /// <summary>
+    /// Every enemy record phase 12 has removed.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Exists because <em>where</em> a removal happens is otherwise unobservable, and a test that cannot
+    /// observe it cannot assert it. doc 10 § System phase ordering defers structural change "so systems
+    /// do not invalidate collections while iterating", but within one tick a record removed in phase 10
+    /// and a record removed in phase 12 are indistinguishable to every later phase: phase 11 does not read
+    /// enemies and phase 14 stages after both. A negative control that moved the removal into phase 10 ran
+    /// GREEN against every assertion in the loop fixture, which is how this counter came to exist.
+    /// </para>
+    /// <para>
+    /// Compared against <see cref="EnemiesDestroyed"/>, it is the falsifiable form of the claim: a death
+    /// resolved in phase 10 that was not applied in phase 12 makes the two disagree.
+    /// </para>
+    /// </remarks>
+    public long EnemiesRemovedInPhaseTwelve => _enemiesRemovedInPhaseTwelve;
 
     /// <summary>
     /// The tick the mech last received a contact instance on, or
@@ -1089,7 +1109,10 @@ public sealed class GameplayWorld : ISimulationWorld
 
         for (int index = 0; index < _deadEnemyCount; index++)
         {
-            _ = _enemies.TryRemove(_deadEnemies[index]);
+            if (_enemies.TryRemove(_deadEnemies[index]))
+            {
+                _enemiesRemovedInPhaseTwelve++;
+            }
         }
 
         for (int index = 0; index < _pendingProjectileCount; index++)

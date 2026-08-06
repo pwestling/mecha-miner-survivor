@@ -233,6 +233,15 @@ internal sealed class GameplayLoopTests
             Assert.That(
                 run.World.EnemiesDestroyed,
                 Is.GreaterThan(0L));
+            Assert.That(
+                run.World.EnemiesRemovedInPhaseTwelve,
+                Is.EqualTo(run.World.EnemiesDestroyed),
+                "and every one of those deaths was APPLIED IN PHASE 12 rather than in the phase that "
+                    + "decided it. This is the assertion that makes doc 10 § System phase ordering's "
+                    + "deferral rule falsifiable: a negative control moving the removal into phase 10 ran "
+                    + "green against every other assertion in this fixture, because within one tick a "
+                    + "record removed in phase 10 and one removed in phase 12 are indistinguishable to "
+                    + "every later phase");
         });
     }
 

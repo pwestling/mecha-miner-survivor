@@ -711,6 +711,78 @@ scope, so the request goes through the integration owner.
 
 ---
 
+## Integration-owner rulings recorded for the parallel streams
+
+These are decided values, not proposals. Four streams inherit them, so each is recorded with
+its derivation: a bare number invites a later reader to tidy it.
+
+### `src/MechaMiner.Simulation/` directory split
+
+| Owner | Directories |
+| --- | --- |
+| `W1-SIM` | `Time/`, `Runtime/`, `Entities/`, `Commands/`, `Events/`, `Snapshots/`, `Random/` |
+| `W2-GEO` | `Geometry/`, `Spatial/`, `Navigation/` |
+
+`Primitives/` was proposed by `W1-SIM` and **rejected**. `GEO-001` is "Planar math,
+primitives, inclusive overlap, swept queries, terrain collision", so `W2-GEO` has the claim;
+and a shared bucket for cross-cutting value types conflicts with
+[placing a type with the project that owns its semantics](./114-autonomous-agent-execution-protocol.md#naming-and-file-placement-defaults).
+Cross-cutting value types are seated with their owning concept instead: an entity ID under
+`Entities/`, a tick index under `Time/`.
+
+Test-tree ownership follows the same rule: each pure test project's `Goldens/` and per-stream
+test subtrees belong to the consuming stream, while `tests/shared/` and every `.csproj` stay
+with `FND-003` and the integration owner.
+
+### Tick catch-up limit: 4 whole ticks per host step (provisional)
+
+Doc 90 gives the 16.67 ms frame and the 5.00 ms simulation allocation but no catch-up budget,
+so the bound derives from [TDR-003](./decisions/TDR-003-require-sixty-fps-on-steam-deck.md)
+§ Performance contract instead: no repeatable active-play stall may exceed 50 ms, which is
+exactly three ticks of debt at 60 Hz, plus one tick of headroom so a frame sitting at
+tolerance cannot trip the bound on a fractional remainder.
+
+Checked the other way, a bound-hitting frame costs `11.67 + 4 x 5.00 = 31.67 ms`, comfortably
+under 50; eight ticks would cost `51.67 ms` and would itself be the stall the bound exists to
+prevent. So 4 is the smallest admissible value, and reaching the bound means the stall was
+already a `TDR-003` defect rather than a catch-up policy failure.
+
+**Proof gate:** `VER-SIM-001-013`, `./build.sh benchmark PERF-04`, tier `main` — a warmed
+ten-minute capture shows zero bound hits against doc 90's existing catch-up-count metric.
+`VER-SIM-001-006` pins the derivation as a unit test so the constant cannot drift before
+`PERF-04` is runnable.
+
+### Snapshot interpolation-snap threshold: 0.18 M
+
+Riftjaw's 5.40 M/s charge is the fastest documented authoritative movement, giving 0.090 M per
+tick, doubled because `CTR-SIM-003` permits a consumer to drop a stale snapshot. 0.18 M is
+0.75% of the 24 m camera height — about 6 px at 800 px, so a snap at the bound is
+imperceptible — and 0.022% of the 810 M longest route, so a genuine teleport clears it by
+orders of magnitude.
+
+### Store capacities: twelve categories with an explicit margin rule
+
+Hard capacity is soft capacity plus one largest authored single materialization. The margin
+exists so that a director bug fails the invariant **with the offending batch resident**,
+which is diagnosable, rather than being masked by a rejected spawn, which is not. Ordinary
+enemy 700 → 730, elite 13 → 15, boss 4 → 4 (a closed set, where no margin is defensible).
+
+Two are recorded as **weakly sourced** and should be revisited when their owners land:
+
+| Category | Capacity | Why it is weak | Revisit at |
+| --- | --- | --- | --- |
+| Pickup | 45 → 87 | rests on the rock-replenishment binomial plus *assumed* boss loot groups | `PRG-001` |
+| Static world object | manifest count | the manifest states no total, because doc 23 deliberately leaves the pickup-entity count open | `MAP-004` |
+
+### Planar position, interim representation
+
+The simulation stores two `double` components locally in `MovementIntent`, both event types,
+and `PresentationSnapshot`, converting at the geometry boundary when `GEO-001` lands. `double`
+because doc 20 § Derived statistics and modifiers allows single precision only after tests
+confirm the map scale is safely inside precision bounds. No competing vector type is
+introduced, because `GEO-001` owns planar primitives. All four change sites carry a grep-able
+`GEO-001` marker so the swap is found mechanically rather than from memory.
+
 ## Note on the four test projects
 
 Doc 100 § Repository structure lists **four** test projects:

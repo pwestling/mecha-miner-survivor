@@ -36,6 +36,7 @@ The same codec policy is reused by content, saves, recovery, manifests, diagnost
 ```text
 content/
   schemas/
+  player/
   resources/
   mechs/
   enemies/
@@ -59,6 +60,8 @@ generated/
   content.bundle.sha256
   reports/
 ```
+
+`content/player/` holds the shared player baseline. It exists because a mech definition carries base Hull, Armor, Recovery, movement, and footprint **overrides** (see [Mechs](#mechs) below), and a value that is overridden is by definition not mech data, so the accepted layout previously had nowhere for the values being overridden to live. The baseline itself is [Player Survivability and Damage Baseline](../72-player-survivability-and-damage-baseline.md) § Shared Player Baseline — 100 Hull, 0 Armor, 0 Recovery, 3.0 M/s, a 1.0 M collision circle — accepted by `DEC-126`, with initial facing east from [Presentation and Rendering](./30-presentation-and-rendering.md) and `DEC-042`.
 
 Catalog directories are the authoring boundary. Definitions are grouped by stable item or the smallest cohesive aggregate such as the standard encounter schedule; generated/source separation is mandatory. A layout change must update build tooling, schemas, importers, documentation, and clean-checkout tests atomically rather than adding a second search path.
 
@@ -113,7 +116,10 @@ The initial `schema_version` is `1` and the initial `content_version` is `1` for
 - a gameplay document ID with an optional anchor, for example `GDD-COMBAT` or `GDD-COMBAT#contact-damage`;
 - a gameplay decision ID, `DEC-###`;
 - a technical decision ID, `TDR-###`; or
-- a technical requirement ID, `TR-<DOMAIN>-###`.
+- a technical requirement ID, `TR-<DOMAIN>-###`; or
+- a technical document ID with an optional anchor, for example `TDD-ENCOUNTERS` or `TDD-ENCOUNTERS#elite-construction`.
+
+The technical document form is legal because [Technical Documentation Conventions](./conventions.md#stable-identifiers) mints `TDD-<DOMAIN>` as a stable identifier; the earlier four-element list omitted it, which was an incomplete enumeration rather than a decision to exclude it.
 
 The grammar for each is the one declared in [Documentation Conventions](../conventions.md#stable-identifiers) and [Technical Documentation Conventions](./conventions.md#stable-identifiers).
 
@@ -186,7 +192,13 @@ Fields include mode/map ID, generation version, region/topology/scale ranges, st
 
 The standard map generation contract has the stable ID `MGC-01`, and it is an aggregate on the same terms as `WAV-01`.
 
-`WAV-01` and `MGC-01` are minted here. No accepted document previously granted a content-ID grammar for either aggregate, and both need one because every schema in this document references other definitions by stable ID. They follow [Stable ID policy](#stable-id-policy) above: case-sensitive ASCII, never localized, never reassigned.
+The four accepted mining site classes have the stable IDs `SITE-01` (standard ore seams), `SITE-02` (rich ore seams), `SITE-03` (Hyper Gold sites), and `SITE-04` (specialized material geodes). The set is **closed**: this document validates exactly four accepted mining classes, so a fifth `SITE-` ID is a gameplay change and not a content-authoring one.
+
+The shared elite modifiers have the stable ID `ELT-01`, and the shared player baseline described in [Accepted content repository layout](#accepted-content-repository-layout) has the stable ID `PLAYER-01`. Both are aggregates on the same terms as `WAV-01`.
+
+`WAV-01`, `MGC-01`, `SITE-01` through `SITE-04`, `ELT-01`, and `PLAYER-01` are minted here. No accepted document previously granted a content-ID grammar for any of them, and each needs one because every schema in this document references other definitions by stable ID. They follow [Stable ID policy](#stable-id-policy) above: case-sensitive ASCII, never localized, never reassigned.
+
+The prefixes `MIN-`, `PLY-`, `ENC-`, and `MAP-` were considered for these aggregates and **rejected**: each collides with an implementation work-package prefix registered in [Implementation Plan for AI Agents](./110-implementation-plan-for-ai-agents.md), so a reference like `MIN-001` would be ambiguous between a content definition and a work package in exactly the places both appear — commit messages, task briefs, and the identifier validator. The next person minting a content-aggregate ID inherits that constraint rather than rediscovering it.
 
 ### Presentation and audio
 

@@ -89,26 +89,40 @@ internal sealed class RegistryValidatorTests
     /// </summary>
     /// <remarks>
     /// <para>
-    /// One, and it is named here rather than tolerated anonymously:
-    /// <c>docs/technical/conventions.md</c> § Stable identifiers illustrates the
-    /// verification-ID grammar with "for example <c>VER-SIM-005-001</c>", and no
-    /// <c>SIM-005</c> registry exists yet, so that identifier does not resolve.
+    /// Three, each named here rather than tolerated anonymously. All three are forward
+    /// references to identifiers whose owning registry has not merged yet, and none is a
+    /// broken link or a typo:
     /// </para>
+    /// <list type="bullet">
+    ///   <item><description>
+    ///     <c>docs/technical/conventions.md</c> § Stable identifiers illustrates the
+    ///     verification-ID grammar with "for example <c>VER-SIM-005-001</c>", and no
+    ///     <c>SIM-005</c> registry exists yet.
+    ///   </description></item>
+    ///   <item><description>
+    ///     <c>docs/technical/delivery-waves.md</c> records the integration owner's proof
+    ///     gate for the tick catch-up limit as <c>VER-SIM-001-013</c> and its unit-test pin
+    ///     as <c>VER-SIM-001-006</c>. Doc 91 requires a verification entry to exist before
+    ///     its implementation, so those two are exactly the entries the simulation stream is
+    ///     registering on its own branch; naming them is the point of recording the ruling.
+    ///   </description></item>
+    /// </list>
     /// <para>
-    /// It is deliberately not repaired. Rewriting an authoritative document's illustrative
-    /// example so a validator turns green is editing the specification to fit the tool,
-    /// which is the wrong direction: the finding is reported with its <c>file:line</c> in
-    /// the retained inventory and in this task's handoff, and the integration owner decides
-    /// whether the example changes or <c>SIM-005</c> simply lands.
+    /// None is repaired here. Rewriting an authoritative document's illustrative example, or
+    /// removing a decided proof-gate ID, so a validator turns green is editing the
+    /// specification to fit the tool. Each finding is reported with its <c>file:line</c> in
+    /// the retained inventory and in this task's handoff, and each resolves by itself when
+    /// <c>tests/verification/SIM-001.json</c> and <c>SIM-005.json</c> merge.
     /// </para>
     /// <para>
     /// The constant is a ratchet in both directions. A new citation to a nonexistent
-    /// identifier or anchor fails this test with its own <c>file:line</c>, and repairing
-    /// this one requires lowering the number in the same change, which is a deliberate
-    /// edit rather than silent drift.
+    /// identifier or anchor fails this test with its own <c>file:line</c>, and repairing one
+    /// requires lowering the number in the same change, which is a deliberate edit rather
+    /// than silent drift. A broken anchor this task introduced in doc 40 was caught by
+    /// exactly that mechanism and fixed rather than absorbed.
     /// </para>
     /// </remarks>
-    private const int ExpectedSpecificationDefects = 1;
+    private const int ExpectedSpecificationDefects = 3;
 
     /// <summary>Every relative document link and anchor resolves.</summary>
     [Test]

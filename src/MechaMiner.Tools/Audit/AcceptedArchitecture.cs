@@ -222,6 +222,10 @@ internal static class AcceptedArchitecture
         "tests/MechaMiner.Tools.Tests",
         "tests/verification",
         "content",
+        // doc 40 § Accepted content repository layout. Both directories carry a .gitkeep,
+        // the way FND-001 seeded every other empty accepted directory.
+        "content/schemas",
+        "content/player",
         "assets-source",
         "assets-runtime",
         "assets-manifest",

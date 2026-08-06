@@ -70,6 +70,14 @@ readonly EXPECTED_PATHS=(
   "tests/MechaMiner.Game.Tests"
   "tests/verification"
   "content"
+  # doc 40 § Accepted content repository layout. content/schemas was in that layout and
+  # simply missing from this gate; content/player was added by the same doc change that
+  # gave the shared player baseline somewhere to live, because a mech definition carries
+  # Hull/Armor/Recovery/movement/footprint *overrides* and the overridden values are not
+  # mech data. Both carry a .gitkeep, the way FND-001 seeded every other empty accepted
+  # directory, so adding the path does not add a failure.
+  "content/schemas"
+  "content/player"
   "assets-source"
   "assets-runtime"
   "assets-manifest"

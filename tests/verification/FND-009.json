@@ -9,7 +9,8 @@
     "The architecture rules are a pure function from a ProjectGraph to findings, and the graph is a plain value a test can construct. That is what makes 'each forbidden synthetic edge fails' provable: an assertion that could only read the real repository can never be shown to fail on any edge, so it would be evidence of nothing.",
     "build/verify-architecture.sh stays. It asks MSBuild to evaluate every project, which catches an SDK-injected package reference no project file mentions, and CI and the build verb both call it. The two gates deliberately do not consume each other's output, so a defect in one reader cannot hide from both.",
     "The registry validator reports pre-existing documentation defects rather than being weakened until the repository passes. It separates errors from warnings by rule, and the rules that fire on pre-existing doc-tree defects are reported under their own exit class so they are visible instead of downgraded. See build/verify-registry.sh and the FND-009 handoff for the complete list found at implementation time.",
-    "tests/verification/FND-001.json wrote the section sign as literal UTF-8 while FND-002.json and FND-003.json wrote it as a six-character JSON escape. TASK-FND-009-002 normalizes every registry file on literal UTF-8, because .editorconfig already fixes charset = utf-8 for the whole repository and an escape only obscures a character the file is already required to encode. The validator enforces it, and this note deliberately describes the escape in words rather than writing it, because writing it here would violate the rule the note is about."
+    "tests/verification/FND-001.json wrote the section sign as literal UTF-8 while FND-002.json and FND-003.json wrote it as a six-character JSON escape. TASK-FND-009-002 normalizes every registry file on literal UTF-8, because .editorconfig already fixes charset = utf-8 for the whole repository and an escape only obscures a character the file is already required to encode. The validator enforces it, and this note deliberately describes the escape in words rather than writing it, because writing it here would violate the rule the note is about.",
+    "VER-FND-009-013 is a negative control of a gate, not of the product. It was added when MechaMiner.Diagnostics became a sixth src/ project: build/verify-architecture.sh gained the row that keeps that project a dependency leaf, and nothing yet showed the script's comparison could reject a violation of it. The five fixtures live under build/policy-fixtures/architecture/ beside the build-policy fixtures, because they are the same kind of evidence - a deliberately invalid input that must fail - and are deliberately not members of MechaMiner.sln."
   ],
   "entries": [
     {
@@ -410,6 +411,40 @@
         "command-exit-code",
         "command-output",
         "registry-report"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-009-013",
+      "summary": "build/verify-architecture.sh's own boundary comparisons are proved capable of failing. Sections 3 and 4 previously ran only against compliant projects, so a broken comparison would have gone on printing ok; MechaMiner.Diagnostics made that gap load-bearing because its accepted row is the strictest in the repository and is the only thing keeping the diagnostics leaf a leaf. Four fixture projects named MechaMiner.Diagnostics.csproj, each carrying one violation of that row - a reference to MechaMiner.Content, to MechaMiner.Simulation, to MechaMiner.Game (the reverse Godot edge), and a GodotSharp PackageReference - are fed through the same edges_match and godot_matches functions the real projects use, and each must be rejected. A fifth compliant fixture must be accepted, so a comparison that reported a difference for every input could not pass the four negative controls silently. The accepted row is read out of EXPECTED_PROJECTS rather than restated, and a missing row or a missing fixture file fails rather than skipping.",
+      "task": "TASK-FND-009-001",
+      "requirements": [
+        "TR-CTR-001",
+        "TR-BLD-006",
+        "TR-AGT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/115-component-contract-and-schema-registry.md#accepted-project-boundary",
+        "docs/technical/100-build-dependencies-and-release-operations.md#repository-structure",
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-architecture.sh"
+      },
+      "fixtures": [
+        "build/policy-fixtures/architecture"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output",
+        "negative-control"
       ],
       "platforms": [
         "linux-x64"

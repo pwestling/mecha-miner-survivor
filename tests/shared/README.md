@@ -12,7 +12,8 @@ assembly:
 ```
 
 `docs/technical/100-build-dependencies-and-release-operations.md` § Repository
-structure prescribes exactly four test projects and no shared test library, and
+structure enumerates the accepted test projects and prescribes no shared test
+library, and
 `docs/technical/115-component-contract-and-schema-registry.md` § Accepted project
 boundary states that "Production projects never depend on test projects". Linking
 keeps the accepted project set intact, keeps every type `internal`, and means no

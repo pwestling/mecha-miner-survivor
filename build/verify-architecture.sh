@@ -121,6 +121,62 @@ project_name() {
   printf '%s' "${base%.csproj}"
 }
 
+# --- The two comparisons, as functions -------------------------------------------------
+#
+# Extracted so the negative controls in section 8 run the SAME comparison the real
+# projects run, rather than a second implementation of it. A control that reimplemented
+# the comparison would only prove the control works.
+
+# $1 project path, $2 accepted comma-separated reference set.
+# Sets EDGES_ACTUAL. Returns 0 when the evaluated set equals the accepted set.
+EDGES_ACTUAL=""
+edges_match() {
+  EDGES_ACTUAL="$(msbuild_items "$1" ProjectReference \
+    | sed -E 's|.*[/\\]||; s|\.csproj$||' | sort | paste -sd, -)"
+  [[ "${EDGES_ACTUAL}" == "$2" ]]
+}
+
+# $1 project path, $2 "yes" when doc 115 allows the engine dependency.
+# Sets GODOT_EVALUATED and GODOT_LOCKED. Returns 0 when the project's engine
+# dependency matches what doc 115 allows for it.
+GODOT_EVALUATED=""
+GODOT_LOCKED=""
+godot_matches() {
+  local project="$1" allowed="$2"
+  local directory="${REPO_ROOT}/$(dirname "${project}")"
+  local lock_file="${directory}/packages.lock.json"
+
+  GODOT_EVALUATED="$(msbuild_items "${project}" PackageReference | grep -i '^Godot' || true)"
+  GODOT_LOCKED=""
+  if [[ -f "${lock_file}" ]]; then
+    GODOT_LOCKED="$(grep -oE '"Godot[A-Za-z.]*"' "${lock_file}" | sort -u | tr -d '"' | paste -sd, - || true)"
+  fi
+
+  if [[ "${allowed}" == "yes" ]]; then
+    [[ -n "${GODOT_EVALUATED}" && "${GODOT_LOCKED}" == *GodotSharp* ]]
+  else
+    [[ -z "${GODOT_EVALUATED}" && -z "${GODOT_LOCKED}" ]]
+  fi
+}
+
+# Reads one field of an EXPECTED_PROJECTS row, and fails loudly when the row is absent.
+# A control that silently tested nothing because a path was renamed would be worse than
+# no control, so the lookup is required to succeed.
+accepted_field() {
+  local wanted="$1" field="$2" entry project refs godot
+  for entry in "${EXPECTED_PROJECTS[@]}"; do
+    IFS='|' read -r project refs godot <<<"${entry}"
+    if [[ "${project}" == "${wanted}" ]]; then
+      case "${field}" in
+        refs) printf '%s' "${refs}" ;;
+        godot) printf '%s' "${godot}" ;;
+      esac
+      return 0
+    fi
+  done
+  return 1
+}
+
 echo "=== 1. accepted repository layout (VER-FND-001-003)"
 for path in "${EXPECTED_PATHS[@]}"; do
   if [[ -e "${REPO_ROOT}/${path}" ]]; then
@@ -146,12 +202,10 @@ echo
 echo "=== 3. project reference edges match the accepted boundary (VER-FND-001-004)"
 for entry in "${EXPECTED_PROJECTS[@]}"; do
   IFS='|' read -r project expected_refs _godot <<<"${entry}"
-  actual_refs="$(msbuild_items "${project}" ProjectReference \
-    | sed -E 's|.*[/\\]||; s|\.csproj$||' | sort | paste -sd, -)"
-  if [[ "${actual_refs}" == "${expected_refs}" ]]; then
+  if edges_match "${project}" "${expected_refs}"; then
     pass "$(project_name "${project}") -> [${expected_refs}]"
   else
-    fail "$(project_name "${project}") references [${actual_refs}], accepted set is [${expected_refs}]"
+    fail "$(project_name "${project}") references [${EDGES_ACTUAL}], accepted set is [${expected_refs}]"
   fi
 done
 
@@ -159,27 +213,16 @@ echo
 echo "=== 4. only game/ may reference Godot (VER-FND-001-004)"
 for entry in "${EXPECTED_PROJECTS[@]}"; do
   IFS='|' read -r project _expected_refs godot_allowed <<<"${entry}"
-  directory="${REPO_ROOT}/$(dirname "${project}")"
-
-  godot_packages="$(msbuild_items "${project}" PackageReference | grep -i '^Godot' || true)"
-  lock_file="${directory}/packages.lock.json"
-  godot_locked=""
-  if [[ -f "${lock_file}" ]]; then
-    godot_locked="$(grep -oE '"Godot[A-Za-z.]*"' "${lock_file}" | sort -u | tr -d '"' | paste -sd, - || true)"
-  fi
-
-  if [[ "${godot_allowed}" == "yes" ]]; then
-    if [[ -n "${godot_packages}" && "${godot_locked}" == *GodotSharp* ]]; then
-      pass "$(project_name "${project}") references Godot as accepted (locked: ${godot_locked})"
+  if godot_matches "${project}" "${godot_allowed}"; then
+    if [[ "${godot_allowed}" == "yes" ]]; then
+      pass "$(project_name "${project}") references Godot as accepted (locked: ${GODOT_LOCKED})"
     else
-      fail "$(project_name "${project}") must reference Godot but no Godot package is evaluated or locked"
-    fi
-  else
-    if [[ -z "${godot_packages}" && -z "${godot_locked}" ]]; then
       pass "$(project_name "${project}") has no Godot dependency"
-    else
-      fail "$(project_name "${project}") must not reference Godot (evaluated: ${godot_packages:-none}, locked: ${godot_locked:-none})"
     fi
+  elif [[ "${godot_allowed}" == "yes" ]]; then
+    fail "$(project_name "${project}") must reference Godot but no Godot package is evaluated or locked"
+  else
+    fail "$(project_name "${project}") must not reference Godot (evaluated: ${GODOT_EVALUATED:-none}, locked: ${GODOT_LOCKED:-none})"
   fi
 done
 
@@ -210,6 +253,73 @@ if [[ -z "${gdscript}" ]]; then
   pass "no .gd source file is tracked"
 else
   fail "GDScript is not permitted (TR-FND-002): ${gdscript}"
+fi
+
+echo
+echo "=== 8. the boundary comparisons above can actually fail (VER-FND-009-013)"
+#
+# Sections 3 and 4 only ever ran against compliant input, so nothing showed they were
+# capable of reporting a violation. MechaMiner.Diagnostics made that gap matter: it is a
+# sixth src/ project whose accepted row is the strictest in the repository - ".NET base
+# libraries only", Godot "No", zero references, a dependency leaf every other project may
+# reference without a cycle - and that row is the only thing keeping the leaf a leaf.
+#
+# Each fixture under build/policy-fixtures/architecture/ is a project file named
+# MechaMiner.Diagnostics.csproj carrying exactly one violation of that row. They are fed
+# through edges_match and godot_matches, the same functions sections 3 and 4 call, and each
+# must report a difference. The accepted row is read out of EXPECTED_PROJECTS rather than
+# hardcoded here, so a future task that legitimately gives Diagnostics an edge updates one
+# place and these controls keep testing the row that is actually accepted.
+
+readonly DIAGNOSTICS_PROJECT="src/MechaMiner.Diagnostics/MechaMiner.Diagnostics.csproj"
+readonly CONTROL_ROOT="build/policy-fixtures/architecture"
+
+# "<fixture directory>|<what it injects>"
+readonly EDGE_CONTROLS=(
+  "edge-content|a reference to MechaMiner.Content"
+  "edge-simulation|a reference to MechaMiner.Simulation"
+  "edge-game|a reference to MechaMiner.Game (the reverse Godot edge)"
+)
+
+if ! diagnostics_accepted_refs="$(accepted_field "${DIAGNOSTICS_PROJECT}" refs)"; then
+  fail "negative control cannot run: ${DIAGNOSTICS_PROJECT} has no EXPECTED_PROJECTS row"
+elif ! diagnostics_accepted_godot="$(accepted_field "${DIAGNOSTICS_PROJECT}" godot)"; then
+  fail "negative control cannot run: ${DIAGNOSTICS_PROJECT} has no EXPECTED_PROJECTS row"
+else
+  # Positive control first. Every control below passes by producing a DIFFERENCE, so a
+  # comparison that had broken into reporting a difference for every input would pass all
+  # of them. This is the one input that must come back equal.
+  control="${CONTROL_ROOT}/compliant/MechaMiner.Diagnostics.csproj"
+  if [[ ! -f "${REPO_ROOT}/${control}" ]]; then
+    fail "negative-control fixture missing: ${control}"
+  elif edges_match "${control}" "${diagnostics_accepted_refs}"; then
+    pass "control: a compliant Diagnostics project compares equal to [${diagnostics_accepted_refs}]"
+  else
+    fail "control: a compliant Diagnostics project reported [${EDGES_ACTUAL}]; the comparison reports a difference for compliant input, so every negative control below is meaningless"
+  fi
+
+  for entry in "${EDGE_CONTROLS[@]}"; do
+    IFS='|' read -r fixture injected <<<"${entry}"
+    control="${CONTROL_ROOT}/${fixture}/MechaMiner.Diagnostics.csproj"
+    if [[ ! -f "${REPO_ROOT}/${control}" ]]; then
+      fail "negative-control fixture missing: ${control}"
+      continue
+    fi
+    if edges_match "${control}" "${diagnostics_accepted_refs}"; then
+      fail "control: Diagnostics with ${injected} was NOT rejected; § 3 accepted [${EDGES_ACTUAL}] against [${diagnostics_accepted_refs}]"
+    else
+      pass "control: Diagnostics with ${injected} is rejected (§ 3 saw [${EDGES_ACTUAL}])"
+    fi
+  done
+
+  control="${CONTROL_ROOT}/godot/MechaMiner.Diagnostics.csproj"
+  if [[ ! -f "${REPO_ROOT}/${control}" ]]; then
+    fail "negative-control fixture missing: ${control}"
+  elif godot_matches "${control}" "${diagnostics_accepted_godot}"; then
+    fail "control: Diagnostics with a GodotSharp PackageReference was NOT rejected by § 4"
+  else
+    pass "control: Diagnostics with a GodotSharp PackageReference is rejected (§ 4 saw [${GODOT_EVALUATED}])"
+  fi
 fi
 
 echo

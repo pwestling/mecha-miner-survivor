@@ -210,6 +210,44 @@ corrected in the same commit. The new project is a dependency leaf, so a later o
 reference it without a cycle, and `Simulation` deliberately does not: it publishes
 `CTR-SIM-001` batches that `CMP-OBS-001` consumes.
 
+### What the sixth project did to the gates, and why the count moved rather than relaxed
+
+Doc 100 § Repository structure requires that "changing these top-level ownership
+directories requires updating the Component, Contract, and Schema Registry and
+architecture tests in the same task", so the gate half is recorded here alongside the
+document half.
+
+The accepted decomposition went from **nine** C# projects to **twelve** — `FND-004` added
+`src/MechaMiner.Diagnostics` and `tests/MechaMiner.Diagnostics.Tests`, and `FND-009` added
+`tests/MechaMiner.Tools.Tests`. Neither gate expresses that as a number. Both hold the
+**enumerated set**: `EXPECTED_PROJECTS` in `build/verify-architecture.sh` and
+`AcceptedArchitecture.Projects` plus `AcceptedArchitecture.RequiredPaths` in
+`MechaMiner.Tools`. Solution membership is then a set comparison in both readers, so an
+omission and an addition are separate findings and a project the decomposition does not
+name still fails. That is deliberately stronger than a count: `9` becoming `12` is one
+character of edit and no reviewer can tell a legitimate new project from a stray one, while
+a name has to be written down and justified. The count in the script's own `ok` line is
+derived from the array length for the same reason — it cannot drift away from the list it
+reports on.
+
+The one place a bare count survived was prose. Four `.csproj` comments and
+`tests/shared/README.md` each asserted that doc 100 "prescribes exactly four test
+projects", which stopped being true and failed silently because no gate reads a comment.
+They now point at the enumerated set instead of restating its size.
+
+`build/verify-architecture.sh` also gained the negative control it never had
+(`VER-FND-009-013`, fixtures in `build/policy-fixtures/architecture/`). Its § 3 and § 4
+comparisons had only ever been run against compliant projects, so nothing distinguished a
+working comparison from one that always printed `ok`. `MechaMiner.Diagnostics` made that
+matter: its row is the strictest in the repository — `.NET base libraries only`, Godot
+`No`, zero references — and that row is the only thing keeping the leaf a leaf, so the
+first consumer wanting a content type inside a log record would otherwise have met no
+resistance. Five fixture projects named `MechaMiner.Diagnostics.csproj` now go through the
+same comparison functions the real projects use: four carry one violation each and must be
+rejected, and the fifth is compliant and must be accepted, because four controls that all
+pass by producing a *difference* would also all pass against a comparison that had broken
+into rejecting everything.
+
 Consequences every stream should know:
 
 | Surface | Where | Notes for consumers |

@@ -30,23 +30,25 @@ readonly DECLARED_SEED=77001
 readonly FAILURE_DIR="${REPO_ROOT}/artifacts/test-failures/${FAILURE_CASE}/seed-${DECLARED_SEED}"
 readonly EXIT_VALIDATION=4
 
-failures=0
+# The shared emitters: pass/fail for findings about the subject under test,
+# control_pass/control_fail for anything produced while a negative control's fixture is in
+# place, section/gate_summary so a red run names the failing section. See build/gate-output.sh
+# for why control output is marked and why that marking is enforced rather than conventional.
+source "${REPO_ROOT}/build/gate-output.sh"
 
-fail() {
-  printf 'FAIL  %s\n' "$*"
-  failures=$((failures + 1))
-}
-
-pass() {
-  printf 'ok    %s\n' "$*"
-}
-
-echo "=== 1. the pure tier runs, discovers a nonzero test count, and launches no Godot"
+section "1. the pure tier runs, discovers a nonzero test count, and its tests launch no Godot"
 #
-# Removing the import cache first is what makes the "no Godot" assertion mean
-# something: if any part of the pure tier launched the engine, game/.godot would
-# reappear.
-rm -rf "${REPO_ROOT}/game/.godot"
+# This section used to remove game/.godot first and then assert that it was still
+# absent, as a corroborating signal for "the pure tier launched no Godot". That
+# assertion is now false for a legitimate reason and has been removed rather than
+# weakened: test-fast reaches build/verify-configurations.sh, which builds the Godot
+# project in all three configurations, and a Godot.NET.Sdk build writes game/.godot.
+# Observed on this tree - game/.godot exists after a green ./build.sh test-fast.
+#
+# The binding assertion was always the tripwire, and the tripwire's scope is the pure
+# NUnit test processes, not everything the verb does; see GodotTripwire's remarks in
+# src/MechaMiner.Tools/Verbs/TestVerb.cs. So this section requires the tripwire to have
+# been reported armed and untripped, and claims nothing about the gate scripts.
 output="$("${WRAPPER}" test-fast 2>&1)"
 status=$?
 printf '%s\n' "${output}" | sed 's/^/      /'
@@ -64,29 +66,21 @@ else
   fail "the pure tier reported no test count; 0 discovered tests is a harness failure"
 fi
 
-if [[ -d "${REPO_ROOT}/game/.godot" ]]; then
-  fail "game/.godot appeared during test-fast, so something launched Godot in the pure tier"
-else
-  pass "game/.godot is still absent, so the pure tier launched no Godot process"
-fi
-
-# The import cache is only a corroborating signal, and only because it was removed
-# above: a pure test that ran `godot --version` would leave no cache behind. The
-# binding assertion is the tripwire, so require the verb to have reported it.
-if printf '%s' "${output}" | grep -q 'ok    no-godot-launched: .*shim was first on PATH'; then
+# The tripwire is the assertion, and it has to have been reported: a verb that dropped
+# the stage entirely would otherwise look identical to one that armed it and saw nothing.
+if grep -q 'ok    no-godot-launched: .*shim was first on PATH' <<<"${output}"; then
   pass "test-fast reported its no-godot-launched tripwire as armed and untripped"
 else
   fail "test-fast did not report an armed no-godot-launched tripwire"
 fi
 
-if printf '%s' "${output}" | grep -q 'skipped 0'; then
+if grep -q 'skipped 0' <<<"${output}"; then
   pass "no test was skipped (doc 91 § Flake policy: a skipped required test is a defect)"
 else
   fail "the pure tier reported skipped tests"
 fi
 
-echo
-echo "=== 2. a randomized failure prints a one-command reproduction and preserves the minimized input"
+section "2. a randomized failure prints a one-command reproduction and preserves the minimized input"
 rm -rf "${FAILURE_DIR}"
 run_output="$(dotnet test "${SIMULATION_TESTS}" \
   --nologo -v normal \
@@ -130,7 +124,7 @@ else
   fail "the seed and identity were not logged before execution"
 fi
 
-if printf '%s' "${run_output}" | grep -q "MECHAMINER_TEST_SEED=${DECLARED_SEED} dotnet test tests/MechaMiner.Simulation.Tests"; then
+if grep -q "MECHAMINER_TEST_SEED=${DECLARED_SEED} dotnet test tests/MechaMiner.Simulation.Tests" <<<"${run_output}"; then
   pass "a one-command reproduction was printed"
 else
   fail "no one-command reproduction was printed"
@@ -159,8 +153,7 @@ if [[ -f "${FAILURE_DIR}/minimized-input.txt" ]]; then
   fi
 fi
 
-echo
-echo "=== 3. the reproduction command actually reproduces the failure at the same seed"
+section "3. the reproduction command actually reproduces the failure at the same seed"
 #
 # Capture the first run's minimized input, then delete the artifact, then rerun with
 # the printed override. Comparing a value captured before the rerun against one read
@@ -173,7 +166,7 @@ reproduced="$(MECHAMINER_TEST_SEED="${DECLARED_SEED}" dotnet test "${SIMULATION_
   --filter "TestCategory=HarnessFailureDemonstration" 2>&1)"
 reproduced_status=$?
 if [[ "${reproduced_status}" -ne 0 ]] \
-    && printf '%s' "${reproduced}" | grep -q "seed=${DECLARED_SEED}"; then
+    && grep -q "seed=${DECLARED_SEED}" <<<"${reproduced}"; then
   pass "rerunning with MECHAMINER_TEST_SEED=${DECLARED_SEED} failed again at the same seed"
 else
   fail "the printed reproduction did not reproduce the failure (exit ${reproduced_status})"
@@ -187,8 +180,7 @@ else
   fail "the minimized input is not stable across runs at the same seed: first '${first_minimized:-none}', second '${second_minimized:-none}'"
 fi
 
-echo
-echo "=== 4. the Explicit fixture never runs in an ordinary suite"
+section "4. the Explicit fixture never runs in an ordinary suite"
 output="$("${WRAPPER}" test-fast 2>&1)"
 status=$?
 if [[ "${status}" -eq 0 ]]; then
@@ -197,8 +189,7 @@ else
   fail "test-fast exited ${status}; the Explicit fixture must not affect an ordinary run"
 fi
 
-echo
-echo "=== 5. negative control: a pure test that launches Godot fails the tier"
+section "5. negative control: a pure test that launches Godot fails the tier"
 #
 # An assertion that cannot fail is not a gate. This writes a pure test that launches
 # `godot` from PATH, ignores the result, and passes; the tier must still fail,
@@ -250,29 +241,27 @@ cleanup_tripwire_fixture
 printf '%s\n' "${violation_output}" | grep -E 'no-godot-launched|FAILED|total ' | sed 's/^/      /'
 
 if [[ "${violation_status}" -eq 4 ]]; then
-  pass "the tier exited 4 even though every test passed, so the tripwire is the gate"
+  control_pass "the tier exited 4 even though every test passed, so the tripwire is the gate"
 else
-  fail "the tier exited ${violation_status}; a pure test that launches Godot must fail it with 4"
+  control_fail "the tier exited ${violation_status}; a pure test that launches Godot must fail it with 4"
 fi
 
-if printf '%s' "${violation_output}" | grep -q 'FAIL  no-godot-launched: the pure tier tried to launch Godot'; then
-  pass "the tripwire named the violation and recorded the invocation"
+if grep -q 'FAIL  no-godot-launched: a pure NUnit test process tried to launch Godot' \
+    <<<"${violation_output}"; then
+  control_pass "the tripwire named the violation and recorded the invocation"
 else
-  fail "the tripwire did not report the launch it was armed to catch"
+  control_fail "the tripwire did not report the launch it was armed to catch"
 fi
 
-echo
-echo "=== 6. the tree is clean again after the negative control"
+section "6. the tree is clean again after the negative control"
 if "${WRAPPER}" test-fast >/dev/null 2>&1; then
-  pass "test-fast passes again with the violating fixture removed"
+  control_pass "test-fast passes again with the violating fixture removed"
 else
-  fail "test-fast does not pass after the violating fixture was removed"
+  control_fail "test-fast does not pass after the violating fixture was removed"
 fi
 
-echo
-if [[ "${failures}" -eq 0 ]]; then
-  echo "verify-test-harness: PASS"
-  exit 0
-fi
-echo "verify-test-harness: FAIL (${failures} assertion(s))"
-exit "${EXIT_VALIDATION}"
+# This gate runs negative controls in band, so its log contains failure-shaped text on a
+# green run. Prove the marking that separates that text from genuine findings still holds.
+gate_assert_marking
+
+gate_summary "verify-test-harness" "${EXIT_VALIDATION}"

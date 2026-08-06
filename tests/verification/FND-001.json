@@ -7,12 +7,15 @@
     "Entries are added before implementation and are never renumbered (docs/technical/91 § Verification registry).",
     "The structural validator for this file is owned by TASK-FND-009-002; until it lands, the shape here is the FND-001 integration owner's declaration of the required fields listed in doc 91.",
     "Selectors are repository scripts and commands because the pure NUnit harness does not exist until TASK-FND-003-001. TASK-FND-009-001 replaces the architecture selector with an architecture test.",
-    "VER-FND-001-012 and VER-FND-001-013 use build/verify-godot.sh rather than the bare godot commands: a headless Godot launch exits 0 even when the boot script fails to load, so the exit code alone is not a gate. The script also asserts the stable startup line and the absence of engine ERROR lines."
+    "VER-FND-001-012 and VER-FND-001-013 use build/verify-godot.sh rather than the bare godot commands: a headless Godot launch exits 0 even when the boot script fails to load, so the exit code alone is not a gate. The script also asserts the stable startup line and the absence of engine ERROR lines.",
+    "The 'platforms' list records the platforms an entry has actually been executed on, not the platforms its subject is intended to support. Every entry in this file is linux-x64 only. VER-FND-001-001 and VER-FND-001-002 previously also listed windows-x64 and osx-arm64; that was wrong and is corrected here. Nothing in this repository has ever run either of them on Windows or macOS: build/bootstrap-linux.sh is the only provisioner, it provisions linux-x64, and build/toolchain.json's godot.unpinned_platform_policy records the same gap for the Godot pins. Restoring windows-x64 or osx-arm64 to any entry requires an actual run on that platform, which needs a CI runner for it - FND-005 owns the CI suite. Cross-platform restore and warning-free compilation are still intended properties of the pinned toolchain; they are simply unverified, and an unverified intention does not belong in a coverage field.",
+    "That platform narrowing did not land in commit a494f0912415d3e06cc7911a0af5a59edac1d526, whose message lists it as 'item 8' of an enumerated list and calls the whole list unverified. a494f09's only change to this file is the VER-FND-001-005 strengthening below; VER-FND-001-001 and VER-FND-001-002 still carried three platforms at that commit. The narrowing landed thirteen minutes later in a494f09's immediate child, bc28ae2e1647273c5cea8fde14aa5ec33564a07b, so anyone reading a494f09's message for the state of this file is reading a claim about a change that was not in it. Nothing gates the platforms field either: no script under build/ reads it, build/verify-registry.sh does not exist on this branch, and the copy TASK-FND-009-002 introduced elsewhere makes no reference to platforms. This field's correctness therefore rests on a reader comparing it against what has actually been executed, and on no check. It answers the 'VER-FND-001-001 and -002 are marked implemented for windows-x64 and osx-arm64' bullet under 'Corrections to the PR body and registry' in pull/1#pullrequestreview-4870772506, which is not one of that review's nine numbered findings.",
+    "Red-then-green record for VER-FND-001-005, whose strengthening arrived in a494f09 as 'item 6' of that same list. Its message's word 'unverified' is now stale, and this note is where the verification lives. Both injections were run at the parent commit 2e6d717 and again at a494f09 and at the three heads that carry a494f09 by base merge (a319afb, ea88ea8, c5f1378), with the same exit class at all four of the later points. Observed exit classes, parent -> carrying commits: an untracked .gd file under src/, build/verify-architecture.sh 0 -> 4; and the same probe under a stale GIT_DIR, build/verify-architecture.sh 0 -> 4. It answers PR #3 finding 6 and PR #1 finding 6 together (pull/3#pullrequestreview-4870741930 and pull/1#pullrequestreview-4870772506). The record for the FND-002 gates that arrived in the same commit is a note in tests/verification/FND-002.json, which also records that the numbered list a494f09's message indexes into exists in no artifact; docs/technical/delivery-waves.md § Decision 12 carries the full account."
   ],
   "entries": [
     {
       "id": "VER-FND-001-001",
-      "summary": "A clean checkout restores the exact locked NuGet graph and fails if any lock file would change.",
+      "summary": "A clean checkout restores the exact locked NuGet graph and fails if any lock file would change. Executed on linux-x64 only; windows-x64 and osx-arm64 are PENDING and have never been run, so they are not listed under platforms. No gate reads the platforms field, so that narrowing rests on a reader comparing the field against what has been executed rather than on a check; it landed in bc28ae2, not in a494f09, whose message lists it as 'item 8'.",
       "task": "TASK-FND-001-001",
       "requirements": ["TR-BLD-001", "TR-BLD-002"],
       "technicalSources": [
@@ -27,13 +30,13 @@
       "fixtures": [],
       "scenarios": [],
       "evidenceKinds": ["command-exit-code", "command-output"],
-      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "platforms": ["linux-x64"],
       "tier": "fast",
       "status": "implemented"
     },
     {
       "id": "VER-FND-001-002",
-      "summary": "The whole solution compiles from a clean checkout with zero warnings and zero errors under the pinned SDK, target framework, and language version.",
+      "summary": "The whole solution compiles from a clean checkout with zero warnings and zero errors under the pinned SDK, target framework, and language version. Executed on linux-x64 only; windows-x64 and osx-arm64 are PENDING and have never been run, so they are not listed under platforms. No gate reads the platforms field, so that narrowing rests on a reader comparing the field against what has been executed rather than on a check; it landed in bc28ae2, not in a494f09, whose message lists it as 'item 8'.",
       "task": "TASK-FND-001-001",
       "requirements": ["TR-BLD-001", "TR-BLD-006", "TR-FND-001"],
       "technicalSources": [
@@ -48,7 +51,7 @@
       "fixtures": [],
       "scenarios": [],
       "evidenceKinds": ["command-exit-code", "command-output", "warning-count"],
-      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "platforms": ["linux-x64"],
       "tier": "fast",
       "status": "implemented"
     },
@@ -96,7 +99,7 @@
     },
     {
       "id": "VER-FND-001-005",
-      "summary": "No GDScript source file exists outside documentation, so no runtime logic can use a second language.",
+      "summary": "No GDScript source file exists outside documentation, tracked or untracked, so no runtime logic can use a second language. The candidate set is tracked plus untracked-but-not-ignored, and a failed enumeration fails the gate rather than emptying it. Both halves are stated because neither used to hold: the check consulted only tracked paths, so an untracked .gd file passed, and it discarded git's exit status with a trailing '|| true', so under a broken or absent git an empty result took the pass branch and this hard prohibition was silently unenforceable. Two negative controls run in the same invocation: an untracked .gd fixture must be reported as a violation, and the same probe under a broken GIT_DIR must report that it could not tell rather than reporting a clean tree. Measured red-then-green against the parent commit 2e6d717: an untracked .gd file under src/ took build/verify-architecture.sh from exit 0 to exit 4, and the same probe under a stale GIT_DIR took it from exit 0 to exit 4, at a494f09 and at every head that carries it.",
       "task": "TASK-FND-001-001",
       "requirements": ["TR-FND-002"],
       "technicalSources": [
@@ -107,7 +110,10 @@
         "kind": "script",
         "value": "build/verify-architecture.sh"
       },
-      "fixtures": [],
+      "fixtures": [
+        "build/verify-architecture.sh untracked-gdscript fixture",
+        "build/verify-architecture.sh broken-GIT_DIR negative control"
+      ],
       "scenarios": [],
       "evidenceKinds": ["command-exit-code", "command-output"],
       "platforms": ["linux-x64"],

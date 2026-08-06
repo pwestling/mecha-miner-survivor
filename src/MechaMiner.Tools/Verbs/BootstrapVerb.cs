@@ -36,7 +36,14 @@ internal static class BootstrapVerb
         ToolchainInspector inspector = new(context.Layout, context.Runner);
         ToolchainPins pins = inspector.LoadPins();
 
-        context.Section("stage 1: probe the pinned system toolchain");
+        StageLedger ledger = new(
+            context,
+            "probe the pinned system toolchain",
+            "install the missing pinned system tools",
+            "restore repository-local packages in locked mode",
+            "run doctor");
+
+        ledger.Enter(0);
         List<ToolProbe> before = inspector.Probe(pins);
         List<ToolProbe> missing = new();
         foreach (ToolProbe probe in before)
@@ -51,23 +58,23 @@ internal static class BootstrapVerb
 
         if (missing.Count > 0)
         {
-            context.Section("stage 2: install the missing pinned system tools");
+            ledger.Enter(1);
             VerbOutcome? installFailure = InstallSystemTools(context, missing, warnings);
             if (installFailure is not null)
             {
-                return installFailure;
+                return ledger.Abandon(installFailure);
             }
         }
         else
         {
-            context.Section("stage 2: no pinned system tool is missing (idempotent no-op)");
+            ledger.Enter(1, "no pinned system tool is missing (idempotent no-op)");
             context.Runner.RecordAssertion(
                 "system-tools",
                 succeeded: true,
                 "every required pinned tool is already present; nothing installed");
         }
 
-        context.Section("stage 3: restore repository-local packages in locked mode");
+        ledger.Enter(2);
         CommandResult restore = context.Runner.Run(
             "dotnet-restore-locked",
             "dotnet",
@@ -76,19 +83,37 @@ internal static class BootstrapVerb
             TimeSpan.FromMinutes(10));
         if (!restore.Succeeded)
         {
-            return VerbOutcome
-                .Environment(
-                    "locked restore failed; the committed lock files and Directory.Packages.props disagree "
-                    + "with what restore would produce. See the step log.")
-                .WithWarnings(warnings);
+            // Class 5, not 3, and deliberately the same class build returns for the
+            // same command. This used to be VerbOutcome.Environment, so one condition
+            // -- a committed lock file disagreeing with Directory.Packages.props --
+            // had two exit classes, and which one a caller saw depended only on
+            // whether bootstrap or build reached the locked restore first. Doc 100
+            // § Standard command surface calls the classes "stable process exit
+            // classes", which a per-verb answer is not.
+            //
+            // 5 is the correct one of the two. Doc 100's verb table assigns "locked
+            // restore" to `build`, so build owns this condition and its class governs;
+            // doc 100 also says wrappers "preserve the owning tool's class". Class 3
+            // is "missing or mismatched pinned environment", and doc 100 scopes the
+            // environment through `doctor`: "exact Godot/.NET/Blender/tool/template
+            // availability and hashes". A lock file that disagrees with the props file
+            // is not that. Both files are committed, the machine is correct, and the
+            // fix is a repository edit -- regenerate the lock files -- not an
+            // environment repair, which is the action a caller reading 3 would take.
+            return ledger.Abandon(VerbOutcome
+                .Build(
+                    "locked restore failed. CI restores in locked mode and fails if lock files would change "
+                    + "(doc 100 § Dependency policy); update Directory.Packages.props and the lock files "
+                    + "together. See the step log.")
+                .WithWarnings(warnings));
         }
 
-        context.Section("stage 4: run doctor");
+        ledger.Enter(3);
         List<ToolProbe> after = inspector.Probe(pins);
         VerbOutcome doctorOutcome = DoctorVerb.Report(context, pins, after);
         if (doctorOutcome.ExitClass != ExitClass.Success)
         {
-            return doctorOutcome.WithWarnings(warnings);
+            return ledger.Abandon(doctorOutcome.WithWarnings(warnings));
         }
 
         VerbOutcome bootstrapped = VerbOutcome

@@ -124,6 +124,12 @@ not a requirement:**
 | 4 | Catalog breadth | widest | the wave 3 primitive it extends is Done |
 | 5 | M4 integration, then M5 breadth, then M6/M7 | integration owner, then breadth | wave 4 |
 
+The "Starts when" column states doc 110's formal gates verbatim and is not softened
+anywhere in this document. What a later section reports is whether the surface behind a
+gate is **landed and usable**, which is a different and weaker claim; § Two different
+claims: landed, and Done below defines both and says which one each status line is
+making. No package in this repository is Done yet.
+
 ---
 
 ## Wave 0 - foundation
@@ -132,16 +138,69 @@ not a requirement:**
 the whole shared surface listed above, so no consumer stream can run concurrently
 with it.
 
+### Two different claims: landed, and Done
+
+This document tracks two states that are easy to conflate. Conflating them is how it
+previously came to assert completion for which no evidence exists, so they are defined
+once here and used precisely below.
+
+- **Landed** is an engineering claim about this branch. The code and its gates exist,
+  they run from a clean checkout, and a consumer can build against them right now. It
+  says nothing about merge status and nothing about evidence.
+- **Done** is doc 114's formal work state, and it is stricter in two independent ways
+  that wave 0 does not currently satisfy.
+  1. Doc 114 § Work states gives Done the exit condition "integration base contains
+     the change". Every `FND-001`, `FND-002`, and `FND-003` commit is still on an
+     **open draft pull request**, so the integration base does not contain them.
+  2. AGENTS.md § Completion and doc 114 § Required evidence bundle require, per task,
+     "a validating `SCH-OBS-003` evidence bundle containing authority,
+     commands/results, seeds, artifacts, warnings, budget deltas, risks, and successor
+     work". `SCH-OBS-003` and its emitter/validator are `FND-010`'s deliverable, and
+     `FND-010` has not started. No `artifacts/evidence/` path exists anywhere in this
+     repository. So **no M0 task can be Done yet, however good its implementation
+     is** - not for want of work, but because the instrument that measures completion
+     has not been built.
+
+The honest reading of wave 0 is therefore: **landed pending merge; engineering-ready
+for consumers now; formally Done at `TASK-FND-005-002`**, the M0 close gate, once
+`FND-010` can emit the bundle that gate's "M0 evidence bundle with no unexplained
+warning or manual repair" refers to.
+
+Where a section below says a wave or a step is "open" or "Ready", it means the surface
+it consumes exists and is usable. That is an engineering-readiness judgement, which
+this explicitly non-normative document is allowed to record. It does **not** mean
+doc 110's completion gate has been passed, and it does not relax doc 114 § Work
+states, which still controls: "Only Done dependencies satisfy downstream package
+prerequisites." A stream that starts on readiness accepts that its base can still be
+revised, and `RSK-017`'s first response above - "freeze consumer work; land one
+owner/contract and rebase consumers" - is what covers that when it happens.
+
+**Nothing gates any of this, including the correction that wrote it.** No script reads a
+status line in this document and compares it with doc 114's exit conditions; there is no
+`artifacts/evidence/` path to check a claim of Done against, which is the point item 2
+above makes. Before this section existed the document asserted "`FND-001` is landed and
+Done", "`FND-002` and `FND-003` are landed and Done", and "**Wave 1 is therefore open**"
+on that basis, and every one of those sentences was false in the same way: they used
+doc 114's word for a state whose instrument had not been built. That correction is
+recorded in commit `a494f09` as "item 1" of a list whose numbering resolves to nothing -
+see § Decision 12 - and it has no exit class before or after, because a document is
+verified by reading it. The protection is that the two words are now defined in one place
+and every status line below says which one it means; a status line that says "Done"
+without satisfying both conditions above is a defect a reader has to catch.
+
 ### Step 1
 
 | Package | Deliverable (doc 110) | Depends on | Completion gate | Owned file scope |
 | --- | --- | --- | --- | --- |
 | `FND-001` | Pin Godot/.NET versions, solution/project skeleton, repository layout, editor/analyzer settings | none | clean restore/build and version report | `MechaMiner.sln`, `global.json`, `Directory.Build.*`, `Directory.Packages.props`, `NuGet.config`, `.editorconfig`, `.gitignore`, every `*.csproj`, `game/project.godot`, `game/scenes/Boot.tscn`, `game/BootCompositionRoot.cs`, `build/bootstrap-linux.sh`, `build/verify-architecture.sh`, `build/verify-policies.sh`, `build/policy-fixtures/`, `tests/verification/FND-001.json` |
 
-**`FND-001` is landed and Done.** `TASK-FND-001-001`, `TASK-FND-001-002`, and
-`TASK-FND-001-003` are merged, with `tests/verification/FND-001.json` carrying thirteen
-implemented entries. That satisfies the hard dependency of `FND-002`, `FND-003`, and
-`FND-004`.
+**`FND-001` is landed, not Done.** `TASK-FND-001-001`, `TASK-FND-001-002`, and
+`TASK-FND-001-003` are committed on an open draft pull request, with
+`tests/verification/FND-001.json` carrying thirteen implemented entries. The pinned
+toolchain, solution skeleton, repository layout, and analyzer settings are what
+`FND-002`, `FND-003`, and `FND-004` actually consume from it, and all of that is
+present and usable, so those packages are unblocked on readiness. Their formal
+prerequisite closes with the rest of M0 at `TASK-FND-005-002`.
 
 ### Step 2
 
@@ -154,11 +213,21 @@ implemented entries. That satisfies the hard dependency of `FND-002`, `FND-003`,
 both are integration-owner scope because they touch the shared workflow entrypoint
 and every test project. `FND-003` is the gate that opens wave 1.
 
-**`FND-002` and `FND-003` are landed and Done**, in one PR of four task commits:
-`TASK-FND-002-001`, `TASK-FND-002-002`, `TASK-FND-003-001`, `TASK-FND-003-002`.
-`tests/verification/FND-002.json` carries fifteen implemented entries and
-`tests/verification/FND-003.json` twelve. **Wave 1 is therefore open**: `W1-DAT`
-(`DAT-001`) and `W1-SIM` (`SIM-001`, `SIM-003`, `SIM-005`) may start.
+**`FND-002` and `FND-003` are landed, not Done**, in one open draft pull request of
+four task commits: `TASK-FND-002-001`, `TASK-FND-002-002`, `TASK-FND-003-001`,
+`TASK-FND-003-002`. `tests/verification/FND-002.json` carries eighteen implemented
+entries and `tests/verification/FND-003.json` twelve. Three of `FND-002`'s eighteen
+(`VER-FND-002-016` through `018`) and the strengthened `VER-FND-001-005` exist because
+an independent review found gates that could not fail; see Decision 11.
+
+**Wave 1 is therefore open on engineering readiness.** The harness `W1-DAT` and
+`W1-SIM` consume exists, runs headlessly from a clean checkout, and its contracts are
+stable enough to build against, so `W1-DAT` (`DAT-001`) and `W1-SIM` (`SIM-001`,
+`SIM-003`, `SIM-005`) may start. It is open because the harness exists - not because
+`FND-003` passed its completion gate, which it has not. Read that sentence with
+§ Two different claims above: a wave 1 stream is starting against a landed base on the
+integration owner's judgement, and accepts a rebase if that base is revised before
+`TASK-FND-005-002` closes M0.
 
 What every stream now gets, and must use rather than reinvent:
 
@@ -201,8 +270,9 @@ Two things the harness deliberately does not provide, so nobody builds on a gues
 | `FND-008` | Profiler marker/metric registry and benchmark report format | `FND-004` | sample CPU/count/allocation report produced | diagnostics metric owner, `SCH-OBS-002` |
 | `FND-009` | Architecture dependency tests plus complete documentation/requirement/component/contract/schema/verification/work ID registry validator | `FND-001`, `FND-003` | forbidden project edges and missing/duplicate/dangling registry IDs/links fail fixtures | architecture tests, registry/document validation tooling, `SCH-QUA-001` validator |
 
-**Step 3 is now Ready.** `FND-004` depends only on `FND-001`, and `FND-009` depends on
-`FND-001` and `FND-003`, both of which are Done. Doc 110 makes `FND-007` and `FND-008`
+**Step 3 is Ready on the same readiness basis.** `FND-004` depends only on `FND-001`,
+and `FND-009` depends on `FND-001` and `FND-003`. All three are landed and usable, and
+none of them is formally Done; see § Two different claims. Doc 110 makes `FND-007` and `FND-008`
 depend on `FND-004`, so inside this step `FND-004` lands first and then
 `FND-007`/`FND-008` can run in parallel with `FND-009`. `FND-004` also has two waiting
 consumers already recorded in code: `HarnessIdentity` in `tests/shared/` says
@@ -223,14 +293,22 @@ validating `tests/verification/*.json` (`TASK-FND-009-002`).
 requires: `Windows Development x86-64`, `Windows Release x86-64`,
 `Linux/Steam Deck Development x86-64`, `Linux/Steam Deck Release x86-64`.
 
-**`FND-005` and `FND-006` are both unblocked**: `FND-005` needs `FND-002` and `FND-003`,
-`FND-006` needs `FND-001` and `FND-002`. Three things they inherit rather than invent:
+**`FND-005` and `FND-006` are both unblocked on readiness**: `FND-005` needs `FND-002`
+and `FND-003`, `FND-006` needs `FND-001` and `FND-002`, and all three are landed.
+`FND-005` also matters to the formal gate rather than only to CI: `FND-010` depends on
+it, and `FND-010` owns the `SCH-OBS-003` bundle without which no M0 task can reach
+Done. Three things they inherit rather than invent:
 
 - `FND-005`'s CI job calls `./build.sh` verbs, never a script directly. The fast
-  pull-request path is `bootstrap`, `format-check`, `build`, `test-fast`; the main path
-  adds `test-main`. The `content` verb belongs in the fast path as soon as `DAT-006`
-  lands, and until then it exits 2 naming `DAT-006`, which is a legible CI failure rather
-  than a silent gap.
+  pull-request path is `bootstrap`, `format-check`, `build`, `test-fast`, `godot-import`;
+  the main path adds `test-main`. This list previously omitted `godot-import`, which
+  contradicted doc 91 § Fast pull-request suite ("Godot headless import and focused
+  integration tests"); doc 91 is the authority and this document is non-normative
+  coordination, so the omission was a defect here and is corrected rather than being
+  read as narrowing the tier. The `content` verb belongs in the fast path as soon as
+  `DAT-006` lands, and until then it exits 2 naming `DAT-006`, which is a legible CI
+  failure rather than a silent gap. The focused integration tests doc 91 names alongside
+  the import are still main-path only, because `test-main` is the verb that runs them.
 - `FND-006` implements `export` and `run`, and inherits Decision 4's mapping: `development`
   builds `ExportDebug` and `release` builds `ExportRelease`. It also owns the export-preset
   exclusion for `game/tests/`, whose compile-time exclusion under `ExportRelease` already
@@ -247,9 +325,13 @@ bundle with no unexplained warning or manual repair".
 
 ## Wave 1 - pure contracts
 
-**`FND-003` is Done, so this wave is open now.** Two streams, no file overlap. These are the
-contract-first packages that every later wave consumes, so nothing downstream may
-begin against them until each package is Done.
+**The `FND-003` harness is landed and usable, so this wave is open on engineering
+readiness now** - see § Two different claims; `FND-003` is not formally Done. Two
+streams, no file overlap. These are the contract-first packages that every later wave
+consumes, so nothing downstream may begin against them until each package is Done, and
+that rule is not weakened by the readiness judgement that opened this wave: a wave 1
+stream may start on a landed harness, but a wave 2 stream may not start on a wave 1
+contract that is still moving.
 
 ### `W1-DAT` - content contracts
 
@@ -504,8 +586,37 @@ Doc 113 requires a risk review at each M0-M7 gate.
 
 ## Decisions already made
 
-Recorded here so no stream re-litigates them. Each was verified empirically in the
-FND-001 container, not recalled.
+Recorded here so no stream re-litigates them. **They were not all established the same
+way, and the list has grown past the sentence that used to cover it.** An earlier
+revision said "each was verified empirically in the FND-001 container, not recalled",
+which was true of Decisions 1-4 and is not true of the rest:
+
+- Decisions 1-4 were measured in the FND-001 container: versions installed, projects
+  built, exit codes observed. Each names the fixture or gate that holds it today.
+- Decisions 5-7 are design and routing choices, not measurements. There was nothing to
+  measure; what they record is which class, code, and owning package was chosen and why
+  a ninth exit class was rejected.
+- Decision 8's `build.ps1` half is a hand measurement on a host that had `pwsh`, not a
+  container result and not a committed gate. That bullet says so itself.
+- Decisions 9-11 are rules distilled from defects found in this repository's own gates.
+  Each cites the sites it came from; the rules themselves are obligations on future
+  gates and no gate asserts them.
+- Decision 12 is a claim about a commit message, two pull-request reviews, and the
+  absence of a file on any ref. It is established by search, and its own text records
+  that three of the nine items it tables have no gate at all.
+- Decision 13 is measured, and it is the only decision here that carries a rate rather
+  than a yes or no. Its numbers are 300 trials per input size against the three affected
+  gate constructs, before and after the repair, on this host. The construct it describes
+  is probabilistic, so a single observation of it working proves nothing and the decision
+  reports the distribution instead.
+- Decision 14 is a rule distilled from one near-miss on this project, like Decisions 9-11,
+  but unlike them **it is asserted by a gate**: `gate_assert_marking` runs in every gate
+  script that emits control output and fails the gate if the separation it requires has
+  stopped holding. Read it as an enforced property, not as an obligation on a future
+  author.
+
+So read each decision for how it says it was established. Do not quote this section as
+a block of empirical results.
 
 ### Decision 1 - .NET SDK 10.0.302 with target framework `net8.0`
 
@@ -682,7 +793,30 @@ scope, so the request goes through the integration owner.
   forward every argument verbatim - so there is one verb table and nothing that can
   drift. Behaviorally, when `pwsh` is present: run both wrappers and require
   byte-identical usage tables. When `pwsh` is absent the behavioral check reports
-  itself as **skipped**, by name, and never as passed.
+  itself as **skipped**, by name, it is counted, and the script's final summary line
+  says how many required checks did not run - so a run with a skip cannot be read, or
+  quoted elsewhere, as a run in which parity was proved by execution.
+- Two consequences of leaving `pwsh` unpinned, both recorded rather than glossed:
+  `VER-FND-002-008` lists **`linux-x64` only**, because the behavioral half executes
+  `build.ps1` on whichever host invokes it and no Windows or macOS host ever has;
+  behavioral parity on `windows-x64` and `osx-arm64` is **pending** and needs runners
+  on those platforms, which `FND-005` owns. Adding PowerShell to the pinned toolchain
+  instead was considered and rejected: it would invent a toolchain dependency in order
+  to make a coverage claim true, and doc 100 § Toolchain pinning would then require an
+  exact version and per-platform hashes for a tool that no repository verb needs on
+  Linux or macOS.
+- Both wrappers do share one behavior that is not merely structural: an absent `dotnet`
+  and a `global.json` pinning an uninstalled SDK version each exit class 3 with
+  `MMT-3001`, never class 8. See Decision 10. **It is asserted by execution on
+  `build.sh` only.** `build/verify-verbs.sh` § 10 invokes `${WRAPPER}`, which is
+  `build.sh`, and `build/verify-wrapper-parity.sh`'s behavioral half does not run without
+  `pwsh`, so no committed gate ever runs `build.ps1 doctor` against a mismatched pin.
+  `build.ps1` does carry the same `MISMATCH-PROBE` block, and the reviewer who reported
+  the defect installed `pwsh` and observed the same 8 -> 3 transition by hand, so the
+  claim is true as fact. It is not evidence a clean checkout can produce, which is the
+  same distinction the `pwsh` bullet above draws for the usage tables. An earlier revision
+  of this bullet said the behavior "is asserted on both"; that was an overclaim and is
+  corrected here.
 
 ### Decision 9 - deliberately invalid fixtures are never committed inside a compiled project
 
@@ -701,7 +835,230 @@ scope, so the request goes through the integration owner.
   (`SeedReproductionFixture`), which is marked `Explicit` so no ordinary run executes
   it, and whose contract is independently covered by always-on tests.
 
+### Decision 10 - exit class 3 has two halves, and a gate that proves one does not prove the other
+
+- Doc 100 § Standard command surface defines class 3 as a "missing **or mismatched**
+  pinned environment". Those are two different environment faults and they reach the
+  wrappers by two different routes.
+- The wrappers originally gated class 3 on `command -v dotnet` alone. A `global.json`
+  pinning an SDK version that is not installed therefore passed that check, failed
+  later inside the verb host's own `dotnet build`, and was reported as class 8
+  `MMT-8001` "unexpected tool-internal failure" - blaming the repository for an
+  operator's environment. Both wrappers now probe pin resolution explicitly and return
+  3 with `MMT-3001` for a mismatch, while a genuinely uncompilable verb host still
+  returns 8.
+- The gate gap that let it survive is the general lesson: `build/verify-verbs.sh` § 6
+  asserted only the *absent* half, and nothing asserted the *mismatched* half, so half
+  of a documented exit class had no gate at all. § 10 now asserts the other half.
+  **When a contract enumerates alternatives, each alternative needs its own
+  assertion**; a gate that covers one member of a documented set and is named after
+  the whole set is worse than no gate, because it reads as coverage.
+
+### Decision 11 - a gate never passes on an input set it did not successfully obtain
+
+- Several gates in this repository were found to succeed vacuously: they derived a
+  candidate set (files to check, paths to hash, projects to scan), the derivation
+  failed or returned nothing, and the "no violations found" branch then reported
+  success. A gate that cannot see anything must not conclude that everything is fine.
+- The rule, applied to every gate the integration owner owns:
+  1. **A failed subprocess is a gate failure.** Never `|| true`, never a discarded
+     exit status, never an empty result substituted for an error. If `git ls-files`
+     fails, the gate fails; it does not check zero files.
+  2. **An empty candidate set never satisfies a gate.** Zero matches is a distinct
+     outcome from zero violations. A gate whose set is legitimately empty says so
+     explicitly and names why; a gate whose set is unexpectedly empty fails.
+  3. **Verify the artifact you resolved, not the one you assumed.** A probe that
+     resolves a path and then validates a canonical path instead is not checking the
+     thing that will be used. Hash, version-check, and compare the resolved artifact.
+  4. **Every gate carries a negative control.** The fixture that must fail has to
+     actually fail, asserted in the same run, or the positive result proves nothing.
+- These are not new requirements. AGENTS.md § Task execution already forbids masking a
+  failure and loosening a threshold to pass, and doc 91 already requires a gate to have
+  observable meaning. Decision 11 records them as a checklist because of how widely the
+  same defect had spread: a review reported three instances, and auditing the
+  neighbouring gates for the same shape found five more, across eight sites in
+  `format`/`format-check`, `build`, `doctor`, `verify-architecture.sh`,
+  `verify-godot.sh`, and `verify-configurations.sh`. Every one of them reported success
+  on something it had not examined. Assume the shape is present until the negative
+  control proves otherwise.
+- **Rule 4 was aspirational when it was written, and is now true.** A later review found
+  three gates with no negative control at all - `verify-configurations.sh`,
+  `verify-godot.sh` and `verify-wrapper-parity.sh` - which made this bullet a claim about
+  the repository that the repository did not support. The controls were written rather than
+  the sentence narrowed, because narrowing it would have withdrawn the guarantee the rest
+  of this checklist rests on instead of recording a gap. They are in band, on every
+  invocation: `verify-configurations.sh` §§ 2b and 4b, `verify-godot.sh`
+  § negative controls, `verify-wrapper-parity.sh` § A3.
+- **A control must run at the size the defect needs.** The three controls above each
+  include a production-sized case - hundreds of kilobytes, with the match late in the
+  input - and say so in their own output. This is not thoroughness for its own sake:
+  Decision 13 describes a defect class whose miss rate is *zero* below about 4 KB, so a
+  one-line fixture is not a weak control for it but a control that structurally cannot
+  fail. Three false passes survived four review rounds for exactly that reason. Where a
+  gate's answer could depend on input size, the control set says what sizes it covered.
+
+### Decision 12 - a message never cites a numbered list that is not an artifact
+
+- Commit `a494f09` on this branch carries the message `WIP: inherited uncommitted
+  review-fix work (items 1-8, 11), unverified` and enumerates nine items in its body. It
+  is the parent of most of the wrapper and gate work described above, it is not on
+  `origin/master` - the common ancestor of `master` and this whole stack is `739bf29` -
+  and it has reached four of the six pull requests stacked on this branch, three of them
+  by base merge (`a319afb`, `ea88ea8`, `c5f1378`) and one by linear descent.
+- **The numbered list it indexes into exists in no artifact.** It is not in any review or
+  comment on any pull request in this repository, and not in any file on any ref at any
+  commit. It was a triage list an agent assembled by merging findings from two independent
+  reviews, each of which numbers its own findings 1 through 9, and it lived only in that
+  agent's context. So the numbers survive in permanent history and the list does not, and
+  no reader of `git log` can resolve "items 1-8, 11" - which makes every claim that
+  message makes unauditable by the reader it was written for.
+- **Where the traceable items came from.** Six of the nine map onto the two reviews, and
+  two of those six map onto unnumbered "Corrections to the PR body" bullets rather than
+  onto numbered findings, so even the traceable half does not resolve as numbers:
+
+  | Item | Subject | Source |
+  | --- | --- | --- |
+  | 1 | this document's false "Done" / "Wave 1 is therefore open" wording | nothing |
+  | 2 | mismatched SDK pin returns class 3, not class 8 | [PR #3 review](https://github.com/pwestling/mecha-miner-survivor/pull/3#pullrequestreview-4870741930) finding 7 |
+  | 3 | `VER-FND-002-008` narrowed; the counted, named `SKIPPED` path | PR #3 review finding 8, plus its "`build.ps1` parity - proved by execution" correction bullet |
+  | 4 | doc 40 derived-geometry self-contradiction (contact diameter) | nothing |
+  | 5 | `format`/`format-check` fail open when `git ls-files` fails | PR #3 review finding 3 |
+  | 6 | `verify-architecture.sh` GDScript check `\|\| true` and untracked `.gd` | PR #3 review finding 6 and [PR #1 review](https://github.com/pwestling/mecha-miner-survivor/pull/1#pullrequestreview-4870772506) finding 6 |
+  | 7 | `doctor`'s Godot hash probe hashes a file it did not resolve | PR #3 review finding 4 |
+  | 8 | `FND-001.json` platform overclaims | PR #1 review, "Corrections to the PR body and registry" |
+  | 11 | delivery-waves.md "no public type in `src/`" claim | nothing - see below |
+
+- **Item 11 had no referent, and the claim behind it was withdrawn.** No text matching
+  "no public type in `src/`" appears in this document, or in any file on any ref, at any
+  commit. Another session originated that claim in conversation, relayed it as a defect,
+  and later retracted it; the sentence was never in any file. So item 11 was an item to
+  fix something that did not exist, there was nothing to fix, and the retraction never
+  reached the commit message - which is why it still reads as outstanding work. This is a
+  withdrawn claim, not an open question.
+- **Item 8 is not in `a494f09` at all.** That commit's only change to
+  `tests/verification/FND-001.json` is item 6's registry counterpart; `VER-FND-001-001`
+  and `-002` still carried three platforms there. The narrowing landed thirteen minutes
+  later in `a494f09`'s immediate child, `bc28ae2`.
+- **"unverified" is stale, and three of the nine items can never stop being unverified by
+  a gate.** Every gate `a494f09` touched has since been run red-then-green by injection;
+  the records live on the entries the gates belong to, in
+  `tests/verification/FND-002.json` (`VER-FND-002-008`, `-016`, `-017`, `-018`) and
+  `tests/verification/FND-001.json` (`VER-FND-001-005`), each naming the injected
+  violation and the exit class at the parent `2e6d717` and at every commit carrying the
+  fix. Items 1, 4 and 8 have no gate: items 1 and 4 are document edits, verified by
+  reading, and nothing anywhere reads the registry `platforms` field, so item 8's
+  correctness is a claim no check can hold. Item 3 is exit 0 on both sides by design -
+  it converts a silent pass into `PASS WITH 1 SKIPPED CHECK(S) - coverage reduced`, so
+  it is a reporting fix and its evidence is that line rather than an exit class.
+- **The rule.** In a commit message, pull request body, or review, carry the claim rather
+  than a pointer to it: one line per item saying what the item is costs a few hundred
+  bytes and stays true forever. If a numbered list must be referenced, cite the artifact
+  by URL or path plus sha and say which of several numbered lists it is - two of this
+  project's reviews each number findings 1 through 9, so a bare "item 6" is ambiguous
+  between them even for someone holding both. Never write "items N-M" where the list is
+  only in your context. And when a message says "unverified", plan the commit that says
+  otherwise: history is append-only, so a message on a branch others have already merged
+  cannot be corrected in place. Doc 91 § Claim and measurement discipline states this as a
+  rule about authors; this decision is the instance that produced it.
+
 ---
+
+### Decision 13 - a shell pipeline's exit status is not the answer to a question about its input
+
+- Under `set -o pipefail`, which every gate script in this repository sets, the construct
+  `printf '%s' "${text}" | grep -q PATTERN` does not reliably answer "does `text` contain
+  `PATTERN`". `grep -q` exits the instant it matches; the left-hand side then takes SIGPIPE
+  on a later write; and the **pipeline's** status is 141. Where the assertion is negative -
+  "this pattern must not appear" - 141 reads as "not present" and the gate passes.
+- **The severity is inverted.** The threshold is the writer's own buffer, about 4 KB, so
+  the miss rate is zero on a small input and certain on a large one. Measured over 300
+  trials per size on the three sites found: 0 of 300 missed at fixture size, single digits
+  at 4 KB, roughly a third to two thirds at 70 KB, and **300 of 300 above about 180 KB**.
+  The larger the violation, the more reliably the gate reported `ok`. That is why four
+  review rounds passed over it: every control was built from a one-line fixture, and at
+  one line the construct is correct.
+- **A third shape has a different symptom.** `x="$(producer | head -1)"` under `set -e`:
+  `head` exits after one line, the producer takes SIGPIPE, `pipefail` surfaces 141, and
+  `errexit` then aborts the whole gate mid-run - after the earlier sections have printed
+  `ok` and before the later ones print anything, which reads as a truncated log rather
+  than as a failure. `verify-architecture.sh` § 7 and § 7a had four such assignments.
+- **The fix is a here-string, and it is mechanical.** `grep -q PATTERN <<<"${text}"` has no
+  left-hand process to kill. Where a value rather than a status is wanted, capture it into a
+  variable first and test the variable, or use parameter expansion instead of `head`.
+- **Three false passes were demonstrated, and the sweep that followed was wider.** The
+  demonstrated three were `verify-wrapper-parity.sh` § A1's dispatch check,
+  `verify-format.sh` § 6's two reads, and `verify-architecture.sh`'s `| head -1`
+  assignments. A census over `build.sh` and `build/*.sh`, with line continuations joined so
+  a logical pipeline counts once, then found the rest: **36** such pipelines at `4c5a79f`
+  (32 read by a conditional or `&&`/`||`, 4 aborting under `set -e`), and **33** at the
+  merged base `402b919` - the difference being `verify-architecture.sh`'s four, which
+  another stream found and fixed independently in the same window, against one new site
+  arriving with `verify-gate-wiring.sh`. Every one is converted; the census over the merged
+  tree reports **0**.
+- **Two streams found this independently, five days into a six-PR stack.** That is worth
+  recording as evidence about the defect rather than about either stream: the construct is
+  idiomatic, it reads correctly, and it is wrong only intermittently and only at scale, so
+  finding it is not a matter of care. A census is the only reliable way to know a repository
+  is clear of it, which is why the numbers above are stated per ref rather than as one
+  total.
+- **Two shapes are safe and were deliberately left alone**, because churning them would
+  hide the ones that matter. A pipeline whose right-hand side is `tail`, `sort`, `wc`,
+  `cut`, `paste`, `tr` or `grep -c` must read to EOF to produce an answer, so it never
+  closes the pipe early - 139 such pipelines are untouched. And a `| head` whose status is
+  discarded and whose value is already correct - a display truncation, a first-match
+  extraction - is right as written; 6 of those remain, named in the census.
+- **`verify-format.sh` § 6 is worth reading as a case study**, because it holds two
+  independently sufficient causes of one symptom. Its two adjacent reads invert in opposite
+  directions: `... || problems+=(...)` fabricates a failure that is not there, and
+  `... && problems+=(...)` discards the real violation the section exists to catch. They
+  flip together, so the gate goes red naming the wrong thing while dropping the finding it
+  was written for. The earlier diagnosis of that section's intermittency - that the verb
+  could emit an empty `output` - is correct and **incomplete**. A confirmed cause is not
+  evidence that there is only one.
+
+### Decision 14 - a gate that runs controls in band marks the output they manufacture
+
+- Running negative controls in band is settled (Decision 11 rule 4) and it has a cost that
+  grows with the thoroughness of the control set: **a gate whose controls run in band prints
+  its own failure vocabulary on every run**, so its log contains a plausible answer to
+  almost any question a reader brings to it.
+- The failure mode is confirmation, not confusion. A reader predicts a cause, greps the log
+  for the string that cause would produce, finds it inside a control's fixture, and stops
+  looking. That happened here: a session predicted a CI failure, found its expected string
+  twice inside in-band control fixtures, and nearly shipped a fix for the wrong section -
+  the real failure was in a different check covering three scripts rather than one. This is
+  a cost worth paying and worth mitigating, not an argument against in-band controls.
+- **So control-manufactured output is marked.** `build/gate-output.sh` is the single shared
+  emitter set for every gate script: `pass`/`fail` for findings about the subject under
+  test, `control_pass`/`control_fail`/`control_detail` for anything produced while a
+  control's fixture is in place. Every control line carries one token, no genuine finding
+  does, and `grep -v` on that token leaves only findings about the repository. That file
+  also records which sections are marked and which deliberately are not, so the boundary is
+  written down rather than left to each author.
+- **The instance is measurable on `verify-gate-wiring.sh` § 5.** That section runs eight
+  in-band controls and quotes their manufactured `FAIL` lines. Before marking, a green run's
+  log answered `grep 'is never invoked and is not on the deliberately-unwired list'` with
+  **two hits**, both inside control fixtures. After marking, the same grep with
+  `grep -v '[control-fixture]'` applied answers **zero**, which is the true number. The
+  fixture-cleanup check is marked with the rest; the control-set **coverage** assertion
+  ("all 8 negative controls ran") is deliberately left unmarked, because "the control set
+  shrank" is exactly a finding a reader excluding control output still needs.
+- **A library is a fourth script kind.** `verify-gate-wiring.sh` requires every script under
+  the enumerators to be classified, and `gate`, `launcher` and `provisioning` all describe
+  something that runs. `gate-output.sh` is only ever sourced, so it is classified `library`,
+  and only the `gate` kind is required to be reached-or-exempt.
+- **It is enforced, not conventional.** `pass` and `fail` refuse a message that already
+  carries the marker, and `gate_assert_marking` proves that refusal works on every
+  invocation. Without that, the marking would decay the first time someone added a control
+  that printed with `pass`.
+- **Two related reporting rules, from the same near-miss.** A summary that names only an
+  assertion count sends the reader back to grepping, so `gate_summary` names the failing
+  **sections**. And a run that stops at stage 1 has not established anything about stages 2
+  and 3, so `Cli.StageLedger` makes every staged verb - `test-fast`, `test-main`, `build`,
+  `bootstrap` - name the stages that did not run, in the final-result line rather than by
+  implication from where the log ends. "Red at stage 1" is otherwise read as "the rest
+  passed", which is the same conflation of *unproved* with *satisfied* that Decision 11 is
+  about.
 
 ## Note on the four test projects
 
@@ -721,6 +1078,54 @@ No document was changed for this: the two sources are reconciled by precedence,
 not by editing either. If `FND-009`'s documentation validator later wants the two
 tables to agree literally, adding the missing row to doc 10 is the editorial
 correction, never removing the project.
+
+## Note on FND-003's open items
+
+This section is the list a reader of `tests/verification/FND-003.json` is sent to. It
+exists because a narrowed claim without a home turns into a claim nobody owns.
+
+### The tripwire covers stage 2, and propagating it to stage 1 is a decision, not a patch
+
+`VER-FND-003-011` used to say `test-fast` "launches no Godot process at all, observed with
+a tripwire". The tripwire is real and it works, but it observes less than that sentence
+claims. `TestVerb.RunFastTier` arms it and then passes `tripwire.Environment` to exactly
+the three pure NUnit processes in stage 2. Stage 1 runs `build/verify-policies.sh` through
+`VerbContext.RunRepositoryScript`, which has no environment parameter at all, so that
+stage runs under the ambient `PATH` and the ambient `MECHAMINER_GODOT`. Whatever stage 1
+does or does not launch, the tripwire would not see it. The entry now says so.
+
+**The summary was narrowed rather than the propagation changed**, which is the same call
+`FND-005` made when it found the same shape in its own claim, and it is deliberate here for
+a reason beyond consistency: propagating the environment is not obviously correct.
+
+- `ToolchainInspector.ResolveGodotCommand` reads `MECHAMINER_GODOT`, and `ProbeGodot` then
+  **executes** the resolved command as `godot --headless --version`. So any nested
+  `doctor` - or anything else that probes the toolchain - would invoke the shim, write the
+  sentinel, and fail `test-fast` for doing something legitimate.
+- That is the open question, and it has to be answered before the plumbing changes: **is a
+  toolchain probe that runs `godot --version` a "launch" that doc 91 § Test project
+  separation forbids, or is it the environment check every verb is entitled to make?** Doc
+  91 forbids pure *tests* from launching Godot; it says nothing about a verb's own
+  toolchain probe, and `doctor` exists precisely to run that probe.
+- Both answers are defensible and they need different code. If a probe is not a launch, the
+  shim needs to distinguish `--version` from a real launch, which makes the shim a policy
+  object rather than a tripwire. If a probe is a launch, then `test-fast` must be defined
+  as a tier that never probes the toolchain, and stage 1 must be shown not to.
+
+Until that is decided, the honest position is the one now recorded: the tripwire proves
+what it proves, stage 1 is named as outside it, and no reader is told the tier was observed
+end to end. **Owner: `FND-003`.** This is not a defect in the tripwire and not a gap in the
+gate; it is a scope statement that was wider than the mechanism.
+
+### `VER-FND-003-011` still carries two evidence kinds that are techniques
+
+Doc 91 § What a kind may name rules that `negative-control` and `tripwire-sentinel`
+describe how a gate was built rather than what it emitted, and that both are defects to
+correct in the registry file that carries them. Both are on `VER-FND-003-011`, and that
+entry is the only place in any registry file where either appears. The evidence those
+techniques actually produce - a command exit code, command output - is already recorded on
+the same entry, so the correction is a removal and not a substitution. **Owner: `FND-003`**,
+because doc 91 assigns it to the work package owning the file.
 
 ## Note on the enemy-projectile capacity ceiling and `TOQ-003`
 

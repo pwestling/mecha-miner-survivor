@@ -26,16 +26,11 @@ set -euo pipefail
 readonly REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly EXIT_VALIDATION=4
 
-failures=0
-
-fail() {
-  printf 'FAIL  %s\n' "$*"
-  failures=$((failures + 1))
-}
-
-pass() {
-  printf 'ok    %s\n' "$*"
-}
+# The shared emitters: pass/fail for findings about the subject under test,
+# control_pass/control_fail for anything produced while a negative control's fixture is in
+# place, section/gate_summary so a red run names the failing section. See build/gate-output.sh
+# for why control output is marked and why that marking is enforced rather than conventional.
+source "${REPO_ROOT}/build/gate-output.sh"
 
 # --- Accepted layout (doc 100 § Repository structure) ------------------------
 
@@ -48,6 +43,15 @@ readonly EXPECTED_PATHS=(
   # They exist from FND-002 onward and are the only workflow entrypoint.
   "build.sh"
   "build.ps1"
+  # doc 100 § Continuous integration requires a pull-request job; FND-005 is that
+  # job and this is the only file that is it. Deleting or renaming the workflow
+  # un-gates every gate at once, silently and with no red build anywhere, which is
+  # the one failure mode no gate inside the workflow can catch.
+  #
+  # Listing it here tests the path and nothing else, which is less than an earlier
+  # version of this comment claimed. § 8 is where the workflow's content is asserted;
+  # this entry only reports the name when the file is gone.
+  ".github/workflows/fast.yml"
   "game/project.godot"
   "game/MechaMiner.Game.csproj"
   "game/scenes"
@@ -103,7 +107,7 @@ project_name() {
   printf '%s' "${base%.csproj}"
 }
 
-echo "=== 1. accepted repository layout (VER-FND-001-003)"
+section "1. accepted repository layout (VER-FND-001-003)"
 for path in "${EXPECTED_PATHS[@]}"; do
   if [[ -e "${REPO_ROOT}/${path}" ]]; then
     pass "exists: ${path}"
@@ -112,8 +116,7 @@ for path in "${EXPECTED_PATHS[@]}"; do
   fi
 done
 
-echo
-echo "=== 2. solution contains exactly the accepted projects (VER-FND-001-003)"
+section "2. solution contains exactly the accepted projects (VER-FND-001-003)"
 actual_solution="$(cd "${REPO_ROOT}" && dotnet sln MechaMiner.sln list \
   | grep -E '\.csproj$' | tr '\\' '/' | sort)"
 expected_solution="$(printf '%s\n' "${EXPECTED_PROJECTS[@]}" | cut -d'|' -f1 | sort)"
@@ -124,8 +127,7 @@ else
   diff <(printf '%s\n' "${expected_solution}") <(printf '%s\n' "${actual_solution}") || true
 fi
 
-echo
-echo "=== 3. project reference edges match the accepted boundary (VER-FND-001-004)"
+section "3. project reference edges match the accepted boundary (VER-FND-001-004)"
 for entry in "${EXPECTED_PROJECTS[@]}"; do
   IFS='|' read -r project expected_refs _godot <<<"${entry}"
   actual_refs="$(msbuild_items "${project}" ProjectReference \
@@ -137,18 +139,46 @@ for entry in "${EXPECTED_PROJECTS[@]}"; do
   fi
 done
 
-echo
-echo "=== 4. only game/ may reference Godot (VER-FND-001-004)"
+section "4. only game/ may reference Godot (VER-FND-001-004)"
 for entry in "${EXPECTED_PROJECTS[@]}"; do
   IFS='|' read -r project _expected_refs godot_allowed <<<"${entry}"
   directory="${REPO_ROOT}/$(dirname "${project}")"
 
-  godot_packages="$(msbuild_items "${project}" PackageReference | grep -i '^Godot' || true)"
+  # `msbuild_items ... | grep -i '^Godot' || true` used to cover the whole pipeline, so a
+  # failed MSBuild evaluation produced an empty package list, and an empty package list
+  # is exactly what a project with no Godot dependency looks like. Every "must not
+  # reference Godot" row below would then pass without anything having been evaluated.
+  # The evaluation is now checked on its own before its output is filtered.
+  evaluated_packages=""
+  package_probe_status=0
+  evaluated_packages="$(msbuild_items "${project}" PackageReference)" || package_probe_status=$?
+  if [[ "${package_probe_status}" -ne 0 ]]; then
+    fail "$(project_name "${project}"): PackageReference evaluation failed (exit ${package_probe_status}); the Godot boundary is unproved for this project, which is not the same as satisfied"
+    continue
+  fi
+
+  # Filtering an already-validated in-memory list: here grep's exit 1 genuinely means
+  # "no Godot package", which is the outcome this row is testing for.
+  godot_packages="$(printf '%s\n' "${evaluated_packages}" | grep -i '^Godot' || true)"
+
+  # The lock file is half of this row's evidence, and an absent one used to be skipped:
+  # `godot_locked` stayed empty, the row was decided on the MSBuild half alone, and the
+  # "must not reference Godot" branch still printed `ok`. Deleting a project's
+  # packages.lock.json therefore removed an assertion without failing anything, which is
+  # Decision 11 rule 2 - an empty candidate set never satisfies a gate - in the mild
+  # form. Every one of the nine accepted projects has a committed lock file today, so
+  # this holds in fact; asserting it makes it hold by construction.
+  #
+  # verify-configurations.sh § 4 carries the sharper form of the same defect and the
+  # set-level assertion that goes with it: that the lock-file set is non-empty and is
+  # exactly the project set. This row is the per-project half.
   lock_file="${directory}/packages.lock.json"
   godot_locked=""
-  if [[ -f "${lock_file}" ]]; then
-    godot_locked="$(grep -oE '"Godot[A-Za-z.]*"' "${lock_file}" | sort -u | tr -d '"' | paste -sd, - || true)"
+  if [[ ! -f "${lock_file}" ]]; then
+    fail "$(project_name "${project}"): ${lock_file#"${REPO_ROOT}/"} is absent, so the locked half of the Godot boundary was not read; an unread half is not a satisfied one"
+    continue
   fi
+  godot_locked="$(grep -oE '"Godot[A-Za-z.]*"' "${lock_file}" | sort -u | tr -d '"' | paste -sd, - || true)"
 
   if [[ "${godot_allowed}" == "yes" ]]; then
     if [[ -n "${godot_packages}" && "${godot_locked}" == *GodotSharp* ]]; then
@@ -165,39 +195,273 @@ for entry in "${EXPECTED_PROJECTS[@]}"; do
   fi
 done
 
-echo
-echo "=== 5. no pure project references MechaMiner.Game (VER-FND-001-004)"
-reverse_edges="$(cd "${REPO_ROOT}" && grep -rlE 'ProjectReference[^>]*MechaMiner\.Game\.csproj' \
-  --include='*.csproj' src tests game 2>/dev/null || true)"
-if [[ -z "${reverse_edges}" ]]; then
-  pass "no project references MechaMiner.Game"
+# Runs a recursive grep whose absence-of-match is the passing outcome, and distinguishes
+# grep's three exit classes instead of collapsing two of them.
+#
+#   0  matches found        -> the prohibition is violated
+#   1  no matches           -> the prohibition holds
+#   2+ grep itself failed   -> nothing was searched, so the prohibition is UNPROVED
+#
+# `grep ... 2>/dev/null || true` conflated 1 and 2+: a missing search root, an unreadable
+# tree, or any other grep error produced an empty result, and the empty result took the
+# pass branch. That is the same defect as the GDScript check below, in two more places.
+# Also asserts that the search roots exist, because grep over a nonexistent directory is
+# an error the gate must not absorb.
+assert_absent_pattern() {
+  local description="$1"
+  local pattern="$2"
+  local include="$3"
+  shift 3
+  local roots=("$@")
+
+  local root
+  for root in "${roots[@]}"; do
+    if [[ ! -d "${REPO_ROOT}/${root}" ]]; then
+      fail "${description}: search root '${root}' does not exist, so this prohibition was not searched for"
+      return
+    fi
+  done
+
+  local matches
+  local grep_status=0
+  matches="$(cd "${REPO_ROOT}" && grep -rlE "${pattern}" --include="${include}" "${roots[@]}" 2>&1)" \
+    || grep_status=$?
+
+  if [[ "${grep_status}" -eq 0 ]]; then
+    fail "${description}: ${matches}"
+  elif [[ "${grep_status}" -eq 1 ]]; then
+    pass "${description}: no match in ${roots[*]}"
+  else
+    fail "${description}: grep exited ${grep_status}, so nothing was searched and the rule is unproved: ${matches}"
+  fi
+}
+
+section "5. no pure project references MechaMiner.Game (VER-FND-001-004)"
+assert_absent_pattern \
+  "no project references MechaMiner.Game" \
+  'ProjectReference[^>]*MechaMiner\.Game\.csproj' \
+  '*.csproj' \
+  src tests game
+
+section "6. no Godot types outside game/ (VER-FND-001-004)"
+assert_absent_pattern \
+  "no C# file under src/ or tests/ imports Godot" \
+  '(^|[^A-Za-z.])using[[:space:]]+Godot([;.]|$)' \
+  '*.cs' \
+  src tests
+
+section "7. no GDScript in the repository (VER-FND-001-005)"
+#
+# "No production GDScript" is one of AGENTS.md § Nonnegotiable architecture's hard
+# prohibitions (TR-FND-002), and this gate could not enforce it. Two separate defects,
+# both of which made a violation pass:
+#
+#   - `|| true` discarded git's exit status, so a git failure produced an empty
+#     result, and the empty result took the "pass" branch. Under a broken or absent
+#     git the prohibition was silently unenforceable.
+#   - only tracked paths were consulted, so an untracked .gd file passed - and
+#     untracked is precisely the state a newly written file is in.
+#
+# The candidate set is now tracked plus untracked-but-not-ignored, which is the same
+# set format/format-check inspects, and a nonzero git status fails the gate instead of
+# emptying it. Ignored paths stay out of scope on purpose: game/.godot/ is an engine
+# cache, and a gitignored file is not production content.
+#
+# The probe is a function so that the negative controls below can drive the identical
+# predicate. A gate asserted only against a clean tree proves nothing about its ability
+# to fail.
+
+# Emits a verdict word on line 1 - clean, violation, or unreadable - and detail after.
+gdscript_probe() {
+  local probe_status=0
+  local probe_output
+  probe_output="$(cd "${REPO_ROOT}" && git ls-files --cached --others --exclude-standard \
+    -- '*.gd' '*.gdshaderinc.gd' 2>&1)" || probe_status=$?
+
+  if [[ "${probe_status}" -ne 0 ]]; then
+    printf 'unreadable\ngit ls-files exited %s: %s\n' "${probe_status}" "${probe_output}"
+  elif [[ -n "${probe_output}" ]]; then
+    printf 'violation\n%s\n' "${probe_output}"
+  else
+    printf 'clean\n'
+  fi
+}
+
+# The first line of a probe's verdict, without a pipe. `probe | head -1` makes head exit
+# after one line, the probe take SIGPIPE, and `set -o pipefail` surface 141; `set -e` then
+# ABORTS THE WHOLE GATE mid-run - after § 1-6 have printed `ok` lines and before § 7 or
+# § 7a print anything, which reads as a truncated log rather than as a failure. It was
+# intermittent and it fired during § 8's negative controls.
+#
+# Measured over 300 trials on a probe emitting one path per offending file: 0 of 300 at
+# 428 bytes and at 4.1 KB, 136 of 300 at 70 KB, 300 of 300 at 326 KB. A tree with a few
+# hundred stray .gd files is exactly the tree this section exists to fail on, so the abort
+# was reachable precisely when the gate mattered. See delivery-waves § Decision 13.
+#
+# `tail -n +2` below is left as a pipeline on purpose: `tail` must read to EOF to know
+# where the end is, so it never closes the pipe early and there is no SIGPIPE to take.
+first_line() {
+  local text="$1"
+  printf '%s' "${text%%$'\n'*}"
+}
+
+gdscript_verdict="$(gdscript_probe)"
+gdscript_kind="$(first_line "${gdscript_verdict}")"
+gdscript_detail="$(printf '%s\n' "${gdscript_verdict}" | tail -n +2)"
+
+if [[ "${gdscript_kind}" == "unreadable" ]]; then
+  fail "could not enumerate GDScript candidates, so the no-GDScript rule is unproved: ${gdscript_detail}"
+elif [[ "${gdscript_kind}" == "violation" ]]; then
+  fail "GDScript is not permitted (TR-FND-002), tracked or untracked: ${gdscript_detail}"
 else
-  fail "reverse Godot edge: ${reverse_edges}"
+  pass "no .gd file is tracked, and none is present untracked in the working tree"
 fi
 
-echo
-echo "=== 6. no Godot types outside game/ (VER-FND-001-004)"
-stray_godot="$(cd "${REPO_ROOT}" && grep -rlE '(^|[^A-Za-z.])using[[:space:]]+Godot([;.]|$)' \
-  --include='*.cs' src tests 2>/dev/null || true)"
-if [[ -z "${stray_godot}" ]]; then
-  pass "no C# file under src/ or tests/ imports Godot"
+section "7a. negative controls: the no-GDScript gate can actually fail"
+readonly GDSCRIPT_FIXTURE="${REPO_ROOT}/game/DeliberatelyForbiddenGdscriptFixture.gd"
+
+remove_gdscript_fixture() {
+  rm -f "${GDSCRIPT_FIXTURE}"
+}
+
+if [[ "${gdscript_kind}" == "unreadable" ]]; then
+  # The controls drive the same enumeration § 7 just failed to perform, so running them
+  # would only restate that failure in three more places. § 7 already failed the gate.
+  echo "      NOT RUN: § 7 could not enumerate at all, so these controls cannot mean"
+  echo "      anything in this environment. The gate is already failing above."
 else
-  fail "Godot import outside game/: ${stray_godot}"
+  trap remove_gdscript_fixture EXIT
+
+  # Control 1: an untracked .gd file. This is exactly the case the old gate passed.
+  cat >"${GDSCRIPT_FIXTURE}" <<'GDFIXTURE'
+# Deliberately forbidden GDScript, written and removed by build/verify-architecture.sh.
+extends Node
+GDFIXTURE
+
+  control_kind="$(first_line "$(gdscript_probe)")"
+  if [[ "${control_kind}" == "violation" ]]; then
+    control_pass "an untracked .gd file is detected as a violation"
+  else
+    control_fail "an untracked .gd file was reported as '${control_kind}'; the gate cannot see untracked GDScript"
+  fi
+
+  # Control 2: the same fixture, with git unable to answer. The gate must report that
+  # it could not tell, and must never report a clean tree.
+  control_kind="$(first_line "$(GIT_DIR=/nonexistent/verify-architecture-broken.git gdscript_probe)")"
+  if [[ "${control_kind}" == "unreadable" ]]; then
+    control_pass "a git failure is reported as unreadable, not as a clean tree"
+  else
+    control_fail "with a broken git the probe reported '${control_kind}'; a failed enumeration must not pass"
+  fi
+
+  remove_gdscript_fixture
+  trap - EXIT
+
+  # The fixture must be gone. The comparison is against § 7's own verdict rather than
+  # against "clean", so that a pre-existing .gd file in the tree - which § 7 already
+  # failed on - is not reported a second time as a fixture-cleanup failure.
+  control_kind="$(first_line "$(gdscript_probe)")"
+  if [[ "${control_kind}" == "${gdscript_kind}" ]]; then
+    control_pass "the fixture was removed; the probe reports '${control_kind}' again, as it did in § 7"
+  else
+    control_fail "the GDScript fixture was not removed: probe reports '${control_kind}', § 7 saw '${gdscript_kind}'"
+  fi
 fi
 
-echo
-echo "=== 7. no GDScript in the repository (VER-FND-001-005)"
-gdscript="$(cd "${REPO_ROOT}" && git ls-files '*.gd' '*.gdshaderinc.gd' 2>/dev/null || true)"
-if [[ -z "${gdscript}" ]]; then
-  pass "no .gd source file is tracked"
+section "8. the CI workflow still gates the repository (VER-FND-005-009)"
+#
+# Section 1 lists the workflow among EXPECTED_PATHS, which is a test of the path and
+# nothing more. `[[ -e ]]` accepts a zero-byte fast.yml, and it accepts a workflow with
+# no jobs and no pull_request or push trigger. Either of those un-gates every gate in
+# this repository exactly as silently as deleting the file, and `./build.sh build` was
+# green for both. What follows asserts the content the suite depends on.
+#
+# The required verbs are a list of requirements, not a roster of what the file happens
+# to contain: delivery-waves § Step 4 says "The fast pull-request path is bootstrap,
+# format-check, build, test-fast, godot-import". Deriving them from the workflow would
+# assert only that the workflow agrees with itself.
+
+readonly CI_WORKFLOW=".github/workflows/fast.yml"
+readonly REQUIRED_TRIGGERS=("pull_request" "push")
+readonly REQUIRED_FAST_VERBS=("bootstrap" "format-check" "build" "test-fast" "godot-import")
+
+# The child keys of a top-level `key:` block, in either the block or the inline-list
+# form, so `on: [push, pull_request]` reads the same as the block this file uses.
+yaml_block_keys() {
+  awk -v want="$1" '
+    index($0, want ":") == 1 {
+      rest = substr($0, length(want) + 2)
+      sub(/^[[:space:]]*/, "", rest)
+      if (rest ~ /^\[/) {
+        gsub(/[][]/, "", rest)
+        n = split(rest, parts, /,/)
+        for (i = 1; i <= n; i++) {
+          gsub(/[[:space:]]/, "", parts[i])
+          if (parts[i] != "") { print parts[i] }
+        }
+      } else if (rest == "" || rest ~ /^#/) {
+        block = 1
+      }
+      next
+    }
+    block && /^[^[:space:]#]/ { block = 0 }
+    block && /^  [A-Za-z_][A-Za-z0-9_-]*:/ {
+      key = $0
+      sub(/:.*/, "", key)
+      gsub(/[[:space:]]/, "", key)
+      print key
+    }
+  ' "$2"
+}
+
+workflow_path="${REPO_ROOT}/${CI_WORKFLOW}"
+
+if [[ ! -f "${workflow_path}" ]]; then
+  fail "${CI_WORKFLOW} does not exist, so nothing in this repository is gated by anything"
+elif [[ ! -s "${workflow_path}" ]]; then
+  fail "${CI_WORKFLOW} exists but is empty, so it runs nothing; § 1's path test cannot tell those apart"
 else
-  fail "GDScript is not permitted (TR-FND-002): ${gdscript}"
+  pass "${CI_WORKFLOW} exists and is not empty"
+
+  # Here-strings rather than pipes into `grep -q`: grep exits on its first match and
+  # closes the pipe, printf takes SIGPIPE, and `set -o pipefail` then aborts the whole
+  # script with 141 instead of reporting an assertion. That happened, nondeterministically,
+  # on the control that deletes one step.
+  mapfile -t workflow_triggers < <(yaml_block_keys "on" "${workflow_path}")
+  workflow_trigger_list="$(printf '%s\n' "${workflow_triggers[@]-}")"
+  for trigger in "${REQUIRED_TRIGGERS[@]}"; do
+    if grep -qxF "${trigger}" <<<"${workflow_trigger_list}"; then
+      pass "${CI_WORKFLOW} triggers on ${trigger}"
+    else
+      fail "${CI_WORKFLOW} declares no ${trigger} trigger, so the suite never runs for that event"
+    fi
+  done
+
+  mapfile -t workflow_jobs < <(yaml_block_keys "jobs" "${workflow_path}")
+  if [[ "${#workflow_jobs[@]}" -eq 0 ]]; then
+    fail "${CI_WORKFLOW} declares no job, so nothing in it can run"
+  else
+    pass "${CI_WORKFLOW} declares ${#workflow_jobs[@]} job(s): ${workflow_jobs[*]}"
+    if grep -qE '^[[:space:]]+steps:[[:space:]]*$' "${workflow_path}"; then
+      pass "${CI_WORKFLOW} declares a steps: block"
+    else
+      fail "${CI_WORKFLOW} declares a job with no steps: block"
+    fi
+  fi
+
+  workflow_body="$(sed 's/#.*$//' "${workflow_path}")"
+  for verb in "${REQUIRED_FAST_VERBS[@]}"; do
+    if grep -qE "(^|[[:space:];&|])(\./)?build\.(sh|ps1)[[:space:]]+${verb}([[:space:]]|\$)" \
+        <<<"${workflow_body}"; then
+      pass "${CI_WORKFLOW} invokes ./build.sh ${verb}"
+    else
+      fail "${CI_WORKFLOW} never invokes ./build.sh ${verb}, which delivery-waves § Step 4 puts on the fast path"
+    fi
+  done
 fi
 
-echo
-if [[ "${failures}" -eq 0 ]]; then
-  echo "verify-architecture: PASS"
-  exit 0
-fi
-echo "verify-architecture: FAIL (${failures} assertion(s))"
-exit "${EXIT_VALIDATION}"
+# This gate runs negative controls in band (§ 7a), so its log contains failure-shaped text
+# on a green run. Prove the marking that separates that text from genuine findings holds.
+gate_assert_marking
+
+gate_summary "verify-architecture" "${EXIT_VALIDATION}"

@@ -298,9 +298,23 @@ public sealed class EntityIdAllocator
     /// matching generation, or names the reserved player.
     /// </returns>
     /// <remarks>
+    /// <para>
     /// Refusing to free the reserved player is what makes doc 20 § Scope and invariants'
     /// "exactly one player entity exists until terminal resolution" structural: the slot
     /// cannot re-enter the free list, so ordinary allocation can never hand it out.
+    /// </para>
+    /// <para>
+    /// <b>The generation is checked here and not only where an identity resolves.</b> doc 20
+    /// § Entity identity places the detection of a stale or foreign identity "where an identity
+    /// is resolved or freed", and a free is the position where getting it wrong costs most: the
+    /// slot a stale generation-<em>n</em> identity names is occupied by the live
+    /// generation-<em>n+1</em> entity, so freeing on the index alone would release a live record
+    /// and put its slot back on the free list to be handed out again. That is destruction rather
+    /// than a failed lookup, which is why the refusal is not merely symmetric with
+    /// <see cref="IsLive"/>. No diagnostic is counted, also per doc 20 § Entity identity: the
+    /// allocator's answers about an identity record nothing, and the one-counter-per-failed
+    /// resolution rule belongs to the store.
+    /// </para>
     /// </remarks>
     public bool TryFree(EntityId id)
     {

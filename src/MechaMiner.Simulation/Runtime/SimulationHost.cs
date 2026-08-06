@@ -27,9 +27,31 @@ namespace MechaMiner.Simulation.Runtime;
 /// <b>Ordering within one step.</b> A step does, in order: consult the pause set; if
 /// unblocked, ask the accumulator for whole ticks; record a performance diagnostic if the
 /// catch-up bound was reached; run each tick once in ascending order, committing the run clock
-/// after each; and when the clock reaches 35:00, evaluate the terminal boundary and raise
+/// after each; and when the clock has reached 35:00, evaluate the terminal boundary and raise
 /// <see cref="PauseReason.TerminalTransition"/> before the step returns. doc 10 § System phase
 /// ordering, phase 2: "the 35:00 terminal boundary is handled before another tick can begin."
+/// </para>
+/// <para>
+/// <b>The boundary is evaluated from both positions the condition occupies, not only after a
+/// commit.</b> A step can begin with the clock already at or past 35:00 and the boundary not yet
+/// evaluated - the clock's <see cref="RunClock.CommitTick"/> is public and the host is
+/// constructed over a caller-supplied clock - and phase 2's rule is owed there as well. A step
+/// that only stopped at that position left the run past 35:00, unblocked, still admitting
+/// scheduled events, and returning a zero-tick result forever.
+/// <see cref="EvaluateFinalBoundary"/> is idempotent, so occupying both positions still
+/// evaluates once per run.
+/// </para>
+/// <para>
+/// <b>A tick that cannot be committed ends the run.</b> The tick call and the commit are one
+/// region: doc 20 § Tick transaction requires an exception or invariant failure before commit to
+/// invalidate the tick and "end[] the run through the safe technical-failure path", and doc 90
+/// § Crash handling requires reporting "without attempting to continue corrupted simulation".
+/// Once the tick target has returned, the world has moved and the clock has not, so a refused
+/// commit cannot be retried: a later step that re-ran the same tick would break
+/// <c>VER-SIM-001-010</c>'s "no gap and no repeat". <see cref="HasEndedInTechnicalFailure"/> is
+/// the recorded fact, and every later <see cref="Step(double)"/> refuses. doc 20 § Where the end
+/// of a technically failed run is recorded is why that fact lives here rather than in the pause
+/// set or the run's terminal state.
 /// </para>
 /// <para>
 /// Cross-boundary consumer (doc 115 § Component registry): <c>CMP-PRS-001</c> in <c>game/</c>
@@ -47,6 +69,8 @@ public sealed class SimulationHost
     private readonly PerformanceDiagnostics _diagnostics;
     private readonly RunLifecycleHooks _lifecycle;
     private bool _inTick;
+    private Exception? _technicalFailure;
+    private SimulationTick _technicalFailureTick;
 
     /// <summary>Creates a host over an explicit clock, accumulator, and diagnostics sink.</summary>
     /// <param name="world">The tick target.</param>
@@ -96,6 +120,52 @@ public sealed class SimulationHost
     public RunLifecycleHooks Lifecycle => _lifecycle;
 
     /// <summary>
+    /// Whether the run ended through the safe technical-failure path, so no later step runs a
+    /// tick.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <c>docs/technical/20-simulation-core.md</c> § Tick transaction: "An exception or invariant
+    /// failure before commit invalidates the tick and ends the run through the safe
+    /// technical-failure path; it never publishes a partial state."
+    /// <c>docs/technical/90-performance-diagnostics-and-observability.md</c> § Crash handling is
+    /// what "safe" means for the step loop: reporting is registered "without attempting to
+    /// continue corrupted simulation". A tick that was applied to the world but not committed to
+    /// the clock has left the two disagreeing, so continuing would either re-run the tick or
+    /// carry the disagreement forward, and <c>VER-SIM-001-010</c> forbids the first.
+    /// </para>
+    /// <para>
+    /// <b>Why this is host state and not run-clock state.</b> The whole argument is doc 20
+    /// § Where the end of a technically failed run is recorded, which rules out a blocking reason
+    /// and rules out the run's terminal state before arriving here. In short:
+    /// <see cref="RunClock"/> owns terminal state and doc 20 § Scope and invariants makes a
+    /// terminal result "assigned once" and "immutable", while a technical failure has no result
+    /// to assign because doc 20 § Tick transaction forbids publishing a partial state, so
+    /// <see cref="ISimulationWorld.EvaluateTerminalBoundary(SimulationTick)"/> is deliberately
+    /// not called. The host owns step ordering across ticks, and refusing to run another tick is
+    /// a step-ordering fact.
+    /// </para>
+    /// </remarks>
+    public bool HasEndedInTechnicalFailure => _technicalFailure is not null;
+
+    /// <summary>
+    /// The failure that ended the run, or <see langword="null"/> while the run is healthy.
+    /// </summary>
+    /// <remarks>
+    /// Retained rather than only counted, so the diagnostic names the real defect. The same
+    /// exception was rethrown unchanged to the caller of <see cref="Step(double)"/>, on the
+    /// precedent doc 20 § Mid-commit invalidation sets for the other half of the tick: the
+    /// failure "is then rethrown unchanged".
+    /// </remarks>
+    public Exception? TechnicalFailure => _technicalFailure;
+
+    /// <summary>
+    /// The tick that was in flight when the run ended technically, meaningful only while
+    /// <see cref="HasEndedInTechnicalFailure"/>.
+    /// </summary>
+    public SimulationTick TechnicalFailureTick => _technicalFailureTick;
+
+    /// <summary>
     /// The UI clock: the total elapsed seconds handed to <see cref="Step(double)"/>, whether
     /// the run was blocked or not.
     /// </summary>
@@ -130,9 +200,11 @@ public sealed class SimulationHost
     /// <paramref name="elapsedSeconds"/> is negative or not finite.
     /// </exception>
     /// <exception cref="InvalidOperationException">
-    /// Called from inside <see cref="ISimulationWorld.AdvanceTick(SimulationTick)"/>. Doc 10
+    /// Called from inside <see cref="ISimulationWorld.AdvanceTick(SimulationTick)"/> - doc 10
     /// § Concurrency baseline runs the authoritative simulation serially, and a re-entrant step
-    /// would run a tick inside a tick.
+    /// would run a tick inside a tick - or called after the run ended through the
+    /// technical-failure path, in which case the refusal carries that failure as its inner
+    /// exception.
     /// </exception>
     public HostStepResult Step(double elapsedSeconds)
     {
@@ -150,6 +222,17 @@ public sealed class SimulationHost
             throw new InvalidOperationException(
                 "the authoritative simulation runs serially (doc 10 § Concurrency baseline); a host step "
                 + "must not be started from inside a tick");
+        }
+
+        if (_technicalFailure is not null)
+        {
+            throw new InvalidOperationException(
+                "the run ended through the safe technical-failure path at tick "
+                + _technicalFailureTick.ToString()
+                + ", so no later step runs a tick: doc 90 § Crash handling registers reporting \"without "
+                + "attempting to continue corrupted simulation\", and doc 20 § Tick transaction ends the run "
+                + "rather than retrying the tick whose call failed",
+                _technicalFailure);
         }
 
         UiClockSeconds += elapsedSeconds;
@@ -175,21 +258,49 @@ public sealed class SimulationHost
         {
             if (_clock.HasReachedFinalBoundary)
             {
+                // The boundary can already have been reached before this step began, and the
+                // evaluation is owed at that position too. doc 10 § System phase ordering, phase
+                // 2: "the 35:00 terminal boundary is handled before another tick can begin." A
+                // step that only broke out of the loop here left the run past 35:00, unblocked,
+                // still admitting scheduled events, and evaluating the boundary never.
+                // EvaluateFinalBoundary is idempotent, so visiting both positions cannot
+                // evaluate twice.
+                boundaryEvaluated = EvaluateFinalBoundary() || boundaryEvaluated;
                 break;
             }
 
             SimulationTick tick = _clock.CurrentTick;
-            _inTick = true;
             try
             {
-                _world.AdvanceTick(tick);
+                _inTick = true;
+                try
+                {
+                    _world.AdvanceTick(tick);
+                }
+                finally
+                {
+                    _inTick = false;
+                }
+
+                _clock.CommitTick();
             }
-            finally
+            catch (Exception failure)
             {
-                _inTick = false;
+                // Everything from the tick call to the commit is one region, and a failure
+                // anywhere in it leaves the world and the clock disagreeing about whether this
+                // tick happened. doc 20 § Tick transaction: such a failure "invalidates the tick
+                // and ends the run through the safe technical-failure path". Two failures reach
+                // here. The tick target threw, which doc 20 names directly. Or the tick target
+                // returned and the commit was refused, which is the pause-set condition in its
+                // second position: RunClock.CommitTick refuses while a blocking reason is
+                // present, so a reason raised from inside the tick makes that tick uncommittable.
+                // Ending the run is what stops the next step from re-running the same tick, which
+                // is what VER-SIM-001-010's "no repeat" forbids. The exception is rethrown
+                // unchanged, on the precedent of doc 20 § Mid-commit invalidation.
+                EndRunInTechnicalFailure(tick, failure);
+                throw;
             }
 
-            _clock.CommitTick();
             if (executed == 0)
             {
                 firstTick = tick;
@@ -275,5 +386,23 @@ public sealed class SimulationHost
         _clock.MarkTerminalBoundaryEvaluated();
         _clock.Raise(PauseReason.TerminalTransition);
         return true;
+    }
+
+    /// <summary>
+    /// Records that the run ended through the safe technical-failure path, so no later step runs
+    /// a tick.
+    /// </summary>
+    /// <param name="tick">The tick that was in flight.</param>
+    /// <param name="failure">The failure, which the caller rethrows unchanged.</param>
+    /// <remarks>
+    /// It records and refuses; it publishes nothing and evaluates no boundary. doc 20 § Tick
+    /// transaction: such a failure "never publishes a partial state", and <c>TR-RUN-007</c> in
+    /// <c>docs/technical/112-normative-requirement-index.md</c> § Foundation and runtime states
+    /// the same requirement unqualified.
+    /// </remarks>
+    private void EndRunInTechnicalFailure(SimulationTick tick, Exception failure)
+    {
+        _technicalFailure = failure;
+        _technicalFailureTick = tick;
     }
 }

@@ -244,6 +244,277 @@ internal sealed class SimulationHostTests
         });
     }
 
+    /// <summary>
+    /// Verification: <c>VER-SIM-001-010</c>.
+    ///
+    /// A blocking reason raised from inside a tick makes that tick uncommittable, so the run ends through
+    /// the safe technical-failure path instead of leaving the world one tick ahead of the clock and
+    /// re-running the tick on the next frame.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>The repeat is what this test exists for.</b> The pause-set condition sits in two places: in
+    /// <see cref="RunClock.CommitTick"/>, which refuses while a blocking reason is present, and in
+    /// <see cref="SimulationHost.Step(double)"/>, which consults the set before its loop. A reason raised
+    /// while a tick is in flight satisfies the first and misses the second, so the tick target ran, the
+    /// commit was refused, and a caller that cleared the reason and drove another frame got the same tick
+    /// again: the recorded sequence was 0, 1, 1 where <c>VER-SIM-001-010</c> requires each tick "exactly
+    /// once, ascending, with no gap and no repeat".
+    /// </para>
+    /// <para>
+    /// <b>Ending the run is the only available answer, and it is the documented one.</b> Once the tick
+    /// target has returned, the world has moved and the clock has not, and no later step can undo either.
+    /// <c>docs/technical/20-simulation-core.md</c> § Tick transaction: "An exception or invariant failure
+    /// before commit invalidates the tick and ends the run through the safe technical-failure path."
+    /// <c>docs/technical/90-performance-diagnostics-and-observability.md</c> § Crash handling names what
+    /// "safe" excludes: reporting is registered "without attempting to continue corrupted simulation".
+    /// </para>
+    /// <para>
+    /// The world is not a writer of pause state - <c>docs/technical/115-component-contract-and-schema-registry.md</c>
+    /// § Mutable-state ownership matrix gives run pause state to <c>CMP-RUN-001</c> alone - so a reason
+    /// arriving from inside a tick is a defect in the caller, which is exactly why the run ends rather than
+    /// absorbing it. The callback below stands in for such a caller.
+    /// </para>
+    /// </remarks>
+    [Test]
+    public void ABlockingReasonRaisedInsideATickEndsTheRunInsteadOfRepeatingTheTick()
+    {
+        RecordingWorld world = new();
+        SimulationHost host = new(world);
+        world.DuringTick = tick =>
+        {
+            if (tick.Index == 1)
+            {
+                host.Clock.Raise(PauseReason.RelicResolution);
+            }
+        };
+
+        HostStepResult first = host.Step(TickRate.SecondsForTicks(1));
+        InvalidOperationException refusedCommit = Expect.Throws<InvalidOperationException>(
+            () => host.Step(TickRate.SecondsForTicks(1)));
+
+        // The caller that cleared the reason and drove one more frame is what re-ran tick 1.
+        host.Clock.Clear(PauseReason.RelicResolution);
+        InvalidOperationException refusedStep = Expect.Throws<InvalidOperationException>(
+            () => host.Step(TickRate.SecondsForTicks(1)));
+
+        Expect.Multiple(() =>
+        {
+            NumericAssert.AreExactlyEqual(1L, first.TickCount, "the first step runs tick 0 and commits it");
+            Assert.That(
+                world.AdvancedTicks,
+                Is.EqualTo(new long[] { 0L, 1L }).AsCollection,
+                "each tick reaches the tick target exactly once, with no gap and no repeat: tick 1 must not "
+                    + "run a second time because its commit was refused");
+            Assert.That(
+                refusedCommit.Message,
+                Does.Contain("no tick commits while a blocking reason is present"),
+                "the refusal the caller sees is the run clock's own, rethrown unchanged rather than wrapped");
+            Assert.That(
+                host.HasEndedInTechnicalFailure,
+                Is.True,
+                "a tick applied to the world that cannot be committed ends the run (doc 20 § Tick "
+                    + "transaction), which is what stops the next frame from repeating it");
+            NumericAssert.AreExactlyEqual(
+                1L,
+                host.TechnicalFailureTick.Index,
+                "and the recorded failure names the tick that was in flight");
+            Assert.That(
+                host.TechnicalFailure,
+                Is.SameAs(refusedCommit),
+                "the recorded failure is the one the caller was given, not a copy or a summary");
+            Assert.That(
+                refusedStep.InnerException,
+                Is.SameAs(refusedCommit),
+                "and a later step refuses by naming that failure, so the run cannot be nursed along");
+            NumericAssert.AreExactlyEqual(
+                1L,
+                host.Clock.CommittedTickCount,
+                "the clock committed tick 0 only, so nothing was committed for the tick that failed");
+            NumericAssert.AreExactlyEqual(
+                0L,
+                world.TerminalBoundaryCallCount,
+                "and no terminal boundary was evaluated: a technical failure publishes no terminal result "
+                    + "(doc 20 § Tick transaction never publishes a partial state)");
+        });
+    }
+
+    /// <summary>
+    /// Verification: <c>VER-SIM-001-010</c>.
+    ///
+    /// A tick target that throws ends the run through the safe technical-failure path: the exception
+    /// reaches the caller unchanged, the run clock commits nothing for that tick, and no later step runs
+    /// the tick again.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="ISimulationWorld.AdvanceTick(SimulationTick)"/>'s own remarks promise this - "doc 20
+    /// § Tick transaction requires an exception or invariant failure before commit to end the run through
+    /// the safe technical-failure path" - and the half that was implemented was only the second sentence,
+    /// that the clock is not committed. Nothing ended the run and nothing recorded the failure, so a caller
+    /// driving the next frame ran the same tick again: the recorded sequence was 0, 0.
+    /// </remarks>
+    [Test]
+    public void ATickTargetThatThrowsEndsTheRunThroughTheTechnicalFailurePath()
+    {
+        const string failureMessage = "the tick target failed its own invariant";
+
+        RecordingWorld world = new();
+        SimulationHost host = new(world);
+        world.DuringTick = tick =>
+        {
+            if (tick.Index == 1)
+            {
+                throw new InvalidOperationException(failureMessage);
+            }
+        };
+
+        host.Step(TickRate.SecondsForTicks(1));
+        InvalidOperationException failure = Expect.Throws<InvalidOperationException>(
+            () => host.Step(TickRate.SecondsForTicks(1)));
+        InvalidOperationException refusedStep = Expect.Throws<InvalidOperationException>(
+            () => host.Step(TickRate.SecondsForTicks(1)));
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                failure.Message,
+                Is.EqualTo(failureMessage),
+                "the tick target's failure reaches the caller unchanged, so the diagnostic names the real "
+                    + "defect (doc 20 § Mid-commit invalidation rethrows unchanged for the other half of "
+                    + "the tick, and this half does the same)");
+            Assert.That(
+                world.AdvancedTicks,
+                Is.EqualTo(new long[] { 0L, 1L }).AsCollection,
+                "the failed tick is not retried, so no tick index appears twice");
+            NumericAssert.AreExactlyEqual(
+                1L,
+                host.Clock.CommittedTickCount,
+                "the run clock is not committed for a tick whose call threw");
+            Assert.That(host.HasEndedInTechnicalFailure, Is.True, "and the run has ended");
+            Assert.That(
+                host.TechnicalFailure,
+                Is.SameAs(failure),
+                "with the failure retained, so it is observable rather than only thrown");
+            NumericAssert.AreExactlyEqual(
+                1L,
+                host.TechnicalFailureTick.Index,
+                "naming the tick that was in flight");
+            Assert.That(
+                refusedStep.InnerException,
+                Is.SameAs(failure),
+                "every later step refuses and names it: doc 90 § Crash handling does not continue a "
+                    + "corrupted simulation");
+        });
+    }
+
+    /// <summary>
+    /// Verification: <c>VER-SIM-001-012</c>.
+    ///
+    /// A step that begins with the clock already at 35:00 and the boundary not yet evaluated evaluates it
+    /// there, rather than breaking out of the tick loop and leaving the run past the boundary, unblocked,
+    /// and still admitting scheduled events.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The boundary condition occupies two positions in the step: after a commit that reached it, and
+    /// before the first tick of a step that begins past it. Only the first was visited, so deleting the
+    /// second left the whole suite green - nothing reached that position - while the state it guards is a
+    /// run that returns a zero-tick result for ever and never resolves.
+    /// </para>
+    /// <para>
+    /// <c>docs/technical/10-runtime-architecture.md</c> § System phase ordering, phase 2: "the 35:00
+    /// terminal boundary is handled before another tick can begin." The clock arrives at the boundary here
+    /// through <see cref="RunClock.CommitTick"/>, which is public, and the host is constructed over that
+    /// clock through its public explicit-collaborator constructor, so the state is reachable with no test
+    /// hook and nothing internal.
+    /// </para>
+    /// </remarks>
+    [Test]
+    public void AStepThatBeginsPastTheBoundaryEvaluatesItRatherThanRunningOnForever()
+    {
+        const string preBoundaryEventId = "SCH-0060-WAVE";
+
+        RunClock clock = new();
+        while (!clock.HasReachedFinalBoundary)
+        {
+            clock.CommitTick();
+        }
+
+        RecordingWorld world = new();
+        SimulationHost host = new(
+            world,
+            clock,
+            new FixedStepAccumulator(),
+            new PerformanceDiagnostics());
+
+        // The state the guard is for, asserted to exist before the step rather than assumed: past 35:00,
+        // nothing evaluated, nothing blocking, and a pre-boundary event still admitted.
+        bool blockingBefore = clock.IsBlocking;
+        bool admittedBefore = host.TryBeginScheduledEvent(new SimulationTick(60), preBoundaryEventId);
+
+        HostStepResult atTheBoundary = host.Step(TickRate.SecondsForTicks(1));
+        HostStepResult afterwards = host.Step(TickRate.SecondsForTicks(1));
+        bool admittedAfter = host.TryBeginScheduledEvent(new SimulationTick(60), preBoundaryEventId);
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                blockingBefore,
+                Is.False,
+                "the run began the step past 35:00 and unblocked, which is the state under test");
+            Assert.That(
+                admittedBefore,
+                Is.True,
+                "and it still admitted a scheduled event, so the position really is unguarded before the "
+                    + "step");
+
+            Assert.That(
+                atTheBoundary.TerminalBoundaryEvaluated,
+                Is.True,
+                "the step that finds the clock past 35:00 evaluates the boundary");
+            NumericAssert.AreExactlyEqual(
+                1L,
+                world.TerminalBoundaryCallCount,
+                "exactly once, on the tick target");
+            Assert.That(
+                clock.TerminalBoundaryEvaluated,
+                Is.True,
+                "and the run clock records it (doc 20 § Scope and invariants: assigned once)");
+            NumericAssert.AreExactlyEqual(
+                0L,
+                atTheBoundary.TickCount,
+                "no tick runs at or after the boundary");
+            NumericAssert.AreExactlyEqual(
+                0L,
+                world.AdvanceTickCallCount,
+                "so the tick target was never advanced");
+            Assert.That(
+                clock.BlockingReasons,
+                Is.EqualTo(PauseReasonSet.Of(PauseReason.TerminalTransition)),
+                "the terminal transition is raised, which is what stops the run rather than a zero-tick "
+                    + "step repeating for ever");
+
+            Assert.That(
+                afterwards.WasBlocked,
+                Is.True,
+                "the following step is blocked rather than reaching the boundary position again");
+            Assert.That(
+                afterwards.TerminalBoundaryEvaluated,
+                Is.False,
+                "and evaluates nothing: the evaluation is idempotent, so occupying both positions cannot "
+                    + "evaluate twice");
+            NumericAssert.AreExactlyEqual(
+                1L,
+                world.TerminalBoundaryCallCount,
+                "still exactly one evaluation in the whole run");
+            Assert.That(
+                admittedAfter,
+                Is.False,
+                "and no scheduled event is admitted afterwards, which is the ordering doc 20 § Boundary and "
+                    + "tie ordering requires the evaluation to establish");
+        });
+    }
+
     private static void Interrupt(SimulationHost host, PauseReason interruption)
     {
         if (interruption == PauseReason.FocusLoss)

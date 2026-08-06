@@ -35,6 +35,15 @@ namespace MechaMiner.Simulation.Commands;
 /// happened - <see cref="IsAccepted"/> only says whether <em>this</em> submission was the one that did it.
 /// </para>
 /// <para>
+/// <b>Which is why a replay has to be the same action.</b> Because <see cref="WasApplied"/> answers "did my
+/// action happen", a result built by <see cref="Replayed"/> for a submission naming a <em>different</em>
+/// action would answer yes about something the caller never submitted, and would report the earlier
+/// submission's <see cref="ActionId"/> as though it were this one's. <c>CommandAdmissionGate.Apply</c>
+/// therefore compares the stored <see cref="ActionId"/> against the request's and refuses a mismatch as
+/// <see cref="TransactionRejectionReason.SequenceRegression"/>; this type's own guard is narrower and
+/// catches only a non-accepted original.
+/// </para>
+/// <para>
 /// <b>One domain event, for now.</b> doc 20 § Paused transactions says validation returns "domain events",
 /// plural, and the registry note in <c>tests/verification/SIM-004.json</c> reserves the domain content to
 /// the packages that own fabrication, relics, and PowerUps. The shell emits exactly the one fact it can

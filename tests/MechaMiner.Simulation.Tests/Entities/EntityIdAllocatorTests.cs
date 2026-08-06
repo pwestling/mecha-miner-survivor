@@ -245,6 +245,176 @@ internal sealed class EntityIdAllocatorTests
         });
     }
 
+    /// <summary>
+    /// Verification: supports <c>VER-SIM-003-001</c> and <c>VER-SIM-003-002</c>.
+    ///
+    /// Freeing a stale identity releases nothing: the live entity occupying that slot stays live, the slot
+    /// does not re-enter the free list, and the next allocation does not hand the slot out again.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <c>docs/technical/20-simulation-core.md</c> § Entity identity places the refusal of a stale or
+    /// foreign identity "where an identity is resolved or freed". The free position is the one where
+    /// getting it wrong destroys rather than merely misreads: the slot a stale generation-one identity
+    /// names is occupied by the live generation-two entity, so freeing on the index alone would end that
+    /// entity's life and put its slot back in circulation, and nothing downstream would report a failure.
+    /// </para>
+    /// <para>
+    /// The counterpart at the resolve position is <see cref="EntityIdTests"/>. This is the free position,
+    /// and it is asserted here because <see cref="EntityIdAllocator.TryFree(EntityId)"/> is where a slot
+    /// re-enters the free list.
+    /// </para>
+    /// </remarks>
+    [Test]
+    public void FreeingAStaleIdentityReleasesNothingAndLeavesTheLiveEntityAlone()
+    {
+        EntityIdAllocator allocator = NewAllocator(RunSession);
+        EntityDiagnostics diagnostics = allocator.DiagnosticsFor(PopulationCategory.Pickup);
+
+        Assert.That(allocator.TryAllocate(PopulationCategory.Pickup, out EntityId firstLife), Is.True);
+        Assert.That(allocator.TryFree(firstLife), Is.True);
+        Assert.That(allocator.TryAllocate(PopulationCategory.Pickup, out EntityId secondLife), Is.True);
+
+        int liveBeforeTheFrees = diagnostics.LiveCount;
+        bool freedStale = allocator.TryFree(firstLife);
+        bool freedUnset = allocator.TryFree(EntityId.Unset);
+        int liveAfterTheFrees = diagnostics.LiveCount;
+
+        // Whether the slot re-entered the free list is only observable through what the next allocation
+        // returns: a reused slot comes back at the same index with a higher generation.
+        Assert.That(allocator.TryAllocate(PopulationCategory.Pickup, out EntityId next), Is.True);
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                secondLife.Index,
+                Is.EqualTo(firstLife.Index),
+                "the two lives must share a slot, or nothing is being proved");
+            Assert.That(
+                secondLife.Generation,
+                Is.EqualTo(firstLife.Generation + 1),
+                "and differ only in generation");
+            Assert.That(
+                freedStale,
+                Is.False,
+                "freeing a stale generation must be refused; the slot it names is occupied by a live entity "
+                    + "of a later generation");
+            Assert.That(freedUnset, Is.False, "and the default identity frees nothing either");
+            Assert.That(
+                allocator.IsLive(secondLife),
+                Is.True,
+                "the live entity in that slot must survive the stale free, which is the whole point: a "
+                    + "wrongly accepted free destroys it silently");
+            Assert.That(
+                liveAfterTheFrees,
+                Is.EqualTo(liveBeforeTheFrees),
+                "so the live count does not move, and no free was counted");
+            Assert.That(
+                next.Index,
+                Is.Not.EqualTo(secondLife.Index),
+                "and the next allocation must be a fresh slot: a refused free must not have put the live "
+                    + "entity's slot back on the free list");
+            Assert.That(
+                allocator.IsLive(firstLife),
+                Is.False,
+                "while the stale identity is still not live");
+        });
+
+        // The contrast: the identity whose generation does match frees, so the refusal above was about the
+        // generation and not about TryFree refusing everything.
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                allocator.TryFree(secondLife),
+                Is.True,
+                "the matching generation frees");
+            Assert.That(allocator.IsLive(secondLife), Is.False, "and the entity is gone");
+        });
+    }
+
+    /// <summary>
+    /// Verification: supports <c>VER-SIM-003-003</c>.
+    ///
+    /// <see cref="EntityIdAllocator.TryGetCategory(EntityId, out PopulationCategory)"/> answers only for
+    /// this run's issued identities: an identity from another run session is refused even though its slot
+    /// index sits squarely inside a partition, and so are the unset and explicit no-entity identities.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The fence matters here rather than only at a store because this method is what
+    /// <see cref="EntityIdAllocator.TryFree(EntityId)"/>, <see cref="EntityIdAllocator.IsLive(EntityId)"/>,
+    /// and <see cref="EntityIdAllocator.IsRetired(EntityId)"/> classify through: without it a foreign
+    /// identity would be classified into a real category and then indexed into this run's arrays.
+    /// </para>
+    /// <para>
+    /// doc 20 § Entity identity: "An allocator asked about such an identity returns false and records
+    /// nothing, deliberately: its predicates are side-effect free." Both halves are asserted - the answer
+    /// and the absence of a diagnostic - because the counter belongs to the store and an allocator that
+    /// incremented it would inflate the store's one-per-failed-resolution count.
+    /// </para>
+    /// </remarks>
+    [Test]
+    public void CategoryLookupAnswersOnlyForThisRunSession()
+    {
+        EntityIdAllocator thisRun = NewAllocator(RunSession);
+        EntityIdAllocator otherRun = NewAllocator(SecondRunSession);
+
+        Assert.That(thisRun.TryAllocate(PopulationCategory.Elite, out EntityId local), Is.True);
+        Assert.That(otherRun.TryAllocate(PopulationCategory.Elite, out EntityId foreign), Is.True);
+
+        long staleBefore = thisRun.DiagnosticsFor(PopulationCategory.Elite).StaleReferenceResolutions;
+
+        bool localFound = thisRun.TryGetCategory(local, out PopulationCategory localCategory);
+        bool foreignFound = thisRun.TryGetCategory(foreign, out PopulationCategory foreignCategory);
+        bool unsetFound = thisRun.TryGetCategory(EntityId.Unset, out PopulationCategory unsetCategory);
+        bool noEntityFound = thisRun.TryGetCategory(
+            EntityId.NoEntityIn(RunSession),
+            out PopulationCategory noEntityCategory);
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                foreign.Index,
+                Is.EqualTo(local.Index),
+                "the foreign identity must land on the same slot index, or the fence is not what is being "
+                    + "tested");
+            Assert.That(localFound, Is.True, "this run's own identity is classified");
+            Assert.That(localCategory, Is.EqualTo(PopulationCategory.Elite), "into its own category");
+            Assert.That(
+                foreignFound,
+                Is.False,
+                "an identity from another run session is refused, even with its index inside a partition: "
+                    + "IDs are unique only within one run session");
+            Assert.That(
+                foreignCategory,
+                Is.EqualTo(default(PopulationCategory)),
+                "and no category is invented for it");
+            Assert.That(
+                unsetFound,
+                Is.False,
+                "the default identity names no run, so it belongs to no partition");
+            Assert.That(unsetCategory, Is.EqualTo(default(PopulationCategory)));
+            Assert.That(
+                noEntityFound,
+                Is.False,
+                "and 'no entity in this run' names no slot, so it is not issued either");
+            Assert.That(noEntityCategory, Is.EqualTo(default(PopulationCategory)));
+            Assert.That(
+                thisRun.DiagnosticsFor(PopulationCategory.Elite).StaleReferenceResolutions,
+                Is.EqualTo(staleBefore),
+                "and none of the refusals recorded a diagnostic: the allocator's predicates are side-effect "
+                    + "free and the counter belongs to the store");
+            Assert.That(
+                thisRun.TryFree(foreign),
+                Is.False,
+                "so a foreign identity cannot be freed through this run's allocator either");
+            Assert.That(
+                thisRun.IsLive(local),
+                Is.True,
+                "and this run's identity is untouched by any of it");
+        });
+    }
+
     private static EntityIdAllocator NewAllocator(ulong runSession)
     {
         return new EntityIdAllocator(

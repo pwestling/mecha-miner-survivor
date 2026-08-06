@@ -10,6 +10,7 @@
     "build/verify-architecture.sh stays. It asks MSBuild to evaluate every project, which catches an SDK-injected package reference no project file mentions, and CI and the build verb both call it. The two gates deliberately do not consume each other's output, so a defect in one reader cannot hide from both.",
     "The registry validator reports pre-existing documentation defects rather than being weakened until the repository passes. It separates errors from warnings by rule, and the rules that fire on pre-existing doc-tree defects are reported under their own exit class so they are visible instead of downgraded. See build/verify-registry.sh and the FND-009 handoff for the complete list found at implementation time.",
     "tests/verification/FND-001.json wrote the section sign as literal UTF-8 while FND-002.json and FND-003.json wrote it as a six-character JSON escape. TASK-FND-009-002 normalizes every registry file on literal UTF-8, because .editorconfig already fixes charset = utf-8 for the whole repository and an escape only obscures a character the file is already required to encode. The validator enforces it, and this note deliberately describes the escape in words rather than writing it, because writing it here would violate the rule the note is about.",
+    "VER-FND-009-010 and VER-FND-009-011 originally cited a MechaMiner.Tools.Tests.Audit.VerificationRegistryTests fixture that was never written, while carrying status: implemented. The validator could not see it: its selector check compared only the namespace prefix against the list of test projects, so any class or method name after that prefix passed. Both entries are repointed to RegistryValidatorTests, the narrowest node containing every test each claim depends on - the real-tree assertion (TheRepositoryHasNoIdentifierErrors, which is where a registry-shape or section-sign violation in any tests/verification/*.json becomes an error) and the negative control over the malformed fixture (TheMalformedFixtureProvesTheRegistryShapeRules). Neither status was weakened: the rules were always real and running, only the citation was false. VER-FND-009-014 registers the check that would have caught it.",
     "VER-FND-009-013 is a negative control of a gate, not of the product. It was added when MechaMiner.Diagnostics became a sixth src/ project: build/verify-architecture.sh gained the row that keeps that project a dependency leaf, and nothing yet showed the script's comparison could reject a violation of it. The five fixtures live under build/policy-fixtures/architecture/ beside the build-policy fixtures, because they are the same kind of evidence - a deliberately invalid input that must fail - and are deliberately not members of MechaMiner.sln."
   ],
   "entries": [
@@ -326,7 +327,7 @@
       "gameplaySources": [],
       "selector": {
         "kind": "nunit",
-        "value": "MechaMiner.Tools.Tests.Audit.VerificationRegistryTests"
+        "value": "MechaMiner.Tools.Tests.Audit.RegistryValidatorTests"
       },
       "fixtures": [
         "tests/verification/FND-001.json",
@@ -367,7 +368,7 @@
       "gameplaySources": [],
       "selector": {
         "kind": "nunit",
-        "value": "MechaMiner.Tools.Tests.Audit.VerificationRegistryTests.EveryRegistryFileUsesLiteralUtf8ForTheSectionSign"
+        "value": "MechaMiner.Tools.Tests.Audit.RegistryValidatorTests"
       },
       "fixtures": [
         "build/policy-fixtures/registry/malformed"
@@ -448,6 +449,41 @@
       ],
       "platforms": [
         "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-009-014",
+      "summary": "Every nunit selector in every tests/verification/*.json resolves to a test the NUnit harness itself reports, so an entry cannot claim implemented coverage of test code that does not exist. The test list is discovered with dotnet test --list-tests per accepted test project rather than maintained by hand, and a selector naming a nonexistent class, or a real class with a nonexistent method, is rejected. Discovery returning zero tests is itself a failure with its own rule rather than a pass with nothing to compare against, and a control proves that guard reads the discovered-test count rather than asserting a constant: an inventory of one non-matching test must fail as an unresolved selector and not as an empty inventory.",
+      "task": "TASK-FND-009-002",
+      "requirements": [
+        "TR-QUA-004",
+        "TR-AGT-003",
+        "TR-CTR-006"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#verification-registry",
+        "docs/technical/115-component-contract-and-schema-registry.md#verification"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Tools.Tests.Audit.RegistryValidatorTests"
+      },
+      "fixtures": [
+        "build/policy-fixtures/registry/compliant"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "negative-control",
+        "registry-report"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
       ],
       "tier": "fast",
       "status": "implemented"

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using MechaMiner.Content.Ids;
 using MechaMiner.Tests.Support;
@@ -107,11 +108,81 @@ internal sealed class ContentIdTests
         Assert.That(ContentId.TryCreate(id, ContentCategory.Weapon, out _), Is.False);
     }
 
+    /// <summary>
+    /// The declared descriptors are exactly the members of <see cref="ContentCategory"/>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Every other test over <see cref="ContentCategories.All"/> is a <c>foreach</c>, so
+    /// the table decides how much they prove and none of them can notice it shrinking: a
+    /// category deleted from the table takes its own coverage with it and leaves the
+    /// suite green. A count literal written here would be a second copy of a fact this
+    /// file already states, and one edit takes both.
+    /// </para>
+    /// <para>
+    /// The enum is the third party. It is declared in a different file, for a different
+    /// reason - it is the type every caller passes - and a descriptor cannot be dropped
+    /// without either the enum member going too, which is a breaking API change a
+    /// consumer will notice, or this failing by name.
+    /// </para>
+    /// </remarks>
+    [Test]
+    public void TheDeclaredCategoriesAreExactlyTheMembersOfTheCategoryEnum()
+    {
+        List<ContentCategory> declared = new();
+        foreach (ContentCategoryDescriptor descriptor in ContentCategories.All)
+        {
+            declared.Add(descriptor.Category);
+        }
+
+        // Unspecified is the zero sentinel - "no category was chosen" - and a descriptor
+        // for it would give an unset field a directory and a grammar. It is excluded from
+        // the expectation rather than from the enum so that the exclusion is one named
+        // value here instead of a rule that could quietly widen.
+        List<ContentCategory> expected = new();
+        foreach (ContentCategory category in Enum.GetValues<ContentCategory>())
+        {
+            if (category != ContentCategory.Unspecified)
+            {
+                expected.Add(category);
+            }
+        }
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                declared,
+                Is.EquivalentTo(expected),
+                nameof(ContentCategories) + " declares a different set of categories than "
+                    + nameof(ContentCategory) + " names. A category leaves this table only "
+                    + "when it leaves the enum");
+            Assert.That(
+                declared,
+                Is.Unique,
+                "a category declared twice would be two descriptors for one identity");
+            Assert.That(
+                declared,
+                Does.Not.Contain(ContentCategory.Unspecified),
+                "the zero sentinel must not carry a directory or a grammar");
+            Assert.That(
+                expected,
+                Is.Not.Empty,
+                "the category enum names nothing but its sentinel, so every walk over it "
+                    + "proves nothing");
+        });
+    }
+
     [Test]
     public void EveryDeclaredCategoryHasADirectoryAndAtLeastOneGrammar()
     {
         Expect.Multiple(() =>
         {
+            Assert.That(
+                ContentCategories.All,
+                Is.Not.Empty,
+                "no category is declared, so this loop asserts nothing; see "
+                    + nameof(TheDeclaredCategoriesAreExactlyTheMembersOfTheCategoryEnum));
+
             foreach (ContentCategoryDescriptor descriptor in ContentCategories.All)
             {
                 Assert.That(descriptor.DirectoryName, Is.Not.Empty);
@@ -128,6 +199,12 @@ internal sealed class ContentIdTests
     {
         Expect.Multiple(() =>
         {
+            Assert.That(
+                ContentCategories.All,
+                Is.Not.Empty,
+                "no category is declared, so this loop asserts nothing; see "
+                    + nameof(TheDeclaredCategoriesAreExactlyTheMembersOfTheCategoryEnum));
+
             foreach (ContentCategoryDescriptor descriptor in ContentCategories.All)
             {
                 Assert.That(

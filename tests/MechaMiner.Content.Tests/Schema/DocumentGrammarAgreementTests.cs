@@ -26,13 +26,26 @@ namespace MechaMiner.Content.Tests.Schema;
 /// such an invariant needs a third anchor".
 /// </para>
 /// <para>
-/// <b>The table, not the prose.</b> Doc 40 § Minted content-ID grammars states each
-/// grammar twice on purpose and says which half a machine reads: the table "is what a
-/// check reads to detect that a schema <c>pattern</c> or an implementation category table
-/// has drifted from this document". This fixture reads only the table. A check that
-/// scraped the surrounding English would break on the first editorial rewrite, be marked
-/// flaky, and be deleted by someone doing a reasonable cleanup - which leaves the
-/// repository worse off than never having had it.
+/// <b>The table, not the prose - for the grammar.</b> Doc 40 § Minted content-ID
+/// grammars states each grammar twice on purpose and says which half a machine reads: the
+/// table "is what a check reads to detect that a schema <c>pattern</c> or an
+/// implementation category table has drifted from this document". Every grammar
+/// comparison here therefore reads the table. A check that scraped the surrounding
+/// English for a regex would break on the first editorial rewrite, be marked flaky, and
+/// be deleted by someone doing a reasonable cleanup - which leaves the repository worse
+/// off than never having had it.
+/// </para>
+/// <para>
+/// <b>And the prose, for one thing only: that the prefix is still in it.</b> The same
+/// section makes the two halves agreeing a mandatory rule - "the two <b>must agree</b>
+/// ... neither may be deleted in favor of the other" - and nothing asserted that rule, so
+/// a prefix could leave one half and stay in the other with every test green. The
+/// document would then describe a set of aggregates its own table does not mint.
+/// <see cref="EveryPrefixInTheTableIsNamedInTheProseThatMintsIt"/> closes that, and it
+/// asks the smallest question that closes it: does the token occur. Containment is not
+/// parsing. It has no opinion about what the sentence says, so an editorial rewrite
+/// cannot break it, and it fails in exactly one case - a prefix has genuinely left one
+/// side.
 /// </para>
 /// <para>
 /// <b>Shape of the assertions.</b> One case per minted prefix, so deleting a row fails a
@@ -43,7 +56,7 @@ namespace MechaMiner.Content.Tests.Schema;
 /// fails.
 /// </para>
 /// <para>
-/// Verification: <c>VER-DAT-001-039</c>.
+/// Verification: <c>VER-DAT-001-039</c>, <c>VER-DAT-001-047</c>.
 /// </para>
 /// </remarks>
 [TestFixture]
@@ -353,21 +366,231 @@ internal sealed class DocumentGrammarAgreementTests
     }
 
     /// <summary>
-    /// Reads doc 40's machine-readable grammar table into prefix to grammar.
+    /// Every prefix the table mints is named somewhere in the prose that mints it.
     /// </summary>
     /// <remarks>
-    /// Reads the table under <see cref="TableHeading"/> and stops at the next heading, so
-    /// a later section adding a table of its own is not silently absorbed. Throws rather
-    /// than returning empty when the heading or the table is missing: an empty dictionary
-    /// would make every "contains" assertion here vacuously reportable as a missing row
-    /// instead of as a deleted table.
+    /// <para>
+    /// <b>The rule this enforces is doc 40's own.</b> § Minted content-ID grammars:
+    /// "The table is the <b>machine-readable</b> form of what the prose in this section
+    /// and in the sections it cites states in sentences, and the two <b>must agree</b>
+    /// ... neither may be deleted in favor of the other". Every other assertion in this
+    /// fixture reads the table and nothing reads the prose, so the halves can be brought
+    /// out of agreement without any test noticing - and the document then says one thing
+    /// in its sentences and another in its rows, which is the failure mode a reader hits
+    /// first and a machine never does.
+    /// </para>
+    /// <para>
+    /// <b>Containment, deliberately, and not parsing.</b> The check asks only whether the
+    /// prefix token occurs in the prose. It does not try to work out what the prose says
+    /// about it, which sentence names it, or whether the description is accurate: a rule
+    /// that scraped English would break on the first editorial rewrite, be marked flaky,
+    /// and be deleted by someone doing a reasonable cleanup - and doc 40 names that exact
+    /// outcome as the reason the table exists at all. Containment survives a rewrite,
+    /// survives reordering, survives a paragraph being split in two, and fails in exactly
+    /// one situation: a prefix has genuinely left one side.
+    /// </para>
+    /// <para>
+    /// <b>Which prose.</b> The section's own, plus the section each row's "Minted in"
+    /// column cites - that column is the document's own statement of where the prefix is
+    /// minted, so following it is reading doc 40 rather than guessing. <c>UTL-</c> is the
+    /// case that makes the difference: its grammar is minted under § Utilities and the
+    /// grammars section never spells it outside the table.
+    /// </para>
     /// </remarks>
-    private static IReadOnlyDictionary<string, string> ReadDocumentTable()
+    [Test]
+    public void EveryPrefixInTheTableIsNamedInTheProseThatMintsIt()
     {
-        string path = Path.Combine(
-            TestArtifacts.RepositoryRoot, DocumentPath.Replace('/', Path.DirectorySeparatorChar));
-        string[] lines = File.ReadAllLines(path);
+        IReadOnlyDictionary<string, string> mintedIn = ReadMintedInColumn();
+        string grammarSectionProse = ProseUnder(TableHeading);
 
+        List<string> unnamed = new();
+        List<string> unresolved = new();
+
+        foreach (KeyValuePair<string, string> row in mintedIn)
+        {
+            string prose = grammarSectionProse;
+
+            string? anchor = CitedAnchor(row.Value);
+            if (anchor is not null)
+            {
+                string? cited = ProseUnderAnchor(anchor);
+                if (cited is null)
+                {
+                    unresolved.Add(row.Key + " cites '" + row.Value
+                        + "', which resolves to no heading in " + DocumentPath);
+                    continue;
+                }
+
+                prose += cited;
+            }
+
+            if (!prose.Contains(row.Key, StringComparison.Ordinal))
+            {
+                unnamed.Add(row.Key + " (minted in: " + row.Value + ")");
+            }
+        }
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                grammarSectionProse,
+                Is.Not.Empty,
+                DocumentPath + " § Minted content-ID grammars has no prose outside its "
+                    + "table, so this check would pass over nothing");
+
+            // The containment test must be able to fail. A prefix no document mints is
+            // not in the prose, and if this found one the reader below is matching
+            // something other than what it is given.
+            Assert.That(
+                grammarSectionProse,
+                Does.Not.Contain("ZZZ-"),
+                "the prose reader is matching text that is not there");
+
+            Assert.That(
+                unresolved,
+                Is.Empty,
+                () => "rows whose 'Minted in' column names a section that does not exist:"
+                    + Environment.NewLine + string.Join(Environment.NewLine, unresolved));
+
+            Assert.That(
+                unnamed,
+                Is.Empty,
+                () => "doc 40 § Minted content-ID grammars requires the table and the prose "
+                    + "to agree, and these prefixes have a row but are named in no "
+                    + "sentence - in this section or in the section the row cites:"
+                    + Environment.NewLine + string.Join(Environment.NewLine, unnamed)
+                    + Environment.NewLine
+                    + "Retiring a prefix means retiring it from both halves under § Stable "
+                    + "ID policy, which requires a migration or tombstone entry. Deleting "
+                    + "one half leaves the document contradicting itself.");
+        });
+    }
+
+    /// <summary>Reads the table's prefix to "Minted in" column.</summary>
+    private static IReadOnlyDictionary<string, string> ReadMintedInColumn()
+    {
+        Dictionary<string, string> rows = new(StringComparer.Ordinal);
+        foreach (string[] cells in TableRows())
+        {
+            if (cells.Length < 5)
+            {
+                throw new InvalidOperationException(
+                    DocumentPath + " § Minted content-ID grammars has a row with fewer "
+                        + "than five cells; the 'Minted in' column is what says which "
+                        + "section's prose must name the prefix");
+            }
+
+            rows[cells[0].Trim().Trim('`')] = cells[4].Trim();
+        }
+
+        return rows;
+    }
+
+    /// <summary>
+    /// The heading anchor a "Minted in" cell links to, or null when the cell says the
+    /// prefix is minted in the grammars section itself.
+    /// </summary>
+    private static string? CitedAnchor(string mintedIn)
+    {
+        int hash = mintedIn.IndexOf("](#", StringComparison.Ordinal);
+        if (hash < 0)
+        {
+            return null;
+        }
+
+        int close = mintedIn.IndexOf(')', hash);
+        return close < 0 ? null : mintedIn[(hash + 3)..close];
+    }
+
+    /// <summary>
+    /// The prose beneath the heading whose GitHub anchor is <paramref name="anchor"/>, or
+    /// null when no heading has it.
+    /// </summary>
+    private static string? ProseUnderAnchor(string anchor)
+    {
+        foreach (string line in DocumentLines())
+        {
+            if (line.StartsWith("#", StringComparison.Ordinal)
+                && HeadingAnchor(line) == anchor)
+            {
+                return ProseUnder(line);
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Every non-table line beneath <paramref name="heading"/>, up to the next heading.
+    /// </summary>
+    /// <remarks>
+    /// Table rows are dropped rather than included. Including them would make the
+    /// containment check compare the table against itself, which is the two-party
+    /// agreement this fixture exists to avoid.
+    /// </remarks>
+    private static string ProseUnder(string heading)
+    {
+        string[] lines = DocumentLines();
+        int start = Array.IndexOf(lines, heading);
+        if (start < 0)
+        {
+            throw new InvalidOperationException(
+                DocumentPath + " has no '" + heading + "' heading");
+        }
+
+        System.Text.StringBuilder prose = new();
+        for (int index = start + 1; index < lines.Length; index++)
+        {
+            string line = lines[index];
+            if (line.StartsWith("#", StringComparison.Ordinal))
+            {
+                break;
+            }
+
+            if (line.TrimStart().StartsWith("|", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            prose.Append(line).Append('\n');
+        }
+
+        return prose.ToString();
+    }
+
+    /// <summary>The GitHub-style anchor of a Markdown heading line.</summary>
+    private static string HeadingAnchor(string line)
+    {
+        string text = line.TrimStart('#').Trim()
+            .Replace("`", string.Empty, StringComparison.Ordinal);
+        System.Text.StringBuilder anchor = new(text.Length);
+        foreach (char character in text.ToLowerInvariant())
+        {
+            if (char.IsLetterOrDigit(character) || character is '_' or '-')
+            {
+                anchor.Append(character);
+            }
+            else if (character == ' ')
+            {
+                anchor.Append('-');
+            }
+        }
+
+        return anchor.ToString();
+    }
+
+    /// <summary>Reads doc 40.</summary>
+    private static string[] DocumentLines()
+    {
+        return File.ReadAllLines(Path.Combine(
+            TestArtifacts.RepositoryRoot,
+            DocumentPath.Replace('/', Path.DirectorySeparatorChar)));
+    }
+
+    /// <summary>Every data row of the minted-grammar table, split into cells.</summary>
+    private static IEnumerable<string[]> TableRows()
+    {
+        string[] lines = DocumentLines();
         int start = Array.IndexOf(lines, TableHeading);
         if (start < 0)
         {
@@ -377,7 +600,7 @@ internal sealed class DocumentGrammarAgreementTests
                     + " a test fix");
         }
 
-        Dictionary<string, string> rows = new(StringComparer.Ordinal);
+        List<string[]> rows = new();
         for (int index = start + 1; index < lines.Length; index++)
         {
             string line = lines[index].Trim();
@@ -399,12 +622,42 @@ internal sealed class DocumentGrammarAgreementTests
 
             string prefix = cells[0].Trim().Trim('`');
             string grammar = cells[1].Trim().Trim('`');
-            if (prefix.Length == 0 || prefix == "Prefix" || grammar.StartsWith("-", StringComparison.Ordinal))
+            if (prefix.Length == 0
+                || prefix == "Prefix"
+                || grammar.StartsWith("-", StringComparison.Ordinal))
             {
                 continue;
             }
 
-            if (!rows.TryAdd(prefix, grammar))
+            rows.Add(cells);
+        }
+
+        if (rows.Count == 0)
+        {
+            throw new InvalidOperationException(
+                DocumentPath + " § Minted content-ID grammars has no table rows");
+        }
+
+        return rows;
+    }
+
+    /// <summary>
+    /// Reads doc 40's machine-readable grammar table into prefix to grammar.
+    /// </summary>
+    /// <remarks>
+    /// Reads the table under <see cref="TableHeading"/> and stops at the next heading, so
+    /// a later section adding a table of its own is not silently absorbed. Throws rather
+    /// than returning empty when the heading or the table is missing: an empty dictionary
+    /// would make every "contains" assertion here vacuously reportable as a missing row
+    /// instead of as a deleted table.
+    /// </remarks>
+    private static IReadOnlyDictionary<string, string> ReadDocumentTable()
+    {
+        Dictionary<string, string> rows = new(StringComparer.Ordinal);
+        foreach (string[] cells in TableRows())
+        {
+            string prefix = cells[0].Trim().Trim('`');
+            if (!rows.TryAdd(prefix, cells[1].Trim().Trim('`')))
             {
                 throw new InvalidOperationException(
                     DocumentPath + " mints " + prefix + " on two rows; one prefix cannot"

@@ -33,19 +33,42 @@ internal sealed class CategoryVerificationRegistryTests
 {
     private static IEnumerable<string> Packages => new[] { "DAT-002", "DAT-003" };
 
+    /// <summary>
+    /// What an emptied <c>entries</c> array must be reported as, wherever it is found.
+    /// </summary>
+    /// <remarks>
+    /// Every check in this fixture is a walk over <c>entries</c>, and a walk over nothing
+    /// reports nothing wrong. Emptying the array satisfied all five at once - the one
+    /// edit to a registry that no test here could see. Each walk now counts what it
+    /// visited, in the same shape as <c>SchemaNullScan.DocumentsSeen</c> and
+    /// <c>SchemaFixturePartition.FilesChecked</c> elsewhere in this suite. What makes
+    /// each counter a count rather than a constant is that emptying the array turns every
+    /// one of them red; nothing here asserts a number, only that the walk arrived
+    /// somewhere.
+    /// </remarks>
+    private static string NoEntries(string package)
+    {
+        return "tests/verification/" + package + ".json holds no entries, so this walk "
+            + "visited nothing and every assertion in it passed over an empty sequence";
+    }
+
     [TestCaseSource(nameof(Packages))]
     public void EveryCitedSourceResolvesToARealFileAndHeading(string package)
     {
         using JsonDocument registry = Registry(package);
         List<string> unresolved = new();
+        int entriesSeen = 0;
+        int citationsResolved = 0;
 
         foreach (JsonElement entry in Entries(registry))
         {
+            entriesSeen++;
             string id = entry.GetProperty("id").GetString()!;
             foreach (string property in new[] { "technicalSources", "gameplaySources" })
             {
                 foreach (JsonElement citation in entry.GetProperty(property).EnumerateArray())
                 {
+                    citationsResolved++;
                     string value = citation.GetString()!;
                     int hash = value.IndexOf('#', StringComparison.Ordinal);
                     string path = hash < 0 ? value : value[..hash];
@@ -66,11 +89,20 @@ internal sealed class CategoryVerificationRegistryTests
             }
         }
 
-        Assert.That(
-            unresolved,
-            Is.Empty,
-            () => package + " has unresolved citations:" + Environment.NewLine
-                + string.Join(Environment.NewLine, unresolved));
+        Expect.Multiple(() =>
+        {
+            Assert.That(entriesSeen, Is.GreaterThan(0), NoEntries(package));
+            Assert.That(
+                citationsResolved,
+                Is.GreaterThan(0),
+                package + " holds entries but not one citation was resolved, so this walk "
+                    + "proved nothing about any document");
+            Assert.That(
+                unresolved,
+                Is.Empty,
+                () => package + " has unresolved citations:" + Environment.NewLine
+                    + string.Join(Environment.NewLine, unresolved));
+        });
     }
 
     [TestCaseSource(nameof(Packages))]
@@ -102,6 +134,8 @@ internal sealed class CategoryVerificationRegistryTests
                     id + " must continue the sequence; entries are never renumbered");
                 previous = number;
             }
+
+            Assert.That(seen, Is.Not.Empty, NoEntries(package));
         });
     }
 
@@ -109,11 +143,13 @@ internal sealed class CategoryVerificationRegistryTests
     public void EveryEntryCarriesTheFieldsDocNinetyOneRequires(string package)
     {
         using JsonDocument registry = Registry(package);
+        int entriesChecked = 0;
 
         Expect.Multiple(() =>
         {
             foreach (JsonElement entry in Entries(registry))
             {
+                entriesChecked++;
                 string id = entry.GetProperty("id").GetString()!;
 
                 foreach (string required in new[]
@@ -134,6 +170,8 @@ internal sealed class CategoryVerificationRegistryTests
                     Is.GreaterThan(0),
                     id + " must cite at least one requirement");
             }
+
+            Assert.That(entriesChecked, Is.GreaterThan(0), NoEntries(package));
         });
     }
 
@@ -148,9 +186,11 @@ internal sealed class CategoryVerificationRegistryTests
     {
         using JsonDocument registry = Registry(package);
         List<string> thin = new();
+        int summariesRead = 0;
 
         foreach (JsonElement entry in Entries(registry))
         {
+            summariesRead++;
             string id = entry.GetProperty("id").GetString()!;
             string summary = entry.GetProperty("summary").GetString()!;
 
@@ -169,28 +209,36 @@ internal sealed class CategoryVerificationRegistryTests
             }
         }
 
-        Assert.That(
-            thin,
-            Is.Empty,
-            () => package + " entries that describe a rule without its route:"
-                + Environment.NewLine + string.Join(Environment.NewLine, thin));
+        Expect.Multiple(() =>
+        {
+            Assert.That(summariesRead, Is.GreaterThan(0), NoEntries(package));
+            Assert.That(
+                thin,
+                Is.Empty,
+                () => package + " entries that describe a rule without its route:"
+                    + Environment.NewLine + string.Join(Environment.NewLine, thin));
+        });
     }
 
     [TestCaseSource(nameof(Packages))]
     public void EveryNunitSelectorNamesATypeInThisAssembly(string package)
     {
         using JsonDocument registry = Registry(package);
+        int entriesSeen = 0;
+        int selectorsResolved = 0;
 
         Expect.Multiple(() =>
         {
             foreach (JsonElement entry in Entries(registry))
             {
+                entriesSeen++;
                 JsonElement selector = entry.GetProperty("selector");
                 if (selector.GetProperty("kind").GetString() != "nunit")
                 {
                     continue;
                 }
 
+                selectorsResolved++;
                 string value = selector.GetProperty("value").GetString()!;
                 string typeName = value.Contains('+', StringComparison.Ordinal)
                     ? value[..value.IndexOf('+', StringComparison.Ordinal)]
@@ -202,6 +250,14 @@ internal sealed class CategoryVerificationRegistryTests
                     entry.GetProperty("id").GetString() + " names '" + typeName
                         + "', which is not a type in this assembly");
             }
+
+            Assert.That(entriesSeen, Is.GreaterThan(0), NoEntries(package));
+            Assert.That(
+                selectorsResolved,
+                Is.GreaterThan(0),
+                package + " declares no nunit selector, so this walk resolved no type at "
+                    + "all. The registry's whole claim is that its selectors point at "
+                    + "evidence that exists");
         });
     }
 
@@ -210,12 +266,16 @@ internal sealed class CategoryVerificationRegistryTests
     {
         using JsonDocument registry = Registry(package);
         List<string> missing = new();
+        int entriesSeen = 0;
+        int pathsChecked = 0;
 
         foreach (JsonElement entry in Entries(registry))
         {
+            entriesSeen++;
             string id = entry.GetProperty("id").GetString()!;
             foreach (JsonElement fixture in entry.GetProperty("fixtures").EnumerateArray())
             {
+                pathsChecked++;
                 string path = fixture.GetString()!;
                 string absolute = Path.Combine(TestArtifacts.RepositoryRoot, path);
                 if (!File.Exists(absolute) && !Directory.Exists(absolute))
@@ -225,11 +285,20 @@ internal sealed class CategoryVerificationRegistryTests
             }
         }
 
-        Assert.That(
-            missing,
-            Is.Empty,
-            () => package + " names fixtures that are absent:" + Environment.NewLine
-                + string.Join(Environment.NewLine, missing));
+        Expect.Multiple(() =>
+        {
+            Assert.That(entriesSeen, Is.GreaterThan(0), NoEntries(package));
+            Assert.That(
+                pathsChecked,
+                Is.GreaterThan(0),
+                package + " holds entries and not one of them names a fixture, so this "
+                    + "walk resolved no path");
+            Assert.That(
+                missing,
+                Is.Empty,
+                () => package + " names fixtures that are absent:" + Environment.NewLine
+                    + string.Join(Environment.NewLine, missing));
+        });
     }
 
     /// <summary>The negative control: the resolver must be able to fail.</summary>

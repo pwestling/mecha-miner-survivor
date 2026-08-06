@@ -1089,6 +1089,92 @@
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-046",
+      "summary": "How many permutations the canonicalization property is proved over is anchored twice, and neither anchor is a number written beside the array. First, the committed set is compared as a set against the canonical/permutation-*.json files on disk, so the fixture directory decides the count and a line deleted from the array fails against a file that is still there. Second, a family is generated rather than committed: every cyclic rotation of the authored fixture's own root property order, each emitted indented and compact, with its size compared against twice the number of root properties the document declares. Why: both agreement loops ranged over a four-element array with no cardinality claim, and shrinking it to one element left them comparing the baseline against itself - measured at 5 passed, 0 failed with a one-element array before this entry, and 1 failed after. Reducing the rotation generator to a single rotation fails the size comparison, 16 expected against 2, which is what shows the number is read from the document rather than written down. DAT-006's permutation gate is built on this property, and determinism proved over one permutation reads identically to determinism proved over all of them. Route not covered: orderings no rotation reaches, which the committed reversed-order fixture covers, and all n! orderings, which is 40320 envelope reads for a property a rotation through every starting position already exercises.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Fixtures.CanonicalPermutationTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/canonical/permutation-authored-order.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/canonical/permutation-reversed-order.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/canonical/permutation-reindented.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/canonical/permutation-compact.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "file-hash", "canonical-ordering"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-047",
+      "summary": "Doc 40 states each minted grammar twice, in a table and in prose, and makes their agreement a mandatory rule; this asserts the half of that rule a machine can hold. Route: every prefix in the minted-grammar table is looked for, as a substring, in the prose of the grammars section with the table rows stripped out, plus the prose of whichever section that row's 'Minted in' column links to - the document's own statement of where the prefix is minted, which is what UTL- needs, since its grammar is minted under Utilities and the grammars section never spells it outside the table. Why containment and not parsing: a check that read what the prose said about a prefix would break on the first editorial rewrite, be called flaky, and be deleted in a reasonable cleanup, which is the outcome doc 40 names as the reason the table exists. Containment survives a rewrite and fails in one case only. Measured against the real document: deleting both prose mentions of SIEGE- while leaving its row failed this and nothing else, 1248 of 1249 still passing. The complementary direction is already held - deleting the SIEGE- row together with both roster entries in this fixture fails the two count assertions - so the two together bound both halves of the must-agree rule.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#minted-content-id-grammars",
+        "docs/technical/40-content-data-and-validation.md#stable-id-policy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.DocumentGrammarAgreementTests"
+      },
+      "fixtures": ["docs/technical/40-content-data-and-validation.md"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-048",
+      "summary": "Every walk over DAT-001.json's entries counts what it visited and fails when the count is zero. Route: the citation, ID-sequence, required-field, nunit-selector and fixture-path checks each increment a counter per entry, and the citation, selector and fixture walks additionally count the citations, selectors and paths actually resolved, since a registry whose entries named none of those would still be a walk that decided nothing. Why: all five were foreach loops with no non-empty assertion, so an emptied entries array satisfied every one of them. Measured directly: with the entries array emptied in all three verification registries, the nineteen tests across the two registry fixtures were 19 passed, 0 failed before this change and 2 passed, 17 failed after, the two survivors being the resolver's own negative control, which reads no entries. That is what makes each counter a count rather than a constant.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#what-evidencekinds-means"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Fixtures.VerificationRegistryTests"
+      },
+      "fixtures": ["tests/verification/DAT-001.json"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-001-049",
+      "summary": "The declared content-category table is compared as a set against the ContentCategory enum less its zero sentinel, and the sentinel is separately required not to be declared. Why: two checks range over ContentCategories.All and both are foreach loops, so the table decides how much they prove and neither can see it shrink; a count literal beside the table would be a second copy of a fact the table already states. The enum is the third party - it lives in another file, it is the type every caller passes, and dropping a member is a breaking API change rather than a tidy-up. Measured: adding a member to ContentCategory with no descriptor passed 1249 of 1249 before this entry and fails it after. The reverse direction, deleting a declared category, was already caught loudly by the fixture corpus at 57 failures, so that half is a strengthening rather than a fail-open closed. Both loops additionally assert the table is not empty so that an emptied table reports as an empty walk instead of as success.",
+      "task": "TASK-DAT-001-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#stable-id-policy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Ids.ContentIdTests"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
     }
   ]
 }

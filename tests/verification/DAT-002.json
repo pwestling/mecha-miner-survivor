@@ -1085,6 +1085,46 @@
       ],
       "tier": "fast",
       "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-032",
+      "summary": "The declared definition-kind table has a cardinality anchored to two things outside itself. Route: the kinds CategorySchemas.All declares are compared as a set against the DefinitionKind enum less its zero sentinel, and the schema file names it declares are compared as a set against every *.schema.json under content/schemas/ less the envelope. Why: four checks range over that table - the schema load, the field-order comparison, and both provenance-gate coverage walks - and every one of them is a foreach, so the table decides how much they all prove and nothing derived from it can see it shrink. A count literal written next to the table would be a second copy of a fact the table already states and one edit would take both. Neither anchor is a literal: the enum lives in another file and is what every caller passes to CategorySchemas.Read, and the schema directory is the number content/schemas/README.md advertises to readers who will never run this suite - 'the other sixteen *.schema.json' and 'one schema per definition kind - sixteen of them'. Measured: adding a member to DefinitionKind with no descriptor passed 1249 of 1249 before this entry and fails it after. Deleting an existing kind was already caught loudly by the fixture corpus, 57 failures, so that direction is a strengthening rather than a fail-open closed. The two provenance-gate walks additionally count what they visited so that an emptied table reports as an empty walk rather than as success. Route not covered: whether a declared schema says the right thing, which the field-order and agreement suites own.",
+      "task": "TASK-DAT-002-001",
+      "requirements": ["TR-DAT-002", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySchemaAgreementTests"
+      },
+      "fixtures": ["content/schemas"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-033",
+      "summary": "Every walk over DAT-002.json's entries counts what it visited and fails when the count is zero. Route: each of the six per-package checks - citation resolution, ID sequencing, required fields, summary routes, nunit selector resolution and fixture-path existence - increments a counter per entry, and the citation, selector and fixture walks additionally count the citations, selectors and paths they actually resolved, because a registry whose entries named none of those would still be a walk that decided nothing. Why: all six were foreach loops with no non-empty assertion, so an emptied entries array satisfied every one of them. Measured directly, with the entries array of all three registries emptied, the nineteen tests across the two registry fixtures were 19 passed, 0 failed before this change and 2 passed, 17 failed after; the two survivors read no entries. That measurement is what makes each counter a count rather than a constant.",
+      "task": "TASK-DAT-002-001",
+      "requirements": ["TR-DAT-002", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#what-evidencekinds-means"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategoryVerificationRegistryTests"
+      },
+      "fixtures": ["tests/verification/DAT-002.json"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
     }
   ]
 }

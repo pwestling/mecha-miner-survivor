@@ -35,6 +35,23 @@ internal sealed class VerificationRegistryTests
         RegexOptions.CultureInvariant,
         TimeSpan.FromSeconds(1));
 
+    /// <summary>
+    /// What an emptied <c>entries</c> array must be reported as, wherever it is found.
+    /// </summary>
+    /// <remarks>
+    /// Every test in this fixture is a walk over <c>entries</c>, and a walk over nothing
+    /// reports nothing wrong. Emptying the array - by hand, by a bad merge, or by a
+    /// generator that wrote an empty document - satisfied all five of them at once, which
+    /// is the one edit to this registry that no test could see. Each walk now counts what
+    /// it visited, in the same shape as <c>SchemaNullScan.DocumentsSeen</c> and
+    /// <c>SchemaFixturePartition.FilesChecked</c> elsewhere in this suite, and the
+    /// counters are counts rather than constants because emptying the array turns every
+    /// one of them red.
+    /// </remarks>
+    private const string NoEntries =
+        "tests/verification/DAT-001.json holds no entries, so this walk visited nothing "
+            + "and every assertion in it passed over an empty sequence";
+
     private static JsonDocument Registry()
     {
         return VerificationRegistry.Open();
@@ -54,14 +71,18 @@ internal sealed class VerificationRegistryTests
     {
         using JsonDocument registry = Registry();
         List<string> unresolved = new();
+        int entriesSeen = 0;
+        int citationsResolved = 0;
 
         foreach (JsonElement entry in Entries(registry))
         {
+            entriesSeen++;
             string id = entry.GetProperty("id").GetString()!;
             foreach (string property in new[] { "technicalSources", "gameplaySources" })
             {
                 foreach (JsonElement citation in entry.GetProperty(property).EnumerateArray())
                 {
+                    citationsResolved++;
                     string value = citation.GetString()!;
                     int hash = value.IndexOf('#', StringComparison.Ordinal);
                     string path = hash < 0 ? value : value[..hash];
@@ -82,11 +103,20 @@ internal sealed class VerificationRegistryTests
             }
         }
 
-        Assert.That(
-            unresolved,
-            Is.Empty,
-            () => "unresolved citations:" + Environment.NewLine
-                + string.Join(Environment.NewLine, unresolved));
+        Expect.Multiple(() =>
+        {
+            Assert.That(entriesSeen, Is.GreaterThan(0), NoEntries);
+            Assert.That(
+                citationsResolved,
+                Is.GreaterThan(0),
+                "the registry holds entries but not one citation was resolved, so this "
+                    + "walk proved nothing about any document");
+            Assert.That(
+                unresolved,
+                Is.Empty,
+                () => "unresolved citations:" + Environment.NewLine
+                    + string.Join(Environment.NewLine, unresolved));
+        });
     }
 
     /// <summary>The negative control: the resolver must be able to fail.</summary>
@@ -138,6 +168,8 @@ internal sealed class VerificationRegistryTests
                     id + " must continue the sequence; entries are never renumbered");
                 previous = number;
             }
+
+            Assert.That(seen, Is.Not.Empty, NoEntries);
         });
     }
 
@@ -145,11 +177,13 @@ internal sealed class VerificationRegistryTests
     public void EveryEntryCarriesTheFieldsDocNinetyOneRequires()
     {
         using JsonDocument registry = Registry();
+        int entriesChecked = 0;
 
         Expect.Multiple(() =>
         {
             foreach (JsonElement entry in Entries(registry))
             {
+                entriesChecked++;
                 string id = entry.GetProperty("id").GetString()!;
 
                 foreach (string required in new[]
@@ -174,6 +208,8 @@ internal sealed class VerificationRegistryTests
                     Is.GreaterThan(0),
                     id + " must cite at least one requirement");
             }
+
+            Assert.That(entriesChecked, Is.GreaterThan(0), NoEntries);
         });
     }
 
@@ -185,17 +221,21 @@ internal sealed class VerificationRegistryTests
     public void EveryNunitSelectorNamesATypeInThisAssembly()
     {
         using JsonDocument registry = Registry();
+        int entriesSeen = 0;
+        int selectorsResolved = 0;
 
         Expect.Multiple(() =>
         {
             foreach (JsonElement entry in Entries(registry))
             {
+                entriesSeen++;
                 JsonElement selector = entry.GetProperty("selector");
                 if (selector.GetProperty("kind").GetString() != "nunit")
                 {
                     continue;
                 }
 
+                selectorsResolved++;
                 string value = selector.GetProperty("value").GetString()!;
                 string typeName = value.Contains('+', StringComparison.Ordinal)
                     ? value[..value.IndexOf('+', StringComparison.Ordinal)]
@@ -207,6 +247,14 @@ internal sealed class VerificationRegistryTests
                     entry.GetProperty("id").GetString() + " names '" + typeName
                         + "', which is not a type in this assembly");
             }
+
+            Assert.That(entriesSeen, Is.GreaterThan(0), NoEntries);
+            Assert.That(
+                selectorsResolved,
+                Is.GreaterThan(0),
+                "no entry declares an nunit selector, so this walk resolved no type at "
+                    + "all. The registry's whole claim is that its selectors point at "
+                    + "evidence that exists");
         });
     }
 
@@ -219,12 +267,16 @@ internal sealed class VerificationRegistryTests
     {
         using JsonDocument registry = Registry();
         List<string> missing = new();
+        int entriesSeen = 0;
+        int pathsChecked = 0;
 
         foreach (JsonElement entry in Entries(registry))
         {
+            entriesSeen++;
             string id = entry.GetProperty("id").GetString()!;
             foreach (JsonElement fixture in entry.GetProperty("fixtures").EnumerateArray())
             {
+                pathsChecked++;
                 string path = fixture.GetString()!;
                 string absolute = Path.Combine(TestArtifacts.RepositoryRoot, path);
                 if (!File.Exists(absolute) && !Directory.Exists(absolute))
@@ -234,11 +286,20 @@ internal sealed class VerificationRegistryTests
             }
         }
 
-        Assert.That(
-            missing,
-            Is.Empty,
-            () => "fixtures named but absent:" + Environment.NewLine
-                + string.Join(Environment.NewLine, missing));
+        Expect.Multiple(() =>
+        {
+            Assert.That(entriesSeen, Is.GreaterThan(0), NoEntries);
+            Assert.That(
+                pathsChecked,
+                Is.GreaterThan(0),
+                "the registry holds entries and not one of them names a fixture, so this "
+                    + "walk resolved no path");
+            Assert.That(
+                missing,
+                Is.Empty,
+                () => "fixtures named but absent:" + Environment.NewLine
+                    + string.Join(Environment.NewLine, missing));
+        });
     }
 
     /// <summary>

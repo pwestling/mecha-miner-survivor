@@ -1148,7 +1148,7 @@
     },
     {
       "id": "VER-DAT-003-033",
-      "summary": "The control that makes VER-DAT-003-032 a suppression rather than a weakening: each of the same twenty-one checks is routed through the same fixture a second time, with every operand present and the rule genuinely broken, and must still report. The variant is also compared against the structural codes to prove it left the operand readable. Route covered: the same twenty-one checks, one violating variant each. Route not covered: every other way each rule can be broken, which is the invalid fixture corpus's job and not this control's.",
+      "summary": "The control that makes VER-DAT-003-032 a suppression rather than a weakening: each of the same twenty-one checks is routed through the same fixture a second time, with every operand present and the rule genuinely broken, and must still report. The variant is also compared against the structural codes to prove it left the operand readable. Route covered: the same twenty-one checks, one violating variant each. Route not covered: every other way each rule can be broken, which is the invalid fixture corpus's job and not this control's. Which direction the accepted catalog can exercise, and which it cannot, measured over its 138 definitions at this revision by reading every one of them through its category reader and tallying codes: the suppression direction is exercised heavily and the firing direction is almost not exercised at all. With suppression disabled the catalog emits MMC-6006 49 times, MMC-6010 35, MMC-6004 14, MMC-6005 13 and MMC-6007 12; with it enabled those become 0, 0, 0, 6 and 0. The catalog is not clean - the same read emits 1760 MMC-2001, 971 MMC-2002 and 247 MMC-2003, because the field tables are ahead of the authored files - and that is precisely why the dependent checks are silenced on it: their operands are among the fields the structural stage has already reported. So four of the five dependent codes appear zero times in real output, MMC-6005 appears six, and for those four this fixture table is the only place the check is ever made to fire. A check in that state has no symptom outside this table if it breaks, which is what VER-DAT-003-037 and VER-DAT-003-038 were added to bound: one holds the suppression to the reported pointer and the other holds the message text.",
       "task": "TASK-DAT-003-001",
       "requirements": [
         "TR-DAT-004",
@@ -1278,6 +1278,82 @@
         "windows-x64",
         "osx-arm64"
       ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-037",
+      "summary": "Dependent-check suppression is scoped to the reported pointer and not to the document. Each of the same twenty-one checks is routed through its fixture a third time with two independent faults composed: the rule broken with every operand present, and one unrelated required root field removed. The structural diagnostic at the unrelated pointer and the dependent diagnostic at its own pointer are matched by code and pointer and both must appear. Why a third table: every document in the other two breaks exactly one thing, so the structural bag is either empty or holds exactly the operand, and in both of those states an exact pointer test and a 'was anything reported at all' test are indistinguishable. Replacing all three pointer tests in StructuralReport with a count-greater-than-zero sweep left 1216 of 1216 other tests green and turned exactly these twenty-one red. Route covered: the twenty-one dependent checks, each composed with one unrelated removal declared per fixture and asserted to be reported, to differ from the operand, and to differ from where the check reports. Route not covered: two faults that interact, since the unrelated field is chosen per fixture to be one no check in the table reads; a composition where they did interact would fail the assertion that the operand is still readable rather than pass quietly.",
+      "task": "TASK-DAT-003-001",
+      "requirements": ["TR-DAT-004", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#semantic",
+        "docs/technical/40-content-data-and-validation.md#validation-layers"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.DependentSemanticSuppressionTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/powerups/valid-powerup.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/valid-utility.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/valid-utility-radar.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/valid-weapon.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/unlocks/valid-unlock.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/branches/valid-branch.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/enemies/valid-elite-modifiers.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/encounters/valid-schedule.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-038",
+      "summary": "The constraint sentence each of the five dependent semantic codes emits is compared as text, in full, against the sentence written down beside the case that provokes it. Route: nine variants built from five valid fixtures are read through their category readers, the diagnostic at the named code and pointer is required to be reported exactly once, and its ExpectedConstraint is compared for equality with the expected string. Why: a message can state the opposite of the truth while preserving everything a structural assertion looks at. Swapping expected and actual in SemanticCheck.ExactCount makes MMC-6006 report a five-row ladder under a cap of four as 'holds exactly 5 elements; found 4', at the same code and the same pointer with the same values present, and every count, key and code assertion in the suite still passed. MMC-6006 is covered three times, with expected above actual and below it, and MMC-6007 carries both an ordinal and the index it was required to equal, so a swap cannot be invisible in every row at once. The text is held inline rather than in a golden file so that changing a sentence changes a line in the diff of the commit that changes it. Route not covered: whether a sentence a reviewer approves is actually true of the document, which no check can decide; what this fixes is that nobody was being asked.",
+      "task": "TASK-DAT-003-001",
+      "requirements": ["TR-DAT-004", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#semantic"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.DependentSemanticConstraintTextTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/powerups/valid-powerup.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/valid-utility.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/valid-utility-radar.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/valid-weapon.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/encounters/valid-schedule.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id", "golden-text"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-039",
+      "summary": "Every walk over DAT-003.json's entries counts what it visited and fails when the count is zero. Route: each of the six per-package checks - citation resolution, ID sequencing, required fields, summary routes, nunit selector resolution and fixture-path existence - increments a counter per entry, and the citation, selector and fixture walks additionally count the citations, selectors and paths they actually resolved, since a registry of entries that name none of those would still be a walk that decided nothing. Why: all six were foreach loops with no non-empty assertion, so an emptied entries array satisfied every one of them. Measured directly: with the entries array of all three registries emptied, the nineteen tests in these two fixtures were 19 passed, 0 failed before this change and 2 passed, 17 failed after - the two survivors being the resolver's own negative control, which reads no entries. What makes each counter a count rather than a constant is exactly that: emptying the array turns all of them red.",
+      "task": "TASK-DAT-003-001",
+      "requirements": ["TR-DAT-004", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#what-evidencekinds-means"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategoryVerificationRegistryTests"
+      },
+      "fixtures": ["tests/verification/DAT-003.json"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
     }

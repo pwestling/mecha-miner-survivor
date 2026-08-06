@@ -27,7 +27,28 @@ namespace MechaMiner.Content.Tests.Categories;
 /// pointer, which is worse than the double report it replaces.
 /// </para>
 /// <para>
-/// Verification: <c>VER-DAT-003-032</c>, <c>VER-DAT-003-033</c>.
+/// <b>The third table, and why two are not enough.</b> Every document in the two tables
+/// above breaks exactly one thing: a <c>Violate</c> variant is an otherwise-valid file
+/// with one rule broken, so the structural bag it is read with is <em>empty</em>, and a
+/// <see cref="StructuralReport"/> over an empty bag answers "no" to every question
+/// however it is spelt. Replacing the three exact-pointer tests inside
+/// <see cref="StructuralReport"/> with <c>_pointers.Count &gt; 0</c> - "something was
+/// reported somewhere in this document, so stay quiet" - therefore leaves both tables
+/// green, and the class's own docstring names that widening as the thing it exists to
+/// avoid: "a missing <c>/ranks/0/price_hyper_gold</c> must not silence a genuine
+/// cardinality fault on <c>/ranks</c>".
+/// </para>
+/// <para>
+/// <see cref="AnUnrelatedMissingFieldDoesNotSilenceTheCheck"/> is the state neither of
+/// the other two occupies: one operand-unrelated field removed <em>and</em> the rule
+/// broken, so the bag holds a pointer, the operand is still readable, and both
+/// diagnostics must appear. Suppression scoped to the reported pointer passes it;
+/// suppression widened to the document fails it. The property holds for every dependent
+/// check, so it is parameterised over the same table rather than written once.
+/// </para>
+/// <para>
+/// Verification: <c>VER-DAT-003-032</c>, <c>VER-DAT-003-033</c>,
+/// <c>VER-DAT-003-037</c>.
 /// </para>
 /// </remarks>
 [TestFixture]
@@ -88,6 +109,40 @@ internal sealed class DependentSemanticSuppressionTests
             return Name;
         }
     }
+
+    /// <summary>
+    /// For each fixture the table is built from, one required root field that no
+    /// dependent check reads.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This is the "unrelated" half of the composed variant. It has to be a field the
+    /// structural stage will genuinely report - otherwise the bag stays empty and the
+    /// composed case degenerates into the violating case that already exists - and it has
+    /// to be one no check in the table reads, or the composed case would be testing
+    /// suppression rather than the absence of it. Both conditions are asserted per case
+    /// rather than trusted: a field that turns out to be optional fails on the first,
+    /// and a field that collides with an operand or a reported pointer fails on the
+    /// second.
+    /// </para>
+    /// <para>
+    /// One entry per fixture rather than one per case, because the property does not
+    /// depend on which check is being provoked - any reported pointer that is not the
+    /// operand is enough to tell an exact test from a document-wide one.
+    /// </para>
+    /// </remarks>
+    private static readonly Dictionary<string, string> TheUnrelatedFieldOfEachFixture =
+        new(StringComparer.Ordinal)
+        {
+            ["powerups/valid-powerup.json"] = "/ui_grouping",
+            ["utilities/valid-utility.json"] = "/behavior_kind",
+            ["utilities/valid-utility-radar.json"] = "/behavior_kind",
+            ["weapons/valid-weapon.json"] = "/targeting_policy",
+            ["unlocks/valid-unlock.json"] = "/unlock_kind",
+            ["branches/valid-branch.json"] = "/branch_class",
+            ["enemies/valid-elite-modifiers.json"] = "/adds_behavior",
+            ["encounters/valid-schedule.json"] = "/extraction_rule",
+        };
 
     private static IEnumerable<Case> Cases => new[]
     {
@@ -324,6 +379,106 @@ internal sealed class DependentSemanticSuppressionTests
     }
 
     /// <summary>
+    /// The composed variant: the rule broken <em>and</em> an unrelated field removed.
+    /// Both diagnostics must appear.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This is the only case in the fixture where <see cref="StructuralReport"/> is asked
+    /// a question over a non-empty bag whose contents are not the operand. Everywhere
+    /// else the bag is either empty (the violating variant) or holds exactly the operand
+    /// (the suppression variant), and in both of those states an exact pointer test and a
+    /// "was anything reported at all" test give the same answer.
+    /// </para>
+    /// <para>
+    /// The reviewer's worked example is the first row of the table: <c>valid-powerup.json</c>
+    /// with <c>cap</c> set to 4 and <c>ui_grouping</c> removed must report
+    /// <c>MMC-2002 @ /ui_grouping</c> and <c>MMC-6006 @ /ranks</c>, and a document-wide
+    /// suppression reports only the first.
+    /// </para>
+    /// </remarks>
+    [TestCaseSource(nameof(Cases))]
+    public void AnUnrelatedMissingFieldDoesNotSilenceTheCheck(Case testCase)
+    {
+        string unrelated = UnrelatedFieldOf(testCase);
+        IReadOnlyList<ContentDiagnostic> diagnostics =
+            Read(testCase, d => testCase.Violate(d).RemoveAt(unrelated));
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                unrelated,
+                Is.Not.EqualTo(testCase.OperandPointer),
+                "the unrelated field must not be the operand the check reads, or this "
+                    + "case is the suppression case with extra steps");
+            Assert.That(
+                unrelated,
+                Is.Not.EqualTo(testCase.SemanticPointer),
+                "the unrelated field must not be where the dependent check reports");
+
+            Assert.That(
+                Structural(diagnostics, unrelated),
+                Is.Not.Empty,
+                () => "removing " + unrelated + " must be reported by the field table, or "
+                    + "the structural bag is empty and this case cannot tell an exact "
+                    + "suppression from a document-wide one: " + Describe(diagnostics));
+
+            Assert.That(
+                Structural(diagnostics, testCase.OperandPointer),
+                Is.Empty,
+                () => "the composed variant must leave " + testCase.OperandPointer
+                    + " present: " + Describe(diagnostics));
+
+            Assert.That(
+                At(diagnostics, testCase.SemanticCode, testCase.SemanticPointer),
+                Is.Not.Empty,
+                () => testCase.SemanticCode + " at " + testCase.SemanticPointer
+                    + " reads " + testCase.OperandPointer + ", which is present. A "
+                    + "diagnostic reported at " + unrelated + " does not license silence "
+                    + "here: suppression is scoped to the reported pointer, not to the "
+                    + "document. " + Describe(diagnostics));
+        });
+    }
+
+    /// <summary>
+    /// Every fixture the table is built from declares an unrelated field, so a case
+    /// cannot join the table without the composed variant being written for it.
+    /// </summary>
+    [Test]
+    public void EveryFixtureInTheTableDeclaresAnUnrelatedField()
+    {
+        List<string> undeclared = new();
+        foreach (Case testCase in Cases)
+        {
+            if (!TheUnrelatedFieldOfEachFixture.ContainsKey(testCase.FixturePath))
+            {
+                undeclared.Add(testCase.Name + " -> " + testCase.FixturePath);
+            }
+        }
+
+        HashSet<string> used = new(StringComparer.Ordinal);
+        foreach (Case testCase in Cases)
+        {
+            used.Add(testCase.FixturePath);
+        }
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                undeclared,
+                Is.Empty,
+                () => "cases whose fixture has no unrelated field declared in "
+                    + nameof(TheUnrelatedFieldOfEachFixture) + ": "
+                    + string.Join("; ", undeclared));
+            Assert.That(
+                TheUnrelatedFieldOfEachFixture.Keys,
+                Is.EquivalentTo(used),
+                nameof(TheUnrelatedFieldOfEachFixture) + " names a fixture no case uses, "
+                    + "which is a row that composes nothing");
+        });
+    }
+
+    /// <summary>
     /// The set of cases is not a hand-kept list of names: every fixture it names is a
     /// fixture the corpus already declares valid, so a case cannot quietly be built on a
     /// document that was already failing for another reason.
@@ -394,6 +549,17 @@ internal sealed class DependentSemanticSuppressionTests
                 () => "the semantic stage must not run past an unsound shape: "
                     + string.Join("; ", semantic));
         });
+    }
+
+    /// <summary>The unrelated field declared for a case's fixture.</summary>
+    private static string UnrelatedFieldOf(Case testCase)
+    {
+        Assert.That(
+            TheUnrelatedFieldOfEachFixture.TryGetValue(testCase.FixturePath, out string? field),
+            Is.True,
+            () => testCase.FixturePath + " has no unrelated field declared in "
+                + nameof(TheUnrelatedFieldOfEachFixture));
+        return field!;
     }
 
     private static IReadOnlyList<ContentDiagnostic> Read(

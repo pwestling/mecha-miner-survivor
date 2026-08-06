@@ -98,6 +98,104 @@ internal sealed class CategorySchemaAgreementTests
 
     private static IEnumerable<CategoryDescriptor> Descriptors => CategorySchemas.All;
 
+    /// <summary>
+    /// The declared kinds are exactly the members of <see cref="DefinitionKind"/>, and
+    /// exactly the category schemas on disk.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Everything else that ranges over <see cref="CategorySchemas.All"/> - the schema
+    /// loads here, the field-order comparison, and both halves of the provenance-gate
+    /// coverage - is a <c>foreach</c> or a <c>TestCaseSource</c> over it. The table
+    /// therefore decides how much all of them prove, and nothing derived from the table
+    /// can see it shrink. Deleting a kind deletes its own coverage and leaves every
+    /// remaining assertion green.
+    /// </para>
+    /// <para>
+    /// <b>Two anchors, neither of them a number written next to the table.</b> The
+    /// <see cref="DefinitionKind"/> enum is one: it lives in a different file, exists for
+    /// a different reason - it is what every caller passes to
+    /// <see cref="CategorySchemas.Read"/> - and dropping a member from it is a breaking
+    /// API change rather than a tidy-up. The schema directory is the other, and it is the
+    /// one <c>content/schemas/README.md</c> advertises outside this codebase: "the other
+    /// sixteen <c>*.schema.json</c>" and "one schema per definition <em>kind</em> -
+    /// sixteen of them". A promise made in a README to readers who will never run this
+    /// suite is a promise worth asserting.
+    /// </para>
+    /// <para>
+    /// A count literal would be neither. It would be a third copy of a fact already
+    /// stated by the table below it, and the single edit that retires a kind takes the
+    /// copy with it.
+    /// </para>
+    /// </remarks>
+    [Test]
+    public void TheDeclaredKindsAreExactlyTheKindEnumAndTheSchemasOnDisk()
+    {
+        List<DefinitionKind> declaredKinds = new();
+        List<string> declaredFiles = new();
+        foreach (CategoryDescriptor descriptor in CategorySchemas.All)
+        {
+            declaredKinds.Add(descriptor.Kind);
+            declaredFiles.Add(descriptor.SchemaFileName);
+        }
+
+        List<string> onDisk = new();
+        foreach (string path in Directory.GetFiles(
+                     Path.Combine(TestArtifacts.RepositoryRoot, "content", "schemas"),
+                     "*.schema.json",
+                     SearchOption.AllDirectories))
+        {
+            string name = Path.GetFileName(path);
+            if (name != "envelope.schema.json")
+            {
+                onDisk.Add(name);
+            }
+        }
+
+        // Unspecified is the zero sentinel - "no kind was chosen" - and declaring it would
+        // give an unset field a schema and a reader. It is excluded from the expectation
+        // rather than from the enum so the exclusion is one named value here rather than
+        // a rule that could quietly widen.
+        List<DefinitionKind> expectedKinds = new();
+        foreach (DefinitionKind kind in Enum.GetValues<DefinitionKind>())
+        {
+            if (kind != DefinitionKind.Unspecified)
+            {
+                expectedKinds.Add(kind);
+            }
+        }
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                declaredKinds,
+                Is.EquivalentTo(expectedKinds),
+                nameof(CategorySchemas) + " declares a different set of kinds than "
+                    + nameof(DefinitionKind) + " names. A kind leaves this table only when "
+                    + "it leaves the enum");
+            Assert.That(
+                declaredKinds,
+                Is.Unique,
+                "a kind declared twice would be two field tables for one identity");
+            Assert.That(
+                declaredKinds,
+                Does.Not.Contain(DefinitionKind.Unspecified),
+                "the zero sentinel must not carry a schema or a reader");
+            Assert.That(
+                declaredFiles,
+                Is.EquivalentTo(onDisk),
+                "the declared category schemas are not the category schemas under "
+                    + "content/schemas/. content/schemas/README.md tells a reader there is "
+                    + "one per definition kind beside the envelope, so a schema with no "
+                    + "kind, or a kind with no schema, contradicts a published claim");
+            Assert.That(
+                onDisk,
+                Is.Not.Empty,
+                "content/schemas/ holds no category schema, so every walk over it proves "
+                    + "nothing");
+        });
+    }
+
     [TestCaseSource(nameof(Descriptors))]
     public void EveryCategorySchemaLoads(CategoryDescriptor descriptor)
     {

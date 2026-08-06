@@ -160,22 +160,45 @@ internal sealed class CategorySchemaAuthorityCoverageTests
     private static string SchemaDirectory => Path.Combine(
         TestArtifacts.RepositoryRoot, "content", "schemas");
 
+    /// <summary>
+    /// What an emptied <see cref="CategorySchemas.All"/> must be reported as.
+    /// </summary>
+    /// <remarks>
+    /// Both walks in this fixture range over the declared table, so the table decides how
+    /// much they prove and neither can see it shrink. The cardinality of the table is
+    /// anchored, against two independent things, by
+    /// <c>CategorySchemaAgreementTests.TheDeclaredKindsAreExactlyTheKindEnumAndTheSchemasOnDisk</c>;
+    /// these guards are what stops a walk reporting success over nothing while that
+    /// anchor is the only test failing.
+    /// </remarks>
+    private const string NoDeclaredCategories =
+        "no category is declared, so this walk visited nothing; see "
+            + "CategorySchemaAgreementTests"
+            + ".TheDeclaredKindsAreExactlyTheKindEnumAndTheSchemasOnDisk";
+
     [Test]
     public void EveryDeclaredCategoryHasASchemaWhereTheProvenanceGateLooks()
     {
         List<string> missing = new();
+        int checkedSchemas = 0;
         foreach (CategoryDescriptor descriptor in CategorySchemas.All)
         {
+            checkedSchemas++;
             if (!File.Exists(Path.Combine(SchemaDirectory, descriptor.SchemaFileName)))
             {
                 missing.Add(descriptor.SchemaPath);
             }
         }
 
-        Assert.That(
-            missing,
-            Is.Empty,
-            () => "declared categories with no schema document: " + string.Join(", ", missing));
+        Expect.Multiple(() =>
+        {
+            Assert.That(checkedSchemas, Is.GreaterThan(0), NoDeclaredCategories);
+            Assert.That(
+                missing,
+                Is.Empty,
+                () => "declared categories with no schema document: "
+                    + string.Join(", ", missing));
+        });
     }
 
     [Test]
@@ -210,10 +233,13 @@ internal sealed class CategorySchemaAuthorityCoverageTests
     [Test]
     public void EveryCategorySchemaLoadsUnderTheProvenanceEnforcingLoader()
     {
+        int loaded = 0;
+
         Expect.Multiple(() =>
         {
             foreach (CategoryDescriptor descriptor in CategorySchemas.All)
             {
+                loaded++;
                 string path = Path.Combine(SchemaDirectory, descriptor.SchemaFileName);
                 JsonSchemaLoadResult load = JsonSchemaLoader.Load(
                     File.ReadAllBytes(path), descriptor.SchemaPath);
@@ -225,6 +251,8 @@ internal sealed class CategorySchemaAuthorityCoverageTests
                         + "unattributed bound and a sourced bound with no derivation: "
                         + string.Join("; ", load.Diagnostics));
             }
+
+            Assert.That(loaded, Is.GreaterThan(0), NoDeclaredCategories);
         });
     }
 }

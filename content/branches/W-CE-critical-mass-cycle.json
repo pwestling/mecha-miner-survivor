@@ -52,7 +52,7 @@
     "maximum_radius_bonus": {
       "percent": 20
     },
-    "charge_consumption": "Charges are consumed by the next pulse and replaced by the count that pulse hits.",
+    "charge_consumption": "Charges are consumed by the next pulse and replaced by the count that pulse hits",
     "charges_from_lone_boss": 1
   },
   "rules": [

@@ -32,7 +32,6 @@
   "earliest_minute": 24,
   "variant_of": "EN-05",
   "behavior_kind": "pure contact pursuer",
-  "armor": 0,
   "contact_footprint": {
     "shape": "Circle",
     "reference_diameter_m": 0.8

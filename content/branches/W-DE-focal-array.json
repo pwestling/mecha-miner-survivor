@@ -37,7 +37,7 @@
   },
   "effects": {
     "pellet_count": 5,
-    "pellet_path": "All five pellets spread and then curve inward to converge on a focal point.",
+    "pellet_path": "All five pellets spread and then curve inward to converge on a focal point",
     "focal_point_location": "centered on persistent mech facing at current maximum range",
     "pellet_damage_of_current_damage": {
       "percent": 140

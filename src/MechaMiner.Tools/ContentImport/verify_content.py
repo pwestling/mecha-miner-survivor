@@ -89,12 +89,24 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       Every row cites its own source doc:line.                        FAILURE
 
   A13 Aggregate row counts match the PROBES table (35 minute rows,
-      4 beacon responses, 7 formations, 1 map contract file), AND the four
+      4 beacon responses, 7 formations, 1 map contract file), AND the six
       authored world-prop VALUES folded into the map contract match the
       document: destructible rock Hull 100 (docs/72:194), rock damage
       footprint diameter 0.80 M (:196), health pack repair 25 Hull (:182),
-      health pack pickup radius 0.25 M (:185). Every row cites its own
-      source doc:line.
+      health pack pickup radius 0.25 M (:185), rock active population cap
+      16 and rock initial count 16 (both docs/51:146, the active cap
+      corroborated at docs/72:203). Every row cites its own source
+      doc:line.
+      The two 16-rock rows were ADDED as a coverage gap: both values were
+      transcribed and NEITHER was asserted, and they sit between two values
+      that were - rock Hull at 72:194 and the footprint at 72:196 bracket
+      the population rules in the same section. A value whose neighbours
+      are asserted reads as covered. That is a gap that LOOKS FILLED, which
+      is a different failure from a gate that cannot fail.
+      Negative control, per value, each reverted after: active_maximum
+      16 -> 15 FAILs "A13 destructible rock active population cap must be
+      16"; initial_count 16 -> 12 FAILs "A13 destructible rock initial
+      count must be 16".
       The world-prop check used to be a row COUNT over key-name patterns,
       which counted patterns that matched at least once - so two names
       existing satisfied it and no value was ever compared. A missing field
@@ -212,8 +224,17 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       the survivability report")                                      FAILURE
 
   A21 content/ holds exactly EXPECTED_CONTENT_JSON_FILES (139) *.json
-      files, so a file in a directory no A12 row covers is still caught.
-      The two Markdown files under content/ are listed, not counted.   FAILURE
+      files, so a file in a directory no A12 row covers is still caught,
+      AND the non-JSON files under content/ are exactly the three named in
+      EXPECTED_CONTENT_NON_JSON (README.md, quote-verification-audit.md,
+      transcription-notes.md).
+      The non-JSON row used to PRINT the file list next to a blank
+      expectation and a hardcoded "ok" - it could not fail, so a stray file
+      under content/ was reported and tolerated in the same breath. It now
+      asserts the exact list.
+      Negative control: an empty content/probe.txt -> FAIL, "content/ holds
+      non-JSON files [... 'content/probe.txt' ...], expected exactly
+      [...]".                                                         FAILURE
 
   A22 Every source_refs scope prefix resolves to a field that EXISTS in the
       definition it annotates. The optional "<json.path>: " prefix attributes
@@ -308,6 +329,39 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       ['content/enemies/EN-01.json.probe_null']".
       Mandate: docs/technical/40-content-data-and-validation.md:90  FAILURE
 
+  A27 No sentence-internal abbreviation period appears anywhere under
+      docs/**/*.md. This asserts a property of the CORPUS on behalf of a
+      MATCHER, and it is the only assertion here that does.
+      content/quote-verification-audit.md adopts a quotation rule that
+      fires when a stored string begins at a sentence boundary, carries its
+      own terminator, and the source sentence continues past it. That rule
+      measured 2 hits in 1,072 quotations with ZERO false positives - but
+      only because `.`/`!`/`?` is an unambiguous sentence terminator in
+      THIS corpus. The moment a design document writes "e.g." the terminator
+      stops being unambiguous and the rule starts misfiring on innocent
+      quotations. Documenting that as an assumption would be a fail-open
+      with a footnote, so it is asserted instead.
+      The list is the abbreviations that carry a period INSIDE a sentence
+      and are plausible in this project's prose: e.g. i.e. etc. approx.
+      cf. vs. viz. resp. no. fig. eq. sec. p. pp. ca. al. esp. incl.
+      Chosen on one criterion - the period is not a sentence end - so
+      units ("0.80M", "1.5 s") and decimals are NOT in scope: a decimal
+      point is not followed by a sentence-initial capital and the audit
+      measured zero decimal misfires across all 1,072 records.
+      Matched case-insensitively at a word boundary, because unbounded
+      substring matching finds "st." inside "burst." and "ver." inside
+      "over." - both of which occur in docs/ and neither of which is an
+      abbreviation. The bounded form finds zero today.
+      THE FAILURE MESSAGE POINTS AT THE MATCHER, NOT AT A QUOTATION. The
+      day someone writes "e.g." in a design document, nothing is wrong with
+      any content string; what is wrong is that the quotation rule's
+      premise no longer holds and the rule needs revisiting.
+      Negative control: docs/ must not be modified, so the check runs
+      against a scratch tree - a byte copy of docs/ with "e.g." inserted
+      into one sentence -> FAIL naming that file and token.
+      Mandate: content/quote-verification-audit.md (adopted rule and its
+      stated corpus dependency)                                     FAILURE
+
 Not asserted here: no structural JSON Schema validation happens, because
 content/schemas/ (40:36) does not exist yet. Domain field names outside the
 envelope are therefore unvalidated and will need one reconciliation pass when
@@ -333,10 +387,22 @@ NON_DEFINITION_DIRS = ("localization", "schemas")
 # plus content/localization/en.json, and it is asserted separately so that a
 # file appearing in a directory A12 does not cover is still caught.
 #
-# content/ also holds two Markdown files - README.md and transcription-notes.md
-# - which are documentation, not content. So `find content -type f` reports 141
-# while this count is 139; that difference is correct and is not a discrepancy.
+# content/ also holds three Markdown files - README.md, transcription-notes.md
+# and quote-verification-audit.md - which are documentation, not content. So
+# `find content -type f` reports 142 while this count is 139; that difference is
+# correct and is not a discrepancy.
+#
+# The non-JSON files are NAMED rather than counted, and the A21 row asserts the
+# exact list. It previously printed the list beside a blank expectation and a
+# hardcoded "ok", which reported a stray file under content/ and tolerated it in
+# the same breath. Adding a documentation file here is a deliberate act and
+# updating this tuple is the record of it.
 EXPECTED_CONTENT_JSON_FILES = 139
+EXPECTED_CONTENT_NON_JSON = (
+    "content/README.md",
+    "content/quote-verification-audit.md",
+    "content/transcription-notes.md",
+)
 
 # --------------------------------------------------------------------------
 # A2/A4/A5 - envelope
@@ -698,6 +764,27 @@ WORLD_PROP_VALUES = (
         re.compile(r"(?i)pickup_radius"),
         0.25,
         "docs/72-player-survivability-and-damage-baseline.md:185",
+    ),
+    # ADDED as a coverage gap, not as a new policy. The rock population cap was
+    # transcribed and never asserted, and the reason it was missed generalises:
+    # A VALUE WHOSE NEIGHBOURS ARE ASSERTED READS AS COVERED. rock Hull (72:194)
+    # and the footprint diameter (72:196) are both checked, and they bracket this
+    # value in the same document section, which is exactly the situation in which
+    # nobody looks. That is a distinct failure shape from a gate that cannot fail
+    # - it is a gap that looks filled.
+    (
+        "destructible rock active population cap",
+        re.compile(r"(?i)destructible_rock(?:_rules)?"),
+        re.compile(r"(?i)^active_maximum$"),
+        16,
+        "docs/51-standard-map-generation-contract.md:146",
+    ),
+    (
+        "destructible rock initial count",
+        re.compile(r"(?i)destructible_rock(?:_rules)?"),
+        re.compile(r"(?i)^initial_count$"),
+        16,
+        "docs/51-standard-map-generation-contract.md:146",
     ),
 )
 
@@ -1772,11 +1859,19 @@ def check_file_inventory() -> list[tuple]:
         ),
         (
             "non-JSON files (documentation, not content)",
-            "",
+            f"{len(EXPECTED_CONTENT_NON_JSON)}: {', '.join(EXPECTED_CONTENT_NON_JSON)}",
             f"{len(other_files)}: {', '.join(rel(p) for p in other_files) or 'none'}",
-            "ok",
+            "ok" if [rel(p) for p in other_files] == list(EXPECTED_CONTENT_NON_JSON) else "FAIL",
         ),
     ]
+    if [rel(p) for p in other_files] != list(EXPECTED_CONTENT_NON_JSON):
+        fail(
+            f"content/ holds non-JSON files {[rel(p) for p in other_files]}, expected exactly "
+            f"{list(EXPECTED_CONTENT_NON_JSON)}. This row used to LIST the non-JSON files with a "
+            f"blank expectation and a hardcoded 'ok', so it could never fail - a stray file under "
+            f"content/ was reported and tolerated in the same breath. It is now an expectation: a "
+            f"new documentation file is added here deliberately, and anything else is a finding."
+        )
     if actual != EXPECTED_CONTENT_JSON_FILES:
         fail(
             f"content/ holds {actual} *.json file(s), expected "
@@ -2310,6 +2405,85 @@ def check_no_nulls() -> list[tuple]:
 
 
 # --------------------------------------------------------------------------
+# A27 - the quotation matcher's corpus premise, asserted rather than documented.
+#
+# WHY THIS ASSERTION LOOKS BACKWARDS. Every other check here asserts something
+# about content/ against docs/. This one asserts something about docs/ on behalf
+# of a matcher described in content/quote-verification-audit.md. That matcher's
+# adopted rule - fail when a stored string begins at a sentence boundary, carries
+# its own trailing terminator, and the source sentence continues past it - was
+# measured at 2 hits in 1,072 quotations with zero false positives. The measurement
+# is only valid while `.` reliably means "end of sentence" in docs/. It does today.
+# Nothing keeps it true tomorrow, and "it can stop being true silently" is exactly
+# the property a documented assumption cannot address: a documented assumption is
+# a fail-open with a footnote.
+#
+# WHAT IS IN THE LIST AND WHY. One criterion: the period is not a sentence end.
+# That admits ordinary prose abbreviations and excludes decimals and unit
+# suffixes ("0.80M", "1.5 s", "45.6"), which are not sentence-terminator
+# candidates in the first place - a decimal point is not followed by a
+# sentence-initial capital, and the audit measured zero decimal-point misfires
+# across all 1,072 records in both directions.
+#
+# WORD-BOUNDARY MATCHING IS LOAD-BEARING, not tidiness. Unbounded case-insensitive
+# substring matching for "st." hits "burst." (93 times) and "ver." hits "over."
+# (5 times) in this corpus. Both are sentence ends, not abbreviations. A check that
+# fires on those would be turned off within a day, which would leave no check.
+#
+# THE MESSAGE IS THE POINT. When this fails, no content string is wrong. What is
+# wrong is that the quotation rule's premise has lapsed. The message must send the
+# reader to the matcher, because a message that blames a quotation sends them to
+# innocent data and teaches them the check is noise.
+# --------------------------------------------------------------------------
+
+SENTENCE_INTERNAL_ABBREVIATIONS = (
+    "e.g.", "i.e.", "etc.", "approx.", "cf.", "vs.", "viz.", "resp.",
+    "no.", "fig.", "eq.", "sec.", "p.", "pp.", "ca.", "al.", "esp.", "incl.",
+)
+
+ABBREVIATION_RX = tuple(
+    (abbr, re.compile(r"(?<![A-Za-z0-9])" + re.escape(abbr), re.IGNORECASE))
+    for abbr in SENTENCE_INTERNAL_ABBREVIATIONS
+)
+
+
+def check_no_abbreviation_periods(docs_root: Path = DOCS) -> list[tuple]:
+    """A27 - docs/ carries no sentence-internal abbreviation period."""
+    hits: list[str] = []
+    scanned = 0
+    for path in sorted(docs_root.rglob("*.md")):
+        scanned += 1
+        text = path.read_text(encoding="utf-8")
+        for lineno, line in enumerate(text.splitlines(), 1):
+            for abbr, rx in ABBREVIATION_RX:
+                for m in rx.finditer(line):
+                    hits.append(f"{rel(path)}:{lineno} '{m.group(0)}' (matched '{abbr}')")
+    rows = [
+        (
+            f"sentence-internal abbreviation periods under docs/ "
+            f"({scanned} file(s), {len(SENTENCE_INTERNAL_ABBREVIATIONS)} token(s) searched)",
+            0,
+            len(hits),
+            "ok" if not hits else "FAIL",
+        )
+    ]
+    if hits:
+        fail(
+            f"THE QUOTATION MATCHER'S ASSUMPTIONS NO LONGER HOLD - the matcher needs "
+            f"revisiting, and no content string is implicated by this failure. "
+            f"content/quote-verification-audit.md adopts a quotation rule that treats "
+            f"'.' as an unambiguous sentence terminator in docs/. It was measured safe "
+            f"(2 hits in 1,072 quotations, zero false positives) against a corpus "
+            f"containing no abbreviation periods. docs/ now contains "
+            f"{len(hits)}, so the rule can misfire on complete, honest quotations that "
+            f"happen to end just before one. Re-measure the rule against the corpus and "
+            f"either teach it this abbreviation or narrow it; do NOT edit the quotation "
+            f"that the rule flags: {sorted(hits)[:15]}"
+        )
+    return rows
+
+
+# --------------------------------------------------------------------------
 # A25 - polarity agreement between a structured direction and its sibling prose.
 #
 # This automates a check that had to be done by hand. Ruling 22 in
@@ -2470,6 +2644,7 @@ def main() -> int:
     doc_path_rows = check_no_doc_paths_in_values(docs)
     polarity_rows = check_polarity_agreement(docs)
     null_rows = check_no_nulls()
+    abbreviation_rows = check_no_abbreviation_periods()
     loc_rows = check_localization(stats)
 
     table(
@@ -2505,6 +2680,11 @@ def main() -> int:
         "A26 No null anywhere under content/ (no declared exceptions)",
         ("check", "expected", "actual", "status"),
         null_rows,
+    )
+    table(
+        "A27 Quotation-matcher corpus premise (no abbreviation periods in docs/)",
+        ("check", "expected", "actual", "status"),
+        abbreviation_rows,
     )
     table(
         "A25 Polarity agreement (structured direction vs sibling prose)",

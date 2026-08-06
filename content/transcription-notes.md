@@ -1734,12 +1734,14 @@ parameters, elite eligibility, presentation, spawn classification, telemetry tag
 entirely, while `:110`'s mech list includes it. Armor is a mech stat. This is the same class as (c1): an
 invented field, not a missing value.
 
-**Reported, not acted on: the ten enemies also carry `armor`.** Every one of `EN-01`–`EN-10` holds a
-top-level `armor: 0` — a value, not a null, so it is outside Ruling 29's scope, and the `40:114`
-argument above would apply to it identically. The 0 comes from one prose sentence at `docs/31:25`
-("Ordinary enemies have no Armor"), not from a roster column. The ruling named bosses only, so the ten
-enemy fields are **left exactly as authored** and referred back to the integration owner rather than
-removed under an extended reading of a ruling that did not mention them.
+**Reported, not acted on at the time: the ten enemies also carry `armor`.** Every one of
+`EN-01`–`EN-10` holds a top-level `armor: 0` — a value, not a null, so it is outside Ruling 29's scope,
+and the `40:114` argument above would apply to it identically. The 0 comes from one prose sentence at
+`docs/31:25` ("Ordinary enemies have no Armor"), not from a roster column. The ruling named bosses only,
+so the ten enemy fields were **left exactly as authored** and referred back to the integration owner
+rather than removed under an extended reading of a ruling that did not mention them.
+**SUPERSEDED by Ruling 32** — the integration owner has now ruled on the ten directly, and they are
+removed. The referral is what produced the ruling; the ten were not removed by analogy.
 
 **(d) Three `external_numerics[n].value` shape defects.** `UTL-A1 :: external_numerics[1].value`,
 `UTL-C1 :: external_numerics[1].value`, `UTL-R1 :: external_numerics[6].value`. In each, the sibling
@@ -1913,6 +1915,176 @@ never said that two numeric leaves left the tree as a result.
   condition (Ruling 30). Two further strings were reworded to remove repository paths (Ruling 31), with
   no change of meaning in either.
 - **`null` count: 275 → 0**, with **no declared exceptions**.
+
+### Integration-owner rulings applied — seventh pass
+
+#### Corrected transcription errors — two trailing periods that turned a fragment into a sentence
+
+**Both are our errors, not design-source contradictions.** Nothing in the documents disagrees with
+anything else; a character was added that the source does not have, and each stored string is now a
+character-exact substring of the section it cites. Verified against the source before editing and
+after.
+
+| # | Field | Was | Now | Source |
+| --: | --- | --- | --- | --- |
+| 1 | `content/branches/W-DE-focal-array.json :: effects.pellet_path` | `…converge on a focal point.` | `…converge on a focal point` | `docs/71-initial-weapon-numeric-catalog.md:443` |
+| 2 | `content/branches/W-CE-critical-mass-cycle.json :: effects.charge_consumption` | `…the count that pulse hits.` | `…the count that pulse hits` | `docs/71-initial-weapon-numeric-catalog.md:382` |
+
+The two source lines, quoted in full, are the whole of the evidence:
+
+- `:443` — `- All five pellets spread and then curve inward to converge on a focal point centered on
+  persistent mech facing at current maximum range.` The sentence **continues** past `focal point`; there
+  is no period there.
+- `:382` — `- Charges are consumed by the next pulse and replaced by the count that pulse hits, allowing
+  sustained crowd contact to maintain the bonus.` The sentence continues with a comma.
+
+**Why the period mattered, and why it is the specific defect worth recording.** Neither field lost
+information. The omitted tails are stored verbatim elsewhere in the same files — for `W-DE-focal-array`
+the sibling `effects.focal_point_location` holds `centered on persistent mech facing at current maximum
+range` word-for-word, and `rules[0].text` holds the complete sentence; for `W-CE-critical-mass-cycle`
+`rules[2].text` holds the complete sentence. **None of those four fields was touched.** What was wrong
+was narrower and more corrosive: the trailing period dressed a *fragment* as a *complete sentence*, and
+that is exactly what made it **indistinguishable from a truncated quotation**. A reader — or a
+checker — seeing a capital-to-period string has no way to tell "this is a deliberately extracted clause"
+from "this quotation lost its second half". Delete the period and the string reads as what it is, a
+clause extracted under a field name that supplies its context.
+
+These two are the *only* two such cases in the tree: they are the complete output of the quotation rule
+adopted in `content/quote-verification-audit.md` §6, which fires when a stored string begins at a
+sentence boundary, carries its own terminator, and the source sentence continues past it — 2 hits across
+1,072 quotations, zero false positives. The exception list is empty because the fix is one character
+each rather than a marker.
+
+#### Ruling 32 — the ten enemy `armor: 0` fields are removed
+
+**Ruled: enemies do not have an armor stat, so the field should not exist.** This closes the referral
+recorded under Ruling 29's `(c2)` above; the ten were **not** removed by extending the boss ruling.
+
+Confirmed at the source before editing, as required:
+
+- **`docs/31-initial-alien-roster.md:37` — the ordinary-enemy table columns are `ID | Identity | Family
+  | Hull | Move | Contact | Body | Control resistance | Earliest minute`. There is no armor column.**
+- `docs/31:25` states it outright: "Ordinary enemies have no Armor. Their listed control resistance
+  reduces player-authored displacement magnitude and timed control duration…" — an **absence
+  statement**, which is the crux (see the rock contrast below).
+- Armor is a player-side stat: `docs/72-player-survivability-and-damage-baseline.md:36` gives the mech
+  Armor 0 in the Shared Player Baseline, and `docs/72:121` applies it to *incoming* damage ("Subtract
+  current Armor, to a minimum of one damage unless the effect ignores Armor").
+- `docs/technical/40-content-data-and-validation.md:114`'s enemies-and-bosses field list omits Armor,
+  while `:110`'s mech list includes it.
+
+So `armor: 0` on an enemy is **an invented field holding a value the document denies exists** — the same
+class as the relic `rarity_and_weighting` fields and the four boss `armor` fields, and **not** the same
+class as a missing value. It is therefore recorded here as a **removal with its reasoning**, alongside
+the boss `armor` removal it matches, and **not** as a value gap: a concept that does not apply to an
+entity is not a gap in that entity's data.
+
+**No citation dangled.** `A22` catches a `source_refs` scope prefix naming a field that no longer
+exists — it caught 19 such orphans when Ruling 29's conversions removed fields. Checked before editing:
+none of the ten files carries an `armor:`-prefixed prefix, or any prefix whose path descends through
+`armor`. Every one of their citations is file-level or scoped to `movement_speed`, `contact_footprint`,
+`contact_cadence`, `damage_pressure`, `applies_to_player`, `elite_eligible`, `first_playable_subset`,
+`description`, or (on `EN-06`) `specialist_attack.*`. `A22` reports **zero dangling** after the removal;
+no citation was deleted or re-pointed because none needed to be.
+
+#### Ruling 33 — the rock `armor: 0` STAYS, and the asymmetry with enemies is structural
+
+`content/maps/standard-map-generation-contract.json :: destructible_rock_rules.destructible_rock.armor`
+holds `0` beside `hull: 100`. It was investigated on the question of whether Ruling 32 extends to it.
+**It does not, and the evidence is decisive in the opposite direction.** Recorded because "the same
+reasoning probably applies" is precisely how a ruling gets over-extended — earlier on this branch that
+reasoning nearly deleted four authored boss diameters (Ruling 23).
+
+A destructible rock's Armor is **stated, as a value, in a property table**:
+
+- `docs/72-player-survivability-and-damage-baseline.md:190` opens `### Destructible rock`, and its
+  property table gives `| Hull | 100 |` at `:194`, **`| Armor | 0 |` at `:195`**, and
+  `| Damage footprint diameter | 0.80M |` at `:196`. The Armor row sits *between* two values this tree
+  already asserts.
+- `docs/51-standard-map-generation-contract.md:156` — "Every rock has 100 Hull, zero Armor, a non-solid
+  0.80M weapon-damage footprint, and no response to control."
+- Corroborated in the same enumerated form at `docs/50-maps-resources-and-navigation.md:94`,
+  `docs/30-combat-weapons-movement-camera.md:102`, `docs/glossary.md:102`, and as a tagged row in
+  `docs/data/survivability-baseline.csv:25` (`rock,hull,100,Hull,Zero Armor`).
+
+**The asymmetry is structural, not a judgement call.** For an enemy the document says the stat *does not
+exist* ("have no Armor"); for a rock the document *assigns the stat a value of zero*, in the same
+sentence and the same table row sequence as its Hull. A rock has Hull and takes weapon damage, so Armor
+applies to it for the same reason it applies to a mech. `armor: 0` on a rock is a faithful transcription
+of an authored value; `armor: 0` on an enemy invented a field. **No change made.**
+
+#### Ruling 34 — the 16-rock cap was transcribed and asserted by nothing; two A13 rows added
+
+A coverage gap, not a value change. `destructible_rock_rules.active_maximum: 16` and
+`initial_count: 16` were transcribed correctly and **no assertion covered either**. Both are now `A13`
+world-prop value rows.
+
+Verified at the source: `docs/51-standard-map-generation-contract.md:146` — "Standard mode maintains a
+dynamic population capped at **16 active destructible rocks** … The run begins with 16 rocks at valid
+offscreen positions around deployment." That one line authors both values, which is why both rows cite
+it. `docs/72:203` corroborates the cap only ("The existing one-attempt-per-second, 10% success chance,
+and 16-rock active cap remain unchanged"), so it is recorded as corroboration rather than as the
+citation for `initial_count`.
+
+**Why it was missed generalises, and that is the reason it is written down.** Rock Hull 100 (`docs/72:194`)
+and the 0.80 M footprint (`docs/72:196`) were both already asserted, and they **bracket** the population
+rules in the same document section. **A value whose neighbours are asserted reads as covered.** That is a
+distinct failure shape from the two this branch has already fixed: it is not a gate that *cannot fail*
+(the A21 non-JSON row, the old world-prop key-family probe) and not a gate that *fires wrongly* (the
+sentence-boundary rule measured and dropped in the quote audit) — it is a gate nobody thought to write,
+and its signature is being surrounded by coverage. Recorded in
+`content/quote-verification-audit.md` §7 beside the other two shapes.
+
+Negative-controlled individually, each value reverted afterwards: `active_maximum` 16 → 15 fails
+"A13 destructible rock active population cap must be 16"; `initial_count` 16 → 12 fails "A13
+destructible rock initial count must be 16".
+
+#### Ruling 35 — the quotation matcher's corpus premise is asserted, not documented (`A27`)
+
+The quotation rule adopted in `content/quote-verification-audit.md` §6 measured **zero** false
+positives across 1,072 quotations — but only because `.` is an unambiguous sentence terminator in this
+corpus, and that is true only because `docs/` contains no `e.g.`, `i.e.`, `etc.` or `approx.` anywhere.
+**"It can stop being true silently" is the whole problem, and a documented assumption is a fail-open
+with a footnote.** So `A27` scans `docs/**/*.md` for eighteen sentence-internal abbreviations and fails
+if any appears. Its failure message names the *matcher* as the thing to revisit and states that no
+content string is implicated — because the day someone writes "e.g." in a design document, the build
+must point at the rule, not at an innocent quotation. Confirmed passing today: zero occurrences of any
+listed token under `docs/`. Negative control run against a scratch copy of `docs/` (this pass must not
+modify `docs/`), reported in the pass summary.
+
+#### Value-preservation record — seventh pass
+
+**Range: `bb10612 → this pass's commit`, `content/**/*.json` only.** Measured, not carried forward.
+
+- **Numeric leaves: 2,313 → 2,303.** Value multiset difference: **removed `{0: 10}`, added `{}`**. The
+  earlier line on this branch — "2,313 → 2,313, empty in both directions" — was true of the sixth pass
+  and is **not** true of this one, because Ruling 32 removes ten numeric leaves. It has been corrected
+  rather than carried, since a multiset statement is only meaningful with its range named.
+- **Across the full branch, `21f1734 → this pass's commit`: 2,320 → 2,303, seventeen leaves removed.**
+  Value multiset difference: removed `{0: 10, 0.75: 1, 1.1: 1, 1.25: 1, 1.3: 1, 1.45: 1, 1.5: 2}`,
+  added `{}`. The seven non-zero removals are the ones already enumerated in the corrected sixth-pass
+  record above (Rulings 12, 19 and 24); the ten zeros are this pass.
+
+**The ten removals, named, with the reason each left:**
+
+| # | Path | Value | Why it left |
+| --: | --- | ---: | --- |
+| 1 | `EN-01 :: armor` | 0 | Ruling 32 — a field for a stat `docs/31:25` says enemies do not have |
+| 2 | `EN-02 :: armor` | 0 | Ruling 32, same reason |
+| 3 | `EN-03 :: armor` | 0 | Ruling 32, same reason |
+| 4 | `EN-04 :: armor` | 0 | Ruling 32, same reason |
+| 5 | `EN-05 :: armor` | 0 | Ruling 32, same reason |
+| 6 | `EN-06 :: armor` | 0 | Ruling 32, same reason |
+| 7 | `EN-07 :: armor` | 0 | Ruling 32, same reason |
+| 8 | `EN-08 :: armor` | 0 | Ruling 32, same reason |
+| 9 | `EN-09 :: armor` | 0 | Ruling 32, same reason |
+| 10 | `EN-10 :: armor` | 0 | Ruling 32, same reason |
+
+- **2 characters removed from 2 strings**, not removals of values: the two trailing periods above. No
+  other string changed.
+- **No number was added, and no number moved to a different path.** The removals are the only value
+  change; every remaining `(file, JSON path, value)` triple is unchanged.
+- **`null` count: 0 → 0**, still with no declared exceptions.
 
 ### Per-definition notes, by catalog
 

@@ -34,7 +34,6 @@
   },
   "earliest_minute": 16,
   "behavior_kind": "pursuit and contact plus one telegraphed straight projectile",
-  "armor": 0,
   "contact_footprint": {
     "shape": "Circle",
     "reference_diameter_m": 0.8

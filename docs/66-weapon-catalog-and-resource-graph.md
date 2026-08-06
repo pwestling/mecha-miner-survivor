@@ -15,7 +15,7 @@ This document defines the 15 normal base weapons, their placement on the six-res
 
 - Stable graph codes `A`, `B`, `C`, `D`, `E`, and `F` correspond to Asterite, Barysteel, Cinderglass, Driftmetal, Eidolon Coral, and Flux Amber.
 - Codes remain authoring shorthand and preserve weapon IDs. Player-facing interfaces use the accepted material names and redundant icons, silhouettes, motion, color, and audio rather than bare codes or color alone.
-- Each unordered pair corresponds to exactly one normal base weapon, producing 15 weapons.
+- Each unordered pair corresponds to exactly one normal base weapon, producing 15 weapons. "Unordered" here is a claim about the recipe; for how it relates to the order of the authored pair field, see [Content Data and Validation](./technical/40-content-data-and-validation.md#weapons).
 - Every weapon has one major branch funded by each recipe resource and one funded by a fixed third resource distinct from both recipe resources.
 - The three branches are mutually exclusive during a run.
 - Every weapon's three branches follow the same transformation gradient: one amplification branch that is “samey but bigger and better,” one functional variant that is “a bit different in function,” and one playstyle conversion that is “much different in play style.”

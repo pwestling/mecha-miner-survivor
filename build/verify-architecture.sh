@@ -50,6 +50,21 @@
 # MechaMiner.sln --locked-mode` produced 9 assets files, the same tree exits 0
 # with 74 assertions.
 #
+# WIRING HAZARD: do not invoke this script ahead of the solution-wide restore.
+#
+# Exactly one path satisfies the precondition above today: stage 0 of
+# `BuildVerb.Execute` runs `dotnet restore <solution> --locked-mode` and
+# returns early on restore failure, before stage 2 invokes this script -
+# measured at 58ee02cd5c1f, where src/MechaMiner.Tools/Verbs/BuildVerb.cs
+# lives; that file is not present on this ref. Two edits break it: wiring this
+# script to `format-check`, or to any verb that runs before `build`'s solution
+# restore; and relying on `build.sh`'s implicit restore, which covers the
+# MechaMiner.Tools host project only and does not write obj/project.assets.json
+# for the nine solution projects. Either one produces a cold run - exit 4, nine
+# section-6 failures, reporting a foundation defect that does not exist. Note
+# that section 11's lock assertions are green on a cold tree; it is section 6
+# that needs the restore.
+#
 # Known wording defect, recorded rather than silently changed: those nine
 # assertions report the THIRD outcome ("I could not measure") when the actual
 # condition is the SECOND ("a precondition was not met"). A reader who meets

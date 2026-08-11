@@ -83,8 +83,9 @@ public static class EncounterScheduleSchema
             "at", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.OrderedArray),
 
         // enemy_ids elements are ^EN-[0-9]{2}$, so they are stable IDs and the event places a
-        // set of them. Note this is stricter than the JSON schema, which does not declare
-        // uniqueItems here as it does on debut_enemy_ids: an ID set forbids a repeat.
+        // set of them. encounter-schedule.schema.json declares uniqueItems here, as it does on
+        // debut_enemy_ids, so the schema and this class now forbid the same repeat rather than
+        // the class being the stricter of the two.
         DefinitionField.ArrayOf(
             "enemy_ids", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.IdSet),
 

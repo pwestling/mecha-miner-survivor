@@ -161,35 +161,15 @@ internal sealed record DivergenceRow(
 /// <c>branch</c> is worst under every shape measured.
 /// </para>
 /// <para>
-/// <b>The instrument gap, measured rather than reconciled, and asymmetrically because the
-/// two directions are not equally dangerous.</b> Over-reporting inflates the pin, which is
-/// noisy and safe; under-reporting makes it blind, which is worse than no pin at all because
-/// it certifies coverage it does not have. So the under-reporting direction is enumerated
-/// exhaustively rather than sampled. The same corpus and row set under <c>jsonschema</c>
-/// 4.26.0 - a second opinion with no stake, since nothing will ever run it here - gives
-/// <b>1,927</b> where this gives <b>3,109</b>, and the 1,182 difference is <b>entirely one
-/// keyword's arity</b>: the two agree exactly on <c>required</c> 955, <c>type</c> 247,
-/// <c>enum</c> 101, <c>oneOf</c> 48 and <c>pattern</c> 23, and the 825 positions at those
-/// five keywords are the <em>same set</em>, position for position, with no position reported
-/// fewer times here. The whole difference is <c>additionalProperties</c>: 553 positions
-/// there, 1,735 here. <b>Of the 553 positions <c>jsonschema</c> reports that this evaluator
-/// does not, all 553 are <c>additionalProperties</c> at an object, and every one of them is
-/// covered by at least one row here at a direct child of that object - zero uncovered - and
-/// all 1,735 rows only this evaluator reports are exactly those children.</b> So the
-/// under-reporting set is empty: nothing <c>jsonschema</c> finds is unrepresented here, and
-/// the gap is a relocation of one keyword's report from the object to the property. This
-/// evaluator <b>splits</b> rather than misses: <c>content/relics/REL-01.json</c> carries
-/// seven undeclared root fields, and <c>jsonschema</c> reports one error at the root whose
-/// <em>message</em> lists "'acquisition', 'behavior_registration', 'core_tradeoff',
-/// 'primary_transformation', 'rarity_and_weighting', 'stacking_and_exclusivity', 'trigger'
-/// were unexpected", while this evaluator reports seven, each located at the property -
-/// <c>/acquisition</c>, <c>/behavior_registration</c>, and so on. Neither loses a finding.
-/// But for a normal form that excludes the message the difference is decisive rather than
-/// cosmetic: under the per-object arity those seven fields collapse into one position with
-/// a count of one, and renaming one undeclared field to another undeclared field would move
-/// nothing - the substitution blindness this whole design exists to remove, one keyword
-/// over. The instrument that puts the property name in the pointer is the one the pin needs,
-/// which is a reason to prefer it beyond its being the one the suite can run.
+/// <b>The instrument gap, in one sentence because it is fully explained.</b> The same corpus
+/// and row set under <c>jsonschema</c> 4.26.0 gives 1,927 where this gives 3,109, and the
+/// whole difference is <c>additionalProperties</c> arity - one error per object there naming
+/// every undeclared property in its message, one per undeclared property here, located at the
+/// property - so the same defects are reported at a different granularity, with nothing
+/// missed in either direction and the pin therefore neither inflated nor blind. The finer
+/// arity is the one a message-free normal form needs: under the per-object arity the seven
+/// undeclared fields of <c>content/relics/REL-01.json</c> collapse into one position with a
+/// count of one, and renaming one undeclared field to another would move nothing.
 /// </para>
 /// <para>
 /// <b>Why a correction to the evaluator is never in the same commit as a baseline it
@@ -431,13 +411,9 @@ internal sealed class SchemaCorpusDivergence
         text.Append("#  - Blind to a swap within one position: two required properties trading\n");
         text.Append("#    places at one object is one line at one count. Asserted by a test, not\n");
         text.Append("#    assumed.\n");
-        text.Append("#  - Nothing a second implementation finds is missing here. Of the 553 positions\n");
-        text.Append("#    jsonschema 4.26.0 reports over this corpus that this evaluator does not,\n");
-        text.Append("#    all 553 are additionalProperties at an object and every one is covered by a\n");
-        text.Append("#    row below at a direct child of that object: zero unrepresented, and the 825\n");
-        text.Append("#    positions at the other five keywords are the same set position for\n");
-        text.Append("#    position. If that number is ever not zero it is a limit on what this file\n");
-        text.Append("#    can claim, and it belongs in this header rather than in a report.\n");
+        text.Append("#  - Nothing a second implementation finds is missing here: jsonschema 4.26.0\n");
+        text.Append("#    over this corpus differs only in additionalProperties arity, one error per\n");
+        text.Append("#    object there against one per undeclared property here.\n");
         text.Append("#\n");
         text.Append("# Instrument: MechaMiner.Content.Schema.JsonSchemaEvaluator, this repository's\n");
         text.Append("# own strict draft 2020-12 evaluator and the only one on any ref here. Its\n");

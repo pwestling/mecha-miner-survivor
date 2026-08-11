@@ -107,10 +107,16 @@ public static class RelicSchema
         DefinitionField.ParameterMap("effects"),
         DefinitionField.Text("pool_availability"),
         DefinitionField.OptionalText("unlock_id"),
-        // relic.schema.json declares the elements ^REL-[0-9]{2}$ with uniqueItems, so this is a
-        // set of stable relic IDs. The authored corpus does not yet agree - REL-06 holds the
-        // phrase "weapon-authored knockback direction" - but that predates this change and
-        // belongs to the catalog stream's rename, not here.
+        // A set: relic.schema.json declares uniqueItems here, and the field table's own name
+        // for its elements is a stable relic ID. It no longer declares ^REL-[0-9]{2}$ - that
+        // element pattern was struck at b6c9f86 by ruling of the document owner - so this
+        // class is now the only side stating that the elements are IDs rather than prose, and
+        // it states it as a declaration rather than as a check: nothing validates an element
+        // of this field against an ID grammar. The authored corpus does not agree and the
+        // authored corpus stands: all ten relics author the field nested under
+        // stacking_and_exclusivity and every element names a mechanic, REL-06's being
+        // "weapon-authored knockback direction". That belongs to the catalog stream's rename,
+        // not here.
         DefinitionField.ArrayOf(
             "overrides_or_replaces",
             DefinitionField.ElementOf(FieldShape.Text),

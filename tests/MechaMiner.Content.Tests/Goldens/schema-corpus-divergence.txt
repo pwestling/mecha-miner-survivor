@@ -26,13 +26,9 @@
 #  - Blind to a swap within one position: two required properties trading
 #    places at one object is one line at one count. Asserted by a test, not
 #    assumed.
-#  - Nothing a second implementation finds is missing here. Of the 553 positions
-#    jsonschema 4.26.0 reports over this corpus that this evaluator does not,
-#    all 553 are additionalProperties at an object and every one is covered by a
-#    row below at a direct child of that object: zero unrepresented, and the 825
-#    positions at the other five keywords are the same set position for
-#    position. If that number is ever not zero it is a limit on what this file
-#    can claim, and it belongs in this header rather than in a report.
+#  - Nothing a second implementation finds is missing here: jsonschema 4.26.0
+#    over this corpus differs only in additionalProperties arity, one error per
+#    object there against one per undeclared property here.
 #
 # Instrument: MechaMiner.Content.Schema.JsonSchemaEvaluator, this repository's
 # own strict draft 2020-12 evaluator and the only one on any ref here. Its

@@ -533,13 +533,27 @@ written here so a later pass can act on it without them.
 ### Released documents — their line counts may change freely
 
 A released document is one no file in this tree cites by line, so its owner may add or remove lines
-without breaking anything here. By the commits' own declarations, which are not sensitive to how one
-counts: `c05aee9` and `e24a52a` removed every line citation of
+without breaking anything here. **The membership figure is 33** — the documents positively confirmed
+released by full-path diff evidence from the diffs of `c05aee9`, `e24a52a` and `85d0ced`, enumerated
+below. That is the figure to take away, because every one of its members is a named document with a diff
+behind it.
+
+**The commits' own declarations assert 37; that number is recorded here as a declaration, not as a
+measurement.** `c05aee9` and `e24a52a` removed every line citation of
 `docs/technical/40-content-data-and-validation.md` ("so no line in that doc is load-bearing"), and
 `85d0ced` re-pointed the line citations of **36 further documents** and states plainly, "The owners of
-all 36 documents can change their line counts." That is **37 documents** released in total.
+all 36 documents can change their line counts" — 37 in total. That prose **names no members**: set
+against the 33 confirmed by diff, **four members are unaccounted for**, and no pass has produced them.
+Publishing 37 as a measured release count would repeat the exact defect this section exists to
+document — a count nobody enumerated. (The likeliest explanation of the gap is documents cited only in
+bare or verbatim-note form, which a path-prefixed scan does not enumerate; that is a conjecture, not an
+enumeration, and it does not name the four either.)
 
-The 33 confirmed by re-deriving from the three diffs, sorted:
+**Why this correction exists** — it is this section's own subject turned on itself: two independent
+methods agreed on a count of 32 while omitting *different* documents, so their agreement manufactured a
+confidence neither had earned, which is why this record publishes membership rather than cardinality.
+
+The 33 confirmed by full-path diff evidence, sorted:
 
 - `docs/10-core-game-loop.md`
 - `docs/30-combat-weapons-movement-camera.md`
@@ -575,16 +589,20 @@ The 33 confirmed by re-deriving from the three diffs, sorted:
 - `docs/technical/114-autonomous-agent-execution-protocol.md`
 - `docs/technical/115-component-contract-and-schema-registry.md`
 
-**The count is method-sensitive, and "32" is an artifact of one method.** A scan that only matches
-`docs/…:<n>`-prefixed citations in the diffs surfaces exactly 32 documents — because it misses bare
-`<NN>:<n>` citations (`docs/technical/22` alone carried **58** such, re-pointed to its own headings and
-gone at HEAD) and citations spread across the other owned files. Two independently produced 32-lists
-each dropped a *different* single document — one omitted `docs/weapons/README.md`
-(its `docs/weapons/README.md:48` was re-pointed to `` `## Design state` `` and `` `## Catalog lookup` ``),
-the other omitted `docs/technical/22` — and coincidentally both landed on 32; **both documents are
-released.** The 33 above are what re-derivation confirms; the balance up to the commits' own 36 + doc-40
-are documents cited only in bare or verbatim-note form that a path-prefixed scan does not enumerate. Do
-not treat "32" as the release count.
+**One member's status is unresolved: `docs/weapons/README.md`.** Two passes disagree about it — one
+reports its citation removed and re-added, which means the claim was withdrawn in place and therefore
+never re-pointed; the other reports its `docs/weapons/README.md:48` re-pointed to `` `## Design state` ``
+and `` `## Catalog lookup` ``. A full-path diff is being run to settle it. Neither reading is adopted
+here: the membership figure stands at **33 with this one document's status pending**, and **a second
+amendment to this section will follow when the verdict lands.**
+
+**The count is method-sensitive, and a path-prefixed scan undercounts.** A scan that only matches
+`docs/…:<n>`-prefixed citations in the diffs surfaces fewer documents than were actually released,
+because it is blind to the bare `<NN>:<n>` spelling — `docs/technical/22` alone carried **58** citations
+in that form, re-pointed to its own headings and gone at HEAD, and was invisible to that instrument
+entirely — and it also misses citations spread across the other owned files. Two such scans each produced
+32, each dropping a *different* single document (one `docs/weapons/README.md`, the other
+`docs/technical/22`). Do not treat "32" as the release count.
 
 ### Five documents are NOT released — the inverse of a release, not a smaller one
 

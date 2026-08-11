@@ -106,6 +106,143 @@
       ],
       "tier": "main",
       "status": "registered"
+    },
+    {
+      "id": "VER-UI-002-004",
+      "summary": "A verb launches game/tests/RunSliceCaptureHarness.tscn under a display server and observes that the harness reached managed code, and the harness's exit code becomes the verb's exit class unchanged. build/verify-run-slice-capture.sh is added to build/verify-gate-wiring.sh's INVENTORY (the array at :409) classified 'gate'. THIS ENTRY IS registered AND ITS TIER IS main, AND THE REASON IS A MEASURED CONSTRAINT RATHER THAN A PREFERENCE. The capture harness needs a real display server: RunSliceCaptureHarness.cs:40-42 says so - 'It needs a real display server, because a capture of a headless viewport would be empty' - and CaptureCurrentBeat calls GetViewport().GetTexture().GetImage() then image.SavePng at :289-:295, which a headless dummy driver cannot satisfy. At 549af81 .github holds exactly one workflow, fast.yml, runs-on ubuntu-24.04 at :128, whose nine named steps are clean checkout (:131), provision the pinned toolchain (:145), and the six build verbs bootstrap, format-check, build, test-fast, godot-import (:160-:188) followed by retain the verb evidence (:199) and report exit classes (:213) - every verb among them headless. fast.yml:58-64 records the split as a decision already taken, quoting delivery-waves § Decision 2 - --headless 'uses the dummy driver and cannot capture screenshots, so visual verification needs xvfb-run plus lavapipe. Two distinct CI tiers, not one.' build/bootstrap-linux.sh installs mesa-vulkan-drivers at :109 and does NOT install xvfb; its comment at :96-:97 says lavapipe is 'Only needed for the windowed/Xvfb rendering tier, not --headless'. A case-insensitive search of build/ and .github/ for xvfb at 549af81 returns three hits and none of them installs it: fast.yml:61, bootstrap-linux.sh:97, and build/toolchain.json:66-70. So wiring this gate into godot-import today makes the fast job red for want of a display, and the two honest routes are (A) provision xvfb in build/bootstrap-linux.sh and run this gate under xvfb-run inside a verb, which is a provisioning change and a fast-job runtime decision this package does not own, or (B) wait for the second tier. TWO COMMITTED FILES NAME DIFFERENT OWNERS FOR THIS BLOCKER, AND THIS ENTRY DOES NOT PICK ONE. .github/workflows/fast.yml:62 says \"The second tier is OPS-001's\", while build/toolchain.json:66-70 declares xvfb-run with \"required_by\": \"PRE-004\" and \"deferred_reason\": \"--headless uses the dummy rendering driver and cannot capture a viewport, so the screenshot/render tier needs Xvfb plus a software Vulkan ICD. No screenshot verification exists until PRE-004.\" The deferredTo field below reads OPS-001 on the integration owner's ruling, and both citations are recorded here so a reader sees the disagreement rather than inheriting one side of it. Neither file is edited by this commit, and reconciling them is not this package's to do. EXEMPT IS NOT WIRED, and this entry must not be promoted on the strength of an EXEMPT line. build/verify-gate-wiring.sh:507 already carries the sibling of that mistake as prose, in the EXEMPT array that opens at :504 and now holds six entries: verify-godot-runner.sh 'was called \"wired\" on the strength of that call site while running exactly as often as before - never.' If this gate joins the EXEMPT list it joins it with the failure observed when it was wired, in the form § 4 requires, and this entry stays registered until something a workflow runs executes it. WHAT IS ASSERTED WHEN IT DOES RUN, and the three parts mirror VER-PRE-001-003: the gate names res://tests/RunSliceCaptureHarness.tscn; stdout carries RunSliceCaptureHarness.StartupLine, the exact string 'MechaMiner: run slice capture harness ready' declared at RunSliceCaptureHarness.cs:48 and printed at :82; and MECHAMINER_RUN_SLICE_CAPTURE points at a per-invocation empty directory in which captures.tsv is absent before and present after, so a stale hand-run artifact cannot satisfy the gate. Exit codes preserved per doc 100 § Standard command surface: 0 from :251 when all five beats complete, 2 from :88 for a missing output directory and from :103 when res://scenes/Run.tscn does not instantiate a RunSceneRoot, 4 from :210 for the input-binding gate. NEGATIVE CONTROL, on the wiring. EXPECTED RED, to be replaced by observed text before promotion: point the gate at res://tests/GodotTestRunner.tscn, a scene that loads, runs and exits 0 under the same display, so nothing about the environment is broken. Expected: red naming the absent startup line and the absent captures.tsv, and the verb exits 4.",
+      "task": "TASK-UI-002-002",
+      "requirements": [
+        "TR-UI-001",
+        "TR-QUA-001",
+        "TR-BLD-005"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#verification-registry",
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-run-slice-capture.sh"
+      },
+      "fixtures": [],
+      "scenarios": [
+        "run-slice-drive"
+      ],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output",
+        "engine-log"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "main",
+      "deferredTo": "OPS-001",
+      "status": "registered"
+    },
+    {
+      "id": "VER-UI-002-005",
+      "summary": "When the physical-key bindings do not reach the engine, the capture harness refuses to capture, the verb goes red, and NO CAPTURE IS WRITTEN - and all three are asserted, because the third is the one this repository has already got wrong. THE HISTORY IS THE ARGUMENT. Before PR #19's own review the harness with no assertions was the CAPTURE one: git show 91714b0:game/tests/RunSliceCaptureHarness.cs has zero Check( and a terminal Quit(0) reached whenever all beats complete, conditioned on nothing. Emptying every [input] event list in game/project.godot - the exact defect the branch claimed to close - left it exiting 0 while the mech still drove to the arena corner, because ApplyHeldKeys calls Input.ActionPress and bypasses the binding entirely; it logged 'bound_events 0' and 'physical_key_binds_action D move_east no' for all eight pairs and nothing failed on it. That state exists nowhere now: dccc958 added the gate, and at 549af81 RunSliceCaptureHarness.cs:182-:212 collects actionsWithNoBoundEvents and keysNotBoundToTheirAction, writes 'FAIL input-bindings-reached-the-engine' at :205 and 'outcome failed' at :206, and exits 4 at :210 WITHOUT capturing. THE SELECTOR IS THE GATE AND NOT A SCENE SECTION, DELIBERATELY, and the reason is measurable rather than stylistic: the capture harness emits NO '## '-prefixed section headings at all at 549af81 - it writes tab-separated labels through Log(), so 'input-bindings-reached-the-engine' appears only as a field of the FAIL line at :205. An engine-scene selector reading 'RunSliceCaptureHarness.tscn § input-bindings-reached-the-engine' would name a section that does not exist, and would add a seventh member to a corpus-wide engine-scene population that is exactly the six RunSliceEvidenceHarness sections. So this entry names the gate that reads the transcript, and giving the capture harness real '## ' sections is a harness change outside this registry-only commit. THE GUARDED EFFECT, NOT ONLY THE GUARD. The trap here is a control whose only observation is 'the guard threw': exit 4 plus a FAIL line proves the guard fired and says nothing about whether pixels were written, and pixels written under broken bindings are precisely the artifact a human would read as evidence that input works. So the acceptance criterion is a conjunction of four observations: the harness exits 4; the verb's exit class is 4; captures.tsv carries 'FAIL input-bindings-reached-the-engine' with the offending actions and key/action pairs named, and 'outcome failed'; and the output directory contains ZERO .png files and zero capture rows. The fourth is an absent-value assertion over a per-invocation empty directory, which is why VER-UI-002-004 requires one. NEGATIVE CONTROL, EXPECTED RED, to be replaced by observed text before promotion. Two injections, and both must be run because they exercise the two independent halves of the gate at :141 and :170, which no single injection reaches. (i) Empty the event list of exactly ONE [input] action in a COPY of the game directory - move_east, leaving move_west, move_north and move_south bound. That is the smallest well-formed thing the rule forbids, per doc 91 § Negative control adequacy, and it is deliberately ONE and not four: the gate aggregates into two lists and reports if either is non-empty, so four failures and one failure are different arities and only the single one shows that the check is not satisfied by 'most of them are fine'. Expected: 'action_registered move_east yes bound_events 0' from the log line at :136-:139, FAIL naming move_east, exit 4, verb class 4, no PNG. (ii) Rebind ONE physical key to the wrong action - D to move_west - leaving its event list non-empty, so the :141 half passes and only the :170 half can fire. Expected: 'physical_key_binds_action D move_east no' from :166-:168, FAIL naming 'D -> move_east', exit 4, verb class 4, no PNG. A CONTROL THAT MUST NOT BE USED: deleting the whole [input] section, or emptying all four lists at once. It goes red, and it goes red on both halves simultaneously, so it cannot show that either half works on its own and it cannot show arity - and it is close enough to breaking the project file that a reader cannot tell a caught violation from a project that failed to load. INJECTIONS ARE MADE IN A COPY. game/project.godot is the file the gate is checking; a gate that edits it is not a gate. THIS ENTRY'S deferredTo TARGET IS CONTESTED IN THE TREE: .github/workflows/fast.yml:62 assigns the windowed/screenshot tier to OPS-001 while build/toolchain.json:66-70 names PRE-004 for the same xvfb blocker; OPS-001 is recorded below on the integration owner's ruling, and VER-UI-002-004 carries the full statement of the disagreement.",
+      "task": "TASK-UI-002-002",
+      "requirements": [
+        "TR-UI-001",
+        "TR-UI-004",
+        "TR-QUA-001"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#negative-control-adequacy",
+        "docs/technical/60-ui-input-and-accessibility.md#logical-input-actions"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-run-slice-capture.sh"
+      },
+      "fixtures": [],
+      "scenarios": [
+        "run-slice-drive"
+      ],
+      "evidenceKinds": [
+        "command-exit-code",
+        "expected-diagnostic-id",
+        "absent-value-assertion",
+        "captured-artifact"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "main",
+      "deferredTo": "OPS-001",
+      "status": "registered"
+    },
+    {
+      "id": "VER-UI-002-006",
+      "summary": "The capture harness's evidence is counted and pinned, so a run that evaluated less than the whole matrix fails rather than passes. THIS HARNESS HAS NO ASSERTION COUNTER, AND THAT IS THE FINDING THAT SHAPES THIS ENTRY. At 549af81 RunSliceCaptureHarness.cs contains zero Check( call sites and no _assertionsRun field - the evidence harness's 28-assertion accounting has no counterpart here. What it has instead is four countable populations, each with a documented expected cardinality, and everything after the input-binding gate at :182 is conditioned on nothing: the terminal Quit(0) at :251 is reached whenever _beatIndex passes _beats.Length, and CaptureCurrentBeat at :258-:263 RETURNS SILENTLY when _runScene?.Run is null, so a run in which the run scene never composed writes no rows, saves no PNG, and still exits 0. That is this harness's vacuous green, and it is not the same shape as the other harness's. FOUR PINS, ALL DERIVED FROM COMMITTED CODE AND ALL RESTATED BY HAND IN THE GATE. (a) 4 action_registered rows, one per movement action, each with bound_events >= 1 - the loop at :124-:130 enumerates MoveEast, MoveWest, MoveNorth, MoveSouth. (b) 8 physical_key_binds_action rows, all 'yes' - the pairs at :152-:162 are D, A, W, S and Right, Left, Up, Down. Eight and not four: the arrow keys are a second binding per action, and a pin of 4 would pass with every arrow binding deleted, which is doc 91 § Negative control adequacy's reach-versus-arity rule applied to this matrix. (c) 5 capture rows, one per Beat in the _beats array at :63-:70 - 01-at-rest, 02-holding-east, 03-holding-north, 04-holding-north-east, 05-released. (d) 5 .png files in the output directory, matching (c) name for name, because a row written for a beat whose SavePng failed is logged as a GD.PushError at :294 and does NOT change the exit code, so rows and files can disagree and only comparing them catches it. THE INDEPENDENT ANCHOR, since a pin both sides of which come from the same run is blind: (c) and (d) are two independently produced populations - a TSV the harness composes and files the engine wrote - and the gate asserts set equality between the beat labels in the TSV and the PNG basenames on disk, in both directions, PLUS the committed count 5. That is doc 91's third-anchor construction: the count is what a correlated deletion from both populations cannot satisfy. For (a) and (b) the independent anchor is game/project.godot's [input] section itself: the gate reads the action names and the expected event count from the project file and compares them with the harness's report, so the harness cannot be the only witness to its own matrix. NEGATIVE CONTROLS, THREE, EXPECTED RED, to be replaced by observed text before promotion. (i) Silent no-capture: make CaptureCurrentBeat return at :260 unconditionally. Expected: harness exits 0 with 'MechaMiner: run slice capture complete' from :250, zero capture rows, zero PNGs, and the gate red on all four pins - which no exit-code check can catch, since the exit code is 0. (ii) Arity, not reach: delete one beat from the _beats array, leaving four. Expected: 4 rows and 4 PNGs against a pin of 5, red, naming the missing beat by label. A gate that only asserted 'at least one capture exists' passes this and is the reach-not-arity failure. (iii) Row-file divergence: make SavePng write to an unwritable path for exactly one beat. Expected: 5 rows, 4 PNGs, red on the set equality naming the beat whose file is missing, and NOT merely red on a total. A CONTROL THAT MUST NOT BE USED: emptying all four [input] lists. It fires the binding gate at :182 and exits 4 before any of (a) through (d) is reached, so it proves nothing about these pins - it is VER-UI-002-005's control, and using it here is a control that cannot fire in the range being tested. WHAT THIS DOES NOT ASSERT: any pixel's value. Five files exist and match the beat labels; nothing compares an image. captured-artifact below means the file exists and is attributable to a beat, nothing more. THIS ENTRY'S deferredTo TARGET IS CONTESTED IN THE TREE: .github/workflows/fast.yml:62 assigns the windowed/screenshot tier to OPS-001 while build/toolchain.json:66-70 names PRE-004 for the same xvfb blocker; OPS-001 is recorded below on the integration owner's ruling, and VER-UI-002-004 carries the full statement of the disagreement.",
+      "task": "TASK-UI-002-002",
+      "requirements": [
+        "TR-UI-001",
+        "TR-QUA-001"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#negative-control-adequacy",
+        "docs/technical/91-verification-strategy.md#determinism-and-fixture-policy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-run-slice-capture.sh"
+      },
+      "fixtures": [],
+      "scenarios": [
+        "run-slice-drive"
+      ],
+      "evidenceKinds": [
+        "pin-comparison",
+        "captured-artifact",
+        "command-output",
+        "surviving-file-assertion"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "main",
+      "deferredTo": "OPS-001",
+      "status": "registered"
+    },
+    {
+      "id": "VER-UI-002-007",
+      "summary": "A capture run in which the harness never started, or started and never reached the run scene, is a failure distinguishable from a pass and from a capture failure. This harness has THREE non-start modes and not two, and the third is specific to it. (a) The scene or the pinned executable is absent - asserted by diagnostic identity, naming the unresolvable path or the version mismatch, and exit class 3 for the toolchain case per doc 100 § Standard command surface, never class 4. (b) The harness starts and never reaches managed code - no 'MechaMiner: run slice capture harness ready' on stdout, the string declared at RunSliceCaptureHarness.cs:48 and printed at :82. (c) THE PRODUCTION RUN SCENE FAILS TO INSTANTIATE. RunSliceCaptureHarness.cs:96-:105 loads res://scenes/Run.tscn, the path declared at :56, and exits 2 at :103 if it is not a RunSceneRoot, which is handled; what is NOT is the state after that, where CaptureCurrentBeat at :258-:263 returns silently whenever _runScene?.Run is null, so a scene that instantiated but never composed a run produces a complete, quiet, exit-0 run with no rows and no pixels. That state is asserted red by VER-UI-002-006's pins, and it is named here because a reader looking for 'the harness never started' will not otherwise look for 'the harness started and the run did not'. (d) NO DISPLAY SERVER is a fourth mode and is deliberately exit class 3, not 4: a capture attempted against a dummy driver is a machine that cannot run this tier, not a repository defect. The gate asserts DisplayServer.GetName() from the harness's own log line at :116 against the expected windowed driver, so 'ran headless by accident and captured black frames' is caught rather than read as a pass. NEGATIVE CONTROLS, THREE, EXPECTED RED, to be replaced by observed text before promotion. (i) COHERENT, PRIMARY: point the gate at res://tests/GodotTestRunner.tscn, which loads, runs and exits 0 under the same display. Nothing is broken. Expected: red naming the absent startup line and the absent captures.tsv, verb class 4, AND the output directory containing no captures.tsv and no PNG - the guarded effect asserted, not only the guard. (ii) Absent scene, in a COPY of the game directory: red naming res://tests/RunSliceCaptureHarness.tscn as unresolvable, class 4, distinct from (i)'s message. (iii) Headless: run the gate without a display. Expected: exit class 3 naming the dummy display server, and specifically NOT class 4 and NOT a pass with black captures. WHAT THIS DOES NOT ASSERT: that the gate ran at all, for the reason VER-PRE-001-007 gives - nothing inside a gate can catch its own non-execution, and the run manifest that would is the item FND-005.json:23 scopes and defers. Nor does it assert that a real key press from a real display server reaches the Input singleton: RunSliceCaptureHarness.cs:313-:320 states that limit - what remains unproven by automation is 'the delivery of a real key press by a real display server to the Input singleton, which is engine behaviour rather than this repository's' - and it stays outside automation. THIS ENTRY'S deferredTo TARGET IS CONTESTED IN THE TREE: .github/workflows/fast.yml:62 assigns the windowed/screenshot tier to OPS-001 while build/toolchain.json:66-70 names PRE-004 for the same xvfb blocker; OPS-001 is recorded below on the integration owner's ruling, and VER-UI-002-004 carries the full statement of the disagreement.",
+      "task": "TASK-UI-002-002",
+      "requirements": [
+        "TR-UI-001",
+        "TR-QUA-001",
+        "TR-BLD-005"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#negative-control-adequacy",
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-run-slice-capture.sh"
+      },
+      "fixtures": [],
+      "scenarios": [
+        "run-slice-drive"
+      ],
+      "evidenceKinds": [
+        "command-exit-code",
+        "expected-diagnostic-id",
+        "absent-value-assertion"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "main",
+      "deferredTo": "OPS-001",
+      "status": "registered"
     }
   ]
 }

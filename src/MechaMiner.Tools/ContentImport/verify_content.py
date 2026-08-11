@@ -376,17 +376,34 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       shape to check it against is how a wrong number circulates.
       The bounded form is NOT free of false positives, and the claim that
       it "finds zero today" was true only while `no.` had no occurrence.
-      THREE of these eighteen tokens are also ordinary English words -
-      `no.`, `fig.` and `sec.` - so all three have a period that can BE
-      the sentence end this list is defined to exclude. `no.` is only the
-      one with an occurrence in the corpus TODAY. `fig.` and `sec.` are
-      KNOWN LATENT MISFIRES, not impossibilities: measured against this
-      module's own compiled ABBREVIATION_RX, "The dessert was a dried
-      fig." matches `fig.` and "Hold on a sec." matches `sec.`, each at a
-      plain sentence end with no abbreviation present. Neither sentence is
-      in docs/ yet, which is the only reason they are not failures today;
-      the day one is written the gate reddens on innocent prose. Do not
-      read the `no.` narrowing as evidence the other tokens are safe.
+      WORDHOOD IS THE WRONG TEST, and counting by it understated this.
+      An earlier revision said THREE of these eighteen tokens are also
+      ordinary English words - `no.`, `fig.` and `sec.` - and offered that
+      as the bound. The operative property is neither wordhood nor that
+      count: it is whether the token, spelled as this list spells it, can
+      END A SENTENCE without being an abbreviation. Those three can
+      because they are words. AT LEAST FIVE MORE can without being words
+      at all, because `re.IGNORECASE` is on the compiled pattern - never
+      mentioned in the text this replaces - so a capitalised or upper-case
+      form of a token matches it. Measured against this module's own
+      compiled ABBREVIATION_RX at 2026-08-11T04:09Z, each of these
+      matches at a plain sentence end with no abbreviation present:
+      `ca.` on "The tour ended in CA." (a US state code), `al.` on "His
+      brother is called Al." (a given name), `p.` on "The verdict was a
+      flat P.", `eq.` on "The band played the whole of EQ.", and `pp.` on
+      "Dynamics fell to pp." (a dynamic marking). So SEVEN of the
+      eighteen are known latent misfires rather than three, and "at least"
+      is meant literally - the five were found by inspecting the list, not
+      by exhausting it, and `re.IGNORECASE` means every token has to be
+      considered in every capitalisation.
+      `no.` is only the one with an occurrence in the corpus TODAY, and
+      the other six are LATENT MISFIRES, not impossibilities: measured the
+      same way, "The dessert was a dried fig." matches `fig.` and "Hold on
+      a sec." matches `sec.`, each at a plain sentence end. None of those
+      sentences is in docs/ yet, which is the only reason they are not
+      failures today; the day one is written the gate reddens on innocent
+      prose. Do not read the `no.` narrowing as evidence the other tokens
+      are safe.
       At b71371e the bounded form reports exactly 1 hit,
       docs/technical/delivery-waves.md:598 "than a yes or no. Its numbers
       are 300 trials", which is that word ending a sentence and not an
@@ -2604,15 +2621,26 @@ def check_no_nulls() -> list[tuple]:
 # period and no quotation is at risk.
 #
 # ABBREVIATION_SUFFIX below therefore narrows `no.` ALONE, and the other seventeen
-# take no suffix for a reason that is NOT "none of them is a word". Two of them are:
-# measured against the compiled ABBREVIATION_RX, "The dessert was a dried fig."
-# matches `fig.` and "Hold on a sec." matches `sec.`, both at a plain sentence end.
-# They take no suffix because neither sentence occurs in docs/ TODAY, so neither is
-# a failure yet - they are latent misfires waiting on prose, not impossibilities.
+# take no suffix. The reason is NOT "none of them can be a sentence end" - and it is
+# not "none of them is a word" either, which is a wrong bound this block carried in
+# place of an earlier wrong bound. The property that matters is whether a token can
+# END A SENTENCE without being an abbreviation, and wordhood is only one way to have
+# it. AT LEAST FIVE tokens have it without being words, because the pattern is
+# compiled with re.IGNORECASE and so matches any capitalisation. Measured against the
+# compiled ABBREVIATION_RX at 2026-08-11T04:09Z, each of these matches at a plain
+# sentence end with no abbreviation present: `ca.` on "The tour ended in CA.", `al.`
+# on "His brother is called Al.", `p.` on "The verdict was a flat P.", `eq.` on "The
+# band played the whole of EQ.", and `pp.` on "Dynamics fell to pp.". Two more do it
+# as words: "The dessert was a dried fig." matches `fig.` and "Hold on a sec."
+# matches `sec.`. That is seven of the eighteen, and "at least" is literal - the list
+# was assembled by inspection, and re.IGNORECASE means each token has to be
+# considered in every capitalisation before any of them can be called safe.
+# They take no suffix because none of those sentences occurs in docs/ TODAY, so none
+# is a failure yet - they are latent misfires waiting on prose, not impossibilities.
 # Anyone who reads this block as licence to assume the unsuffixed tokens cannot land
 # on a sentence end is being misled; that assumption is what this paragraph exists to
-# remove. Extending the suffix map to `fig.` and `sec.` is a separate decision, to be
-# proposed with each token's false-negative cost stated, and is not made here.
+# remove. Extending the suffix map is a separate decision, to be proposed with each
+# token's false-negative cost stated, and is not made here.
 #
 # NOR does the number sense always introduce a numeral, which is the other thing
 # this block used to assert. "See No. IV", "Part No. A-12", "Ticket No. ABC-123" and

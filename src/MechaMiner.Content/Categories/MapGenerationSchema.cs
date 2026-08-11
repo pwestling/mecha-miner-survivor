@@ -141,7 +141,9 @@ public static class MapGenerationSchema
         DefinitionField.Flag("changes_every_run"),
         DefinitionField.Flag("directions_revealed_to_player"),
         DefinitionField.ArrayOf(
-            "excluded_from_initial_camera_view", DefinitionField.ElementOf(FieldShape.Text)));
+            "excluded_from_initial_camera_view",
+            DefinitionField.ElementOf(FieldShape.Text),
+            ArrayOrder.OrderedArray));
 
     /// <summary>The site-placement sub-shape.</summary>
     public static DefinitionShape SitePlacement { get; } = DefinitionShape.Of(
@@ -202,7 +204,10 @@ public static class MapGenerationSchema
         DefinitionField.Number("replenishment_attempt_interval_seconds"),
         DefinitionField.Integer("replenishment_success_chance_percent"),
         DefinitionField.Text("success_behavior"),
-        DefinitionField.ArrayOf("position_constraints", DefinitionField.ElementOf(FieldShape.Text)),
+        DefinitionField.ArrayOf(
+            "position_constraints",
+            DefinitionField.ElementOf(FieldShape.Text),
+            ArrayOrder.OrderedArray),
         DefinitionField.Object("destructible_rock", DefinitionShape.Of(
             "the destructible rock prop",
             DefinitionField.Text("prop"),
@@ -213,7 +218,8 @@ public static class MapGenerationSchema
             DefinitionField.Text("movement_collision"),
             DefinitionField.Integer("health_pack_chance_percent"),
             DefinitionField.Flag("health_pack_chance_is_independent_per_rock"),
-            DefinitionField.ArrayOf("rules", DefinitionField.ElementOf(FieldShape.Text)))),
+            DefinitionField.ArrayOf(
+                "rules", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.OrderedArray))),
         DefinitionField.Object("health_pack", DefinitionShape.Of(
             "the health pack prop",
             DefinitionField.Text("prop"),
@@ -224,20 +230,29 @@ public static class MapGenerationSchema
             DefinitionField.Text("attraction"),
             DefinitionField.Text("movement_collision"),
             DefinitionField.Text("persistence"),
-            DefinitionField.ArrayOf("rules", DefinitionField.ElementOf(FieldShape.Text)))));
+            DefinitionField.ArrayOf(
+                "rules",
+                DefinitionField.ElementOf(FieldShape.Text),
+                ArrayOrder.OrderedArray))));
 
     /// <summary>The map generation field table, in schema-declared order.</summary>
     public static DefinitionShape Shape { get; } = DefinitionShape.Of(
         "the standard map generation contract",
         DefinitionField.Text("mode"),
         DefinitionField.Text("distance_language"),
-        DefinitionField.ArrayOf("distance_bands", DefinitionField.ElementObject(DistanceBand)),
+        // map-generation-contract.schema.json: "The three half-open distance bands", and each
+        // row carries its own band and range. Near, Middle, Far is the progression.
+        DefinitionField.ArrayOf(
+            "distance_bands",
+            DefinitionField.ElementObject(DistanceBand),
+            ArrayOrder.OrderedArray),
         DefinitionField.Object("world_scale", WorldScale),
         DefinitionField.Object("topology", Topology),
         DefinitionField.Object("deployment_and_opening_fairness", DeploymentFairness),
         DefinitionField.ArrayOf(
             "shared_important_site_placement_contract",
-            DefinitionField.ElementOf(FieldShape.Text)),
+            DefinitionField.ElementOf(FieldShape.Text),
+            ArrayOrder.OrderedArray),
         DefinitionField.Object(
             "visible_mining_opportunities_in_normal_view",
             DefinitionShape.Of(
@@ -258,14 +273,20 @@ public static class MapGenerationSchema
             DefinitionField.Flag("structure_recognition_reveals_global_position"),
             DefinitionField.Flag("mandatory_environmental_damage_hazards"))),
         DefinitionField.ArrayOf(
-            "variation_independence", DefinitionField.ElementOf(FieldShape.Text)),
+            "variation_independence",
+            DefinitionField.ElementOf(FieldShape.Text),
+            ArrayOrder.OrderedArray),
         DefinitionField.ArrayOf(
-            "boundary_and_fog_presentation", DefinitionField.ElementOf(FieldShape.Text)),
+            "boundary_and_fog_presentation",
+            DefinitionField.ElementOf(FieldShape.Text),
+            ArrayOrder.OrderedArray),
         DefinitionField.Object("valid_seed_contract", DefinitionShape.Of(
             "what makes a seed valid",
             DefinitionField.Text("validation_distance_metric"),
             DefinitionField.ArrayOf(
-                "invalid_if_violated", DefinitionField.ElementOf(FieldShape.Text)))));
+                "invalid_if_violated",
+                DefinitionField.ElementOf(FieldShape.Text),
+                ArrayOrder.OrderedArray))));
 
     /// <summary>The values the compiler derives for the map contract.</summary>
     public static DerivedFieldRegister Derived { get; } = new(new[]

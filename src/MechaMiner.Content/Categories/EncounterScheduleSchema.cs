@@ -77,9 +77,20 @@ public static class EncounterScheduleSchema
     public static DefinitionShape FormationEvent { get; } = DefinitionShape.Of(
         "a formation event",
         DefinitionField.Text("authored_cell_text"),
-        DefinitionField.ArrayOf("at", DefinitionField.ElementOf(FieldShape.Text)),
-        DefinitionField.ArrayOf("enemy_ids", DefinitionField.ElementOf(FieldShape.Text)),
-        DefinitionField.ArrayOf("formations", DefinitionField.ElementOf(FieldShape.Text)),
+        // at holds m:ss timestamps, and ascending time is what the row means; ordinal order
+        // would also read "13:30" before "3:30".
+        DefinitionField.ArrayOf(
+            "at", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.OrderedArray),
+
+        // enemy_ids elements are ^EN-[0-9]{2}$, so they are stable IDs and the event places a
+        // set of them. Note this is stricter than the JSON schema, which does not declare
+        // uniqueItems here as it does on debut_enemy_ids: an ID set forbids a repeat.
+        DefinitionField.ArrayOf(
+            "enemy_ids", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.IdSet),
+
+        // formations names formations from a seven-member enum, not stable IDs.
+        DefinitionField.ArrayOf(
+            "formations", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.OrderedArray),
         DefinitionField.OptionalText("timestamp_provenance"),
         DefinitionField.OptionalText("reconstruction_basis"));
 
@@ -103,12 +114,22 @@ public static class EncounterScheduleSchema
         DefinitionField.Text("authored_event_or_boundary"),
         DefinitionField.Integer("minimum_count"),
         DefinitionField.Object("pulse", Pulse),
-        DefinitionField.ArrayOf("composition", DefinitionField.ElementObject(CompositionEntry)),
-        DefinitionField.ArrayOf("debut_enemy_ids", DefinitionField.ElementOf(FieldShape.Text)),
         DefinitionField.ArrayOf(
-            "formation_events", DefinitionField.ElementObject(FormationEvent)),
+            "composition",
+            DefinitionField.ElementObject(CompositionEntry),
+            ArrayOrder.OrderedArray),
+
+        // Elements are ^EN-[0-9]{2}$ with uniqueItems: a set of stable IDs.
         DefinitionField.ArrayOf(
-            "scheduled_elites", DefinitionField.ElementObject(ScheduledElite)),
+            "debut_enemy_ids", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.IdSet),
+        DefinitionField.ArrayOf(
+            "formation_events",
+            DefinitionField.ElementObject(FormationEvent),
+            ArrayOrder.OrderedArray),
+        DefinitionField.ArrayOf(
+            "scheduled_elites",
+            DefinitionField.ElementObject(ScheduledElite),
+            ArrayOrder.OrderedArray),
         DefinitionField.OptionalText("boss_arrival_boss_id"));
 
     /// <summary>One beacon response package.</summary>
@@ -128,8 +149,10 @@ public static class EncounterScheduleSchema
         DefinitionField.Integer("warning_seconds"),
         DefinitionField.Text("population_symbol"),
         DefinitionField.Text("elite_exclusion_enemy_id"),
-        DefinitionField.ArrayOf("responses", DefinitionField.ElementObject(BeaconResponse)),
-        DefinitionField.ArrayOf("rules", DefinitionField.ElementOf(FieldShape.Text)));
+        DefinitionField.ArrayOf(
+            "responses", DefinitionField.ElementObject(BeaconResponse), ArrayOrder.OrderedArray),
+        DefinitionField.ArrayOf(
+            "rules", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.OrderedArray));
 
     /// <summary>The population ceiling sub-shape.</summary>
     public static DefinitionShape PopulationCeilings { get; } = DefinitionShape.Of(
@@ -177,11 +200,23 @@ public static class EncounterScheduleSchema
         DefinitionField.Object("population_ceilings", PopulationCeilings),
         DefinitionField.Object("boss_arrival_minute_rule", BossArrivalMinuteRule),
         DefinitionField.ArrayOf(
-            "spawn_formations", DefinitionField.ElementObject(FormationDefinition)),
-        DefinitionField.ArrayOf("formation_constraints", DefinitionField.ElementOf(FieldShape.Text)),
+            "spawn_formations",
+            DefinitionField.ElementObject(FormationDefinition),
+            ArrayOrder.OrderedArray),
         DefinitionField.ArrayOf(
-            "phase_pressure_curve", DefinitionField.ElementObject(PhasePressure)),
-        DefinitionField.ArrayOf("minute_rows", DefinitionField.ElementObject(MinuteRow)),
+            "formation_constraints",
+            DefinitionField.ElementOf(FieldShape.Text),
+            ArrayOrder.OrderedArray),
+
+        // Each row carries its own phase range, and the curve rises through them.
+        DefinitionField.ArrayOf(
+            "phase_pressure_curve",
+            DefinitionField.ElementObject(PhasePressure),
+            ArrayOrder.OrderedArray),
+
+        // encounter-schedule.schema.json: "One row per minute of the run, in minute order."
+        DefinitionField.ArrayOf(
+            "minute_rows", DefinitionField.ElementObject(MinuteRow), ArrayOrder.OrderedArray),
         DefinitionField.Object("hyper_gold_beacon_response", BeaconResponseTable));
 
     /// <summary>The values the compiler derives for the schedule.</summary>

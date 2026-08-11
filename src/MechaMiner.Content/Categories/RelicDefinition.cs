@@ -95,19 +95,30 @@ public static class RelicSchema
         "a relic definition",
         DefinitionField.Text("transformation_key"),
         DefinitionField.Text("tradeoff_key"),
-        DefinitionField.ArrayOf("affected_scope", DefinitionField.ElementOf(FieldShape.Text)),
+        // A three-member enum of scope tokens, not stable IDs.
+        DefinitionField.ArrayOf(
+            "affected_scope", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.OrderedArray),
         DefinitionField.Text("behavior_kind"),
         DefinitionField.Text("trigger_condition"),
         DefinitionField.ParameterMap("effects"),
         DefinitionField.Text("pool_availability"),
         DefinitionField.OptionalText("unlock_id"),
+        // relic.schema.json declares the elements ^REL-[0-9]{2}$ with uniqueItems, so this is a
+        // set of stable relic IDs. The authored corpus does not yet agree - REL-06 holds the
+        // phrase "weapon-authored knockback direction" - but that predates this change and
+        // belongs to the catalog stream's rename, not here.
         DefinitionField.ArrayOf(
-            "overrides_or_replaces", DefinitionField.ElementOf(FieldShape.Text)),
+            "overrides_or_replaces",
+            DefinitionField.ElementOf(FieldShape.Text),
+            ArrayOrder.IdSet),
         DefinitionField.Integer("sale_value_common_ore"),
         DefinitionField.OptionalObject("live_state_meter", LiveStateMeter),
-        DefinitionField.ArrayOf("rules", DefinitionField.ElementOf(FieldShape.Text)),
         DefinitionField.ArrayOf(
-            "cross_document_rules", DefinitionField.ElementObject(CrossDocumentRule)));
+            "rules", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.OrderedArray),
+        DefinitionField.ArrayOf(
+            "cross_document_rules",
+            DefinitionField.ElementObject(CrossDocumentRule),
+            ArrayOrder.OrderedArray));
 
     /// <summary>The values the compiler derives for a relic.</summary>
     public static DerivedFieldRegister Derived { get; } = new(new[]

@@ -74,8 +74,12 @@ public static class BranchSchema
     public static DefinitionShape Exclusivity { get; } = DefinitionShape.Of(
         "a branch's exclusivity",
         DefinitionField.Flag("irreversible_within_run"),
+        // A set: branch.schema.json declares the elements ^W-[A-F]{2}(-[a-z0-9]+)+$ with
+        // uniqueItems, so they are stable branch IDs and no order over them carries anything.
         DefinitionField.ArrayOf(
-            "mutually_exclusive_with", DefinitionField.ElementOf(FieldShape.Text)));
+            "mutually_exclusive_with",
+            DefinitionField.ElementOf(FieldShape.Text),
+            ArrayOrder.IdSet));
 
     /// <summary>The branch field table, in schema-declared order.</summary>
     public static DefinitionShape Shape { get; } = DefinitionShape.Of(
@@ -90,7 +94,8 @@ public static class BranchSchema
         DefinitionField.OptionalObject(
             "global_attack_rate_mapping", WeaponSchema.GlobalAttackRateMapping),
         DefinitionField.OptionalObject("expected_effect", ExpectedEffect),
-        DefinitionField.ArrayOf("rules", DefinitionField.ElementOf(FieldShape.Text)));
+        DefinitionField.ArrayOf(
+            "rules", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.OrderedArray));
 
     /// <summary>The values the compiler derives for a branch.</summary>
     public static DerivedFieldRegister Derived { get; } = new(new[]

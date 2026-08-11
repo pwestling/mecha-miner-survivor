@@ -248,41 +248,6 @@ public sealed class DefinitionField
             Require(name), FieldShape.Array, false, null, element, RequireOrder(name, order));
     }
 
-    /// <summary>
-    /// Declares a required array field, transitionally, without stating an order class.
-    /// </summary>
-    /// <remarks>
-    /// <b>Deleted in the next commit.</b> It exists only so the commit that introduces
-    /// <see cref="ArrayOrder"/> compiles on its own: converting the declarations is a
-    /// separate change, because those are semantic decisions and a diff that also carried
-    /// this mechanism would read as mechanical. Nothing new may call it.
-    /// <para>
-    /// It hands the writer <see cref="ArrayOrder.OrderedArray"/>, the treatment that cannot
-    /// change what a definition says, and <b>no declaration keeps that answer by
-    /// inheritance</b>: the next commit restates all of them at their declaration and
-    /// deletes this overload, so the value here is never a default anybody relies on.
-    /// </para>
-    /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="element"/> is null.</exception>
-    public static DefinitionField ArrayOf(string name, DefinitionField element)
-    {
-        ArgumentNullException.ThrowIfNull(element);
-        return new DefinitionField(
-            Require(name), FieldShape.Array, true, null, element, ArrayOrder.OrderedArray);
-    }
-
-    /// <summary>
-    /// Declares an optional array field, transitionally, without stating an order class.
-    /// </summary>
-    /// <remarks><b>Deleted in the next commit.</b> See <see cref="ArrayOf(string, DefinitionField)"/>.</remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="element"/> is null.</exception>
-    public static DefinitionField OptionalArrayOf(string name, DefinitionField element)
-    {
-        ArgumentNullException.ThrowIfNull(element);
-        return new DefinitionField(
-            Require(name), FieldShape.Array, false, null, element, ArrayOrder.OrderedArray);
-    }
-
     /// <summary>Declares an array element of a scalar shape.</summary>
     public static DefinitionField ElementOf(FieldShape shape)
     {

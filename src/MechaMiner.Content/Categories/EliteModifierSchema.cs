@@ -55,7 +55,8 @@ public static class EliteModifierSchema
     /// <summary>The presentation-requirement sub-shape.</summary>
     public static DefinitionShape PresentationRequirements { get; } = DefinitionShape.Of(
         "what an elite must show",
-        DefinitionField.ArrayOf("required", DefinitionField.ElementOf(FieldShape.Text)),
+        DefinitionField.ArrayOf(
+            "required", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.OrderedArray),
         DefinitionField.Text("insufficient"));
 
     /// <summary>The elite modifier field table, in schema-declared order.</summary>
@@ -74,8 +75,12 @@ public static class EliteModifierSchema
         DefinitionField.Text("retains_base_identity_behavior"),
         DefinitionField.Integer("maximum_scheduled_elites_at_once"),
         DefinitionField.Text("beacon_elites_additional"),
+        // elite-modifiers.schema.json: "The order in which modifier layers apply ... a total
+        // order over the closed vocabulary". The field is the order.
         DefinitionField.ArrayOf(
-            "modifier_application_order", DefinitionField.ElementOf(FieldShape.Text)),
+            "modifier_application_order",
+            DefinitionField.ElementOf(FieldShape.Text),
+            ArrayOrder.OrderedArray),
         DefinitionField.Object("recycling", Recycling),
         DefinitionField.Object("presentation_requirements", PresentationRequirements));
 

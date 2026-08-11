@@ -140,7 +140,8 @@ public static class BossSchema
         DefinitionField.OptionalFlag("airborne_remains_targetable"),
         DefinitionField.OptionalFlag("resumes_pursuit_immediately_after_landing"),
 
-        DefinitionField.ArrayOf("rules", DefinitionField.ElementOf(FieldShape.Text)));
+        DefinitionField.ArrayOf(
+            "rules", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.OrderedArray));
 
     /// <summary>The boss field table, in schema-declared order.</summary>
     public static DefinitionShape Shape { get; } = DefinitionShape.Of(
@@ -160,7 +161,8 @@ public static class BossSchema
         DefinitionField.Object("resonance", Resonance),
         DefinitionField.Object("defeat_reward", DefeatReward),
         DefinitionField.Text("description"),
-        DefinitionField.ArrayOf("rules", DefinitionField.ElementOf(FieldShape.Text)));
+        DefinitionField.ArrayOf(
+            "rules", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.OrderedArray));
 
     /// <summary>The values the compiler derives for a boss.</summary>
     public static DerivedFieldRegister Derived { get; } = new(new[]

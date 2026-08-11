@@ -66,8 +66,14 @@ public static class MechSchema
         DefinitionField.Object("inherent_trait", InherentTrait),
         DefinitionField.OptionalText("matching_utility_id"),
         DefinitionField.OptionalObject("base_overrides", BaseOverrides),
-        DefinitionField.ArrayOf("top_down_silhouette", DefinitionField.ElementOf(FieldShape.Text)),
-        DefinitionField.ArrayOf("rules", DefinitionField.ElementOf(FieldShape.Text)));
+        // Authored art-direction lines, read from the accepted mech catalog in its order; the
+        // sequence is the transcription's traceability, so sorting it would scramble prose.
+        DefinitionField.ArrayOf(
+            "top_down_silhouette",
+            DefinitionField.ElementOf(FieldShape.Text),
+            ArrayOrder.OrderedArray),
+        DefinitionField.ArrayOf(
+            "rules", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.OrderedArray));
 
     /// <summary>The values the compiler derives for a mech.</summary>
     /// <remarks>

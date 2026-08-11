@@ -82,8 +82,11 @@ public static class EnemySchema
         DefinitionField.OptionalFlag("returns_to_full_pursuit_after_firing"),
         DefinitionField.OptionalObject("projectile", CombatShapes.Projectile),
         DefinitionField.OptionalArrayOf(
-            "readability_requirements", DefinitionField.ElementOf(FieldShape.Text)),
-        DefinitionField.OptionalArrayOf("rules", DefinitionField.ElementOf(FieldShape.Text)));
+            "readability_requirements",
+            DefinitionField.ElementOf(FieldShape.Text),
+            ArrayOrder.OrderedArray),
+        DefinitionField.OptionalArrayOf(
+            "rules", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.OrderedArray));
 
     /// <summary>The enemy field table, in schema-declared order.</summary>
     public static DefinitionShape Shape { get; } = DefinitionShape.Of(

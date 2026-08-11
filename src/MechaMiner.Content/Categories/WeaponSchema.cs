@@ -92,23 +92,50 @@ public static class WeaponSchema
     /// </remarks>
     public static DefinitionShape GlobalAttackRateMapping { get; } = DefinitionShape.Of(
         "the global attack rate mapping",
-        DefinitionField.ArrayOf("affected_timings", DefinitionField.ElementOf(FieldShape.Text)),
-        DefinitionField.ArrayOf("unaffected_timings", DefinitionField.ElementOf(FieldShape.Text)));
+        // Free-text timing names, not stable IDs.
+        DefinitionField.ArrayOf(
+            "affected_timings",
+            DefinitionField.ElementOf(FieldShape.Text),
+            ArrayOrder.OrderedArray),
+        DefinitionField.ArrayOf(
+            "unaffected_timings",
+            DefinitionField.ElementOf(FieldShape.Text),
+            ArrayOrder.OrderedArray));
 
     /// <summary>The weapon field table, in schema-declared order.</summary>
     public static DefinitionShape Shape { get; } = DefinitionShape.Of(
         "a weapon definition",
+        // The one array in the tree that is stable IDs and still ordered, so it is the one the
+        // rule "the elements are IDs, therefore a set" gets wrong.
+        // weapon.schema.json says it outright: "The two resources this weapon is fabricated
+        // from, in authored order. The order is meaningful: the concatenation of the two
+        // resources' canonical letters, in this order, is the weapon ID's own suffix."
+        // Relational/CatalogChecks.cs:326 is that check - string.Concat over the resolved
+        // letters, compared to the ID suffix - and CatalogChecks.cs:158-168 states why its
+        // sibling FifteenDistinctRecipePairs sorts a copy while this one must not. Emitting
+        // this field as an ID set would make [RSC-02, RSC-01] and [RSC-01, RSC-02] the same
+        // bytes and delete the only check on a swapped pair, which
+        // ARecipePairWrittenInTheOtherOrderFailsTheLetterSpelling exists to catch.
         DefinitionField.ArrayOf(
-            "recipe_pair_material_ids", DefinitionField.ElementOf(FieldShape.Text)),
+            "recipe_pair_material_ids",
+            DefinitionField.ElementOf(FieldShape.Text),
+            ArrayOrder.OrderedArray),
         DefinitionField.OptionalText("signature_mech_id"),
         DefinitionField.Text("behavior_kind"),
         DefinitionField.Text("targeting_policy"),
         DefinitionField.Text("rock_targeting_behavior"),
+        // weapon.schema.json: "The three ore-upgradeable stat tracks, in slot order", and each
+        // row carries its own slot.
         DefinitionField.ArrayOf(
-            "ore_upgradeable_stats", DefinitionField.ElementObject(StatTrack)),
+            "ore_upgradeable_stats",
+            DefinitionField.ElementObject(StatTrack),
+            ArrayOrder.OrderedArray),
         DefinitionField.ParameterMap("fixed_properties"),
         DefinitionField.Object("global_attack_rate_mapping", GlobalAttackRateMapping),
-        DefinitionField.ArrayOf("branch_ids", DefinitionField.ElementOf(FieldShape.Text)),
+        // Elements are ^W-[A-F]{2}(-[a-z0-9]+)+$ with uniqueItems: a set of stable branch IDs.
+        // Which class each branch is lives on the branch, so no order here carries it.
+        DefinitionField.ArrayOf(
+            "branch_ids", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.IdSet),
         DefinitionField.Text("base_automatic_attack_text"),
         DefinitionField.Text("base_behavior_text"));
 

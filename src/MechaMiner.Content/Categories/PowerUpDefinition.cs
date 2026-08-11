@@ -98,10 +98,14 @@ public static class PowerUpSchema
         DefinitionField.Text("effect_kind"),
         DefinitionField.Number("per_rank_value"),
         DefinitionField.Integer("cap"),
-        DefinitionField.ArrayOf("ranks", DefinitionField.ElementObject(Rank)),
+        // powerup.schema.json: "One row per purchasable rank, from one to the cap." The rank
+        // index is the order, and a serialized-form sort would put rank 10 before rank 2.
+        DefinitionField.ArrayOf(
+            "ranks", DefinitionField.ElementObject(Rank), ArrayOrder.OrderedArray),
         DefinitionField.OptionalObject("revival", Revival),
         DefinitionField.Object("active_rank_policy", ActiveRankPolicy),
-        DefinitionField.ArrayOf("rules", DefinitionField.ElementOf(FieldShape.Text)));
+        DefinitionField.ArrayOf(
+            "rules", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.OrderedArray));
 
     /// <summary>The values the compiler derives for a PowerUp.</summary>
     public static DerivedFieldRegister Derived { get; } = new(new[]

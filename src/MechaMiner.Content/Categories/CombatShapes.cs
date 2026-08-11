@@ -63,7 +63,12 @@ public static class CombatShapes
         DefinitionField.Flag("explodes"),
         DefinitionField.Flag("leaves_hazard"),
         DefinitionField.Flag("applies_status"),
-        DefinitionField.ArrayOf("snapshot_at_creation", DefinitionField.ElementOf(FieldShape.Text)));
+        // A closed token vocabulary of five property names, not stable IDs, so doc 40's set
+        // treatment does not reach it and authored order is the only treatment left.
+        DefinitionField.ArrayOf(
+            "snapshot_at_creation",
+            DefinitionField.ElementOf(FieldShape.Text),
+            ArrayOrder.OrderedArray));
 
     /// <summary>The drop table shared by every combatant.</summary>
     public static DefinitionShape Drops { get; } = DefinitionShape.Of(

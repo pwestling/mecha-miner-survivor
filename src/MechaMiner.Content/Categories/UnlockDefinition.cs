@@ -57,8 +57,12 @@ public static class UnlockSchema
         "an option unlock definition",
         DefinitionField.Integer("cost_hyper_gold"),
         DefinitionField.Text("unlock_kind"),
-        DefinitionField.ArrayOf("granted_ids", DefinitionField.ElementOf(FieldShape.Text)),
-        DefinitionField.ArrayOf("rules", DefinitionField.ElementOf(FieldShape.Text)));
+        // unlock.schema.json: "The stable IDs of the granted content", elements
+        // ^(REL-[0-9]{2}|UTL-[A-FR][1-9])$ with uniqueItems.
+        DefinitionField.ArrayOf(
+            "granted_ids", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.IdSet),
+        DefinitionField.ArrayOf(
+            "rules", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.OrderedArray));
 
     /// <summary>The values the compiler derives for an unlock.</summary>
     public static DerivedFieldRegister Derived { get; } = new(new[]

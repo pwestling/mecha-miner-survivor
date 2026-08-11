@@ -77,7 +77,9 @@ public static class MiningSiteSchema
         DefinitionField.Flag("uses_progress_thresholds"),
         DefinitionField.Flag("fields_overlap_on_standard_maps"),
         DefinitionField.Flag("modifier_named_in_geode_label_or_contextual_hud"),
-        DefinitionField.ArrayOf("applies_to", DefinitionField.ElementOf(FieldShape.Text)),
+        // A three-member enum of audience tokens, not stable IDs.
+        DefinitionField.ArrayOf(
+            "applies_to", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.OrderedArray),
         DefinitionField.Text("generation_constraint"));
 
     /// <summary>One beacon threshold row.</summary>
@@ -127,29 +129,43 @@ public static class MiningSiteSchema
         DefinitionField.Flag("completion_only_reward"),
         DefinitionField.OptionalObject("payout_per_installment", Payout),
         DefinitionField.OptionalArrayOf(
-            "completion_payout", DefinitionField.ElementObject(Payout)),
+            "completion_payout", DefinitionField.ElementObject(Payout), ArrayOrder.OrderedArray),
         DefinitionField.OptionalText("partial_payout"),
         DefinitionField.Object("progress_decay", ProgressDecay),
         DefinitionField.OptionalObject("resonance_field", ResonanceField),
+        // Rows carry their own progress trigger and fire in crossing order.
         DefinitionField.OptionalArrayOf(
-            "beacon_thresholds", DefinitionField.ElementObject(BeaconThreshold)),
-        DefinitionField.OptionalArrayOf("beacon_rules", DefinitionField.ElementOf(FieldShape.Text)),
+            "beacon_thresholds",
+            DefinitionField.ElementObject(BeaconThreshold),
+            ArrayOrder.OrderedArray),
+        DefinitionField.OptionalArrayOf(
+            "beacon_rules", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.OrderedArray),
         DefinitionField.Text("depleted_state_kind"),
         DefinitionField.Flag("reactivatable"),
         DefinitionField.Text("persistence_class"),
+        // Prose placement exclusions, not stable IDs.
         DefinitionField.OptionalArrayOf(
-            "spawn_exclusions", DefinitionField.ElementOf(FieldShape.Text)),
+            "spawn_exclusions",
+            DefinitionField.ElementOf(FieldShape.Text),
+            ArrayOrder.OrderedArray),
         DefinitionField.OptionalText("map_marker_id"),
+        // Elements are ^RSC-[0-9]{2}$ with uniqueItems: a set of stable resource IDs.
         DefinitionField.OptionalArrayOf(
-            "eligible_material_ids", DefinitionField.ElementOf(FieldShape.Text)),
+            "eligible_material_ids",
+            DefinitionField.ElementOf(FieldShape.Text),
+            ArrayOrder.IdSet),
         DefinitionField.OptionalInteger("present_materials_per_run"),
         DefinitionField.OptionalInteger("material_units_per_geode"),
         DefinitionField.OptionalObject("geodes_per_present_material", IntegerRange),
+        // Survey states in increasing supply, each row carrying its own state.
         DefinitionField.OptionalArrayOf(
-            "abundance_states", DefinitionField.ElementObject(AbundanceState)),
+            "abundance_states",
+            DefinitionField.ElementObject(AbundanceState),
+            ArrayOrder.OrderedArray),
         DefinitionField.OptionalText("survey_disclosure"),
         DefinitionField.OptionalText("rarity"),
-        DefinitionField.ArrayOf("rules", DefinitionField.ElementOf(FieldShape.Text)));
+        DefinitionField.ArrayOf(
+            "rules", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.OrderedArray));
 
     /// <summary>The values the compiler derives for a mining site.</summary>
     public static DerivedFieldRegister Derived { get; } = new(new[]

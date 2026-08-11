@@ -92,8 +92,12 @@ public static class UtilitySchema
     public static DefinitionShape Acquisition { get; } = DefinitionShape.Of(
         "how a utility is acquired",
         DefinitionField.Integer("rank_count"),
+        // utility.schema.json: "One price per rank above Installed" - the index is the rank, and
+        // the prices increase. The one integer-element array in the tree.
         DefinitionField.OptionalArrayOf(
-            "rank_ore_costs", DefinitionField.ElementOf(FieldShape.Integer)),
+            "rank_ore_costs",
+            DefinitionField.ElementOf(FieldShape.Integer),
+            ArrayOrder.OrderedArray),
         DefinitionField.OptionalInteger("material_unit_cost"),
         DefinitionField.OptionalInteger("common_ore_cost"),
         DefinitionField.Integer("utility_slots_filled"),
@@ -125,7 +129,11 @@ public static class UtilitySchema
         DefinitionField.Integer("maximum_simultaneous_bearings"),
         DefinitionField.Integer("bearing_fan_threshold_degrees"),
         DefinitionField.Integer("bearing_cluster_collapse_above_count"),
-        DefinitionField.ArrayOf("tracked_categories", DefinitionField.ElementOf(FieldShape.Text)));
+        // Free-text category descriptions, not stable IDs.
+        DefinitionField.ArrayOf(
+            "tracked_categories",
+            DefinitionField.ElementOf(FieldShape.Text),
+            ArrayOrder.OrderedArray));
 
     /// <summary>The utility field table, in schema-declared order.</summary>
     public static DefinitionShape Shape { get; } = DefinitionShape.Of(
@@ -136,14 +144,21 @@ public static class UtilitySchema
         DefinitionField.OptionalText("coverage_role"),
         DefinitionField.Text("behavior_kind"),
         DefinitionField.Text("effect_kind"),
-        DefinitionField.ArrayOf("affected_stat_names", DefinitionField.ElementOf(FieldShape.Text)),
+        // Statistic names from a seventeen-member shared enum, not stable IDs.
+        DefinitionField.ArrayOf(
+            "affected_stat_names",
+            DefinitionField.ElementOf(FieldShape.Text),
+            ArrayOrder.OrderedArray),
         DefinitionField.OptionalText("stacking_classification"),
         DefinitionField.OptionalInteger("stored_charges"),
-        DefinitionField.OptionalArrayOf("ranks", DefinitionField.ElementObject(Rank)),
+        // utility.schema.json: "The rank rows, starting at rank zero for Installed."
+        DefinitionField.OptionalArrayOf(
+            "ranks", DefinitionField.ElementObject(Rank), ArrayOrder.OrderedArray),
         DefinitionField.Object("acquisition", Acquisition),
         DefinitionField.Object("availability", Availability),
         DefinitionField.OptionalObject("tracking", Tracking),
-        DefinitionField.ArrayOf("effect_rules", DefinitionField.ElementOf(FieldShape.Text)));
+        DefinitionField.ArrayOf(
+            "effect_rules", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.OrderedArray));
 
     /// <summary>The values the compiler derives for a utility.</summary>
     public static DerivedFieldRegister Derived { get; } = new(new[]

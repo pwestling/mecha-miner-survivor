@@ -122,6 +122,11 @@ usage_table() {
 # `readlink -f` exited non-zero, `|| true` discarded that, and the empty result was then
 # read as "no godot on PATH" - a control that named a cause it had not established, and
 # sent a reader to inspect a Godot install that was fine.
+#
+# Equivalence to `readlink -f` holds up to 40 hops and not beyond: a 41-link chain resolves
+# there and returns 1 here (measured - byte-identical at 40, divergent at 41), which is
+# harmless because the kernel's own MAXSYMLINKS is 40 too, so a binary reachable only
+# through a longer chain could not be exec'd anyway.
 resolve_to_real_path() {
   local target="$1" hops=0 link directory base
   [[ -n "${target}" ]] || return 1

@@ -108,7 +108,7 @@
     },
     {
       "name": "sed",
-      "reason": "build/verify-godot.sh strips ANSI from engine logs with the \\x1b escape, which is a GNU sed extension. BSD sed does not fail on it, it matches a literal 'x1b' - so the engine log is silently left unstripped and the ERROR-line assertions read colour codes as content. A wrong answer rather than an error is why this is probed rather than left to chance",
+      "reason": "the strip_ansi function in build/verify-godot.sh strips ANSI from engine logs with the \\x1b escape, which is a GNU sed extension. BSD sed does not fail on it, it matches a literal 'x1b' - so the engine log is silently left unstripped and the ERROR-line assertions read colour codes as content. A wrong answer rather than an error is why this is probed rather than left to chance",
       "capability_arguments": ["--version"],
       "capability_description": "GNU sed (BSD sed has no --version and no \\xHH escape)",
       "remedy": "brew install gnu-sed, then export PATH=\"$(brew --prefix)/opt/gnu-sed/libexec/gnubin:$PATH\" so 'sed' is the GNU one"

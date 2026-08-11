@@ -940,7 +940,11 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       times, all at the top level of the eight content/resources/ files.
       NOT ASSERTED HERE: WHICH resource takes WHICH class. That is a
       placement claim, and that section states the partition - "resource
-      material role", transcribed from `docs/00:20` - without assigning
+      material role", which that section's own provenance cell reports as
+      transcribed from the game-vision document - `docs/00-game-vision.md`
+      `## Player fantasy`, where the three roles are named in one sentence; the
+      cell spells that provenance as a line coordinate and this is a re-pointing
+      of doc 40's claim, not a fresh citation of our own - without assigning
       tokens to files, so a per-file mapping table here would invent a
       mandate the document does not carry. The same section rules that
       "`resource_class` does not determine persistence or run-locality" and
@@ -973,6 +977,39 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       vocabulary table, under that section's own rule that a vocabulary is
       grounded "only when the document it cites states the set"      FAILURE
 
+  A35 NO POSITIONAL CITATION OF A DESIGN DOCUMENT in the files this tool owns:
+      everything under src/MechaMiner.Tools/ContentImport/ plus content/README.md,
+      content/transcription-notes.md and content/quote-verification-audit.md. A
+      line number breaks silently when the cited document gains a line above the
+      cited material, which is why 311 of them were re-pointed and why TWO
+      documents had been frozen at a fixed line count by their authors to work
+      around it. Every spelling that has actually occurred is matched: a docs/
+      path with the extension present OR ABSENT, a bare filename, a bare short
+      document name, ranges in any punctuation, a bare coordinate inheriting its
+      document from an antecedent named earlier in the string or on the line
+      above, the word line/lines, and the L / #L permalink forms. Labels A35 and
+      A36 are the next free numbers, re-measured across all 35 `origin` heads
+      before being taken: the highest anywhere is A34, on this branch.
+      RECALL IS MEASURED against the pre-sweep tree, because for an ABSENCE rule
+      "matches nothing" is the PASS condition and cannot be the test - at
+      e24a52a it catches 308 of the 351 genuine citations the sweep removed. The
+      43 it misses are one undecidable shape, recorded in the section docstring
+      rather than chased. EXEMPTIONS ARE AN EXACT DECLARED SET, one entry per
+      bucket, each with its own reason and a PINNED COUNT: adding a citation to
+      an already-exempt bucket FAILS, which is the designed difference between
+      an exact set and a pattern. Regrowth already happened once in this file
+      after the release; the section docstring records it.       FAILURE
+  A36 AN AMBIGUOUS SHORT-NAME DOCUMENT REFERENCE MUST CARRY ITS FULL PATH. The
+      citation convention is the document then its heading in backticks, and that
+      is not automatically unambiguous: 12 short names each name more than one
+      document, `40` among them. The collision set is COMPUTED from a RECURSIVE
+      walk of docs/**/*.md on every run and PRINTED in full - a non-recursive
+      walk finds exactly one document numbered 40, computes an empty set, and
+      passes forever while the ambiguity sits one directory down, and a computed
+      rule that prints only a verdict is a hardcoded list one layer down. A
+      reference resolves when its heading exists in exactly one of the documents
+      sharing its short name.                                     FAILURE
+
 Not asserted here: no structural JSON Schema validation happens, because
 content/schemas/ (40 `## Accepted content repository layout`) does not exist
 yet. Domain field names outside the envelope are therefore unvalidated and
@@ -988,6 +1025,7 @@ import re
 import subprocess
 import sys
 import textwrap
+from collections import namedtuple
 from fractions import Fraction
 from pathlib import Path
 
@@ -2743,7 +2781,10 @@ def check_value_vocabulary_coupling(
         f"expectation that cannot be located is a FAILURE here, never an empty set that passes.",
         f"WHAT THIS ROW DOES NOT ASSERT: WHICH resource takes WHICH class. "
         f"`{MINTED_VOCABULARY_HEADING}` states the partition - resource material role, "
-        f"transcribed from `docs/00:20` - without assigning tokens to files, so a per-file mapping "
+        f"which that section's own provenance cell reports as transcribed from "
+        f"`docs/00-game-vision.md` `## Player fantasy` (doc 40 spells that provenance as a line "
+        f"coordinate; this re-points doc 40's claim rather than asserting a fresh one) - without "
+        f"assigning tokens to files, so a per-file mapping "
         f"here would invent a mandate. The same section rules that `{field}` determines neither "
         f"persistence nor run-locality and that any consumer inferring either from it has a bug; "
         f"this row reads neither field, which is how it complies.",
@@ -5707,6 +5748,834 @@ def check_polarity_agreement(docs: dict[Path, object]) -> list[tuple]:
 
 
 # --------------------------------------------------------------------------
+# A35 / A36 - no positional citation of a design document, and no ambiguous
+# short-name reference, anywhere in the files this tool owns.
+#
+# WHY THESE TWO ROWS EXIST. Three commits (8101da0, c05aee9, e24a52a, then
+# 85d0ced) re-pointed every line-number citation of a design document out of
+# these files - the last of them 311 occurrences across 36 documents - because a
+# citation of the form <doc> plus a line number silently breaks when the cited
+# document gains a line above the cited material. Nothing in the tree stopped it
+# coming back. TWO documents had been FROZEN AT A FIXED LINE COUNT by their
+# authors to work around exactly that (doc 66 by 0648186 in its own words, and
+# the technical content-data document held at a fixed length), which is the cost
+# of the hazard: a citation in this tool was constraining what a document owner
+# was allowed to edit. Both freezes are now lifted.
+#
+# THE HAZARD IS INVISIBLE AT THE MOMENT OF WRITING, which is the whole reason a
+# gate is the answer and a convention is not. Nobody decided to accumulate 2,368
+# raw positional hits; each one looked locally correct the day it was typed, and
+# the decay happened later, in someone else's commit, to a document this tool
+# does not own.
+#
+# REGROWTH ALREADY HAPPENED ONCE, IN THIS FILE, AFTER THE RELEASE - which is the
+# single most concrete piece of evidence in this repository that a sweep without a
+# gate is a snapshot rather than a fix. Commit 29a9b8d, writing A34's own
+# docstring one commit after the sweep declared the population zero, introduced
+# TWO positional citations of the game-vision document in the extensionless bare
+# form; there were zero at origin/master and two at HEAD. It went unnoticed until
+# a separate pass measured the file, because nothing in the tree could see it: a
+# convention is only ever as strong as the attention of the next person writing a
+# docstring, and that attention had already lapsed inside the very file that
+# enforces the rules. This pair of rows is what would have caught it on the run
+# that introduced it - and did catch it, reddening twice, once per occurrence,
+# before this pass re-pointed both to the heading form.
+#
+# WHAT A35 MATCHES, and every spelling here is one that HAS occurred in this
+# repository rather than one imagined for completeness:
+#
+#   - <doc> plus a line number, where <doc> is a path under docs/ with the
+#     extension present OR ABSENT. The extensionless spelling is the DOMINANT
+#     one and a sweep keyed on the extension is why an earlier census undercounted:
+#     of the technical content-data document's citations, a scan requiring
+#     ".md" before the colon found one.
+#   - a bare document filename plus a line number, extension present, no
+#     directory - the spelling that walks past any pattern anchored on "docs/".
+#   - a bare short document name plus a line number, no directory and no
+#     extension, which is the compact form this repository's prose actually used.
+#   - a range in any punctuation: hyphen, any of the Unicode dashes, or a comma
+#     list.
+#   - a BARE line number inheriting its document from a full path named earlier
+#     in the same string or on the line above - the "factored" form, where the
+#     document is written once and several coordinates follow it. c05aee9 found
+#     this shape and named it; it is matched here across a line break as well as
+#     within one string, because a wrapped docstring splits one citation over two
+#     source lines.
+#   - the word line or lines followed by a number or range.
+#   - the L and #L forms, which occur nowhere in this tree today and are matched
+#     because they are the spelling a GitHub permalink pastes in.
+#
+# RECALL, MEASURED AGAINST THE PRE-SWEEP TREE RATHER THAN ASSERTED. Run against
+# the file contents at e24a52a - the commit before the 311-citation sweep - this
+# pattern catches 308 of the 351 genuine design-document citations that sweep
+# removed. That is the acceptance test for an ABSENCE assertion: asking whether
+# the pattern matches anything at HEAD is the wrong question, because for an
+# absence rule "matches nothing" is the PASS condition and would read as a pass
+# forever. The question that can fail is whether it would match a real case, so
+# it is measured on the tree where the real cases still existed.
+#
+# THE 43 IT MISSES, RECORDED RATHER THAN CHASED. All 43 are one shape: a bare
+# short document name followed by a TWO-DIGIT line number in the range a clock
+# reading occupies. That string is IDENTICAL to a schedule timecode, and this
+# repository's notes are full of real timecodes transcribed from the wave
+# schedule. The two cannot be told apart without resolving the coordinate against
+# the document, which a text scan does not do. Dropping the clock guard to catch
+# those 43 would flag every real timecode as a violation and redden a clean HEAD,
+# so the guard stays and the gap is stated here instead. A three-digit line
+# number in the same spelling IS caught; only the two-digit case is undecidable.
+#
+# AND 351 IS ITSELF A FINDING ABOUT THE SWEEP. The re-point pass reported 311
+# live citations; measured at its own base ref with this pattern the genuine
+# population is 351. Both figures are recorded with the population each counted:
+# 311 counted occurrences with a range collapsed to one and was produced by an
+# instrument blind to the extensionless and bare-short spellings; 351 counts each
+# coordinate. The earlier figure was an undercount by a blind instrument, not a
+# different opinion - which is evidence for gating the rule rather than against
+# it.
+#
+# WHAT NEITHER ROW CAN SEE, printed on every run beside the count. A gate walks a
+# working tree. Six citation surfaces are outside it, and a positional citation
+# is known to exist in a pull-request body today, so the disclosure is not
+# hypothetical. The zero these rows report is A COUNT OVER FILES, NOT OVER
+# CITATIONS - an unlabelled true zero is the strongest false claim available
+# here, because it is arithmetically true and reads as "there are none anywhere".
+#
+# THE EXEMPTIONS ARE AN EXACT DECLARED SET WITH A PER-ENTRY REASON AND A PINNED
+# COUNT. Never a pattern: a pattern-shaped exemption ("skip this file", "skip
+# anything matching span") is a hole the next real citation hides in. Each entry
+# below names one bucket of one file, states how many citations that bucket is
+# allowed to contain, and says why. A citation that lands outside every declared
+# bucket is a FAILURE, and so is a bucket whose count moves in either direction.
+# The consequence is deliberate and worth knowing before you meet it: ADDING A
+# NEW CITATION TO AN ALREADY-EXEMPT BUCKET FAILS THIS GATE. That is the coupling
+# that makes an exact set different from a pattern - the exemption covers the
+# citations that were audited, not the location they happen to live in.
+#
+# The counts are not copied from a brief; each was derived by running this
+# scanner over the tree and reading the bucket totals off it.
+# --------------------------------------------------------------------------
+
+# The files this tool owns: everything beside this script, plus the three
+# content/ documents this tool is the author of. Nothing else is in scope, because
+# a rule this tool cannot repair is a rule it should not assert.
+OWNED_TOOL_DIR = Path(__file__).resolve().parent
+OWNED_CONTENT_FILES = (
+    "content/README.md",
+    "content/transcription-notes.md",
+    "content/quote-verification-audit.md",
+)
+# Extensions worth reading as text. __pycache__ and any binary are skipped.
+OWNED_SUFFIXES = (".py", ".md", ".json", ".txt", ".csv")
+
+# The freeze rule this file's own preamble states, and the section it protects.
+# Both are matched by TEXT, never by line number - the rule this pair asserts
+# applies to itself first.
+TRANSCRIPTION_NOTES = "content/transcription-notes.md"
+PER_DEFINITION_HEADING = "### Per-definition notes, by catalog"
+BUCKET_FROZEN_NOTES = "per-definition notes section (frozen verbatim note text)"
+BUCKET_OUTSIDE_FROZEN = "outside the per-definition notes section"
+
+# Document extensions a citation's document half may carry.
+DOC_EXTENSIONS = "md|markdown|mdown|csv|rst|txt"
+
+
+def design_document_index() -> tuple[dict[str, list[Path]], dict[str, list[Path]]]:
+    """Walk docs/ RECURSIVELY and group every document by its short name.
+
+    Returns (by_short_name, collisions).
+
+    THE WALK IS RECURSIVE AND THAT IS LOAD-BEARING. A non-recursive walk over
+    docs/*.md finds exactly ONE document numbered 40, computes an EMPTY collision
+    set, and passes forever while the ambiguity sits one directory down in
+    docs/technical/. The collision set is computed from the tree on every run and
+    printed, never hardcoded: a computed rule that emits only a verdict is a
+    hardcoded list one layer down, and printing the intermediate is what stops it
+    going stale invisibly.
+
+    A document's SHORT NAME is the leading numeric run of its filename, or a
+    leading alpha-plus-number code, or - when it has neither - the whole stem.
+    That is the form this repository's prose actually uses to name a document.
+    """
+    by_short: dict[str, list[Path]] = {}
+    if not DOCS.is_dir():
+        return {}, {}
+    for path in sorted(DOCS.rglob("*.md")):
+        stem = path.stem
+        match = (
+            re.match(r"^(\d+)-", stem)
+            or re.match(r"^([A-Za-z]+-\d+)-", stem)
+            or re.match(r"^([A-Za-z]+-\d+)$", stem)
+        )
+        short = match.group(1) if match else stem
+        by_short.setdefault(short, []).append(path)
+    collisions = {k: v for k, v in by_short.items() if len(v) > 1}
+    return by_short, collisions
+
+
+def _normalize_whitespace(text: str) -> str:
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def document_headings(path: Path) -> set[str]:
+    """Every heading of one document, normalized, fenced blocks skipped."""
+    headings: set[str] = set()
+    in_fence = False
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if FENCE.match(line):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        match = HEADING.match(line)
+        if match:
+            headings.add(_normalize_whitespace(f"{match.group(1)} {match.group(2)}"))
+    return headings
+
+
+def _normalize_cited_heading(raw: str) -> str:
+    """Undo SOURCE-LINE WRAPPING so a citation split across two lines resolves.
+
+    A heading cited inside a wrapped docstring, a `#` comment block or an
+    f-string concatenation arrives with the wrap artifacts embedded in it. Those
+    are properties of the Python source, not of the citation, so they are removed
+    before the heading is compared. Without this, 8 perfectly good references in
+    this file alone read as unresolvable and the row would fail on its own
+    formatting.
+    """
+    text = re.sub(r'"\s*\n\s*f?"', " ", raw)
+    text = re.sub(r"\n\s*#\s*", " ", text)
+    text = re.sub(r"\n\s*", " ", text)
+    return _normalize_whitespace(text)
+
+
+def citation_matchers(by_short: dict[str, list[Path]]) -> dict[str, re.Pattern]:
+    """Build the A35 patterns, with the short-name alternation READ FROM THE TREE.
+
+    The short names are not listed here. They come from the same walk that
+    computes the collision set, so a document added to docs/ is in scope for this
+    rule on the next run without anyone editing this file.
+    """
+    short_alt = "|".join(sorted((re.escape(s) for s in by_short), key=len, reverse=True))
+    dash = r"[-‐‑‒–—―]"
+    rng = rf"\d+(?:\s*(?:{dash}|,)\s*\d+)*"
+    return {
+        # a path under docs/, EXTENSION OPTIONAL, then a line number or range
+        "docs_path": re.compile(
+            rf"docs[/\\][\w./\\\-]*?[\w\-]+(?:\.(?:{DOC_EXTENSIONS}))?:{rng}", re.I
+        ),
+        # a bare document filename, extension present, no directory
+        "doc_file": re.compile(rf"(?<![\w./\\\-])[\w\-]+\.(?:{DOC_EXTENSIONS}):{rng}", re.I),
+        # a bare short document name, no directory and no extension
+        "short_name": re.compile(rf"(?<![\w./\\\-])(?:{short_alt}):{rng}", re.I),
+        # the word line/lines, and the GitHub L / #L permalink forms
+        "line_word": re.compile(rf"\blines?\s+{rng}", re.I),
+        "l_form": re.compile(rf"(?:#L\d+(?:{dash}L?\d+)?|(?<![\w])L\d+(?:{dash}L?\d+)?(?![\w]))"),
+        # a BARE coordinate, inheriting its document from an antecedent
+        "bare": re.compile(rf"(?<=[\s(\[{{,;+]):\s*{rng}"),
+        # what counts as an antecedent: a docs/ path or a document filename ONLY.
+        # A bare short name is deliberately NOT an antecedent - "65 groups and 59
+        # elements" would otherwise license every colon-number in the paragraph.
+        "antecedent": re.compile(
+            rf"docs[/\\][\w./\\\-]+|(?<![\w./\\\-])[\w\-]+\.(?:{DOC_EXTENSIONS})", re.I
+        ),
+        # prose that names a coordinate without naming its document on the line.
+        # FLAGGED, never failed - see the note this row prints.
+        "prose_line_of": re.compile(r"\bline\s+\d+\s+of\b", re.I),
+    }
+
+
+# A bare short name plus a TWO-DIGIT number in clock range is indistinguishable
+# from a transcribed schedule timecode. See the docstring above: this guard is why
+# 43 of the pre-sweep citations are missed, and removing it would flag real
+# timecodes and redden a clean tree.
+CLOCK_READING = re.compile(r"^\d{1,2}:[0-5]\d$")
+
+
+def _is_antecedent(text: str, matchers: dict[str, re.Pattern], doc_files: set[str]) -> bool:
+    for match in matchers["antecedent"].finditer(text):
+        token = match.group(0).lower()
+        if token.startswith("docs"):
+            return True
+        if token in doc_files:
+            return True
+    return False
+
+
+def scan_for_citations(
+    text: str, matchers: dict[str, re.Pattern], doc_files: set[str], inherited: bool = False
+) -> tuple[list[tuple[str, str, str]], list[str]]:
+    """Find every positional citation in one unit of text.
+
+    Returns (citations, flags). A citation is (kind, matched text, cited document),
+    where the cited document is the token's own document half, or - for a bare or
+    line-word or L form - the antecedent it inherits from.
+    """
+    found: list[tuple[str, str, str]] = []
+    spans: list[tuple[int, int]] = []
+    for kind in ("docs_path", "doc_file", "short_name"):
+        for match in matchers[kind].finditer(text):
+            token = match.group(0)
+            if kind == "doc_file":
+                stem = re.match(
+                    rf"[\w\-]+\.(?:{DOC_EXTENSIONS})", token, re.I
+                ).group(0).lower()
+                if stem not in doc_files:
+                    continue
+            if kind == "short_name" and CLOCK_READING.match(token.replace(" ", "")):
+                continue
+            found.append((kind, token, token.split(":", 1)[0].strip().lower()))
+            spans.append(match.span())
+
+    antecedents = [m.group(0).lower() for m in matchers["antecedent"].finditer(text)]
+    governed = _is_antecedent(text, matchers, doc_files)
+    for kind in ("line_word", "l_form", "bare"):
+        for match in matchers[kind].finditer(text):
+            if any(a <= match.start() < b for a, b in spans):
+                continue
+            if governed:
+                found.append((kind, match.group(0).strip(), antecedents[-1] if antecedents else ""))
+                spans.append(match.span())
+            elif kind == "bare" and inherited:
+                # the factored form, wrapped across a line break: the document was
+                # named on the line above and the coordinates follow underneath.
+                found.append((kind, match.group(0).strip(), "<previous line>"))
+                spans.append(match.span())
+
+    flags = [m.group(0) for m in matchers["prose_line_of"].finditer(text)] if governed else []
+    return found, flags
+
+
+# --------------------------------------------------------------------------
+# A35's EXEMPTIONS: an exact declared set, one entry per bucket, each with its
+# own reason and its own pinned count. Adding a citation to any bucket below
+# FAILS this gate - see the docstring above on why that coupling is the point.
+#
+# Every count was measured by running this scanner over the tree, not copied
+# from a description of it.
+# --------------------------------------------------------------------------
+
+CitationExemption = namedtuple("CitationExemption", "path bucket count reason")
+
+CITATION_EXEMPTIONS = (
+    # ---- generated / frozen measurement artifacts. Not hand-editable: the
+    # coordinate is a MEASUREMENT of a section's extent, not a pointer a reader
+    # is meant to resolve, and the checker that consumes the file rebuilds every
+    # one of them from the live documents by anchor slug.
+    CitationExemption(
+        "src/MechaMiner.Tools/ContentImport/quote_mismatch_evidence.json",
+        "$.records[].cited[].span",
+        655,
+        "the span of a cited anchor as MEASURED at the sweep ref, emitted by "
+        "check_quote_mismatch_evidence.py beside a doc_id#anchor pointer that carries the "
+        "claim. No code path reads the stored numbers - the checker rebuilds every span from "
+        "the live documents by anchor slug - so rewriting them would destroy a frozen "
+        "measurement and change no behaviour",
+    ),
+    CitationExemption(
+        "src/MechaMiner.Tools/ContentImport/quote_mismatch_evidence.json",
+        "$.records[].refreshed_reason",
+        1,
+        "the one re-baselined record's prose reason, which names the coordinate it verified "
+        "the corrected quotation against character-for-character. It is the evidence for a "
+        "hand refresh of a frozen string; removing the coordinate would remove the audit trail "
+        "for the only record in the artifact that was edited by hand",
+    ),
+    CitationExemption(
+        "src/MechaMiner.Tools/ContentImport/expected_citation_deltas.json",
+        "$.sweep_16[].sections_containing_the_value[].where",
+        29,
+        "emitted by derive_citation_pass_expectations.py from live document geometry. Its "
+        "regeneration route is that script's own --write; it did not need one, and a committed "
+        "expectation is never hand-edited",
+    ),
+    # ---- verbatim-preserved note text, under this file's OWN freeze rule, which
+    # its preamble states as "Note text stays verbatim even where a ruling has
+    # since superseded it". Both buckets are already covered in the file by dated
+    # 2026-08-11 block notes naming the heading each coordinate means, per
+    # document, with the count resolving to each.
+    CitationExemption(
+        TRANSCRIPTION_NOTES,
+        BUCKET_FROZEN_NOTES,
+        599,
+        "verbatim note text reproduced from the deleted per-definition `notes` arrays, kept "
+        "under this file's own freeze rule. Two dated 2026-08-11 block notes at the head of "
+        "the section name the heading every coordinate means and how many resolve to each, and "
+        "record that nothing in this tool resolves any of them at runtime",
+    ),
+    CitationExemption(
+        TRANSCRIPTION_NOTES,
+        BUCKET_OUTSIDE_FROZEN,
+        19,
+        "quoted blockquotes, FLAG text and the `Before` columns of deleted JSON values outside "
+        "the per-definition section, each already carrying a dated 2026-08-11 resolution note "
+        "beside it, plus the two Ruling 25 / Ruling 40 exhibit tables whose coordinate IS the "
+        "exhibit those rulings exist to forbid",
+    ),
+    # ---- exhibits in this file: the coordinate is the thing under discussion, so
+    # removing it would delete the evidence rather than fix a pointer.
+    CitationExemption(
+        "src/MechaMiner.Tools/ContentImport/verify_content.py",
+        "docs/68-utility-catalog.md",
+        1,
+        "the literal string eleven content values carried, quoted in A24's commentary as the "
+        "exhibit A24a exists to forbid. Its line number IS the exhibit; the sentence it stood "
+        "in is named by heading in a dated note beside it",
+    ),
+    CitationExemption(
+        "src/MechaMiner.Tools/ContentImport/verify_content.py",
+        "40-mining-and-extraction.md",
+        1,
+        "an A24a spelling exemplar - the no-directory form - documenting what that rule's "
+        "pattern matches. Removing it would remove the record of a spelling that walked past "
+        "the pattern A24a replaced",
+    ),
+    CitationExemption(
+        "src/MechaMiner.Tools/ContentImport/verify_content.py",
+        "docs/...md",
+        1,
+        "the second A24a spelling exemplar - the uppercase, elided-path form - for the same "
+        "reason as the exemplar above",
+    ),
+    # ---- content/README.md's line-citation release record. Five entries for six
+    # citations; each is a different class of exhibit and gets its own reason. That
+    # file is owned by a peer pass and is NOT edited here.
+    CitationExemption(
+        "content/README.md",
+        "docs/66",
+        2,
+        "the two coordinates quoted verbatim from commit 0648186's own freeze message, which "
+        "is the evidence that a document was being held at a fixed line count on this tool's "
+        "account. Paraphrasing the freeze message would destroy the proof that the freeze "
+        "existed",
+    ),
+    CitationExemption(
+        "content/README.md",
+        "docs/72",
+        1,
+        "the INVERTED pull-request citation: the coordinate resolves to a plausible but wrong "
+        "sentence, so a reader who checks it believes the claim verified. Stating the wrong "
+        "coordinate is the only way to record that specific failure mode",
+    ),
+    CitationExemption(
+        "content/README.md",
+        "docs/technical/40-content-data-and-validation.md",
+        1,
+        "the DRIFTED pull-request citation, correct against the blob its surrounding prose "
+        "pins it to and re-flowed later. It is recorded as coordinates that moved rather than "
+        "a claim that changed, which requires naming them",
+    ),
+    CitationExemption(
+        "content/README.md",
+        "docs/51",
+        1,
+        "the STRUCTURALLY UNREPAIRABLE pull-request citation: it sits in a submitted review "
+        "body, which GitHub exposes no edit for. It is recorded precisely because it cannot be "
+        "fixed",
+    ),
+    CitationExemption(
+        "content/README.md",
+        "docs/weapons/readme.md",
+        1,
+        "the released-document exhibit: this coordinate is named as the one whose re-pointing "
+        "released a document an earlier count had wrongly omitted from the released set",
+    ),
+)
+
+
+def _exemption_lookup() -> dict[tuple[str, str], CitationExemption]:
+    return {(e.path, e.bucket): e for e in CITATION_EXEMPTIONS}
+
+
+# The six citation surfaces no working-tree gate reaches. Printed on every run,
+# beside the count, because the count is a count over FILES.
+UNREACHABLE_SURFACES = (
+    "pull-request bodies",
+    "pull-request reviews",
+    "pull-request review comments",
+    "issue bodies",
+    "commit messages",
+    "messages between sessions",
+)
+
+
+def owned_files() -> list[tuple[str, Path]]:
+    """The exact population A35 and A36 cover, as (relative path, path)."""
+    found: list[tuple[str, Path]] = []
+    for path in sorted(OWNED_TOOL_DIR.rglob("*")):
+        if not path.is_file() or "__pycache__" in path.parts:
+            continue
+        if path.suffix.lower() in OWNED_SUFFIXES:
+            found.append((rel(path), path))
+    for name in OWNED_CONTENT_FILES:
+        path = REPO_ROOT / name
+        if path.is_file():
+            found.append((name, path))
+    return sorted(found)
+
+
+def _json_bucket(pointer: str) -> str:
+    return re.sub(r"\[\d+\]", "[]", pointer)
+
+
+def _frozen_region(lines: list[str]) -> tuple[int, int]:
+    """The per-definition notes section, located by HEADING TEXT, never by line.
+
+    Returns a half-open [start, end) over zero-based line indices; an empty range
+    when the heading is absent, which makes every citation in the file land in the
+    outside bucket and reddens the row rather than passing silently.
+    """
+    try:
+        start = next(
+            i for i, line in enumerate(lines) if line.strip() == PER_DEFINITION_HEADING
+        )
+    except StopIteration:
+        return 0, 0
+    end = next(
+        (i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")), len(lines)
+    )
+    return start, end
+
+
+def collect_owned_citations(
+    matchers: dict[str, re.Pattern], doc_files: set[str]
+) -> tuple[dict[tuple[str, str], list[str]], list[str], int]:
+    """Every positional citation in the owned population, grouped into buckets."""
+    buckets: dict[tuple[str, str], list[str]] = {}
+    flags: list[str] = []
+    scanned = 0
+
+    for relative, path in owned_files():
+        scanned += 1
+        text = path.read_text(encoding="utf-8", errors="replace")
+
+        if path.suffix.lower() == ".json":
+            try:
+                parsed = json.loads(text)
+            except json.JSONDecodeError:
+                parsed = None
+            if parsed is not None:
+                for pointer, value in _json_strings(parsed):
+                    hits, found_flags = scan_for_citations(value, matchers, doc_files)
+                    for _, token, _cited in hits:
+                        buckets.setdefault((relative, _json_bucket(pointer)), []).append(token)
+                    flags.extend(f"{relative} {pointer}: {f}" for f in found_flags)
+                continue
+
+        lines = text.splitlines()
+        frozen_start, frozen_end = _frozen_region(lines)
+        inherited = False
+        for index, line in enumerate(lines):
+            hits, found_flags = scan_for_citations(line, matchers, doc_files, inherited=inherited)
+            for _, token, cited in hits:
+                if relative == TRANSCRIPTION_NOTES:
+                    bucket = (
+                        BUCKET_FROZEN_NOTES
+                        if frozen_start <= index < frozen_end
+                        else BUCKET_OUTSIDE_FROZEN
+                    )
+                else:
+                    bucket = cited
+                buckets.setdefault((relative, bucket), []).append(token)
+            flags.extend(f"{relative}:{index + 1}: {f}" for f in found_flags)
+            inherited = _is_antecedent(line, matchers, doc_files)
+
+    return buckets, flags, scanned
+
+
+def _json_strings(obj, pointer: str = "$"):
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            yield from _json_strings(value, f"{pointer}.{key}")
+    elif isinstance(obj, list):
+        for index, value in enumerate(obj):
+            yield from _json_strings(value, f"{pointer}[{index}]")
+    elif isinstance(obj, str):
+        yield pointer, obj
+
+
+def check_no_positional_citations() -> tuple[list[tuple], tuple[str, ...]]:
+    """A35 - no positional citation of a design document in the files this tool owns."""
+    by_short, _ = design_document_index()
+    matchers = citation_matchers(by_short)
+    doc_files = {p.name.lower() for paths in by_short.values() for p in paths}
+    buckets, flags, scanned = collect_owned_citations(matchers, doc_files)
+    declared = _exemption_lookup()
+
+    undeclared: list[str] = []
+    undeclared_each: list[tuple[str, str, str]] = []
+    drifted: list[str] = []
+    for (path, bucket), tokens in sorted(buckets.items()):
+        entry = declared.get((path, bucket))
+        if entry is None:
+            undeclared.append(f"{path} [{bucket}] {len(tokens)}: {sorted(set(tokens))[:4]}")
+            undeclared_each.extend((path, bucket, token) for token in tokens)
+        elif len(tokens) != entry.count:
+            drifted.append(
+                f"{path} [{bucket}] declared {entry.count}, found {len(tokens)}"
+            )
+    missing = [
+        f"{e.path} [{e.bucket}] declared {e.count}, found 0"
+        for e in CITATION_EXEMPTIONS
+        if (e.path, e.bucket) not in buckets
+    ]
+
+    exempt_total = sum(e.count for e in CITATION_EXEMPTIONS)
+    live_total = sum(
+        len(tokens)
+        for (path, bucket), tokens in buckets.items()
+        if (path, bucket) not in declared
+    )
+
+    rows = [
+        (
+            f"files carrying a NON-EXEMPT positional citation ({scanned} owned file(s) scanned)",
+            0,
+            len({u.split(" [")[0] for u in undeclared}),
+            "ok" if not undeclared else "FAIL",
+        ),
+        (
+            "declared exemption buckets, each at its pinned count",
+            f"{len(CITATION_EXEMPTIONS)} bucket(s), {exempt_total} citation(s)",
+            (
+                f"{len(CITATION_EXEMPTIONS) - len(drifted) - len(missing)} at count"
+                + (f", {len(drifted) + len(missing)} MOVED" if drifted or missing else "")
+            ),
+            "ok" if not drifted and not missing else "FAIL",
+        ),
+        (
+            "prose coordinates FLAGGED, not failed (a line number whose document is "
+            "named in an earlier sentence)",
+            "flag only",
+            f"{len(flags)} flagged",
+            "not asserted",
+        ),
+    ]
+
+    # ONE FAILURE PER OCCURRENCE, naming it. The arity is the attribution: a rule
+    # that aggregated N citations into one failure could not tell a reader whether
+    # it stopped at the first, and a negative control could not distinguish "it
+    # fired" from "it fired once per defect". One injected citation reddens this
+    # row exactly once; two redden it exactly twice.
+    for path, bucket, token in undeclared_each:
+        fail(
+            f"{path}: A35 - {token!r} is a positional citation of a design document that no "
+            f"declared exemption covers (bucket {bucket!r}). A line number breaks silently when "
+            f"the cited document gains a line above the cited material - cite the section heading "
+            f"instead, in the form this repository uses: the document, then its heading in "
+            f"backticks. If it genuinely cannot be re-pointed, it needs its OWN entry in "
+            f"CITATION_EXEMPTIONS with its own reason and pinned count, never a pattern"
+        )
+    for message in drifted + missing:
+        fail(
+            f"A35 - a declared exemption bucket moved: {message}. An exemption pins a COUNT so "
+            f"that a new citation added to an already-exempt bucket reddens this row rather than "
+            f"hiding inside it. If the new citation is legitimate, raise the declared count and "
+            f"say why in that entry's reason; if a citation was removed, lower it"
+        )
+
+    notes = (
+        "WHAT THIS ROW CANNOT SEE, and the zero above is A COUNT OVER FILES, NOT OVER "
+        "CITATIONS. A gate walks a working tree, so it reaches none of these six surfaces: "
+        + ", ".join(UNREACHABLE_SURFACES)
+        + ". A positional citation is known to exist in at least one pull-request body today, "
+        "and content/README.md records a sweep of that surface finding 506 positional citations "
+        "across 27 of 36 pull requests - 149 of them citing the ambiguous bare number 40. A "
+        "merged pull-request body has no routine edit path, so for that population the record is "
+        "the delivery and not a fix. Reading the zero above as 'there are none anywhere' is the "
+        "strongest false claim available here, because it is arithmetically true of the files.",
+        "RECALL IS MEASURED, NOT ASSUMED. Against the file contents at e24a52a - the commit "
+        "before the 311-citation sweep - this pattern catches 308 of the 351 genuine "
+        "design-document citations that sweep removed. For an ABSENCE assertion 'the pattern "
+        "matches nothing' is the PASS condition, so asking whether it matches anything here "
+        "would read as a pass forever; the question that can fail is whether it would match a "
+        "real case, and that is only answerable on a tree where the real cases still exist.",
+        "THE 43 IT MISSES ARE ONE UNDECIDABLE SHAPE. All 43 are a bare short document name "
+        "followed by a TWO-DIGIT number in clock range - a string identical to the schedule "
+        "timecodes this repository's notes transcribe verbatim. Telling them apart needs the "
+        "coordinate resolved against the document, which a text scan does not do. Dropping the "
+        "guard would flag real timecodes and redden a clean tree, so the gap is recorded here "
+        "instead of chased. The same spelling with a THREE-digit line number is caught.",
+        "THE SWEEP'S OWN FIGURE WAS AN UNDERCOUNT, recorded because the discrepancy is "
+        "evidence for this row. The re-point pass reported 311 live citations; this pattern "
+        "measures 351 genuine ones at that pass's own base ref. 311 collapsed a range to one "
+        "occurrence and came from an instrument that could not see the extensionless or "
+        "bare-short spellings; 351 counts each coordinate. Both figures are stated with the "
+        "population each counted rather than reconciled away.",
+        "AN EXEMPTION IS AN EXACT SET, WHICH HAS A CONSEQUENCE WORTH KNOWING BEFORE YOU MEET "
+        "IT: adding a new citation to an already-exempt bucket FAILS this gate, because each "
+        "entry pins a count. That is the designed difference between an exact set and a "
+        "pattern - the exemption covers the citations that were audited, not the location they "
+        "happen to sit in. A pattern-shaped exemption is a hole the next real citation hides in.",
+    )
+    return rows, notes
+
+
+# --------------------------------------------------------------------------
+# A36 - an ambiguous short-name document reference must carry its full path.
+#
+# THE CITATION CONVENTION this repository settled on is the document, then its
+# section heading in backticks. That form is stable under editing, which is the
+# whole point of A35. It is NOT automatically unambiguous: the short name 40 names
+# TWO documents - the mining-and-extraction design document and the technical
+# content-data-and-validation document - and they differ by more than 200 lines.
+# A reader who resolves the wrong one gets a confidently wrong answer.
+#
+# THE COLLISION SET IS COMPUTED FROM THE TREE ON EVERY RUN AND PRINTED. Not
+# hardcoded, because a hardcoded pair goes stale the moment a document is added;
+# and printed rather than reduced to a verdict, because a computed rule that emits
+# only pass/fail is a hardcoded list one layer down. Printing the intermediate is
+# what stops it going stale invisibly.
+#
+# THE WALK IS RECURSIVE, and that is the difference between a real rule and one
+# that passes forever. docs/*.md non-recursively contains exactly ONE document
+# numbered 40; the collision set computed that way is EMPTY, the row is green, and
+# the ambiguity sits one directory down in docs/technical/ untouched. The
+# recursive walk over docs/**/*.md finds 201 documents and 12 colliding short
+# names.
+#
+# TWO COUNTS OF ONE POPULATION, RECONCILED HERE RATHER THAN LEFT TO DISAGREE. An
+# earlier pass measured 9 ambiguous numbers over the same 201 documents. Both
+# figures are right and they count different predicates: 9 counts documents whose
+# filename BEGINS WITH DIGITS (38 distinct leading numbers, 9 of them shared by
+# two documents each); 12 counts every short name a citation can spell, which adds
+# the three NON-NUMERIC collisions - README, shared by 7 documents, and
+# conventions and open-questions, each shared by 2. This row uses the wider
+# predicate because a bare README reference is exactly as unresolvable as a bare
+# 40, and neither figure is adjusted to match the other.
+#
+# A REFERENCE RESOLVES when its heading exists in exactly ONE of the documents
+# sharing that short name. That is measurable and it is what a reader does. A
+# reference whose heading matches two of them, or none, is the failure - and a
+# short name carrying a LINE NUMBER instead of a heading cannot resolve at all,
+# which is the population this row flags today and A35 forbids independently.
+# --------------------------------------------------------------------------
+
+
+def check_short_name_ambiguity() -> tuple[list[tuple], list[tuple], tuple[str, ...]]:
+    """A36 - an ambiguous short-name reference must carry a full path or resolve uniquely.
+
+    Returns (rows, collision_rows, notes). `collision_rows` is the computed
+    collision set, printed on every run.
+    """
+    by_short, collisions = design_document_index()
+    total_docs = sum(len(paths) for paths in by_short.values())
+
+    collision_rows = [
+        (
+            short,
+            len(paths),
+            ", ".join(rel(p) for p in paths),
+        )
+        for short, paths in sorted(collisions.items())
+    ]
+    numeric_collisions = sum(1 for s in collisions if s.isdigit())
+
+    headings_by_doc = {
+        short: {rel(p): document_headings(p) for p in paths}
+        for short, paths in collisions.items()
+    }
+
+    short_alt = "|".join(sorted((re.escape(s) for s in collisions), key=len, reverse=True))
+    heading_ref = re.compile(rf"(?<![/\w.\-])({short_alt}) `([^`]+)`")
+    dash = r"[-‐‑‒–—―]"
+    coordinate_ref = re.compile(
+        rf"(?<![\w./\\\-])({short_alt}):\d+(?:\s*(?:{dash}|,)\s*\d+)*"
+    )
+
+    unresolved: list[str] = []
+    resolved = 0
+    positional = list()
+    for relative, path in owned_files():
+        if path.suffix.lower() == ".json":
+            continue
+        text = path.read_text(encoding="utf-8", errors="replace")
+        for match in heading_ref.finditer(text):
+            short, raw = match.group(1), match.group(2)
+            if not raw.lstrip().startswith("#"):
+                continue
+            heading = _normalize_cited_heading(raw)
+            owners = [d for d, hs in headings_by_doc[short].items() if heading in hs]
+            if len(owners) == 1:
+                resolved += 1
+            else:
+                unresolved.append(
+                    f"{relative}: `{short}` `{heading}` -> "
+                    + (f"{len(owners)} documents: {owners}" if owners else "no document")
+                )
+        for match in coordinate_ref.finditer(text):
+            token = match.group(0)
+            if CLOCK_READING.match(token.replace(" ", "")):
+                continue
+            positional.append(f"{relative}: {token}")
+
+    rows = [
+        (
+            f"colliding short names computed from docs/**/*.md ({total_docs} document(s))",
+            "a non-empty, PRINTED collision set",
+            f"{len(collisions)} ({numeric_collisions} numeric + "
+            f"{len(collisions) - numeric_collisions} non-numeric)",
+            "ok" if collisions else "FAIL",
+        ),
+        (
+            f"ambiguous short-name references resolving to exactly one document ({resolved} ref(s))",
+            0,
+            len(unresolved),
+            "ok" if not unresolved else "FAIL",
+        ),
+        (
+            "ambiguous short name carrying a LINE NUMBER instead of a heading (cannot resolve)",
+            0,
+            len(positional),
+            "ok" if not positional else "FAIL",
+        ),
+    ]
+
+    if not collisions:
+        fail(
+            "A36 - the computed collision set is EMPTY, which on this tree means the walk broke "
+            "rather than that the ambiguity is gone. A non-recursive walk over docs/ produces "
+            "exactly this result while two documents numbered 40 sit one directory apart, so an "
+            "empty set is a failure here and never a pass"
+        )
+    if unresolved:
+        fail(
+            f"A36 - {len(unresolved)} ambiguous short-name reference(s) do not resolve to one "
+            f"document. A short name shared by two documents needs its FULL PATH, because the "
+            f"reader cannot tell which document is meant: {unresolved[:10]}"
+        )
+    if positional:
+        fail(
+            f"A36 - {len(positional)} reference(s) spell an ambiguous short name with a line "
+            f"number. That form is doubly unresolvable - the document is ambiguous AND the "
+            f"coordinate decays - so it needs the full path and the section heading: "
+            f"{positional[:10]}"
+        )
+
+    notes = (
+        "THE COLLISION SET ABOVE IS COMPUTED ON EVERY RUN AND PRINTED IN FULL, never "
+        "hardcoded and never reduced to a verdict. A computed rule that prints only pass/fail "
+        "is a hardcoded list one layer down; printing the intermediate is what stops it going "
+        "stale invisibly. The walk is RECURSIVE over docs/**/*.md - non-recursively there is "
+        "exactly one document numbered 40, the collision set computes EMPTY, and this row would "
+        "pass forever while the ambiguity sat one directory below.",
+        "TWO COUNTS OF ONE POPULATION, both correct, kept with their predicates. An earlier "
+        "pass measured 9 ambiguous NUMBERS over these same documents - documents whose filename "
+        "begins with digits, 38 distinct leading numbers. This row counts 12 ambiguous SHORT "
+        "NAMES, which adds the three non-numeric collisions: README shared by 7 documents, and "
+        "conventions and open-questions each shared by 2. The wider predicate is used because a "
+        "bare README reference is exactly as unresolvable as a bare 40; neither figure was "
+        "adjusted to match the other.",
+        "A REFERENCE COUNTS AS RESOLVED when its cited heading exists in exactly one of the "
+        "documents sharing its short name, which is what a reader actually does to disambiguate. "
+        "Source-line wrapping is undone before the comparison - a heading split across two lines "
+        "of a docstring, a comment block or an f-string is one citation, not an unresolvable "
+        "one - and without that 8 sound references in this file alone would redden the row on "
+        "their own formatting.",
+    )
+    return rows, collision_rows, notes
+
+
+# --------------------------------------------------------------------------
 # reporting
 # --------------------------------------------------------------------------
 
@@ -5774,6 +6643,8 @@ def main() -> int:
     loc_rows = check_localization(stats)
     key_binding_rows, key_binding_notes = check_key_id_binding(docs)
     value_vocabulary_rows, value_vocabulary_notes = check_value_vocabulary_coupling(docs)
+    citation_rows, citation_notes = check_no_positional_citations()
+    ambiguity_rows, collision_rows, ambiguity_notes = check_short_name_ambiguity()
 
     table(
         "A12 Per-directory entry counts",
@@ -5887,6 +6758,26 @@ def main() -> int:
         ("check", "expected", "actual", "status"),
         value_vocabulary_rows,
         value_vocabulary_notes,
+    )
+    table(
+        "A35 No positional citation of a design document in the files this tool owns "
+        "[exemptions are an EXACT declared set with a per-entry reason and a pinned count; "
+        "adding a citation to an exempt bucket FAILS]",
+        ("check", "expected", "actual", "status"),
+        citation_rows,
+        citation_notes,
+    )
+    table(
+        "A36 An ambiguous short-name document reference must carry its full path "
+        "[collision set COMPUTED from docs/**/*.md recursively on every run, and printed below]",
+        ("check", "expected", "actual", "status"),
+        ambiguity_rows,
+        ambiguity_notes,
+    )
+    table(
+        "A36 the computed collision set (printed every run, never hardcoded)",
+        ("short name", "documents", "paths"),
+        collision_rows,
     )
     table("A19 Expected exception sets", ("set", "expected", "actual", "status"), set_rows)
     table(

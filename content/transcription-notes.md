@@ -619,7 +619,7 @@ byte-identically: `adds_behavior`, `adds_attacks_phases_aura_or_support_ai`, `ad
 
 > **FLAG — the placement of this constants block is my choice, not the spec's.**
 > The ruling says the five multipliers are “a shared constants block, not a definition” and does
-> **not** name a home for it. `content/` has no constants category: `40:34-63` lays out
+> **not** name a home for it. `content/` has no constants category: `docs/technical/40-content-data-and-validation.md` `## Accepted content repository layout` lays out
 > per-catalog definition directories and nothing else. I put it in `content/enemies/` because that
 > is where its only consumer's definitions live and because it sits beside the `elite_eligible`
 > flags it pairs with. Nothing in `docs/` states that. **It may move when the schemas land** — to a
@@ -632,11 +632,11 @@ byte-identically: `adds_behavior`, `adds_attacks_phases_aura_or_support_ai`, `ad
 > file lives — is untouched: it stays exactly where it is, in `content/enemies/`, with the same stem
 > (Ruling 10 already confirmed the path, and Ruling 11 does not revisit it). What Ruling 11 reverses
 > is this entry's ruling that the file is “not a definition” and therefore needs no ID. It has one:
-> **`ELT-01`**. **The reason is the bundle ordering.** `40:185` — “The canonical bundle is ordered by
+> **`ELT-01`**. **The reason is the bundle ordering.** `docs/technical/40-content-data-and-validation.md` `## Compilation pipeline` — “The canonical bundle is ordered by
 > category and stable ID” — leaves no slot in that ordering for a file without a stable ID, so an
 > ID-less file cannot be placed deterministically in the artifact every consumer reads. That is also
 > what stops the kebab-case file name looking wrong now that the file has an ID: the ordering keys on
-> the `id` field, and `40:185` requires the bundle to hash “identically for identical semantic input
+> the `id` field, and that same section requires the bundle to hash “identically for identical semantic input
 > regardless of source file enumeration order”, so the stem is not load-bearing and no rename is
 > owed. The FLAG text above is left verbatim, including the “not a definition” framing that Ruling 11
 > reverses — the reasoning trail is the point, and the argument it makes about *placement* is still
@@ -718,11 +718,13 @@ zone’; no dimension is given.”
 note text and is kept as written; it means `docs/40-mining-and-extraction.md`
 `### Geode resonance fields`, the six-row resonance table (`| Asterite | **Focused Assault:** …` …
 `| Flux Amber | **Overclocked Motion:** …`), and it resolves there at blob `21c555f`, that
-document's only revision in this history and also HEAD. (`40:156` in the same FLAG is the technical
-document and is out of this pass's scope.)
+document's only revision in this history and also HEAD. (The other bare-`40` coordinate in the same FLAG named the technical
+document; it is re-pointed to `docs/technical/40-content-data-and-validation.md` `## Behavior registries`,
+because a bare `40` names two documents and cannot resolve on its own. The coordinate itself is not
+reproduced here: naming it would reintroduce the very form this repair removes.)
 
 > **FLAG — the six effects need `behavior_kind` registry tokens and do not have them.**
-> `40:156` requires that “every content `behavior_kind` … has exactly one registered descriptor
+> `docs/technical/40-content-data-and-validation.md` `## Behavior registries` requires that “every content `behavior_kind` … has exactly one registered descriptor
 > with a compatible parameter schema”, and no registry exists in this tree yet. So each
 > `resonance_behavior` carries `"behavior_kind": null` with
 > `"behavior_kind_registration_pending": true`, and **no token format was invented** — anything
@@ -4667,7 +4669,13 @@ carried by the sentence rather than by the number.
    - **The search, run rather than assumed.** `git grep -i "cross-run progression resource" <ref> -- 'docs/*'` over
      every one of the 18 `origin` refs this repository has, `origin/master` included — **zero hits in any design or
      technical document that could serve as a source.** The corpus is the point of the entry: this is not "the phrase
-     is missing from the document I happened to open", it is the phrase missing from `docs/` on every ref.
+     is missing from the document I happened to open", it is the phrase missing from `docs/` on every ref —
+     **outside doc 40's own record of this same failed search**, which quotes the phrase in order to report its
+     absence and is the one hit the bullets below account for. The unqualified "anywhere" was wrong in the letter:
+     a negative claim about a phrase falsifies itself the moment it is written down, because the record of the
+     claim contains the phrase. Doc 40 scoped its own copy exactly this way — "outside this section that phrase
+     returns zero verbatim hits in `docs/` on any ref" — and the scope is borrowed here for the same reason. The
+     finding is intact; only the missing qualifier was.
      - **Stamped, not re-run — both the 18 and the zero are figures of `b482304`.** The repository now has **35**
        `origin` refs, and the phrase is no longer absent from `docs/` on all of them: it is in
        `docs/technical/40-content-data-and-validation.md` at `origin/master` `e17b8b6` and at `85d0ced`, as exactly

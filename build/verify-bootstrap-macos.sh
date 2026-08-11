@@ -243,12 +243,77 @@ echo "=== 8. it does not demand root"
 # which contains no "warn" at all, and it escaped the old check purely because the
 # old pattern could not see `-eq 0`. Widening the pattern without fixing the
 # exclusion would have turned this check into a permanent false FAIL.
+#
+# Two further holes, both found by injection AFTER the by-function exclusion
+# shipped, and both closed below. DO NOT SIMPLIFY EITHER ONE AWAY - each looks
+# like fussiness and each is the difference between a check and a decoration.
+#
+#   3. SCOPE NEVER CLOSED. The awk set `fn` on a function header and never reset
+#      it, so `fn` stayed set past the function's closing `}`. Top-level code in
+#      the window between warn_if_root's `}` and the next function header was
+#      therefore still attributed to warn_if_root and exempted. 1500 hard-fail
+#      lines in that 3-line window: gate exit 0, twelve consecutive runs. The
+#      same injection one function earlier - after require_macos's `}` - was
+#      correctly caught, which is exactly why this was invisible: the hole is
+#      three lines wide and sits immediately after the one exempt function.
+#      Fixed by resetting fn on `^}$`.
+#   4. THE EXEMPTION WAS UNCONDITIONAL. Exempting warn_if_root by name exempted
+#      whatever warn_if_root happened to contain. Rewriting its body to
+#      `if [[ "${EUID}" -ne 0 ]]; then fail "..." "$EXIT_ENVIRONMENT"; fi`
+#      printed "ok  no root requirement" and exited 0 - a two-token edit, in the
+#      one function in the file that already concerns root, and therefore the
+#      single most likely way the requirement ever comes back. It was also a
+#      REGRESSION against the old text test, which would have caught it: that
+#      body's condition line contains no "warn".
+#      So the exemption is now CONDITIONAL - warn_if_root is exempt only while
+#      its body contains no `fail` and no `exit`. A warn_if_root that terminates
+#      the script is not a warning, and the name must not buy it cover. The body
+#      is buffered and adjudicated at the closing `}` because the `fail` normally
+#      appears AFTER the EUID test, so a streaming decision at the test line
+#      cannot yet know.
+#
+# Both `nhit > 0` and `nkill > 0` are required before a buffered body is
+# reported, so a warn_if_root that calls `fail` for some unrelated reason with no
+# EUID test at all is not a false FAIL. The real warn_if_root only calls `warn`,
+# so the clean tree reports `ok  no root requirement` - confirmed, not assumed.
 root_gate_hits="$(awk '
+  # Whole-line comments are not executable code.
   /^[[:space:]]*#/ { next }
-  /^[a-zA-Z_][a-zA-Z0-9_]*\(\)[[:space:]]*\{/ { fn = $0; sub(/\(\).*/, "", fn); next }
-  /(EUID|id -u)/ &&
-  /(-ne[[:space:]]+0|-eq[[:space:]]+0|!=[[:space:]]*"?0|==[[:space:]]*"?0)/ {
-    if (fn != "warn_if_root") { printf "%d:%s\n", NR, $0 }
+
+  # A function header opens a scope. Remember whose, and start that body fresh.
+  /^[a-zA-Z_][a-zA-Z0-9_]*\(\)[[:space:]]*\{/ {
+    fn = $0; sub(/\(\).*/, "", fn)
+    buf = ""; nhit = 0; nkill = 0
+    next
+  }
+
+  # ...and a `}` in column 0 CLOSES it. Resetting fn here is load-bearing: with
+  # fn left set, top-level code in the window between warn_if_root closing `}`
+  # and the next function header is still attributed to warn_if_root and
+  # silently exempted. 1500 hard-fail-on-non-root lines in that window passed
+  # this check green before this reset existed.
+  /^\}[[:space:]]*$/ {
+    if (fn == "warn_if_root" && nhit > 0 && nkill > 0) { printf "%s", buf }
+    fn = ""; buf = ""; nhit = 0; nkill = 0
+    next
+  }
+
+  {
+    is_hit = ($0 ~ /(EUID|id -u)/) &&
+             ($0 ~ /(-ne[[:space:]]+0|-eq[[:space:]]+0|!=[[:space:]]*"?0|==[[:space:]]*"?0)/)
+    if (fn == "warn_if_root") {
+      # The exemption is CONDITIONAL, not by name. warn_if_root is exempt only
+      # while it warns: a body carrying `fail` or `exit` is a root REQUIREMENT
+      # wearing the name of a warning, and is reported. Buffer the body and
+      # decide at the closing brace, because the `fail` may follow the EUID
+      # test rather than precede it.
+      is_kill = ($0 ~ /(^|[^[:alnum:]_])(fail|exit)([^[:alnum:]_]|$)/)
+      if (is_hit) { nhit++ }
+      if (is_kill) { nkill++ }
+      if (is_hit || is_kill) { buf = buf sprintf("%d:%s\n", NR, $0) }
+    } else if (is_hit) {
+      printf "%d:%s\n", NR, $0
+    }
   }
 ' "${SCRIPT}")"
 if [[ -n "${root_gate_hits}" ]]; then

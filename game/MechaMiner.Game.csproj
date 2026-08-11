@@ -51,6 +51,53 @@
       tests/MechaMiner.Content.Tests/MechaMiner.Content.Tests.csproj.
     -->
     <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+    <!--
+      Every restore of THIS project is locked, not only the ones that pass the
+      locked-mode switch on the command line. This project alone needs it,
+      because this project alone has a configuration-dependent package graph.
+
+      Godot.NET.Sdk gates its GodotSharpEditor PackageReference on
+      Condition=" '$(Configuration)' == 'Debug' " (Sdk.targets:37). So a restore
+      at Release, ExportDebug or ExportRelease resolves a SMALLER graph than the
+      committed lock file records, and - because Directory.Build.props sets
+      RestorePackagesWithLockFile=true - NuGet rewrites packages.lock.json to
+      match, dropping the GodotSharpEditor entry. Measured: that rewrite is
+      silent. `dotnet build game/MechaMiner.Game.csproj -c Release` exited 0,
+      printed "Build succeeded / 0 Warning(s) / 0 Error(s)", and emitted not one
+      line mentioning the lock file. The damage surfaced much later and
+      elsewhere, as VER-FND-001-001 (a locked-mode `dotnet restore
+      MechaMiner.sln`) failing NU1004 on a tree in which nobody edited a source
+      file.
+
+      RestoreLockedMode=true converts that silent rewrite into an immediate
+      NU1004 naming GodotSharpEditor, raised by the very command that caused it,
+      and leaves the lock file byte-identical. The failure moves from a distant
+      misattributed gate failure to a local one whose message already names the
+      cause.
+
+      Consequence, intended: `dotnet build game/MechaMiner.Game.csproj` at any
+      configuration other than Debug now FAILS, and so does
+      `dotnet build MechaMiner.sln -c Release` (which maps this project to
+      ExportRelease). Both used to exit 0 while corrupting the lock file. The
+      sanctioned solution build passes the no-restore switch
+      (VER-FND-001-002) and is unaffected; build/verify-godot.sh cannot, because
+      it deletes game/.godot for a cold cache and that is where this project's
+      obj/ lives, so it must restore - which it does at the default
+      configuration, Debug, and therefore stays green. When the graph
+      legitimately changes, the escape hatch is a restore passing
+      force-evaluate: explicit, reviewable, and visible in the diff.
+
+      Do NOT "fix" this by setting RestorePackagesWithLockFile=false here. That
+      would delete the guarantee rather than enforce it, leaving the one project
+      with a genuinely configuration-dependent graph as the only project with no
+      locked graph at all.
+
+      Known limit, measured, so nobody reads more into this than it does:
+      locked mode validates the package reference SET (names and requested
+      ranges) and does NOT validate the "resolved" version recorded in the lock
+      file, nor does it fail when the lock file is absent.
+    -->
+    <RestoreLockedMode>true</RestoreLockedMode>
   </PropertyGroup>
 
   <ItemGroup>

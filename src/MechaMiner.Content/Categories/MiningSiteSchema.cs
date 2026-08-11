@@ -33,6 +33,49 @@ public static class MiningSiteSchema
         "non-interactive-landmark");
 
     /// <summary>Who a resonance field applies to.</summary>
+    /// <remarks>
+    /// <para>
+    /// <b>OPEN GRANT. This vocabulary is ungranted, and its member form is not settled.</b>
+    /// <c>docs/technical/40-content-data-and-validation.md</c> § Minted value vocabularies grants
+    /// exactly four closed vocabularies - <c>resource_class</c>, <c>persistence_class</c>,
+    /// <c>modifier_direction</c> and <c>timestamp_provenance</c> - and
+    /// <c>resonance_field.applies_to</c> is not among them. So "which token should this contain"
+    /// is a question that cannot be answered before the vocabulary is granted, and the same
+    /// statement is on the field's own <c>description</c> in
+    /// <c>content/schemas/mining-site.schema.json</c> so a measuring pass over either artifact
+    /// finds it.
+    /// </para>
+    /// <para>
+    /// <b>Two facts hold at once, and both were measured.</b> The authored corpus writes the
+    /// SPACE form: <c>content/mining-sites/specialized-material-geodes.json:83</c> authors
+    /// <c>["ordinary enemies", "elites", "bosses"]</c>. And the space form cannot be a member of
+    /// this vocabulary at all, because <see cref="ClosedVocabulary"/>'s constructor enforces
+    /// <see cref="MechaMiner.Content.Vocabulary.TokenGrammar"/> and throws
+    /// <see cref="System.ArgumentException"/> on any member that fails it - substituting
+    /// <c>"ordinary enemies"</c> here throws in this type's initializer and takes 306 Content
+    /// tests down with it. Nothing is red today because no typed reader is pointed at
+    /// <c>content/mining-sites/</c>.
+    /// </para>
+    /// <para>
+    /// <b>EITHER OF TWO THINGS DISCHARGES THIS.</b> Written as conditions rather than as a
+    /// verdict, deliberately: a label saying the declaration and the corpus cannot meet would be
+    /// a claim nothing checks, and such labels accumulate unfalsified because a green run is what
+    /// both a true one and a false one produce. A later reader should check whether one of these
+    /// has happened, not re-form an opinion.
+    /// </para>
+    /// <list type="number">
+    /// <item><description>
+    /// <b>The vocabulary is granted</b> by an accepted document. The member form then follows
+    /// from the grammar, and it is the CONTENT that moves - a content change carrying its own
+    /// provenance and justification, not a token edit here.
+    /// </description></item>
+    /// <item><description>
+    /// <b>An accepted document states that the field is prose</b>, as its three siblings
+    /// <c>generation_constraint</c>, <c>spawn_rule</c> and <c>material_selection</c> already are.
+    /// The schema enum then comes out and this vocabulary stops governing the field.
+    /// </description></item>
+    /// </list>
+    /// </remarks>
     public static ClosedVocabulary ResonanceTargets { get; } = new(
         "a resonance field target",
         "GDD-MINING",

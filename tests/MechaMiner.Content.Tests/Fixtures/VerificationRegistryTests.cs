@@ -847,7 +847,13 @@ internal sealed class VerificationRegistryTests
     }
 
     /// <summary>Fixture references that are a bare repository-relative path.</summary>
-    private const int RepositoryPathReferences = 319;
+    /// <remarks>
+    /// 319 at <c>46366ea</c>. 326 from <c>VER-DAT-002-037</c>, which names the seven new
+    /// behavior-token fixtures as its evidence - one per previously unreached call site. The
+    /// delta is +7 and the seven are enumerated in that entry's own <c>fixtures</c> array, so a
+    /// reader can check the arithmetic against the thing that moved it.
+    /// </remarks>
+    private const int RepositoryPathReferences = 326;
 
     /// <summary>Fixture references of the form <c>path § heading</c>.</summary>
     private const int PathAndSectionReferences = 108;
@@ -865,10 +871,19 @@ internal sealed class VerificationRegistryTests
     private const int EntriesNamingNoFixture = 73;
 
     /// <summary>Entries across every registry in <c>tests/verification/</c>.</summary>
-    private const int RegistryEntries = 294;
+    /// <remarks>
+    /// 294 at <c>46366ea</c>, 295 now. VER-DAT-002-037, which records the behavior-token call-site coverage, is the one entry this branch adds after the census was last pinned.
+    /// </remarks>
+    private const int RegistryEntries = 295;
 
     /// <summary>Entries whose selector <c>kind</c> is <c>nunit</c>.</summary>
-    private const int NunitSelectors = 236;
+    /// <remarks>
+    /// 236 at <c>46366ea</c>, 237 now, and the added entry is the same one that moved
+    /// <see cref="RegistryEntries"/> - it carries an nunit selector, so both move by one
+    /// together. A move in one without the other would mean an entry arrived with a selector of
+    /// some other kind, which is a different fact.
+    /// </remarks>
+    private const int NunitSelectors = 237;
 
     /// <summary>Entries whose selector <c>kind</c> is <c>script</c>.</summary>
     private const int ScriptSelectors = 39;
@@ -884,7 +899,13 @@ internal sealed class VerificationRegistryTests
     /// The stronger of the two answers; see
     /// <see cref="TheSelectorCensusIsWhatIsDeclared"/> for what neither proves.
     /// </summary>
-    private const int NunitSelectorsReflected = 126;
+    /// <remarks>
+    /// 126 at <c>46366ea</c>, 127 now. <c>VER-DAT-002-037</c> names
+    /// <c>BehaviorTokenCallSiteTests</c>, a type in this assembly, so the runtime loader answers
+    /// it and it joins the stronger side rather than
+    /// <see cref="NunitSelectorsSourceDeclared"/>, which is unchanged at 110.
+    /// </remarks>
+    private const int NunitSelectorsReflected = 127;
 
     /// <summary>
     /// Nunit selectors only the source index answers, because they name a type in a sibling test
@@ -896,7 +917,12 @@ internal sealed class VerificationRegistryTests
     /// Distinct nunit selector values, which is fewer than
     /// <see cref="NunitSelectors"/> because a fixture can be the evidence for several entries.
     /// </summary>
-    private const int DistinctNunitSelectors = 150;
+    /// <remarks>
+    /// 150 at <c>46366ea</c>, 151 now. The added selector is a class no other entry names, so
+    /// this moves with <see cref="NunitSelectors"/> rather than lagging it - an entry reusing an
+    /// existing selector would move that count and not this one.
+    /// </remarks>
+    private const int DistinctNunitSelectors = 151;
 
     /// <summary>
     /// Registries declaring no <c>nunit</c> selector at all, and so having no selector checked by

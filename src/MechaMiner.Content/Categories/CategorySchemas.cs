@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Text.Json;
+using MechaMiner.Content.Envelope;
 using MechaMiner.Content.Ids;
 
 namespace MechaMiner.Content.Categories;
@@ -119,6 +121,28 @@ public static class CategorySchemas
             _ => throw new ArgumentOutOfRangeException(
                 nameof(context), context.Kind, "no reader is declared for this definition kind"),
         };
+    }
+
+    /// <summary>
+    /// Writes one definition's canonical payload through <paramref name="kind"/>'s writer.
+    /// </summary>
+    /// <remarks>
+    /// <b>Deliberately not a switch, unlike <see cref="Read"/>.</b> Read dispatches to sixteen
+    /// reader types because each parses a different DTO, so the arms are genuinely different
+    /// code and the switch is where a missing one is caught. The writers differ only in the
+    /// field table they are bound to, so a sixteen-arm switch here would be sixteen chances to
+    /// bind the wrong table, and a seventeenth kind would compile with no writer until somebody
+    /// noticed. The writer comes off the descriptor instead, where
+    /// <see cref="CategoryDescriptor"/> already built it from the same shape it registers.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="envelope"/> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">No field table is declared for the kind.</exception>
+    public static byte[] WriteCanonical(
+        DefinitionKind kind,
+        DefinitionEnvelope envelope,
+        JsonElement document)
+    {
+        return Describe(kind).Writer.ToCanonicalUtf8(envelope, document);
     }
 
     private static CategoryDescriptor Declare(

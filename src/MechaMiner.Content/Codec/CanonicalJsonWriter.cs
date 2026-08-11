@@ -152,6 +152,64 @@ public sealed class CanonicalJsonWriter
         ArgumentNullException.ThrowIfNull(entries);
         ArgumentNullException.ThrowIfNull(writeValue);
 
+        List<KeyValuePair<string, TValue>> sorted = SortEntries(field, entries);
+
+        WriteFieldName(field);
+        WriteEntries(sorted, writeValue);
+    }
+
+    /// <summary>
+    /// Writes a dictionary in value position - as an array element or another
+    /// dictionary's value - with its entries in ordinal key order.
+    /// </summary>
+    /// <remarks>
+    /// An object with no declared field order is a dictionary, whatever it is nested in, so
+    /// doc 40's "dictionaries as lexically sorted key entries" is the rule that applies to it.
+    /// This overload exists because such an object can appear where there is no field name to
+    /// write first; <paramref name="subject"/> names it for a duplicate-key diagnostic instead.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">An argument is null.</exception>
+    /// <exception cref="ArgumentException">Two entries share a key.</exception>
+    public void WriteSortedDictionaryValue<TValue>(
+        string subject,
+        IEnumerable<KeyValuePair<string, TValue>> entries,
+        Action<CanonicalJsonWriter, TValue> writeValue)
+    {
+        ArgumentNullException.ThrowIfNull(subject);
+        ArgumentNullException.ThrowIfNull(entries);
+        ArgumentNullException.ThrowIfNull(writeValue);
+
+        WriteEntries(SortEntries(subject, entries), writeValue);
+    }
+
+    /// <summary>
+    /// Writes an array in value position, in its authored order, unchanged.
+    /// </summary>
+    /// <remarks>
+    /// The value-position counterpart of <see cref="WriteOrderedArray{TItem}"/>, for an array
+    /// nested inside another array or inside a dictionary value, where there is no field name.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">An argument is null.</exception>
+    public void WriteOrderedArrayValue<TItem>(
+        IEnumerable<TItem> items,
+        Action<CanonicalJsonWriter, TItem> writeItem)
+    {
+        ArgumentNullException.ThrowIfNull(items);
+        ArgumentNullException.ThrowIfNull(writeItem);
+
+        _writer.WriteStartArray();
+        foreach (TItem item in items)
+        {
+            writeItem(this, item);
+        }
+
+        _writer.WriteEndArray();
+    }
+
+    private static List<KeyValuePair<string, TValue>> SortEntries<TValue>(
+        string subject,
+        IEnumerable<KeyValuePair<string, TValue>> entries)
+    {
         List<KeyValuePair<string, TValue>> sorted = new(entries);
         sorted.Sort(static (left, right) => string.CompareOrdinal(left.Key, right.Key));
 
@@ -160,13 +218,19 @@ public sealed class CanonicalJsonWriter
             if (string.Equals(sorted[index - 1].Key, sorted[index].Key, StringComparison.Ordinal))
             {
                 throw new ArgumentException(
-                    "dictionary key '" + sorted[index].Key + "' occurs twice in field '" + field
+                    "dictionary key '" + sorted[index].Key + "' occurs twice in field '" + subject
                         + "'; a canonical payload cannot represent a duplicate key",
                     nameof(entries));
             }
         }
 
-        WriteFieldName(field);
+        return sorted;
+    }
+
+    private void WriteEntries<TValue>(
+        List<KeyValuePair<string, TValue>> sorted,
+        Action<CanonicalJsonWriter, TValue> writeValue)
+    {
         _writer.WriteStartObject();
         foreach (KeyValuePair<string, TValue> entry in sorted)
         {
@@ -224,13 +288,7 @@ public sealed class CanonicalJsonWriter
         ArgumentNullException.ThrowIfNull(writeItem);
 
         WriteFieldName(field);
-        _writer.WriteStartArray();
-        foreach (TItem item in items)
-        {
-            writeItem(this, item);
-        }
-
-        _writer.WriteEndArray();
+        WriteOrderedArrayValue(items, writeItem);
     }
 
     /// <summary>Writes a bare string value, for use inside an array or dictionary.</summary>

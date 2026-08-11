@@ -23,6 +23,7 @@ public sealed class CategoryDescriptor
         Shape = shape;
         Derived = derived;
         OmitsNameKey = omitsNameKey;
+        Writer = new DefinitionWriter(kind, shape);
     }
 
     /// <summary>The definition kind.</summary>
@@ -39,6 +40,15 @@ public sealed class CategoryDescriptor
 
     /// <summary>The values the compiler derives for this kind.</summary>
     public DerivedFieldRegister Derived { get; }
+
+    /// <summary>This kind's canonical writer.</summary>
+    /// <remarks>
+    /// Constructed here rather than registered, so "every declared kind has a canonical writer"
+    /// is true by construction instead of by a table somebody has to remember to extend. It is
+    /// also why there are exactly sixteen writers: there are sixteen rows in
+    /// <see cref="CategorySchemas.All"/>, and a seventeenth row would arrive with a writer.
+    /// </remarks>
+    public DefinitionWriter Writer { get; }
 
     /// <summary>
     /// True when this kind is an aggregate players never see named, and so omits

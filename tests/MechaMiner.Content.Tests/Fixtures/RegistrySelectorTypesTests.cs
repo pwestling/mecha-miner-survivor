@@ -305,20 +305,24 @@ internal sealed class RegistrySelectorTypesTests
     /// Types the source index finds across the five source directories it reads: the 221
     /// measured at <c>f5b4e77</c>, plus <c>ArrayOrderDeclarationTests</c> at <c>23ab9a0</c> and
     /// <c>DeclaredArrayOrderCoverageTests</c> at <c>674376c</c>, plus
-    /// <c>EnvelopeArrayOrderEmissionTests</c> measured at <c>35dc68d</c>. The index reads
-    /// <c>tests/</c> only, so <c>src/MechaMiner.Content/Categories/ArrayOrder.cs</c> and
-    /// <c>ArrayOrderEmitter.cs</c> are not among these.
+    /// <c>EnvelopeArrayOrderEmissionTests</c> measured at <c>35dc68d</c>, plus
+    /// <c>CanonicalDefinitionWriterTests</c> and <c>CanonicalWriterSubject</c> measured at
+    /// <c>8e45064</c>. The index reads <c>tests/</c> only, so
+    /// <c>src/MechaMiner.Content/Categories/ArrayOrder.cs</c>, <c>ArrayOrderEmitter.cs</c> and
+    /// <c>DefinitionWriter.cs</c> are not among these.
     /// </summary>
-    private const int TypesIndexed = 224;
+    private const int TypesIndexed = 226;
 
     /// <summary>
     /// Members the source index records across every type it finds: the 1190 measured at
     /// <c>f5b4e77</c>, plus <c>ArrayOrderDeclarationTests</c>' five methods at <c>23ab9a0</c>,
     /// plus <c>DeclaredArrayOrderCoverageTests</c>' three tests and its two walk helpers at
     /// <c>674376c</c>, plus <c>EnvelopeArrayOrderEmissionTests</c>' four tests and its five
-    /// helpers, measured at <c>35dc68d</c>.
+    /// helpers, measured at <c>35dc68d</c>, plus <c>CanonicalDefinitionWriterTests</c>' six
+    /// tests and one helper and <c>CanonicalWriterSubject</c>' seven members, measured at
+    /// <c>8e45064</c>.
     /// </summary>
-    private const int MembersIndexed = 1209;
+    private const int MembersIndexed = 1223;
 
     /// <summary>The negative control: the resolver must be able to fail.</summary>
     [Test]

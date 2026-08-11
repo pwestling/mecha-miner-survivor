@@ -99,20 +99,23 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       errors") - so these are failures, not warnings                  FAILURE
 
   A12 Entry counts per catalog directory match the EXPECTATIONS table.
-      Every row cites its own source doc:line.                        FAILURE
+      Every row cites its own source document and heading.           FAILURE
 
   A13 Aggregate row counts match the PROBES table (35 minute rows,
       4 beacon responses, 7 formations, 1 map contract file), AND the six
       authored world-prop VALUES folded into the map contract match the
-      document: destructible rock Hull 100 (docs/72:194), rock damage
-      footprint diameter 0.80 M (:196), health pack repair 25 Hull (:182),
-      health pack pickup radius 0.25 M (:185), rock active population cap
-      16 and rock initial count 16 (both docs/51:146, the active cap
-      corroborated at docs/72:203). Every row cites its own source
-      doc:line.
+      document: destructible rock Hull 100 (docs/72 `### Destructible
+      rock`), rock damage footprint diameter 0.80 M (same table), health
+      pack repair 25 Hull and pickup radius 0.25 M (docs/72 `### Health
+      pack`), rock active population cap 16 and rock initial count 16
+      (both docs/51 `## Destructible rocks`, the active cap corroborated
+      at docs/72 `### Destructible rock`, "the existing
+      one-attempt-per-second, 10% success chance, and 16-rock active cap").
+      Every row cites its own source document and heading.
       The two 16-rock rows were ADDED as a coverage gap: both values were
       transcribed and NEITHER was asserted, and they sit between two values
-      that were - rock Hull at 72:194 and the footprint at 72:196 bracket
+      that were - rock Hull and the footprint diameter in docs/72
+      `### Destructible rock` bracket
       the population rules in the same section. A value whose neighbours
       are asserted reads as covered. That is a gap that LOOKS FILLED, which
       is a different failure from a gate that cannot fail.
@@ -130,8 +133,9 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       Actual vs expected is always printed.
       Mandate: 40 `### PowerUps and option unlocks` ("Validators
       recompute total catalog costs");
-      sources docs/62-permanent-powerup-catalog.md:35 and
-      docs/63-permanent-option-unlock-catalog.md:48                   FAILURE
+      sources docs/62-permanent-powerup-catalog.md `## Catalog overview`
+      and docs/63-permanent-option-unlock-catalog.md
+      `## Catalog overview`                                           FAILURE
 
   A15 Referential integrity: every branch's weapon reference resolves to a
       file in content/weapons/, every enemy ID referenced by the encounter
@@ -209,7 +213,9 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
 
   A18 Derived-vs-authored regression guard, special-cased to the one known
       transcription bug: the Sentry Pod (W-BE) deployment interval is 6.0
-      seconds (docs/71-initial-weapon-numeric-catalog.md:83), and 12 must
+      seconds (docs/71-initial-weapon-numeric-catalog.md
+      `## Rank-Zero Values and Ore-Stat Increments`, the `W-BE` row: "One
+      pod every 6 s, 24 s life, maximum three"), and 12 must
       never appear as an authored deployment or ramp value anywhere in
       content/weapons/ - 12 s is the DERIVED time for three pods to exist at
       a 6 s cadence, not an authored number.
@@ -228,15 +234,18 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
           reference_diameter_m is allowlisted: 0.80 M is the Ripper's
           authored rank-zero diameter, not a per-enemy derived value. A BOSS
           diameter is AUTHORED and must stay - the boss roster gives bosses
-          no body-scale column (docs/31:121-128, unlike docs/31:37-48) and
-          docs/72:105-110 states the four diameters flat.
+          no body-scale column (docs/31 `## Interval boss overview`,
+          unlike docs/31 `## Ordinary roster overview`) and docs/72
+          `## Collision and Contact Footprints` states the four diameters
+          flat in its `| Boss | Contact and weapon-hurt diameter |` table.
         - the CENTRE DISTANCE rule covers content/enemies/,
           content/bosses/ AND content/maps/. It is the object's radius plus
           the player's 0.50 M collision radius in all three, so storing it
           hardcodes a player-baseline constant into a catalog that does not
           own it. content/maps/ joined the rule because the health pack
           stored 0.75 = its authored 0.25 M pickup radius + 0.50 M
-          (docs/72:185).
+          (docs/72 `### Health pack`, "The pack has a 0.25M pickup
+          radius ... collection occurs when centers come within 0.75M").
       Checked on KEY NAMES in the covered directories. That catches a
       rename ONLY INTO A NAME THE PATTERN STILL MATCHES, which is a narrow
       thing and was previously written as though it were a general one: an
@@ -337,7 +346,8 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       contradiction and is not reported.
       This automates a check that had to be done by hand - Ruling 22 in
       content/transcription-notes.md verified six geode resonance
-      directions against docs/40 `### Resources` by eye, and nothing in
+      directions against docs/40-mining-and-extraction.md
+      `### Geode resonance fields` by eye, and nothing in
       the tree would have caught a seventh. Its value does not depend on
       catching
       anything today.                                                 FAILURE
@@ -1027,9 +1037,14 @@ STATUS_VOCABULARY = ("development", "enabled", "disabled", "retired")
 # unconditional failure (A5/A6). The integration owner minted the last five
 # IDs, so nothing in this tree is waiting on one:
 #   - the four prose-only mining-site classes
-#     (docs/40-mining-and-extraction.md:58-132) are SITE-01..SITE-04, in
-#     document order: standard ore seams, rich ore seams, Hyper Gold sites,
-#     specialized-material geodes;
+#     (docs/40-mining-and-extraction.md `## Resource payout profiles` - its
+#     `### Standard ore seams`, `### Rich ore seams`,
+#     `### Specialized-material geodes` and `### Hyper Gold sites`
+#     subsections, closed by `### Other resource profiles`: "Standard ore
+#     seams, rich ore seams, specialized-material geodes, and Hyper Gold
+#     sites are the accepted initial mining-point classes") are
+#     SITE-01..SITE-04, in document order: standard ore seams, rich ore
+#     seams, Hyper Gold sites, specialized-material geodes;
 #   - content/enemies/shared-elite-modifiers.json is ELT-01. It was previously
 #     ID-less on the reading that a constants block "has nothing to be
 #     referenced BY". That is superseded: the canonical bundle is ordered by
@@ -1056,7 +1071,8 @@ STATUS_VOCABULARY = ("development", "enabled", "disabled", "retired")
 #     site class, per the mining-site schema (40 `### Mining sites`).
 #   - utilities/radar-unassigned-id.json is now utilities/UTL-R1.json. The
 #     radar is the thirteenth utility
-#     (docs/50-maps-resources-and-navigation.md:106) and the rulings pass gave
+#     (docs/50-maps-resources-and-navigation.md `## Resource radar`
+#     `### Decided behavior`) and the rulings pass gave
 #     it the stable ID UTL-R1 and the player-facing name "Resource radar", so
 #     it is an ordinary item in the utilities count and belongs in neither list.
 ID_NULL_EXPECTED: frozenset[str] = frozenset()
@@ -1117,7 +1133,8 @@ BOUND_ABBREVIATIONS = frozenset({"cap", "max", "min"})
 # escalated to the document owner, and declared here so the exception is visible
 # rather than absorbed.
 # Now EMPTY. The two W-BF-tethered-reaper members are resolved, not suppressed:
-# docs/71:346 reads "Its contact Damage is `200% + up to 200%` of current Damage,
+# docs/71 `### Tethered Reaper - Conversion - 2 Eidolon Coral` reads "Its
+# contact Damage is `200% + up to 200%` of current Damage,
 # scaling linearly with blade world speed ... and capped at 400%", so 200 bounds
 # the speed-bonus COMPONENT (the "up to 200%" addend) and 400 bounds the TOTAL
 # (200% base + 200% maximum bonus). They are two different bounds on two different
@@ -1136,8 +1153,10 @@ FORBIDDEN_KEYS = (
     "_source",
     "notes",
     # The singular "note" was missing while "notes" was blocked, so three keys
-    # survived - two on MCH-06 restating a movement speed docs/72:55,57 already
-    # state, which is the same category deleted from all ten enemies.
+    # survived - two on MCH-06 restating a movement speed docs/72
+    # `## Movement and Speed Modifiers` already states ("Razorback with its
+    # +10% trait moves at 3.30M/s"; "Razorback with both moves at
+    # 4.05M/s"), which is the same category deleted from all ten enemies.
     "note",
     "refs",
     "lines",
@@ -1178,7 +1197,8 @@ EXPECTATIONS = [
         source="docs/technical/40-content-data-and-validation.md "
                "`### Minted content-ID grammars` (the `RSC-` grammar row + the "
                "\"Which number goes to which resource is fixed here\" mapping); "
-               "docs/61-specialized-resource-identities.md:20 + docs/60-resources-crafting-progression.md:18",
+               "docs/61-specialized-resource-identities.md `## Accepted identity map` + "
+               "docs/60-resources-crafting-progression.md `## Progression layers`",
     ),
     dict(
         dir="mechs",
@@ -1190,7 +1210,7 @@ EXPECTATIONS = [
         # category the schema
         # stream owns (consumer PLY-001).
         label="mechs (no baseline aggregate)",
-        source="docs/36-initial-mech-catalog.md:45",
+        source="docs/36-initial-mech-catalog.md `## Catalog overview`",
     ),
     dict(
         dir="enemies",
@@ -1210,7 +1230,8 @@ EXPECTATIONS = [
         # listed in NAME_KEY_OMITTED for that. The former
         # elite-modifier-profile.json definition it replaced is deleted.
         label="ordinary enemies (+ 1 shared elite modifier constants block)",
-        source="docs/31-initial-alien-roster.md:37 + docs/31-initial-alien-roster.md:104",
+        source="docs/31-initial-alien-roster.md `## Ordinary roster overview` + "
+               "docs/31-initial-alien-roster.md `## Elite treatment`",
     ),
     dict(
         dir="bosses",
@@ -1218,7 +1239,7 @@ EXPECTATIONS = [
         items=4,
         aggregates=None,
         label="interval bosses",
-        source="docs/31-initial-alien-roster.md:121",
+        source="docs/31-initial-alien-roster.md `## Interval boss overview`",
     ),
     dict(
         dir="weapons",
@@ -1226,7 +1247,8 @@ EXPECTATIONS = [
         items=15,
         aggregates=1,
         label="base weapons (+ 1 shared stat price formula aggregate)",
-        source="docs/66-weapon-catalog-and-resource-graph.md:39 + docs/65-weapon-stat-and-branch-upgrades.md:44",
+        source="docs/66-weapon-catalog-and-resource-graph.md `## Accepted base catalog assignment` + "
+               "docs/65-weapon-stat-and-branch-upgrades.md `## Individual stat upgrades`",
     ),
     dict(
         dir="branches",
@@ -1234,7 +1256,7 @@ EXPECTATIONS = [
         items=45,
         aggregates=0,
         label="weapon branches (15 weapons x 3)",
-        source="docs/71-initial-weapon-numeric-catalog.md:130",
+        source="docs/71-initial-weapon-numeric-catalog.md `### Unbounded Bore - Amplification - 2 Asterite`",
     ),
     dict(
         dir="utilities",
@@ -1246,7 +1268,8 @@ EXPECTATIONS = [
         items=13,
         aggregates=0,
         label="utilities (12 material UTL-* + the resource radar UTL-R1)",
-        source="docs/68-utility-catalog.md:35 + docs/50-maps-resources-and-navigation.md:106",
+        source="docs/68-utility-catalog.md `## Catalog overview` + "
+               "docs/50-maps-resources-and-navigation.md `## Resource radar` `### Decided behavior`",
     ),
     dict(
         dir="relics",
@@ -1254,7 +1277,7 @@ EXPECTATIONS = [
         items=10,
         aggregates=0,
         label="relics",
-        source="docs/69-initial-relic-catalog.md:26",
+        source="docs/69-initial-relic-catalog.md `## Catalog overview`",
     ),
     dict(
         dir="powerups",
@@ -1262,7 +1285,7 @@ EXPECTATIONS = [
         items=13,
         aggregates=0,
         label="permanent PowerUps",
-        source="docs/62-permanent-powerup-catalog.md:35",
+        source="docs/62-permanent-powerup-catalog.md `## Catalog overview`",
     ),
     dict(
         dir="unlocks",
@@ -1270,7 +1293,7 @@ EXPECTATIONS = [
         items=6,
         aggregates=0,
         label="permanent option unlocks",
-        source="docs/63-permanent-option-unlock-catalog.md:48",
+        source="docs/63-permanent-option-unlock-catalog.md `## Catalog overview`",
     ),
     dict(
         dir="mining-sites",
@@ -1278,7 +1301,7 @@ EXPECTATIONS = [
         items=4,
         aggregates=None,
         label="mining site classes (standard seam, rich seam, geode, Hyper Gold site)",
-        source="docs/40-mining-and-extraction.md:58",
+        source="docs/40-mining-and-extraction.md `## Resource payout profiles`",
     ),
     dict(
         dir="encounters",
@@ -1286,7 +1309,7 @@ EXPECTATIONS = [
         items=1,
         aggregates=None,
         label="standard encounter schedule (one cohesive aggregate)",
-        source="docs/32-standard-wave-and-beacon-schedule.md:54",
+        source="docs/32-standard-wave-and-beacon-schedule.md `## Complete 35-minute schedule`",
     ),
     dict(
         dir="maps",
@@ -1296,7 +1319,8 @@ EXPECTATIONS = [
         # One MGC-01 definition; the destructible-rock and health-pack values
         # are fields of it, not a separate world-props file.
         label="standard map generation contract (world props folded in as fields)",
-        source="docs/51-standard-map-generation-contract.md:1 + docs/72-player-survivability-and-damage-baseline.md:180",
+        source="docs/51-standard-map-generation-contract.md (whole contract) + "
+               "docs/72-player-survivability-and-damage-baseline.md `### Health pack`",
     ),
 ]
 
@@ -1314,7 +1338,7 @@ PROBES = [
         expected=35,
         kind="array_at_path",
         pattern=r"\.minute_rows$",
-        source="docs/32-standard-wave-and-beacon-schedule.md:54",
+        source="docs/32-standard-wave-and-beacon-schedule.md `## Complete 35-minute schedule`",
     ),
     dict(
         dir="encounters",
@@ -1322,7 +1346,7 @@ PROBES = [
         expected=4,
         kind="array_at_path",
         pattern=r"beacon[^.]*\.responses$",
-        source="docs/32-standard-wave-and-beacon-schedule.md:100",
+        source="docs/32-standard-wave-and-beacon-schedule.md `## Hyper Gold threat-beacon response`",
     ),
     dict(
         dir="encounters",
@@ -1330,7 +1354,7 @@ PROBES = [
         expected=7,
         kind="array_at_path",
         pattern=r"^\$\.(?:spawn_)?formations$",
-        source="docs/32-standard-wave-and-beacon-schedule.md:27",
+        source="docs/32-standard-wave-and-beacon-schedule.md `## Formation grammar`",
     ),
     dict(
         dir="maps",
@@ -1338,7 +1362,7 @@ PROBES = [
         expected=1,
         kind="files_matching",
         pattern=r"contract",
-        source="docs/51-standard-map-generation-contract.md:1",
+        source="docs/51-standard-map-generation-contract.md (whole contract)",
     ),
 ]
 
@@ -1364,33 +1388,34 @@ WORLD_PROP_VALUES = (
         re.compile(r"(?i)destructible_rock(?:_rules)?"),
         re.compile(r"(?i)^hull$"),
         100,
-        "docs/72-player-survivability-and-damage-baseline.md:194",
+        "docs/72-player-survivability-and-damage-baseline.md `### Destructible rock`",
     ),
     (
         "destructible rock damage footprint diameter (M)",
         re.compile(r"(?i)destructible_rock(?:_rules)?"),
         re.compile(r"(?i)damage_footprint_diameter"),
         0.80,
-        "docs/72-player-survivability-and-damage-baseline.md:196",
+        "docs/72-player-survivability-and-damage-baseline.md `### Destructible rock`",
     ),
     (
         "health pack repair (Hull)",
         re.compile(r"(?i)health_pack"),
         re.compile(r"(?i)repair.*hull|hull.*repair"),
         25,
-        "docs/72-player-survivability-and-damage-baseline.md:182",
+        "docs/72-player-survivability-and-damage-baseline.md `### Health pack`",
     ),
     (
         "health pack pickup radius (M)",
         re.compile(r"(?i)health_pack"),
         re.compile(r"(?i)pickup_radius"),
         0.25,
-        "docs/72-player-survivability-and-damage-baseline.md:185",
+        "docs/72-player-survivability-and-damage-baseline.md `### Health pack`",
     ),
     # ADDED as a coverage gap, not as a new policy. The rock population cap was
     # transcribed and never asserted, and the reason it was missed generalises:
-    # A VALUE WHOSE NEIGHBOURS ARE ASSERTED READS AS COVERED. rock Hull (72:194)
-    # and the footprint diameter (72:196) are both checked, and they bracket this
+    # A VALUE WHOSE NEIGHBOURS ARE ASSERTED READS AS COVERED. rock Hull and
+    # the footprint diameter (both docs/72 `### Destructible rock`) are
+    # checked, and they bracket this
     # value in the same document section, which is exactly the situation in which
     # nobody looks. That is a distinct failure shape from a gate that cannot fail
     # - it is a gap that looks filled.
@@ -1399,14 +1424,14 @@ WORLD_PROP_VALUES = (
         re.compile(r"(?i)destructible_rock(?:_rules)?"),
         re.compile(r"(?i)^active_maximum$"),
         16,
-        "docs/51-standard-map-generation-contract.md:146",
+        "docs/51-standard-map-generation-contract.md `## Destructible rocks`",
     ),
     (
         "destructible rock initial count",
         re.compile(r"(?i)destructible_rock(?:_rules)?"),
         re.compile(r"(?i)^initial_count$"),
         16,
-        "docs/51-standard-map-generation-contract.md:146",
+        "docs/51-standard-map-generation-contract.md `## Destructible rocks`",
     ),
 )
 
@@ -1447,8 +1472,8 @@ def check_world_prop_values(docs: dict[Path, object]) -> list[tuple]:
 # A14 - doc-stated grand totals the JSON must reproduce
 # --------------------------------------------------------------------------
 
-POWERUP_TOTAL_HYPER_GOLD = 9450  # docs/62-permanent-powerup-catalog.md:35
-UNLOCK_TOTAL_HYPER_GOLD = 2150  # docs/63-permanent-option-unlock-catalog.md:48
+POWERUP_TOTAL_HYPER_GOLD = 9450  # docs/62-permanent-powerup-catalog.md `## Catalog overview`
+UNLOCK_TOTAL_HYPER_GOLD = 2150  # docs/63-permanent-option-unlock-catalog.md `## Catalog overview`
 
 # --------------------------------------------------------------------------
 # A16 / A17 - reconciliation heuristics
@@ -2562,7 +2587,8 @@ def check_totals(docs: dict[Path, object]) -> list[tuple]:
     if rank_sum != POWERUP_TOTAL_HYPER_GOLD:
         fail(
             f"PowerUp rank prices sum to {rank_sum} Hyper Gold across {len(rank_prices)} rank "
-            f"rows, expected {POWERUP_TOTAL_HYPER_GOLD} (docs/62-permanent-powerup-catalog.md:35)"
+            f"rows, expected {POWERUP_TOTAL_HYPER_GOLD} "
+            f"(docs/62-permanent-powerup-catalog.md `## Catalog overview`)"
         )
     rows.append(
         (
@@ -2575,7 +2601,8 @@ def check_totals(docs: dict[Path, object]) -> list[tuple]:
     if stated_sum != POWERUP_TOTAL_HYPER_GOLD:
         fail(
             f"PowerUp per-entry total costs sum to {stated_sum} Hyper Gold, expected "
-            f"{POWERUP_TOTAL_HYPER_GOLD} (docs/62-permanent-powerup-catalog.md:35)"
+            f"{POWERUP_TOTAL_HYPER_GOLD} "
+            f"(docs/62-permanent-powerup-catalog.md `## Catalog overview`)"
         )
 
     unlock_costs: list[float] = []
@@ -2610,7 +2637,7 @@ def check_totals(docs: dict[Path, object]) -> list[tuple]:
         fail(
             f"option unlock costs sum to {unlock_sum} Hyper Gold across {len(unlock_costs)} "
             f"unlocks, expected {UNLOCK_TOTAL_HYPER_GOLD} "
-            f"(docs/63-permanent-option-unlock-catalog.md:48)"
+            f"(docs/63-permanent-option-unlock-catalog.md `## Catalog overview`)"
         )
     return rows
 
@@ -2620,7 +2647,8 @@ def check_totals(docs: dict[Path, object]) -> list[tuple]:
 #
 # Only the one known transcription bug is special-cased. 12 s is the DERIVED
 # time for three Sentry Pods to exist at a 6 s cadence with the first pod
-# immediate; it is not an authored value, and docs/71:83 authors only "One pod
+# immediate; it is not an authored value, and docs/71
+# `## Rank-Zero Values and Ore-Stat Increments` authors only "One pod
 # every 6 s". A generic derived-value detector is not possible without schemas.
 # --------------------------------------------------------------------------
 
@@ -2635,20 +2663,26 @@ def check_totals(docs: dict[Path, object]) -> list[tuple]:
 # different halves of their footprint.
 #
 # Enemies author body_scale_multiplier, and both of these are products of it:
-#   contact diameter  = body_scale_multiplier x 0.80 M   (docs/72:86)
-#   centre distance   = contact diameter / 2 + 0.50 M    (docs/72:86)
+#   contact diameter  = body_scale_multiplier x 0.80 M
+#   centre distance   = contact diameter / 2 + 0.50 M
+# both from docs/72 `## Collision and Contact Footprints` ("The Ripper's
+# rank-zero contact diameter is 0.80M. Every ordinary body scale in the alien
+# roster multiplies that diameter.")
 #
 # BOSS DIAMETERS ARE AUTHORED, so the diameter rule must NOT cover
-# content/bosses/. The boss roster at docs/31:121-128 has no body-scale column
-# at all - unlike the ordinary roster overview at docs/31:37-48, which is where
+# content/bosses/. The boss roster at docs/31 `## Interval boss overview` has
+# no body-scale column at all - unlike docs/31 `## Ordinary roster overview`,
+# which is where
 # the ten enemy scales come from - and the scales the four boss diameters would
-# imply (1.875, 2.5, 2.0, 2.375) appear nowhere in docs/. docs/72:105 states the
+# imply (1.875, 2.5, 2.0, 2.375) appear nowhere in docs/. docs/72
+# `## Collision and Contact Footprints` states the
 # four diameters flat: Riftjaw 1.50M, Brood Titan 2.00M, Prism Crown 1.60M,
 # Skybreaker Apex 1.90M. There is nothing to derive them from, so they are the
 # authored quantity, exactly as body_scale_multiplier is for an enemy.
 #
 # THE CENTRE DISTANCE IS DERIVED FOR BOSSES TOO, so that rule covers
-# content/bosses/ as well as content/enemies/. docs/72:86 gives one derivation
+# content/bosses/ as well as content/enemies/. docs/72
+# `## Collision and Contact Footprints` gives one derivation
 # for both: contact begins when the enemy circle and the mech's 0.50M-radius
 # collision circle overlap. It reproduces exactly for all four bosses -
 # 1.50/2+0.50=1.25, 2.00/2+0.50=1.50, 1.60/2+0.50=1.30, 1.90/2+0.50=1.45 - each
@@ -2658,14 +2692,16 @@ def check_totals(docs: dict[Path, object]) -> list[tuple]:
 # radius and those files are silently wrong, with no validator to notice.
 #
 # THE CENTRE DISTANCE IS DERIVED IN content/maps/ TOO. The health pack authors
-# pickup_radius_m = 0.25 M and docs/72:185 gives the sum as a consequence of it:
+# pickup_radius_m = 0.25 M and docs/72 `### Health pack` gives the sum as a
+# consequence of it:
 # "The pack has a 0.25M pickup radius. With the standard mech circle, collection
 # occurs when centers come within 0.75M." 0.25 + 0.50 = 0.75, and the 0.50 M is
 # again the PLAYER's collision radius - a third writer for one constant, after
 # the ten enemies and the four bosses.
 #
 # reference_diameter_m is allowlisted and must stay: 0.80 M is the Ripper's
-# authored rank-zero contact diameter (docs/72:86), the shared reference the
+# authored rank-zero contact diameter (docs/72
+# `## Collision and Contact Footprints`), the shared reference the
 # scale multiplies. It is an authored constant, not a per-enemy derived value.
 DERIVED_FOOTPRINT_FIELD_ALLOWED = frozenset({"reference_diameter_m"})
 DERIVED_FOOTPRINT_RULES = (
@@ -2684,7 +2720,9 @@ DERIVED_FOOTPRINT_RULES = (
 )
 
 SENTRY_POD_WEAPON_ID = "W-BE"
-SENTRY_POD_DEPLOYMENT_SECONDS = 6.0  # docs/71-initial-weapon-numeric-catalog.md:83
+# docs/71-initial-weapon-numeric-catalog.md
+# `## Rank-Zero Values and Ore-Stat Increments`, `W-BE` row
+SENTRY_POD_DEPLOYMENT_SECONDS = 6.0
 DERIVED_DEPLOYMENT_SECONDS = 12  # derived from 6 s x (3 pods - 1), never authored
 DEPLOYMENT_KEY = re.compile(r"(?i)deploy|ramp")
 DEPLOYMENT_INTERVAL_KEY = re.compile(r"(?i)deploy.*(?:interval|cadence|seconds|period)")
@@ -4080,7 +4118,8 @@ CSV_MIRROR_EXPECTED_COMPARISONS = 98
 
 # How many definitions must author contact_footprint.reference_diameter_m, the
 # operand A30's diameter column multiplies. Ten - the ordinary enemy roster. The
-# four bosses author their diameters flat (docs/72:105-110) and have no reference,
+# four bosses author their diameters flat (docs/72
+# `## Collision and Contact Footprints`) and have no reference,
 # which is why this is 10 and not 14.
 CSV_MIRROR_REFERENCE_DIAMETER_AUTHORS = 10
 
@@ -4116,7 +4155,8 @@ def check_csv_mirror_agreement(docs: dict[Path, object]) -> list[tuple]:
 
     # THE PLAYER'S COLLISION RADIUS IS THE ONE OPERAND WITH NO AUTHORED MIRROR, and
     # the asymmetry with reference_diameter_m below is deliberate rather than an
-    # oversight. docs/72:86 states it: "Contact begins when the enemy contact circle
+    # oversight. docs/72 `## Collision and Contact Footprints` states it:
+    # "Contact begins when the enemy contact circle
     # and the mech's 0.50M-radius collision circle overlap." It is a PLAYER-baseline
     # constant, and A20's centre-distance rule exists precisely to keep it OUT of
     # content/enemies/, content/bosses/ and content/maps/ - storing the sum there put
@@ -4131,7 +4171,8 @@ def check_csv_mirror_agreement(docs: dict[Path, object]) -> list[tuple]:
     # prose in content/README.md and content/transcription-notes.md, which are
     # documentation of this derivation, not values it may read. If the mech baseline
     # ever becomes authored content, read it here the way ref_diameter is read.
-    player_radius = Fraction("0.50")  # docs/72:86 - no authored mirror; see above
+    # docs/72 `## Collision and Contact Footprints` - no authored mirror; see above
+    player_radius = Fraction("0.50")
 
     by_id = {}
     for path, doc in docs.items():
@@ -4322,7 +4363,8 @@ def check_csv_mirror_agreement(docs: dict[Path, object]) -> list[tuple]:
     if len(distinct_ref_diameters) != 1:
         fail(
             f"A30 the authored reference diameter is not one shared value: "
-            f"{[str(d) for d in distinct_ref_diameters]}. docs/72:86 gives ONE reference (the "
+            f"{[str(d) for d in distinct_ref_diameters]}. docs/72 "
+            f"`## Collision and Contact Footprints` gives ONE reference (the "
             f"Ripper's 0.80 M rank-zero contact diameter) that every ordinary body scale "
             f"multiplies, so a per-file reference is a second owner for one quantity."
         )
@@ -4350,7 +4392,7 @@ def check_csv_mirror_agreement(docs: dict[Path, object]) -> list[tuple]:
         f"distinct value: {', '.join(str(float(d)) for d in distinct_ref_diameters) or 'none'}); "
         f"body_scale_multiplier and the authored boss diameters READ per actor. The player's "
         f"{float(player_radius):.2f} M collision radius is the ONLY hardcoded operand, from "
-        f"docs/72:86, and it "
+        f"docs/72 `## Collision and Contact Footprints`, and it "
         f"is hardcoded because A20 keeps it out of content/ deliberately - it is a player-baseline "
         f"constant and storing it in an enemy, boss or map file put a second writer on it.",
         f"DECLARED EXCEPTIONS ARE EXACT PAIRS, NOT BANDS: {len(CSV_MIRROR_ROUNDED)} declared, each "
@@ -4557,7 +4599,10 @@ def check_derived_values(docs: dict[Path, object]) -> list[tuple]:
         fail(
             f"{len(banned_hits)} deployment/ramp field(s) in content/weapons/ hold "
             f"{float(derived_total):g}, which is DERIVED from W-BE's authored operands "
-            f"({basis}), not authored (docs/71-initial-weapon-numeric-catalog.md:83, 40 `## Unit and numeric policy`): "
+            f"({basis}), not authored "
+            f"(docs/71-initial-weapon-numeric-catalog.md "
+            f"`## Rank-Zero Values and Ore-Stat Increments`, "
+            f"40 `## Unit and numeric policy`): "
             f"{banned_hits}"
         )
 
@@ -4577,7 +4622,8 @@ def check_derived_values(docs: dict[Path, object]) -> list[tuple]:
         warn(
             f"{SENTRY_POD_WEAPON_ID}: no numeric deployment-interval property found, so the "
             f"{SENTRY_POD_DEPLOYMENT_SECONDS} s cadence at "
-            f"docs/71-initial-weapon-numeric-catalog.md:83 could not be checked "
+            f"docs/71-initial-weapon-numeric-catalog.md "
+            f"`## Rank-Zero Values and Ore-Stat Increments` could not be checked "
             f"(field names are unvalidated until content/schemas/ exists)"
         )
         rows.append(("W-BE deployment interval == 6.0 s", SENTRY_POD_DEPLOYMENT_SECONDS, "no field found", "WARN"))
@@ -4594,7 +4640,9 @@ def check_derived_values(docs: dict[Path, object]) -> list[tuple]:
     if wrong:
         fail(
             f"{SENTRY_POD_WEAPON_ID} Sentry Pod deployment interval must be "
-            f"{SENTRY_POD_DEPLOYMENT_SECONDS} s (docs/71-initial-weapon-numeric-catalog.md:83): "
+            f"{SENTRY_POD_DEPLOYMENT_SECONDS} s "
+            f"(docs/71-initial-weapon-numeric-catalog.md "
+            f"`## Rank-Zero Values and Ore-Stat Increments`): "
             f"{wrong}"
         )
     return rows
@@ -4868,6 +4916,11 @@ def check_percentage_point_policy(docs: dict[Path, object]) -> list[tuple]:
 # door: eleven effect.stacking_classification strings carried a parenthetical
 # "(docs/68-utility-catalog.md:253)", a weapons note carried one, and
 # hyper-gold-sites.json held a repo path in a field named beacon_response_source.
+# That quoted string keeps its line number on purpose: it is the exhibit this
+# assertion exists to forbid, not a citation a reader is meant to resolve. The
+# sentence it stood in is `## Modifier and timing rules` (dated note,
+# 2026-08-11; blob 21c555f, the sole revision of that document in this
+# history).
 # A line number is unstable wherever it hides, and the doc_id#anchor form
 # (40 `## Common definition envelope`) is the only citation form the envelope
 # names, so the rule is scoped to the value, not to one field.
@@ -5152,9 +5205,12 @@ def check_no_abbreviation_periods(docs_root: Path = DOCS) -> list[tuple]:
 #
 # This automates a check that had to be done by hand. Ruling 22 in
 # content/transcription-notes.md verified all six
-# resonance_behavior.modifier.direction values against docs/40 `### Resources`
-# by eye
+# resonance_behavior.modifier.direction values against
+# docs/40-mining-and-extraction.md `### Geode resonance fields` by eye
 # after one was reported wrong; nothing in the tree would have caught a seventh.
+# (c05aee9/8101da0 re-pointed this pair to `### Resources`, a heading of
+# docs/technical/40-content-data-and-validation.md; the six resonance rows are
+# in the MINING document, and the short `docs/40` prefix is that document.)
 #
 # The vocabulary is a CLOSED set of opposed pairs and +1 means "more of the
 # quantity": higher/lower, increase/decrease, more/less, faster/slower,

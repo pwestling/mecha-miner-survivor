@@ -2,12 +2,14 @@
 
 **This tree does not deliver `DAT-007`.** It holds JSON transcribed by hand from the accepted gameplay
 design documents in `docs/`, prepared *ahead of* work package `DAT-007` ("Import accepted gameplay
-catalogs into initial JSON definitions", `docs/technical/110-implementation-plan-for-ai-agents.md:216`).
-That same line makes `DAT-006` `DAT-007`'s prerequisite; `DAT-006` depends on `DAT-005`, which depends
-on `DAT-002`/`DAT-003`, which depend on `DAT-001` (`docs/technical/110-implementation-plan-for-ai-agents.md:210-215`);
+catalogs into initial JSON definitions", `docs/technical/110-implementation-plan-for-ai-agents.md`
+`## Content and data work packages`, the `DAT-007` row).
+That same row makes `DAT-006` `DAT-007`'s prerequisite; `DAT-006` depends on `DAT-005`, which depends
+on `DAT-002`/`DAT-003`, which depend on `DAT-001` (the `DAT-001`…`DAT-006` rows of that same table);
 and `DAT-001` has no implementation in this repository — `src/` contains one stdlib-only Python
 verifier and no codec, schema, registry, or bundle-compiler code. `DAT-007` cannot be Done, so this
-tree cannot be its completion, and `docs/technical/114-autonomous-agent-execution-protocol.md:141`
+tree cannot be its completion, and `docs/technical/114-autonomous-agent-execution-protocol.md`
+`## Work states and integration` ("Only Done dependencies satisfy downstream package prerequisites")
 admits no data-versus-code exemption.
 
 **The basis for preparing it now** is that same line, quoted verbatim:
@@ -70,8 +72,8 @@ generated/
 > clean-checkout tests atomically rather than adding a second search path.
 > — `docs/technical/40-content-data-and-validation.md` `## Accepted content repository layout`
 
-Corroborated by `docs/technical/100-build-dependencies-and-release-operations.md:41`
-(`content/   source JSON and localization`). **No document specifies individual JSON file names**
+Corroborated by `docs/technical/100-build-dependencies-and-release-operations.md`
+`## Related documents`, in its repository-tree block (`content/   source JSON and localization`). **No document specifies individual JSON file names**
 inside these directories; grouping follows the "stable item or smallest cohesive aggregate" rule
 above.
 
@@ -92,10 +94,10 @@ above.
 | `mining-sites/` (4 prose-derived site classes, `SITE-01`–`SITE-04`) | CAT | authored |
 | `encounters/` (1: `standard-encounter-schedule`, `WAV-01`) | CAT | authored |
 | `maps/` (1: `standard-map-generation-contract`, `MGC-01`) | CAT | authored |
-| `localization/` (`en.json`) | localization stream (`DAT-009`, `docs/technical/110-implementation-plan-for-ai-agents.md:218`) | authored here, **not** a `DAT-009` delivery |
+| `localization/` (`en.json`) | localization stream (`DAT-009`, `docs/technical/110-implementation-plan-for-ai-agents.md` `## Content and data work packages`) | authored here, **not** a `DAT-009` delivery |
 | `schemas/` | schema stream (`DAT-001`, `DAT-002`, `DAT-003`) | **not authored here** |
-| `presentation/` | presentation/audio definitions, `SCH-CNT-003` (`docs/technical/115-component-contract-and-schema-registry.md:91`) | **not authored here** |
-| `../generated/` | bundle compiler and report generators (`DAT-006`, `DAT-008`); "Generated files are changed through their generator" (`docs/technical/110-implementation-plan-for-ai-agents.md:92`) | **not authored here** |
+| `presentation/` | presentation/audio definitions, `SCH-CNT-003` (`docs/technical/115-component-contract-and-schema-registry.md` `## Schema registry`) | **not authored here** |
+| `../generated/` | bundle compiler and report generators (`DAT-006`, `DAT-008`); "Generated files are changed through their generator" (`docs/technical/110-implementation-plan-for-ai-agents.md` `## Rules minimizing agent ambiguity`) | **not authored here** |
 
 **"authored" in that table means the JSON exists and was transcribed by hand.** It does not mean
 validated, compiled, hashed, or delivered, and no row of the table records a completed work package.
@@ -126,7 +128,8 @@ Five files that used to be here are gone, and their absence is deliberate:
   (`docs/technical/40-content-data-and-validation.md` `### Mechs`), and `content/` has no player or run
   category yet; the schema stream owns that category, with `PLY-001` as its consumer.
 - **`maps/world-props.json`** held the destructible-rock and health-pack values
-  (`docs/72-player-survivability-and-damage-baseline.md:180,190`). Those are now fields of the
+  (`docs/72-player-survivability-and-damage-baseline.md` `### Health pack` and `### Destructible
+  rock`). Those are now fields of the
   `MGC-01` map-generation-contract definition.
 - **`resources/geode-resonance-effects.json`** held the six geode resonance effects as one aggregate.
   Each effect now sits on the resource that owns it — `resources/A.json`…`F.json` each carry
@@ -138,7 +141,7 @@ Five files that used to be here are gone, and their absence is deliberate:
 - **`enemies/elite-modifier-profile.json`** treated elite status as its own entity. It is not one:
   elite *eligibility* is a validated `elite_eligible` field on each of the ten enemies
   (`docs/technical/40-content-data-and-validation.md` `### Enemies and bosses` lists "elite eligibility" among the enemy
-  fields), and the shared elite multipliers (`docs/31-initial-alien-roster.md:104`) are now the
+  fields), and the shared elite multipliers (`docs/31-initial-alien-roster.md` `## Elite treatment`) are now the
   constants block `enemies/shared-elite-modifiers.json`, which the enemies read.
 - **`utilities/radar-unassigned-id.json`** is now **`utilities/UTL-R1.json`**. The rulings pass
   assigned the resource radar the stable ID `UTL-R1` and a player-facing name, so it is an ordinary
@@ -264,7 +267,8 @@ rule:
   here — the compiler writes it into the runtime bundle as a separate derived field.
 - **Geometry names distinguish radius, diameter, width, and range**; `area` is never a vague scalar
   (`docs/technical/40-content-data-and-validation.md` `## Unit and numeric policy`). **`Area` the stat is exempt**, because it is
-  an established stat classification rather than a geometric measurement: `docs/36-initial-mech-catalog.md:137`
+  an established stat classification rather than a geometric measurement: `docs/36-initial-mech-catalog.md`
+  `## MCH-04 — Lodestar` `### Signature and trait`
   defines its membership as "scalable radii, widths, blast areas, projectile bodies, cones, and
   persistent damage zones", so `weapon_area_multiplier` deliberately scales a *set* of dimensions and
   naming one of them would encode a falsehood. The rule binds a field naming a measured dimension of a
@@ -311,7 +315,8 @@ rule:
   exception set** — an exception set is a place for a null to hide. See Ruling 29 in
   `content/transcription-notes.md` for the full bucket accounting.
 - **The authoritative source wins over its mirrors.** The Markdown design docs are authoritative; the
-  CSVs under `docs/data/` are mirrors (`docs/data/README.md:5,10` — "when values disagree, update the
+  CSVs under `docs/data/` are mirrors (`docs/data/README.md`, its `authoritative: false` front-matter
+  key and the preamble under `# Machine-Readable Data Index` — "when values disagree, update the
   data mirror to match the Markdown"). Where a mirror and a doc disagree, the doc value is transcribed
   and the divergence is recorded in `content/transcription-notes.md`.
 
@@ -322,7 +327,7 @@ independently addressable definition. The literal values this tree carries today
 
 | Field | Mandate | In this tree |
 | --- | --- | --- |
-| `id` | 40 `## Common definition envelope` — stable category-valid ID | present as a non-empty string on **all 138** definitions, including the aggregates (`WAV-01`, `MGC-01`) and the six IDs the integration owner minted rather than transcribed: the four prose-only mining-site classes (`docs/40-mining-and-extraction.md:58-132`) are `SITE-01`–`SITE-04` in document order, `enemies/shared-elite-modifiers.json` is `ELT-01`, and `weapons/stat-price-formula.json` is `FORMULA-01` (`content/transcription-notes.md`, the ruling headed "Ruling 38 — `FORMULA-01`, and the summary that says what the definition is" — it previously carried `weapon-stat-price-formula`, the only *minted* ID that was not `<PREFIX>-<NN>`). **No `id` in this tree is lower-kebab.** This row previously ended "lower-kebab `id`s do exist here, but only as the two transcribed resource IDs `common-ore` and `hyper-gold`"; that was true until the `RSC-01`–`RSC-08` migration and is **false at `origin/master` `e17b8b6` and at `1d6a9d2`**, where the eight resource definitions carry `RSC-01`…`RSC-08` (`common-ore.json` → `RSC-07`, `hyper-gold.json` → `RSC-08`) and the two slugs survive only as `resource_class` values. Corrected rather than dated, because this row is a live description of the tree rather than a record of a past measurement. Nothing here carries `"id": null` or omits the field, so the verifier treats a missing or null `id` as an unconditional failure |
+| `id` | 40 `## Common definition envelope` — stable category-valid ID | present as a non-empty string on **all 138** definitions, including the aggregates (`WAV-01`, `MGC-01`) and the six IDs the integration owner minted rather than transcribed: the four prose-only mining-site classes (`docs/40-mining-and-extraction.md` `## Resource payout profiles` — its `### Standard ore seams`, `### Rich ore seams`, `### Specialized-material geodes` and `### Hyper Gold sites` subsections, closed by `### Other resource profiles`: "Standard ore seams, rich ore seams, specialized-material geodes, and Hyper Gold sites are the accepted initial mining-point classes") are `SITE-01`–`SITE-04` in document order, `enemies/shared-elite-modifiers.json` is `ELT-01`, and `weapons/stat-price-formula.json` is `FORMULA-01` (`content/transcription-notes.md`, the ruling headed "Ruling 38 — `FORMULA-01`, and the summary that says what the definition is" — it previously carried `weapon-stat-price-formula`, the only *minted* ID that was not `<PREFIX>-<NN>`). **No `id` in this tree is lower-kebab.** This row previously ended "lower-kebab `id`s do exist here, but only as the two transcribed resource IDs `common-ore` and `hyper-gold`"; that was true until the `RSC-01`–`RSC-08` migration and is **false at `origin/master` `e17b8b6` and at `1d6a9d2`**, where the eight resource definitions carry `RSC-01`…`RSC-08` (`common-ore.json` → `RSC-07`, `hyper-gold.json` → `RSC-08`) and the two slugs survive only as `resource_class` values. Corrected rather than dated, because this row is a live description of the tree rather than a record of a past measurement. Nothing here carries `"id": null` or omits the field, so the verifier treats a missing or null `id` as an unconditional failure |
 | `schema_version` | 40 `## Common definition envelope` — integer version of its definition schema | `1` everywhere; no schema exists to version yet |
 | `content_version` | 40 `## Common definition envelope` — monotonic revision | `1` everywhere; this is the first authored revision |
 | `status` | 40 `## Common definition envelope` — exactly one of `development`, `enabled`, `disabled`, `retired` | `"enabled"` everywhere; nothing here is gated or retired |
@@ -414,7 +419,8 @@ file, and `src/MechaMiner.Tools/ContentImport/README.md`):
 - that no property name abbreviates a bound as `cap`, `max` or `min` at any depth, so the spelled-out
   `maximum`/`minimum` cannot drift back into three spellings. The only accepted exceptions are the two
   fields declared in the verifier's `BOUND_SPELLING_ESCALATED`, which is now **empty**: its two
-  `W-BF-tethered-reaper` members are resolved rather than suppressed, since `docs/71:346` shows 200
+  `W-BF-tethered-reaper` members are resolved rather than suppressed, since `docs/71`
+  `### Tethered Reaper — Conversion — 2 Eidolon Coral` shows 200
   bounds the speed-bonus component and 400 bounds the total, so both values stay as
   `maximum_speed_bonus_percent` and `maximum_total_contact_damage_percent`;
 - no stale extraction metadata keys survive anywhere at any depth, including the retired
@@ -431,15 +437,17 @@ file, and `src/MechaMiner.Tools/ContentImport/README.md`):
 - branch→weapon, encounter→enemy, and mech→signature-weapon referential integrity (40 `### Relational`);
 - two derived-value guards. The first is a regression guard on the one known transcription bug: the
   Sentry Pod deployment interval is the authored 6.0 s
-  (`docs/71-initial-weapon-numeric-catalog.md:83`), and the derived 12 s must not appear as an
+  (`docs/71-initial-weapon-numeric-catalog.md` `## Rank-Zero Values and Ore-Stat Increments`, the
+  `W-BE` row: "One pod every 6 s, 24 s life, maximum three"), and the derived 12 s must not appear as an
   authored deployment or ramp value. The second is a second-writer guard on footprints, with two
   scopes. No definition under `enemies/` may carry a contact **diameter**, because an enemy authors
   `body_scale_multiplier` and the diameter is `scale × 0.80 M`; and no definition under `enemies/`
   **or** `bosses/` may carry the **centre distance that begins contact**, which for both is
   `diameter ÷ 2 + the player's 0.50 M collision radius` (40 `### Enemies and bosses`). The diameter rule deliberately
   stops at enemies: a boss diameter is *authored*, since the boss roster gives bosses no body-scale
-  column to derive one from (`docs/31-initial-alien-roster.md:121-128`) and
-  `docs/72-player-survivability-and-damage-baseline.md:105-110` states the four boss diameters flat.
+  column to derive one from (`docs/31-initial-alien-roster.md` `## Interval boss overview`) and
+  `docs/72-player-survivability-and-damage-baseline.md` `## Collision and Contact Footprints` states
+  the four boss diameters flat in its `| Boss | Contact and weapon-hurt diameter |` table.
   `reference_diameter_m` is allowlisted because 0.80 M is the Ripper's authored rank-zero diameter,
   the shared reference the scale multiplies; and
 - the total `*.json` inventory under `content/`, so a file in a directory no per-catalog row covers is
@@ -471,7 +479,7 @@ What to run once the schemas land, in this order:
    `docs/technical/40-content-data-and-validation.md` `### Weapons`).
 3. `DAT-004` behavior-registry validation — every `behavior_kind`, targeting policy, formula, modifier
    hook, formation, and effect must resolve to exactly one registered descriptor
-   (`CTR-CNT-002`, `docs/technical/115-component-contract-and-schema-registry.md:62`). **No registry
+   (`CTR-CNT-002`, `docs/technical/115-component-contract-and-schema-registry.md` `## Cross-boundary contract registry`). **No registry
    token has been minted for a `behavior_kind`, but the field is not greenfield: 14 sites already
    hold a prose sentence where a token will go**, so this is a 14-site migration rather than a fresh
    authoring job. All 14 are `behavior_kind` at the top level of an enemy or boss: the ten ordinary

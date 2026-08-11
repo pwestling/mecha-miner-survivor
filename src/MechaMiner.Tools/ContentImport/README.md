@@ -38,7 +38,8 @@ checks:
   (`{target_minimum, target_maximum, hard_maximum}`). Where the name carries a unit suffix the unit stays
   terminal and the bound word moves to the front (`maximum_control_resistance_percent`). The exception
   list `BOUND_SPELLING_ESCALATED` is now **empty** — its two `W-BF-tethered-reaper` members were resolved
-  rather than suppressed, since `docs/71:346` shows 200 bounds the speed-bonus component and 400 the
+  rather than suppressed, since `docs/71` `### Tethered Reaper — Conversion — 2 Eidolon Coral` shows 200 bounds the
+  speed-bonus component and 400 the
   total — and it is still asserted for drift like `ID_NULL_EXPECTED`, because a resolved escalation left
   in an exception list is worse than no list;
 - that no stale extraction metadata key (`_provenance`, `_source`, `notes`, `note`, `refs`, `lines`,
@@ -70,7 +71,8 @@ checks:
   raise/reduce, gain/lose) sits beside prose stating the same fact, the two must agree in sign. Prose is
   read from the same object and from the enclosing one. It fires on strict contradiction only, so
   "20% faster without increasing movement speed" is not reported. This automates a check that had to be
-  done by hand: six geode resonance directions were verified against `docs/40:104-109` by eye, and
+  done by hand: six geode resonance directions were verified against
+  `docs/40-mining-and-extraction.md` `### Geode resonance fields` by eye, and
   nothing would have caught a seventh;
 - the **percentage-point policy** (40 `## Unit and numeric policy`, the percentage bullet) on numbers and key names, not prose: every percent-named
   property resolves to at least one numeric leaf; no percent-named numeric value satisfies
@@ -97,10 +99,11 @@ checks:
 - `content/localization/en.json`: parses, flat, lexically sorted, duplicate-free, every referenced
   localization key present, and no orphaned string;
 - per-catalog entry counts and aggregate row counts, from the `EXPECTATIONS` and `PROBES` tables where
-  every row cites its own source doc and line;
+  every row cites its own source doc and heading;
 - the four authored world-prop **values** folded into the map contract, each against its own citation:
-  destructible rock Hull 100 (`docs/72:194`), rock damage footprint diameter 0.80 M (`:196`), health
-  pack repair 25 Hull (`:182`), health pack pickup radius 0.25 M (`:185`). This replaced a row *count*
+  destructible rock Hull 100 and rock damage footprint diameter 0.80 M (both
+  `docs/72` `### Destructible rock`), health pack repair 25 Hull and pickup radius 0.25 M (both
+  `docs/72` `### Health pack`). This replaced a row *count*
   over key-name patterns, which counted patterns that matched at least once — so two names existing
   satisfied it and no value was ever compared. A missing field is now a failure, not a silent pass;
 - the two doc-stated grand totals recomputed from the JSON — PowerUp rank prices must sum to 9,450
@@ -117,18 +120,22 @@ checks:
   diameter is `scale × 0.80 M` — and no definition under `content/enemies/`, `content/bosses/` **or**
   `content/maps/` may carry the **centre distance that begins contact**, which is the object's radius
   plus the player's `0.50 M` collision radius in all three. `content/maps/` joined the rule because the
-  health pack stored `0.75` = its authored `0.25 M` pickup radius + `0.50 M` (`docs/72:185`), a third
+  health pack stored `0.75` = its authored `0.25 M` pickup radius + `0.50 M` (`docs/72`
+  `### Health pack`), a third
   writer for one player-baseline constant. The diameter rule stops at enemies on purpose: a boss
   diameter is authored, because the boss roster gives bosses no body scale to derive one from
-  (`docs/31:121-128` has no `Body` column, and `docs/72:86` scopes the derivation to "every **ordinary**
-  body scale") and the survivability baseline states the four boss diameters flat (`docs/72:105-110`).
+  (`docs/31` `## Interval boss overview` has no `Body` column, and `docs/72`
+  `## Collision and Contact Footprints` scopes the derivation to "every **ordinary**
+  body scale") and the survivability baseline states the four boss diameters flat in that same
+  section's `| Boss | Contact and weapon-hurt diameter |` table.
   `reference_diameter_m` is allowlisted, being the Ripper's authored rank-zero diameter rather than a
   per-enemy derived value — and A30 now **reads** it out of the ten enemy files instead of hardcoding
   `0.80`, because a hardcoded operand made that derivation agree with itself: setting the field to `1.0`
   in all ten left the suite green, 10 of 10 escaped, while the sibling operand `body_scale_multiplier`
   went red. The player's `0.50 M` collision radius stays a literal in the checker, and that asymmetry is
   deliberate: it has **no authored mirror anywhere in `content/`** — these very rules keep it out — so
-  there is nothing to read, and the constant is cited to `docs/72:86` where it is stated.
+  there is nothing to read, and the constant is cited to `docs/72`
+  `## Collision and Contact Footprints` where it is stated.
 
 **What the footprint guard does not do.** Both rules match specific key-name patterns in specific
 directories. A derived value reintroduced under a name neither pattern matches, or in a directory

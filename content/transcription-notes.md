@@ -6,7 +6,7 @@ an OQ ID. This file is the reviewable record of the per-definition transcription
 used to live in a `notes` array inside every JSON definition of the catalog transcription under
 `content/`. **That transcription does not deliver `DAT-007`** — `DAT-007`'s prerequisite `DAT-006` is
 not Done and `DAT-001` has no code, so what is here is material prepared ahead of `DAT-007` under
-`docs/technical/114-autonomous-agent-execution-protocol.md:141` ("A task may prepare read-only
+`docs/technical/114-autonomous-agent-execution-protocol.md` `## Work states and integration` ("A task may prepare read-only
 analysis while waiting"), and it is neither validated nor validatable until `content/schemas/` exists.
 Where a note below says "the DAT-007 catalog" or "the DAT-007 field conventions", it is naming the
 package the work anticipates, not a package this branch closed; note text is reproduced verbatim and
@@ -43,10 +43,10 @@ resolved, not ruled on; see “Sentry Pod deployment interval” in the shape no
 ### C-1 — `EN-07` Ripper body scale: 0.496 M derived vs 0.50 M stated
 
 - **Kind:** genuine source disagreement (a derived value and a stated value that do not match).
-- **Value A — 0.496 M.** `docs/31-initial-alien-roster.md:45` gives `EN-07` (Razorling) a body-scale
+- **Value A — 0.496 M.** `docs/31-initial-alien-roster.md` `## Ordinary roster overview` gives `EN-07` (Razorling) a body-scale
   multiplier of `0.62x` against the `0.80 M` reference diameter the definition records;
   `0.62 x 0.80 = 0.496 M`.
-- **Value B — 0.50 M.** `docs/72-player-survivability-and-damage-baseline.md:96` states Razorling's
+- **Value B — 0.50 M.** `docs/72-player-survivability-and-damage-baseline.md` `## Collision and Contact Footprints` states Razorling's
   contact diameter directly as `0.50 M`, and derives its `0.75 M` contact-start distance from
   `0.50 M`.
 - **What the JSON carries:** `contact_footprint.contact_diameter_m = 0.5` (Value B, the authoritative
@@ -57,18 +57,18 @@ resolved, not ruled on; see “Sentry Pod deployment interval” in the shape no
   `0.496 M`, or the multiplier is declared presentation-only and not a footprint input.
 - **RULED — third option, and the content-side disagreement dissolves.** See
   “Ruling 1 — enemies store a body scale, not a derived collision diameter” below. The authored
-  quantity is the `0.62×` scale at `docs/31:45`; the diameter is derived and is now the compiler's
+  quantity is the `0.62×` scale at `docs/31` `## Ordinary roster overview`; the diameter is derived and is now the compiler's
   to produce (`docs/technical/40-content-data-and-validation.md` `### Enemies and bosses`). The JSON no longer carries a
   diameter, so nothing under `content/` is internally inconsistent, and `0.496` correctly appears in
   no definition file.
 - **The reading behind that ruling, recorded here as an interpretation and not as a convention
-  quoted from doc 72.** The reading is that `docs/72:96`'s `0.50 M` is `0.496 M` typeset to two
+  quoted from doc 72.** The reading is that `docs/72` `## Collision and Contact Footprints`'s `0.50 M` is `0.496 M` typeset to two
   decimals, as the rest of that column is a body scale times `0.80 M` typeset to two decimals.
   **Doc 72 states no rounding or precision convention that these notes have read; the reading is an
   inference from the shape of the table, made here.** It is also weak on its own evidence: the other
   nine products are exact at two decimals, so that column has never needed a third decimal and
   cannot distinguish a value authored at two decimals from one presented at two.
-- **What is still open on C-1 — a question, not an owed edit.** Whether `docs/72:96` should carry
+- **What is still open on C-1 — a question, not an owed edit.** Whether `docs/72` `## Collision and Contact Footprints` should carry
   the exact value is **contingent on two things nobody has checked**: whether that line is scoped to
   the Razorling specifically or states a general/baseline figure, and whether doc 72 has a rounding
   or precision convention under which `0.50` is already `0.496` rendered at two decimals. Until both
@@ -84,9 +84,9 @@ resolved, not ruled on; see “Sentry Pod deployment interval” in the shape no
 ### C-2 — `UTL-A1` display name: “Harmonic Calibrator” vs “Harmonic Amplifier”
 
 - **Kind:** genuine source disagreement (one entity, two names).
-- **Value A — “Harmonic Calibrator”.** `docs/68-utility-catalog.md:37` (overview row) and `:52`
-  (section heading). Doc 68 is `authoritative: true` for the utility catalog.
-- **Value B — “Harmonic Amplifier”.** `docs/71-initial-weapon-numeric-catalog.md:517`, in the
+- **Value A — “Harmonic Calibrator”.** `docs/68-utility-catalog.md` `## Catalog overview` (overview row) and
+  `### UTL-A1 — Harmonic Calibrator` (section heading). Doc 68 is `authoritative: true` for the utility catalog.
+- **Value B — “Harmonic Amplifier”.** `docs/71-initial-weapon-numeric-catalog.md` `## Legal Reference Build and Boss Feasibility`, in the
   reference-build progression prose.
 - **What the JSON carries:** `utility.UTL-A1.name = "Harmonic Calibrator"` in
   `content/localization/en.json`. The doc-71 wording survives verbatim inside
@@ -104,10 +104,12 @@ resolved, not ruled on; see “Sentry Pod deployment interval” in the shape no
 
 - **Kind:** genuine source disagreement (one entity, three renderings of its name).
 - **Value A — “resource radar”** (lower case, running prose):
-  `docs/50-maps-resources-and-navigation.md:104` and `docs/68-utility-catalog.md:31`.
-- **Value B — “Resource radar”** (sentence case, heading):
-  `docs/50-maps-resources-and-navigation.md:102` and `docs/glossary.md:220`.
-- **Value C — “Resource Radar”** (title case): `docs/71-initial-weapon-numeric-catalog.md:518`.
+  `docs/50-maps-resources-and-navigation.md` `## Resource radar`, its opening sentence
+  (“The **resource radar** is a run-local utility blueprint”), and `docs/68-utility-catalog.md`
+  `## Shared acquisition and rank rules`.
+- **Value B — “Resource radar”** (sentence case, heading): the `## Resource radar` heading text
+  itself, in both `docs/50-maps-resources-and-navigation.md` and `docs/glossary.md`.
+- **Value C — “Resource Radar”** (title case): `docs/71-initial-weapon-numeric-catalog.md` `## Legal Reference Build and Boss Feasibility`.
 - **What the JSON carries:** `"Resource radar"` (Value B, the heading form) in
   `content/localization/en.json`. The key was `utility.radar-unassigned-id.name` when this entry was
   written and is now `utility.UTL-R1.name`; the string itself never changed.
@@ -117,11 +119,11 @@ resolved, not ruled on; see “Sentry Pod deployment interval” in the shape no
 - **Ruling needed:** same reason as C-2. A single canonical English string is now committed to the
   localization catalog; the docs should be reconciled to it.
 - **RULED — Value B, “Resource radar” (sentence case), confirmed.** The authorities are
-  `docs/glossary.md:220` and the fresh-profile catalog row at `docs/63:28`, where the neighbouring
+  `docs/glossary.md` `## Resource radar` and the fresh-profile catalog row at `docs/63` `## Fresh-profile baseline`, where the neighbouring
   cell (`Universal utility` / the fully title-cased material-utility names in the row below) makes
   the lowercase `r` deliberate rather than a typo. The key is now `utility.UTL-R1.name`; see
   “Ruling 2 — the resource radar is a utility and gets `UTL-R1`” below. Value C
-  (`docs/71:518`, title case) and the Value A prose spellings remain the docs-side reconciliation.
+  (`docs/71` `## Legal Reference Build and Boss Feasibility`, title case) and the Value A prose spellings remain the docs-side reconciliation.
 
 - **Transcription note, verbatim** (`content/utilities/radar-unassigned-id.json`):
 
@@ -159,7 +161,7 @@ structural decisions taken in this pass. Nothing here is a disagreement between 
 
 #### Sentry Pod (`W-BE`) deployment interval — corrected to 6.0 s, derived 12 s removed
 
-Not a source defect. `docs/71-initial-weapon-numeric-catalog.md:83` (the fixed-properties
+Not a source defect. `docs/71-initial-weapon-numeric-catalog.md` `## Rank-Zero Values and Ore-Stat Increments` (the fixed-properties
 cell of the Rank-Zero table) settles it: “One pod every 6 s, 24 s life, maximum three active;
 oldest replaced at cap.” The authored deployment interval is **6.0 s**. The 12 s figure in the
 base-behavior prose at `:305` is the arithmetic consequence for the *third* pod
@@ -187,8 +189,8 @@ are reproduced verbatim rather than rewritten, and this entry supersedes them.
 
 The file held two prop definitions (destructible rock, health pack). Both are transcribed
 values, not inferred ones: rock hull/armour/footprint from
-`docs/72-player-survivability-and-damage-baseline.md:192` and health-pack repair and pickup
-radius from `docs/51-standard-map-generation-contract.md:144`. Both now live inside
+`docs/72-player-survivability-and-damage-baseline.md` `### Destructible rock` and health-pack repair and pickup
+radius from `docs/51-standard-map-generation-contract.md` `## Destructible rocks`. Both now live inside
 `content/maps/standard-map-generation-contract.json` (`MGC-01`). Every value and every
 `source_refs` citation was carried over unchanged; the world-props `source_refs` entry is now
 present twice, re-prefixed with the two new field paths.
@@ -218,7 +220,7 @@ Also in this fold:
   same 18–45 M and 2 M values from two different tables; de-duplicating them is a domain-shape
   decision for the map schema, not a transcription one.
 - No landmark content was authored. `landmark_pools` stays `null` because the landmark pools are
-  an open question (OQ-008, `docs/open-questions.md:42`; landmark content is named in its
+  an open question (OQ-008, `docs/open-questions.md` `### OQ-008 — How does exploration work?`; landmark content is named in its
   candidate-answers entry at `:47`). Rocks and health packs are not
   landmarks, so folding them in does not touch OQ-008.
 - **Field naming needs confirming against 40 `### Map generation` when the map schema lands.**
@@ -232,11 +234,11 @@ Also in this fold:
 Verbatim notes from the deleted file (`content/maps/world-props.json`):
 
 1. Two entries in one aggregate: docs/technical/40-content-data-and-validation.md `### Map generation` lists "rock rules" under map generation, and the health pack exists only as the destructible rock's drop, so the pair is the smallest cohesive aggregate (docs/technical/40-content-data-and-validation.md `## Accepted content repository layout`).
-2. Secondary source for both entries: docs/51-standard-map-generation-contract.md:144-156 ("## Destructible rocks"), which states the same 100 Hull, 0 Armor, 0.80M footprint, 20% health-pack chance, 0.25M pickup radius, and 25-Hull repair.
+2. Secondary source for both entries: docs/51-standard-map-generation-contract.md `## Destructible rocks` ("## Destructible rocks"), which states the same 100 Hull, 0 Armor, 0.80M footprint, 20% health-pack chance, 0.25M pickup radius, and 25-Hull repair.
 3. id is null for both entries: neither the rock nor the health pack receives an ID in any document, and docs/technical/40-content-data-and-validation.md `## Stable ID policy` lists no ID scheme for world props. A stable-ID decision is required.
-4. Rock field order follows the "Property | Initial value" table at docs/72-player-survivability-and-damage-baseline.md:192-201.
+4. Rock field order follows the "Property | Initial value" table at docs/72-player-survivability-and-damage-baseline.md `### Destructible rock`.
 5. Spawn/replenishment behavior (16-rock cap, one attempt per second, 10% success) is transcribed in content/maps/standard-map-generation-contract.json under destructibleRockRules; the distance and camera-margin values are repeated here because they appear in the rock's own property table.
-6. presentation is null: docs/51-standard-map-generation-contract.md:156 states "Audiovisual treatment remains production work".
+6. presentation is null: docs/51-standard-map-generation-contract.md `## Destructible rocks` states "Audiovisual treatment remains production work".
 
 #### `content/mechs/shared-baseline.json` — handoff to the player-baseline stream (`PLY-001`)
 
@@ -293,33 +295,33 @@ Source citation for every value:
 
 | Field | Value | Citation |
 | --- | --- | --- |
-| `maximum_hull_integrity` | 100 | `docs/36-initial-mech-catalog.md:31` (Shared comparison baseline, `:27-39`); `docs/72-player-survivability-and-damage-baseline.md:34` (Shared Player Baseline, `:30-45`, accepted by `DEC-126`) |
-| `armor` | 0 | `docs/36:32`; `docs/72:36` |
-| `recovery_hull_per_second` | 0 | `docs/36:33` “Recovery | 0 Hull/s”; `docs/72:37` “Passive Recovery | 0 Hull/s” |
-| `movement_speed_m_per_s` | 3.0 | `docs/36:34` “Movement speed | 3.0M/s (100%)”; `docs/72:39` “Base movement speed | 3.0M/s” |
-| `movement_speed_percent` | 100 | `docs/36:34` (the “(100%)” annotation only; doc 72 omits it) |
-| `collision_diameter_m` | 1.0 | `docs/36:35` “Collision diameter | 1.0M circle”; `docs/72:40` |
-| `collision_shape` | "circle" | `docs/36:35` (combined cell); `docs/72:41` (split into its own row) |
-| `mining_extraction_rate_percent` | 100 | `docs/36:36` — doc 36 only |
-| `weapon_damage_percent` | 100 | `docs/36:37` — doc 36 only |
-| `weapon_attack_rate_percent` | 100 | `docs/36:38` — doc 36 only |
-| `weapon_area_percent` | 100 | `docs/36:39` — doc 36 only |
-| `survivability_baseline_extensions.starting_hull_integrity` | "Current maximum" | `docs/72:35` — doc 72 only |
-| `survivability_baseline_extensions.passive_recovery_hull_per_second` | 0 | `docs/72:37` — the doc-72 row name for the same 0 Hull/s recorded above |
-| `survivability_baseline_extensions.revival_charges` | 0 | `docs/72:38` — doc 72 only |
-| `survivability_baseline_extensions.same_enemy_contact_repeat_interval_seconds` | 0.75 | `docs/72:42` — doc 72 only |
-| `survivability_baseline_extensions.global_contact_grace_after_resolved_contact_seconds` | 0.2 | `docs/72:43` — doc 72 only |
-| `survivability_baseline_extensions.universal_post_hit_invulnerability` | "None" / `null` | `docs/72:44` — doc 72 only; qualitative “None” with no duration |
-| `survivability_baseline_extensions.health_pack_repair_hull` | 25 | `docs/72:45` — doc 72 only; the same 25 Hull now also carried by `MGC-01` |
+| `maximum_hull_integrity` | 100 | `docs/36-initial-mech-catalog.md` `## Shared comparison baseline`; `docs/72-player-survivability-and-damage-baseline.md` `## Shared Player Baseline` (accepted by `DEC-126`) |
+| `armor` | 0 | `docs/36` `## Shared comparison baseline`; `docs/72` `## Shared Player Baseline` |
+| `recovery_hull_per_second` | 0 | `docs/36` `## Shared comparison baseline` “Recovery | 0 Hull/s”; `docs/72` `## Shared Player Baseline` “Passive Recovery | 0 Hull/s” |
+| `movement_speed_m_per_s` | 3.0 | `docs/36` `## Shared comparison baseline` “Movement speed | 3.0M/s (100%)”; `docs/72` `## Shared Player Baseline` “Base movement speed | 3.0M/s” |
+| `movement_speed_percent` | 100 | `docs/36` `## Shared comparison baseline` (the “(100%)” annotation only; doc 72 omits it) |
+| `collision_diameter_m` | 1.0 | `docs/36` `## Shared comparison baseline` “Collision diameter | 1.0M circle”; `docs/72` `## Shared Player Baseline` |
+| `collision_shape` | "circle" | `docs/36` `## Shared comparison baseline` (combined cell); `docs/72` `## Shared Player Baseline` (split into its own row) |
+| `mining_extraction_rate_percent` | 100 | `docs/36` `## Shared comparison baseline` — doc 36 only |
+| `weapon_damage_percent` | 100 | `docs/36` `## Shared comparison baseline` — doc 36 only |
+| `weapon_attack_rate_percent` | 100 | `docs/36` `## Shared comparison baseline` — doc 36 only |
+| `weapon_area_percent` | 100 | `docs/36` `## Shared comparison baseline` — doc 36 only |
+| `survivability_baseline_extensions.starting_hull_integrity` | "Current maximum" | `docs/72` `## Shared Player Baseline` — doc 72 only |
+| `survivability_baseline_extensions.passive_recovery_hull_per_second` | 0 | `docs/72` `## Shared Player Baseline` — the doc-72 row name for the same 0 Hull/s recorded above |
+| `survivability_baseline_extensions.revival_charges` | 0 | `docs/72` `## Shared Player Baseline` — doc 72 only |
+| `survivability_baseline_extensions.same_enemy_contact_repeat_interval_seconds` | 0.75 | `docs/72` `## Shared Player Baseline` — doc 72 only |
+| `survivability_baseline_extensions.global_contact_grace_after_resolved_contact_seconds` | 0.2 | `docs/72` `## Shared Player Baseline` — doc 72 only |
+| `survivability_baseline_extensions.universal_post_hit_invulnerability` | "None" / `null` | `docs/72` `## Shared Player Baseline` — doc 72 only; qualitative “None” with no duration |
+| `survivability_baseline_extensions.health_pack_repair_hull` | 25 | `docs/72` `## Shared Player Baseline` — doc 72 only; the same 25 Hull now also carried by `MGC-01` |
 | `source_refs[0]` | — | `GDD-INITIAL-MECH-CATALOG#shared-comparison-baseline` |
 | `source_refs[1]` | — | `survivability_baseline_extensions: GDD-PLAYER-SURVIVABILITY-BASELINE#shared-player-baseline` |
 
 Two things the receiving stream should know that this file did **not** carry:
 
-- **Facing-starts-east is not in this file.** It is a movement rule at `docs/30:70` (`DEC-042`)
+- **Facing-starts-east is not in this file.** It is a movement rule at `docs/30` `## Direct controls` (`DEC-042`)
   and was never transcribed into `content/`. Nothing was lost by the deletion; it still needs
   authoring wherever the player/run definition lands.
-- The unit `M` is one unmodified mech collision diameter (`docs/72:47`), not a metre. Every
+- The unit `M` is one unmodified mech collision diameter (`docs/72` `## Shared Player Baseline`), not a metre. Every
   `_m` and `_m_per_s` suffix above uses that unit.
 
 The 14 verbatim notes from the deleted file (`content/mechs/shared-baseline.json`), which
@@ -328,19 +330,25 @@ coverage differences with zero conflicting values, which is why none is filed as
 contradiction:
 
 1. No stable ID exists for the shared baseline in any doc, so this is a cohesive aggregate in a kebab-case file with no `id` field.
-2. docs/36 is treated as PRIMARY for this file because it is the mech catalog and its 9-row table is the pre-PowerUp baseline the selection interface compares each mech against (line 27).
-3. docs/72-player-survivability-and-damage-baseline.md 'Shared Player Baseline' (lines 30-46) is a 12-row table over the same subject. It contains ZERO conflicting values — every property present in both agrees numerically. The divergence is entirely one of row naming, row splitting, and coverage. All doc-72-only rows are preserved under `survivabilityBaselineExtensions` with their own `_source`, so no accepted value is dropped.
-4. DIVERGENCE 1 (naming only): docs/36:33 'Recovery | 0 Hull/s' vs docs/72:37 'Passive Recovery | 0 Hull/s'. Same value 0; recorded once as recoveryHullPerSecond with the doc-72 label captured in the extensions block.
-5. DIVERGENCE 2 (annotation only): docs/36:34 'Movement speed | 3.0M/s (100%)' vs docs/72:39 'Base movement speed | 3.0M/s'. Same value; docs/36's '(100%)' reference percentage is kept as movementSpeedPercent.
-6. DIVERGENCE 3 (row splitting): docs/36:35 'Collision diameter | 1.0M circle' is one cell combining size and shape; docs/72:40-41 splits it into 'Mech collision diameter | 1.0M' and 'Mech collision shape | Circle'. Same values; recorded here as collisionDiameterM plus collisionShape following the docs/72 split.
-7. DIVERGENCE 4 (docs/36-only rows, absent from docs/72): 'Mining extraction rate | 100%', 'Weapon damage | 100%', 'Weapon attack rate | 100%', 'Weapon area | 100%' (docs/36:36-39). These are the reference 100% denominators the mech traits modify and exist only in docs/36.
-8. DIVERGENCE 5 (docs/72-only rows, absent from docs/36): 'Starting Hull Integrity | Current maximum', 'Revival charges | 0', 'Same-enemy contact repeat interval | 0.75 s', 'Global contact grace after a resolved contact | 0.20 s', 'Universal post-hit invulnerability | None', 'Health-pack repair | 25 Hull' (docs/72:35, 38, 42-45).
-9. 'Universal post-hit invulnerability' has no numeric value in either doc: docs/72:44 states 'None'. Recorded as null with the verbatim text preserved; flagged in the gaps file.
-10. Unit `M`: docs/72:47 defines M as one unmodified mech collision diameter, so one base-travel second equals 3.0M of shortest-path travel. Map-generation distance bands always use this unmodified speed even when the current mech has movement bonuses.
-11. Modifier application order comes from docs/36:41: account PowerUps modify the account-wide starting baseline first, then the selected mech's inherent modifier applies, and the selection screen shows the resulting values. Percentage modifiers with the same named utility or PowerUp statistic add under the shared modifier rules.
+2. docs/36 is treated as PRIMARY for this file because it is the mech catalog and its 9-row table is the pre-PowerUp baseline the selection interface compares each mech against
+   (`## Shared comparison baseline`, "The selection interface compares each mech with this
+   pre-PowerUp baseline").
+3. docs/72-player-survivability-and-damage-baseline.md `## Shared Player Baseline` is a 12-row table over the same subject. It contains ZERO conflicting values — every property present in both agrees numerically. The divergence is entirely one of row naming, row splitting, and coverage. All doc-72-only rows are preserved under `survivabilityBaselineExtensions` with their own `_source`, so no accepted value is dropped.
+4. DIVERGENCE 1 (naming only): docs/36 `## Shared comparison baseline` 'Recovery | 0 Hull/s' vs docs/72 `## Shared Player Baseline` 'Passive Recovery | 0 Hull/s'. Same value 0; recorded once as recoveryHullPerSecond with the doc-72 label captured in the extensions block.
+5. DIVERGENCE 2 (annotation only): docs/36 `## Shared comparison baseline` 'Movement speed | 3.0M/s (100%)' vs docs/72 `## Shared Player Baseline` 'Base movement speed | 3.0M/s'. Same value; docs/36's '(100%)' reference percentage is kept as movementSpeedPercent.
+6. DIVERGENCE 3 (row splitting): docs/36 `## Shared comparison baseline` 'Collision diameter | 1.0M circle' is one cell combining size and shape; docs/72 `## Shared Player Baseline` splits it into 'Mech collision diameter | 1.0M' and 'Mech collision shape | Circle'. Same values; recorded here as collisionDiameterM plus collisionShape following the docs/72 split.
+7. DIVERGENCE 4 (docs/36-only rows, absent from docs/72): 'Mining extraction rate | 100%', 'Weapon damage | 100%', 'Weapon attack rate | 100%', 'Weapon area | 100%' (docs/36 `## Shared comparison baseline`). These are the reference 100% denominators the mech traits modify and exist only in docs/36.
+8. DIVERGENCE 5 (docs/72-only rows, absent from docs/36): 'Starting Hull Integrity | Current maximum', 'Revival charges | 0', 'Same-enemy contact repeat interval | 0.75 s', 'Global contact grace after a resolved contact | 0.20 s', 'Universal post-hit invulnerability | None', 'Health-pack repair | 25 Hull' (docs/72 `## Shared Player Baseline`, 42-45).
+9. 'Universal post-hit invulnerability' has no numeric value in either doc: docs/72 `## Shared Player Baseline` states 'None'. Recorded as null with the verbatim text preserved; flagged in the gaps file.
+10. Unit `M`: docs/72 `## Shared Player Baseline` defines M as one unmodified mech collision diameter, so one base-travel second equals 3.0M of shortest-path travel. Map-generation distance bands always use this unmodified speed even when the current mech has movement bonuses.
+11. Modifier application order comes from docs/36 `## Shared comparison baseline`: account PowerUps modify the account-wide starting baseline first, then the selected mech's inherent modifier applies, and the selection screen shows the resulting values. Percentage modifiers with the same named utility or PowerUp statistic add under the shared modifier rules.
 12. passiveRecoveryHullPerSecond is the docs/72 label for the same 0 Hull/s value recorded above as recoveryHullPerSecond; it is repeated here only to preserve the docs/72 row name, not as a second statistic.
-13. universalPostHitInvulnerability.durationSeconds is null because docs/72:44 gives the qualitative value 'None' and no duration.
-14. docs/72:10 self-describes as the 'authoritative first-playable baseline' and docs/72:16 states that where the CSV mirrors disagree, docs/72 wins over docs/data/survivability-baseline.csv.
+13. universalPostHitInvulnerability.durationSeconds is null because docs/72 `## Shared Player Baseline` gives the qualitative value 'None' and no duration.
+14. docs/72's preamble self-describes as the 'authoritative first-playable baseline' ("Status:
+    **authoritative first-playable baseline**", above its first `##` heading, with
+    `authoritative: true` in the front matter) and the same preamble states that where the CSV mirrors
+    disagree, docs/72 wins over docs/data/survivability-baseline.csv ("If the CSV and this document
+    disagree, this document is authoritative.").
 
 #### Stable IDs
 
@@ -425,7 +433,8 @@ envelope key slot to point at:
 
 `refs` arrays holding `docs/<file>.md:<line>` strings (30 `availability.refs` + 30
 `exclusivity.refs`, all in `content/branches/`), `lines` fields sitting beside `text`, and
-`rules[].line` were all deleted. Line numbers are explicitly unstable (40 `## Stable ID policy`, `TDR-006:25`).
+`rules[].line` were all deleted. Line numbers are explicitly unstable (40 `## Stable ID policy`, and `TDR-006` `## Consequences` —
+"Stable IDs, not filenames or display names, connect definitions").
 Each was resolved to the enclosing heading of the cited document and merged into that file's
 top-level `source_refs` in the existing `<snake_case json path>: <DOC-ID>#<anchor>` form, then
 deduplicated against the entries already there. `text` values were kept: they are verbatim
@@ -436,7 +445,7 @@ present and not touched, flagged for a decision”. **That is no longer true, an
 when written.** The field (spelled `sharedRuleRefs` at the time) held 2 raw
 `docs/65-weapon-stat-and-branch-upgrades.md:<line>` strings on each of the 15 files — 30 in total,
 all of them `:66` or `:68` — and it was removed in the same pass as the rest of this section,
-commit `5becb39`. Both cited lines fall under `## Weapon branches` (`docs/65:54`), so both resolved
+commit `5becb39`. Both cited lines fall under `## Weapon branches` (`docs/65` `## Weapon branches`), so both resolved
 to `GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches`, which the `availability:` and
 `exclusivity:` prefixed entries already carried; the folded refs deduplicated against those and the
 field was deleted. `shared_rule_refs` / `sharedRuleRefs` now appears nowhere under `content/**/*.json`.
@@ -458,8 +467,8 @@ point.
 
 #### Ruling 1 — enemies store a body scale, not a derived collision diameter
 
-**Citations.** `docs/31:45` authors `EN-07` (Razorling) a `0.62×` body scale.
-`docs/72:86` — “The Ripper's rank-zero contact diameter is 0.80M. Every ordinary body scale in the
+**Citations.** `docs/31` `## Ordinary roster overview` authors `EN-07` (Razorling) a `0.62×` body scale.
+`docs/72` `## Collision and Contact Footprints` — “The Ripper's rank-zero contact diameter is 0.80M. Every ordinary body scale in the
 alien roster multiplies that diameter.” So the diameter is a product, not an authored number.
 `docs/technical/40-content-data-and-validation.md` `### Enemies and bosses` assigns producing it to the compiler:
 “Validation derives world speeds/footprints and compares them with the survivability report.”
@@ -472,9 +481,9 @@ Storing it alongside the scale would put a second writer on a compiler-owned val
 - `contact_footprint.contact_diameter_m` is **removed**. It was the derived collision diameter.
 
 The ten scales were re-verified against the “Ordinary roster overview” table at
-`docs/31:37-48` (`Body` column), not taken from the ruling's restatement, and the removed
+`docs/31` `## Ordinary roster overview` (`Body` column), not taken from the ruling's restatement, and the removed
 diameters were re-verified against the “Collision and Contact Footprints” table at
-`docs/72:88-99` before deletion:
+`docs/72` `## Collision and Contact Footprints` before deletion:
 
 | ID | Identity | `body_scale_factor` (`docs/31`) | Removed `contact_diameter_m` (`docs/72`) | scale × `0.80 M` |
 | --- | --- | ---: | ---: | ---: |
@@ -492,13 +501,13 @@ diameters were re-verified against the “Collision and Contact Footprints” ta
 Every row reproduces exactly, so nine of the ten removals lost nothing that the compiler cannot
 reproduce from the surviving scale and the `0.80 M` reference.
 
-**`docs/72:96`'s `0.50M` for Razorling is read here as `0.496` typeset to the two decimals the whole
+**`docs/72` `## Collision and Contact Footprints`'s `0.50M` for Razorling is read here as `0.496` typeset to the two decimals the whole
 column uses** — the reading stated under C-1, and stated there as an interpretation recorded in these
 notes rather than a convention quoted from doc 72. It is the reading this ruling was taken under, and
 it is not established: the same rounding is invisible on the other nine rows only because their
 products happen to be exact at two decimals, so the column cannot discriminate. The ruling does not
 depend on it settling either way — the diameter is derived under either reading and `content/` stores
-no diameter. **No docs-side edit follows from this ruling.** Whether `docs/72:96` should carry the
+no diameter. **No docs-side edit follows from this ruling.** Whether `docs/72` `## Collision and Contact Footprints` should carry the
 exact value is open, contingent on the scope and precision-convention questions recorded under C-1,
 and owned by the design-document holder. *(An earlier revision of this paragraph asserted the `0.50M`
 was "not a second authored value" and reported the docs side as "being corrected" to `0.496 M`. Both
@@ -510,7 +519,7 @@ are withdrawn: the first settles a question that is open, the second reported wo
    `contact_footprint.contact_diameter_m`. I **kept**
    `contact_footprint.center_distance_that_begins_contact_m`, `shape`, and
    `reference_diameter_m` — even though the centre distance is *also* derivable
-   (`contact_diameter ÷ 2 + the mech's 0.50 M collision radius`, `docs/72:86`, which reproduces
+   (`contact_diameter ÷ 2 + the mech's 0.50 M collision radius`, `docs/72` `## Collision and Contact Footprints`, which reproduces
    all ten values). The ruling named one field, singular, and “preserve every value you are not
    explicitly told to remove” governs the rest. If the compiler is to derive the centre distance
    too, that is a second removal and a second decision.
@@ -528,7 +537,7 @@ are withdrawn: the first settles a question that is open, the second reported wo
 
 **Citations.** 40 `### Utilities` gives the Utilities schema a field for the “assigned material or ore-only
 radar exception”, so the schema expects the radar *inside* the utility catalog with a marked
-exception rather than outside it. `docs/68:31` — the radar “remains outside the material table: it
+exception rather than outside it. `docs/68` `## Shared acquisition and rank rules` — the radar “remains outside the material table: it
 costs 300 common ore, has no ranks” — places it outside the *material table*, which is not the
 catalog. `R` collides with none of the `A`–`F` material letters used by `UTL-A1`…`UTL-F2`.
 
@@ -541,8 +550,8 @@ catalog. `R` collides with none of the `A`–`F` material letters used by `UTL-A
   `utility.radar-unassigned-id.*`). Both keys were renamed in place in
   `content/localization/en.json`, which stays flat, lexically sorted, duplicate-free and
   orphan-free at 164 strings; the two English values are unchanged.
-- Display name confirmed as **“Resource radar”**, sentence case — `docs/glossary.md:220` and the
-  catalog row at `docs/63:28`, where the neighbouring `Universal utility` cell and the fully
+- Display name confirmed as **“Resource radar”**, sentence case — `docs/glossary.md` `## Resource radar` and the
+  catalog row at `docs/63` `## Fresh-profile baseline`, where the neighbouring `Universal utility` cell and the fully
   title-cased material-utility names in the row below make the lowercase `r` deliberate. This also
   closes C-3 above.
 - The “no ID assigned” flag is gone: `"id": null` **was** the flag, and the per-definition note
@@ -559,13 +568,13 @@ Every other field of the definition — including `material: null`, the 300-ore 
 the seven tracked categories, `effect_rules`, and all seven `external_numerics` — is byte-identical.
 
 **What the ruling did not determine, and I chose:** the four added `source_refs` entries and their
-`json.path:` prefixes. The ruling named `docs/glossary.md:220` and `docs/63:28` as name authorities
-and 40 `### Utilities` / `docs/68:31` as ID authorities but did not say to cite them in the file.
+`json.path:` prefixes. The ruling named `docs/glossary.md` `## Resource radar` and `docs/63` `## Fresh-profile baseline` as name authorities
+and 40 `### Utilities` / `docs/68` `## Shared acquisition and rank rules` as ID authorities but did not say to cite them in the file.
 
 #### Ruling 3 — `elite-modifier-profile.json` is not a definition; decomposed and deleted
 
 **Citations.** 40 `### Enemies and bosses` puts “elite eligibility” in the *enemy* schema's field list.
-`docs/technical/23:137` — an elite “snapshots the base enemy definition plus the shared elite
+`docs/technical/23` `## Elite construction` — an elite “snapshots the base enemy definition plus the shared elite
 modifiers at spawn. It does not create a second duplicated enemy catalog row.” So there is no
 elite definition to own an ID: there is a per-enemy flag and a block of shared constants.
 
@@ -573,18 +582,18 @@ elite definition to own an ID: there is a per-enemy flag and a block of shared c
 definitions, `false` on `EN-06` and `true` on the other nine, and each now carries a
 `elite_eligible: GDD-INITIAL-ALIEN-ROSTER#elite-treatment` ref (`EN-06` additionally carries
 `elite_eligible: TDD-ENCOUNTERS#elite-construction`). The `EN-06` exclusion was confirmed at
-source before writing it, in two places. `docs/31:102` states it twice in one sentence — an elite is “a visibly
+source before writing it, in two places. `docs/31` `## Elite treatment` states it twice in one sentence — an elite is “a visibly
 enhanced instance of one of the nine pure pursuers” (nine of ten) and “Needler does not become an
 elite in the initial standard schedule because combining its projectile with the shared elite
 multipliers reduces readability”. And — decisively, because it is what makes this a validated field
-rather than prose — `docs/technical/23:141`, “Needler is excluded by content validation.” The former `eligible_enemy_ids` / `excluded_enemy_ids` arrays are gone; their
+rather than prose — `docs/technical/23` `## Elite construction`, “Needler is excluded by content validation.” The former `eligible_enemy_ids` / `excluded_enemy_ids` arrays are gone; their
 content is exactly the ten booleans.
 
 **Change — the five shared multipliers become a constants block.**
 `content/enemies/shared-elite-modifiers.json`, with **no `id`** and **no `name_key`** because it is
 not a definition and has no player-facing name. Envelope (`schema_version`, `content_version`,
 `status`, `tags`, `source_refs`) first, as everywhere else. The five values, verified against
-`docs/31:104-110` and `docs/technical/23:139-140`:
+`docs/31` `## Elite treatment` and `docs/technical/23` `## Elite construction`:
 
 | Property | Value | Note |
 | --- | ---: | --- |
@@ -655,8 +664,8 @@ byte-identically: `adds_behavior`, `adds_attacks_phases_aura_or_support_ai`, `ad
 
 **Citations.** Doc 40 splits this deliberately. 40 `### Resources` gives the *resource* definition a
 “resonance behavior registration if applicable”, and the authored table is keyed by Material
-(`docs/61:90`, “Geode resonance behavior”), so the shape already matches. 40 `### Mining sites` gives the
-*mining-site* definition the “zone/field dimensions”. Runtime agrees: `docs/technical/24:23` has
+(`docs/61` `## Geode resonance behavior`, “Geode resonance behavior”), so the shape already matches. 40 `### Mining sites` gives the
+*mining-site* definition the “zone/field dimensions”. Runtime agrees: `docs/technical/24` `## Mining site state` has
 each site store “resonance material and field radius if a geode” — the site references the
 material, the material owns the behavior.
 
@@ -699,11 +708,18 @@ Two `source_refs` entries were added to the site for the relocated rules.
 none were ever minted for it (see “Localization keys” below) — so nothing was removed from
 `en.json`.
 
-**The field radius was never given a number** and stays `null`. `docs/40:100` says only that the
+**The field radius was never given a number** and stays `null`. `docs/40` `### Geode resonance fields` says only that the
 field is “larger than its extraction zone”; no doc gives a dimension. The existing gap flag is
 kept — note 4 of `specialized-material-geodes` below, “resonanceField.radiusMeters is null:
-docs/40-mining-and-extraction.md:100 states only that the field is ‘larger than its extraction
+docs/40-mining-and-extraction.md `### Geode resonance fields` states only that the field is ‘larger than its extraction
 zone’; no dimension is given.”
+
+**Dated note, 2026-08-11 on the FLAG below.** Its `docs/40:104-109` coordinate is verbatim quoted
+note text and is kept as written; it means `docs/40-mining-and-extraction.md`
+`### Geode resonance fields`, the six-row resonance table (`| Asterite | **Focused Assault:** …` …
+`| Flux Amber | **Overclocked Motion:** …`), and it resolves there at blob `21c555f`, that
+document's only revision in this history and also HEAD. (`40:156` in the same FLAG is the technical
+document and is out of this pass's scope.)
 
 > **FLAG — the six effects need `behavior_kind` registry tokens and do not have them.**
 > `40:156` requires that “every content `behavior_kind` … has exactly one registered descriptor
@@ -744,7 +760,7 @@ zone’; no dimension is given.”
 **Citations.** The markdown row is well-formed; only its timing token is not. “at 33:15 intervals”
 parses neither as an `m:ss` timestamp (`33:15` would be one instant, not a set) nor as a period
 (`33:15` is not a duration). The column's contract is “at the listed time”
-(`docs/32:21`, “a deterministic authored formation layered over baseline replenishment at the
+(`docs/32` `## Director vocabulary`, “a deterministic authored formation layered over baseline replenishment at the
 listed time”), and every other repeating row in the table enumerates its times explicitly —
 `29:20 and 29:45`, `34:10 and 34:40`. Four sectors, minute 33, quarter-minute spacing is the only
 reading that satisfies the column contract, the “four sectors” in the cell, and the `33:15` token.
@@ -769,7 +785,7 @@ reading that satisfies the column contract, the “four sectors” in the cell, 
 **Proof gate — what discharges the flag.** The flag comes off when, and only when, one of these
 lands, and until then the four times must not be treated as accepted content:
 
-1. `docs/32:89` (the minute-33 row) is reauthored to enumerate absolute times, exactly as the
+1. `docs/32` `## Complete 35-minute schedule` (the minute-33 row) is reauthored to enumerate absolute times, exactly as the
    minute-29 and minute-34 rows do. If those times are the four written here, the flag is deleted
    and `source_refs` gains nothing; if they differ, the data changes and only the flag's removal is
    shared with this pass. This is the expected resolution.
@@ -804,7 +820,7 @@ finding the value in `docs/` and assuming it was overlooked.
 
 #### Ruling 6 — the centre distance is derived too, and comes out
 
-**Citations.** `docs/72:86` gives the whole derivation in one sentence: “The Ripper's rank-zero
+**Citations.** `docs/72` `## Collision and Contact Footprints` gives the whole derivation in one sentence: “The Ripper's rank-zero
 contact diameter is 0.80M. Every ordinary body scale in the alien roster multiplies that diameter.
 Contact begins when the enemy contact circle and the mech's 0.50M-radius collision circle overlap.”
 So the centre distance is `enemy contact diameter ÷ 2 + 0.50 M`, and
@@ -832,7 +848,7 @@ removed from `content/bosses/` as well. This entry's scope — “the ruling nam
 — is what left the defect in place one catalog over.
 
 The removed values were re-verified against the “Center distance that begins contact” column at
-`docs/72:88-99` before deletion, and every one reproduces from the surviving
+`docs/72` `## Collision and Contact Footprints` before deletion, and every one reproduces from the surviving
 `body_scale_multiplier`:
 
 | ID | Identity | `body_scale_multiplier` | Removed centre distance (`docs/72`) | scale × `0.80 M` ÷ 2 + `0.50 M` |
@@ -870,8 +886,8 @@ Flattening is a shape decision for the schema stream.
 
 #### Ruling 7 — `body_scale_factor` goes back to `body_scale_multiplier`
 
-**Citations.** Both documents call it a multiplication. `docs/31:35` — “Body scale multiplies the
-Ripper's 0.80M contact diameter, not its decorative mesh.” `docs/technical/23:139` — “Hull ×4,
+**Citations.** Both documents call it a multiplication. `docs/31` `## Ordinary roster overview` — “Body scale multiplies the
+Ripper's 0.80M contact diameter, not its decorative mesh.” `docs/technical/23` `## Elite construction` — “Hull ×4,
 movement ×1.10, contact damage ×1.50, contact diameter ×1.25.”
 
 **Change.** `body_scale_factor` is renamed **`body_scale_multiplier`** on all ten ordinary enemy
@@ -889,17 +905,17 @@ like two unrelated ideas. `content/enemies/shared-elite-modifiers.json` was alre
 #### Ruling 8 — `exclusion_reason` comes out of the shared elite modifiers
 
 **Citations.** 40 `## Agent content-change workflow` — an agent “must not … add an unvalidated optional field”. The exclusion
-already has a machine-readable carrier: `docs/technical/23:141` says “Needler is excluded by content
+already has a machine-readable carrier: `docs/technical/23` `## Elite construction` says “Needler is excluded by content
 validation”, and that validation reads `EN-06`'s `elite_eligible: false`, which is the field
-40 `### Enemies and bosses` puts in the enemy schema. The *reason* is authored prose at `docs/31:102` (“Needler does not
+40 `### Enemies and bosses` puts in the enemy schema. The *reason* is authored prose at `docs/31` `## Elite treatment` (“Needler does not
 become an elite in the initial standard schedule because combining its projectile with the shared
-elite multipliers reduces readability”) and restated at `docs/technical/23:141`.
+elite multipliers reduces readability”) and restated at `docs/technical/23` `## Elite construction`.
 
 **Change.** `exclusion_reason` is **removed** from `content/enemies/shared-elite-modifiers.json`.
 Nothing else in the file changed.
 
 No authored sentence was lost, which is where my first-pass reasoning went wrong: the sentence is
-still at `docs/31:102`, where it is owned and maintained. Copying it into `content/` gave the same
+still at `docs/31` `## Elite treatment`, where it is owned and maintained. Copying it into `content/` gave the same
 prose a second writer with no validator to keep the two in step, so the copy could drift from the
 source and nothing would notice. The exclusion **is** `elite_eligible: false` on `EN-06`; that is
 the assertion a validator can act on, and it is already in the data.
@@ -925,7 +941,7 @@ already referenced from six files by then. Guessing here costs more than waiting
 
 **Outstanding work, recorded here because it does not belong in `content/`.** Six resonance
 behaviors need registry tokens and do not have them. `DAT-004` should mint against these six names,
-all authored in the “Geode resonance fields” table at **`docs/40-mining-and-extraction.md:98-109`**:
+all authored in the “Geode resonance fields” table at **`docs/40-mining-and-extraction.md` `### Geode resonance fields`**:
 
 | Resource | Geode | Effect name | Authored effect |
 | --- | --- | --- | --- |
@@ -950,7 +966,7 @@ Neither of these is a change; both were reviewed in the second pass and left as 
 1. **`content/enemies/shared-elite-modifiers.json` keeps its location.** The FLAG under Ruling 3
    calls the path my choice and provisional; the ruling confirms `content/enemies/` is right for now.
    Elite modifiers are enemy values used by the enemy catalog — same domain — so the
-   “unrelated convenience file” objection at `114:90`, which is what moved the player baseline out
+   “unrelated convenience file” objection at `114` `### Naming and file-placement defaults`, which is what moved the player baseline out
    of the mech catalog (see the `shared-baseline.json` handoff above), does not apply here. The
    file's *stem* is still unsourced, and the path may still move when the schemas land.
 2. **The geode resonance field radius stays `null`.** The integration owner is registering
@@ -970,7 +986,7 @@ earlier entries carry a **superseded-by** pointer rather than being rewritten.
 absent from `content/` by decision rather than for want of a source. A sixth joins them:
 `contact_footprint.center_distance_that_begins_contact_m` on the **four bosses** (Ruling 12). As with
 the other five, a reviewer should not read it as missing data, and a later transcription pass that
-finds the four values at `docs/72:105-110` must not re-add them.
+finds the four values at `docs/72` `## Collision and Contact Footprints` must not re-add them.
 
 #### Ruling 11 — the last five stable IDs are minted: `SITE-01`–`SITE-04` and `ELT-01`
 
@@ -984,7 +1000,7 @@ gameplay IDs exactly”) still forbids *inventing* IDs during transcription, whi
 not mint them and the integration owner did.
 
 **Change — the four mining-site classes.** `"id": null` becomes a minted token, in the document order
-of `docs/40-mining-and-extraction.md:58-132`, and each definition's `name_key` moves off the
+of `docs/40-mining-and-extraction.md` `## Resource payout profiles`…`### Other resource profiles`, and each definition's `name_key` moves off the
 provisional filename stem:
 
 | File | `id` | `name_key` before | `name_key` after |
@@ -1016,20 +1032,20 @@ than an ID-less constants block. Three things it does **not** gain, each for its
   and verifier reference for no gain. The file's stem remains unsourced, as Rulings 3 and 10 noted.
 - **No new `source_refs` entry.** No document assigns either `ELT-01` or `SITE-01`–`SITE-04`, so there
   is nothing to cite: a `id: <DOC>#<anchor>` prefix here would attribute a minted token to a document
-  that does not contain it. (`UTL-R1` got such refs under Ruling 2 because 40 `### Utilities` and `docs/68:31`
+  that does not contain it. (`UTL-R1` got such refs under Ruling 2 because 40 `### Utilities` and `docs/68` `## Shared acquisition and rank rules`
   genuinely argue for putting the radar in the utility catalog; nothing comparable exists here.)
 
 **What the ruling did not determine, and I chose:**
 
 1. **Which mining-site file gets which number.** The ruling supplied the five tokens and the mapping;
-   the ordering rationale recorded above — document order in `docs/40:58-132` — is the reading I
+   the ordering rationale recorded above — document order in `docs/40` `## Resource payout profiles`…`### Other resource profiles` — is the reading I
    applied when writing them, and it matches the mapping given.
 2. **Placing `id` first in the elite block's envelope**, ahead of `schema_version`, matching every
    other definition in the tree.
 
 #### Ruling 12 — the boss centre distance is derived too, and comes out
 
-**Citations.** `docs/72:86` states one derivation for every contact circle in the game: “Contact begins
+**Citations.** `docs/72` `## Collision and Contact Footprints` states one derivation for every contact circle in the game: “Contact begins
 when the enemy contact circle and the mech's 0.50M-radius collision circle overlap.” So the centre
 distance is `contact diameter ÷ 2 + 0.50 M` for a boss exactly as for an enemy, and
 `docs/technical/40-content-data-and-validation.md` `### Enemies and bosses` assigns producing it to the compiler
@@ -1041,20 +1057,20 @@ enemy definitions”. The defect it was removing did not stop there.
 split before anything was deleted:**
 
 - **Boss diameters are AUTHORED and stay.** The interval-boss overview table at
-  `docs/31-initial-alien-roster.md:121-128` has **no body-scale column at all** — unlike the ordinary
-  roster overview at `docs/31:37-48`, which is where the ten enemy `body_scale_multiplier` values come
+  `docs/31-initial-alien-roster.md` `## Interval boss overview` has **no body-scale column at all** — unlike the ordinary
+  roster overview at `docs/31` `## Ordinary roster overview`, which is where the ten enemy `body_scale_multiplier` values come
   from. The scales the four boss diameters would imply against the `0.80 M` Ripper reference
   (`1.875×`, `2.5×`, `2.0×`, `2.375×`) appear **nowhere** in `docs/`; a search for them returns
-  nothing. And `docs/72-player-survivability-and-damage-baseline.md:105` states the four diameters
+  nothing. And `docs/72-player-survivability-and-damage-baseline.md` `## Collision and Contact Footprints` states the four diameters
   flat (rows at `:107-110`), in its own table introduced by “Bosses use simple circular gameplay footprints even when their
   meshes are elongated or irregular”. There is no operand to derive them from, so the diameter *is*
   the authored quantity for a boss — the role `body_scale_multiplier` plays for an enemy.
   `contact_footprint.contact_and_weapon_hurt_diameter_m` therefore **stays** on all four bosses.
 - **Boss centre distances are DERIVED and come out.** Re-verified against the “Center distance that
-  begins contact” column of the boss table at `docs/72:105-110` before deletion, arithmetic recomputed
+  begins contact” column of the boss table at `docs/72` `## Collision and Contact Footprints` before deletion, arithmetic recomputed
   from the authored diameter rather than taken from the ruling's restatement:
 
-| ID | Boss | Authored diameter (`docs/72:105`) | `diameter ÷ 2 + 0.50 M` | Removed stored value | Reproduces |
+| ID | Boss | Authored diameter (`docs/72` `## Collision and Contact Footprints`) | `diameter ÷ 2 + 0.50 M` | Removed stored value | Reproduces |
 | --- | --- | ---: | ---: | ---: | --- |
 | `BOSS-01` | Riftjaw | 1.50 M | 1.50 ÷ 2 + 0.50 = **1.25** | 1.25 M | exactly |
 | `BOSS-02` | Brood Titan | 2.00 M | 2.00 ÷ 2 + 0.50 = **1.50** | 1.50 M | exactly |
@@ -1182,7 +1198,7 @@ the guess survives into the schema as if a document had stated it. So a `_scalin
 
 | Omitted field | What the prose actually says | Why no field was declared |
 | --- | --- | --- |
-| `explosion_strength_scaling` (was `null`) | `docs/69-initial-relic-catalog.md:130` — "Explosion strength and Area scale from that enemy's maximum Hull, subject to a cap for elites and bosses." | The sentence says explosion strength *scales from* maximum Hull. It does not say the relationship is multiplicative, nor give a coefficient, an exponent, or a curve. Naming the field `explosion_strength_multiplier` would assert a multiplication the document never states; naming it `_scaling` keeps a second spelling alive for a value that does not exist. `REL-07 :: rules[5]` records the same gap in the relic's own words: "Exact explosion scaling, generational decay, delay, and boss cap remain numerical tuning." |
+| `explosion_strength_scaling` (was `null`) | `docs/69-initial-relic-catalog.md` `## REL-07 — Fission Seed` — "Explosion strength and Area scale from that enemy's maximum Hull, subject to a cap for elites and bosses." | The sentence says explosion strength *scales from* maximum Hull. It does not say the relationship is multiplicative, nor give a coefficient, an exponent, or a curve. Naming the field `explosion_strength_multiplier` would assert a multiplication the document never states; naming it `_scaling` keeps a second spelling alive for a value that does not exist. `REL-07 :: rules[5]` records the same gap in the relic's own words: "Exact explosion scaling, generational decay, delay, and boss cap remain numerical tuning." |
 | `elite_and_boss_scaling_cap` (was `null`) | the same line 130 — "subject to a cap for elites and bosses" — and `rules[5]`'s "boss cap remain numerical tuning" | The cap's *existence* is stated; its magnitude, and even whether it bounds a multiplier, an absolute damage figure, or a fraction of Hull, are not. The field would have had to declare both a bound spelling and the kind of quantity bounded, and the document supports neither. |
 
 The surviving prose is not lost: `effects.explosion_scales_from = "the defeated enemy's maximum Hull"`
@@ -1261,14 +1277,14 @@ mistake?**
 #### Ruling 17 — `Area` the stat keeps its name; the geometry rule does not bind it
 
 **Citation.** 40 `## Unit and numeric policy` — "Geometry dimensions distinguish radius, diameter, width, range, and area; `area`
-is never used as a vague scalar name" — read against `docs/35-playable-mechs.md:65`, which lists "weapon
-Area" in "the shared stat vocabulary", and `docs/36-initial-mech-catalog.md:137`, which defines its
+is never used as a vague scalar name" — read against `docs/35-playable-mechs.md` `## Mech-specific trait`, which lists "weapon
+Area" in "the shared stat vocabulary", and `docs/36-initial-mech-catalog.md` `### Signature and trait`, which defines its
 membership: "scalable radii, widths, blast areas, projectile bodies, cones, and persistent damage zones
 qualify".
 
 **The ruling.** `content/relics/REL-04.json :: effects.weapon_area_multiplier` is **not renamed**. It
 deliberately scales a *set* of dimensions, so forcing a specific dimension into the name would encode a
-falsehood — `REL-04 :: rules[1]` restates `docs/69-initial-relic-catalog.md:99` verbatim ("weapon Area is
+falsehood — `REL-04 :: rules[1]` restates `docs/69-initial-relic-catalog.md` `## REL-04 — Colossus Governor` verbatim ("weapon Area is
 doubled"). 40 `## Unit and numeric policy` binds a field naming a measured dimension of a specific shape, not a field naming the
 Area stat. `content/README.md`'s geometry bullet now records the exemption.
 
@@ -1279,7 +1295,7 @@ applied mechanically; the other is Ruling 18. Both are called out in the audit a
 
 `content/maps/standard-map-generation-contract.json ::
 deployment_and_opening_fairness.obstacle_free_radius_in_mining_zone_diameters = 1` names a **radius**
-measured in **diameters**, and `docs/51-standard-map-generation-contract.md:70` ("obstacle-free space at
+measured in **diameters**, and `docs/51-standard-map-generation-contract.md` `## Deployment and opening fairness` ("obstacle-free space at
 least one mining-zone diameter around the mech") does not say whether the clear envelope's radius or its
 diameter equals one mining-zone diameter. That is a **factor-of-two design ambiguity**, not a naming
 defect: renaming the field either way would silently pick one reading. The field and its flag stay
@@ -1293,9 +1309,9 @@ exactly as they are, escalated for a document correction.
 `effects.enemy_movement_speed_multiplier_while_mining` and
 `cross_document_rules[0].enemy_movement_multiplier` were the same number.
 `cross_document_rules[0].enemy_movement_multiplier` is **removed**, and the longer name is kept, because
-that is the name the source wording supports: `docs/72-player-survivability-and-damage-baseline.md:80` —
+that is the name the source wording supports: `docs/72-player-survivability-and-damage-baseline.md` `## Movement and Speed Modifiers` —
 which is the sentence `cross_document_rules[0].rule` transcribes — says "Claim-Jumper Core multiplies it by
-1.50 **only while mining progress advances**", and `docs/69-initial-relic-catalog.md:153` says "+50%
+1.50 **only while mining progress advances**", and `docs/69-initial-relic-catalog.md` `## REL-09 — Claim-Jumper Core` says "+50%
 movement **speed** while extraction progress is actively advancing". The short name dropped both the
 `speed` the docs name and the `while_mining` condition the rule text restates.
 
@@ -1303,7 +1319,7 @@ movement **speed** while extraction progress is actively advancing". The short n
 described this as a pair internal to REL-09 between `movement_speed_multiplier` and
 `multiplies_with_elite_movement_multiplier`. **REL-09 has no `movement_speed_multiplier` field**; the pair is
 *cross-file*. `content/enemies/shared-elite-modifiers.json (ELT-01) :: movement_speed_multiplier = 1.1` is
-the authored value — `docs/31-initial-alien-roster.md:107` states it as a multiplier in the shared elite
+the authored value — `docs/31-initial-alien-roster.md` `## Elite treatment` states it as a multiplier in the shared elite
 modifier table, "| Movement speed | 1.10× |" — and `REL-09 :: cross_document_rules[0].multiplies_with_elite_movement_multiplier = 1.1`
 was a second writer on it, under a name that reads as a boolean predicate while holding a number. So the
 collapse keeps ELT-01's field and **removes the copy in REL-09**. Nothing about the ordering is lost:
@@ -1314,7 +1330,7 @@ the doc sentence in full.
 **`cross_document_rules[0].multiplies_with_flux_amber_resonance_multiplier = 1.2` is left in place.** It is
 the same *name* shape, but not the same defect: `1.20` is authored nowhere else in `content/` — no resource
 definition carries it — so this field is the tree's only carrier of the Flux Amber movement factor from
-`docs/72:80`, and removing it would delete a value rather than a duplicate. Flagged as the asymmetry it is.
+`docs/72` `## Movement and Speed Modifiers`, and removing it would delete a value rather than a duplicate. Flagged as the asymmetry it is.
 
 **No `source_refs` citation was orphaned.** REL-09's four `cross_document_rules[]:` prefixes name the
 array, which still exists with element 0 intact; no prefix named either removed field.
@@ -1347,7 +1363,7 @@ multiplier, the multiplier is what is authored and nothing is derived.
 
 **Removal check — the doc line relied on, per relic. Nothing is removed:**
 
-- **`REL-04`** — `docs/69-initial-relic-catalog.md:99`: "All weapon damage is multiplied by 2.5, weapon Area
+- **`REL-04`** — `docs/69-initial-relic-catalog.md` `## REL-04 — Colossus Governor`: "All weapon damage is multiplied by 2.5, weapon Area
   is doubled, and finite weapon-created durations are doubled." The document states *multipliers*, so
   `weapon_damage_multiplier = 2.5`, `weapon_area_multiplier = 2` and
   `finite_weapon_created_duration_multiplier = 2` are the authored form and stay. There is no
@@ -1355,16 +1371,16 @@ multiplier, the multiplier is what is authored and nothing is derived.
   (`:98` "Each weapon produces primary activations at 40% of its otherwise final frequency", `:96`
   "Weapons attack 60% less often"), and `60` is the complement of `40` rather than a normalized factor —
   a different redundancy class, outside this ruling.
-- **`REL-07`** — `docs/69-initial-relic-catalog.md:129`: "All direct and persistent damage attributed to
+- **`REL-07`** — `docs/69-initial-relic-catalog.md` `## REL-07 — Fission Seed`: "All direct and persistent damage attributed to
   equipped weapons is multiplied by 0.65." The normative rule line states the **multiplier**, so the
   multiplier is authored and is not removed. The percentage sibling is doc-stated too, at `:127`: "Weapons
   deal 35% less direct damage." Both forms appear in the source, so removing either would drop a
   doc-stated value.
-- **`REL-09`** — `docs/69-initial-relic-catalog.md:153` states the **percentage**: "Every living enemy
+- **`REL-09`** — `docs/69-initial-relic-catalog.md` `## REL-09 — Claim-Jumper Core` states the **percentage**: "Every living enemy
   receives +50% movement speed while extraction progress is actively advancing." That alone would make
   `enemy_movement_speed_multiplier_while_mining = 1.5` the derived member and remove it. It is **not**
   removed, because a second accepted document states the multiplier directly —
-  `docs/72-player-survivability-and-damage-baseline.md:80`: "Claim-Jumper Core multiplies it by 1.50 only
+  `docs/72-player-survivability-and-damage-baseline.md` `## Movement and Speed Modifiers`: "Claim-Jumper Core multiplies it by 1.50 only
   while mining progress advances." Both forms are authored by documents this definition already cites, so
   the ruling's own test ("whichever the source states is authored") keeps both.
 
@@ -1394,14 +1410,14 @@ fixed. The distinction matters for judging how far to trust the rest of the tree
 
 One was reported and investigated this pass, and **it is not a defect**. The report was that
 `content/resources/F.json` (Flux Amber) carried `resonance_behavior.modifier.direction = "decrease"` while
-`docs/40-mining-and-extraction.md:109` states the opposite. The doc line is:
+`docs/40-mining-and-extraction.md` `### Geode resonance fields` states the opposite. The doc line is:
 
 > | Flux Amber | **Overclocked Motion:** enemy movement speed is 20% higher |
 
 `F.json` already carries `"direction": "increase"`, matching it. All six were then checked against
-`docs/40-mining-and-extraction.md:104-109` in full, and all six are correct:
+`docs/40-mining-and-extraction.md` `### Geode resonance fields` in full, and all six are correct:
 
-| Resource | Geode | Doc wording (`docs/40:104-109`) | `direction` | Correct? |
+| Resource | Geode | Doc wording (`docs/40` `### Geode resonance fields`) | `direction` | Correct? |
 | --- | --- | --- | --- | --- |
 | `A` | Asterite | "outgoing enemy damage is 20% **higher**" | `increase` | yes |
 | `B` | Barysteel | "enemies take 20% **less** damage" | `decrease` | yes |
@@ -1441,11 +1457,11 @@ A third independent attempt to refute the authored finding also failed:
 
 | Refutation attempt | Result |
 | --- | --- |
-| Is there a boss body-scale column? | No. `docs/31:121-128` carries ID, Boss, Arrival, Initial Hull, Move, Contact, Control resistance, Defining behavior. The ordinary roster at `docs/31:37-48` *does* carry a `Body` column, which is where the ten enemy scales come from |
-| Does the derivation sentence cover bosses? | No. `docs/72:86` reads "Every **ordinary** body scale in the alien roster multiplies that diameter" — the qualifier is in the source |
+| Is there a boss body-scale column? | No. `docs/31` `## Interval boss overview` carries ID, Boss, Arrival, Initial Hull, Move, Contact, Control resistance, Defining behavior. The ordinary roster at `docs/31` `## Ordinary roster overview` *does* carry a `Body` column, which is where the ten enemy scales come from |
+| Does the derivation sentence cover bosses? | No. `docs/72` `## Collision and Contact Footprints` reads "Every **ordinary** body scale in the alien roster multiplies that diameter" — the qualifier is in the source |
 | Do the implied scales (1.875, 2.5, 2.0, 2.375) appear anywhere in `docs/`? | No. `grep` over all of `docs/` returns nothing for any of the four |
-| Is the elite `1.25×` body scale (`docs/31:109`) an operand? | No. It scales "an enhanced instance of one of the nine pure pursuers"; bosses are explicitly separate |
-| Are the diameters stated flat? | Yes. `docs/72:105-110` states Riftjaw 1.50M, Brood Titan 2.00M, Prism Crown 1.60M, Skybreaker Apex 1.90M |
+| Is the elite `1.25×` body scale (`docs/31` `## Elite treatment`) an operand? | No. It scales "an enhanced instance of one of the nine pure pursuers"; bosses are explicitly separate |
+| Are the diameters stated flat? | Yes. `docs/72` `## Collision and Contact Footprints` states Riftjaw 1.50M, Brood Titan 2.00M, Prism Crown 1.60M, Skybreaker Apex 1.90M |
 
 **Ruling.** The boss diameter is the authored quantity, exactly as `body_scale_multiplier` is for an
 ordinary enemy. It stays. Deleting it would destroy the only statement of a boss footprint in the tree
@@ -1456,9 +1472,9 @@ in order to satisfy a review instruction. **No boss file was modified this pass.
 **Change.** `destructible_rock_rules.health_pack.collection_center_distance_with_standard_mech_circle_m`
 is **removed** from `content/maps/standard-map-generation-contract.json`.
 
-**Why.** It held `0.75`, and `docs/72:185` gives it as a consequence, not an operand: "The pack has a
+**Why.** It held `0.75`, and `docs/72` `### Health pack` gives it as a consequence, not an operand: "The pack has a
 0.25M pickup radius. With the standard mech circle, collection occurs when centers come within 0.75M."
-`0.25 + 0.50 = 0.75`, where `0.50` is the *player's* collision radius (`docs/72:86`). The authored
+`0.25 + 0.50 = 0.75`, where `0.50` is the *player's* collision radius (`docs/72` `## Collision and Contact Footprints`). The authored
 operand `pickup_radius_m = 0.25` stays. This is the third writer for the same player-baseline constant,
 after the ten enemies (Ruling 12's precursor) and the four bosses (`4e12659`): change the mech's
 collision radius and this file is silently wrong with no validator to notice. A20's centre-distance rule
@@ -1468,6 +1484,15 @@ now covers `content/maps/` as well as `content/enemies/` and `content/bosses/`.
 
 `source_refs` was cleaned in an earlier pass, but the unstable citations had moved next door into
 domain fields, where no assertion looked. Line numbers are unstable wherever they hide.
+
+**The `Before` column below keeps its line numbers — dated note, 2026-08-11.** Those strings are
+reproduced verbatim from the JSON values this ruling removed; they are the exhibit, not a citation a
+reader is meant to resolve, and rewriting them would falsify the record of what was authored. For
+anyone who does want to resolve them: `docs/68-utility-catalog.md:253` is
+`## Modifier and timing rules` ("Flat statistic changes apply before percentage modifiers"), and
+`docs/weapons/README.md:48` is `## Design state` ("The shared common-ore price curve is fixed
+globally by DEC-085"). Both resolve at blob `21c555f`, the only revision of either document in this
+history and also HEAD.
 
 | Where | Before | After |
 | --- | --- | --- |
@@ -1480,9 +1505,11 @@ Two corrections to the review's own framing, both verified before writing:
 - The claim that `hyper-gold-sites.json` "already uses the stable form correctly in its own
   `source_refs`" was **false** — that array held only `GDD-MINING#hyper-gold-sites`. The stable form is
   nonetheless correct and was verified independently: `docs/32` declares
-  `doc_id: GDD-STANDARD-WAVE-SCHEDULE` and carries `## Hyper Gold threat-beacon response` at `:94`,
-  whose slug is `hyper-gold-threat-beacon-response`. A9 and A22 now both resolve it.
-- `docs/68:253` and `:255` both sit under `## Modifier and timing rules` (`docs/68:251`), so all eleven
+  `doc_id: GDD-STANDARD-WAVE-SCHEDULE` and carries a `## Hyper Gold threat-beacon response`
+  heading, whose slug is `hyper-gold-threat-beacon-response`. A9 and A22 now both resolve it.
+- The two cited `docs/68` bullets — “Flat statistic changes apply before percentage modifiers” and
+  “Recovery sources add in Hull Integrity per second” — both sit under `## Modifier and timing
+  rules`, so all eleven
   utilities cite one anchor.
 
 **New assertion (A24).** No string value anywhere under `content/` may match `docs/.*\.md`.
@@ -1499,12 +1526,19 @@ pass. The keys are removed and `note` is added to `FORBIDDEN_KEYS`. Text is repr
 | `content/mechs/MCH-06.json :: cross_doc_notes[1].note` | "Razorback with both maximum Servo Overdrive and Rank-3 Vector Thrusters moves at 4.05M/s: `3.0 × (1 + 0.10 + 0.10 + 0.15)`." |
 | `content/weapons/stat-price-formula.json :: price_curve_decision.note` | "The shared common-ore price curve is fixed globally by DEC-085 (docs/weapons/README.md:48)." |
 
-The two `movement_speed_m_per_s` values **stay**: `docs/72:55` states 3.30M/s and `docs/72:57` states
-4.05M/s flat, so they are transcribed, not derived here. Only the prose restating them is gone, and
+The two `movement_speed_m_per_s` values **stay**: `docs/72` `## Movement and Speed Modifiers` states
+both flat — "Razorback with its +10% trait moves at 3.30M/s" and "Razorback with both moves at
+4.05M/s" — so they are transcribed, not derived here. Only the prose restating them is gone, and
 `cross_doc_notes[]: GDD-PLAYER-SURVIVABILITY-BASELINE#movement-and-speed-modifiers` still carries the
-citation. The third note's `docs/weapons/README.md:48` pointer is worth recording as unresolvable —
-there is no `docs/weapons/` directory in this repo — which is precisely why a `path:line` string in a
-domain field is a defect rather than a convenience.
+citation. The third note's `docs/weapons/README.md:48` pointer was recorded here as unresolvable,
+"there is no `docs/weapons/` directory in this repo". **That is false against this tree — corrected
+2026-08-11, and the claim is withdrawn rather than quietly deleted.** `docs/weapons/README.md`
+exists (51 lines, blob `21c555f`, its only revision in this history) and its line 48 does say "The
+shared common-ore price curve is fixed globally by DEC-085", under `## Design state`. So the pointer
+resolved when it was written and resolves now, and the note text quoted above keeps its coordinate
+because it is a verbatim reproduction of a deleted JSON value. The reason a `path:line` string in a
+domain field is still a defect is the ordinary one and does not need a false premise: the line
+number decays as soon as the cited document is edited, and nothing in this tree would notice.
 
 #### Ruling 27 — three assertions were rewritten because they did not check what they cited
 
@@ -1570,16 +1604,16 @@ It is replaced by four value assertions, each carrying its own citation:
 
 | Assertion | Value | Citation |
 | --- | --- | --- |
-| destructible rock Hull | `100` | `docs/72:194` |
-| destructible rock damage footprint diameter | `0.80` M | `docs/72:196` |
-| health pack repair | `25` Hull | `docs/72:182` |
-| health pack pickup radius | `0.25` M | `docs/72:185` |
+| destructible rock Hull | `100` | `docs/72` `### Destructible rock` |
+| destructible rock damage footprint diameter | `0.80` M | `docs/72` `### Destructible rock` |
+| health pack repair | `25` Hull | `docs/72` `### Health pack` |
+| health pack pickup radius | `0.25` M | `docs/72` `### Health pack` |
 
 All four verified against the document before the assertion was written, and all four reproduce.
 
 **A25 (new) — polarity agreement, the automation of a hand check.** Ruling 22's Flux Amber
 investigation had to verify six `resonance_behavior.modifier.direction` values by reading
-`docs/40:104-109` by eye. Nothing stopped a seventh from being wrong. A25 draws a closed polarity
+`docs/40` `### Geode resonance fields` by eye. Nothing stopped a seventh from being wrong. A25 draws a closed polarity
 vocabulary of opposed pairs — higher/lower, increase/decrease, more/less, faster/slower,
 shorter/longer, raise/reduce, gain/lose — and fails when a structured polarity value contradicts the
 polarity words in the prose beside it. It fires on strict contradiction only: prose carrying words of
@@ -1599,7 +1633,7 @@ does. `src/MechaMiner.Tools/ContentImport/README.md` already described it accura
 `effects.contact_damage_percent_cap = {percent: 400}` — two spellings of a bound holding *different*
 values, which could have been two bounds or one bound plus a transcription mistake. Renaming without
 knowing which would have destroyed a value. The document owner has now answered, and the sentence was
-re-read here before writing anything. `docs/71-initial-weapon-numeric-catalog.md:346`:
+re-read here before writing anything. `docs/71-initial-weapon-numeric-catalog.md` `### Tethered Reaper — Conversion — 2 Eidolon Coral`:
 
 > The four cutters combine into one blade with 200% current cutter radius. Its contact Damage is
 > `200% + up to 200%` of current Damage, scaling linearly with blade world speed from stationary to one
@@ -1678,21 +1712,21 @@ extent for any of them. The three share one cause, so they are one gap:
 - `BOSS-01 :: ability.lane_width_m`. Being transcribed: the width of Riftjaw's charge lane. Expected: a
   width in metres, because the ability's hit test is an area and the roster gives every other parameter
   of the ability numerically — 8 s cadence, 1 s telegraph, 1.5 s charge, 180% / 5.40 M/s, 27 damage.
-  What the document actually says: `docs/31:134` — "displays a **wide** straight charge lane toward the
-  mech's sampled position". "Wide" is the only extent given, and `docs/31:136`'s "before covering one
+  What the document actually says: `docs/31` `## BOSS-01 — Riftjaw` — "displays a **wide** straight charge lane toward the
+  mech's sampled position". "Wide" is the only extent given, and `docs/31` `## BOSS-01 — Riftjaw`'s "before covering one
   body length" dimensions the lane's *length* test, not its width.
 - `BOSS-02 :: ability.ring_radius_m`. Being transcribed: the radius of the Skitterling ring Brood Titan
   sheds. Expected: a radius in metres, since the sibling `ring_opening_degrees` is authored as 90 and a
   ring needs both an angular opening and a radius to be placed. What the document actually says:
-  `docs/31:143` — "releases 16 Skitterlings in an incomplete ring **just outside its body**". The
+  `docs/31` `## BOSS-02 — Brood Titan` — "releases 16 Skitterlings in an incomplete ring **just outside its body**". The
   placement is given relative to the body with no offset, and the boss's 2.00 M contact diameter is the
   only nearby length. Deriving a radius from it would author a number `docs/31` does not state.
 - `BOSS-04 :: ability.marker_diameter_m`. Being transcribed: the diameter of Skybreaker Apex's locked
   landing marker. Expected: a diameter in metres — the sibling `marker_shape` is authored as "Circle"
   and landing damage of 35 applies "inside the circle", so the circle's size decides the ability's
-  entire threat area. What the document actually says: `docs/31:162` — "marks a **circular area**
-  centered on the mech's sampled position" — and `docs/31:163` — "Landing deals 35 damage inside the
-  circle." Neither gives a size, and the boss circles `docs/31:35` defers to
+  entire threat area. What the document actually says: `docs/31` `## BOSS-04 — Skybreaker Apex` — "marks a **circular area**
+  centered on the mech's sampled position" — and `docs/31` `## BOSS-04 — Skybreaker Apex` — "Landing deals 35 damage inside the
+  circle." Neither gives a size, and the boss circles `docs/31` `## Ordinary roster overview` defers to
   `docs/72-player-survivability-and-damage-baseline.md#collision-and-contact-footprints` are the
   bosses' own contact diameters, not their ability markers.
 
@@ -1700,7 +1734,7 @@ extent for any of them. The three share one cause, so they are one gap:
 living enemies count as clustered, which gates a +50% weapon damage bonus. Expected: a distance in
 metres; it is the sole spatial condition of the relic's headline effect, its sibling
 `minimum_other_living_enemies_for_clustering` is authored as 1, and the damage figure itself is authored
-as 50 percentage points. What the document actually says: `docs/69-initial-relic-catalog.md:121` — "An
+as 50 percentage points. What the document actually says: `docs/69-initial-relic-catalog.md` `## REL-06 — Event-Horizon Coupler` — "An
 enemy within the **displayed** clustering distance of at least one other living enemy takes 50% more
 weapon damage." The distance is described as displayed to the player and is never stated, and unlike
 `REL-08` below the section does not say the value remains tuning — so the relic's central threshold is
@@ -1708,10 +1742,10 @@ simply missing.
 
 **Gap 3 — `UTL-R1 :: availability.coverage_role`.** Being transcribed: the resource radar's
 coverage-role label. Expected: one of the role labels the utility catalog assigns every other
-fresh-profile utility, because the radar is a fresh-profile utility — `docs/50:106` and
-`docs/68:272` both have it offered in every profile. What the document actually says: the "Coverage
-role" column at `docs/68:265-272` has exactly six rows, one per material (Direct offense, Mining speed,
-Weapon tempo, Mobility, Recovery, Economy), and the radar is not one of them; `docs/68:272` mentions it
+fresh-profile utility, because the radar is a fresh-profile utility — `docs/50` `### Decided behavior` and
+`docs/68` `## Fresh-profile and unlocked availability` both have it offered in every profile. What the document actually says: the "Coverage
+role" column at `docs/68` `## Fresh-profile and unlocked availability` has exactly six rows, one per material (Direct offense, Mining speed,
+Weapon tempo, Mobility, Recovery, Economy), and the radar is not one of them; `docs/68` `## Fresh-profile and unlocked availability` mentions it
 only as "plus the resource radar", outside the table. **What existed before this entry, precisely.** `content/README.md` listed this
 field's *path* among ten it named as gaps, but nowhere in the repository recorded the *substance* — what
 was being transcribed, what value was expected and why, or what the document says instead — and
@@ -1754,13 +1788,13 @@ reader would need:
 - `first_playable_subset.temporary_substitute` on six enemies (`EN-01`–`EN-04`, `EN-06`, `EN-07`). The
   sibling `included` is authored `true` on all six, so no substitute is needed and the field is
   vestigial rather than missing — recorded so it is not later read as a hole.
-- `resonance_behavior.edge_case_rule` on three resources (`A`, `E`, `F`). `docs/40:110-116` states
+- `resonance_behavior.edge_case_rule` on three resources (`A`, `E`, `F`). `docs/40` `### Geode resonance fields` states
   edge-case rules for Cinderglass, Barysteel and Driftmetal and states none for Asterite, Eidolon Coral
   or Flux Amber. One gap: three of the six resonance behaviors have no stated edge case.
 
 **Not gaps, and deliberately not written up as such.** 22 nulls sit under fields whose document says
 the value varies per instance or is decided at generation time, and two more (`presentation` on the
-destructible rock and the health pack) sit under `docs/51-standard-map-generation-contract.md:156`'s
+destructible rock and the health pack) sit under `docs/51-standard-map-generation-contract.md` `## Destructible rocks`'s
 "Audiovisual treatment remains production work". A specification that deliberately defers a value is a
 specification, not a hole; writing register-style entries for them would dilute the gaps above. Their
 keys are simply omitted.
@@ -1794,7 +1828,7 @@ invented field, not a missing value.
 **Reported, not acted on at the time: the ten enemies also carry `armor`.** Every one of
 `EN-01`–`EN-10` holds a top-level `armor: 0` — a value, not a null, so it is outside Ruling 29's scope,
 and the 40 `### Enemies and bosses` argument above would apply to it identically. The 0 comes from one prose sentence at
-`docs/31:25` ("Ordinary enemies have no Armor"), not from a roster column. The ruling named bosses only,
+`docs/31` `## Shared ordinary-enemy rules` ("Ordinary enemies have no Armor"), not from a roster column. The ruling named bosses only,
 so the ten enemy fields were **left exactly as authored** and referred back to the integration owner
 rather than removed under an extended reading of a ruling that did not mention them.
 **SUPERSEDED by Ruling 32** — the integration owner has now ruled on the ten directly, and they are
@@ -1825,7 +1859,7 @@ set at all**, which is a stronger assertion than one carrying two permanent exem
 #### Deliberate deferrals and pending citations
 
 - **`landmark_pools` (`MGC-01`)** — key omitted, and **no gap entry written**. It is already tracked as
-  `OQ-008` at `docs/open-questions.md:42`; duplicating a live open question into a gap register would
+  `OQ-008` at `docs/open-questions.md` `### OQ-008 — How does exploration work?`; duplicating a live open question into a gap register would
   create two places to resolve one thing.
 - **`extraction_zone_radius_m` (4 mining-site classes) and `resonance_field.radius_m`
   (specialized-material geodes)** — keys omitted, and these are **not gaps**: `DEC-128` sets them at
@@ -1835,7 +1869,7 @@ set at all**, which is a stronger assertion than one carrying two permanent exem
   dangling-citation rule). This is a distinct state from "no document supplies this" and is recorded as
   such so the next pass adds the numbers with their citation rather than re-deriving the gap.
 - **`presentation` on the destructible rock and the health pack** — keys omitted, no gap entry, per
-  `docs/51:156` above.
+  `docs/51` `## Destructible rocks` above.
 
 #### A consequence the conversion produced, and `A22` caught: 19 citations de-scoped
 
@@ -1860,7 +1894,7 @@ of them has a prerequisite, so the file-level scope is the honest one.
 > "The enemy speed increase ends immediately when mining stops because the mech leaves, the point
 > completes, or the simulation pauses."
 
-`docs/69-initial-relic-catalog.md:153` states:
+`docs/69-initial-relic-catalog.md` `## REL-09 — Claim-Jumper Core` states:
 
 > "Every living enemy receives +50% movement speed while extraction progress is actively advancing. The
 > increase begins with forward progress and ends immediately when mining stops because the mech leaves,
@@ -1874,15 +1908,15 @@ is incomplete without the condition that starts it. The field presented itself a
 nothing structural could see the change: it is not a null, not a naming defect, not a value, and no
 value-preservation proof over numeric leaves would ever touch it.
 
-**The fix.** The verbatim second sentence of `docs/69:153` is restored. This is **our** transcription
+**The fix.** The verbatim second sentence of `docs/69` `## REL-09 — Claim-Jumper Core` is restored. This is **our** transcription
 error, not a design-source contradiction, so it belongs here and not in the contradictions section.
 
 **Second case, judged rather than fixed.** `content/mining-sites/specialized-material-geodes.json ::
 progress_decay.rule` reads "The reward is withheld until the Complete transition, so an incomplete
 attempt pays nothing", which overlaps its cited section (`GDD-MINING#specialized-material-geodes`) by
 very little and uses `Complete`-transition vocabulary from the technical state diagram rather than the
-geode section's wording. Reading the cited text: `docs/40:78` says the geode "awards that unit and 50
-common ore **only at completion** and provides **no partial material or ore payout**", and `docs/40:42`,
+geode section's wording. Reading the cited text: `docs/40` `### Specialized-material geodes` says the geode "awards that unit and 50
+common ore **only at completion** and provides **no partial material or ore payout**", and `docs/40` `## Mining state flow`,
 in a different section, says "Material geodes and Hyper Gold sites **withhold their primary reward until
 the `Complete` transition**." **Conclusion: this field is our own description, not a quotation, and the
 text is left alone.** There is no single passage it could be a verbatim quote of — it synthesises two
@@ -1985,8 +2019,8 @@ after.
 
 | # | Field | Was | Now | Source |
 | --: | --- | --- | --- | --- |
-| 1 | `content/branches/W-DE-focal-array.json :: effects.pellet_path` | `…converge on a focal point.` | `…converge on a focal point` | `docs/71-initial-weapon-numeric-catalog.md:443` |
-| 2 | `content/branches/W-CE-critical-mass-cycle.json :: effects.charge_consumption` | `…the count that pulse hits.` | `…the count that pulse hits` | `docs/71-initial-weapon-numeric-catalog.md:382` |
+| 1 | `content/branches/W-DE-focal-array.json :: effects.pellet_path` | `…converge on a focal point.` | `…converge on a focal point` | `docs/71-initial-weapon-numeric-catalog.md` `### Focal Array — Conversion — 2 Cinderglass` |
+| 2 | `content/branches/W-CE-critical-mass-cycle.json :: effects.charge_consumption` | `…the count that pulse hits.` | `…the count that pulse hits` | `docs/71-initial-weapon-numeric-catalog.md` `### Critical-Mass Cycle — Amplification — 2 Eidolon Coral` |
 
 The two source lines, quoted in full, are the whole of the evidence:
 
@@ -2020,13 +2054,13 @@ recorded under Ruling 29's `(c2)` above; the ten were **not** removed by extendi
 
 Confirmed at the source before editing, as required:
 
-- **`docs/31-initial-alien-roster.md:37` — the ordinary-enemy table columns are `ID | Identity | Family
+- **`docs/31-initial-alien-roster.md` `## Ordinary roster overview` — the ordinary-enemy table columns are `ID | Identity | Family
   | Hull | Move | Contact | Body | Control resistance | Earliest minute`. There is no armor column.**
-- `docs/31:25` states it outright: "Ordinary enemies have no Armor. Their listed control resistance
+- `docs/31` `## Shared ordinary-enemy rules` states it outright: "Ordinary enemies have no Armor. Their listed control resistance
   reduces player-authored displacement magnitude and timed control duration…" — an **absence
   statement**, which is the crux (see the rock contrast below).
-- Armor is a player-side stat: `docs/72-player-survivability-and-damage-baseline.md:36` gives the mech
-  Armor 0 in the Shared Player Baseline, and `docs/72:121` applies it to *incoming* damage ("Subtract
+- Armor is a player-side stat: `docs/72-player-survivability-and-damage-baseline.md` `## Shared Player Baseline` gives the mech
+  Armor 0 in the Shared Player Baseline, and `docs/72` `## Incoming Damage Resolution` applies it to *incoming* damage ("Subtract
   current Armor, to a minimum of one damage unless the effect ignores Armor").
 - `docs/technical/40-content-data-and-validation.md` `### Enemies and bosses`'s enemies-and-bosses field list omits Armor,
   while `:110`'s mech list includes it.
@@ -2055,15 +2089,15 @@ reasoning nearly deleted four authored boss diameters (Ruling 23).
 
 A destructible rock's Armor is **stated, as a value, in a property table**:
 
-- `docs/72-player-survivability-and-damage-baseline.md:190` opens `### Destructible rock`, and its
+- `docs/72-player-survivability-and-damage-baseline.md` `### Destructible rock` opens `### Destructible rock`, and its
   property table gives `| Hull | 100 |` at `:194`, **`| Armor | 0 |` at `:195`**, and
   `| Damage footprint diameter | 0.80M |` at `:196`. The Armor row sits *between* two values this tree
   already asserts.
-- `docs/51-standard-map-generation-contract.md:156` — "Every rock has 100 Hull, zero Armor, a non-solid
+- `docs/51-standard-map-generation-contract.md` `## Destructible rocks` — "Every rock has 100 Hull, zero Armor, a non-solid
   0.80M weapon-damage footprint, and no response to control."
-- Corroborated in the same enumerated form at `docs/50-maps-resources-and-navigation.md:94`,
-  `docs/30-combat-weapons-movement-camera.md:102`, `docs/glossary.md:102`, and as a tagged row in
-  `docs/data/survivability-baseline.csv:25` (`rock,hull,100,Hull,Zero Armor`).
+- Corroborated in the same enumerated form at `docs/50-maps-resources-and-navigation.md` `## Destructible rocks`,
+  `docs/30-combat-weapons-movement-camera.md` `## Combat progression`, `docs/glossary.md` `## Destructible rock`, and as a tagged row in
+  `docs/data/survivability-baseline.csv`, its `rock,hull,100,Hull,Zero Armor` row.
 
 **The asymmetry is structural, not a judgement call.** For an enemy the document says the stat *does not
 exist* ("have no Armor"); for a rock the document *assigns the stat a value of zero*, in the same
@@ -2077,15 +2111,15 @@ A coverage gap, not a value change. `destructible_rock_rules.active_maximum: 16`
 `initial_count: 16` were transcribed correctly and **no assertion covered either**. Both are now `A13`
 world-prop value rows.
 
-Verified at the source: `docs/51-standard-map-generation-contract.md:146` — "Standard mode maintains a
+Verified at the source: `docs/51-standard-map-generation-contract.md` `## Destructible rocks` — "Standard mode maintains a
 dynamic population capped at **16 active destructible rocks** … The run begins with 16 rocks at valid
 offscreen positions around deployment." That one line authors both values, which is why both rows cite
-it. `docs/72:203` corroborates the cap only ("The existing one-attempt-per-second, 10% success chance,
+it. `docs/72` `### Destructible rock` corroborates the cap only ("The existing one-attempt-per-second, 10% success chance,
 and 16-rock active cap remain unchanged"), so it is recorded as corroboration rather than as the
 citation for `initial_count`.
 
-**Why it was missed generalises, and that is the reason it is written down.** Rock Hull 100 (`docs/72:194`)
-and the 0.80 M footprint (`docs/72:196`) were both already asserted, and they **bracket** the population
+**Why it was missed generalises, and that is the reason it is written down.** Rock Hull 100 (`docs/72` `### Destructible rock`)
+and the 0.80 M footprint (`docs/72` `### Destructible rock`) were both already asserted, and they **bracket** the population
 rules in the same document section. **A value whose neighbours are asserted reads as covered.** That is a
 distinct failure shape from the two this branch has already fixed: it is not a gate that *cannot fail*
 (the A21 non-JSON row, the old world-prop key-family probe) and not a gate that *fires wrongly* (the
@@ -2129,7 +2163,7 @@ modify `docs/`), reported in the pass summary.
 
 | # | Path | Value | Why it left |
 | --: | --- | ---: | --- |
-| 1 | `EN-01 :: armor` | 0 | Ruling 32 — a field for a stat `docs/31:25` says enemies do not have |
+| 1 | `EN-01 :: armor` | 0 | Ruling 32 — a field for a stat `docs/31` `## Shared ordinary-enemy rules` says enemies do not have |
 | 2 | `EN-02 :: armor` | 0 | Ruling 32, same reason |
 | 3 | `EN-03 :: armor` | 0 | Ruling 32, same reason |
 | 4 | `EN-04 :: armor` | 0 | Ruling 32, same reason |
@@ -2434,7 +2468,7 @@ than converting once, late, so these wait on a provenance answer and a grammar. 
 migration is pending and must land as one pass.
 
 **The counter-evidence to the exact-string clause, recorded with its own qualification.**
-`docs/technical/23-encounter-director-and-enemy-runtime.md:115` — verified by opening the file — reads
+`docs/technical/23-encounter-director-and-enemy-runtime.md` `### Needler` — verified by opening the file — reads
 "Projectile speed, damage, lifetime, terrain collision, and no-homing flags are snapshotted at
 creation." `EN-06`'s `specialist_attack.projectile.snapshot_at_creation` is
 `["speed", "damage", "lifetime", "terrainCollision", "noHoming"]`: **the same five members in the same
@@ -2466,7 +2500,7 @@ opinion about it.
    `W-AB-unbounded-bore`, `W-AE-replicator-swarm`). **Any remaining hit discharges this item; an empty
    remainder leaves it open.** Measured that way it is empty at both refs above. Somebody preferring an
    answer does not discharge it. **The grep is exact-string, and that is a real limit on the check, not
-   a formality:** `docs/technical/23-encounter-director-and-enemy-runtime.md:115` describes two of the
+   a formality:** `docs/technical/23-encounter-director-and-enemy-runtime.md` `### Needler` describes two of the
    eight in prose spelling ("terrain collision", "no-homing") and the grep cannot see it, as the
    paragraph above records. A same-meaning occurrence in prose does **not** discharge this item, because
    prose that carries neither casing cannot answer a casing question; what discharges it is an
@@ -2624,7 +2658,7 @@ record**, and the count of re-baselined records is printed on every run.
 
 | record | classification | what verifies the refresh |
 | --- | --- | --- |
-| `content/relics/REL-09.json → pause_behavior.rule` | frozen string is the **pre-fix drifted text** of audit §3; the live string is the corrected quotation | **The cited section**: `docs/69-initial-relic-catalog.md:153`, inside `GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core`, character-for-character |
+| `content/relics/REL-09.json → pause_behavior.rule` | frozen string is the **pre-fix drifted text** of audit §3; the live string is the corrected quotation | **The cited section**: `docs/69-initial-relic-catalog.md` `## REL-09 — Claim-Jumper Core`, inside `GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core`, character-for-character |
 | `content/encounters/standard-encounter-schedule.json → minute_rows[33].formation_events[0].reconstruction_basis` | **authored prose, not a quotation** — `no-match` before and after; there is no cited section to verify it against | **`A24` plus Ruling 40**: the frozen string ends `See content/transcription-notes.md.`, embedding a repo path in a value, which `A24` forbids unconditionally, so the frozen string cannot legally exist in this tree. The live string is the A24-compliant replacement of Rulings 25/26/31 |
 
 The second is refreshed on **weaker and different** evidence than the first — an assertion and a
@@ -2819,9 +2853,9 @@ therefore applied to all six surviving families:
 | enemy and boss world speed (17) | No — it is the **derived** side 40 `### Enemies and bosses` names | the survivability report, now restored |
 | PowerUp cumulative cost (58) | No | the doc-stated 9,450 that A14 checks, in `docs/` |
 | utility total rank ore cost (13) | No | 40 `### Analytical`; operands (`rank_ore_costs`) retained |
-| resource aggregate total (13) | No | the 400-unit run ceiling stated at `50:24` and `10:86` |
+| resource aggregate total (13) | No | the 400-unit run ceiling stated at `docs/50-maps-resources-and-navigation.md` `## Randomized resource profile` and `docs/10-core-game-loop.md` `### Crafting and upgrades` |
 | mining-site aggregate total (13) | No | 40 `### Mining sites` "their totals" |
-| map-contract site-based Hyper Gold (1) | No | the 300 per map stated at `50:24` |
+| map-contract site-based Hyper Gold (1) | No | the 300 per map stated at `docs/50-maps-resources-and-navigation.md` `## Randomized resource profile` |
 
 **None of the six is a comparand that lives only in `content/`** — in every case the independent side is a
 `docs/` line or table, which is what makes the compiler's recomputation a real check rather than a
@@ -3232,6 +3266,47 @@ headings those citations meant are the ones this file's own prose now names dire
 `### Enemies and bosses` for `:114`. Nothing in `src/MechaMiner.Tools/ContentImport/` resolves
 any of these coordinates at runtime, so none of them is load-bearing on a gate; they are a
 record, and their staleness is recorded rather than repaired.
+
+**The other 419 `<doc>:<n>` citations below are frozen note text too, and every one of them still
+resolves — dated note, 2026-08-11.** Same rule, same reason: they are reproduced verbatim from the
+deleted `notes` arrays and are **not** rewritten. What is new is that they have now been resolved
+rather than assumed. Unlike the doc-40 case above, none of these twenty documents has been edited
+since the citations were written: each has exactly **one** revision in this branch's history,
+`21c555f`, so there is a single era and every coordinate below lands on the sentence it claims.
+Read each `:<n>` as a pointer into `21c555f`, which is also HEAD for these files. The headings they
+meant, per document and with the count of citations resolving to each:
+
+| document | heading each `:<n>` below resolves to (count) |
+| --- | --- |
+| `docs/31-initial-alien-roster.md` | `## Ordinary roster overview` (1) |
+| `docs/32-standard-wave-and-beacon-schedule.md` | `## Complete 35-minute schedule` (20), `## Hyper Gold threat-beacon response` (1) |
+| `docs/36-initial-mech-catalog.md` | `## Catalog overview` (15) |
+| `docs/40-mining-and-extraction.md` | `### Specialized-material geodes` (8), `## Automatic proximity activation` (5), `### Hyper Gold sites` (5), `### Geode resonance fields` (3), `### Rich ore seams` (2), `## Resource payout profiles` (1), `### Standard ore seams` (1), `## Related documents` (1) |
+| `docs/50-maps-resources-and-navigation.md` | `### Design role` (2), `### Decided behavior` (1), `## Randomized resource profile` (1) |
+| `docs/51-standard-map-generation-contract.md` | `## Purpose` (1) |
+| `docs/60-resources-crafting-progression.md` | `## Utility availability` (14), `## Specialized material identities` (6), `## Progression layers` (2), `## Run-local progression loop` (2), `### Hyper Gold purchase categories` (1), `## Cross-run progression loop` (1), `### Resource-radar safety valve` (1) |
+| `docs/61-specialized-resource-identities.md` | `## Accepted identity map` (13), ``## Asterite (`A`)`` (6), `## Accessibility and recognition standard` (6), `## Shared player-facing rules` (6), `## Geode resonance behavior` (4), `## Boundaries and remaining questions` (1) |
+| `docs/62-permanent-powerup-catalog.md` | `## Catalog overview` (13) |
+| `docs/63-permanent-option-unlock-catalog.md` | `## Catalog overview` (6) |
+| `docs/65-weapon-stat-and-branch-upgrades.md` | `## Individual stat upgrades` (31), `## Weapon branches` (30), `## Upgrade layers` (1) |
+| `docs/66-weapon-catalog-and-resource-graph.md` | `## Accepted base catalog assignment` (45) |
+| `docs/68-utility-catalog.md` | `## Shared acquisition and rank rules` (14), `## Modifier and timing rules` (13), `## Fresh-profile and unlocked availability` (12), `## Catalog overview` (1) |
+| `docs/69-initial-relic-catalog.md` | `## Catalog overview` (10), `## Fresh-profile and unlocked availability` (10) |
+| `docs/71-initial-weapon-numeric-catalog.md` | `## Measurement Conventions` (17), `## Base Weapon Summary` (15), `## Branch Numeric Summary` (5), `## Rank-Zero Values and Ore-Stat Increments` (3), `## W-AF — Tracking Laser` (1), `## W-DF — Ram Field` (1) |
+| `docs/72-player-survivability-and-damage-baseline.md` | `## Shared Player Baseline` (15) |
+| `docs/data/README.md` | its front matter and the preamble above the first `##` heading (15) |
+| `docs/glossary.md` | `## Specialized resource` (1) |
+| `docs/technical/23-encounter-director-and-enemy-runtime.md` | `## Population classes` (10), `## Elite construction` (1), `## Boss scheduling and lifecycle` (1), `### Skybreaker Apex` (1) |
+| `docs/technical/110-implementation-plan-for-ai-agents.md` | `### M5 — Full standard-run feature completeness` (1) |
+| `docs/weapons/README.md` | `## Catalog lookup` (15) |
+
+As with doc 40, **nothing in `src/MechaMiner.Tools/ContentImport/` resolves any of these coordinates
+at runtime**, on an exercised path or an unexercised one, so none of them is load-bearing on a gate.
+The consequence for the owners of those twenty documents is the one that matters: **no line number
+in any of them is load-bearing on this tree any more**, so none of them needs its length held
+steady on this tree's account. Where a coordinate above is the only thing distinguishing two cited
+lines under one heading, this file's own prose beside it names the value, so the distinction is
+carried by the sentence rather than by the number.
 
 #### Weapons (`content/weapons/`)
 
@@ -4668,7 +4743,8 @@ owners.
   IDs." Resources are absent, confirmed by reading all of `## Stable ID policy` (lines 65–72).
 - **`canonical_letter` is prose only, never a field name.** The token is absent from the entire
   repository (`grep -rn "canonical_letter" docs/ src/ content/` → no matches). "canonical letter" appears
-  three times, all in running prose: 40 `### Resources`, `docs/73-…:156`, `docs/73-…:189`. By contrast the doc names
+  three times, all in running prose: 40 `### Resources`, `docs/73-…` `### Resources`, `docs/73-…`
+  `### Radar bearings and waypoint bearing`. By contrast the doc names
   real fields in backticks in the `## Common definition envelope` table at 40 `## Common definition envelope`. **So
   `canonical_letter` as a field name would be a choice, not a mandate.**
   - **Resolved since — the bullet above is preserved as the record of what was argued, not corrected.**
@@ -4736,7 +4812,7 @@ files), `scales_with_attack_rate_ranks_and_global_modifiers`, `scales_with`,
 
 1. `REL-09 :: mining_decay_multiple_of_current_forward_extraction_rate` — same as finding A. **Fixed.**
 2. `REL-07 :: explosion_strength_scaling` and `explosion_area_scaling`, both `null`, multiplicativity
-   inferred from `docs/69-initial-relic-catalog.md:130` rather than from data. **Resolved by Ruling 15
+   inferred from `docs/69-initial-relic-catalog.md` `## REL-07 — Fission Seed` rather than from data. **Resolved by Ruling 15
    (omitted) and Ruling 14 (renamed) respectively — see the open tension recorded under Ruling 15.**
 3. `REL-07 :: elite_and_boss_scaling_cap`, `null`, a bound on a scaling whose name states neither a
    multiplier nor a unit. **Fixed — omitted, Ruling 15.**
@@ -4744,7 +4820,7 @@ files), `scales_with_attack_rate_ranks_and_global_modifiers`, `scales_with`,
    contents. **Open, unruled.**
 5. `W-CF-circuit-closure :: effects.eruption_damage_as_seconds_of_current_segment_damage = 6` —
    functionally a multiplier on current DPS, named as a duration, and doc-faithful
-   (`docs/71-initial-weapon-numeric-catalog.md:418`: "an eruption hit equal to six seconds of current
+   (`docs/71-initial-weapon-numeric-catalog.md` `### Circuit Closure — Conversion — 2 Driftmetal`: "an eruption hit equal to six seconds of current
    segment Damage"). **Open judgement call; arguably intended.**
 6. The `_percent_of_current_*` family (`charged_shot_width_percent_of_current_width = 200`,
    `secondary_blast_radius_percent_of_current_radius = 60`, `shell_blast_radius_percent_of_current_radius = 160`,
@@ -4759,8 +4835,11 @@ files), `scales_with_attack_rate_ranks_and_global_modifiers`, `scales_with`,
    **Open — a separate rule, already reported by the verifier as an A17 warning.**
 
 **`body_scale_factor` in this file is deliberately not scrubbed.** The audit found the dead spelling
-surviving at `content/transcription-notes.md:442`, `:451`, `:484-486`, `:597`, `:784`, `:811`, `:817` —
-both spellings in adjacent tables of one document. The ruling: **naming rules bind definitions, not
+surviving in this file's own shape-note and ruling tables — dated note, 2026-08-11: those seven
+coordinates were `content/transcription-notes.md:442`, `:451`, `:484-486`, `:597`, `:784`, `:811`,
+`:817` when the audit ran, and none of them still lands on a `body_scale_factor` occurrence, because
+this file has grown past them. Search the token instead of the line —
+both spellings appear in adjacent tables of one document. The ruling: **naming rules bind definitions, not
 documentation.** Ruling 7 is recorded as superseding the rename, and scrubbing the old spelling out of an
 audit trail stops it being a record. The verifier walks `content/**/*.json` definitions only. **Not a
 defect; no change.**
@@ -4775,10 +4854,10 @@ clean: no `_factor`/`_scale`/`_ratio`/`_times`/`_x` suffix anywhere in the JSON.
 
 | # | Property | Value | Doc support for a specific dimension | Verdict |
 | --- | --- | --- | --- | --- |
-| 1 | `W-CF-circuit-closure :: effects.minimum_enclosed_area_m2` | 4 | yes — `docs/71-…:418` "encloses at least 4M², the loop closes" | compliant |
-| 2 | `W-CF-circuit-closure :: effects.maximum_claimed_interior_area_m2` | 40 | yes — `docs/71-…:419` "A loop may claim at most 40M² of interior area" | compliant |
+| 1 | `W-CF-circuit-closure :: effects.minimum_enclosed_area_m2` | 4 | yes — `docs/71-…` `### Circuit Closure — Conversion — 2 Driftmetal` "encloses at least 4M², the loop closes" | compliant |
+| 2 | `W-CF-circuit-closure :: effects.maximum_claimed_interior_area_m2` | 40 | yes — `docs/71-…` `### Circuit Closure — Conversion — 2 Driftmetal` "A loop may claim at most 40M² of interior area" | compliant |
 | 3 | `REL-04 :: effects.weapon_area_multiplier` | 2 | no single dimension — it scales a set | **exempt, Ruling 17** |
-| 4 | `REL-07 :: effects.explosion_area_multiplier` (was `explosion_area_scaling`) | `null` | no — `docs/69-…:130` says only "Explosion strength and Area scale from that enemy's maximum Hull" | **renamed under Ruling 14; exemption reasoning of Ruling 17 applies to the `area` half; the `null` is the open tension under Ruling 15** |
+| 4 | `REL-07 :: effects.explosion_area_multiplier` (was `explosion_area_scaling`) | `null` | no — `docs/69-…` `## REL-07 — Fission Seed` says only "Explosion strength and Area scale from that enemy's maximum Hull" | **renamed under Ruling 14; exemption reasoning of Ruling 17 applies to the `area` half; the `null` is the open tension under Ruling 15** |
 | 5 | `maps/… :: topology.optional_pockets.terminal_area_rule` | prose | n/a — region noun | compliant |
 | 6 | `maps/… :: topology.optional_pockets.exit_readable_from_terminal_area` | `true` | n/a — region noun | compliant |
 
@@ -4786,8 +4865,9 @@ clean: no `_factor`/`_scale`/`_ratio`/`_times`/`_x` suffix anywhere in the JSON.
 
 | Property | Value | Problem | Status |
 | --- | --- | --- | --- |
-| `maps/… :: deployment_and_opening_fairness.obstacle_free_radius_in_mining_zone_diameters` | 1 | a **radius** measured in **diameters**; `docs/51-…:70` ("obstacle-free space at least one mining-zone diameter around the mech") does not say whether the radius or the diameter of the clear envelope is meant. `docs/technical/50-…:99` and `docs/51-…:47` use "diameters" as a unit of *width* elsewhere. Factor-of-two risk. | **not touched — Ruling 18**, escalated for a doc correction |
-| `W-DF :: fixed_properties.forward_reach_m` | 1.2 | "reach" is not one of 40 `## Unit and numeric policy`'s five words; `docs/71-…:89` and `docs/data/weapon-base-balance.csv:15` both say "1.2M forward reach" and neither says whether it is measured from mech centre or hull front | **open** |
+| `maps/… :: deployment_and_opening_fairness.obstacle_free_radius_in_mining_zone_diameters` | 1 | a **radius** measured in **diameters**; `docs/51-…` `## Deployment and opening fairness` ("obstacle-free space at least one mining-zone diameter around the mech") does not say whether the radius or the diameter of the clear envelope is meant. `docs/51-…` `## Specialized-material geodes` and `docs/51-…` `### Redundant major routes` use
+"diameters" as a unit of *width* elsewhere. Factor-of-two risk. | **not touched — Ruling 18**, escalated for a doc correction |
+| `W-DF :: fixed_properties.forward_reach_m` | 1.2 | "reach" is not one of 40 `## Unit and numeric policy`'s five words; `docs/71-…` `## Rank-Zero Values and Ore-Stat Increments` (the `W-DF` row) and the `W-DF` row of `docs/data/weapon-base-balance.csv` both say "1.2M forward reach" and neither says whether it is measured from mech centre or hull front | **open** |
 | `W-AF-cutting-vector :: effects.range` | `"the upgradeable laser range"` | a bare `range` — an allowed dimension word, but not *which* range | **open** |
 | `W-DF-siege-anchor :: effects.barrier_thickness_source` | `"current ram width"` | dimension-word mismatch: key says *thickness*, value says *width*; "thickness" is outside 40 `## Unit and numeric policy`'s five words | **open** |
 | `W-AB-fracture-lance :: effects.shockwave_reach_per_side_m` | 2.5 | "reach" again; `per_side` resolves the half-vs-full ambiguity, but no doc line states the dimension or the value | **open** |
@@ -4820,7 +4900,7 @@ rather than summarized away.
 1. **40 `## Unit and numeric policy` applied to the `Area` stat.** Read literally, "`area` is never used as a vague scalar name"
    condemns `REL-04 :: effects.weapon_area_multiplier` — and a validator enforcing it would have demanded
    a specific dimension in the name. That would have been **wrong**: `Area` is an established stat
-   classification (`docs/35-playable-mechs.md:65`), whose membership `docs/36-initial-mech-catalog.md:137`
+   classification (`docs/35-playable-mechs.md` `## Mech-specific trait`), whose membership `docs/36-initial-mech-catalog.md` `### Signature and trait`
    defines as "scalable radii, widths, blast areas, projectile bodies, cones, and persistent damage zones",
    with explicit exclusions at `:138`. Naming one dimension would encode a falsehood about a scalar that
    deliberately spans several. The rule binds a field naming a measured dimension of a specific shape, not
@@ -4828,7 +4908,8 @@ rather than summarized away.
 2. **A geometry-naming validator applied to
    `obstacle_free_radius_in_mining_zone_diameters`.** The name is internally odd — a radius in diameters —
    and any mechanical fix (rename the key, or normalize the unit) would have silently chosen one of two
-   readings that differ by a factor of two, because `docs/51-…:70` does not say which is meant. The correct
+   readings that differ by a factor of two, because `docs/51-…` `## Deployment and opening fairness`
+   does not say which is meant. The correct
    output is *no change plus an escalation* (Ruling 18). A validator that "fixes" this produces a map
    contract that is quietly wrong in one direction.
 
@@ -5143,9 +5224,9 @@ three-way choice — `-expander` for a radius, area or capacity, `-amplifier` fo
 
 #### `weapon.rock_targeting_behavior` (15) — both spellings assigned
 
-Criterion, stated once, from `22:90`: does the attack, at the weapon's level *or* at the level of an actor
+Criterion, stated once, from `22` `## Target acquisition`: does the attack, at the weapon's level *or* at the level of an actor
 it spawns, select a target from enemy candidates? `fallback-when-no-enemy-in-domain` takes all four
-content words from `22:90`'s own sentence ("A rock becomes an eligible fallback only when no valid enemy
+content words from `22` `## Target acquisition`'s own sentence ("A rock becomes an eligible fallback only when no valid enemy
 lies in that weapon's acquisition domain"); `incidental-geometry-only` takes "geometric" and "incidentally"
 from the next sentence and adds "only" to mark that this side has no other route to a rock.
 
@@ -5154,10 +5235,10 @@ from the next sentence and adds "only" to mark that this side has no other route
 16. `W-AE` → `fallback-when-no-enemy-in-domain` — the drones "acquire targets independently", so the domain is the spawned actor's; answering the rock field at the actor level is exactly what its declined `targeting_policy` refuses to do (I-5).
 17. `W-AF` → `fallback-when-no-enemy-in-domain` — "locks to one target in range" plus `fixed_properties.focus_resets_on_target_loss` proves it tracks target identity, which makes "no valid enemy in domain" a real state for it.
 18. `W-BC` → `fallback-when-no-enemy-in-domain` — "selects the nearest enemy within current range" is an explicit selection step, so the fallback applies exactly when that selection returns nothing.
-19. `W-BE` → `fallback-when-no-enemy-in-domain` — pods "fire independently", so the pod's empty domain is the condition; the untargeted deployment step is not the attack, and `22:90` governs attacks.
-20. `W-CD` → `fallback-when-no-enemy-in-domain` — "strikes the nearest target within 8M" plus `initial_acquisition_range_m` names acquisition and domain in one sentence, and `22:90`'s "Rocks never consume enemy-only chain slots" is written for it.
+19. `W-BE` → `fallback-when-no-enemy-in-domain` — pods "fire independently", so the pod's empty domain is the condition; the untargeted deployment step is not the attack, and `22` `## Target acquisition` governs attacks.
+20. `W-CD` → `fallback-when-no-enemy-in-domain` — "strikes the nearest target within 8M" plus `initial_acquisition_range_m` names acquisition and domain in one sentence, and `22` `## Target acquisition`'s "Rocks never consume enemy-only chain slots" is written for it.
 21. `W-EF` → `fallback-when-no-enemy-in-domain` — "dividing them across valid targets when possible" plus `acquire_range_m: 12` makes the salvo enemy-targeting, so a rock must not eat a missile an enemy could have taken.
-22. `W-AB` → `incidental-geometry-only` — "fires down the mech's current facing line" with no selection step, and `22:45` selects a *direction* rather than a target, so there is no domain that could be empty.
+22. `W-AB` → `incidental-geometry-only` — "fires down the mech's current facing line" with no selection step, and `22` `## Initial behavior registry` selects a *direction* rather than a target, so there is no domain that could be empty.
 23. `W-BD` → `incidental-geometry-only` — a mine triggers "on the first valid enemy entering their radius", a proximity trigger rather than an acquisition domain, so a rock inside the radius can only be incidental.
 24. `W-BF` → `incidental-geometry-only` — "four cutters orbit the mech" damaging an enemy "while their collision shapes overlap" is pure geometry, with no candidate list for a fallback to substitute into.
 25. `W-CE` → `incidental-geometry-only` — `damages_every_valid_target_in_radius: true` with `has_target_or_overlap_maximum: false` says the pulse selects nobody, and a weapon that selects nobody has no empty-domain state.
@@ -5168,7 +5249,7 @@ from the next sentence and adds "only" to mark that this side has no other route
 #### `branch.behavior_kind` (3)
 
 29. `W-BD-seed-charges` → `seeded-micro-mines` — built from `micro_mines_per_parent_explosion: 4` and `micro_mine_placement: "evenly around the blast edge"`; doc 22's leftover fragment "arming/lifetime" describes the parent mine, though the branch does carry its own `micro_mine_arm_seconds`, so a reader may argue the fragment fits.
-30. `W-DF-momentum-cascade` → `momentum-stacks` — keeps doc 22's noun from `22:58`'s "movement stacks" but takes its qualifier from the branch's own `stack_name: "Momentum"`, because "movement stacks" is shared verbatim with `22:56`.
+30. `W-DF-momentum-cascade` → `momentum-stacks` — keeps doc 22's noun from `22` `## Initial behavior registry`'s "movement stacks" but takes its qualifier from the branch's own `stack_name: "Momentum"`, because "movement stacks" is shared verbatim with `22` `## Initial behavior registry`.
 31. `W-CF-runaway-wake` → `wake-movement-ramp` — this branch has no stack counter, only `ramp_starts_after_continuous_movement_seconds` and `maximum_reached_at_continuous_movement_seconds`, so "stacks" is inaccurate and "ramp" names the continuous function; flatter alternative `wake-movement-stacks`.
 
 #### `weapon-stat-price-formula.formula_kind` (1)
@@ -5177,17 +5258,17 @@ from the next sentence and adds "only" to mark that this side has no other route
 
 ### The 8 declinations — what is missing, and what would settle each
 
-- **`weapon.behavior_kind` · `W-AB`.** `22:45`'s "fast finite piercing **projectile/trace** along selected direction" names two members of `22:35` at once (`finite projectile`, `hitscan trace`) and the rule may neither pick one nor concatenate them; both readings are live (`projectile_speed_m_per_s: 30` argues finite projectile, while branch `W-BC-zero-lag-emitter` exists to convert a projectile *to* a trace). The slug rule cannot help — it would happily mint a sixteenth primitive. **Settled by:** an edit to `22:45` replacing `projectile/trace` with one member, or, if the slash is deliberate, a doc-22 sentence permitting two primitives per weapon *plus* a ruling on what 40 `## Behavior registries`'s "exactly one registered descriptor" then means.
-- **`weapon.behavior_kind` · `W-DF`.** `22:58`'s "persistent facing-aligned contact capsule/rectangle" matches no member of the fifteen: `persistent field` is placed in the world while `W-DF`'s volume is rigidly attached to facing and gated on movement, and `orbit contact` is an orbiting actor. **Settled by:** a sixteenth member on `22:35` naming a mech-attached contact volume, or a doc-22 sentence filing `W-DF` under `persistent field`. A schema change cannot settle it.
-- **`weapon.targeting_policy` · `W-AF`.** Retention, not acquisition: `22:85` lists "current target retention/hysteresis" as a bullet separate from `22:34`'s six policies, `22:92` says "Beams and homing actors use behavior-specific retention hysteresis", and the file says "locks to one target in range" without saying which. **Settled by:** a seventh member on `22:34` naming retention/hysteresis targeting, or a separately granted `target_retention` field, so the two concerns `22:85` keeps apart are not forced into one token.
-- **`weapon.targeting_policy` · `W-AE`.** The policy belongs to the spawned actor: drones "acquire targets independently" and "Several drones may choose the same target", and `22:48` books "actor transforms and targets" as the persistent state, so `nearest` would be true of the drone and false of the weapon. **Settled by:** a decision on where two-level targeting lives — an `actor_targeting_policy` field, or a nested actor block for weapons that spawn autonomous actors — or a doc-22 sentence stating that a weapon's `targeting_policy` is the policy of whatever actor performs the attack.
-- **`weapon.targeting_policy` · `W-BD`.** No member covers a trigger volume: `facing` fails (the mine is dropped at the mech's own position on a travel interval, no direction chosen), `nearest` fails ("the first valid enemy entering their radius" is temporal, not metric), `radial` fails (the radius is a trigger threshold, not a direction of fire). **Settled by:** a seventh member on `22:34` for proximity or trigger-volume targeting, or a doc-22 sentence that a weapon whose attack is performed by a placed child has no weapon-level policy — which converts this into an omission. **Settle with `W-CF` or not at all.**
-- **`weapon.targeting_policy` · `W-BF`.** `radial` is the near miss and fails on geometry: radial motion runs *along* the radius outward, whereas four cutters at a fixed `orbit_radius_m: 2.2` (`cutter_count: 4`) move tangentially, orthogonal to it; `facing` fails because the orbit is unchanged by where the mech points. **Settled by:** a member on `22:34` for fixed-radius tangential sweep, or a doc-22 sentence declaring `radial` to cover any mech-centred geometry regardless of direction of motion — which must then also rule on `W-CF`.
-- **`weapon.targeting_policy` · `W-CF`.** `facing` fails on direction: a trail is laid at positions the mech has *already occupied*, so its orientation is the mech's history rather than its current aim, and `simultaneous_segment_overlap_maximum_per_target` exists precisely because the two diverge when the mech turns. **Settled by:** a member on `22:34` for path-history geometry, or a doc-22 sentence that `facing` covers direction of travel as well as of aim — which must then also rule on `W-BD`. **Settle with `W-BD` or not at all.**
-- **`weapon.targeting_policy` · `W-EF`** *(newly declined; was assigned `nearest`)*. The weapon's own fields state a **distribution** rule and decline an ordering: `base_behavior` "dividing them across valid targets when possible", branch `W-EF-mirv-saturation.effects.micro_missile_targeting` "They select distinct nearby targets before assigning extras", branch `W-EF-guardian-reserve.effects.reserve_full_behavior` "newly produced missiles launch normally at **any target** in acquisition range". `22:34` has no distribution member. Targeting is also booked at the missile rather than the weapon: `22:59` "**missile target/turn state**", `global_attack_rate_mapping.unaffected_timing` "Missile movement, reserve life, and **targeting**", and `22:92`'s "**homing actors** use behavior-specific retention hysteresis" covers "A missile can retarget if its target dies". The only route to `nearest` was `22:88`'s global tie-break ("then distance squared"), which applies to every target request in the game and so discriminates nothing. **Settled by:** *either* an edit to `content/weapons/W-EF.json`'s `base_behavior` naming which target a missile takes (which converts the site to a **transcription** outright), *or* a member on `22:34` for multi-target salvo distribution, *or* the same two-level-actor decision as `W-AE` and `W-BE`, since `22:59` books target state at the missile.
+- **`weapon.behavior_kind` · `W-AB`.** `22` `## Initial behavior registry`'s "fast finite piercing **projectile/trace** along selected direction" names two members of `22` `## Behavior implementation strategy` (the fifteen runtime-model primitives) at once (`finite projectile`, `hitscan trace`) and the rule may neither pick one nor concatenate them; both readings are live (`projectile_speed_m_per_s: 30` argues finite projectile, while branch `W-BC-zero-lag-emitter` exists to convert a projectile *to* a trace). The slug rule cannot help — it would happily mint a sixteenth primitive. **Settled by:** an edit to `22` `## Initial behavior registry` replacing `projectile/trace` with one member, or, if the slash is deliberate, a doc-22 sentence permitting two primitives per weapon *plus* a ruling on what 40 `## Behavior registries`'s "exactly one registered descriptor" then means.
+- **`weapon.behavior_kind` · `W-DF`.** `22` `## Initial behavior registry`'s "persistent facing-aligned contact capsule/rectangle" matches no member of the fifteen: `persistent field` is placed in the world while `W-DF`'s volume is rigidly attached to facing and gated on movement, and `orbit contact` is an orbiting actor. **Settled by:** a sixteenth member on `22` `## Behavior implementation strategy` (the fifteen runtime-model primitives) naming a mech-attached contact volume, or a doc-22 sentence filing `W-DF` under `persistent field`. A schema change cannot settle it.
+- **`weapon.targeting_policy` · `W-AF`.** Retention, not acquisition: `22` `## Target acquisition` lists "current target retention/hysteresis" as a bullet separate from `22` `## Behavior implementation strategy` (the six targeting policies)'s six policies, `22` `## Target acquisition` says "Beams and homing actors use behavior-specific retention hysteresis", and the file says "locks to one target in range" without saying which. **Settled by:** a seventh member on `22` `## Behavior implementation strategy` (the six targeting policies) naming retention/hysteresis targeting, or a separately granted `target_retention` field, so the two concerns `22` `## Target acquisition` keeps apart are not forced into one token.
+- **`weapon.targeting_policy` · `W-AE`.** The policy belongs to the spawned actor: drones "acquire targets independently" and "Several drones may choose the same target", and `22` `## Initial behavior registry` books "actor transforms and targets" as the persistent state, so `nearest` would be true of the drone and false of the weapon. **Settled by:** a decision on where two-level targeting lives — an `actor_targeting_policy` field, or a nested actor block for weapons that spawn autonomous actors — or a doc-22 sentence stating that a weapon's `targeting_policy` is the policy of whatever actor performs the attack.
+- **`weapon.targeting_policy` · `W-BD`.** No member covers a trigger volume: `facing` fails (the mine is dropped at the mech's own position on a travel interval, no direction chosen), `nearest` fails ("the first valid enemy entering their radius" is temporal, not metric), `radial` fails (the radius is a trigger threshold, not a direction of fire). **Settled by:** a seventh member on `22` `## Behavior implementation strategy` (the six targeting policies) for proximity or trigger-volume targeting, or a doc-22 sentence that a weapon whose attack is performed by a placed child has no weapon-level policy — which converts this into an omission. **Settle with `W-CF` or not at all.**
+- **`weapon.targeting_policy` · `W-BF`.** `radial` is the near miss and fails on geometry: radial motion runs *along* the radius outward, whereas four cutters at a fixed `orbit_radius_m: 2.2` (`cutter_count: 4`) move tangentially, orthogonal to it; `facing` fails because the orbit is unchanged by where the mech points. **Settled by:** a member on `22` `## Behavior implementation strategy` (the six targeting policies) for fixed-radius tangential sweep, or a doc-22 sentence declaring `radial` to cover any mech-centred geometry regardless of direction of motion — which must then also rule on `W-CF`.
+- **`weapon.targeting_policy` · `W-CF`.** `facing` fails on direction: a trail is laid at positions the mech has *already occupied*, so its orientation is the mech's history rather than its current aim, and `simultaneous_segment_overlap_maximum_per_target` exists precisely because the two diverge when the mech turns. **Settled by:** a member on `22` `## Behavior implementation strategy` (the six targeting policies) for path-history geometry, or a doc-22 sentence that `facing` covers direction of travel as well as of aim — which must then also rule on `W-BD`. **Settle with `W-BD` or not at all.**
+- **`weapon.targeting_policy` · `W-EF`** *(newly declined; was assigned `nearest`)*. The weapon's own fields state a **distribution** rule and decline an ordering: `base_behavior` "dividing them across valid targets when possible", branch `W-EF-mirv-saturation.effects.micro_missile_targeting` "They select distinct nearby targets before assigning extras", branch `W-EF-guardian-reserve.effects.reserve_full_behavior` "newly produced missiles launch normally at **any target** in acquisition range". `22` `## Behavior implementation strategy` (the six targeting policies) has no distribution member. Targeting is also booked at the missile rather than the weapon: `22` `## Initial behavior registry` "**missile target/turn state**", `global_attack_rate_mapping.unaffected_timing` "Missile movement, reserve life, and **targeting**", and `22` `## Target acquisition`'s "**homing actors** use behavior-specific retention hysteresis" covers "A missile can retarget if its target dies". The only route to `nearest` was `22` `## Target acquisition`'s global tie-break ("then distance squared"), which applies to every target request in the game and so discriminates nothing. **Settled by:** *either* an edit to `content/weapons/W-EF.json`'s `base_behavior` naming which target a missile takes (which converts the site to a **transcription** outright), *or* a member on `22` `## Behavior implementation strategy` (the six targeting policies) for multi-target salvo distribution, *or* the same two-level-actor decision as `W-AE` and `W-BE`, since `22` `## Initial behavior registry` books target state at the missile.
 
 **The omission (1) — `weapon.targeting_policy` · `W-BE`.** Not a declination. Pods "fire independently" and
-`22:52` books "creation order, life, target/fire state" as the pod's state, so this is a positive finding
+`22` `## Initial behavior registry` books "creation order, life, target/fire state" as the pod's state, so this is a positive finding
 that the pod owns the targeting and the weapon-level field has no referent — a claim about where the field
 belongs, not about what the vocabulary lacks. **Settled by** the same decision as `W-AE`.
 
@@ -5231,7 +5312,7 @@ recomputation.
 
 **R-C — the whole `behavior_registration.hook` string slugged into one `relic.behavior_kind` (10).**
 Invents zero names, asserts no hook vocabulary, asserts no one-hook-per-relic shape. Each string is also
-byte-identical to the left cell of doc 22's hook table (`22:154`–`22:163`), so both sources are available
+byte-identical to the left cell of doc 22's hook table (`22` `## Relic integration`–`22` `## Relic integration`), so both sources are available
 and an edit to either is detectable. `behavior_registration` does not survive the mint — one-time
 derivation only. 10 of 10 slugs distinct, 10 of 10 match the pattern.
 
@@ -5248,8 +5329,8 @@ derivation only. 10 of 10 slugs distinct, 10 of 10 match the pattern.
 | `mining-rate and conditional enemy-speed transformation` | `mining-rate-and-conditional-enemy-speed-transformation` | `REL-09` |
 | `weapon-slot activation gate and rotating phase` | `weapon-slot-activation-gate-and-rotating-phase` | `REL-10` |
 
-**R-D — `weapon.behavior_kind` is the member of `22:35` that doc 22's own "Primary runtime model" cell
-names (13).** `22:35` verbatim, the stated set: `finite projectile, homing projectile, hitscan trace, beam,
+**R-D — `weapon.behavior_kind` is the member of `22` `## Behavior implementation strategy` (the fifteen runtime-model primitives) that doc 22's own "Primary runtime model" cell
+names (13).** `22` `## Behavior implementation strategy` (the fifteen runtime-model primitives) verbatim, the stated set: `finite projectile, homing projectile, hitscan trace, beam,
 sector volley, chain, circle pulse, delayed impact, persistent field, trail segment, orbit contact,
 deployable, drone, mine, and explosion`. Matching is by the model cell, never by the weapon's flavour text.
 
@@ -5268,8 +5349,8 @@ trajectory **without homing**") · `distance-traveled production, arming, proxim
 `four-missile homing salvo` → `homing-projectile` (`W-EF`).
 Granted but unused members: `hitscan trace`, `explosion`. `W-AB` and `W-DF` are the two declinations.
 
-**R-E — `weapon.targeting_policy` is the member of `22:34` whose own word appears in a source sentence
-(8).** `22:34` verbatim, the stated set: `nearest, priority, concentration, facing, radial, and
+**R-E — `weapon.targeting_policy` is the member of `22` `## Behavior implementation strategy` (the six targeting policies) whose own word appears in a source sentence
+(8).** `22` `## Behavior implementation strategy` (the six targeting policies) verbatim, the stated set: `nearest, priority, concentration, facing, radial, and
 fallback-rock targeting;`. The test is the member *word*, present, not a paraphrase.
 
 `fires down the mech's current facing line` → `facing` (`W-AB`) ·
@@ -5279,7 +5360,7 @@ fallback-rock targeting;`. The test is the member *word*, present, not a paraphr
 `strikes the nearest target within 8M` → `nearest` (`W-CD`) ·
 `emits a radial pulse centered on the mech` → `radial` (`W-CE`) ·
 `fires five pellets across a 60° facing cone` → `facing` (`W-DE`) ·
-`persistent facing-aligned contact capsule/rectangle` (`22:58`) **and** `pushed along the mech's facing
+`persistent facing-aligned contact capsule/rectangle` (`22` `## Initial behavior registry`) **and** `pushed along the mech's facing
 direction` (the definition's own `base_behavior`) → `facing` (`W-DF`).
 Granted but unused members: `priority`, `fallback-rock`.
 
@@ -5290,21 +5371,21 @@ mismatches are assignments 29–31 above.
 
 | weapon | fragment → token, three per row |
 | --- | --- |
-| `W-AB` (`22:45`) | `shockwaves` → `shockwaves` (fracture-lance) · `charge-by-travel` → `charge-by-travel` (kinetic-capacitor) · `unlimited pierce` → `unlimited-pierce` (unbounded-bore) |
-| `W-AC` (`22:46`) | `seeded secondary blasts` → `seeded-secondary-blasts` (saturation-cascade) · `lingering field` → `lingering-field` (interdiction-payload) · `danger-close center replacement` → `danger-close-center-replacement` (danger-close-protocol) |
-| `W-AD` (`22:47`) | `delayed echo` → `delayed-echo` (echo-well) · `end burst/launch` → `end-burst-launch` (gravity-slingshot) · `collection mass and singularity cycle` → `collection-mass-and-singularity-cycle` (singularity-forge) |
-| `W-AE` (`22:48`) | `temporary clone cap` → `temporary-clone-cap` (replicator-swarm) · `shared focus` → `shared-focus` (wolfpack-protocol) · `rotating containment links` → `rotating-containment-links` (containment-lattice) |
-| `W-AF` (`22:49`) | `memory decay` → `memory-decay` (coherence-memory) · `exposure debuff` → `exposure-debuff` (target-designator) · `facing beam hysteresis` → `facing-beam-hysteresis` (cutting-vector) |
-| `W-BC` (`22:50`) | `hitscan replacement` → `hitscan-replacement` (zero-lag-emitter) · `recent-hit preference/slow` → `recent-hit-preference-slow` (suppressive-sequencer) · `fixed lateral pair` → `fixed-lateral-pair` (broadside-oscillator) |
-| `W-BD` (`22:51`) | `selective population trigger` → `selective-population-trigger` (selective-detonators) · `hunter state` → `hunter-state` (hunter-mines) · *third fragment `arming/lifetime` is assignment 29* |
-| `W-BE` (`22:52`) | `overclock count` → `overclock-count` (battery-overclock) · `guardian priority` → `guardian-priority` (guardian-firmware) · `anchored bastion packing` → `anchored-bastion-packing` (forward-bastion) |
-| `W-BF` (`22:53`) | `flywheel stacks` → `flywheel-stacks` (kinetic-flywheel) · `projectile interception` → `projectile-interception` (deflection-ring) · `delayed-path reaper` → `delayed-path-reaper` (tethered-reaper) |
-| `W-CD` (`22:54`) | `unlimited dense chain` → `unlimited-dense-chain` (total-conduction) · `hard control` → `hard-control` (disruption-current) · `moving ball-lightning actor` → `moving-ball-lightning-actor` (ball-lightning-projector) |
-| `W-CE` (`22:55`) | `victim charge` → `victim-charge` (critical-mass-cycle) · `push/slow` → `push-slow` (kinetic-vent) · `long-charge supernova cycle` → `long-charge-supernova-cycle` (supernova-cycle) |
-| `W-CF` (`22:56`) | `enemy-carried trails` → `enemy-carried-trails` (carrier-ignition) · `loop detection/consumption` → `loop-detection-consumption` (circuit-closure) · *third fragment `movement stacks` is assignment 31* |
-| `W-DE` (`22:57`) | `all-target cone wave` → `all-target-cone-wave` (saturation-choke) · `once-per-volley control` → `once-per-volley-control` (concussive-fan) · `focal convergence` → `focal-convergence` (focal-array) |
-| `W-DF` (`22:58`) | `transferred launched-enemy collision` → `transferred-launched-enemy-collision` (impact-transfer) · `stationary ring` → `stationary-ring` (siege-anchor) · *third fragment `movement stacks` is assignment 30* |
-| `W-EF` (`22:59`) | `split children` → `split-children` (mirv-saturation) · `reserve queue` → `reserve-queue` (guardian-reserve) · `rotating radial spiral` → `rotating-radial-spiral` (spiral-barrage) |
+| `W-AB` (`22` `## Initial behavior registry`) | `shockwaves` → `shockwaves` (fracture-lance) · `charge-by-travel` → `charge-by-travel` (kinetic-capacitor) · `unlimited pierce` → `unlimited-pierce` (unbounded-bore) |
+| `W-AC` (`22` `## Initial behavior registry`) | `seeded secondary blasts` → `seeded-secondary-blasts` (saturation-cascade) · `lingering field` → `lingering-field` (interdiction-payload) · `danger-close center replacement` → `danger-close-center-replacement` (danger-close-protocol) |
+| `W-AD` (`22` `## Initial behavior registry`) | `delayed echo` → `delayed-echo` (echo-well) · `end burst/launch` → `end-burst-launch` (gravity-slingshot) · `collection mass and singularity cycle` → `collection-mass-and-singularity-cycle` (singularity-forge) |
+| `W-AE` (`22` `## Initial behavior registry`) | `temporary clone cap` → `temporary-clone-cap` (replicator-swarm) · `shared focus` → `shared-focus` (wolfpack-protocol) · `rotating containment links` → `rotating-containment-links` (containment-lattice) |
+| `W-AF` (`22` `## Initial behavior registry`) | `memory decay` → `memory-decay` (coherence-memory) · `exposure debuff` → `exposure-debuff` (target-designator) · `facing beam hysteresis` → `facing-beam-hysteresis` (cutting-vector) |
+| `W-BC` (`22` `## Initial behavior registry`) | `hitscan replacement` → `hitscan-replacement` (zero-lag-emitter) · `recent-hit preference/slow` → `recent-hit-preference-slow` (suppressive-sequencer) · `fixed lateral pair` → `fixed-lateral-pair` (broadside-oscillator) |
+| `W-BD` (`22` `## Initial behavior registry`) | `selective population trigger` → `selective-population-trigger` (selective-detonators) · `hunter state` → `hunter-state` (hunter-mines) · *third fragment `arming/lifetime` is assignment 29* |
+| `W-BE` (`22` `## Initial behavior registry`) | `overclock count` → `overclock-count` (battery-overclock) · `guardian priority` → `guardian-priority` (guardian-firmware) · `anchored bastion packing` → `anchored-bastion-packing` (forward-bastion) |
+| `W-BF` (`22` `## Initial behavior registry`) | `flywheel stacks` → `flywheel-stacks` (kinetic-flywheel) · `projectile interception` → `projectile-interception` (deflection-ring) · `delayed-path reaper` → `delayed-path-reaper` (tethered-reaper) |
+| `W-CD` (`22` `## Initial behavior registry`) | `unlimited dense chain` → `unlimited-dense-chain` (total-conduction) · `hard control` → `hard-control` (disruption-current) · `moving ball-lightning actor` → `moving-ball-lightning-actor` (ball-lightning-projector) |
+| `W-CE` (`22` `## Initial behavior registry`) | `victim charge` → `victim-charge` (critical-mass-cycle) · `push/slow` → `push-slow` (kinetic-vent) · `long-charge supernova cycle` → `long-charge-supernova-cycle` (supernova-cycle) |
+| `W-CF` (`22` `## Initial behavior registry`) | `enemy-carried trails` → `enemy-carried-trails` (carrier-ignition) · `loop detection/consumption` → `loop-detection-consumption` (circuit-closure) · *third fragment `movement stacks` is assignment 31* |
+| `W-DE` (`22` `## Initial behavior registry`) | `all-target cone wave` → `all-target-cone-wave` (saturation-choke) · `once-per-volley control` → `once-per-volley-control` (concussive-fan) · `focal convergence` → `focal-convergence` (focal-array) |
+| `W-DF` (`22` `## Initial behavior registry`) | `transferred launched-enemy collision` → `transferred-launched-enemy-collision` (impact-transfer) · `stationary ring` → `stationary-ring` (siege-anchor) · *third fragment `movement stacks` is assignment 30* |
+| `W-EF` (`22` `## Initial behavior registry`) | `split children` → `split-children` (mirv-saturation) · `reserve queue` → `reserve-queue` (guardian-reserve) · `rotating radial spiral` → `rotating-radial-spiral` (spiral-barrage) |
 
 **Row count check.** 15 + 12 + 10 + 13 + 8 + 42 = **100**, which is the transcribed cell of the population
 table above.
@@ -5328,19 +5409,19 @@ The pattern being satisfied throughout, identically on all twelve fields:
 - **I-1.** The ruling that hrufl9 is the transcription source has an **empty antecedent**: no definition on that ref carries a minted behavior token — every one lives under `tests/**/Fixtures/` — and 40 `## Minted value vocabularies` denies fixture strings authority anyway ("a token that has only ever appeared in a schema `enum`, a code comment, or a chat log carries no authority here"). An earlier pass applied that ruling five times; all five applications are withdrawn. What hrufl9 legitimately supplies is the grammar and the field names, not tokens.
 - **I-2.** hrufl9's `relic.schema.json` says a relic-to-hook mapping "is therefore not derivable today", yet the same sentence's tail permits the slug ("this token asserts neither a hook vocabulary nor a one-hook-per-relic shape"). The grant must **quote the tail clause, not the head**, or a reader who quotes only the head will conclude the mint defied the schema author.
 - **I-3.** `W-EF` was assigned under one ruling and declined under another; **the discriminator test resolves it to declined**, which is what empties `weapon.targeting_policy`'s `assigned` cell. An empty `assigned` cell is an acceptable outcome, not a defect.
-- **I-4.** `22:58` is unusable for one of `W-DF`'s fields and authoritative for another: its `behavior_kind` is declined because the eleven words match no member of `22:35`, while `targeting_policy` transcribes `facing` from the same words. This is weaker than previously stated — `W-DF`'s own `base_behavior` also contains "pushed along the mech's **facing** direction", so the site survives on the definition and not only on doc 22.
-- **I-5.** The two-level-actor finding is answered on `rock_targeting_behavior` and refused on `targeting_policy` for the **same four** weapons (`W-AE`, `W-BE`, `W-AF`, and now `W-EF`): each gets a rock token reasoned at the spawned actor's or the retained target's level, while its policy is declined or omitted because the weapon level is the wrong level. Defensible, because `22:90` is written about *attacks* and `22:34` about *weapons* — but the grant must say so, or one defect appears to get two dispositions.
+- **I-4.** `22` `## Initial behavior registry` is unusable for one of `W-DF`'s fields and authoritative for another: its `behavior_kind` is declined because the eleven words match no member of `22` `## Behavior implementation strategy` (the fifteen runtime-model primitives), while `targeting_policy` transcribes `facing` from the same words. This is weaker than previously stated — `W-DF`'s own `base_behavior` also contains "pushed along the mech's **facing** direction", so the site survives on the definition and not only on doc 22.
+- **I-5.** The two-level-actor finding is answered on `rock_targeting_behavior` and refused on `targeting_policy` for the **same four** weapons (`W-AE`, `W-BE`, `W-AF`, and now `W-EF`): each gets a rock token reasoned at the spawned actor's or the retained target's level, while its policy is declined or omitted because the weapon level is the wrong level. Defensible, because `22` `## Target acquisition` is written about *attacks* and `22` `## Behavior implementation strategy` (the six targeting policies) about *weapons* — but the grant must say so, or one defect appears to get two dispositions.
 - **I-6.** The framing paragraph's citation and count were both wrong: the compiler assertion is at **40 `## Behavior registries`**, not 40 `### Presentation and audio`, and it asserts the one-descriptor check over **seven** kinds of thing (`behavior_kind`, targeting policy, formula, modifier hook, formation, effect, presentation recipe), two of which are outside this family and one of which is not the relic hook. State it as **four granted, seven asserted, zero overlap** — stronger, and true.
 - **I-7.** Five of the twelve fields end with a vocabulary 40 `## Minted value vocabularies` will not call grounded (`branch`, `relic`, `utility`, `mech.inherent_trait`, `resource.resonance_behavior` — 80 of the 141 instances): "A vocabulary is **grounded** only when the document it cites **states the set**. A resolving citation is necessary and not sufficient." Use doc 40's own "Token provenance" column (40 `## Minted value vocabularies`) and record `branch` as fragments rather than as a vocabulary.
 - **I-8.** The utility head nouns `-expander`, `-amplifier` and `-accelerator` appear in no document and in no definition — the only place in the package where a morpheme has no source at all. Only the qualifiers are transcribed. The utility vocabulary must not be presented on the same footing as `enemy.behavior_kind`'s, whose tokens are the authored strings themselves.
 - **I-9.** `boss.behavior_kind`'s single token is shared by all four bosses, so 40 `## Behavior registries`'s "exactly one registered descriptor" gives four bosses with differing abilities one descriptor whose parameter schema must then carry the ability. Correct as a transcription — what differs per boss lives in the excluded field `boss.ability.kind` — but a registry-shape consequence to raise before the grant lands, not after the manifest is emitted.
 - **I-10.** The registry namespace is undeclared. `SemanticCheck.BehaviorToken` applies one grammar with **no per-field namespace**, and 40 `## Behavior registries` speaks of "every content `behavior_kind`" as one population, so `facing` as a targeting policy and any future `facing` as a behavior kind would be one descriptor. No collision exists today (`facing`, `facing-beam-hysteresis` and `targeting-replacement-and-facing-conversion` are distinct). The grant must say whether the registry is one namespace or twelve: it reads as one and is authored as twelve.
-- **I-11.** Four survivors, one line each: `22:34`'s unused `fallback-rock` member covers the same distinction as the whole of `rock_targeting_behavior`, which `22:86` frames as a **boolean** ("whether destructible rocks are fallback candidates") rather than as a token pair; granting lower-kebab on twelve fields settles the eight camelCase value tokens' grammar by implication unless the grant says it binds only the fields it names (those eight are measured in Ruling 39 above, and Ruling 39's reason for leaving them alone still stands); and 40 `## Minted value vocabularies` still cites two `content/schemas/*.json` files that exist on no ref but hrufl9 — a defect doc 40 now names in its own text, which is the model to copy.
+- **I-11.** Four survivors, one line each: `22` `## Behavior implementation strategy` (the six targeting policies)'s unused `fallback-rock` member covers the same distinction as the whole of `rock_targeting_behavior`, which `22` `## Target acquisition` frames as a **boolean** ("whether destructible rocks are fallback candidates") rather than as a token pair; granting lower-kebab on twelve fields settles the eight camelCase value tokens' grammar by implication unless the grant says it binds only the fields it names (those eight are measured in Ruling 39 above, and Ruling 39's reason for leaving them alone still stands); and 40 `## Minted value vocabularies` still cites two `content/schemas/*.json` files that exist on no ref but hrufl9 — a defect doc 40 now names in its own text, which is the model to copy.
 
-**Ruling A, offered to resolve I-4 and the two "movement stacks" assignments.** That `22:58` names a
+**Ruling A, offered to resolve I-4 and the two "movement stacks" assignments.** That `22` `## Initial behavior registry` names a
 movement effect usable as a `behavior_kind` source, **and** that its phrase "movement stacks" fails to
 uniquely identify a behavior, are **two different properties of one line, both true**: the line is a usable
-source for `W-DF`'s fields, while the three-word fragment it shares verbatim with `22:56` cannot name two
+source for `W-DF`'s fields, while the three-word fragment it shares verbatim with `22` `## Initial behavior registry` cannot name two
 different branches. Non-uniqueness of a fragment is not unusability of the line.
 
 **Ruling B, offered to resolve I-10.** The grammar check is **field-blind** — `SemanticCheck.BehaviorToken`

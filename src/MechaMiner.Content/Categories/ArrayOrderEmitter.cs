@@ -30,6 +30,20 @@ namespace MechaMiner.Content.Categories;
 /// <see cref="ArrayOrder.IdSet"/> over non-string elements fails loudly at the first write
 /// instead of being sorted by some incidental property of its serialized form.
 /// </para>
+/// <para>
+/// <b>A change to a declared class is invisible to a merge, and that generalises past this
+/// type.</b> The paragraph above says a disagreement between two statements of a field's class
+/// surfaces as a wrong hash rather than as an error; the same property makes such a change
+/// invisible to Git. <c>git merge-tree</c> reports a conflict only for competing <em>edits</em>,
+/// never for competing <em>semantics</em>: a branch that changes how a field is serialised and a
+/// branch that never touches the declaration merge clean, because the other side's blob is
+/// byte-identical to the merge base and there is nothing to collide with. The change is then
+/// adopted by a silent one-sided take, with no diff to review and no error, and it surfaces
+/// later as a hash that does not match a recorded one. <b>So a clean <c>merge-tree</c> is not
+/// evidence that a merge is safe when one side changed how something is written.</b> A
+/// serialisation change has to be announced to whoever holds recorded bytes - goldens, bundle
+/// hashes, evidence bundles - because nothing in the merge will announce it for them.
+/// </para>
 /// </remarks>
 public static class ArrayOrderEmitter
 {

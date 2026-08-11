@@ -153,33 +153,51 @@ public static class EnvelopeSchema
 
     private static readonly Dictionary<string, ArrayOrder> ArrayOrders = new(StringComparer.Ordinal)
     {
-        // Doc 40 § tags vocabulary says what tags are - terms from a closed vocabulary that
-        // "never carries behavior, never selects an implementation, and never gates a rule" -
-        // and says nothing about their order. Of the two treatments doc 40 grants, canonical
-        // order is granted to stable-ID sets, and a vocabulary term is not a stable ID: the
-        // same document draws that contrast itself, calling source_refs "an array of stable-ID
-        // strings" one section later. Sorting tags would therefore mean asserting they are IDs.
-        // Authored order asserts nothing, so that is what they get, and the choice is currently
-        // unexercised: all 138 authored definitions hold an empty tags array, measured at
-        // 674376c. Nothing needs minting for that to change: doc 40:28's fourth clause is
-        // already granted and simply names no member, so what is missing is a document
-        // assigning this field to one of the two clauses, not a third class. Until then this
-        // is an interim choice with the basis above and not something doc 40 says.
-        [Tags] = ArrayOrder.OrderedArray,
+        // A set, and the one envelope array where the set treatment is the supported reading
+        // rather than the unsupported one. tags holds terms from a closed vocabulary - doc 40
+        // § tags vocabulary, "never carries behavior, never selects an implementation, and
+        // never gates a rule" - the vocabulary is a set, TagVocabulary holds it in a
+        // HashSet, and the schema's own description treats the array as unordered. Two
+        // authorings of the same terms therefore mean the same thing, which is exactly the
+        // condition canonical order exists for; emitting them in authored order would assert
+        // that the sequence carries something, and nothing in the document or the data says
+        // it does. This costs zero bytes today - all 138 authored definitions hold an empty
+        // tags array, measured at c626d9f - which is the reason to settle it now rather than
+        // when the first authored tag makes it a hash change.
+        [Tags] = ArrayOrder.IdSet,
 
-        // Doc 40 § source_refs element grammar: "source_refs is an array of stable-ID strings",
-        // which is doc 40's set treatment verbatim.
+        // Authored order, and the argument is that the set treatment cannot be implemented for
+        // this field rather than that it would be unhelpful.
         //
-        // One question this leaves open, recorded rather than answered: an element may carry a
-        // scope prefix, "scope ': ' reference" per SourceRefGrammar, so ordinal order over whole
-        // elements sorts a scoped element under its scope name rather than under the reference
-        // it attributes - "currency: GDD-X#y" lands under 'c' while bare "GDD-X#y" lands under
-        // 'G'. Doc 40 does not say which key the order is over. Ordering on the whole element is
-        // total and deterministic, which is what a hash needs, so that is what canonical ID
-        // order does here; a document that wants the reference to be the key would change this
-        // one entry. No authored file has a repeated source_refs element (138 files, measured at
-        // 674376c), so the set treatment's ban on repeats costs nothing today.
-        [SourceRefs] = ArrayOrder.IdSet,
+        // Doc 40:28 grants canonical order to "stable-ID sets in canonical ID order". A sort
+        // over these elements is a sort by whole-element text, and on a scope-prefixed element
+        // those two orderings are not the same one: "currency: GDD-X#y" sorts under 'c' while a
+        // bare "GDD-X#y" sorts under 'G', so the key is the prefix and not the ID. A clause
+        // granting ID order cannot authorise ordering by something that is not the ID, so what
+        // a whole-element sort implements is a different rule that merely happens to be a sort.
+        // It follows that these elements are not stable-ID strings in that clause's sense: the
+        // element grammar declares the optional scope prefix as part of the element, and the
+        // corpus is composite through and through: 1196 of 1375 authored elements carry a scope
+        // prefix, every one of the 138 files holds at least one that does and at least one that
+        // does not, and no file is composite throughout - so on every definition in the tree a
+        // whole-element sort interleaves prefixed and bare elements. Measured at c626d9f. Doc
+        // 40's other sentence, calling the array "an array of stable-ID strings", is then either
+        // loose about the prefix or wrong about the field - and a question that flips committed
+        // bytes is not settled by leaning on the looser of two sentences in the same document.
+        //
+        // Authored order is the treatment that asserts nothing. It also preserves a reading
+        // order the corpus bears out: 118 of 138 files list their whole-definition references
+        // before their per-field ones, measured at c626d9f, so authored order carries at least
+        // that much information for a reader, while a whole-element sort would interleave the
+        // two by prefix letter.
+        //
+        // The open question, recorded and deliberately not closed here, because it is the
+        // document owner's: is a scope-prefixed per-field reference a stable-ID string for that
+        // clause at all, and if these are ever ordered, is the order over the whole element or
+        // over the ID after the prefix? Nothing on any ref answers it. Until it is written,
+        // authored order is the reading that asserts nothing, and this is the one entry that
+        // changes when the answer arrives.
+        [SourceRefs] = ArrayOrder.OrderedArray,
     };
 
     /// <summary>The canonical emission order of the envelope's fields.</summary>

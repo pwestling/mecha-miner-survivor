@@ -292,12 +292,21 @@ internal static class RegistrySelectorTypes
                 + ", and neither it nor its declaring type is declared anywhere under tests/");
     }
 
-    /// <summary>How many types the source index found. A count, so an emptied index is loud.</summary>
+    /// <summary>
+    /// How many types the source index found. Pinned to a literal by
+    /// <see cref="RegistrySelectorTypesTests.TheIndexFindsEveryTypeReflectionFindsInThisAssembly"/>,
+    /// so an emptied index is loud and so is one that lost a declaration form.
+    /// </summary>
     internal static int TypesIndexed => Sources.Value.Members.Count;
 
     /// <summary>
-    /// How many members the source index found, across every type. A count, so a return type the
-    /// <see cref="MethodDeclaration"/> regex stops matching is loud rather than silent.
+    /// How many members the source index found, across every type. Pinned to a literal by
+    /// <see cref="RegistrySelectorTypesTests.TheIndexRecordsEveryMethodReflectionFindsInThisAssembly"/>,
+    /// which is what makes a return type the <see cref="MethodDeclaration"/> regex stops matching
+    /// loud rather than silent. Until that literal existed the only assertion on this number was
+    /// that it exceeded zero, so a regex change could drop ten or a hundred declarations of the
+    /// 1195 recorded at <c>455d22f</c> without anything turning red - which is what the flat
+    /// return-type character class did.
     /// </summary>
     internal static int MembersIndexed => Sources.Value.Members.Values.Sum(members => members.Count);
 

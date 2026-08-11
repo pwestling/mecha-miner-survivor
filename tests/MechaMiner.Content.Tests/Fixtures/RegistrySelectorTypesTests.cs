@@ -75,9 +75,11 @@ internal sealed class RegistrySelectorTypesTests
                 "no type was compared, so this walk held the parser to nothing");
             Assert.That(
                 RegistrySelectorTypes.TypesIndexed,
-                Is.GreaterThan(0),
-                "the source index is empty, so every selector below would fail for one reason "
-                    + "and it would not be the registry's");
+                Is.EqualTo(TypesIndexed),
+                "types the source index found. A literal for the same reason the selector census "
+                    + "uses literals: a count compared against itself agrees on every input, "
+                    + "including an input that lost a declaration form. Nonzero, so an emptied "
+                    + "index is still loud");
             Assert.That(
                 missing,
                 Is.Empty,
@@ -193,9 +195,14 @@ internal sealed class RegistrySelectorTypesTests
                 "no method was compared, so this walk held the parser to nothing");
             Assert.That(
                 RegistrySelectorTypes.MembersIndexed,
-                Is.GreaterThan(0),
-                "the source index recorded no members at all, so every method-granular selector "
-                    + "would fail for one reason and it would not be the registry's");
+                Is.EqualTo(MembersIndexed),
+                "members the source index found, across every type. This is the assertion that "
+                    + "would have made ebbc38a's own defect red on the commit that introduced it: "
+                    + "Is.GreaterThan(0) was the only thing on this number until now, so a return "
+                    + "type the MethodDeclaration regex stopped matching could drop 10 or 100 "
+                    + "declarations in silence, which is exactly what the flat character class "
+                    + "did. If this moved, say in the message why the index now records more or "
+                    + "fewer declarations than it did");
             Assert.That(
                 unknownTypes,
                 Is.Empty,
@@ -293,6 +300,17 @@ internal sealed class RegistrySelectorTypesTests
     {
         return GenericArity.Replace(runtimeFullName.Replace('+', '.'), string.Empty);
     }
+
+    /// <summary>
+    /// Types the source index finds across the five source directories it reads, measured at
+    /// <c>f5b4e77</c>.
+    /// </summary>
+    private const int TypesIndexed = 221;
+
+    /// <summary>
+    /// Members the source index records across every type it finds, measured at <c>f5b4e77</c>.
+    /// </summary>
+    private const int MembersIndexed = 1190;
 
     /// <summary>The negative control: the resolver must be able to fail.</summary>
     [Test]

@@ -72,9 +72,33 @@ public static class ResourceSchema
         "banked-at-extraction");
 
     /// <summary>Which way a resonance modifier moves the statistic it names.</summary>
+    /// <remarks>
+    /// <para>
+    /// <b>The cited source was a document that does not exist.</b> This declaration named
+    /// <c>GDD-SPECIALIZED-RESOURCES</c>, and no document in <c>docs/</c> carries that
+    /// <c>doc_id</c> on any ref of this repository. A citation naming a nonexistent document is
+    /// worse than no citation: it sends a checker somewhere confidently wrong, and it reads as
+    /// grounded to anyone who does not try to follow it.
+    /// </para>
+    /// <para>
+    /// It now names the document that actually grants the set.
+    /// <c>docs/technical/40-content-data-and-validation.md</c> § Minted value vocabularies grants
+    /// four closed vocabularies, this among them, and its <c>doc_id</c> is
+    /// <c>TDD-CONTENT-DATA</c> - which is what
+    /// <see cref="ResourceClasses"/>, <see cref="PersistenceClasses"/> and the encounter
+    /// schedule's <c>TimestampProvenances</c>, the other three granted there, already cite.
+    /// </para>
+    /// <para>
+    /// The history is not erased by this: doc 40's own grant text records that the declaration
+    /// named a fiction, that the nearest real document is
+    /// <c>GDD-SPECIALIZED-RESOURCE-IDENTITIES</c> - <c>docs/61-specialized-resource-identities.md</c>
+    /// - and that it does not state the set either. That sentence is where a reader learns what
+    /// this citation used to say; the repair is only to stop repeating the fiction here.
+    /// </para>
+    /// </remarks>
     public static ClosedVocabulary ModifierDirections { get; } = new(
         "a resonance modifier direction",
-        "GDD-SPECIALIZED-RESOURCES",
+        "TDD-CONTENT-DATA",
         "increase",
         "decrease");
 

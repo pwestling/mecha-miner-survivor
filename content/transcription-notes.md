@@ -54,15 +54,27 @@ resolved, not ruled on; see “Sentry Pod deployment interval” in the shape no
 - **Affected definitions:** `EN-07` (`content/enemies/EN-07.json`).
 - **Ruling needed:** either the multiplier becomes `0.625`, or doc 72's stated diameter becomes
   `0.496 M`, or the multiplier is declared presentation-only and not a footprint input.
-- **RULED — third option, and the disagreement dissolves.** See
-  “Ruling 1 — enemies store a body scale, not a derived collision diameter” below. There was never
-  a second authored value: `docs/72:96`'s `0.50 M` is `0.496 M` typeset to two decimals, exactly as
-  every other row of that table is the body scale times `0.80 M` typeset to two decimals. The
-  authored quantity is the `0.62×` scale at `docs/31:45`; the diameter is derived and is now the
-  compiler's to produce (`docs/technical/40-content-data-and-validation.md:114`). The JSON no
-  longer carries a diameter, so nothing is internally inconsistent. The **docs side is being
-  corrected** — `docs/72:96` should read `0.496 M`, not `0.50 M`; that correction is not in this
-  pass's scope (`docs/` is out of scope here) and is the one action still open on C-1.
+- **RULED — third option, and the content-side disagreement dissolves.** See
+  “Ruling 1 — enemies store a body scale, not a derived collision diameter” below. The authored
+  quantity is the `0.62×` scale at `docs/31:45`; the diameter is derived and is now the compiler's
+  to produce (`docs/technical/40-content-data-and-validation.md:114`). The JSON no longer carries a
+  diameter, so nothing under `content/` is internally inconsistent, and `0.496` correctly appears in
+  no definition file.
+- **The reading behind that ruling, recorded here as an interpretation and not as a convention
+  quoted from doc 72.** The reading is that `docs/72:96`'s `0.50 M` is `0.496 M` typeset to two
+  decimals, as the rest of that column is a body scale times `0.80 M` typeset to two decimals.
+  **Doc 72 states no rounding or precision convention that these notes have read; the reading is an
+  inference from the shape of the table, made here.** It is also weak on its own evidence: the other
+  nine products are exact at two decimals, so that column has never needed a third decimal and
+  cannot distinguish a value authored at two decimals from one presented at two.
+- **What is still open on C-1 — a question, not an owed edit.** Whether `docs/72:96` should carry
+  the exact value is **contingent on two things nobody has checked**: whether that line is scoped to
+  the Razorling specifically or states a general/baseline figure, and whether doc 72 has a rounding
+  or precision convention under which `0.50` is already `0.496` rendered at two decimals. Until both
+  are answered, no docs-side edit is owed and none is in progress; these notes assert no answer. The
+  question belongs to the design-document holder (`docs/31`, `docs/72`). The evidence on both sides,
+  including which arguments are non-discriminating, is under “A30 — the two survivability mirrors
+  must agree”, and the item is listed in “Findings still open after this pass”.
 
 - **Transcription note, verbatim** (`content/enemies/EN-07.json`):
 
@@ -479,11 +491,17 @@ diameters were re-verified against the “Collision and Contact Footprints” ta
 Every row reproduces exactly, so nine of the ten removals lost nothing that the compiler cannot
 reproduce from the surviving scale and the `0.80 M` reference.
 
-**`docs/72:96`'s `0.50M` for Razorling is not a second authored value.** It is `0.496`
-typeset to the two decimals the whole column uses; the same rounding is invisible on the other
-nine rows only because their products happen to be exact at two decimals. Reading it as an
-authored diameter is what created contradiction C-1. The **docs side is being corrected** to
-`0.496 M`; that edit is outside this pass (`docs/` is out of scope for this worker).
+**`docs/72:96`'s `0.50M` for Razorling is read here as `0.496` typeset to the two decimals the whole
+column uses** — the reading stated under C-1, and stated there as an interpretation recorded in these
+notes rather than a convention quoted from doc 72. It is the reading this ruling was taken under, and
+it is not established: the same rounding is invisible on the other nine rows only because their
+products happen to be exact at two decimals, so the column cannot discriminate. The ruling does not
+depend on it settling either way — the diameter is derived under either reading and `content/` stores
+no diameter. **No docs-side edit follows from this ruling.** Whether `docs/72:96` should carry the
+exact value is open, contingent on the scope and precision-convention questions recorded under C-1,
+and owned by the design-document holder. *(An earlier revision of this paragraph asserted the `0.50M`
+was "not a second authored value" and reported the docs side as "being corrected" to `0.496 M`. Both
+are withdrawn: the first settles a question that is open, the second reported work nobody agreed to.)*
 
 **What the ruling did not determine, and I chose:**
 
@@ -829,10 +847,13 @@ The removed values were re-verified against the “Center distance that begins c
 | `EN-09` | Siegeback | 1.65 | 1.16 M | 1.160 |
 | `EN-10` | Dreadwing | 1.35 | 1.04 M | 1.040 |
 
-Nine rows reproduce exactly. `EN-07` is off by `0.002` for the *same* reason it was off by `0.004`
-on the diameter — it is `0.748` typeset to the two decimals the column uses — which is contradiction
-C-1 showing up a second time in a second derived column, and is further evidence that C-1 is a
-typesetting artefact rather than a competing authored value.
+Nine rows reproduce exactly. `EN-07` is off by `0.002` on the same row that was off by `0.004` on the
+diameter — contradiction C-1 showing up a second time in a second derived column. *(Corrected: this
+sentence called the second column “further evidence that C-1 is a typesetting artefact rather than a
+competing authored value”. It is not evidence for either reading. The centre distance is
+`diameter ÷ 2 + 0.50 M`, so it is a function of the diameter and repeats whatever the diameter does —
+one coincidence seen twice, not two. See the non-discriminating-arguments table under A30, which
+records the same argument in its `docs/72`-figures form.)*
 
 **Verifier.** `A20` in `src/MechaMiner.Tools/ContentImport/verify_content.py` now asserts that no
 enemy definition carries either derived field, matching on key names across `content/enemies/`. *(Corrected

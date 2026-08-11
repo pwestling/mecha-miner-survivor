@@ -129,6 +129,30 @@
       "platforms": ["linux-x64"],
       "tier": "fast",
       "status": "registered"
+    },
+    {
+      "id": "VER-DAT-006-006",
+      "summary": "Every ClosedVocabulary declaration is measured against the corpus at the JSON pointer its own call site builds, rather than at any field sharing the pointer's last property name. PREDICTION, PRE-REGISTERED BEFORE THE RUN and recorded here ahead of the result so a reader cannot mistake a tested prediction for a conclusion written to fit: 'the failing-value column shrinks while the absent count grows, the opposite direction from the last correction'. IT DID NOT HOLD, and the half that failed is the half that would have flattered the previous report. Absent grew 15 to 18 as predicted; failing GREW 10 to 11 rather than shrinking. Measured at aa550fb on claude/hearth-thread-hrufl9-dat-006 over 139 corpus files and 27 declaration sites yielding 33 rows. METHOD AND ITS PROVENANCE, PER ROW. Each call site's pointer argument is resolved by tracing JsonPointer variable assignments to the nearest preceding assignment above the call - method-local in practice - producing a template with * for an array index; the corpus is then read at exactly that template. All 33 rows resolved: located-by-declared-pointer 33, located-by-leaf-key 0, unresolvable 0. That distinction is recorded per row because a row located by pointer and a row located by name are different strengths of claim, and an absence established by reading the declared pointer and finding nothing is a different claim from an absence inferred because a matcher found no key. Every absence here is the former. WHY FAILING GREW. The previous pass could not resolve five pointers and reported them absent. Two of those five are present and failing: CombatShapes.SnapshotProperties at /specialist_attack/projectile/snapshot_at_creation/* fails on noHoming and terrainCollision, and MiningSiteSchema.ResonanceTargets at /resonance_field/applies_to/* fails on 'ordinary enemies' - which is the open-grant row, now confirmed failing at its declared pointer rather than by leaf match. A further row split: EncounterScheduleSchema.Formations is three declared pointers, not two, all three failing. CLASS CHANGES, BOTH DIRECTIONS, NAMED SEPARATELY. Diverging by leaf key and absent at the declared pointer, 5: NamedStatistics /affected_statistic, StackingClassifications /stacking_classification, TraitModifierKinds /inherent_trait/modifier_kind, RelicSchema and UtilitySchema PoolAvailabilities. Absent by leaf key and present at the declared pointer, 2: the two named above; against a like-for-like leaf baseline this direction is 0, and the 2 arise from rows the old pass could not resolve at all, which is why both baselines are stated. PULL-IN EXPOSURE, PER ROW RATHER THAN AS A FOOTNOTE. Four leaf names carry more than one path - kind, unit, formation, formations - and every one of those rows was at risk under leaf matching and is excluded from it here: BossSchema.AbilityKinds resolves to /ability/kind alone, 4 occurrences failing, where the leaf matcher had pulled in /specialist_attack/kind and six /unlocks/kind and reported 7. Six leaf names are single-path and cannot suffer pull-in at all: branch_class, resource_class, ui_grouping, modifier_kind, affected_statistic, stacking_classification. TOTALS, ALL FLOORS: 33 rows, 15 present, 18 absent, 0 unresolvable, 11 present-and-failing. Floors because the population was once measured as 25 of 27 and because an unresolvable row would not be evidence of absence. THE ABSENT ROWS IN FOUR CATEGORIES, not three: coming, renamed, never real, and SHAPE MISMATCH - the field exists in the corpus under a shape the schema does not declare. Shape mismatch 12, never-real-or-coming (cannot tell) 6, renamed 0, coming 0. RENAMED IS EMPTY and that is the finding: every candidate previously called a rename is a shape mismatch. VALUE-SET MATCHING IS NECESSARY AND NOWHERE NEAR SUFFICIENT - UtilitySchema.EffectKinds agrees with /effect/value_kind on 5 of 5 members and ResourceSchema.ModifierDirections with /resonance_behavior/modifier/direction on 2 of 2, and those two are precisely the ones that cannot be re-pointed, because the corpus wraps each field in an object - effect, modifier - that the schema never declares while requiring the flat field. A rename can be re-pointed; a shape mismatch cannot, and it belongs to this work package's divergence gate rather than to a re-pointing job. The four rows expected to be clean were the ones worth running.",
+      "task": "TASK-DAT-006-001",
+      "requirements": ["TR-DAT-002", "TR-DAT-004"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#minted-value-vocabularies",
+        "docs/technical/40-content-data-and-validation.md#behavior-registries"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "command",
+        "value": "resolve each SemanticCheck.Token pointer chain and read content/ at that pointer"
+      },
+      "fixtures": [
+        "content/mining-sites/specialized-material-geodes.json",
+        "content/resources/A.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["command-output"],
+      "platforms": ["linux-x64"],
+      "tier": "fast",
+      "status": "registered"
     }
   ]
 }

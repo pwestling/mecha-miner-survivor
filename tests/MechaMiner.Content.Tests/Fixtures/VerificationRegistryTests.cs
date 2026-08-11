@@ -855,7 +855,12 @@ internal sealed class VerificationRegistryTests
     /// file its ref walk reads, so the delta is +1 and the reference is the document the entry is
     /// about.
     /// </remarks>
-    private const int RepositoryPathReferences = 329;
+    /// <remarks>
+    /// 331 now. VER-DAT-006-006 names two corpus files as the evidence its declared-pointer
+    /// re-derivation turns on - content/mining-sites/specialized-material-geodes.json and
+    /// content/resources/A.json - so the delta is +2 and both are files the entry quotes values from.
+    /// </remarks>
+    private const int RepositoryPathReferences = 331;
 
     /// <summary>Fixture references of the form <c>path § heading</c>.</summary>
     private const int PathAndSectionReferences = 108;
@@ -879,7 +884,11 @@ internal sealed class VerificationRegistryTests
     /// 299 now. VER-DAT-006-005, which records the ref-scope invariant that two commits on this
     /// branch stated as a per-clone blob count, is the one entry added since this was last pinned.
     /// </remarks>
-    private const int RegistryEntries = 299;
+    /// <remarks>
+    /// 300 now. VER-DAT-006-006, the declared-pointer re-derivation of the vocabulary census, is the
+    /// one entry added since this was last pinned.
+    /// </remarks>
+    private const int RegistryEntries = 300;
 
     /// <summary>Entries whose selector <c>kind</c> is <c>nunit</c>.</summary>
     /// <remarks>The 236 at <c>715ef53</c> plus <c>DAT-006.json</c>'s four, at
@@ -896,7 +905,12 @@ internal sealed class VerificationRegistryTests
     /// count and leaves <see cref="NunitSelectors"/> alone, which is the distinction worth being
     /// able to see in the census.
     /// </remarks>
-    private const int CommandSelectors = 14;
+    /// <remarks>
+    /// 15 now. VER-DAT-006-006 carries a command selector for the same reason VER-DAT-006-005 does:
+    /// what it records is a measurement, not a property a test asserts, so it moves this count and
+    /// leaves <see cref="NunitSelectors"/> alone.
+    /// </remarks>
+    private const int CommandSelectors = 15;
 
     /// <summary>Entries whose selector <c>kind</c> is <c>engine-scene</c>.</summary>
     private const int EngineSceneSelectors = 6;

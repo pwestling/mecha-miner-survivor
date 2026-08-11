@@ -391,19 +391,42 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       `ca.` on "The tour ended in CA." (a US state code), `al.` on "His
       brother is called Al." (a given name), `p.` on "The verdict was a
       flat P.", `eq.` on "The band played the whole of EQ.", and `pp.` on
-      "Dynamics fell to pp." (a dynamic marking). So SEVEN of the
-      eighteen are known latent misfires rather than three, and "at least"
-      is meant literally - the five were found by inspecting the list, not
-      by exhausting it, and `re.IGNORECASE` means every token has to be
-      considered in every capitalisation.
+      "Dynamics fell to pp." (a dynamic marking). So EIGHT of the
+      eighteen are known latent misfires rather than three - the three
+      words plus those five - and "at least" is meant literally: the five
+      were found by inspecting the list, not by exhausting it, and
+      `re.IGNORECASE` means every token has to be considered in every
+      capitalisation.
+      EIGHT AND NOT SEVEN, and the arithmetic is worth spelling out
+      because this paragraph carried the wrong total from the commit that
+      restructured it: three words plus five non-words is eight, and the
+      inline comment at ABBREVIATION_SUFFIX says seven for a different and
+      correct reason - it counts only the tokens that take NO suffix, so
+      it excludes `no.`. Fold `no.` back in, as this paragraph does when
+      it says "those three can", and the count is eight. Re-derived at
+      ecf733c against the compiled ABBREVIATION_RX, one innocent
+      sentence-final candidate per token, all eight matching: `no.`,
+      `fig.`, `sec.`, `ca.`, `al.`, `p.`, `eq.`, `pp.`. The other ten
+      match only where the token really is the abbreviation, which is the
+      gate working.
       `no.` is only the one with an occurrence in the corpus TODAY, and
-      the other six are LATENT MISFIRES, not impossibilities: measured the
-      same way, "The dessert was a dried fig." matches `fig.` and "Hold on
-      a sec." matches `sec.`, each at a plain sentence end. None of those
-      sentences is in docs/ yet, which is the only reason they are not
-      failures today; the day one is written the gate reddens on innocent
-      prose. Do not read the `no.` narrowing as evidence the other tokens
-      are safe.
+      the other SEVEN are LATENT MISFIRES, not impossibilities: measured
+      the same way, "The dessert was a dried fig." matches `fig.` and
+      "Hold on a sec." matches `sec.`, each at a plain sentence end. Seven
+      is what the list that follows has always named - `fig.`, `sec.` and
+      the five above - so the "six" this sentence used to say was
+      contradicted by its own enumeration.
+      `no.` STAYS IN THE EIGHT DESPITE ITS SUFFIX, which is the part the
+      narrowing makes easy to miss. The suffix requires a following
+      numeral, so it clears the one real occurrence in docs/ - "than a yes
+      or no. Its numbers are 300 trials" no longer matches - but a sentence
+      ending in the word "no" whose NEXT sentence opens with a numeral
+      still matches on the same line: "The answer is no. 5 people agreed."
+      does. Narrowed is not the same as closed.
+      None of those sentences is in docs/ yet, which is the only reason
+      they are not failures today; the day one is written the gate reddens
+      on innocent prose. Do not read the `no.` narrowing as evidence the
+      other tokens are safe.
       At b71371e the bounded form reports exactly 1 hit,
       docs/technical/delivery-waves.md:598 "than a yes or no. Its numbers
       are 300 trials", which is that word ending a sentence and not an

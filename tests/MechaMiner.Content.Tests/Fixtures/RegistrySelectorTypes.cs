@@ -416,6 +416,54 @@ internal static class RegistrySelectorTypes
     /// here; a block comment's interior lines would still count, so it is a change with its own
     /// measurement to make.
     /// </para>
+    /// <para>
+    /// <b>NAMED LIMITATION - a declaration-shaped line inside a string literal is recorded as a
+    /// member, and in a sibling assembly it resolves.</b> A comment line is skipped for
+    /// declaration matching; a string-literal line is not. So a line of declaration shape written
+    /// inside a multi-line string - a raw string in a fixture, an expected-source sample, a
+    /// snippet in a message - becomes a recorded member of whatever type encloses it. Measured at
+    /// <c>ecf733c</c>: <c>Widget MakePhantomWidget(int size)</c> planted inside a raw string in
+    /// <c>MechaMiner.Simulation.Tests</c> resolved as
+    /// <c>...CommandAdmissionGateTests.MakePhantomWidget</c> by <see cref="Route.SourceIndex"/>
+    /// with <see cref="Unresolved"/> returning null, while a genuinely absent member on the same
+    /// type returned <see cref="Route.None"/> and named itself. That is a registry promising
+    /// evidence nothing produces, and it is worst in a sibling test project, where the source
+    /// index is the only route and reflection is not there to contradict it. In
+    /// <c>MechaMiner.Content.Tests</c> reflection answers first, so the phantom cannot arise for
+    /// a type in this assembly.
+    /// </para>
+    /// <para>
+    /// <b>Latent, not live.</b> No selector in any registry resolves through such a line today.
+    /// The keyword rejection in <see cref="ReservedKeywords"/> closes only the reserved-keyword
+    /// case; contextual keywords are out of it by design and an ordinary identifier such as
+    /// <c>MakePhantomWidget</c> is out of its reach entirely.
+    /// </para>
+    /// <para>
+    /// <b>Why <see cref="MembersIndexed"/> does not cover it, which is the part worth
+    /// remembering.</b> The count moves for every legitimate change, so it is re-derived as a
+    /// matter of routine - twice in the change that wrote this paragraph, 1190 to 1197 to 1198 -
+    /// and a re-derivation absorbs whatever else moved in the same edit. The number that would
+    /// have reported a phantom is the number a normal working day rewrites.
+    /// </para>
+    /// <para>
+    /// <b>Why it is recorded rather than fixed here.</b> Skipping string-literal lines is not the
+    /// same size of change as skipping comment lines. A comment line announces itself by its own
+    /// prefix, statelessly; being inside a string is a property of the lines <em>before</em> this
+    /// one, so it needs state across the file: raw-string openers of three or more quotes closed
+    /// by a run at least as long, their interpolated <c>$</c> forms, verbatim <c>@"</c> strings
+    /// closed by an unescaped quote, and each of those able to open and close on one line. A
+    /// single-line ordinary string is already harmless, because
+    /// <see cref="MethodDeclaration"/> anchors at <c>^\s*</c> and a leading quote is not a
+    /// modifier or a return type. The cost of getting the state machine wrong falls in the
+    /// dangerous direction this class documents everywhere else: a wrong "inside a string" belief
+    /// skips real declarations, which under-records, and under-recording makes a selector naming
+    /// a real member report absent. This assembly's calibration would catch that here; the three
+    /// sibling assemblies have no such calibration, which is exactly where the fix would matter
+    /// and exactly where its own faults would be invisible. So it is its own piece of work, with
+    /// its own measurement, and this paragraph is the statement that the gap is known rather than
+    /// unnoticed - a resolver whose job is refusing names that are not there owes the reader that
+    /// much.
+    /// </para>
     /// </remarks>
     private static void IndexFile(SourceIndex index, string file, string relative)
     {

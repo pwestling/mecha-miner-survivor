@@ -749,6 +749,63 @@ while IFS='|' read -r verdict detail; do
 done <<<"${configuration_map_report}"
 
 echo
+echo "=== 11. every accepted project has a committed NuGet lock file (VER-FND-001-001)"
+#
+# VER-FND-001-001's selector is `dotnet restore MechaMiner.sln --locked-mode`,
+# and the natural reading of that is "the locked graph is enforced". It is not
+# enforced against a lock file that is not there. Measured on this repository:
+# delete game/packages.lock.json, run that exact selector, and it exits 0,
+# regenerates the file from whatever it happened to resolve, and prints no line
+# mentioning the lock at all. Locked mode fails closed on a lock file that
+# DISAGREES and fails open on one that is ABSENT. So the gate's guarantee rests
+# on a precondition - the file exists - that nothing had been asserting.
+#
+# TRACKED, not merely present, is the whole point of this section. A bare -f
+# test is satisfied by the very failure it is meant to catch: the deleted file
+# is silently recreated on disk by the next restore, so by the time any gate
+# looked, -f would be true again and the graph would have quietly re-baselined
+# itself to whatever the machine resolved that day. `git ls-files
+# --error-unmatch` asks the index instead, which a restore cannot write to.
+#
+# Section 6 is not this check. It reads the game project's lock file, but only
+# to answer a Godot-boundary question, and its `[[ -f ]]` guard means a missing
+# lock leaves godot_locked empty - which happens to fail for game/ and would
+# SILENTLY PASS for all eight pure projects. A deleted lock on any pure project
+# is invisible to every other section in this file.
+#
+# Scope, stated so nobody reads more into it: this asserts existence and
+# tracking, not content. Two things it deliberately does not cover, both
+# measured: locked-mode restore validates the package reference SET (names and
+# requested ranges) and does NOT validate the "resolved" version recorded in the
+# lock file - a lock claiming "resolved": "4.7.0" against "requested":
+# "[4.7.1, )" restored at exit 0 and was left mutated - and this section does
+# not diff a lock file against the graph a restore would produce. Like section
+# 10, it reads only committed state, so it needs no restore.
+lock_presence_report="$(cd "${REPO_ROOT}" && git rev-parse --git-dir >/dev/null 2>&1 && \
+  for entry in "${EXPECTED_PROJECTS[@]}"; do
+    IFS='|' read -r project _expected_refs _godot_allowed <<<"${entry}"
+    lock_path="$(dirname "${project}")/packages.lock.json"
+    if [[ ! -f "${lock_path}" ]]; then
+      printf 'FAIL|%s does not exist, so locked-mode restore silently regenerates it instead of enforcing it\n' "${lock_path}"
+    elif ! git ls-files --error-unmatch -- "${lock_path}" >/dev/null 2>&1; then
+      printf 'FAIL|%s exists on disk but is NOT tracked by git, so it is a restore artefact rather than a committed lock\n' "${lock_path}"
+    else
+      printf 'OK|%s exists and is tracked by git\n' "${lock_path}"
+    fi
+  done)" || lock_presence_report="ERROR|the committed lock files could not be enumerated, so no project's locked graph is verified"
+
+if [[ -z "${lock_presence_report}" ]]; then
+  fail "the lock-file presence check produced no result for any accepted project"
+fi
+while IFS='|' read -r verdict detail; do
+  [[ -n "${verdict}" ]] || continue
+  case "${verdict}" in
+    OK) pass "${detail}" ;;
+    *) fail "${detail}" ;;
+  esac
+done <<<"${lock_presence_report}"
+
+echo
 if [[ "${failures}" -eq 0 ]]; then
   echo "verify-architecture: PASS"
   exit 0

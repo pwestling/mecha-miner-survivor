@@ -69,14 +69,9 @@
     },
     "affected_scope": {
       "type": "array",
-      "description": "What the transformation applies to. At least one: a transformation that applies to nothing is not one, and doc 40 requires compatibility results computed against a scope.",
+      "description": "What the transformation applies to. At least one: a transformation that applies to nothing is not one, and doc 40 requires compatibility results computed against a scope. No vocabulary is declared for an element, and the reason is structural rather than a complaint about provenance: there is no single documented set for an enum here to match. Mech Relics states three mutually incompatible scope rules - docs/67:24 gives five members plus an open tail, 'It may affect several weapons, mining, movement, enemy interactions, or another major gameplay rule'; docs/67:55 gives a different rule, 'Relic designs may affect only a tagged subset of systems when that restriction is part of the effect'; and docs/67:67 gives a closed three-way partition, 'A relic may affect all equipped weapons, only a clearly defined weapon family, or a non-weapon gameplay system' - and under doc 40 Minted value vocabularies a field is not grounded by documents that state different sets. The structural argument is the one to carry, because it survives someone later finding the tokens in a document. The three tokens this enum listed were all-equipped-weapons, mining-extraction-rate and enemy-movement-speed, retokenized from docs/67:24 and docs/67:67. The member docs/67:67 states that the enum dropped, 'only a clearly defined weapon family', is ungroundable by any route available today: no document defines a weapon-family taxonomy, and docs/30:50 denies one exists - 'Form does not determine slot category; primary gameplay purpose does' - so a family-scoped relic could not have been expressed correctly here whatever the token list said. The authoritative typed validator still enforces a three-token closed vocabulary, RelicSchema.AffectedScopes in src/MechaMiner.Content/Categories/RelicDefinition.cs, which cites GDD-INITIAL-RELIC-CATALOG; that document states no scope set either, so the vocabulary is ungrounded on both sides and what changes here is only that the mirror stops restating it. Striking this enum reduces no divergence row: all ten relics author affected_scope as a string, so the type failure fires and items is never applied, measured at 9379753.",
       "items": {
-        "type": "string",
-        "enum": [
-          "all-equipped-weapons",
-          "mining-extraction-rate",
-          "enemy-movement-speed"
-        ]
+        "type": "string"
       },
       "uniqueItems": true,
       "minItems": 1,
@@ -121,10 +116,9 @@
     },
     "overrides_or_replaces": {
       "type": "array",
-      "description": "The relics this one overrides.",
+      "description": "What this relic overrides. The element pattern ^REL-[0-9]{2}$ was struck by ruling of the document owner and the authored content stands: all ten relics author this field nested under stacking_and_exclusivity rather than at the root, every element names a mechanic rather than a relic - 'primary activation frequency (tempo)', 'automatic aiming and target selection' - and all ten elements fail the pattern. Two of the ten, REL-07 and REL-08, author an empty array, and there is no minItems here, so the pattern was vacuous rather than unsatisfiable: an empty array satisfied it. Striking it reduces no divergence row either, and for a second reason worth recording because it is the shape of a whole class of dead constraint: the field the pattern was declared on is at the root, the corpus authors the field one level down, so no element ever reached the pattern at all. Measured at 9379753.",
       "items": {
-        "type": "string",
-        "pattern": "^REL-[0-9]{2}$"
+        "type": "string"
       },
       "uniqueItems": true
     },

@@ -29,13 +29,15 @@ public sealed class DefinitionField
         FieldShape shape,
         bool isRequired,
         DefinitionShape? nested,
-        DefinitionField? element)
+        DefinitionField? element,
+        ArrayOrder order)
     {
         Name = name;
         Shape = shape;
         IsRequired = isRequired;
         Nested = nested;
         Element = element;
+        Order = order;
     }
 
     /// <summary>The <c>snake_case</c> property name.</summary>
@@ -59,6 +61,21 @@ public sealed class DefinitionField
     /// because an array element is addressed by index and has none.
     /// </summary>
     public DefinitionField? Element { get; }
+
+    /// <summary>
+    /// Which of doc 40's two array treatments this field's elements get, a real class
+    /// exactly when <see cref="Shape"/> is <see cref="FieldShape.Array"/> and
+    /// <see cref="ArrayOrder.Unspecified"/> otherwise.
+    /// </summary>
+    /// <remarks>
+    /// The class is declared here rather than decided at the writer because doc 40 gives
+    /// the discriminator and no per-field answers: only the field table knows whether an
+    /// array of strings is a set of stable IDs or a sequence whose order is its meaning.
+    /// Two consumers read it - the canonical writer, which picks the emitting operation,
+    /// and the ordering gate, which asserts every declared array is covered by one class
+    /// or the other.
+    /// </remarks>
+    public ArrayOrder Order { get; }
 
     /// <summary>The JSON value kind a value of this shape must have.</summary>
     /// <remarks>
@@ -153,7 +170,8 @@ public sealed class DefinitionField
     public static DefinitionField Object(string name, DefinitionShape nested)
     {
         ArgumentNullException.ThrowIfNull(nested);
-        return new DefinitionField(Require(name), FieldShape.Object, true, nested, null);
+        return new DefinitionField(
+            Require(name), FieldShape.Object, true, nested, null, ArrayOrder.Unspecified);
     }
 
     /// <summary>Declares an optional object field with a nested field table.</summary>
@@ -161,29 +179,114 @@ public sealed class DefinitionField
     public static DefinitionField OptionalObject(string name, DefinitionShape nested)
     {
         ArgumentNullException.ThrowIfNull(nested);
-        return new DefinitionField(Require(name), FieldShape.Object, false, nested, null);
+        return new DefinitionField(
+            Require(name), FieldShape.Object, false, nested, null, ArrayOrder.Unspecified);
     }
 
-    /// <summary>Declares a required array field whose elements have one declared shape.</summary>
+    /// <summary>
+    /// Declares a required array field whose elements have one declared shape and whose
+    /// order class <paramref name="order"/> states.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b><paramref name="order"/> has no default, and that is this stream's decision
+    /// rather than doc 40's.</b> Doc 40 § JSON codec and schema baseline distinguishes the
+    /// two array treatments and says nothing about defaulted parameters or compile-time
+    /// forcing, so the contract does not require this and no reader should cite it as
+    /// contractual.
+    /// </para>
+    /// <para>
+    /// <b>Why forcing rather than a reserved default.</b> The alternative is in this file's
+    /// neighbourhood already: <see cref="FieldShape.Unspecified"/> is a reserved zero, so a
+    /// declaration that says nothing about its shape still compiles. That is safe for a
+    /// shape, because the structural pass rejects the first authored value it sees and the
+    /// omission surfaces immediately. An unstated array order class has no such backstop: a
+    /// wrongly ordered array is still well-formed JSON of the declared kind, so the
+    /// omission surfaces as a wrong hash rather than as an error, and it surfaces in the
+    /// bundle rather than at the declaration. Sixty-one declared arrays needed an answer
+    /// and at least one of them has a counter-intuitive one - <c>recipe_pair_material_ids</c>
+    /// holds two stable IDs and is ordered, not a set - so the parameter is required and
+    /// every declaration states its answer where a reviewer reads it.
+    /// </para>
+    /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="element"/> is null.</exception>
+    /// <exception cref="ArgumentException">
+    /// <paramref name="order"/> is <see cref="ArrayOrder.Unspecified"/>, which is reserved
+    /// and is not one of the two treatments.
+    /// </exception>
+    public static DefinitionField ArrayOf(string name, DefinitionField element, ArrayOrder order)
+    {
+        ArgumentNullException.ThrowIfNull(element);
+        return new DefinitionField(
+            Require(name), FieldShape.Array, true, null, element, RequireOrder(name, order));
+    }
+
+    /// <summary>
+    /// Declares an optional array field whose elements have one declared shape and whose
+    /// order class <paramref name="order"/> states.
+    /// </summary>
+    /// <remarks>
+    /// Optional changes nothing about the order class: a field the author omitted is still
+    /// emitted into the canonical bundle, because doc 40 § Common definition envelope
+    /// requires optional fields to have "explicit defaults materialized into the canonical
+    /// bundle so runtime never guesses", and an emitted array is ordered one way or the
+    /// other. See <see cref="ArrayOf(string, DefinitionField, ArrayOrder)"/> for why the
+    /// parameter has no default.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="element"/> is null.</exception>
+    /// <exception cref="ArgumentException">
+    /// <paramref name="order"/> is <see cref="ArrayOrder.Unspecified"/>, which is reserved
+    /// and is not one of the two treatments.
+    /// </exception>
+    public static DefinitionField OptionalArrayOf(
+        string name,
+        DefinitionField element,
+        ArrayOrder order)
+    {
+        ArgumentNullException.ThrowIfNull(element);
+        return new DefinitionField(
+            Require(name), FieldShape.Array, false, null, element, RequireOrder(name, order));
+    }
+
+    /// <summary>
+    /// Declares a required array field, transitionally, without stating an order class.
+    /// </summary>
+    /// <remarks>
+    /// <b>Deleted in the next commit.</b> It exists only so the commit that introduces
+    /// <see cref="ArrayOrder"/> compiles on its own: converting the declarations is a
+    /// separate change, because those are semantic decisions and a diff that also carried
+    /// this mechanism would read as mechanical. Nothing new may call it.
+    /// <para>
+    /// It hands the writer <see cref="ArrayOrder.OrderedArray"/>, the treatment that cannot
+    /// change what a definition says, and <b>no declaration keeps that answer by
+    /// inheritance</b>: the next commit restates all of them at their declaration and
+    /// deletes this overload, so the value here is never a default anybody relies on.
+    /// </para>
+    /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="element"/> is null.</exception>
     public static DefinitionField ArrayOf(string name, DefinitionField element)
     {
         ArgumentNullException.ThrowIfNull(element);
-        return new DefinitionField(Require(name), FieldShape.Array, true, null, element);
+        return new DefinitionField(
+            Require(name), FieldShape.Array, true, null, element, ArrayOrder.OrderedArray);
     }
 
-    /// <summary>Declares an optional array field whose elements have one declared shape.</summary>
+    /// <summary>
+    /// Declares an optional array field, transitionally, without stating an order class.
+    /// </summary>
+    /// <remarks><b>Deleted in the next commit.</b> See <see cref="ArrayOf(string, DefinitionField)"/>.</remarks>
     /// <exception cref="ArgumentNullException"><paramref name="element"/> is null.</exception>
     public static DefinitionField OptionalArrayOf(string name, DefinitionField element)
     {
         ArgumentNullException.ThrowIfNull(element);
-        return new DefinitionField(Require(name), FieldShape.Array, false, null, element);
+        return new DefinitionField(
+            Require(name), FieldShape.Array, false, null, element, ArrayOrder.OrderedArray);
     }
 
     /// <summary>Declares an array element of a scalar shape.</summary>
     public static DefinitionField ElementOf(FieldShape shape)
     {
-        return new DefinitionField(string.Empty, shape, true, null, null);
+        return new DefinitionField(string.Empty, shape, true, null, null, ArrayOrder.Unspecified);
     }
 
     /// <summary>Declares an array element that is an object with a nested field table.</summary>
@@ -191,19 +294,22 @@ public sealed class DefinitionField
     public static DefinitionField ElementObject(DefinitionShape nested)
     {
         ArgumentNullException.ThrowIfNull(nested);
-        return new DefinitionField(string.Empty, FieldShape.Object, true, nested, null);
+        return new DefinitionField(
+            string.Empty, FieldShape.Object, true, nested, null, ArrayOrder.Unspecified);
     }
 
     /// <summary>Declares a required registry-owned parameter map.</summary>
     public static DefinitionField ParameterMap(string name)
     {
-        return new DefinitionField(Require(name), FieldShape.ParameterMap, true, null, null);
+        return new DefinitionField(
+            Require(name), FieldShape.ParameterMap, true, null, null, ArrayOrder.Unspecified);
     }
 
     /// <summary>Declares an optional registry-owned parameter map.</summary>
     public static DefinitionField OptionalParameterMap(string name)
     {
-        return new DefinitionField(Require(name), FieldShape.ParameterMap, false, null, null);
+        return new DefinitionField(
+            Require(name), FieldShape.ParameterMap, false, null, null, ArrayOrder.Unspecified);
     }
 
     /// <inheritdoc/>
@@ -214,7 +320,22 @@ public sealed class DefinitionField
 
     private static DefinitionField Scalar(string name, FieldShape shape, bool isRequired)
     {
-        return new DefinitionField(Require(name), shape, isRequired, null, null);
+        return new DefinitionField(
+            Require(name), shape, isRequired, null, null, ArrayOrder.Unspecified);
+    }
+
+    private static ArrayOrder RequireOrder(string name, ArrayOrder order)
+    {
+        if (order == ArrayOrder.Unspecified)
+        {
+            throw new ArgumentException(
+                "array field '" + name + "' must state an order class; "
+                    + nameof(ArrayOrder) + "." + nameof(ArrayOrder.Unspecified)
+                    + " is reserved so a default-initialised order is never a real one",
+                nameof(order));
+        }
+
+        return order;
     }
 
     private static string Require(string name)

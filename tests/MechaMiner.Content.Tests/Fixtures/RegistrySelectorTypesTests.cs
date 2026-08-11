@@ -302,15 +302,19 @@ internal sealed class RegistrySelectorTypesTests
     }
 
     /// <summary>
-    /// Types the source index finds across the five source directories it reads, measured at
-    /// <c>f5b4e77</c>.
+    /// Types the source index finds across the five source directories it reads: the 221
+    /// measured at <c>f5b4e77</c>, plus <c>ArrayOrderDeclarationTests</c>, added by this
+    /// change on top of <c>1b83ebd</c>. The index reads <c>tests/</c> only, so
+    /// <c>src/MechaMiner.Content/Categories/ArrayOrder.cs</c> is not among these.
     /// </summary>
-    private const int TypesIndexed = 221;
+    private const int TypesIndexed = 222;
 
     /// <summary>
-    /// Members the source index records across every type it finds, measured at <c>f5b4e77</c>.
+    /// Members the source index records across every type it finds: the 1190 measured at
+    /// <c>f5b4e77</c>, plus the five test methods <c>ArrayOrderDeclarationTests</c> declares,
+    /// added by this change on top of <c>1b83ebd</c>.
     /// </summary>
-    private const int MembersIndexed = 1190;
+    private const int MembersIndexed = 1195;
 
     /// <summary>The negative control: the resolver must be able to fail.</summary>
     [Test]

@@ -54,6 +54,17 @@ public static class UtilitySchema
     public const int AlwaysAvailableCount = 1;
 
     /// <summary>Where a utility comes from.</summary>
+    /// <remarks>
+    /// <b>SHARED PROPERTY NAME - THIS IS NOT THE ONLY <c>PoolAvailabilities</c>.</b> <see cref="RelicSchema"/> declares a
+    /// second <c>ClosedVocabulary</c> of this same property name, and the two are different
+    /// vocabularies: different subject ("a pool availability" here against "a relic pool availability" there), different source
+    /// <c>doc_id</c>, and different member sets. Any pass over these declarations that keys on
+    /// the PROPERTY NAME collapses them and silently reports one where there are two - measured:
+    /// keying by name gives 25 rows against 27 declaration sites, and which sibling survives
+    /// depends on directory iteration order, so the same pass can produce different tables on
+    /// two runs and both look clean. Key on the declaring type together with the property, or on
+    /// the declaration site. A count of names is not a count of vocabularies.
+    /// </remarks>
     public static ClosedVocabulary PoolAvailabilities { get; } = new(
         "a pool availability",
         "GDD-UTILITY-CATALOG",
@@ -66,6 +77,17 @@ public static class UtilitySchema
     /// The closest thing to a registered behavior kind anywhere in the authored tree:
     /// five clean tokens already in kebab case, one per shape of contribution. The
     /// behavior registry should look here first.
+    /// </remarks>
+    /// <remarks>
+    /// <b>SHARED PROPERTY NAME - THIS IS NOT THE ONLY <c>EffectKinds</c>.</b> <see cref="PowerUpSchema"/> declares a
+    /// second <c>ClosedVocabulary</c> of this same property name, and the two are different
+    /// vocabularies: different subject ("a utility effect kind" here against "a PowerUp effect kind" there), different source
+    /// <c>doc_id</c>, and different member sets. Any pass over these declarations that keys on
+    /// the PROPERTY NAME collapses them and silently reports one where there are two - measured:
+    /// keying by name gives 25 rows against 27 declaration sites, and which sibling survives
+    /// depends on directory iteration order, so the same pass can produce different tables on
+    /// two runs and both look clean. Key on the declaring type together with the property, or on
+    /// the declaration site. A count of names is not a count of vocabularies.
     /// </remarks>
     public static ClosedVocabulary EffectKinds { get; } = new(
         "a utility effect kind",

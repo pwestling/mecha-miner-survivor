@@ -138,6 +138,17 @@ namespace MechaMiner.Content.Categories;
 public static class RelicSchema
 {
     /// <summary>Where a relic comes from.</summary>
+    /// <remarks>
+    /// <b>SHARED PROPERTY NAME - THIS IS NOT THE ONLY <c>PoolAvailabilities</c>.</b> <see cref="UtilitySchema"/> declares a
+    /// second <c>ClosedVocabulary</c> of this same property name, and the two are different
+    /// vocabularies: different subject ("a relic pool availability" here against "a pool availability" there), different source
+    /// <c>doc_id</c>, and different member sets. Any pass over these declarations that keys on
+    /// the PROPERTY NAME collapses them and silently reports one where there are two - measured:
+    /// keying by name gives 25 rows against 27 declaration sites, and which sibling survives
+    /// depends on directory iteration order, so the same pass can produce different tables on
+    /// two runs and both look clean. Key on the declaring type together with the property, or on
+    /// the declaration site. A count of names is not a count of vocabularies.
+    /// </remarks>
     public static ClosedVocabulary PoolAvailabilities { get; } = new(
         "a relic pool availability",
         "GDD-INITIAL-RELIC-CATALOG",

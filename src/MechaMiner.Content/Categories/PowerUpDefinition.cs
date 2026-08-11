@@ -56,6 +56,17 @@ public static class PowerUpSchema
     /// carried by the token, which is why there is one <c>per_rank_value</c> and not
     /// five differently-named numbers.
     /// </remarks>
+    /// <remarks>
+    /// <b>SHARED PROPERTY NAME - THIS IS NOT THE ONLY <c>EffectKinds</c>.</b> <see cref="UtilitySchema"/> declares a
+    /// second <c>ClosedVocabulary</c> of this same property name, and the two are different
+    /// vocabularies: different subject ("a PowerUp effect kind" here against "a utility effect kind" there), different source
+    /// <c>doc_id</c>, and different member sets. Any pass over these declarations that keys on
+    /// the PROPERTY NAME collapses them and silently reports one where there are two - measured:
+    /// keying by name gives 25 rows against 27 declaration sites, and which sibling survives
+    /// depends on directory iteration order, so the same pass can produce different tables on
+    /// two runs and both look clean. Key on the declaring type together with the property, or on
+    /// the declaration site. A count of names is not a count of vocabularies.
+    /// </remarks>
     public static ClosedVocabulary EffectKinds { get; } = new(
         "a PowerUp effect kind",
         "GDD-POWERUP-CATALOG",

@@ -24,10 +24,13 @@
 # The reflection prohibition in particular is registration-scoped - doc 40 § Behavior
 # registries forbids "runtime assembly scanning, reflection discovery, source-generator
 # magic, and a separately hand-edited manifest" in a paragraph about registration tables and
-# the registry manifest - and a scope ruling has held that a calibration test enumerating
-# types to check a parser registers nothing and is therefore not a subject of it. Cited by
-# section and not by line deliberately: that sentence sits at a different line number on
-# different refs of this repository, so a line citation here would be wrong somewhere.
+# the registry manifest - and whether a calibration test enumerating types to check a parser
+# is a subject of it is OPEN, not settled. That reading is an agent's scoping decision, argued
+# by the DAT stream in RegistrySelectorTypesTests's own remarks; a reviewer of this branch then
+# declined to rule on it explicitly, saying the question wants the owner's ruling. Nobody with
+# authority over the scope has ruled, so read it as an open question and not as a decision.
+# Cited by section and not by line deliberately: that sentence sits at a different line
+# number on different refs of this repository, so a line citation here would be wrong somewhere.
 #
 # A SUBJECT, AND UNENFORCED BY THIS SCRIPT. The second half - "generated/explicit registries
 # make missing behavior a build error" - does have one today. VerbRegistry is an explicit

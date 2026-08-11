@@ -614,6 +614,136 @@ else
 fi
 
 echo
+echo "=== 10. solution configurations map to the matching project configuration (VER-FND-001-003)"
+#
+# Section 3 asserts only that a Build.0 flag EXISTS per project per solution
+# configuration. It says nothing about which project configuration that flag
+# points at, so a solution can build all nine projects and still compile one of
+# them in the wrong configuration. That is exactly what master did: the Godot
+# project's Release rows pointed at Debug|Any CPU, so `dotnet build -c Release`
+# produced eight Release assemblies and one Debug assembly, silently.
+#
+# Assert both halves of every mapping - ActiveCfg (what the IDE selects) and
+# Build.0 (what the command line compiles) - resolve to the solution
+# configuration's own name.
+#
+# Only the configuration NAME is compared, not the platform. Every project here
+# is AnyCPU-only, so the solution's x64 and x86 rows deliberately fold onto
+# "Any CPU"; comparing the full "name|platform" string would flag that healthy
+# and intentional folding on every project.
+#
+# EXCEPTION - game/MechaMiner.Game.csproj at Release maps to ExportRelease.
+# This is not a mismatch to be repaired; it is the only correct target. The
+# Godot .NET SDK defines NO "Release" configuration: Sdk.props declares
+# <Configurations>Debug;ExportDebug;ExportRelease</Configurations>. Building
+# that project at "Release" is not an error, it just silently inherits SDK
+# defaults - producing optimized IL (Optimize=true) compiled against the DEBUG
+# Godot API (GodotApiConfiguration=Debug) into .godot/mono/temp/bin/Release/,
+# a directory the engine never reads. ExportRelease is the SDK's real
+# release configuration: Optimize=true AND GodotApiConfiguration=Release.
+# Keep this exception narrow - it is keyed to that one project at that one
+# configuration, so any OTHER divergence still fails.
+readonly GODOT_CONFIGURATION_EXCEPTIONS=(
+  "game/MechaMiner.Game.csproj|Release|ExportRelease"
+)
+
+configuration_map_report="$(cd "${REPO_ROOT}" && python3 - MechaMiner.sln \
+  "$(printf '%s\n' "${EXPECTED_PROJECTS[@]}" | cut -d'|' -f1)" \
+  "$(printf '%s\n' "${GODOT_CONFIGURATION_EXCEPTIONS[@]}")" <<'PY'
+import re, sys
+
+solution = open(sys.argv[1]).read()
+expected = [line for line in sys.argv[2].splitlines() if line.strip()]
+
+# (project path, solution configuration name) -> accepted project configuration name.
+exceptions = {}
+for line in sys.argv[3].splitlines():
+    if not line.strip():
+        continue
+    path, solution_name, project_name = line.split("|")
+    exceptions[(path, solution_name)] = project_name
+
+
+def section(name):
+    # Skips the GlobalSection header line itself, so its "= preSolution" suffix is
+    # not mistaken for a configuration entry.
+    found = re.search(
+        r"GlobalSection\(%s\)[^\n]*\n(.*?)EndGlobalSection" % name, solution, re.S)
+    return found.group(1) if found else ""
+
+
+configurations = [
+    name for name in (
+        line.split("=")[0].strip()
+        for line in section("SolutionConfigurationPlatforms").splitlines()
+        if "=" in line
+    ) if name
+]
+
+# "{GUID}.Debug|x64.Build.0" -> "Debug|Any CPU"
+mappings = {}
+for line in section("ProjectConfigurationPlatforms").splitlines():
+    if "=" not in line:
+        continue
+    key, value = line.split("=", 1)
+    mappings[key.strip()] = value.strip()
+
+guids = {
+    path.replace("\\", "/"): guid
+    for _name, path, guid in re.findall(
+        r'^Project\("\{[^}]+\}"\)\s*=\s*"([^"]+)",\s*"([^"]+)",\s*"\{([^}]+)\}"',
+        solution, re.M)
+}
+
+if not configurations:
+    print("ERROR|the solution declares no configuration, so this check would be vacuous")
+    raise SystemExit(0)
+
+for path in expected:
+    guid = guids.get(path)
+    if guid is None:
+        print("FAIL|%s is not present in the solution at all" % path)
+        continue
+    wrong = []
+    excepted = []
+    for configuration in configurations:
+        solution_name = configuration.split("|")[0]
+        accepted = exceptions.get((path, solution_name), solution_name)
+        if accepted != solution_name and accepted not in excepted:
+            excepted.append(accepted)
+        for half in ("ActiveCfg", "Build.0"):
+            key = "{%s}.%s.%s" % (guid, configuration, half)
+            mapped = mappings.get(key)
+            if mapped is None:
+                wrong.append("%s.%s is absent" % (configuration, half))
+                continue
+            mapped_name = mapped.split("|")[0]
+            if mapped_name != accepted:
+                wrong.append("%s.%s -> %s (expected %s)" % (
+                    configuration, half, mapped_name, accepted))
+    if wrong:
+        print("FAIL|%s maps to the wrong project configuration: %s" % (
+            path, "; ".join(wrong)))
+    elif excepted:
+        print("OK|%s maps every solution configuration to its own configuration "
+              "(accepted SDK exception: %s)" % (path, ", ".join(excepted)))
+    else:
+        print("OK|%s maps every solution configuration to its own configuration" % path)
+PY
+)" || configuration_map_report="ERROR|the solution configuration section could not be parsed"
+
+if [[ -z "${configuration_map_report}" ]]; then
+  fail "the solution configuration-mapping check produced no result for any accepted project"
+fi
+while IFS='|' read -r verdict detail; do
+  [[ -n "${verdict}" ]] || continue
+  case "${verdict}" in
+    OK) pass "${detail}" ;;
+    *) fail "${detail}" ;;
+  esac
+done <<<"${configuration_map_report}"
+
+echo
 if [[ "${failures}" -eq 0 ]]; then
   echo "verify-architecture: PASS"
   exit 0

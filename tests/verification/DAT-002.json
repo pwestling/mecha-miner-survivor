@@ -1125,6 +1125,78 @@
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-034",
+      "summary": "enemy.specialist_attack.kind is matched against the lower-kebab-case grammar at its own call site rather than at the root behavior_kind's. Route: the typed enemy reader appends specialist_attack then kind to the root pointer and hands that value to the same grammar check the root field uses, so the diagnostic is compared against the pointer /specialist_attack/kind and not merely against the code; a malformed token reported anywhere else fails the assertion. The fixture carries EN-06's own authored prose, 'telegraphed straight non-homing projectile', with the document's root behavior_kind left well formed, so exactly one grammar failure may be reported and it must be the nested one. Why this needed an entry of its own: the field is required and grammar-checked and no fixture reached it, so the call site could be deleted with the whole suite still green. Route not covered: whether the token resolves to a registered descriptor, which is DAT-004's registry check. OBSERVED, negative control run rather than cited. Environment: the working checkout /workspace/mecha-miner-survivor at b71371e68f54ac2c75688d8be63ba7bb301e4bc5 with this tranche uncommitted, two linked git worktrees nested at .claude/worktrees/hrufl9-gates and .claude/worktrees/hrufl9-hardening (measured with git worktree list, both .git files naming this clone's /workspace/mecha-miner-survivor/.git/worktrees/), dotnet SDK 10.0.302 targeting net8.0. Command: dotnet test tests/MechaMiner.Content.Tests/MechaMiner.Content.Tests.csproj --no-build --filter FullyQualifiedName~NestedBehaviorTokenTests, with MSBUILDDISABLENODEREUSE=1 on the preceding build. Intact: 7 passed, 0 failed of 7. Deleting the SemanticCheck.BehaviorToken call at src/MechaMiner.Content/Categories/EnemyDefinition.cs:353 and rebuilding: 1 failed, 6 passed of 7, the failure being EnemySpecialistAttackKind with all three assertions of AProseValueInANestedTokenPositionIsReportedAtThatPosition reporting at once - Assert.That(diagnostics, Is.Not.Empty) 'Expected: not <empty> But was: <empty>', Assert.That(atPointer, Does.Contain(ContentDiagnosticCodes.BehaviorTokenMalformed)) 'Expected: some item equal to \"MMC-6002\" But was: <empty>', and Assert.That(Codes(diagnostics), Has.Exactly(1).EqualTo(ContentDiagnosticCodes.BehaviorTokenMalformed)) 'Expected: exactly one item equal to \"MMC-6002\" But was: no matching items'. So the deletion takes the fixture's diagnostics to empty rather than merely moving the pointer, which is what shows this call site is the only thing reaching the field. The call was then restored, the assembly rebuilt (confirmed by MechaMiner.Content -> ...MechaMiner.Content.dll reappearing in the build output rather than being skipped, the restore being a copy that bumps mtime), and the tier returned to 7 passed, 0 failed of 7.",
+      "task": "TASK-DAT-002-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-002"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#enemies-and-bosses",
+        "docs/technical/40-content-data-and-validation.md#behavior-registries"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.NestedBehaviorTokenTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/enemies/valid-enemy.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/enemies/invalid-specialist-attack-kind-prose.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-035",
+      "summary": "mech.inherent_trait.behavior_kind is matched against the lower-kebab-case grammar, and the field stays optional. Route: the typed mech reader reaches the nested field only when it is present, appends inherent_trait then behavior_kind to the root pointer, and the diagnostic is compared against /inherent_trait/behavior_kind; the paired control is valid-mech.json, which omits the field entirely and must produce zero diagnostics, so the check cannot be satisfied by a call site that reports every value including no value. MechSchema declares it OptionalText and this entry does not make it required. The malformed value is MCH-01's own authored inherent_trait.effect prose, '+15% weapon attack rate', which is what an author carries across into a field whose vocabulary is not yet minted. Why it needed an entry: four mech fixtures existed and not one of them carried this field, so the call site was unexercised. OBSERVED, negative control run rather than cited. Environment: the working checkout /workspace/mecha-miner-survivor at b71371e68f54ac2c75688d8be63ba7bb301e4bc5 with this tranche uncommitted, two linked git worktrees nested at .claude/worktrees/hrufl9-gates and .claude/worktrees/hrufl9-hardening (measured with git worktree list, both .git files naming this clone's /workspace/mecha-miner-survivor/.git/worktrees/), dotnet SDK 10.0.302 targeting net8.0. Command: dotnet test tests/MechaMiner.Content.Tests/MechaMiner.Content.Tests.csproj --no-build --filter FullyQualifiedName~NestedBehaviorTokenTests, with MSBUILDDISABLENODEREUSE=1 on the preceding build. Intact: 7 passed, 0 failed of 7. Deleting the SemanticCheck.BehaviorToken call at src/MechaMiner.Content/Categories/MechDefinition.cs:226 - leaving the enclosing 'if (trait.BehaviorKind is not null)' in place with an empty body, so the mutation is the check and not the reachability - and rebuilding: 1 failed, 6 passed of 7, the failure being MechInherentTraitBehaviorKind with all three assertions reporting at once - Assert.That(diagnostics, Is.Not.Empty) 'Expected: not <empty> But was: <empty>', Assert.That(atPointer, Does.Contain(ContentDiagnosticCodes.BehaviorTokenMalformed)) 'Expected: some item equal to \"MMC-6002\" But was: <empty>', and Assert.That(Codes(diagnostics), Has.Exactly(1).EqualTo(ContentDiagnosticCodes.BehaviorTokenMalformed)) 'Expected: exactly one item equal to \"MMC-6002\" But was: no matching items'. Note which control this is and is not: it proves the malformed-token half fails when the check goes, and the clean-when-absent half (MechWithNoTraitBehaviorKind) passes in both states, because deleting a check cannot make an absent field report. The call was then restored, the assembly rebuilt, and the tier returned to 7 passed, 0 failed of 7.",
+      "task": "TASK-DAT-002-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-002"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#mechs",
+        "docs/technical/40-content-data-and-validation.md#behavior-registries"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.NestedBehaviorTokenTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/mechs/valid-mech.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/mechs/invalid-trait-behavior-kind-prose.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-036",
+      "summary": "resource.resonance_behavior.behavior_kind is matched against the lower-kebab-case grammar, and the field stays optional. Route: the typed resource reader reaches the nested field only on a specialized material and only when the field is present, appends resonance_behavior then behavior_kind to the root pointer, and the diagnostic is compared against /resonance_behavior/behavior_kind; the paired control is valid-specialized-material.json, which omits the field and must produce zero diagnostics. content/schemas/resource.schema.json says of this field that it 'becomes required in the change that mints the vocabulary', so requiring it is deliberately out of scope here and what is covered is the malformed-token case only. Why it needed an entry: seven resource fixtures existed and not one carried the field, so the call site was unexercised. OBSERVED, negative control run rather than cited. Environment: the working checkout /workspace/mecha-miner-survivor at b71371e68f54ac2c75688d8be63ba7bb301e4bc5 with this tranche uncommitted, two linked git worktrees nested at .claude/worktrees/hrufl9-gates and .claude/worktrees/hrufl9-hardening (measured with git worktree list, both .git files naming this clone's /workspace/mecha-miner-survivor/.git/worktrees/), dotnet SDK 10.0.302 targeting net8.0. Command: dotnet test tests/MechaMiner.Content.Tests/MechaMiner.Content.Tests.csproj --no-build --filter FullyQualifiedName~NestedBehaviorTokenTests, with MSBUILDDISABLENODEREUSE=1 on the preceding build. Intact: 7 passed, 0 failed of 7. Deleting the SemanticCheck.BehaviorToken call at src/MechaMiner.Content/Categories/ResourceDefinition.cs:330 - leaving the enclosing 'if (resonance.BehaviorKind is not null)' in place with an empty body - and rebuilding: 1 failed, 6 passed of 7, the failure being ResourceResonanceBehaviorBehaviorKind with all three assertions reporting at once - Assert.That(diagnostics, Is.Not.Empty) 'Expected: not <empty> But was: <empty>', Assert.That(atPointer, Does.Contain(ContentDiagnosticCodes.BehaviorTokenMalformed)) 'Expected: some item equal to \"MMC-6002\" But was: <empty>', and Assert.That(Codes(diagnostics), Has.Exactly(1).EqualTo(ContentDiagnosticCodes.BehaviorTokenMalformed)) 'Expected: exactly one item equal to \"MMC-6002\" But was: no matching items'. As with VER-DAT-002-035, the clean-when-absent half (ResourceWithNoResonanceBehaviorKind) passes in both states by construction and is an over-strictness control rather than a deletion control. The call was then restored, the assembly rebuilt, and the tier returned to 7 passed, 0 failed of 7. All three call sites were confirmed present and unmutated after the last revert, by git diff over the three files reporting no change against HEAD and by reading each line back. The whole pure NUnit tier in this environment, run directly because ./build.sh test-fast exits 4 at stage 2 before reaching it: dotnet test over tests/MechaMiner.Simulation.Tests (19 passed, 0 failed of 19), tests/MechaMiner.Content.Tests (1263 passed, 0 failed of 1263) and tests/MechaMiner.Persistence.Tests (3 passed, 0 failed of 3), each with --nologo -v minimal as TestVerb.PureTestProjects invokes them; 1285 tests, 0 failed.",
+      "task": "TASK-DAT-002-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-002"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#resources",
+        "docs/technical/40-content-data-and-validation.md#behavior-registries"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.NestedBehaviorTokenTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/resources/valid-specialized-material.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/resources/invalid-resonance-behavior-kind-prose.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
     }
   ]
 }

@@ -13,7 +13,7 @@
   "ore_only_exception": false,
   "primary_role": "Extraction reach",
   "coverage_role": "Mining speed",
-  "behavior_kind": "extraction-zone-expander",
+  "behavior_kind": "movement-speed-booster",
   "effect_kind": "additive-percent",
   "affected_stat_names": [
     "extraction-zone-radius"

@@ -86,12 +86,16 @@ internal static class CategoryFixtureCorpus
             ContentDiagnosticCodes.ConditionalFieldMissing),
         Bad("resources/invalid-resource-class-token.json", DefinitionKind.Resource,
             ContentDiagnosticCodes.TokenOutsideVocabulary),
+        Bad("resources/invalid-resonance-behavior-kind-prose.json", DefinitionKind.Resource,
+            ContentDiagnosticCodes.BehaviorTokenMalformed),
 
         // --- mechs ----------------------------------------------------------
         Bad("mechs/invalid-signature-weapon-display-name.json", DefinitionKind.Mech,
             ContentDiagnosticCodes.ReferenceGrammarMismatch),
         Bad("mechs/invalid-trait-modifier-kind.json", DefinitionKind.Mech,
             ContentDiagnosticCodes.TokenOutsideVocabulary),
+        Bad("mechs/invalid-trait-behavior-kind-prose.json", DefinitionKind.Mech,
+            ContentDiagnosticCodes.BehaviorTokenMalformed),
 
         // --- enemies --------------------------------------------------------
         Bad("enemies/invalid-armor-declared.json", DefinitionKind.Enemy,
@@ -103,6 +107,8 @@ internal static class CategoryFixtureCorpus
         Bad("enemies/invalid-derived-world-speed.json", DefinitionKind.Enemy,
             ContentDiagnosticCodes.DerivedValueAuthored),
         Bad("enemies/invalid-behavior-kind-prose.json", DefinitionKind.Enemy,
+            ContentDiagnosticCodes.BehaviorTokenMalformed),
+        Bad("enemies/invalid-specialist-attack-kind-prose.json", DefinitionKind.Enemy,
             ContentDiagnosticCodes.BehaviorTokenMalformed),
         Bad("enemies/invalid-elite-field-on-enemy.json", DefinitionKind.Enemy,
             ContentDiagnosticCodes.UnknownField),

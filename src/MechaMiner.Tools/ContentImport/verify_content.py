@@ -2661,8 +2661,10 @@ def check_no_nulls() -> list[tuple]:
 # the offending prose across. From outside, green-by-corpus and green-by-fix are
 # INDISTINGUISHABLE: both report RESULT: PASS, exit 0. Only green-by-fix survives a
 # merge. Reading a ref's passing gate as evidence the narrowing has reached it is
-# therefore wrong 13 times out of 15, and `master` is the costly instance - it is the
-# ref everything else eventually merges into. Anyone consolidating this file should
+# therefore wrong 13 times out of the 16 gate-carrying refs that pass at the stamp
+# above (13 unnarrowed+clean, plus the 3 narrowed+prose that pass because they are
+# fixed), and `master` is the costly instance - it is the ref everything else
+# eventually merges into. Anyone consolidating this file should
 # treat "the gate is green there" as no information at all and re-derive the cell.
 #
 # THE MESSAGE IS THE POINT. When this fails, no content string is wrong. What is

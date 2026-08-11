@@ -878,6 +878,101 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       mean it counts something other than files. Two corrupted files, two
       failures.                                                    FAILURE
 
+  A34 THE resource_class COUPLING. Every `resource_class` value in this tree
+      is a member of the closed vocabulary
+      docs/technical/40-content-data-and-validation.md
+      `## Minted value vocabularies` grants, and the expected token set is
+      READ OUT OF THAT SECTION rather than copied into this file or
+      collected from the files being checked. Label A34 is the next free
+      number in this table, re-measured across all 35 `origin` heads before
+      it was taken rather than read off this branch: the highest label
+      anywhere is A33, on this branch, and no other head is sitting on it.
+      That re-measurement is the procedure the minted-assertion-label-table
+      open item in content/transcription-notes.md prescribes, and the reason
+      it exists is the A28 -> A31 collision it records.
+      WHY THIS ROW DID NOT EXIST UNTIL NOW. `resource_class` appeared ZERO
+      times in this file. content/transcription-notes.md note 8, under
+      `##### hyper-gold - content/resources/hyper-gold.json`, declined to
+      assert the token vocabulary BECAUSE it was ungranted on `master`, and
+      closed "when the grant lands on `master`, the coupling is the row to
+      add". The grant has landed - that section is present at
+      `origin/master` and absent at `b482304` - so the stated reason for the
+      omission expired, and a granted closed vocabulary was left with no
+      checker in the gate that actually runs. The full path is spelled out
+      wherever the citation could be read either way, because two documents
+      in this repository are short-named 40 and the other one is
+      docs/40-mining-and-extraction.md.
+      THE EXPECTATION IS DERIVED FROM THE GRANT, NEVER FROM THE DATA. The
+      tokens are parsed out of the `resource_class` row of the vocabulary
+      table that closes that section, whose own closing paragraph says the
+      table is "the machine-readable form of what the prose above states in
+      sentences" and that "the row is what a check reads". The two
+      alternatives are both worse and both look identical on a green run.
+      (a) Collecting the distinct values present under content/resources/
+      and asserting membership in that is a TAUTOLOGY - every value is a
+      member of the set of values - so it would agree with any tree,
+      including one where a ninth resource introduced a fourth class.
+      (b) A literal tuple of the three tokens here would be a second,
+      independent statement of a set the document already states, which is
+      the drift the A21 comment above records this repository being burned
+      by. So the grant is the INPUT, and an expectation that cannot be
+      located is a FAILURE rather than an empty set that passes: a renamed
+      heading, a deleted table or a removed row reddens row 1.
+      THREE ROWS, each blind to a different edit:
+        1. The granted set is LOCATABLE and non-empty. The heading is found
+           by TEXT, the table's Tokens column by its HEADER CELL, and the
+           vocabulary by its row label - never by line number, which is the
+           citation form 8101da0 re-pointed 114 of across this file.
+        2. Every `resource_class` VALUE is a member, reported per file with
+           actual-vs-granted. This is the coupling itself.
+        3. The CARRIER SET is NAMED, not counted: exactly the eight
+           definitions under content/resources/ carry the field, one apiece.
+           Row 2 passes VACUOUSLY over an empty carrier set - deleting the
+           field from all eight leaves "0 values, 0 outside the granted
+           set" - so the population claim is asserted separately, on the
+           pattern A32 row 1 sets for canonical_letter.
+      SCOPE IS REPO-WIDE AT ANY DEPTH, and that is what row 3 makes
+      assertable. The field is collected by walking every parsed definition
+      rather than by globbing content/resources/, so `resource_class`
+      authored into another category, or nested inside one, is a member of
+      row 3's carrier set and reddens it by name. Measured before it was
+      asserted: repo-wide, at any depth, the field occurs exactly eight
+      times, all at the top level of the eight content/resources/ files.
+      NOT ASSERTED HERE: WHICH resource takes WHICH class. That is a
+      placement claim, and that section states the partition - "resource
+      material role", transcribed from `docs/00:20` - without assigning
+      tokens to files, so a per-file mapping table here would invent a
+      mandate the document does not carry. The same section rules that
+      "`resource_class` does not determine persistence or run-locality" and
+      that "any validator or consumer that infers either from
+      `resource_class` has a bug"; this row reads neither field, which is
+      how it complies.
+      NEGATIVE CONTROL, injected, run and reverted:
+      content/resources/hyper-gold.json's `resource_class` set to
+      "cross-run progression resource" - the prose the token replaced, so
+      the injection is the exact regression the grant retired rather than a
+      random string. Observed: `RESULT: FAIL (1 failure(s), 9 warning(s))`
+      at exit 1, with row 2 reading
+      `7 in set, 1 outside: content/resources/hyper-gold.json.resource_class
+      = 'cross-run progression resource'`. Rows 1 and 3 stay GREEN - the
+      grant is still readable and the carrier set is unchanged - the warning
+      count is the same 9 a clean tree prints, and A34's failure is the ONLY
+      failure, so no other assertion in this file moves.
+      ARITY, MEASURED BOTH WAYS. One corrupted value gives exactly ONE
+      failure, naming the file. A SECOND simultaneous injection -
+      content/resources/A.json set to the British spelling
+      "specialised-material", a one-letter change no other row can see -
+      gives exactly TWO, one per corrupted value. That pair is what
+      attributes the defect: a control that fired once either way would mean
+      the row stops at the first mismatch, and one that fired an unbounded
+      number of times would mean it counts something other than values. Both
+      injections were reverted and `git status --porcelain -- content/` is
+      empty; neither is committed.
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## Minted value vocabularies` - the `resource_class` row of its
+      vocabulary table, under that section's own rule that a vocabulary is
+      grounded "only when the document it cites states the set"      FAILURE
+
 Not asserted here: no structural JSON Schema validation happens, because
 content/schemas/ (40 `## Accepted content repository layout`) does not exist
 yet. Domain field names outside the envelope are therefore unvalidated and
@@ -2455,6 +2550,299 @@ def check_key_id_binding(docs: dict[Path, object]) -> tuple[list[tuple], tuple[s
         "row and the total-strings row all stay green - so a set-based or count-based check is "
         "structurally blind to a swap, the way a multiset proof is blind to reordering. Only the "
         "two-field relation sees it, and it reddens once per corrupted file.",
+    )
+    return rows, notes
+
+
+# --------------------------------------------------------------------------
+# A34 - the resource_class COUPLING: authored values against the vocabulary
+# docs/technical/40-content-data-and-validation.md
+# `## Minted value vocabularies` grants.
+#
+# WHY THIS WAS MISSING, AND WHY IT IS NOT MISSING ANY MORE. `resource_class`
+# appeared ZERO times in this file. That was not an oversight when it was made:
+# content/transcription-notes.md note 8, under
+# `##### hyper-gold - content/resources/hyper-gold.json`, DECLINED to assert the
+# token vocabulary and gave the reason - the vocabulary was ungranted on
+# `master`, so asserting a set no accepted document stated would have been
+# minting one from a validator. That note closed with the discharge condition,
+# "when the grant lands on `master`, the coupling is the row to add". The grant
+# has landed: `## Minted value vocabularies` is present at `origin/master` and
+# absent at `b482304`. This is that row.
+#
+# THE GAP'S SHAPE IS WHY IT SURVIVED. A granted closed vocabulary with no
+# checker looks like coverage from both ends. The document says the set is
+# closed; the eight authored values happen to comply; and nothing between them
+# says so, so nothing reddens when the next value is authored outside the set.
+#
+# THE EXPECTED SET IS READ FROM THE GRANT. Not from content/resources/ - that
+# expectation is derived from the data it governs and cannot fail, because every
+# value is trivially a member of the set of values, so it would pass on a tree
+# with a fourth class in it. And not from a literal tuple here either - that is a
+# second independent statement of a set the document already states, which is the
+# drift the A21 comment above records this repository being burned by. The
+# granting section closes by saying the table is "the machine-readable form of
+# what the prose above states in sentences" and that "the row is what a check
+# reads", so reading the row is the use the document asks for.
+#
+# EVERY LOOKUP IS BY TEXT, NEVER BY LINE. The heading is matched by its text,
+# the Tokens column by its header cell, the vocabulary by its row label. A line
+# number would decay on the next edit to that document, which is the failure
+# 8101da0 re-pointed 114 citations across this file to undo.
+# --------------------------------------------------------------------------
+
+# The granting document, spelled as a full path rather than as `40`, because two
+# documents in this repository are short-named 40 and the other is
+# docs/40-mining-and-extraction.md.
+DOC_CONTENT_DATA = DOCS / "technical" / "40-content-data-and-validation.md"
+
+# The section that grants the four closed value vocabularies, and the header cell
+# naming the column whose contents are the token set. Both are TEXT.
+MINTED_VOCABULARY_HEADING = "## Minted value vocabularies"
+MINTED_VOCABULARY_ROW_LABEL_COLUMN = "Vocabulary"
+MINTED_VOCABULARY_TOKENS_COLUMN = "Tokens"
+
+# The one vocabulary of that section's four this row couples. The other three -
+# persistence_class, modifier_direction, timestamp_provenance - are granted field
+# NAMES the authored tree does not carry at all (that section says so outright:
+# "the authored tree carries neither of them", and timestamp_provenance belongs
+# to a schedule field that is not authored either). A membership row over a field
+# that appears zero times would report "0 values, 0 outside the set" forever, so
+# they are deliberately not coupled here; coupling them belongs to the commit
+# that authors them.
+COUPLED_VOCABULARY_FIELD = "resource_class"
+
+# Said once, so the failure messages and the notes cannot drift apart.
+A34_MANDATE = (
+    f"{rel(DOC_CONTENT_DATA)} `{MINTED_VOCABULARY_HEADING}` grants "
+    f"`{COUPLED_VOCABULARY_FIELD}` as a CLOSED vocabulary and states its members in the "
+    f"`{COUPLED_VOCABULARY_FIELD}` row of that section's vocabulary table, under its own rule "
+    f"that a vocabulary is grounded \"only when the document it cites states the set\". This row "
+    f"READS that row for its expectation - it holds no copy of the set, and it does not collect "
+    f"the set from content/, which would be an expectation read off the data it governs"
+)
+
+
+def granted_value_vocabulary(field: str) -> tuple[tuple[str, ...], str]:
+    """Read one vocabulary's tokens out of the granting section's table.
+
+    Returns `(tokens, problem)`. `problem` is a non-empty explanation whenever the
+    expectation could not be located, and the caller FAILS on it rather than
+    proceeding with an empty set: a membership check against nothing passes over
+    any tree at all, which is the one outcome this function must not produce
+    silently.
+    """
+    if not DOC_CONTENT_DATA.is_file():
+        return (), f"{rel(DOC_CONTENT_DATA)} does not exist on this ref"
+    lines = DOC_CONTENT_DATA.read_text(encoding="utf-8").splitlines()
+
+    start = next(
+        (i + 1 for i, line in enumerate(lines) if line.strip() == MINTED_VOCABULARY_HEADING),
+        None,
+    )
+    if start is None:
+        return (), (
+            f"{rel(DOC_CONTENT_DATA)} carries no `{MINTED_VOCABULARY_HEADING}` heading "
+            f"(matched by heading TEXT, so a rename shows up here rather than shifting a line "
+            f"number quietly)"
+        )
+    # The section ends at the next same-level heading; `### ` subsections belong
+    # to it. `## Common definition envelope` follows it today.
+    end = next((i for i in range(start, len(lines)) if lines[i].startswith("## ")), len(lines))
+    section = lines[start:end]
+
+    headers = [
+        line for line in section
+        if line.startswith(f"| {MINTED_VOCABULARY_ROW_LABEL_COLUMN} |")
+    ]
+    if len(headers) != 1:
+        return (), (
+            f"`{MINTED_VOCABULARY_HEADING}` holds {len(headers)} table(s) whose header row starts "
+            f"`| {MINTED_VOCABULARY_ROW_LABEL_COLUMN} |`, expected exactly 1"
+        )
+    header_cells = [cell.strip() for cell in headers[0].strip().strip("|").split("|")]
+    if MINTED_VOCABULARY_TOKENS_COLUMN not in header_cells:
+        return (), (
+            f"the vocabulary table under `{MINTED_VOCABULARY_HEADING}` has no "
+            f"`{MINTED_VOCABULARY_TOKENS_COLUMN}` column (its columns are "
+            f"{', '.join(header_cells)}), so the token set cannot be located; the column index is "
+            f"DERIVED from this header rather than assumed, so a reordered table reddens here "
+            f"instead of reading the wrong cell"
+        )
+    column = header_cells.index(MINTED_VOCABULARY_TOKENS_COLUMN)
+
+    matches = [line for line in section if line.startswith(f"| `{field}` |")]
+    if len(matches) != 1:
+        return (), (
+            f"the vocabulary table under `{MINTED_VOCABULARY_HEADING}` holds {len(matches)} row(s) "
+            f"for `{field}`, expected exactly 1"
+        )
+    cells = [cell.strip() for cell in matches[0].strip().strip("|").split("|")]
+    if column >= len(cells):
+        return (), (
+            f"the `{field}` row of the vocabulary table under `{MINTED_VOCABULARY_HEADING}` has "
+            f"{len(cells)} cell(s), so it has no "
+            f"`{MINTED_VOCABULARY_TOKENS_COLUMN}` cell at column {column}"
+        )
+    tokens = tuple(re.findall(r"`([^`]+)`", cells[column]))
+    if not tokens:
+        return (), (
+            f"the `{MINTED_VOCABULARY_TOKENS_COLUMN}` cell of the `{field}` row under "
+            f"`{MINTED_VOCABULARY_HEADING}` names no backticked token ({cells[column]!r})"
+        )
+    if len(set(tokens)) != len(tokens):
+        return (), (
+            f"the `{MINTED_VOCABULARY_TOKENS_COLUMN}` cell of the `{field}` row under "
+            f"`{MINTED_VOCABULARY_HEADING}` repeats a token ({', '.join(tokens)}), so the granted "
+            f"set is not the list the document states"
+        )
+    return tokens, ""
+
+
+def collect_field_occurrences(docs: dict[Path, object], field: str) -> list[tuple[Path, str, object]]:
+    """Every occurrence of `field` in every parsed definition, at ANY depth.
+
+    Repo-wide and depth-blind on purpose: globbing content/resources/ would make
+    the same field authored into another category invisible, and the carrier-set
+    row below exists precisely to name that.
+    """
+    found: list[tuple[Path, str, object]] = []
+
+    def walk(node: object, where: str, path: Path) -> None:
+        if isinstance(node, dict):
+            for key, value in node.items():
+                child = f"{where}.{key}" if where else key
+                if key == field:
+                    found.append((path, child, value))
+                walk(value, child, path)
+        elif isinstance(node, list):
+            for index, value in enumerate(node):
+                walk(value, f"{where}[{index}]", path)
+
+    for path, doc in sorted(docs.items()):
+        walk(doc, "", path)
+    return found
+
+
+def check_value_vocabulary_coupling(
+    docs: dict[Path, object],
+) -> tuple[list[tuple], tuple[str, ...]]:
+    """A34 - resource_class values are members of the set 40 grants, read from 40."""
+    field = COUPLED_VOCABULARY_FIELD
+    granted, problem = granted_value_vocabulary(field)
+    occurrences = collect_field_occurrences(docs, field)
+    rows: list[tuple] = []
+
+    notes = (
+        f"THE EXPECTATION IS THE GRANT, NOT THE DATA. The tokens are read out of the "
+        f"`{field}` row of the vocabulary table under "
+        f"{rel(DOC_CONTENT_DATA)} `{MINTED_VOCABULARY_HEADING}` on every run. Collecting the "
+        f"distinct values present under content/resources/ instead would be a tautology that "
+        f"passes on any tree, including one that authored a fourth class; a literal copy of those "
+        f"tokens here would be a second statement of a set the document already states. An "
+        f"expectation that cannot be located is a FAILURE here, never an empty set that passes.",
+        f"WHAT THIS ROW DOES NOT ASSERT: WHICH resource takes WHICH class. "
+        f"`{MINTED_VOCABULARY_HEADING}` states the partition - resource material role, "
+        f"transcribed from `docs/00:20` - without assigning tokens to files, so a per-file mapping "
+        f"here would invent a mandate. The same section rules that `{field}` determines neither "
+        f"persistence nor run-locality and that any consumer inferring either from it has a bug; "
+        f"this row reads neither field, which is how it complies.",
+        f"WHY THE CARRIER SET IS NAMED. The membership row is VACUOUS over an empty population: "
+        f"deleting `{field}` from all eight resources leaves it reporting 0 values and 0 "
+        f"deviations. The carrier row names its files for the same reason A32 row 1 does - a "
+        f"count of 8 survives a correlated delete-here/add-there edit and a named set does not.",
+    )
+
+    # ---- row 1: the granted set is LOCATABLE. Reddens on a renamed heading, a
+    # deleted table, a reordered column or a removed row - never on a moved line.
+    if problem:
+        fail(
+            f"A34 - the granted `{field}` token set cannot be read from its grant: {problem}. "
+            f"This row does NOT fall back to the distinct values authored under content/, and it "
+            f"carries no copy of the set, so an unreadable grant is a failure rather than a check "
+            f"that quietly asserts nothing. {A34_MANDATE}"
+        )
+        rows.append(
+            (
+                f"granted `{field}` set located in its grant",
+                "a non-empty token set",
+                problem,
+                "FAIL",
+            )
+        )
+        rows.append(
+            (
+                f"{len(occurrences)} `{field}` value(s) in the granted set",
+                "not evaluable",
+                "skipped - no expectation to compare against",
+                "FAIL",
+            )
+        )
+    else:
+        rows.append(
+            (
+                f"granted `{field}` set located in its grant",
+                "a non-empty token set",
+                f"{len(granted)}: " + ", ".join(granted),
+                "ok",
+            )
+        )
+
+        # ---- row 2: THE COUPLING. One failure per offending occurrence, naming
+        # it, so the arity of a negative control attributes the defect.
+        outside: list[str] = []
+        for path, where, value in occurrences:
+            if isinstance(value, str) and value in granted:
+                continue
+            outside.append(f"{rel(path)}.{where} = {value!r}")
+            fail(
+                f"{rel(path)}: A34 - {where} is {value!r}, which is not one of the "
+                f"{len(granted)} granted `{field}` token(s) "
+                f"({', '.join(repr(t) for t in granted)}). {A34_MANDATE}"
+            )
+        rows.append(
+            (
+                f"{len(occurrences)} `{field}` value(s) in the granted set",
+                f"{len(occurrences)} in set",
+                f"{len(occurrences) - len(outside)} in set"
+                + (f", {len(outside)} outside: " + "; ".join(outside[:5]) if outside else ""),
+                "ok" if not outside else "FAIL",
+            )
+        )
+
+    # ---- row 3: the CARRIER SET, NAMED rather than counted, repo-wide and at
+    # any depth, so the field authored anywhere else reddens by name.
+    #
+    # The expected set is EVERY parsed definition under content/resources/, at
+    # the top level, once each - because the granting section grants the field
+    # "on the resource definition". That population is not free-floating: A12
+    # pins content/resources/ at eight entries and A28 pins their paths, so this
+    # row inherits its population from assertions that already own it instead of
+    # restating a filename list a third time.
+    expected_carriers = sorted(
+        f"{rel(path)}.{field}"
+        for path in docs
+        if path.parent == RESOURCES_DIR and isinstance(docs[path], dict)
+    )
+    actual_carriers = sorted(f"{rel(path)}.{where}" for path, where, _ in occurrences)
+    if actual_carriers != expected_carriers:
+        missing = [c for c in expected_carriers if c not in actual_carriers]
+        extra = [c for c in actual_carriers if c not in expected_carriers]
+        fail(
+            f"A34 - `{field}` is carried by a different set of places than the resource "
+            f"definitions {rel(DOC_CONTENT_DATA)} `{MINTED_VOCABULARY_HEADING}` grants it on (it "
+            f"grants the field \"on the resource definition\"). "
+            f"missing={missing or 'none'}, unexpected={extra or 'none'}. The set is NAMED rather "
+            f"than counted because a count of {len(expected_carriers)} survives deleting the field "
+            f"from one resource and authoring it into some other category in the same edit"
+        )
+    rows.append(
+        (
+            f"`{field}` carriers, NAMED (repo-wide, any depth)",
+            f"{len(expected_carriers)}: every content/resources/ definition, top level, once",
+            f"{len(actual_carriers)}: " + ", ".join(actual_carriers),
+            "ok" if actual_carriers == expected_carriers else "FAIL",
+        )
     )
     return rows, notes
 
@@ -5385,6 +5773,7 @@ def main() -> int:
     abbreviation_rows = check_no_abbreviation_periods()
     loc_rows = check_localization(stats)
     key_binding_rows, key_binding_notes = check_key_id_binding(docs)
+    value_vocabulary_rows, value_vocabulary_notes = check_value_vocabulary_coupling(docs)
 
     table(
         "A12 Per-directory entry counts",
@@ -5489,6 +5878,15 @@ def main() -> int:
         ("check", "expected", "actual", "status"),
         key_binding_rows,
         key_binding_notes,
+    )
+    table(
+        f"A34 `{COUPLED_VOCABULARY_FIELD}` coupled to the closed vocabulary "
+        f"{rel(DOC_CONTENT_DATA)} `{MINTED_VOCABULARY_HEADING}` grants "
+        "[expected set READ from that section's table on every run, never copied here and never "
+        "collected from the files being checked]",
+        ("check", "expected", "actual", "status"),
+        value_vocabulary_rows,
+        value_vocabulary_notes,
     )
     table("A19 Expected exception sets", ("set", "expected", "actual", "status"), set_rows)
     table(

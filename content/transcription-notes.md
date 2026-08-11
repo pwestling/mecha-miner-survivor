@@ -2523,6 +2523,55 @@ opinion about it.
    this ruling refuses. A field space whose grammar is settled on an unmerged ref is therefore still
    governed by this precondition here, however settled it looks over there.
 
+**EVIDENCE ARRIVING AGAINST THIS RULING, dated 2026-08-11 — attached to the pending record rather than
+left to be re-derived.** A C# closed vocabulary `UnlockKinds`, in
+`src/MechaMiner.Content/Categories/UnlockDefinition.cs`, declares the two unlock kinds as **kebab**
+members — `relic-cache-pool-entry` and `utility-blueprints` — while pointing at a flat field
+`/unlock_kind` that **no file in this tree authors**. **Re-pointed to `/unlocks/kind`, the path the tree
+does author, it would govern six files**: `content/unlocks/UNL-01.json` through
+`content/unlocks/UNL-06.json`, whose `unlocks.kind` values are `utilityBlueprints` once and
+`relicCachePoolEntry` five times — the first two rows of the eight-token table above. Every one of the
+six is camelCase against kebab members, so **all six would be rejected**. That is a real change in this
+ruling's evidential position: two of the eight tokens now have a consumer that **would reject them if it
+were pointed at them**. The members are identical on all 8 `origin` heads that carry that file, so this
+is not one branch's local opinion.
+
+**What that does and does not do, stated as narrowly as it can be: it is evidence ABOUT this ruling, and
+it is NOT grounds to unfreeze it.** Neither precondition moves.
+
+- **It is not a provenance answer, so item 1 is not discharged.** Item 1's mechanical check is an
+  exact-string grep for the eight literals, and `UnlockKinds` contains neither `relicCachePoolEntry` nor
+  `utilityBlueprints` — it contains their kebab counterparts, which is the **opposite** spelling. What
+  item 1 asks for is an occurrence that fixes a *spelling a consumer depends on*; a vocabulary spelling
+  the tokens the other way fixes no spelling for the authored values, it states a preference in code.
+  Its own authority string sharpens the point: it cites `GDD-OPTION-UNLOCK-CATALOG`, and **no document
+  in `docs/` carries that `doc_id`** at `origin/master` `e17b8b6` or at `85d0ced` — the nearest real one
+  is `GDD-PERMANENT-OPTION-UNLOCK-CATALOG` (`docs/63-permanent-option-unlock-catalog.md`), so this is one
+  of the nine non-resolving citations `docs/technical/40-content-data-and-validation.md`
+  `## Minted value vocabularies` counts.
+- **It is not a document-declared grammar, so item 2 is not discharged either, and the grammar
+  precondition stays UNMET.** `docs/technical/40-content-data-and-validation.md`
+  `## Minted value vocabularies` refuses precisely this kind of authority: "a token that has only ever
+  appeared in a schema `enum`, a code comment, or a chat log carries no authority here, and being obvious
+  was never a substitute for a grant". `UnlockKinds` is a code vocabulary, and the reason it gives for
+  kebab lives in a `<remarks>` comment on that property. Cited by section heading rather than by line,
+  and by full path because two documents in this repository are short-named 40 and the other is
+  `docs/40-mining-and-extraction.md`.
+- **Item 2's own check, re-run rather than assumed.** `git ls-tree <ref> content/schemas` is **empty** at
+  `85d0ced` (this branch's head when this evidence was attached) and at `origin/master` `e17b8b6`. Empty
+  output leaves item 2 open, so **item 2 is open exactly as written** and needs no re-reading.
+- **The merged-ref requirement bites this evidence too.**
+  `src/MechaMiner.Content/Categories/UnlockDefinition.cs` exists on **neither** `origin/master`
+  `e17b8b6` nor `85d0ced`; it is on 8 of the 35 `origin` heads, all unmerged. A consumer on an unmerged
+  branch can be revised or abandoned without notice, which is the same reason item 2 refuses a grammar
+  declared only on an unmerged ref — so this is recorded as evidence and not promoted to a call site.
+
+**Why it is attached rather than merely known.** A pending record that accumulates the evidence arriving
+against it is worth far more than one that only says "waiting". The next measuring pass gets the fact
+that a rejecting consumer exists, gets the three reasons it discharges nothing, and does not spend the
+pass re-deriving any of it. Nothing here says which way the ruling should eventually go: it still turns
+on a provenance answer and a declared token grammar, both open at the refs named above.
+
 **This ruling has been rediscovered and re-routed as a new finding at least twice**: a pass re-measures
 some subset of the eight camelCase tokens, finds no recorded open precondition beside the reason, and
 files it afresh — which is the defect the two numbered items above exist to stop. A pass that arrives
@@ -4604,19 +4653,40 @@ carried by the sentence rather than by the number.
 5. docs/61-specialized-resource-identities.md:126 records that Hyper Gold's appearance and audio identity are explicitly undecided, so no icon or audio identity is authored here.
 6. Localization keys are not authored here; content/localization/ is owned by a separate stream.
 7. runCeiling 400 and increasedByPowerUps=false are from docs/60-resources-crafting-progression.md:80.
-8. **`resource_class` is authored, not transcribed, and no document sources it.** `content/resources/hyper-gold.json:17`
-   reads `"resource_class": "cross-run progression resource"`. The value is left exactly as authored; this note
+8. **`resource_class` is authored, not transcribed, and no document sources it.** **This opening claim and the
+   quotation that follows it are STAMPED AT `b482304`** — the commit this note was written against and the ref every
+   measurement in it was taken at — rather than deleted, because they are the record of *why* the value was frozen,
+   and a freeze whose stated cause has been removed is a freeze the next reader has to take on trust. At `b482304`,
+   `content/resources/hyper-gold.json:17`
+   read `"resource_class": "cross-run progression resource"`. The value was left exactly as authored there; this note
    records the search that failed to find a source for it, because "no source exists" and "nobody looked" are
-   indistinguishable on the page otherwise.
+   indistinguishable on the page otherwise. **What the file holds now, and the commit that changed it, are on the
+   "Left as authored" bullet below:** at `origin/master` `e17b8b6` and at `85d0ced` (this branch's head when this
+   repair was written) the value is the granted token `hyper-gold`, and the field sits at
+   `content/resources/hyper-gold.json:18`.
    - **The search, run rather than assumed.** `git grep -i "cross-run progression resource" <ref> -- 'docs/*'` over
      every one of the 18 `origin` refs this repository has, `origin/master` included — **zero hits in any design or
      technical document that could serve as a source.** The corpus is the point of the entry: this is not "the phrase
      is missing from the document I happened to open", it is the phrase missing from `docs/` on every ref.
+     - **Stamped, not re-run — both the 18 and the zero are figures of `b482304`.** The repository now has **35**
+       `origin` refs, and the phrase is no longer absent from `docs/` on all of them: it is in
+       `docs/technical/40-content-data-and-validation.md` at `origin/master` `e17b8b6` and at `85d0ced`, as exactly
+       the self-quotation the next bullet rules out as circular. These figures are stamped rather than re-derived
+       because the conclusion they support was **superseded, not falsified** — the value whose source they failed to
+       find no longer exists in the tree — so re-running the search would answer a question nothing now asks.
    - **The one hit anywhere, and why it is not a source.**
      `docs/technical/40-content-data-and-validation.md:131` on `origin/claude/hearth-thread-2vmaro-fnd-002` contains
      the phrase, but it contains it as a *quotation of this field value* inside its own record that the phrase
      "returns zero verbatim hits in `docs/` on any ref of this repository". Citing it would be circular — its copy of
      the phrase is derived from this file, so it corroborates the failed search rather than answering it.
+     - **Corrected, not stamped — "anywhere" has moved.** That hit is no longer confined to an unmerged branch. The
+       same paragraph is on `master`: `d013707` ("docs(40): bring content data and validation up to date from
+       fnd-002") brought it over, and it reads today under
+       `docs/technical/40-content-data-and-validation.md` `## Minted value vocabularies` at `origin/master`
+       `e17b8b6` and at `85d0ced`. Only the **location** is corrected; the reasoning is untouched and still holds — a
+       document quoting this field value cannot source it, on `master` no less than on a branch. Corrected rather
+       than dated because "the one hit anywhere" is a claim about the whole repository at whatever ref you read it
+       on, and a sha behind it would read as provenance while functioning as cover.
    - **The near miss, and why it does not qualify.** The closest thing in `docs/` is the heading
      `## Cross-run progression loop` at `docs/60-resources-crafting-progression.md:53`. It names a **loop** — the
      earn/bank/spend cycle — not a class of resource, and putting a process name into a classification field is a
@@ -4628,17 +4698,69 @@ carried by the sentence rather than by the number.
      also the only one of the three class values in this position: per the same `fnd-002` section, `specialized-material`
      is transcribed from `docs/65:19` and `common-ore` from `docs/60:212`, while `hyper-gold` is stated there to be
      **assigned** rather than transcribed.
+     - **DISCHARGED 2026-08-11, by `0fe7041`** ("content(resources): adopt the granted resource_class tokens in all
+       eight files"). **This freeze is spent and must not be read as live instruction.** That commit replaced the
+       prose `resource_class` value in all eight `content/resources/` files with the tokens the grant states, so
+       `content/resources/hyper-gold.json` now holds `"resource_class": "hyper-gold"` and carries the scoped citation
+       `resource_class: TDD-CONTENT-DATA#minted-value-vocabularies`. The bullet's own condition — "there is no sourced
+       phrase to put in its place" — was answered by the **grant**, not by a further search, which is exactly what the
+       next bullet licensed. **The discharge is recorded here, on the freezing bullet itself,** because a note whose
+       first bullet freezes a value and whose second licenses replacing it will be read by its first bullet every
+       time: a reader who arrives at "left as authored rather than replaced" and finds no discharge has been told, by
+       this file, not to touch a value this file elsewhere authorised changing.
    - **Expected to be replaced by a token, not sourced.** The document owner is minting a closed `resource_class`
      vocabulary — `docs/technical/40` § *Minted value vocabularies* on `origin/claude/hearth-thread-2vmaro-fnd-002`
      grants the field and assigns the token `hyper-gold` to this resource. The successor to this value is therefore a
      **granted token**, not a document quotation, and the search above should not be re-run in the hope of a different
      answer.
+     - **Corrected, not stamped — the grant is on `master`, and the sentence above names the wrong ref.** Locating the
+       grant on the unmerged branch `origin/claude/hearth-thread-2vmaro-fnd-002` is **false** at `origin/master`
+       `e17b8b6` and at `85d0ced`. **Where it lives now:**
+       `docs/technical/40-content-data-and-validation.md` `## Minted value vocabularies` — cited by section heading
+       rather than by line, and by full path because two documents in this repository are short-named 40 and the
+       other is `docs/40-mining-and-extraction.md`. It landed on `master` in `d013707`, and it is **absent** at
+       `b482304`, which is why the note as written could not have said otherwise. Corrected rather than dated: a sha
+       makes a true-then figure honest, but behind a claim that names the wrong ref it would read as provenance while
+       functioning as cover — the same treatment the `id`-contribution sub-claim under Ruling 39 gets. The
+       **prediction** in this bullet is untouched and came true: the successor was a granted token, not a document
+       quotation.
    - **Deliberately not asserted.** No check in `src/MechaMiner.Tools/ContentImport/verify_content.py` references
      `specialized-material`, `common-ore` or `hyper-gold` as class tokens, and none couples `resource_class` to
      `canonical_letter`. That vocabulary is not minted on `master`, and importing an ungranted vocabulary into the
      checker whose job is to adjudicate authorisation would beg the question it exists to answer. Asserting the
      current prose values instead is the mirror error: it would ratify as a contract the prose the grant is about to
      replace. Both were considered and left out; when the grant lands on `master`, the coupling is the row to add.
+     - **Corrected, not stamped — the vocabulary IS minted on `master`.** "That vocabulary is not minted on `master`"
+       is **false** at `origin/master` `e17b8b6` and at `85d0ced`; the bullet above records where the grant lives and
+       which commit landed it. The **argument** the sentence carried is untouched and was right — importing an
+       ungranted vocabulary into the checker would have begged the question, and asserting the prose values would have
+       ratified what the grant was about to replace. Only its premise expired.
+     - **Now asserted, 2026-08-11 — the coupling row this bullet named is `A34`.** "No check in
+       `src/MechaMiner.Tools/ContentImport/verify_content.py` references `specialized-material`, `common-ore` or
+       `hyper-gold` as class tokens" is **false** as of this commit. **`A34`** asserts that every `resource_class`
+       value in the tree is a member of the set `docs/technical/40-content-data-and-validation.md`
+       `## Minted value vocabularies` grants, that the granted set is locatable in that section at all, and that the
+       carrier set is exactly the eight resource definitions, named rather than counted. It **reads the expected set
+       out of that section's vocabulary table on every run** — it holds no copy of the three tokens, and it does not
+       collect them from the files it checks, because an expectation derived from the data it governs cannot fail.
+       Cited here **by assertion label rather than by line**, per the citation form `8101da0` established across this
+       file. Its negative control was observed red: `content/resources/hyper-gold.json` set back to the prose
+       `"cross-run progression resource"` gives `RESULT: FAIL (1 failure(s), 9 warning(s))` at exit 1, **once**,
+       naming that file; a second simultaneous injection gives exactly two; both injections were reverted and neither
+       is committed.
+     - **Still not asserted, and deliberately so.** The other half of this bullet holds unchanged: nothing couples
+       `resource_class` to `canonical_letter`, and `A34` does not. That section states the partition — resource
+       material role — without assigning tokens to files, so a per-file mapping would invent a mandate; and the same
+       section rules that `resource_class` determines neither persistence nor run-locality and that any validator or
+       consumer inferring either from it has a bug.
+   - **THE INVERTED FAILURE MODE, recorded because it is the strongest argument available for stamping a ruling's
+     factual claims.** The usual direction is that a ruling holds and the tree has drifted from it; here the tree was
+     re-read against this note and **it was the note that was out of date, not the tree** — three of its factual
+     claims were false ("not minted on `master`", the branch the grant lives on, and the absent check) and its freeze
+     was spent, while the tree was correct throughout. A ruling that cites the tree silently becomes a ruling *about
+     the past* the moment
+     the tree moves, with nothing on the page marking the transition, so its unmarked past tense goes on being read as
+     present instruction; a sha on each factual claim is what marks that transition.
 
 #### Mining sites (`content/mining-sites/`)
 

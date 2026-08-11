@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using MechaMiner.Content.Categories;
 using MechaMiner.Content.Codec;
 using MechaMiner.Content.Ids;
 
@@ -87,24 +88,49 @@ public sealed class DefinitionEnvelope
         Status is DefinitionStatus.Development or DefinitionStatus.Disabled;
 
     /// <summary>
-    /// Writes the envelope's canonical form: fields in schema-declared order, tags as a
-    /// canonical ID set, source refs in their authored order, and every
+    /// Writes the envelope's canonical form as a whole object: the nine fields in
+    /// schema-declared order, each array under the class
+    /// <see cref="EnvelopeSchema.ArrayOrderOf"/> declares for it, and every
     /// declared-optional field materialized.
     /// </summary>
-    /// <remarks>
-    /// The three orderings here are not interchangeable and are chosen per field.
-    /// <c>tags</c> is an unordered set of stable terms, so it is emitted in canonical
-    /// order and a duplicate is a write failure. <c>source_refs</c> is
-    /// <em>semantically ordered</em>: an author lists the whole-definition sources first
-    /// and then the per-field ones, and sorting would destroy that reading order, so it
-    /// is emitted exactly as authored.
-    /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="writer"/> is null.</exception>
     public void WriteCanonical(CanonicalJsonWriter writer)
     {
         ArgumentNullException.ThrowIfNull(writer);
 
         writer.BeginObject(EnvelopeSchema.Order);
+        WriteCanonicalFields(writer);
+        writer.EndObject();
+    }
+
+    /// <summary>
+    /// Writes the nine envelope fields into an object the caller has already opened, so a
+    /// definition can emit its envelope and its own domain fields into one object.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>The two arrays' treatments are read from the declaration, not chosen here.</b>
+    /// <see cref="EnvelopeSchema.ArrayOrderOf"/> states which of doc 40's two treatments
+    /// <c>tags</c> and <c>source_refs</c> get, and
+    /// <see cref="Categories.ArrayOrderEmitter"/> turns that answer into the matching
+    /// <see cref="CanonicalJsonWriter"/> operation. Naming an operation here instead would put
+    /// a second answer beside the declaration's, and the two can disagree silently: both
+    /// spellings emit a well-formed array of strings, so the disagreement would surface as a
+    /// changed hash rather than as an error. This method therefore contains no statement about
+    /// which class either field has.
+    /// </para>
+    /// <para>
+    /// The caller's open object must declare all nine names, in
+    /// <see cref="EnvelopeSchema.Order"/>'s relative order, ahead of any of its own fields:
+    /// the writer rejects a field its order does not declare and a field written out of
+    /// declared order.
+    /// </para>
+    /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="writer"/> is null.</exception>
+    public void WriteCanonicalFields(CanonicalJsonWriter writer)
+    {
+        ArgumentNullException.ThrowIfNull(writer);
+
         writer.WriteString(EnvelopeSchema.Id, Id.Value);
         writer.WriteInteger(EnvelopeSchema.SchemaVersion, SchemaVersion);
         writer.WriteInteger(EnvelopeSchema.ContentVersion, ContentVersion);
@@ -115,11 +141,16 @@ public sealed class DefinitionEnvelope
         writer.WriteString(
             EnvelopeSchema.SummaryKey,
             SummaryKey?.Value ?? EnvelopeSchema.AbsentOptionalDefault);
-        writer.WriteIdSet(EnvelopeSchema.Tags, Tags);
-        writer.WriteOrderedArray(
+        ArrayOrderEmitter.WriteStrings(
+            writer,
+            EnvelopeSchema.Tags,
+            EnvelopeSchema.ArrayOrderOf(EnvelopeSchema.Tags),
+            Tags);
+        ArrayOrderEmitter.WriteStrings(
+            writer,
             EnvelopeSchema.SourceRefs,
-            SourceRefs,
-            static (target, sourceRef) => target.WriteStringValue(sourceRef.Text));
+            EnvelopeSchema.ArrayOrderOf(EnvelopeSchema.SourceRefs),
+            SourceRefTexts());
 
         // presentation_id is required absent in source, so there is nothing here to
         // materialize from and no model property to read: the field's canonical value is
@@ -129,7 +160,6 @@ public sealed class DefinitionEnvelope
         writer.WriteString(
             EnvelopeSchema.PresentationId,
             EnvelopeSchema.AbsentOptionalDefault);
-        writer.EndObject();
     }
 
     /// <summary>The canonical payload bytes of this envelope.</summary>
@@ -148,5 +178,26 @@ public sealed class DefinitionEnvelope
     internal static IReadOnlyList<T> Freeze<T>(List<T> values)
     {
         return new ReadOnlyCollection<T>(values);
+    }
+
+    /// <summary>
+    /// The source references as the strings a canonical payload holds.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="SourceRef.Text"/> is the whole authored element, scope prefix included.
+    /// Which key canonical ID order runs over when an element carries a scope prefix is the
+    /// open question recorded at <see cref="EnvelopeSchema.ArrayOrderOf"/>'s declaration; this
+    /// projection is deliberately the identity on the authored text so that the answer lives
+    /// in one place rather than being half-decided here.
+    /// </remarks>
+    private List<string> SourceRefTexts()
+    {
+        List<string> texts = new(SourceRefs.Count);
+        foreach (SourceRef sourceRef in SourceRefs)
+        {
+            texts.Add(sourceRef.Text);
+        }
+
+        return texts;
     }
 }

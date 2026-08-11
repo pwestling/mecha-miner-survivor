@@ -648,11 +648,24 @@ internal sealed class SchemaCorpusDivergenceTests
     /// When a position leaves the baseline, it is exactly the set predicted to leave.
     /// </summary>
     /// <remarks>
-    /// The committed golden is the previous baseline, so the removal set is computable
-    /// against it without anybody recording a number by hand. Today the set is empty and
-    /// this passes on an empty condition, which is why the two tests above exist: one
-    /// asserts the prediction is live in the current baseline, and the other cashes it on a
-    /// mutated copy so the equality has been exercised rather than merely written.
+    /// <para>
+    /// The committed golden is the previous baseline, so the removal set is computable against
+    /// it without anybody recording a number by hand.
+    /// </para>
+    /// <para>
+    /// <b>This assertion is vacuous at this sha, and says so where it is read rather than only
+    /// in a registry entry.</b> The removal set is empty - the measured positions are exactly
+    /// the pinned ones - so the equality below is never evaluated and a green result here is
+    /// the absence of a removal, not a verified prediction. What carries the prediction today
+    /// is elsewhere and is named here so a reader does not have to find it:
+    /// <see cref="ThePredictedResourceRenameRowsAreRowsTheBaselineActuallyHas"/> requires all
+    /// twenty-four predicted positions to be present in the current baseline, so the
+    /// prediction cannot quietly become a list of rows that already went, and
+    /// <see cref="TheResourceRenameSimulationRemovesExactlyThePredictedRowsAndAddsNone"/>
+    /// applies the rename to a copy and exercises this very equality against a non-empty
+    /// removal set. This test becomes load-bearing the moment a row leaves, which is the
+    /// moment it exists for.
+    /// </para>
     /// </remarks>
     [Test]
     public void AnyPositionThatLeftTheBaselineIsExactlyTheOnesPredictedToLeave()
@@ -680,7 +693,17 @@ internal sealed class SchemaCorpusDivergenceTests
 
         if (removed.Count == 0)
         {
-            return;
+            // Vacuous, deliberately and visibly: nothing has left the baseline, so there is no
+            // equality to check. The two tests named in the remarks are what hold the
+            // prediction until something does leave.
+            Assert.Pass(
+                "no position has left the baseline at this sha, so the predicted-removal "
+                + "equality was not evaluated. The prediction is carried meanwhile by "
+                + nameof(ThePredictedResourceRenameRowsAreRowsTheBaselineActuallyHas)
+                + ", which requires all " + PredictedRenamePositions().Count
+                + " predicted positions to be present, and by "
+                + nameof(TheResourceRenameSimulationRemovesExactlyThePredictedRowsAndAddsNone)
+                + ", which exercises this equality on a mutated copy.");
         }
 
         Assert.That(
@@ -709,11 +732,33 @@ internal sealed class SchemaCorpusDivergenceTests
     }
 
     /// <summary>The committed baseline's text, normalized the way the golden comparison does.</summary>
+    /// <remarks>
+    /// An absent golden fails with its own message rather than an <c>IOException</c> from
+    /// somewhere inside the assertion. The two states a reader must be able to tell apart are
+    /// "the pinned property is violated" and "the measurement never happened", and an
+    /// unhandled file-not-found collapses the second into the first: the run is red either
+    /// way, and the stack trace names an assertion that never ran. That collapse is the one
+    /// this project has been bitten by before, so the baseline's absence is reported as the
+    /// absence of the baseline.
+    /// </remarks>
     private static string CommittedBaselineText()
     {
-        return File.ReadAllText(
-                Path.Combine(TestArtifacts.TestProjectDirectory, "Goldens", GoldenName))
-            .Replace("\r\n", "\n", StringComparison.Ordinal);
+        string path = Path.Combine(TestArtifacts.TestProjectDirectory, "Goldens", GoldenName);
+        if (!File.Exists(path))
+        {
+            // Thrown rather than Assert.Fail'd: inside Expect.Multiple a recorded failure does
+            // not abort, so the read below would still throw and the run would report the
+            // absence twice - once in these words and once as an IOException with a stack in
+            // the assertion that never ran. One clear failure is the whole point here.
+            throw new InvalidOperationException(
+                "the committed baseline " + TestArtifacts.Relative(path) + " is not on disk, so "
+                + "nothing was compared. This is not a violation of the pinned property - it is "
+                + "the property never having been evaluated. Restore the golden from version "
+                + "control, or regenerate it deliberately with "
+                + GoldenText.UpdateVariable + "=1 and review it before committing.");
+        }
+
+        return File.ReadAllText(path).Replace("\r\n", "\n", StringComparison.Ordinal);
     }
 
     /// <summary>The committed baseline's position lines.</summary>

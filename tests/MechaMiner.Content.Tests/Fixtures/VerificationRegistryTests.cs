@@ -271,9 +271,11 @@ internal sealed class VerificationRegistryTests
     /// </summary>
     /// <remarks>
     /// Resolution goes through <see cref="RegistrySelectorTypes"/> rather than
-    /// <c>Assembly.GetType</c> against this assembly alone, because 110 of the selectors on
+    /// <c>Assembly.GetType</c> against this assembly alone, because many of the selectors on
     /// disk name fixtures in the three sibling test projects this project does not reference
-    /// and could never have resolved. See that class for what the route proves.
+    /// and could never have resolved. See that class for what the route proves, and
+    /// <see cref="TheSelectorCensusIsWhatIsDeclared"/> for how many get which answer - a
+    /// literal rather than a number restated here.
     /// </remarks>
     [TestCaseSource(nameof(Packages))]
     public void EveryNunitSelectorNamesSomethingThatExists(string package)
@@ -387,6 +389,180 @@ internal sealed class VerificationRegistryTests
 
     /// <summary>The subset of <see cref="KnownSelectorKinds"/> some walk can resolve.</summary>
     private static readonly string[] KindsSomeWalkResolves = ["nunit"];
+
+    /// <summary>
+    /// How many entries there are, how many each selector kind accounts for, and which of the
+    /// two resolution routes answers each <c>nunit</c> selector.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Why this exists.</b> <see cref="EverySelectorKindIsOneSomeWalkResolves"/> pins the
+    /// <em>set</em> of kinds and <see cref="VerificationRegistry.RegistriesOnDisk"/> pins how
+    /// many files are walked, but nothing pinned how much of either is there. Until this test the
+    /// only statement of how many nunit selectors are on disk was a sentence in a doc comment on
+    /// <see cref="RegistrySelectorTypes"/> - no literal, no assertion - so entries could be
+    /// deleted, or a gate downgraded from an <c>nunit</c> selector to a <c>script</c> one nothing
+    /// resolves, and that sentence would simply become false with nothing turning red. That is
+    /// the same staleness <see cref="ProseReferences"/> and
+    /// <see cref="VerificationRegistry.RegistriesOnDisk"/> exist to catch, and the selector
+    /// census had been left out of it.
+    /// </para>
+    /// <para>
+    /// The numbers are literals for the usual reason: a census derived from the registries agrees
+    /// with itself on every input, including an input that lost a gate. Moving one is a
+    /// deliberate statement about what this suite now covers.
+    /// </para>
+    /// <para>
+    /// <b>The kind counts are made to sum, in both directions.</b> Per-kind equality on its own
+    /// is not enough: a drift in one kind compensated by a drift in another passes if both
+    /// literals are edited to match, so the four committed literals are asserted to sum to the
+    /// committed entry total. Measuring the sum is not enough either, because
+    /// <c>kinds.Values.Sum()</c> equals the entry count by construction whatever the kinds are,
+    /// so what is asserted is that the four <em>named</em> kinds account for every entry
+    /// measured. An entry declaring a fifth kind fails that even while all four of the others
+    /// are right.
+    /// </para>
+    /// <para>
+    /// <b>What these numbers do NOT prove.</b> "Resolves" is two claims of two different
+    /// strengths, which is why the split is counted rather than the total. For the
+    /// <see cref="NunitSelectorsReflected"/> selectors naming a type in this assembly, it is the
+    /// runtime loader's answer: the type was loaded and, for a method-granular selector,
+    /// reflection found a member of that name declared on it. For the
+    /// <see cref="NunitSelectorsSourceDeclared"/> naming a type in a sibling test project this
+    /// project cannot reference, it means only that a member of that name is declared somewhere
+    /// in the repository's test sources - not that the declaration compiles into that assembly,
+    /// not that it carries <c>[Test]</c>, not that it is reachable, not that it runs. And neither
+    /// number, at either strength, says that a test a selector names passes, or that it tests
+    /// what its entry's <c>summary</c> claims it tests. This pins how many selectors exist and
+    /// which strength of answer each one got; it does not upgrade the weaker answer.
+    /// </para>
+    /// </remarks>
+    [Test]
+    public void TheSelectorCensusIsWhatIsDeclared()
+    {
+        Dictionary<string, int> kinds = new(StringComparer.Ordinal);
+        Dictionary<RegistrySelectorTypes.Route, int> routes = new();
+        HashSet<string> distinctNunitSelectors = new(StringComparer.Ordinal);
+        int entries = 0;
+
+        foreach (string package in VerificationRegistry.Packages)
+        {
+            using JsonDocument registry = Registry(package);
+            foreach (JsonElement entry in Entries(registry))
+            {
+                entries++;
+                JsonElement selector = entry.GetProperty("selector");
+                string kind = selector.GetProperty("kind").GetString()!;
+                kinds[kind] = kinds.TryGetValue(kind, out int count) ? count + 1 : 1;
+
+                if (!string.Equals(kind, "nunit", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                string value = selector.GetProperty("value").GetString()!;
+                distinctNunitSelectors.Add(value);
+                RegistrySelectorTypes.Route route = RegistrySelectorTypes.RouteOf(value);
+                routes[route] = routes.TryGetValue(route, out int answered) ? answered + 1 : 1;
+            }
+        }
+
+        int Kind(string kind)
+        {
+            return kinds.TryGetValue(kind, out int count) ? count : 0;
+        }
+
+        int Answered(RegistrySelectorTypes.Route route)
+        {
+            return routes.TryGetValue(route, out int count) ? count : 0;
+        }
+
+        int namedKinds = Kind("nunit") + Kind("script") + Kind("command") + Kind("engine-scene");
+
+        TestContext.Out.WriteLine(
+            "selector census over " + VerificationRegistry.Packages.Count.ToString(
+                CultureInfo.InvariantCulture)
+            + " registries and " + entries.ToString(CultureInfo.InvariantCulture) + " entries: "
+            + Kind("nunit").ToString(CultureInfo.InvariantCulture) + " nunit, "
+            + Kind("script").ToString(CultureInfo.InvariantCulture) + " script, "
+            + Kind("command").ToString(CultureInfo.InvariantCulture) + " command, "
+            + Kind("engine-scene").ToString(CultureInfo.InvariantCulture) + " engine-scene. Of the "
+            + Kind("nunit").ToString(CultureInfo.InvariantCulture) + " nunit selectors, "
+            + distinctNunitSelectors.Count.ToString(CultureInfo.InvariantCulture)
+            + " are distinct values, "
+            + Answered(RegistrySelectorTypes.Route.Reflection).ToString(CultureInfo.InvariantCulture)
+            + " are answered by reflection into this assembly and "
+            + Answered(RegistrySelectorTypes.Route.SourceIndex).ToString(
+                CultureInfo.InvariantCulture)
+            + " only by the source index. THOSE TWO ANSWERS ARE NOT THE SAME STRENGTH: the first "
+            + "loaded the member, the second found a declaration of that name under tests/ and "
+            + "proves nothing about whether it compiles, carries [Test] or runs.");
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                entries,
+                Is.GreaterThan(0),
+                "no entry was visited, so this census counted nothing and every number below is "
+                    + "zero agreeing with zero");
+            Assert.That(entries, Is.EqualTo(RegistryEntries), "entries across every registry");
+            Assert.That(Kind("nunit"), Is.EqualTo(NunitSelectors), "entries with an nunit selector");
+            Assert.That(
+                Kind("script"), Is.EqualTo(ScriptSelectors), "entries with a script selector");
+            Assert.That(
+                Kind("command"), Is.EqualTo(CommandSelectors), "entries with a command selector");
+            Assert.That(
+                Kind("engine-scene"),
+                Is.EqualTo(EngineSceneSelectors),
+                "entries with an engine-scene selector");
+            Assert.That(
+                NunitSelectors + ScriptSelectors + CommandSelectors + EngineSceneSelectors,
+                Is.EqualTo(RegistryEntries),
+                "the committed kind counts must sum to the committed entry total, so one kind "
+                    + "drifting down while another drifts up cannot be made to pass by editing "
+                    + "both literals");
+            Assert.That(
+                namedKinds,
+                Is.EqualTo(entries),
+                () => "the four named kinds must account for every entry on disk, and they "
+                    + "accounted for " + namedKinds.ToString(CultureInfo.InvariantCulture)
+                    + " of " + entries.ToString(CultureInfo.InvariantCulture)
+                    + ". The kinds found were " + string.Join(
+                        ", ",
+                        kinds.OrderBy(pair => pair.Key, StringComparer.Ordinal)
+                            .Select(pair => pair.Key + "=" + pair.Value.ToString(
+                                CultureInfo.InvariantCulture)))
+                    + ". Summing the measured counts against each other would pass on any input; "
+                    + "this is the form that notices a fifth kind");
+            Assert.That(
+                Answered(RegistrySelectorTypes.Route.Reflection),
+                Is.EqualTo(NunitSelectorsReflected),
+                "nunit selectors reflection resolves inside this assembly");
+            Assert.That(
+                Answered(RegistrySelectorTypes.Route.SourceIndex),
+                Is.EqualTo(NunitSelectorsSourceDeclared),
+                "nunit selectors only the source index resolves - the weaker answer, and raising "
+                    + "this says one more gate is now attested by a declaration rather than by "
+                    + "the loader");
+            Assert.That(
+                NunitSelectorsReflected + NunitSelectorsSourceDeclared,
+                Is.EqualTo(NunitSelectors),
+                "the committed split must sum to the committed nunit total, for the same reason "
+                    + "the kind counts must");
+            Assert.That(
+                Answered(RegistrySelectorTypes.Route.Reflection)
+                    + Answered(RegistrySelectorTypes.Route.SourceIndex),
+                Is.EqualTo(Kind("nunit")),
+                "every nunit selector must be answered by one route or the other; a shortfall "
+                    + "here is selectors resolved by neither, which "
+                    + nameof(EveryNunitSelectorNamesSomethingThatExists) + " reports in detail");
+            Assert.That(
+                distinctNunitSelectors.Count,
+                Is.EqualTo(DistinctNunitSelectors),
+                "distinct nunit selector values - fewer than the entries, because one fixture is "
+                    + "legitimately the evidence for several entries");
+        });
+    }
 
     /// <summary>
     /// Every fixture reference a registry entry names must resolve, so an entry cannot cite
@@ -621,6 +797,40 @@ internal sealed class VerificationRegistryTests
 
     /// <summary>Entries naming no fixture evidence at all.</summary>
     private const int EntriesNamingNoFixture = 73;
+
+    /// <summary>Entries across every registry in <c>tests/verification/</c>.</summary>
+    private const int RegistryEntries = 294;
+
+    /// <summary>Entries whose selector <c>kind</c> is <c>nunit</c>.</summary>
+    private const int NunitSelectors = 236;
+
+    /// <summary>Entries whose selector <c>kind</c> is <c>script</c>.</summary>
+    private const int ScriptSelectors = 39;
+
+    /// <summary>Entries whose selector <c>kind</c> is <c>command</c>.</summary>
+    private const int CommandSelectors = 13;
+
+    /// <summary>Entries whose selector <c>kind</c> is <c>engine-scene</c>.</summary>
+    private const int EngineSceneSelectors = 6;
+
+    /// <summary>
+    /// Nunit selectors the runtime loader answers, because they name a type in this assembly.
+    /// The stronger of the two answers; see
+    /// <see cref="TheSelectorCensusIsWhatIsDeclared"/> for what neither proves.
+    /// </summary>
+    private const int NunitSelectorsReflected = 126;
+
+    /// <summary>
+    /// Nunit selectors only the source index answers, because they name a type in a sibling test
+    /// project this one cannot reference. The weaker answer.
+    /// </summary>
+    private const int NunitSelectorsSourceDeclared = 110;
+
+    /// <summary>
+    /// Distinct nunit selector values, which is fewer than
+    /// <see cref="NunitSelectors"/> because a fixture can be the evidence for several entries.
+    /// </summary>
+    private const int DistinctNunitSelectors = 150;
 
     /// <summary>
     /// The GitHub-style anchors of every heading in a Markdown file: lowercased, inline

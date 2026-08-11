@@ -18,7 +18,12 @@ namespace MechaMiner.Content.Tests.Fixtures;
 /// resolved selectors against <c>MechaMiner.Content.Tests</c> and only that assembly, so
 /// every selector naming a fixture in <c>MechaMiner.Simulation.Tests</c>,
 /// <c>MechaMiner.Persistence.Tests</c> or <c>MechaMiner.Game.Tests</c> was unresolvable by
-/// construction. 110 of the 236 nunit selectors on disk name a type outside this assembly.
+/// construction. Most of the nunit selectors on disk name a type outside this assembly, and
+/// the split is not restated as a number here: it is pinned as
+/// <c>NunitSelectorsReflected</c> and <c>NunitSelectorsSourceDeclared</c> by
+/// <see cref="VerificationRegistryTests.TheSelectorCensusIsWhatIsDeclared"/>. A count written
+/// into a comment is exactly the thing that goes stale without anything turning red, which is
+/// what this one did.
 /// </para>
 /// <para>
 /// <b>Why a source index and not a reference.</b> This project references
@@ -143,17 +148,63 @@ internal static class RegistrySelectorTypes
     private static Assembly ThisAssembly => typeof(RegistrySelectorTypes).Assembly;
 
     /// <summary>
+    /// Which of the two routes answered a selector, and so how strong the answer is.
+    /// </summary>
+    /// <remarks>
+    /// The routes are not equally strong - see the class remarks - so a census that counted
+    /// both as one number would claim more than it had. This is what lets
+    /// <see cref="VerificationRegistryTests.TheSelectorCensusIsWhatIsDeclared"/> pin them apart.
+    /// </remarks>
+    internal enum Route
+    {
+        /// <summary>Neither route found what the selector names.</summary>
+        None,
+
+        /// <summary>
+        /// The runtime loader answered: the type is in this assembly and, for a method-granular
+        /// selector, reflection found a member of that name declared on it.
+        /// </summary>
+        Reflection,
+
+        /// <summary>
+        /// The source index answered: a declaration of that name is in the repository's test
+        /// sources. Strictly weaker than <see cref="Reflection"/>.
+        /// </summary>
+        SourceIndex,
+    }
+
+    /// <summary>
     /// Why <paramref name="selector"/> names nothing, or <see langword="null"/> when it
     /// resolves.
     /// </summary>
     internal static string? Unresolved(string selector)
+    {
+        return Resolve(selector).Reason;
+    }
+
+    /// <summary>
+    /// Which route resolved <paramref name="selector"/>, or <see cref="Route.None"/> when
+    /// neither did.
+    /// </summary>
+    internal static Route RouteOf(string selector)
+    {
+        return Resolve(selector).Route;
+    }
+
+    /// <summary>
+    /// Resolves a selector once, reporting both the route that answered and - when neither
+    /// did - why. One implementation deliberately: a second one that only computed the route
+    /// could disagree with this one about which selectors resolve at all, and the census would
+    /// then be a census of something other than what the walk checks.
+    /// </summary>
+    private static (Route Route, string? Reason) Resolve(string selector)
     {
         // A nested type is spelled Outer+Nested in a selector and Outer.Nested in source.
         string value = selector.Replace('+', '.');
 
         if (ThisAssembly.GetType(selector) is not null)
         {
-            return null;
+            return (Route.Reflection, null);
         }
 
         int lastDot = value.LastIndexOf('.');
@@ -172,9 +223,9 @@ internal static class RegistrySelectorTypes
                     .Any(method => string.Equals(method.Name, member, StringComparison.Ordinal));
 
                 return declared
-                    ? null
-                    : "'" + owner + "' is a type in " + ThisAssembly.GetName().Name
-                        + " but declares no member '" + member + "'";
+                    ? (Route.Reflection, null)
+                    : (Route.None, "'" + owner + "' is a type in " + ThisAssembly.GetName().Name
+                        + " but declares no member '" + member + "'");
             }
         }
 
@@ -182,19 +233,21 @@ internal static class RegistrySelectorTypes
 
         if (index.Members.ContainsKey(value))
         {
-            return null;
+            return (Route.SourceIndex, null);
         }
 
         if (owner is not null && index.Members.TryGetValue(owner, out HashSet<string>? members))
         {
             return members.Contains(member!)
-                ? null
-                : "'" + owner + "' is declared in " + index.FileOf[owner]
-                    + " but no member '" + member + "' is declared in it";
+                ? (Route.SourceIndex, null)
+                : (Route.None, "'" + owner + "' is declared in " + index.FileOf[owner]
+                    + " but no member '" + member + "' is declared in it");
         }
 
-        return "'" + selector + "' is not a type in " + ThisAssembly.GetName().Name
-            + ", and neither it nor its declaring type is declared anywhere under tests/";
+        return (
+            Route.None,
+            "'" + selector + "' is not a type in " + ThisAssembly.GetName().Name
+                + ", and neither it nor its declaring type is declared anywhere under tests/");
     }
 
     /// <summary>How many types the source index found. A count, so an emptied index is loud.</summary>

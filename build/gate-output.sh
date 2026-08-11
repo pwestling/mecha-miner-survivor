@@ -85,6 +85,41 @@ if [[ -n "${GATE_OUTPUT_SOURCED:-}" ]]; then
 fi
 readonly GATE_OUTPUT_SOURCED=1
 
+# ---------------------------------------------------------------------------------------
+# The running bash must be 4.0 or newer
+# ---------------------------------------------------------------------------------------
+#
+# The gate scripts use `mapfile` in 32 places. It is a bash 4.0 builtin, and Apple still
+# ships bash 3.2 as /bin/bash, so on a stock macOS the gates do not fail a check - they
+# die partway through with `mapfile: command not found`, one line per site, having already
+# printed a section heading that makes the run look like it was progressing.
+#
+# Every gate script sources this file, so the check belongs here and only here: one copy,
+# reached by all of them, refusing to start rather than half-running. `./build.sh doctor`
+# probes the same thing before any gate runs (build/toolchain.json, required_commands),
+# and this is the backstop for a gate invoked directly.
+#
+# Every script here is `#!/usr/bin/env bash`, so PATH order alone decides which bash runs.
+# That is why the remedy names the PATH entry and not just the package.
+if (( BASH_VERSINFO[0] < 4 )); then
+  printf '%s\n' \
+    "FATAL  this repository's gate scripts require bash 4.0 or newer; this is bash ${BASH_VERSION}" \
+    "       'mapfile' is a bash 4.0 builtin and is used in 32 places under build/. Under" \
+    "       bash 3.2 the gates do not report a finding, they abort partway with" \
+    "       'mapfile: command not found', which reads like a broken repository." \
+    "" \
+    "       On macOS, Apple ships bash 3.2 as /bin/bash and will not ship a newer one." \
+    "       Install a current bash and put it ahead of /bin on PATH:" \
+    "" \
+    "         brew install bash" \
+    "         export PATH=\"\$(brew --prefix)/bin:\$PATH\"" \
+    "" \
+    "       Then 'bash --version' must report 4.0 or newer. Every script here uses" \
+    "       '#!/usr/bin/env bash', so PATH order is what selects the interpreter." \
+    >&2
+  exit 78
+fi
+
 # The one token. Chosen to be a word no diagnostic, path, MSBuild property or Godot log
 # line in this repository contains, so `grep -v` on it cannot remove a genuine finding.
 readonly CONTROL_MARKER='[control-fixture]'

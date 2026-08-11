@@ -70,6 +70,11 @@
       "deferred_reason": "--headless uses the dummy rendering driver and cannot capture a viewport, so the screenshot/render tier needs Xvfb plus a software Vulkan ICD. No screenshot verification exists until PRE-004."
     }
   ],
+  "required_commands_policy": [
+    "An entry here is a command the workflow cannot function without, and doctor's job is to establish that BEFORE a gate runs. Presence on PATH is not the requirement; capability is. macOS ships a bash and a sed that are both present and both unable to do what the gate scripts need, and an earlier version of this list probed only git, unzip and curl - so doctor passed on a Mac where ./build.sh build then died in build/verify-gate-wiring.sh. A preflight that certifies an environment its own gates cannot run in is worse than no preflight, because it moves the reader's suspicion onto their own machine.",
+    "Capability is established by RUNNING the command (minimum_major_version, or capability_arguments whose exit status demonstrates it), never by inspecting the platform. A uname test would be wrong the moment someone installs gnu-sed or coreutils, which is the normal macOS remedy and therefore the case that matters most.",
+    "Two commands are deliberately NOT probed here. 'readlink -f' and 'sed -i' were requirements of build/verify-verbs.sh and build/verify-gate-wiring.sh respectively; both call sites were rewritten to portable forms in the same change that added this list, so probing for them would assert a requirement the repository no longer has. A probe for a dependency that has been removed is the same defect as a missing probe for one that exists: the list stops describing the workflow."
+  ],
   "required_commands": [
     {
       "name": "git",
@@ -82,6 +87,31 @@
     {
       "name": "curl",
       "reason": "bootstrap downloads the pinned Godot archive and the .NET install script"
+    },
+    {
+      "name": "bash",
+      "reason": "the gate scripts use the 'mapfile' builtin in 32 places, which arrived in bash 4.0; under Apple's bash 3.2 they abort mid-run with 'mapfile: command not found' rather than reporting a finding",
+      "minimum_major_version": 4,
+      "remedy": "brew install bash, then put Homebrew's bin ahead of /bin on PATH: export PATH=\"$(brew --prefix)/bin:$PATH\". Every script under build/ is '#!/usr/bin/env bash', so PATH order is what selects the interpreter. build/gate-output.sh repeats this check for a gate invoked directly."
+    },
+    {
+      "name": "sha256sum",
+      "reason": "build/verify-format.sh and build/verify-policies.sh hash fixtures and the deterministic assembly with it; macOS has 'shasum -a 256' instead and no sha256sum at all",
+      "remedy": "brew install coreutils, then export PATH=\"$(brew --prefix)/opt/coreutils/libexec/gnubin:$PATH\" so the GNU names are the ones found"
+    },
+    {
+      "name": "timeout",
+      "reason": "build/verify-godot-runner.sh bounds a hanging engine run with 'timeout --kill-after'; stock macOS has no timeout command at all, so a hang there would run without a bound",
+      "capability_arguments": ["--kill-after=1s", "1s", "true"],
+      "capability_description": "GNU timeout accepting --kill-after",
+      "remedy": "brew install coreutils, then export PATH=\"$(brew --prefix)/opt/coreutils/libexec/gnubin:$PATH\" so the GNU names are the ones found"
+    },
+    {
+      "name": "sed",
+      "reason": "build/verify-godot.sh strips ANSI from engine logs with the \\x1b escape, which is a GNU sed extension. BSD sed does not fail on it, it matches a literal 'x1b' - so the engine log is silently left unstripped and the ERROR-line assertions read colour codes as content. A wrong answer rather than an error is why this is probed rather than left to chance",
+      "capability_arguments": ["--version"],
+      "capability_description": "GNU sed (BSD sed has no --version and no \\xHH escape)",
+      "remedy": "brew install gnu-sed, then export PATH=\"$(brew --prefix)/opt/gnu-sed/libexec/gnubin:$PATH\" so 'sed' is the GNU one"
     }
   ]
 }

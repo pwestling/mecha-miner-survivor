@@ -112,6 +112,35 @@ usage_table() {
   "${WRAPPER}" 2>&1 || true
 }
 
+# A portable `readlink -f`. GNU coreutils has -f; stock macOS readlink does not, and this
+# gate must not depend on which one a developer happens to have on PATH. `readlink` with
+# no flags reads one link and is portable, so the chain is followed here by hand and the
+# directory is realised with `cd -P`/`pwd -P`.
+#
+# It returns non-zero rather than empty on failure, and no caller may wrap it in
+# `|| true`: the swallowed failure this replaces is the whole defect. On stock macOS
+# `readlink -f` exited non-zero, `|| true` discarded that, and the empty result was then
+# read as "no godot on PATH" - a control that named a cause it had not established, and
+# sent a reader to inspect a Godot install that was fine.
+resolve_to_real_path() {
+  local target="$1" hops=0 link directory base
+  [[ -n "${target}" ]] || return 1
+  while [[ -L "${target}" ]]; do
+    hops=$((hops + 1))
+    # Bounded so a symlink cycle fails the control instead of hanging the gate.
+    (( hops <= 40 )) || return 1
+    link="$(readlink -- "${target}")" || return 1
+    if [[ "${link}" == /* ]]; then
+      target="${link}"
+    else
+      target="$(dirname -- "${target}")/${link}"
+    fi
+  done
+  directory="$(cd -P -- "$(dirname -- "${target}")" 2>/dev/null && pwd -P)" || return 1
+  base="$(basename -- "${target}")"
+  printf '%s\n' "${directory%/}/${base}"
+}
+
 section "1. the registered verb set is exactly doc 100's eighteen verbs (VER-FND-002-006)"
 mapfile -t registered < <(usage_table \
   | sed -n '/^VERB TABLE/,/^$/p' \
@@ -310,8 +339,27 @@ fi
 # simply failed on any non-canonical path would satisfy every assertion above while
 # still not hashing anything. A different path holding the SAME bytes must pass, which
 # is only possible if the probe hashes what the command resolves to.
-resolved_pinned="$(readlink -f "$(command -v godot 2>/dev/null || true)" 2>/dev/null || true)"
-if [[ -n "${resolved_pinned}" && -f "${resolved_pinned}" ]]; then
+# Each way this control can fail to run reports itself separately. Collapsing them into
+# one "no godot on PATH" message is what made a macOS run blame a healthy Godot install.
+godot_on_path="$(command -v godot 2>/dev/null || true)"
+resolved_pinned=""
+resolve_status=""
+if [[ -n "${godot_on_path}" ]]; then
+  # No `|| true`: a resolution failure must reach the message below, not vanish.
+  if resolved_pinned="$(resolve_to_real_path "${godot_on_path}")"; then
+    resolve_status="ok"
+  else
+    resolve_status="failed"
+  fi
+fi
+
+if [[ -z "${godot_on_path}" ]]; then
+  control_fail "negative control could not run: no godot on PATH to reach by a second path"
+elif [[ "${resolve_status}" == "failed" ]]; then
+  control_fail "negative control could not run: godot IS on PATH at ${godot_on_path}, but resolving it to a real path failed, so no second path to the same bytes could be built. This is a defect in this gate's path resolution, not in the Godot installation"
+elif [[ ! -f "${resolved_pinned}" ]]; then
+  control_fail "negative control could not run: godot on PATH at ${godot_on_path} resolved to ${resolved_pinned}, which is not a regular file"
+else
   ln -s "${resolved_pinned}" "${GODOT_SAME_CONTENT_LINK}"
   output="$(MECHAMINER_GODOT="${GODOT_SAME_CONTENT_LINK}" "${WRAPPER}" doctor 2>&1)"
   status=$?
@@ -321,8 +369,6 @@ if [[ -n "${resolved_pinned}" && -f "${resolved_pinned}" ]]; then
     control_fail "negative control: the pinned binary reached through another path exited ${status} (expected 0); § 6a may be rejecting the path rather than the content"
     printf '%s\n' "${output}" | grep -E 'godot' | sed 's/^/      /'
   fi
-else
-  control_fail "negative control could not run: no godot on PATH to reach by a second path"
 fi
 
 # Negative control 2. The substitute and the pin must genuinely differ, or § 6a's
@@ -521,6 +567,80 @@ if [[ "$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["sdk"][
 else
   fail "global.json was not restored to its real pin"
 fi
+
+section "11. doctor fails on a required command that is present but not capable"
+#
+# The doctor gap this section closes: required_commands probed git, unzip and curl and
+# nothing else, so doctor passed on a macOS machine whose bash was 3.2 and whose sed and
+# timeout were BSD builds - and ./build.sh build then died inside the gate scripts. A
+# preflight that certifies an environment its own gates cannot run in is worse than none,
+# because it moves the reader's suspicion onto their own installation.
+#
+# The probe must therefore fail on PRESENT-BUT-NOT-CAPABLE, not merely on absent, since
+# present-but-not-capable is precisely what macOS looks like. This drives that state by
+# putting a shim named `sed` first on PATH which rejects the capability arguments the pin
+# declares, and asserts doctor's report names the tool, the remedy, and exits class 3.
+readonly CAPABILITY_SHIM_DIR="${REPO_ROOT}/artifacts/verify-verbs/capability-shim"
+rm -rf "${CAPABILITY_SHIM_DIR}"
+mkdir -p "${CAPABILITY_SHIM_DIR}"
+
+# Present, executable, and answers everything except the declared capability probe - the
+# shape of BSD sed, which has no --version. Real work is delegated so that only the
+# capability answer differs from a working sed.
+cat >"${CAPABILITY_SHIM_DIR}/sed" <<'SHIM'
+#!/usr/bin/env bash
+for argument in "$@"; do
+  if [[ "${argument}" == "--version" ]]; then
+    printf 'sed: illegal option -- -\n' >&2
+    exit 1
+  fi
+done
+exec /usr/bin/sed "$@"
+SHIM
+chmod +x "${CAPABILITY_SHIM_DIR}/sed"
+
+capability_output="$(PATH="${CAPABILITY_SHIM_DIR}:${PATH}" "${WRAPPER}" doctor 2>&1)"
+capability_status=$?
+
+capability_problems=()
+[[ "${capability_status}" -eq 3 ]] || capability_problems+=("exit ${capability_status}, expected 3")
+grep -q 'MMT-3001' <<<"${capability_output}" \
+  || capability_problems+=("MMT-3001 not printed")
+grep -qE 'MISMATCH.*\bsed\b' <<<"${capability_output}" \
+  || capability_problems+=("no MISMATCH row naming sed")
+# The decisive assertion: the row must carry the action a person takes, not just the
+# symptom. "sed is not capable" would send a reader to read this gate; "brew install
+# gnu-sed" ends the investigation.
+grep -q 'gnu-sed' <<<"${capability_output}" \
+  || capability_problems+=("the report does not name the remedy (gnu-sed)")
+
+if [[ "${#capability_problems[@]}" -eq 0 ]]; then
+  pass "doctor rejects a present-but-not-capable required command: exit 3, MMT-3001, a MISMATCH row for sed, and the remedy named"
+else
+  fail "capability probe: $(printf '%s; ' "${capability_problems[@]}")"
+  printf '%s\n' "${capability_output}" | grep -iE 'sed|MISMATCH' | sed 's/^/      /'
+fi
+
+# Negative control. Without it § 11 could pass for the wrong reason: a doctor that failed
+# on ANY unusual PATH would satisfy every assertion above while probing nothing. The same
+# shim directory, first on PATH, with the capability answer corrected must pass - which is
+# only possible if doctor rejected the capability rather than the altered PATH.
+cat >"${CAPABILITY_SHIM_DIR}/sed" <<'SHIM'
+#!/usr/bin/env bash
+exec /usr/bin/sed "$@"
+SHIM
+chmod +x "${CAPABILITY_SHIM_DIR}/sed"
+
+control_output="$(PATH="${CAPABILITY_SHIM_DIR}:${PATH}" "${WRAPPER}" doctor 2>&1)"
+control_status=$?
+if [[ "${control_status}" -eq 0 ]]; then
+  control_pass "negative control: the same shim directory with a capable sed exits 0, so § 11 rejected the capability and not merely a modified PATH"
+else
+  control_fail "negative control: a capable sed on the same modified PATH exited ${control_status} (expected 0); § 11 may be rejecting the PATH rather than the capability"
+  printf '%s\n' "${control_output}" | grep -iE 'sed|MISMATCH' | sed 's/^/      /'
+fi
+
+rm -rf "${CAPABILITY_SHIM_DIR}"
 
 # This gate runs negative controls in band, so its log contains failure-shaped text on a
 # green run. Prove the marking that separates that text from genuine findings still holds.

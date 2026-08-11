@@ -1512,8 +1512,35 @@ done
 # Only the call sites move. The script itself is not copied and not renamed: the
 # defect being injected is "the verb now calls something else", which is exactly what a
 # rename that forgets a call site produces.
+#
+# NO `sed -i`. There is no portable spelling of it, so this does not try to find one:
+# `sed -i "s|a|b|" f` works on GNU and on BSD reads the EXPRESSION as the backup suffix
+# and then `f` as the script, while `sed -i '' "s|a|b|" f` works on BSD and on GNU reads
+# `''` as the script and `s|a|b|` as a filename. Both spellings are wrong on exactly one
+# of the two seds every developer here might have installed. Detecting the flavour would
+# work and is still the wrong shape: `uname` is wrong the moment someone installs
+# gnu-sed, and a behavioural probe adds a branch whose BSD arm no Linux run ever
+# executes. Writing to a temp file and moving it needs neither.
+#
+# This mutates copies under control_root, a mktemp -d scratch tree, and those copies are
+# read only by this gate's own resolve_sites analyzer below - never by a build, and never
+# by anything that decides whether to rebuild. So the mtime that `mv` carries over from
+# the temp file cannot make a later stage skip work or read a stale artifact, and nothing
+# here needs to touch the result afterwards.
+substitute_in_place() {
+  local target="$1" replaced
+  replaced="$(mktemp "${target}.XXXXXX")"
+  if LC_ALL=C sed "s|${RENAME_TARGET}|${RENAME_REPLACEMENT}|g" "${target}" >"${replaced}"; then
+    mv -- "${replaced}" "${target}"
+  else
+    rm -f -- "${replaced}"
+    return 1
+  fi
+}
+
 while IFS= read -r file; do
-  LC_ALL=C sed -i "s|${RENAME_TARGET}|${RENAME_REPLACEMENT}|g" "${file}"
+  substitute_in_place "${file}" \
+    || control_fail "control: could not rewrite the call site in ${file}, so the renamed-call-site control never injected its defect"
 done < <(grep -rl --binary-files=without-match -F "${RENAME_TARGET}" "${control_root}" 2>/dev/null)
 
 control_sites="$(mktemp "${control_root}/sites.XXXXXX")"

@@ -33,6 +33,12 @@ internal sealed class ToolchainPins
     /// <summary>Tools whose owning work package has not landed, or which are platform-specific.</summary>
     public List<OptionalToolPin> OptionalTools { get; set; } = new();
 
+    /// <summary>
+    /// Why the required-command list is shaped the way it is, including which commands
+    /// are deliberately absent from it. Editorial, like <see cref="Purpose"/>.
+    /// </summary>
+    public List<string> RequiredCommandsPolicy { get; set; } = new();
+
     /// <summary>Commands that must exist for the workflow to function at all.</summary>
     public List<RequiredCommandPin> RequiredCommands { get; set; } = new();
 }
@@ -157,6 +163,20 @@ internal sealed class OptionalToolPin
 }
 
 /// <summary>A command the workflow cannot function without.</summary>
+/// <remarks>
+/// Presence on PATH is not the same requirement as capability. The gate scripts need a
+/// bash new enough to have <c>mapfile</c> and a <c>sed</c>/<c>timeout</c> from GNU
+/// coreutils rather than the BSD builds macOS ships, and a probe that only asked
+/// "is there a file called sed on PATH" would certify a machine the gates cannot run
+/// on - which is exactly what happened: doctor passed on a Mac where the gates then
+/// died. So an entry may also declare a minimum version, or arguments whose exit status
+/// demonstrates the capability.
+///
+/// Capability is always established by RUNNING the command, never by inspecting the
+/// platform. A <c>uname</c> test would be wrong the moment someone installs gnu-sed or
+/// coreutils, which is the normal remedy on macOS and therefore the case that matters
+/// most.
+/// </remarks>
 internal sealed class RequiredCommandPin
 {
     /// <summary>The command name.</summary>
@@ -164,4 +184,22 @@ internal sealed class RequiredCommandPin
 
     /// <summary>Why the workflow needs it.</summary>
     public string Reason { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The lowest acceptable major version, or 0 when any version will do. Compared
+    /// against the first integer in the command's own version output.
+    /// </summary>
+    public int MinimumMajorVersion { get; set; }
+
+    /// <summary>
+    /// Arguments that must exit 0 for the command to count as capable, or empty when
+    /// presence on PATH is the whole requirement.
+    /// </summary>
+    public List<string> CapabilityArguments { get; set; } = new();
+
+    /// <summary>What the capability arguments demonstrate, phrased for the report.</summary>
+    public string CapabilityDescription { get; set; } = string.Empty;
+
+    /// <summary>The concrete action that repairs a failure, named rather than implied.</summary>
+    public string Remedy { get; set; } = string.Empty;
 }

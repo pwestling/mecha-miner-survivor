@@ -153,18 +153,30 @@ public static class EnvelopeSchema
 
     private static readonly Dictionary<string, ArrayOrder> ArrayOrders = new(StringComparer.Ordinal)
     {
-        // A set, and the one envelope array where the set treatment is the supported reading
-        // rather than the unsupported one. tags holds terms from a closed vocabulary - doc 40
-        // § tags vocabulary, "never carries behavior, never selects an implementation, and
-        // never gates a rule" - the vocabulary is a set, TagVocabulary holds it in a
-        // HashSet, and the schema's own description treats the array as unordered. Two
-        // authorings of the same terms therefore mean the same thing, which is exactly the
-        // condition canonical order exists for; emitting them in authored order would assert
-        // that the sequence carries something, and nothing in the document or the data says
-        // it does. This costs zero bytes today - all 138 authored definitions hold an empty
-        // tags array, measured at c626d9f - which is the reason to settle it now rather than
-        // when the first authored tag makes it a hash change.
-        [Tags] = ArrayOrder.IdSet,
+        // Unclassified, which takes authored order. This entry was IdSet between f4f38a1 and
+        // this commit, on the ground that the array is documented as unordered. That ground
+        // does not exist, checked at 109ca57 in all four places it could have been: doc 40
+        // § tags vocabulary says nothing about order; the envelope's own $defs/tags
+        // description says only "An empty array is the expected value. A tag never carries
+        // behavior, never selects an implementation, and never gates a rule"; the sixteen
+        // per-category schemas say only "The vocabulary starts empty, so [] is the only
+        // accepted value"; and CanonicalJsonWriter does not mention tags at all, zero
+        // occurrences of the word.
+        //
+        // Two things that look like grounds and are not. uniqueItems forbids a repeat, which
+        // is a statement about cardinality and says nothing about the order of what remains -
+        // an ordered array with no duplicates is exactly as consistent with it. And "closed
+        // query and tooling vocabulary", the title, is a statement about the vocabulary the
+        // elements are drawn from, not about the array that draws from it: a vocabulary is a
+        // set by definition, and that a value comes from a set does not make the sequence of
+        // values one.
+        //
+        // So no document classifies this field, and authored order is what an unclassified
+        // array gets, because preservation is the treatment that asserts nothing while
+        // sorting asserts that the sequence carries nothing. Zero bytes either way today: all
+        // 138 authored definitions author [], and both treatments emit []. That is also why
+        // this reversal is cheap now and would not have been later.
+        [Tags] = ArrayOrder.OrderedArray,
 
         // Authored order, and the argument is that the set treatment cannot be implemented for
         // this field rather than that it would be unhelpful.

@@ -64,10 +64,13 @@ internal sealed class EnvelopeArrayOrderEmissionTests
                     + "authorise. Authored order is the treatment that asserts nothing");
             Assert.That(
                 EnvelopeSchema.ArrayOrderOf(EnvelopeSchema.Tags),
-                Is.EqualTo(ArrayOrder.IdSet),
-                "tags holds terms from a closed vocabulary that TagVocabulary keeps in a set "
-                    + "and whose schema description treats the array as unordered, so two "
-                    + "authorings mean the same thing and ordering is the unsupported claim");
+                Is.EqualTo(ArrayOrder.OrderedArray),
+                "no document classifies tags: doc 40 § tags vocabulary says nothing about "
+                    + "order, and neither the envelope's description nor the per-category ones "
+                    + "nor the canonical writer says anything either. uniqueItems is "
+                    + "cardinality and a closed vocabulary is a property of the vocabulary "
+                    + "rather than of the array drawing from it, so this is unclassified and "
+                    + "takes authored order, the treatment that asserts nothing");
         });
     }
 

@@ -2642,9 +2642,18 @@ def check_no_nulls() -> list[tuple]:
 #     printf '%s\t%s\t%s\n' "$g" "$p" "$r"
 #   done | cut -f1,2 | sort | uniq -c
 #
-# At 2026-08-11T01:18Z, over 34 remote refs, that reports: unnarrowed+prose 5 (red
-# now), narrowed+prose 2 (green because FIXED), unnarrowed+clean 13, none+prose 8,
-# none+clean 6. Re-run it rather than believing those five numbers.
+# If that has to travel through a writing path, swap `-P` for `-E` and the lookbehind
+# for '(^|[^A-Za-z0-9])no\.'. Measured identical cell-for-cell at 2026-08-11T01:21Z,
+# and it survives transcription: the lookbehind's less-than-then-exclamation pair is
+# eaten as an HTML comment opener by at least one publishing path in this project,
+# which silently turns the negative lookbehind into a positive one.
+#
+# At 2026-08-11T01:21Z, over 34 remote refs, that reports: unnarrowed+prose 4 (red
+# now), narrowed+prose 3 (green because FIXED), unnarrowed+clean 13, none+prose 8,
+# none+clean 6. Three minutes earlier, at 01:18Z, the first two cells read 5 and 2:
+# the ref that moved is this branch's own, flipped by the push of this very commit's
+# parent. THAT IS THE HALF-LIFE OF THESE NUMBERS, demonstrated rather than asserted.
+# Re-run the command; do not believe the five figures above.
 #
 # THE DIRECTION THAT MATTERS MOST, AND THAT NO EARLIER TALLY RECORDED: the 13
 # unnarrowed+clean refs - `master` AMONG THEM - are green TODAY ONLY BECAUSE THEIR

@@ -60,10 +60,19 @@
 # script to `format-check`, or to any verb that runs before `build`'s solution
 # restore; and relying on `build.sh`'s implicit restore, which covers the
 # MechaMiner.Tools host project only and does not write obj/project.assets.json
-# for the nine solution projects. Either one produces a cold run - exit 4, nine
-# section-6 failures, reporting a foundation defect that does not exist. Note
-# that section 11's lock assertions are green on a cold tree; it is section 6
-# that needs the restore.
+# for the nine solution projects.
+#
+# Which sections: the section reading the RESOLVED compile-time reference set
+# is the one that needs the restore; the lock-file section is green on a cold
+# tree. Named by what they check rather than by number on purpose - they are 6
+# and 11 here, the reference-set check is 4a at 58ee02cd5c1f, and a merge
+# renumbers them.
+#
+# Scope: this describes the hard-failing variant in THIS file. c5f6b86 is not
+# an ancestor of this ref (merge-base 8c4a8ec2); the eight refs that do carry
+# it report NOT MEASURED through skip(), exit 0, and record reduced coverage
+# instead. There a mis-wired gate goes green having measured less, which is
+# worse than a red - an unmeasured check reports success.
 #
 # Known wording defect, recorded rather than silently changed: those nine
 # assertions report the THIRD outcome ("I could not measure") when the actual

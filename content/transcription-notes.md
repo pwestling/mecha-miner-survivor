@@ -670,7 +670,7 @@ the abbreviated `short_modifier` wording).
 
 Two fields of each old row were **not** copied, because they were the row's own keys and are
 already the receiving definition's identity: `material_id` (`"A"`) is the resource's `id`, and
-`geode` (`"Asterite"`) is the resource's display name — `en.json`'s `resource.A.name` is exactly
+`geode` (`"Asterite"`) is the resource's display name — `en.json`'s `resource.RSC-01.name` is exactly
 `"Asterite"` for all six. Nothing is lost; asserted mechanically.
 
 **Change — the field rules onto the geode class.** `content/mining-sites/specialized-material-geodes.json`
@@ -4490,6 +4490,15 @@ owners.
   resource ID" is contradicted by the shipped content: `content/resources/A.json` carries `"id": "A"` and
   `"name_key": "resource.A.name"`, and the same shape runs through `F.json`. No resource file carries a
   canonical-letter field of any spelling. Today the letter *is* the ID.
+  - **Resolved since — the bullet above is preserved as the record of what was argued, not corrected.**
+    It describes a pre-`RSC-` tree and was already stale on its own terms before this note was added.
+    `content/resources/A.json` now carries `"id": "RSC-01"`, and its `name_key` now reads
+    `resource.RSC-01.name`; the same shape runs through `hyper-gold.json` / `RSC-08`. The letter is no
+    longer the ID, so the counter-evidence no longer holds against the ruling it was raised against.
+    The letters `A`–`F` survive as JSON *values* — 18–19 occurrences each under `content/`, chiefly
+    `funding_material_code`, `material_codes[]` and `material_code`, plus one `canonical_letter` apiece —
+    and `common-ore` / `hyper-gold` survive as one `resource_class` value each. All eight remain file
+    stems. None of them is inside a key any longer.
 - **Resources are not uniquely omitted from the reuse bullet.** `branches` (eleven-plus ID-bearing files,
   its own doc section) and `mining-sites` are omitted too, and the bullet says "and equivalent … IDs",
   so its list is illustrative rather than exhaustive. Any argument built on "resources were deliberately

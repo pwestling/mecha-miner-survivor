@@ -3,7 +3,7 @@
   "schema_version": 1,
   "content_version": 1,
   "status": "enabled",
-  "name_key": "resource.E.name",
+  "name_key": "resource.RSC-05.name",
   "tags": [],
   "source_refs": [
     "GDD-SPECIALIZED-RESOURCE-IDENTITIES#accepted-identity-map",

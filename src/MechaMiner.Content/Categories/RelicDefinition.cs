@@ -109,6 +109,26 @@ namespace MechaMiner.Content.Categories;
 /// this loop never executed over authored content in the first place.
 /// </para>
 /// <para>
+/// <b>And what the strike does not fix, so the field cannot read as resolved.</b>
+/// <c>affected_scope</c> remains a <em>type</em> disagreement in both artifacts: the schema
+/// declares an array, all ten relics author a bare string, and that is also why the enum was
+/// unreachable - a type failure fires before <c>items</c> is applied. Measured at
+/// <c>7a28cc2</c>, that is 10 of <c>relic.schema.json</c>'s 245 pinned divergence errors, one
+/// per relic. It is <em>not</em> the relic row's 67 type errors: the other 57 are at
+/// <c>/rules/N</c>, where the elements are objects and the schema declares strings, which is a
+/// different field's disagreement. So this field has gone from wrongly constrained and
+/// unreachable to <b>unconstrained and still type-mismatched</b>, which is not part of this
+/// change and is not urgent, but is what a reader who sees a constraint removed would otherwise
+/// assume was cleaned up.
+/// </para>
+/// <para>
+/// <b>Undoing this is deliberately two edits.</b> A token list and one call site: restore the
+/// <c>ClosedVocabulary</c> with its three tokens, and restore the <c>SemanticCheck.Token</c>
+/// loop over the elements in <c>Validate</c>. It is kept that cheap on purpose, because the
+/// ruling chain behind it has reversed once already and the next reader should be able to see
+/// how to reverse it again.
+/// </para>
+/// <para>
 /// <b><c>effects</c> is the strongest case in the tree for an open parameter map.</b>
 /// Seventy-four keys across ten relics, with <em>none</em> shared between any two.
 /// There is literally no common structure to factor, so the per-kind parameter schema

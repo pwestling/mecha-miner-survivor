@@ -173,7 +173,7 @@
     },
     {
       "id": "VER-DAT-001-008",
-      "summary": "The canonical writer implements doc 40's three ordering rules as three distinct mechanisms: schema-declared field order, ordinal-sorted dictionary keys, and authored order preserved for semantically ordered arrays.",
+      "summary": "The canonical writer implements doc 40's four ordering rules as four distinct mechanisms: schema-declared field order, ordinal-sorted dictionary keys, canonical ID order for stable-ID sets, and authored order preserved for semantically ordered arrays. This entry said three and omitted the stable-ID set clause, which is the one doc 40 states as 'stable-ID sets in canonical ID order' and which CanonicalJsonWriter's own remarks call 'a fourth, distinct case': a set has no keys to sort by and no authored order to preserve, so it is ordered by the ID token itself, and WriteIdSet is a separate operation from WriteOrderedArray rather than a spelling of it. Omitting it made doc 40 look as though it granted ordering to everything except sets, which inverts the one clause the document is most explicit about, and a count in a registry is what a reader takes the document to say.",
       "task": "TASK-DAT-001-001",
       "requirements": ["TR-DAT-003", "TR-DAT-006"],
       "technicalSources": [

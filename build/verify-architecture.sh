@@ -630,7 +630,12 @@ echo "=== 10. solution configurations map to the matching project configuration 
 # Only the configuration NAME is compared, not the platform. Every project here
 # is AnyCPU-only, so the solution's x64 and x86 rows deliberately fold onto
 # "Any CPU"; comparing the full "name|platform" string would flag that healthy
-# and intentional folding on every project.
+# and intentional folding on every project. The platform half is therefore
+# unasserted: a row mapping to a platform the project does not define would pass
+# here and fail later at build time.
+#
+# Unlike section 6, this section reads only the committed solution text, so it
+# needs no restore and still reports on a bare checkout.
 #
 # EXCEPTION - game/MechaMiner.Game.csproj at Release maps to ExportRelease.
 # This is not a mismatch to be repaired; it is the only correct target. The

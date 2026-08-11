@@ -302,15 +302,40 @@ internal sealed class RegistrySelectorTypesTests
     }
 
     /// <summary>
-    /// Types the source index finds across the five source directories it reads, measured at
-    /// <c>f5b4e77</c>.
+    /// Types the source index finds across the five source directories it reads.
     /// </summary>
-    private const int TypesIndexed = 221;
+    /// <remarks>
+    /// 221 at <c>f5b4e77</c>. Moved to 222 by
+    /// <see cref="MechaMiner.Content.Tests.Categories.BehaviorTokenCallSiteTests"/>, one added
+    /// type in <c>MechaMiner.Content.Tests</c>.
+    /// </remarks>
+    private const int TypesIndexed = 222;
 
     /// <summary>
-    /// Members the source index records across every type it finds, measured at <c>f5b4e77</c>.
+    /// Members the source index records across every type it finds.
     /// </summary>
-    private const int MembersIndexed = 1190;
+    /// <remarks>
+    /// <para>
+    /// 1190 at <c>f5b4e77</c>. Moved to 1197 by
+    /// <see cref="MechaMiner.Content.Tests.Categories.BehaviorTokenCallSiteTests"/>: seven
+    /// methods, which is every method that class declares - <c>Site</c>,
+    /// <c>EachCallSiteReportsItsOwnFieldAtItsOwnPointer</c>,
+    /// <c>TheCallSitesOnDiskAreExactlyTheOnesThisTableCovers</c>, <c>Render</c>, <c>Read</c>,
+    /// <c>Codes</c> and <c>Describe</c>. The delta is stated as a roster rather than as "+7"
+    /// because +7 is what a regression that lost one declaration and gained eight also looks
+    /// like.
+    /// </para>
+    /// <para>
+    /// <b>Re-measuring this literal is not a neutral act.</b> Its job is to make a lost
+    /// declaration form loud, and the way it is defeated is by being re-derived after a change
+    /// that legitimately moved it - the new number absorbs whatever else moved in the same
+    /// edit. That is why each move is recorded with the declarations that account for it: a
+    /// move this remark cannot account for is the finding. See
+    /// <see cref="RegistrySelectorTypes"/> on the string-literal limitation, which is the
+    /// concrete thing a re-measurement here can hide.
+    /// </para>
+    /// </remarks>
+    private const int MembersIndexed = 1197;
 
     /// <summary>The negative control: the resolver must be able to fail.</summary>
     [Test]

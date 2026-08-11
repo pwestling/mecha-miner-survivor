@@ -860,7 +860,17 @@ internal sealed class VerificationRegistryTests
     /// re-derivation turns on - content/mining-sites/specialized-material-geodes.json and
     /// content/resources/A.json - so the delta is +2 and both are files the entry quotes values from.
     /// </remarks>
-    private const int RepositoryPathReferences = 331;
+    /// <remarks>
+    /// 333 now. VER-DAT-006-007, which withdraws direction 2 of the vocabulary census as never
+    /// measured, names two - content/localization/en.json, the file its out-of-scope-by-kind
+    /// disposition is about, and src/MechaMiner.Content/Categories/UtilityDefinition.cs, which
+    /// carries the count-of-names remark it cross-references - so the delta is +2. It names its
+    /// instrument in prose rather than as a fixture reference on purpose: the script is not
+    /// committed yet, blocked on an INVENTORY classification in <c>build/verify-gate-wiring.sh</c>
+    /// that another stream owns, and a fixture reference to a path that does not exist is exactly
+    /// what <see cref="EveryNamedFixtureReferenceResolves"/> exists to catch.
+    /// </remarks>
+    private const int RepositoryPathReferences = 333;
 
     /// <summary>Fixture references of the form <c>path § heading</c>.</summary>
     private const int PathAndSectionReferences = 108;
@@ -888,7 +898,12 @@ internal sealed class VerificationRegistryTests
     /// 300 now. VER-DAT-006-006, the declared-pointer re-derivation of the vocabulary census, is the
     /// one entry added since this was last pinned.
     /// </remarks>
-    private const int RegistryEntries = 300;
+    /// <remarks>
+    /// 301 now. VER-DAT-006-007, which withdraws direction 2 of that census as never measured and
+    /// returns its two recoverable figures to direction 1, is the one entry added since this was
+    /// last pinned.
+    /// </remarks>
+    private const int RegistryEntries = 301;
 
     /// <summary>Entries whose selector <c>kind</c> is <c>nunit</c>.</summary>
     /// <remarks>The 236 at <c>715ef53</c> plus <c>DAT-006.json</c>'s four, at
@@ -910,7 +925,13 @@ internal sealed class VerificationRegistryTests
     /// what it records is a measurement, not a property a test asserts, so it moves this count and
     /// leaves <see cref="NunitSelectors"/> alone.
     /// </remarks>
-    private const int CommandSelectors = 15;
+    /// <remarks>
+    /// 16 now. VER-DAT-006-007 carries a command selector for the same reason the two before it do,
+    /// and for one more: what it records is a withdrawal plus a re-derivation, neither of which is a
+    /// property any test in this suite asserts. The selector names the instrument's command so the
+    /// figures can be re-run rather than trusted.
+    /// </remarks>
+    private const int CommandSelectors = 16;
 
     /// <summary>Entries whose selector <c>kind</c> is <c>engine-scene</c>.</summary>
     private const int EngineSceneSelectors = 6;

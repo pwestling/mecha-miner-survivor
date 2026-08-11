@@ -49,6 +49,66 @@ namespace MechaMiner.Content.Categories;
 /// one hook per relic.
 /// </para>
 /// <para>
+/// <b>No vocabulary is asserted for <c>affected_scope</c>, by either artifact, and that is a
+/// decision rather than an omission.</b> <c>relic.schema.json</c>'s element enum was struck at
+/// <c>b6c9f86</c> on the document owner's ruling that the constraint is not enforceable as
+/// written: <c>docs/67</c> states three mutually incompatible scope rules - five members plus
+/// an open tail at <c>:24</c>, "only a tagged subset of systems" at <c>:55</c>, a closed
+/// three-way partition at <c>:67</c> - so there is no single documented set for an enum to
+/// match, and the member the partition names that the enum dropped, "only a clearly defined
+/// weapon family", is ungroundable because no document defines a weapon-family taxonomy and
+/// <c>docs/30:50</c> denies one exists. <b>That ruling was about the constraint, not about the
+/// file it happened to live in.</b> This class held the same constraint in a different
+/// artifact - a three-token <c>ClosedVocabulary</c> with one consuming call site in
+/// <c>RelicReader</c> - so leaving it would have implemented the ruling in the mirror and not
+/// in the thing that gates, which is backwards: <c>content/schemas/README.md</c> says the
+/// schemas are a mirror and the typed validator is authoritative. It was also, after
+/// <c>b6c9f86</c>, the <em>only</em> remaining assertion of the three tokens, ungrounded on
+/// exactly the argument that struck the schema's: it cited
+/// <c>GDD-INITIAL-RELIC-CATALOG</c>, which resolves - <c>docs/69-initial-relic-catalog.md</c>
+/// carries that <c>doc_id</c> - while enumerating no scope set at all, which is doc 40
+/// § Minted value vocabularies' "a resolving citation is necessary and not sufficient" in its
+/// purest form.
+/// </para>
+/// <para>
+/// <b>Why leaving it would have been worse than never having ruled at all.</b> Not firing over
+/// today's corpus is not the same as not gating: the path is live, five fixtures reach it, and
+/// any definition authoring <c>affected_scope</c> as an array with an out-of-vocabulary token is
+/// rejected by it. So content authored with a weapon-family scope would still have been
+/// rejected - by this class - with no schema declaration left to point at, and the author of
+/// that content could not have found the rule that stopped them. <b>A live rule whose
+/// documentation has been removed is harder to deal with than a documented rule you disagree
+/// with.</b>
+/// </para>
+/// <para>
+/// <b>The general form, which matters more than this instance.</b> When one constraint is
+/// carried by both a mirror and a gate, striking it from the mirror alone inverts which
+/// artifact is authoritative and leaves the enforcement running without its documentation. The
+/// gate is therefore the artifact that must go first, and a decision to strike a constraint has
+/// to name every artifact that carries it. This one was carried by two and the ruling named
+/// one, which is how the mirror came to be corrected a commit ahead of the thing that gates.
+/// </para>
+/// <para>
+/// <b>The other option is rejected here so it is not reopened.</b> The check had no negative
+/// control: five relic fixtures pass an in-vocabulary token through it and nothing anywhere
+/// contradicts it, so its rejecting path had never been observed. Writing that missing control
+/// would have been the conscientious-looking move and it is the wrong direction - it would mint
+/// a control for a vocabulary the ruling says is not enforceable, entrenching an ungrounded
+/// constraint and granting it more authority than it ever had. A check earns a control by being
+/// enforceable, not by existing.
+/// </para>
+/// <para>
+/// <b>What is lost, stated because "the check is gone" and "nothing states what scopes exist"
+/// are different facts.</b> After the strike no artifact in the repository asserts a scope
+/// vocabulary: the schema and this class agree that none is asserted, and <c>affected_scope</c>
+/// is checked only for what needs no vocabulary - the elements are distinct and there is at
+/// least one. <c>docs/67</c>'s three incompatible sentences are now a documentation question
+/// for the relic document's owner rather than a constraint anybody enforces, and the field will
+/// accept any string until that document states one set. Nothing about the authored corpus
+/// changed: all ten relics author <c>affected_scope</c> as a string rather than an array, so
+/// this loop never executed over authored content in the first place.
+/// </para>
+/// <para>
 /// <b><c>effects</c> is the strongest case in the tree for an open parameter map.</b>
 /// Seventy-four keys across ten relics, with <em>none</em> shared between any two.
 /// There is literally no common structure to factor, so the per-kind parameter schema
@@ -63,14 +123,6 @@ public static class RelicSchema
         "GDD-INITIAL-RELIC-CATALOG",
         "fresh-profile",
         "hyper-gold-unlock");
-
-    /// <summary>What a relic's transformation applies to.</summary>
-    public static ClosedVocabulary AffectedScopes { get; } = new(
-        "a relic's affected scope",
-        "GDD-INITIAL-RELIC-CATALOG",
-        "all-equipped-weapons",
-        "mining-extraction-rate",
-        "enemy-movement-speed");
 
     /// <summary>The live-state meter sub-shape.</summary>
     public static DefinitionShape LiveStateMeter { get; } = DefinitionShape.Of(
@@ -95,11 +147,12 @@ public static class RelicSchema
         "a relic definition",
         DefinitionField.Text("transformation_key"),
         DefinitionField.Text("tradeoff_key"),
-        // Scope tokens, not stable IDs, so the set clause does not apply. The schema no
-        // longer enumerates them: relic.schema.json's element enum was struck at b6c9f86
-        // because doc 67 states three mutually incompatible scope sets, and AffectedScopes
-        // below is now the only side asserting the three. Interim either way, and unobservable
-        // today: all ten relics author this field as a string rather than an array.
+        // Scope tokens, not stable IDs, so the set clause does not apply. No artifact
+        // enumerates the tokens any more: relic.schema.json's element enum was struck at
+        // b6c9f86 and this class's AffectedScopes vocabulary at the commit after it - see the
+        // remarks above for why the second followed from the first ruling rather than from a
+        // new one. Interim either way, and unobservable today: all ten relics author this
+        // field as a string rather than an array.
         DefinitionField.ArrayOf(
             "affected_scope", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.OrderedArray),
         DefinitionField.Text("behavior_kind"),
@@ -303,14 +356,13 @@ public static class RelicReader
             dto.PoolAvailability, RelicSchema.PoolAvailabilities,
             root.AppendProperty("pool_availability"), context, id, bag);
 
+        // No token check over the elements. The three-token vocabulary this loop used to
+        // enforce was struck at this commit: the ruling that struck relic.schema.json's enum
+        // was about the constraint, not about the file it lived in. What is still checked here
+        // is what the schema also states and what does not need a vocabulary: the elements are
+        // distinct, and there is at least one of them.
         List<string> scope = dto.AffectedScope ?? new();
         JsonPointer scopePointer = root.AppendProperty("affected_scope");
-        for (int index = 0; index < scope.Count; index++)
-        {
-            SemanticCheck.Token(
-                scope[index], RelicSchema.AffectedScopes, scopePointer.AppendIndex(index), context,
-                id, bag);
-        }
 
         SemanticCheck.Distinct(scope, scopePointer, context, id, bag, "a relic's affected scopes");
         if (scope.Count == 0)

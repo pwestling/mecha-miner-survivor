@@ -542,19 +542,27 @@ whoever picks those packages up:
   modifiers; the resonance-field radius is never scaled, because no utility or
   PowerUp changes resonance-field size. Extraction Tether can be installed
   partway through a run, so a radius scaled once at map creation and stored on
-  the site is wrong from the moment the player installs it. Doc 24 states the
-  rule about occupancy deliberately and says nothing about what the site
-  stores.
+  the site is wrong from the moment the player installs it. Doc 24 § Mining
+  site state states that read-time rule in a sentence this same change adds —
+  it is this change's own wording, not prior support — and lists an extraction
+  radius among what every site owns without saying which radius that is. The
+  independent support is doc 115 § Component registry, where `CMP-MIN-001`
+  takes "player position, site definitions, modifiers" as separate inputs. So
+  this note is a constraint this document imposes on `MIN-001`, not a
+  restatement of doc 24: store the unscaled baseline and scale it at the
+  occupancy test.
 - **Nothing marks provisional or reconstructed values inside the content
   bundle, and that is deliberate.** A per-build flag reading "authored only" is
   indistinguishable between a genuinely clean tree and a dirty tree where
   nobody set the flag, which reintroduces the same laundering with
-  machine-readable assurance behind it; and after the minute-33 confirmation
-  there are zero live instances to mark. The guarantee that was actually wanted
-  is doc 115 § What the bundle hash attests, which cannot rot the way a
-  mechanism can. Two things would justify revisiting: a definition shipping
-  with a value no document states, or a second consumer beginning to treat the
-  bundle hash as evidence about content rather than about bytes.
+  machine-readable assurance behind it; and the one reconstruction marker still
+  live, on the minute-33 row of the encounter schedule, comes out on the
+  content branch as a follow-up to this change rather than needing a mechanism
+  here. The guarantee that was actually wanted is doc 115 § What the bundle
+  hash attests, which cannot rot the way a mechanism can. Two things would
+  justify revisiting: a definition shipping with a value no document states, or
+  a second consumer beginning to treat the bundle hash as evidence about
+  content rather than about bytes.
 
 ---
 

@@ -6,7 +6,7 @@ Godot 4.7.1 (.NET / C#), authoritative 60 Hz simulation, Windows and Steam Deck 
 
 ## Where the project is
 
-Measured against `master` at `3016fbc`, 6 Aug 2026. This block is refreshed after major merges rather than continuously; `git log --oneline 3016fbc..origin/master` shows exactly what has landed since, which is exactly what this block has not accounted for.
+Measured against `master` at `85a706e`, 11 Aug 2026. This block is refreshed after major merges rather than continuously; `git log --oneline 85a706e..origin/master` shows exactly what has landed since, which is exactly what this block has not accounted for.
 
 **Playable today: a mech you can drive around an empty test arena.** No enemies, no weapons, no mining, no HUD. What it does do, verified by execution at the sha below: the mech moves at 3.0 m/s under the authoritative 60 Hz simulation, turns to face the direction it is travelling, stops with its collision circle tangent to the wall of a 40 m square arena, and is shown by a non-rotating orthographic north-up camera whose vertical extent is 24 gameplay metres.
 
@@ -46,7 +46,7 @@ The playable slice ([#19](https://github.com/pwestling/mecha-miner-survivor/pull
 
 ## Try it out
 
-**Linux x86-64 is the only path that has actually been run.** The steps below were executed from a fresh clone on 6 Aug 2026 and the game launched; see [What has and hasn't been verified](#what-has-and-hasnt-been-verified). The macOS steps are derived from the same version pins and have **never been run on a Mac**.
+**Linux x86-64 and macOS on Apple Silicon have both been run.** The Linux steps were executed from a fresh clone on 6 Aug 2026 and the game launched. The macOS steps were executed on Apple Silicon under macOS 26.6 and the game launched with the mech drivable from the keyboard. The two runs establish different things — see [What has and hasn't been verified](#what-has-and-hasnt-been-verified) for what each one did and did not cover. Windows has never been run.
 
 You will need `git`, `curl` and `unzip`, and then two pinned tools:
 
@@ -93,20 +93,20 @@ Verified exit codes for that run: the build printed `Build succeeded` and exited
 
 What you give up is `doctor`, so check the two pins by hand: `dotnet --version` must print exactly `10.0.302` and `godot --version` must print `4.7.1.stable.mono.official.a13da4feb`. You also give up `test-fast` and the evidence bundles, so use this to look at the game, not to validate a change.
 
-### macOS — not run on hardware
+### macOS (Apple Silicon) — run on hardware
 
-There is no macOS provisioning script in this repository. `build/bootstrap-linux.sh` is Linux-only by construction, and the `bootstrap` verb reports "there is no platform installer for osx-arm64 yet". The steps below follow the same pins the Linux script uses; every one of them is unverified on a Mac.
+There is no macOS provisioning script in this repository. `build/bootstrap-linux.sh` is Linux-only by construction, and the `bootstrap` verb reports "there is no platform installer for osx-arm64 yet". The steps below install the same pins the Linux script uses, by hand. They were carried out on Apple Silicon under macOS 26.6 and ended with the game running and the mech drivable from the keyboard; [What has and hasn't been verified](#what-has-and-hasnt-been-verified) records the one step in them that a Mac has not established.
 
-**1. Replace the BSD userland tools the gate scripts assume.** This is required, not optional: the gate scripts use `mapfile` (bash 4+) in 32 places and GNU `sha256sum` and `timeout`, and stock macOS ships bash 3.2.57 and neither command.
+**1. Install the GNU tools the gate scripts assume.**
 
 ```bash
-brew install bash coreutils
-echo 'export PATH="$(brew --prefix)/bin:$(brew --prefix coreutils)/libexec/gnubin:$PATH"' >> ~/.zshrc
-exec zsh
-bash --version   # expect 5.x, not 3.2.57
+brew install bash coreutils gnu-sed
+export PATH="$(brew --prefix)/bin:$(brew --prefix)/opt/gnu-sed/libexec/gnubin:$(brew --prefix)/opt/coreutils/libexec/gnubin:$PATH"
 ```
 
-The command host invokes `bash` by name from `PATH` rather than through each script's shebang, so a Homebrew bash ahead of `/bin` is enough; no file in the repo needs editing.
+**These are needed only for the `./build.sh` verbs. Playing the game does not require any of them** — if you only want to drive the mech, skip this step; nothing in steps 2 to 4 invokes a gate script. Put the export in your shell profile if you want it to survive a new terminal.
+
+The gate scripts use `mapfile` (bash 4+) in 32 places, and stock macOS ships bash 3.2.57. They also invoke `bash`, `sed`, `sha256sum` and `readlink` by unprefixed name from `PATH`, so Homebrew's `bin` and the relevant `libexec/gnubin` directories have to precede the system ones: otherwise `sed` and `readlink` resolve to the BSD builds, whose flags differ from the ones these scripts pass, and `sha256sum` and `timeout` do not resolve at all — macOS ships neither. The export writes `$(brew --prefix)/opt/<formula>` rather than `brew --prefix <formula>` deliberately: the latter errors when the formula is absent, and an erroring command substitution in a shell profile breaks the whole login rather than the one path it was meant to add. The command host invokes `bash` by name from `PATH` rather than through each script's shebang, so a Homebrew bash ahead of `/bin` is enough; no file in the repo needs editing.
 
 **2. Install .NET SDK exactly 10.0.302.**
 
@@ -121,27 +121,45 @@ Do not use `brew install dotnet` and do not accept a later 10.0.3xx patch. `./bu
 curl -LO https://github.com/godotengine/godot-builds/releases/download/4.7.1-stable/Godot_v4.7.1-stable_mono_macos.universal.zip
 unzip Godot_v4.7.1-stable_mono_macos.universal.zip -d /Applications
 xattr -dr com.apple.quarantine /Applications/Godot_mono.app   # only if Gatekeeper objects
-sudo ln -s /Applications/Godot_mono.app/Contents/MacOS/Godot /usr/local/bin/godot
-godot --version   # expect 4.7.1.stable.mono.official.a13da4feb
+/Applications/Godot_mono.app/Contents/MacOS/Godot --version   # expect 4.7.1.stable.mono.official.a13da4feb
 ```
 
 The bundle is named `Godot_mono.app`, not `Godot.app`. There is nothing to check this download against: the sums published with the 4.7.1-stable release, read over the network on 6 Aug 2026, were SHA512, while `build/toolchain.json` records SHA256 and only for `linux-x64`. Whether the release server offers a SHA256 elsewhere was not established, and no macOS hash is pinned in this repository at all.
 
-**4. Clone the playable branch and run the verbs.** There is no bootstrap step here; steps 2 and 3 already installed both pinned tools.
+**Always invoke Godot by its full bundle path. Do not put it on `PATH` — not by symlink, not by wrapper.** The long path is what this page documents on purpose, because both shortcuts have been tried on a Mac and both broke:
+
+- `sudo ln -s /Applications/Godot_mono.app/Contents/MacOS/Godot /usr/local/bin/godot` breaks the mono build. Godot locates its `GodotSharp` assemblies relative to the path it was invoked by, so invoked through the symlink it searches next to that name in `/usr/local/bin` and dies with, verbatim:
+
+  ```
+  Unable to find .NET assemblies directories, Make sure /usr/local/bin/GodotSharp/Api/Debug exists and contains the .NET assemblies
+  ```
+
+- A shell wrapper is worse, because writing one to the wrong path is unrecoverable in place. A wrapper written over `/Applications/Godot_mono.app/Contents/MacOS/Godot` itself replaced Godot's own 348 MB binary with a 70-byte script that `exec`'d itself in an infinite loop. It hangs with no `godot` process visible anywhere, because the process is `sh`. Recovery meant re-extracting the app from the zip.
+
+Why the Linux section's `/usr/local/bin/godot` symlink is fine and this one is not — the coherent reading of the failure above, not something measured — is that the macOS build derives its assembly search root from the path it was invoked by, where the Linux build resolves the link through to its target first.
+
+One consequence, read from the scripts rather than run on the Mac: `build/verify-godot.sh` calls bare `godot`, and `doctor`'s Godot probes resolve `godot` from `PATH` unless `MECHAMINER_GODOT` names the executable. With no `godot` on `PATH` — which on macOS you must not create — `./build.sh godot-import` has nothing to find. Step 4 therefore drives the two pinned tools directly, which is the route that was actually run.
+
+**4. Clone the playable branch and run it.** There is no bootstrap step here; steps 2 and 3 already installed both pinned tools.
 
 ```bash
 git clone https://github.com/pwestling/mecha-miner-survivor.git
 cd mecha-miner-survivor
 git checkout claude/hearth-thread-3aamx2   # if this fails, the work landed; stay on the default branch
-./build.sh doctor
-./build.sh build
-./build.sh godot-import
-godot --path game res://scenes/Run.tscn
+dotnet build game/MechaMiner.Game.csproj
+/Applications/Godot_mono.app/Contents/MacOS/Godot --headless --path game --import
+/Applications/Godot_mono.app/Contents/MacOS/Godot --path game res://scenes/Run.tscn
 ```
 
-`doctor` should still exit 0. It will report the Godot pin as a **warning** rather than a mismatch, because `build/toolchain.json` has no macOS entry; that is deliberate and non-blocking.
+WASD or the arrow keys drive the mech at 3 m/s. There is no HUD, no pause and no quit button — close the window.
 
-If you would rather not install GNU bash and coreutils, skip step 1 and use [Running the pinned tools directly](#running-the-pinned-tools-directly--verified-on-linux) above instead of `./build.sh` — that path invokes no gate script, so it needs neither `mapfile` nor `sha256sum` nor `timeout`; its exit codes are verified on Linux only, and running it on a Mac is as unverified as everything else here.
+The import line is needed only the first time and is a no-op once `game/.godot` is warm. Run it explicitly anyway: it separates "importing, which takes a while" from "stuck behind a dialog you cannot see", which on macOS are otherwise indistinguishable. Which brings us to the thing to know before anything goes wrong.
+
+**On macOS, a silent hang is this program's normal way of reporting a mistake.** Godot reports errors through a modal dialog even under `--headless`, and a process launched from a terminal never brings its alert to the front. So *every* Godot error on a Mac — a .NET runtime it cannot find, a mistyped scene path — presents identically: the command sits there at 0% CPU, printing nothing, with no error text anywhere. Before you conclude it is wedged, look in the Dock and in Mission Control for a Godot window waiting on a click, or re-run the same command headed so the message has somewhere to go. To settle it from the terminal, `sample $(pgrep -i godot) 5` — a stack containing `-[NSAlert runModal]` is the confirmation. Dismissing the alert can then produce a null-dereference crash inside `-[NSApplication _postDidFinishNotification]`; that is the same root cause one step further along, not a second fault to chase.
+
+**The `verify-gate-wiring` gate.** A real Mac has reached and passed that gate's real checks — sections 1 to 4, the ones that analyse this repository — with zero findings about the repository. It still reports FAIL, and the FAIL is section 5: the negative controls the script runs against copies of the tree to prove its own checks can go red, one of which rewrites a call site with `sed -i` and, under BSD sed, dies with `sed: 1: ... invalid command code` instead. That is the script's self-test failing, not a finding about this repository — the defect is `sed -i` portability; the FAIL is the gate being honest.
+
+If you would rather not install the GNU tools, skip step 1 — step 4 above already avoids `./build.sh` entirely, and the Linux write-up of the same route is at [Running the pinned tools directly](#running-the-pinned-tools-directly--verified-on-linux).
 
 ### Windows — not supported
 
@@ -163,11 +181,11 @@ Neither harness is wired to a `./build.sh` verb; both are run by hand, so neithe
 
 Not verified, and not claimed:
 
-- ⚠️ **A real keyboard.** A container cannot press keys. The input map — WASD, arrows and stick, bound by physical keycode — and the movement path driven from action state are both verified; that pressing a physical W moves the mech is not.
+- ⚠️ **A real keyboard, on the Linux evidence only.** Every ✅ above was produced in a container, and a container cannot press keys: the input map — WASD, arrows and stick, bound by physical keycode — and the movement path driven from action state are verified there, but no key was pressed in any of those runs. This caveat does **not** extend to macOS, where a human drove the mech with a keyboard in a real window; it stands unchanged for the Linux and container evidence, which never pressed one.
 - ⚠️ A real GPU. Everything above rendered through `llvmpipe`, a software Vulkan implementation. Audio fell back to the dummy driver, and every launch was under Xvfb rather than a window on a real desktop.
 - ⚠️ Exports and packaging. The `export`, `package-demo`, `release-validate` and `run` verbs are unimplemented, and the 1.2 GB Godot export templates are not fetched.
 - ⚠️ **Any Linux that is not Debian or Ubuntu.** The block opens with `apt-get`, and `build/bootstrap-linux.sh` installs `mesa-vulkan-drivers` by that name — on a non-apt distro it logs `WARNING: no apt-get` and skips the Vulkan driver rather than failing. Install `git`, `curl`, `unzip` and a Vulkan ICD with your own package manager; the rest of the block is unchanged.
-- ⚠️ **Every macOS and Windows instruction on this page.**
+- ⚠️ **One step of the macOS path, and every Windows instruction on this page.** macOS is confirmed as far as the game running with the mech drivable — on Apple Silicon, macOS 26.6, launched from the full bundle path. What is *not* established on Mac hardware is whether a fresh clone needs the explicit `--headless --path game --import` before its first launch: the single report that it was unnecessary came from an already-warm `game/.godot`, which proves nothing about a cold one. Windows has never been run at all.
 
 ## Things that will trip you up
 

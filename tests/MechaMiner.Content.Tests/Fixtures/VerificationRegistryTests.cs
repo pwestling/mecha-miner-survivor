@@ -23,7 +23,7 @@ namespace MechaMiner.Content.Tests.Fixtures;
 /// <para>
 /// It used to read DAT-001 and nothing else, while
 /// <see cref="Categories.CategoryVerificationRegistryTests"/> read DAT-002 and DAT-003 and
-/// nothing else, so eighteen of the twenty-one registries on disk were validated by nobody
+/// nothing else, so nineteen of the twenty-two registries on disk were validated by nobody
 /// and no test said so. The set now comes from
 /// <see cref="VerificationRegistry.Packages"/>, which is the directory listing - a
 /// hand-maintained list of registries fails the same way the hand-maintained pair did.
@@ -314,7 +314,7 @@ internal sealed class VerificationRegistryTests
             }
         }
 
-        // No "at least one nunit selector" assertion here, deliberately. Seven of the twenty-one
+        // No "at least one nunit selector" assertion here, deliberately. Seven of the twenty-two
         // registries declare none: DAT-007, FND-001, FND-002 and FND-005, which are script and
         // command gates, and PRE-001, PRE-002 and UI-002, which are engine-scene gates. Not "the
         // FND registries" - FND-003 is one and declares six - and the seven are pinned as
@@ -340,7 +340,7 @@ internal sealed class VerificationRegistryTests
     /// <para>
     /// The per-registry selector walk skips any entry whose kind is not <c>nunit</c>, so a
     /// registry declaring no <c>nunit</c> selector passes it while having no selector checked at
-    /// all. Seven of the twenty-one are in that state: DAT-007, FND-001, FND-002 and FND-005,
+    /// all. Seven of the twenty-two are in that state: DAT-007, FND-001, FND-002 and FND-005,
     /// which are script and command gates, and PRE-001, PRE-002 and UI-002, which are engine-scene
     /// gates. FND-003 is an FND registry and is <em>not</em> among them - it declares six nunit
     /// selectors - which is why the exposure is stated as a list of registries rather than as a
@@ -847,7 +847,10 @@ internal sealed class VerificationRegistryTests
     }
 
     /// <summary>Fixture references that are a bare repository-relative path.</summary>
-    private const int RepositoryPathReferences = 319;
+    /// <remarks>The 319 at <c>715ef53</c> plus the nine <c>DAT-006.json</c> names at
+    /// <c>59a4986</c>: the divergence golden four times, two schemas, and three resource
+    /// definitions.</remarks>
+    private const int RepositoryPathReferences = 328;
 
     /// <summary>Fixture references of the form <c>path § heading</c>.</summary>
     private const int PathAndSectionReferences = 108;
@@ -865,10 +868,14 @@ internal sealed class VerificationRegistryTests
     private const int EntriesNamingNoFixture = 73;
 
     /// <summary>Entries across every registry in <c>tests/verification/</c>.</summary>
-    private const int RegistryEntries = 294;
+    /// <remarks>The 294 at <c>715ef53</c> plus <c>DAT-006.json</c>'s four, at
+    /// <c>59a4986</c>.</remarks>
+    private const int RegistryEntries = 298;
 
     /// <summary>Entries whose selector <c>kind</c> is <c>nunit</c>.</summary>
-    private const int NunitSelectors = 236;
+    /// <remarks>The 236 at <c>715ef53</c> plus <c>DAT-006.json</c>'s four, at
+    /// <c>59a4986</c>.</remarks>
+    private const int NunitSelectors = 240;
 
     /// <summary>Entries whose selector <c>kind</c> is <c>script</c>.</summary>
     private const int ScriptSelectors = 39;
@@ -884,7 +891,9 @@ internal sealed class VerificationRegistryTests
     /// The stronger of the two answers; see
     /// <see cref="TheSelectorCensusIsWhatIsDeclared"/> for what neither proves.
     /// </summary>
-    private const int NunitSelectorsReflected = 126;
+    /// <remarks>The 126 at <c>715ef53</c> plus <c>DAT-006.json</c>'s four, which name a
+    /// fixture and three methods in this assembly, at <c>59a4986</c>.</remarks>
+    private const int NunitSelectorsReflected = 130;
 
     /// <summary>
     /// Nunit selectors only the source index answers, because they name a type in a sibling test
@@ -896,7 +905,9 @@ internal sealed class VerificationRegistryTests
     /// Distinct nunit selector values, which is fewer than
     /// <see cref="NunitSelectors"/> because a fixture can be the evidence for several entries.
     /// </summary>
-    private const int DistinctNunitSelectors = 150;
+    /// <remarks>The 150 at <c>715ef53</c> plus <c>DAT-006.json</c>'s four, which are four
+    /// distinct values, at <c>59a4986</c>.</remarks>
+    private const int DistinctNunitSelectors = 154;
 
     /// <summary>
     /// Registries declaring no <c>nunit</c> selector at all, and so having no selector checked by

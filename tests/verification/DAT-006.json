@@ -1,0 +1,110 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "DAT-006",
+  "workPackageTitle": "Canonical bundle compiler, hash, normalized defaults, deterministic ordering",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91 § Verification registry).",
+    "These four entries cover one thing only: the gate that runs content/schemas/ over the definitions under content/ and pins the disagreement. The canonical bundle and its hash - the criterion delivery-waves.md names for this package - are blocked on DAT-005 and have no entry here yet. An entry is not written for work that has not been done.",
+    "The record of this gate's negative controls lives in VER-DAT-006-003 rather than in the test's own doc comment. A control described in a comment is prose: nothing reads it, nothing fails when it goes stale, and it is the same shape as an unreachability label no check verifies."
+  ],
+  "entries": [
+    {
+      "id": "VER-DAT-006-001",
+      "summary": "Every schema under content/schemas/ is run over the definitions it governs under content/, and the disagreement is pinned as the whole normalised set of (corpus file, JSON pointer, keyword) positions with an occurrence count each, committed as tests/MechaMiner.Content.Tests/Goldens/schema-corpus-divergence.txt. The defect this closes: content/schemas/README.md presents the schemas as a mirror of the authoritative typed validator and the agreement corpus that makes the mirror trustworthy is hand-written under tests/, so no test anywhere loaded a definition from content/<category>/ and ran a schema over it, and the mirror was green for the same reason an unrun check is green. VER-DAT-001-039 already recorded the consequence about one schema in the project's own words: 'those two committed artifacts contradict each other today and nothing is red only because no check reads the corpus.' Measured at 59a4986 through this repository's own JsonSchemaEvaluator, which is the only JSON Schema implementation on any ref here: 3109 errors at 2560 positions over 138 files, zero of which satisfy the schema that governs them. Both figures carry their row set and traversal because one library over one corpus gives a different total for every choice of the two: sixteen category rows, one row per definition against the single schema governing it, envelope excluded, every error rather than the first, failed oneOf and anyOf branches reported once at the failing location without expanding sub-errors, and additionalProperties reported once per undeclared property. The same corpus and row set under jsonschema 4.26.0, which reports additionalProperties once per object, gives 1927; the two agree on 1374 errors and on every keyword total except that one, so the difference is the granularity of one keyword rather than a disagreement about the content. No per-schema ranking travels without its traversal: branch.schema.json is worst under every shape measured, relic.schema.json is sixth under this one and fifth under the per-object shape. Why a pinned baseline and not a passing gate, recorded as forced rather than chosen: zero of 138 files are clean on this branch's corpus and zero of 138 on origin/master's at e17b8b6, minimum three errors per file here and two there, maximum 297 on both, so there is no green baseline anywhere to switch a schema on from and a pinned divergence is the only construction committable green at this sha. What the gate covers is realised divergence only, and it says so about itself: a constraint no authored value exercises produces no row, so if this pin ever reads zero the correct reading is that no disagreement is realised and never that the schemas and the content agree.",
+      "task": "TASK-DAT-006-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-002", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline",
+        "docs/technical/91-verification-strategy.md#determinism-and-fixture-policy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.SchemaCorpusDivergenceTests.TheDivergenceIsExactlyThePinnedBaseline"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Goldens/schema-corpus-divergence.txt"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "golden-artifact"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-006-002",
+      "summary": "The population the pin is taken over is asserted rather than iterated into existence. Every *.schema.json on disk is either exercised against a non-empty corpus, named in AuthoredCorpus.NoCorpus as governing no authored definition, or named in AuthoredCorpus.Excluded as deliberately outside the pin, and nothing is in two of those states. The failure this exists to stop: a measurement that walks corpus directories cannot report a schema whose corpus does not exist, because there is no directory to arrive at - it skips it, and the schema with zero coverage becomes the one the gate never mentions. content/schemas/player-baseline.schema.json is exactly that schema: content/player/ does not exist, so it governs zero instances and can never fail, and it is carried as a named row rather than an omission, with the claim rechecked against the directory instead of trusted from the list. envelope.schema.json is the one exclusion, and its reason is measured rather than asserted: pointed at whole definitions the closed nine-field envelope rejects all 138 for their category fields, so TheEnvelopeExclusionIsTheArtefactItClaimsToBe runs it over the whole corpus and holds it to that claim - no file passes, and every rejection includes an undeclared-property error - which means the day the envelope stops rejecting everything the exclusion's premise is gone and the suite says so. In the other direction, every authored definition under content/ that is not a schema or a localization catalog must be governed by exactly one schema, walked from the tree rather than from the binding table, so a new category directory that nothing is bound to fails rather than being silently unmeasured.",
+      "task": "TASK-DAT-006-001",
+      "requirements": ["TR-DAT-002"],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#determinism-and-fixture-policy",
+        "docs/technical/40-content-data-and-validation.md#accepted-content-repository-layout"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.SchemaCorpusDivergenceTests"
+      },
+      "fixtures": [
+        "content/schemas/player-baseline.schema.json",
+        "content/schemas/envelope.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-006-003",
+      "summary": "Both directions of the pin are controlled, and the control record is here rather than in a doc comment. Upward: InjectingOneUndeclaredFieldAddsExactlyThatPositionAndBreaksThePin copies the corpus into artifacts/, adds one undeclared field to content/relics/REL-01.json - the smallest well-formed thing additionalProperties:false forbids, so the file stays parseable and a red result cannot be the environment falling over - and asserts the measurement gains exactly the position 'relic.schema.json | content/relics/REL-01.json | /control_injected_field | additionalProperties | 1', loses nothing, gains exactly one error, and no longer matches the committed baseline. A ratchet only ever watched while the number falls has demonstrated that it tolerates improvement, which is not what it exists to catch. Same-cardinality substitution, which is THE control that distinguishes a pinned set from a count wearing a set's name: SubstitutingOneViolationForAnotherKeepsTheErrorCountAndBreaksThePin deletes affected_scope from the same relic, which removes the type failure at /affected_scope - the authored value is a string where the schema states an array - and adds a required failure at the root where seven already sit. The error count is identical, so a per-schema count, a whole-corpus total and a per-file count are all green on it; the set moves, so the pin breaks, naming the position that left at count 7 and the one that arrived at count 8. If that test ever passes green the baseline has become a count and the blindness the set exists to remove has returned. Neither control writes to content/: the corpus belongs to the catalog stream and this package may read it and not write it, and an in-place control is one whose green run depends on somebody remembering to revert. What the pin cannot see is asserted too rather than described: TheBaselineIsBlindToASwapWithinOnePosition satisfies one absent required field and breaks a present one at the same object, which is one position at one count, and asserts the measurement does not move. Closing that gap needs a discriminator naming the missing property, which today exists only inside JsonSchemaError.Message, and a normal form built on message text reddens the whole baseline whenever the evaluator's wording is edited, which is how a golden stops being read.",
+      "task": "TASK-DAT-006-001",
+      "requirements": ["TR-DAT-002", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#determinism-and-fixture-policy",
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.SchemaCorpusDivergenceTests.SubstitutingOneViolationForAnotherKeepsTheErrorCountAndBreaksThePin"
+      },
+      "fixtures": [
+        "content/relics/REL-01.json",
+        "tests/MechaMiner.Content.Tests/Goldens/schema-corpus-divergence.txt"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-006-004",
+      "summary": "A predicted drop is committed as a named subset of the baseline rather than as a note beside a count. The catalog stream's resource rename is expected to have landed on origin/master already: a third derivation reports 1891 errors against that ref's corpus at e17b8b6 where this branch's corpus gives 1927 under the same library, row set and traversal, and reading that ref's tree read-only out of this clone's object store reproduces both figures and localises the whole 36-error gap - 24 positions in resource, 13 in utility, one fewer in map-generation-contract, twelve rows identical. A prose note saying 24 rows will drop is unfalsifiable at the moment it matters, because a count falling by 24 does not distinguish the predicted 24 from some other 24, or from the predicted 24 dropping while 24 new ones appear elsewhere - the count-versus-set problem one level up. So the 24 are named: for each of the eight resource definitions carrying ids A through F, common-ore and hyper-gold, the root oneOf, the pattern at /id, and the enum at /resource_class, stated as a rule over the eight files rather than as pasted strings. Two assertions make it checkable at the only moment it can be wrong. ThePredictedResourceRenameRowsAreRowsTheBaselineActuallyHas requires every predicted position to be in the current baseline, so the prediction cannot name a row that already went. AnyPositionThatLeftTheBaselineIsExactlyTheOnesPredictedToLeave computes the removal set against the committed golden - which is the previous baseline - and requires it to equal the predicted set exactly when it is non-empty, so 24 rows vanishing that are not those 24 fails and says which. Because that equality would otherwise wait on somebody else's merge to be exercised, TheResourceRenameSimulationRemovesExactlyThePredictedRowsAndAddsNone cashes it today on a copy: applying the rename's three authored changes - the id becomes RSC-0n, resource_class becomes its token, and a specialized material carries the canonical_letter its arm requires - removes exactly the 24 predicted positions and adds none, and the resulting resource rows are byte-identical to the rows origin/master's corpus produces at e17b8b6. The status of the claim is stated as what it is from here: these positions are expected to be already fixed on origin/master, unverified at pin time from the working tree the suite reads, attributed to the third-route derivation.",
+      "task": "TASK-DAT-006-001",
+      "requirements": ["TR-DAT-002", "TR-DAT-004"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#stable-id-policy",
+        "docs/technical/40-content-data-and-validation.md#minted-content-id-grammars"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Schema.SchemaCorpusDivergenceTests.TheResourceRenameSimulationRemovesExactlyThePredictedRowsAndAddsNone"
+      },
+      "fixtures": [
+        "content/resources/A.json",
+        "content/resources/common-ore.json",
+        "content/resources/hyper-gold.json",
+        "tests/MechaMiner.Content.Tests/Goldens/schema-corpus-divergence.txt"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "negative-control"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    }
+  ]
+}

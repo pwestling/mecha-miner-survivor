@@ -311,9 +311,12 @@ internal sealed class RegistrySelectorTypesTests
     /// <c>src/MechaMiner.Content/Categories/ArrayOrder.cs</c>, <c>ArrayOrderEmitter.cs</c> and
     /// <c>DefinitionWriter.cs</c> are not among these, plus
     /// <c>CanonicalArrayOrderGateTests</c>, its nested <c>WriterCensus</c> record and
-    /// <c>CanonicalArrayOccurrence</c>, measured at <c>e655fbf</c>.
+    /// <c>CanonicalArrayOccurrence</c>, measured at <c>e655fbf</c>, plus the five types of the
+    /// schema-versus-corpus divergence gate - <c>AuthoredCorpus</c>,
+    /// <c>DivergencePosition</c>, <c>DivergenceRow</c>, <c>SchemaCorpusDivergence</c> and
+    /// <c>SchemaCorpusDivergenceTests</c> - measured at <c>59a4986</c>.
     /// </summary>
-    private const int TypesIndexed = 229;
+    private const int TypesIndexed = 234;
 
     /// <summary>
     /// Members the source index records across every type it finds: the 1190 measured at
@@ -323,9 +326,11 @@ internal sealed class RegistrySelectorTypesTests
     /// helpers, measured at <c>35dc68d</c>, plus <c>CanonicalDefinitionWriterTests</c>' six
     /// tests and one helper and <c>CanonicalWriterSubject</c>' seven members, measured at
     /// <c>8e45064</c>, plus <c>CanonicalArrayOrderGateTests</c>' eight tests and five helpers
-    /// and <c>CanonicalArrayOccurrence</c>' six members, measured at <c>e655fbf</c>.
+    /// and <c>CanonicalArrayOccurrence</c>' six members, measured at <c>e655fbf</c>, plus the
+    /// twenty-nine members the schema-versus-corpus divergence gate declares across its five
+    /// types, measured at <c>59a4986</c>.
     /// </summary>
-    private const int MembersIndexed = 1242;
+    private const int MembersIndexed = 1271;
 
     /// <summary>The negative control: the resolver must be able to fail.</summary>
     [Test]

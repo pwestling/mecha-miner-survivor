@@ -23,7 +23,7 @@ namespace MechaMiner.Content.Tests.Fixtures;
 /// hand-maintained list of registries has the same defect as a hand-maintained list of
 /// checks: the registry added next is walked by nobody, and nothing says so. That was the
 /// actual state of this suite - two walks between them named DAT-001, DAT-002 and DAT-003,
-/// and the other eighteen registries on disk were validated by nothing.
+/// and the other nineteen registries on disk were validated by nothing.
 /// </para>
 /// </remarks>
 internal static class VerificationRegistry
@@ -40,7 +40,11 @@ internal static class VerificationRegistry
     /// on that input, so the expected number is the one part of this that must not be
     /// computed. Changing it is a deliberate change to what this suite covers.
     /// </remarks>
-    internal const int RegistriesOnDisk = 21;
+    /// <remarks>
+    /// The twenty-one at <c>715ef53</c> plus <c>DAT-006.json</c>, added at <c>59a4986</c>
+    /// with the schema-versus-corpus divergence gate it records.
+    /// </remarks>
+    internal const int RegistriesOnDisk = 22;
 
     /// <summary>The directory holding every verification registry.</summary>
     internal static string DirectoryPath { get; } = Path.Combine(

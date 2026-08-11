@@ -25,7 +25,7 @@ namespace MechaMiner.Content.Tests.Categories;
 /// <para>
 /// This walk named DAT-002 and DAT-003 in source, and
 /// <see cref="Fixtures.VerificationRegistryTests"/> named DAT-001, which between them left
-/// eighteen of the twenty-one registries on disk walked by nobody. Both now take their set
+/// nineteen of the twenty-two registries on disk walked by nobody. Both now take their set
 /// from <see cref="VerificationRegistry.Packages"/> - the directory listing - because a
 /// hand-maintained list of registries fails exactly the way the hand-maintained pair did.
 /// </para>

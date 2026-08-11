@@ -81,6 +81,41 @@ internal static class RegistrySelectorTypes
         TimeSpan.FromSeconds(1));
 
     /// <summary>
+    /// The return type in a declaration: either a tuple type, or a dotted chain of identifiers
+    /// each able to carry a generic argument list; then any array-rank and nullable suffixes.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Spelling the generic argument list out as a bracketed group, rather than folding
+    /// <c>&lt;</c>, <c>&gt;</c> and <c>,</c> into one flat character class of return-type
+    /// characters, is the point of this fragment. A generic argument list of more than one
+    /// argument contains a space - <c>Dictionary&lt;string, JsonSchemaNode&gt;?</c> is the
+    /// shape - and a flat class has only two options, both wrong. Forbidding the space is what
+    /// the flat class did, and it dropped 9 declarations from the sources this index reads, 18
+    /// across <c>src/</c> and <c>tests/</c> together. Permitting the space everywhere is the
+    /// other option, and it lets the return type span two identifiers instead of one, so
+    /// <c>owners ?? new List&lt;string&gt;()));</c> reads as the return type <c>owners ??</c>
+    /// declaring a member named <c>List</c>.
+    /// </para>
+    /// <para>
+    /// A tuple return type has to be spelled out for the same reason and one more: it contains a
+    /// space, and it also begins with a character no chain of identifiers can begin with. Without
+    /// the alternation, <c>private static (string Before, string After) Split(</c> did not merely
+    /// go unrecorded - the paren the regex found was the tuple's rather than the method's, so it
+    /// recorded a member named <c>static</c>. Admitting the tuple both records the three real
+    /// declarations of that shape and stops recording the two phantom <c>static</c> members.
+    /// </para>
+    /// <para>
+    /// Nothing outside the bracketed groups consumes <c>=</c>, which is what keeps an initialiser,
+    /// a deconstruction or a lambda from being read as a declaration: a line carrying one before
+    /// the name's paren cannot match at all.
+    /// </para>
+    /// </remarks>
+    private const string ReturnTypePattern =
+        @"(?:\([^()]*\)|[A-Za-z_][A-Za-z0-9_]*(?:<[^()]*>)?"
+        + @"(?:\.[A-Za-z_][A-Za-z0-9_]*(?:<[^()]*>)?)*)[\[\],\?]*";
+
+    /// <summary>
     /// A method declaration: modifiers, a return type, then the name and its paren.
     /// </summary>
     /// <remarks>
@@ -88,14 +123,17 @@ internal static class RegistrySelectorTypes
     /// and a paren, which is the shape of a declaration, and without the guard it would record
     /// <c>Helper</c> as a member of the enclosing type. Recording a member that is not there
     /// only ever makes a method-granular selector pass that should have failed, so this list
-    /// errs long.
+    /// errs long - and it has to actually err in that direction, which is a claim about the
+    /// return type as much as about the guard, and the claim
+    /// <see cref="RegistrySelectorTypesTests.TheIndexRecordsEveryMethodReflectionFindsInThisAssembly"/>
+    /// now holds it to.
     /// </remarks>
     private static readonly Regex MethodDeclaration = new(
         @"^\s*(?!(?:return|throw|yield|await|else|case|new|using|lock|fixed|foreach|for|while"
             + @"|if|switch|do|catch|var|base|this|default)\b)"
             + @"(?:(?:public|internal|private|protected|static|async|override|sealed|virtual"
             + @"|partial|extern|unsafe|new|abstract)\s+)*"
-            + @"[A-Za-z_][A-Za-z0-9_.<>,\[\]\?]*\s+([A-Za-z_][A-Za-z0-9_]*)\s*"
+            + ReturnTypePattern + @"\s+([A-Za-z_][A-Za-z0-9_]*)\s*"
             + @"(?:<[^>()]*>)?\s*\(",
         RegexOptions.CultureInvariant,
         TimeSpan.FromSeconds(1));
@@ -162,10 +200,31 @@ internal static class RegistrySelectorTypes
     /// <summary>How many types the source index found. A count, so an emptied index is loud.</summary>
     internal static int TypesIndexed => Sources.Value.Members.Count;
 
+    /// <summary>
+    /// How many members the source index found, across every type. A count, so a return type the
+    /// <see cref="MethodDeclaration"/> regex stops matching is loud rather than silent.
+    /// </summary>
+    internal static int MembersIndexed => Sources.Value.Members.Values.Sum(members => members.Count);
+
     /// <summary>The fully qualified names the source index found, for the negative control.</summary>
     internal static bool Declares(string fullyQualifiedType)
     {
         return Sources.Value.Members.ContainsKey(fullyQualifiedType);
+    }
+
+    /// <summary>
+    /// The members the source index recorded directly in <paramref name="fullyQualifiedType"/>, or
+    /// <see langword="null"/> when it recorded no such type at all - a distinction the member-level
+    /// calibration needs, because an unknown type and a known type with a missing member are
+    /// different parser faults.
+    /// </summary>
+    internal static IReadOnlyCollection<string>? MembersOf(string fullyQualifiedType)
+    {
+        return Sources.Value.Members.TryGetValue(
+            fullyQualifiedType,
+            out HashSet<string>? members)
+            ? members
+            : null;
     }
 
     private static SourceIndex BuildSourceIndex()

@@ -120,7 +120,13 @@ internal sealed record DivergenceRow(
 /// mainstream validator, and the choice between keeping the in-tree evaluator as the
 /// enforcing instrument - already the ruling - and expressing "no value admitted yet" in a
 /// form every implementation compiles while preserving the documented protocol belongs to
-/// the schema's owner.
+/// the schema's owner. Three things do tell an unexercised constraint from an abandoned one,
+/// and none of them is this class: the document, the schema's own description, and
+/// <c>EnvelopeSchemaPatternTests</c>, which asserts that <c>$defs/tag</c> declares
+/// <c>enum</c> and that it is an empty array - "an absent enum and an empty one read the same
+/// to a set comparison and mean opposite things" - with deleting the keyword recorded as a
+/// failing injected control in <c>tests/verification/DAT-001.json</c>. So the tag vocabulary
+/// could not have been quietly struck: the tier would have gone red.
 /// </para>
 /// <para>
 /// <b>The instrument, and why the instrument is part of the finding.</b> The evaluator is
@@ -410,7 +416,18 @@ internal sealed class SchemaCorpusDivergence
         text.Append("#    initial state of a vocabulary that grows a term in the same change that\n");
         text.Append("#    first uses one, and all 138 files comply by authoring tags: [] - so a\n");
         text.Append("#    designed and working constraint contributes zero rows here, and this file\n");
-        text.Append("#    cannot tell an unexercised constraint from an absent one.\n");
+        text.Append("#    cannot tell an unexercised constraint from an absent one. Three other\n");
+        text.Append("#    things do: the document, the schema description, and\n");
+        text.Append("#    EnvelopeSchemaPatternTests, which asserts $defs/tag declares enum and that\n");
+        text.Append("#    it is empty, with deleting the keyword recorded as a failing control.\n");
+        text.Append("#  - Two relic constraints struck at b6c9f86 were row-neutral for the same\n");
+        text.Append("#    reason, and this file is the evidence: the ten /affected_scope type rows\n");
+        text.Append("#    below are unchanged, because a type failure fires before items is applied,\n");
+        text.Append("#    so the element enum was never reached; and overrides_or_replaces appears\n");
+        text.Append("#    nowhere below, because every relic authors it one level down from the\n");
+        text.Append("#    declaration, so its element pattern was never reached either. A strike\n");
+        text.Append("#    that removes no row is a correction to a dead constraint rather than a\n");
+        text.Append("#    reduction of the measured disagreement.\n");
         text.Append("#  - Blind to a swap within one position: two required properties trading\n");
         text.Append("#    places at one object is one line at one count. Asserted by a test, not\n");
         text.Append("#    assumed.\n");

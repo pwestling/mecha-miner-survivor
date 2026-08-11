@@ -11,7 +11,18 @@
 #    initial state of a vocabulary that grows a term in the same change that
 #    first uses one, and all 138 files comply by authoring tags: [] - so a
 #    designed and working constraint contributes zero rows here, and this file
-#    cannot tell an unexercised constraint from an absent one.
+#    cannot tell an unexercised constraint from an absent one. Three other
+#    things do: the document, the schema description, and
+#    EnvelopeSchemaPatternTests, which asserts $defs/tag declares enum and that
+#    it is empty, with deleting the keyword recorded as a failing control.
+#  - Two relic constraints struck at b6c9f86 were row-neutral for the same
+#    reason, and this file is the evidence: the ten /affected_scope type rows
+#    below are unchanged, because a type failure fires before items is applied,
+#    so the element enum was never reached; and overrides_or_replaces appears
+#    nowhere below, because every relic authors it one level down from the
+#    declaration, so its element pattern was never reached either. A strike
+#    that removes no row is a correction to a dead constraint rather than a
+#    reduction of the measured disagreement.
 #  - Blind to a swap within one position: two required properties trading
 #    places at one object is one line at one count. Asserted by a test, not
 #    assumed.

@@ -185,6 +185,16 @@ public static class EnvelopeSchema
         // loose about the prefix or wrong about the field - and a question that flips committed
         // bytes is not settled by leaning on the looser of two sentences in the same document.
         //
+        // What the choice is worth in bytes, which is the figure to quote when this is
+        // discussed: 133 of the 138 authored files emit different source_refs bytes under the
+        // two treatments. The five that do not are already in ordinal order by accident of
+        // authoring - content/encounters/standard-encounter-schedule.json,
+        // content/mining-sites/{hyper-gold-sites,rich-ore-seams,standard-ore-seams}.json and
+        // content/weapons/stat-price-formula.json - and every one of the 138 holds at least two
+        // elements, so none of the five is the one-element case. Measured at 7e047ef. That is a
+        // count of files whose bytes move; the 1196-of-1375 figure above counts elements
+        // carrying a prefix. Both hold at once, and neither substitutes for the other.
+        //
         // Authored order is the treatment that asserts nothing. It also preserves a reading
         // order the corpus bears out: 118 of 138 files list their whole-definition references
         // before their per-field ones, measured at c626d9f, so authored order carries at least

@@ -309,9 +309,11 @@ internal sealed class RegistrySelectorTypesTests
     /// <c>CanonicalDefinitionWriterTests</c> and <c>CanonicalWriterSubject</c> measured at
     /// <c>8e45064</c>. The index reads <c>tests/</c> only, so
     /// <c>src/MechaMiner.Content/Categories/ArrayOrder.cs</c>, <c>ArrayOrderEmitter.cs</c> and
-    /// <c>DefinitionWriter.cs</c> are not among these.
+    /// <c>DefinitionWriter.cs</c> are not among these, plus
+    /// <c>CanonicalArrayOrderGateTests</c>, its nested <c>WriterCensus</c> record and
+    /// <c>CanonicalArrayOccurrence</c>, measured at <c>e655fbf</c>.
     /// </summary>
-    private const int TypesIndexed = 226;
+    private const int TypesIndexed = 229;
 
     /// <summary>
     /// Members the source index records across every type it finds: the 1190 measured at
@@ -320,9 +322,10 @@ internal sealed class RegistrySelectorTypesTests
     /// <c>674376c</c>, plus <c>EnvelopeArrayOrderEmissionTests</c>' four tests and its five
     /// helpers, measured at <c>35dc68d</c>, plus <c>CanonicalDefinitionWriterTests</c>' six
     /// tests and one helper and <c>CanonicalWriterSubject</c>' seven members, measured at
-    /// <c>8e45064</c>.
+    /// <c>8e45064</c>, plus <c>CanonicalArrayOrderGateTests</c>' eight tests and five helpers
+    /// and <c>CanonicalArrayOccurrence</c>' six members, measured at <c>e655fbf</c>.
     /// </summary>
-    private const int MembersIndexed = 1223;
+    private const int MembersIndexed = 1242;
 
     /// <summary>The negative control: the resolver must be able to fail.</summary>
     [Test]

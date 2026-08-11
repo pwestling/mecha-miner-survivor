@@ -132,17 +132,31 @@ internal sealed class NestedBehaviorTokenTests
     }
 
     /// <summary>
-    /// The pointers this fixture asserts are the pointers the validators build, rather
-    /// than three string literals that happen to look right.
+    /// The three pointer literals above are the strings <see cref="JsonPointer"/> builds
+    /// from the same property names.
     /// </summary>
     /// <remarks>
-    /// A literal typo would make the first check fail loudly, so this is not a second
-    /// copy of the same assertion: it is what makes the expected values readable as the
-    /// route each diagnostic takes - root, then the object, then the field - instead of
-    /// as pasted output.
+    /// <para>
+    /// <b>What this asserts, named accurately.</b> It references no validator and reaches
+    /// no reader: it is an identity about <see cref="JsonPointer"/> - root, then the
+    /// object, then the field - compared against the literals <see cref="Positions"/>
+    /// passes. The previous name, <c>TheExpectedPointersAreTheOnesTheValidatorsBuild</c>,
+    /// claimed a comparison against the validators that nothing here performs, and the
+    /// pull request that added it went further and said the expected pointers were built
+    /// from <see cref="JsonPointer"/> rather than pasted as three string literals. They
+    /// are pasted as three string literals; this is the separate test that keeps them
+    /// honest.
+    /// </para>
+    /// <para>
+    /// It is not vacuous - a literal typo fails here as well as above, and the two
+    /// failures say different things - but it is worth being clear that the arrangement
+    /// itself is the weaker of the two available. <c>BehaviorTokenCallSiteTests</c> builds
+    /// each expected pointer with <see cref="JsonPointer"/> in the table, so it has no
+    /// literal to reconcile and needs no second test to reconcile it.
+    /// </para>
     /// </remarks>
     [Test]
-    public void TheExpectedPointersAreTheOnesTheValidatorsBuild()
+    public void TheExpectedPointerLiteralsAreWhatJsonPointerBuilds()
     {
         Expect.Multiple(() =>
         {

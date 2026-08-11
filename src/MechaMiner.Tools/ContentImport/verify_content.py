@@ -20,14 +20,16 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
   A2  Envelope: every definition file carries schema_version (int),
       content_version (int), status in {development, enabled, disabled,
       retired}, tags (array), and source_refs (non-empty array of strings).
-      Mandate: docs/technical/40-content-data-and-validation.md:76-88
-      (envelope table); status vocabulary at 40:83                    FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## Common definition envelope` (the field table); the status
+      vocabulary is that table's `status` row                         FAILURE
 
   A3  name_key and summary_key are both CONDITIONAL. summary_key is "where
-      relevant" (40:85); name_key is required only where a definition has a
-      genuinely player-facing name, with the compiler supplying the default
-      otherwise (40:90, "Optional fields have explicit defaults materialized
-      into the canonical bundle") - the same treatment presentation_id gets.
+      relevant" (40 `## Common definition envelope`); name_key is required
+      only where a definition has a genuinely player-facing name, with the
+      compiler supplying the default otherwise (same section, "Optional
+      fields have explicit defaults materialized into the canonical
+      bundle") - the same treatment presentation_id gets.
       When either is present it must be a non-empty string that resolves in
       en.json (see A11).                                              FAILURE
       Omission is warned about, and the set of omitting files is asserted
@@ -35,14 +37,16 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
 
   A4  presentation_id is ABSENT, not present-and-null. No presentation
       entry can exist until content/presentation/ is authored
-      (40:88 declares the field; 40:52 declares the directory).        FAILURE
+      (40 `## Common definition envelope` declares the field; 40:52
+      declares the directory)                                         FAILURE
 
   A5  id must be present and a non-empty string, EXCEPT on the definitions
       listed in ID_NULL_EXPECTED below, where no design document assigns a
       stable ID and minting one would be inventing content. That list is now
       EMPTY - every definition in this tree carries a minted stable ID - so
       the exception has no members and A5 is unconditional.
-      Mandate: docs/technical/40-content-data-and-validation.md:80     FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## Common definition envelope`, the `id` row                   FAILURE
 
   A6  An absent or null id is a FAILURE, with its path, unless the definition
       is listed in ID_NULL_EXPECTED. With that list empty, a missing or null
@@ -61,29 +65,35 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       VALUES keep their exact case by the same mandate.
       Mandate: docs/technical/40-content-data-and-validation.md:26
       ("Property names use snake_case; stable enum/kind/ID tokens remain
-      exact case-sensitive ASCII"), restated at 40:92-100              FAILURE
+      exact case-sensitive ASCII"), restated by the naming rules under
+      40 `## Unit and numeric policy`                                 FAILURE
 
   A8  No stale extraction metadata: no key named _provenance, _source,
       notes, refs, lines, or line at any depth. Provenance now lives in
-      source_refs (40:87); unknown fields are errors (40:90).          FAILURE
+      source_refs (40 `## Common definition envelope`); unknown fields
+      are errors (same section)                                       FAILURE
 
   A9  source_refs resolution: for every element, the document-ID portion
       (after any "json.path: " prefix, before any "#anchor") is a doc_id
       declared in the front matter of a file under docs/, and any #anchor
       resolves to a real heading slug in that document.
-      Mandate: docs/technical/40-content-data-and-validation.md:87     FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## Common definition envelope`, the `source_refs` row          FAILURE
 
   A10 Localization: content/localization/en.json parses, is flat (all values
       are strings), is lexically sorted, and has no duplicate keys.
-      Mandate: 40:211 (dedicated string catalog), 40:28 (dictionaries
-      emitted as lexically sorted key entries)                         FAILURE
+      Mandate: 40 `### Source catalog format and key pattern` - "Each
+      file is a flat object of key to string. There is no nesting, no
+      metadata wrapper, and no array." for the flatness, and "Keys are
+      lexically sorted, so a diff shows only the strings that changed"
+      for the ordering                                                FAILURE
 
   A11 Every name_key / summary_key that IS present (and any other
       *_key / *_keys reference) resolves to a key present in en.json, and no
       key in en.json is orphaned.
-      Mandate: docs/technical/40-content-data-and-validation.md:216
-      ("Missing release strings are build errors") - so these are
-      failures, not warnings                                          FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## Localization contract` ("Missing release strings are build
+      errors") - so these are failures, not warnings                  FAILURE
 
   A12 Entry counts per catalog directory match the EXPECTATIONS table.
       Every row cites its own source doc:line.                        FAILURE
@@ -115,7 +125,8 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
   A14 Doc-stated totals recompute from the JSON: PowerUp rank prices sum to
       9,450 Hyper Gold and the six option-unlock costs sum to 2,150.
       Actual vs expected is always printed.
-      Mandate: 40:136 ("Validators recompute total catalog costs");
+      Mandate: 40 `### PowerUps and option unlocks` ("Validators
+      recompute total catalog costs");
       sources docs/62-permanent-powerup-catalog.md:35 and
       docs/63-permanent-option-unlock-catalog.md:48                   FAILURE
 
@@ -124,8 +135,8 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       schedule resolves in content/enemies/, and every mech's
       signature-weapon reference resolves. Reference key names are
       DISCOVERED from the data (snake_case), not hardcoded.
-      Mandate: docs/technical/40-content-data-and-validation.md:199
-      (relational layer: "References, uniqueness, graph coverage")     FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `### Relational` ("References, uniqueness, graph coverage")      FAILURE
 
   A16 Percentage-point policy, checked on NUMBERS and KEY NAMES:
         1. every percent-named property resolves to at least one numeric
@@ -146,12 +157,14 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
            surcharge or uplift - when that name says neither percent nor
            any unit-or-kind token. Such a number is either percentage
            points or a multiplicative scale and the name does not say
-           which; 40:95 permits percentage points only under a name that
-           says percent, and 40:94 requires an ambiguous numeric name to
-           carry a unit suffix.
+           which; 40 `## Unit and numeric policy` permits percentage
+           points only under a name that says percent, and the same
+           section requires an ambiguous numeric name to carry a unit
+           suffix.
       A name "says _percent" wherever the token appears, not only at the
-      end - 40:95 constrains what the name says and 40:96's terminal-unit
-      rule is about unit suffixes, so the mid-name spellings such as
+      end - the percentage bullet under 40 `## Unit and numeric policy`
+      constrains what the name SAYS, and the unit-suffix bullet beside it
+      is about unit tokens, so the mid-name spellings such as
       percent_of_mech_base_speed are correct and are not flagged. Measured
       with PERCENT_TOKEN_KEY, this tree holds 50 such occurrences across 33
       distinct property names; the figure here read 52 and matched neither
@@ -186,8 +199,10 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
   A17 Formula policy: a player-facing formula must be a registered formula
       kind plus parameters, never a script string. String-valued formula
       expressions are grouped by key name.
-      Mandate: docs/technical/40-content-data-and-validation.md:99
-      Reported as a warning for the same reason as A16.                WARNING
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## Unit and numeric policy` (registered formula kind plus
+      parameters, never a script string)
+      Reported as a warning for the same reason as A16.               WARNING
 
   A18 Derived-vs-authored regression guard, special-cased to the one known
       transcription bug: the Sentry Pod (W-BE) deployment interval is 6.0
@@ -195,8 +210,9 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       never appear as an authored deployment or ramp value anywhere in
       content/weapons/ - 12 s is the DERIVED time for three pods to exist at
       a 6 s cadence, not an authored number.
-      Mandate: docs/technical/40-content-data-and-validation.md:100
-      ("Derived values include source operands ... in reports")         FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## Unit and numeric policy` ("Derived values include source
+      operands ... in reports")                                       FAILURE
       A missing deployment field is only a warning, because the field name
       is unvalidated until content/schemas/ exists.                    WARNING
 
@@ -228,9 +244,10 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       footprint value reintroduced under any name the pattern misses, or in
       an uncovered directory, passes - see the per-rule scopes above and
       README.md.
-      Mandate: docs/technical/40-content-data-and-validation.md:114
-      ("Validation derives world speeds/footprints and compares them with
-      the survivability report")                                      FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `### Enemies and bosses` ("Validation derives world
+      speeds/footprints and compares them with the survivability
+      report")                                                        FAILURE
 
   A21 content/ holds exactly as many DEFINITION *.json files as the A28
       manifest has pairs, so a definition in a directory no A12 row covers is
@@ -274,10 +291,11 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       heading (A9). The path grammar is dot-separated snake_case segments,
       each optionally suffixed with [] (every element), [N] (one element), or
       [N..M] (a range of elements).
-      Mandate: docs/technical/40-content-data-and-validation.md:87
-      (source_refs carries "gameplay document IDs/anchors ... implemented"),
-      with 40:90 ("Unknown fields are errors") for why a prefix may not name
-      a field the definition does not have                            FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## Common definition envelope`, where source_refs carries "gameplay
+      document IDs/anchors ... implemented" and the same section's
+      "Unknown fields are errors" is why a prefix may not name a field the
+      definition does not have                                        FAILURE
 
   A24 Two rules over every string value under content/, each matching the
       thing that is actually wrong rather than one spelling of a path:
@@ -285,8 +303,9 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
            spelling - either slash separator, any case, extension optional
            when a separator is present, and no `docs/` prefix required;
         b. no repository path (docs, src, content, tools, assets followed by
-           a separator) appears at all, line number or not, because 40:87
-           names doc_id#anchor as the citation form and a path is not one.
+           a separator) appears at all, line number or not, because
+           40 `## Common definition envelope` names doc_id#anchor as the
+           citation form and a path is not one.
       A bare `#anchor` is OUT OF SCOPE by design: it is half of the
       sanctioned citation form, A9 already resolves anchors against real
       heading slugs, and it carries neither a path nor a line number.
@@ -300,7 +319,8 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       reconstruction_basis, and a bare extensionless `docs/68` in a UTL-A1
       statement. Both are the class Ruling 25 removed 13 of, and both were
       rewritten in this pass.
-      Mandate: docs/technical/40-content-data-and-validation.md:87    FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## Common definition envelope`, the `source_refs` row          FAILURE
 
   A25 Polarity agreement. Where a structured polarity value (a "direction",
       or any field whose value is drawn from the closed polarity vocabulary
@@ -314,8 +334,9 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       contradiction and is not reported.
       This automates a check that had to be done by hand - Ruling 22 in
       content/transcription-notes.md verified six geode resonance
-      directions against docs/40:104-109 by eye, and nothing in the tree
-      would have caught a seventh. Its value does not depend on catching
+      directions against docs/40 `### Resources` by eye, and nothing in
+      the tree would have caught a seventh. Its value does not depend on
+      catching
       anything today.                                                 FAILURE
 
   A23 One spelling for a bound. No property name abbreviates a bound as the
@@ -323,8 +344,9 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       `minimum`, with the qualifier - not the noun - carrying the distinction
       between two bounds on one quantity (`target_minimum` vs `target_maximum`
       vs `hard_maximum`). A cap IS a maximum, so `_cap`, `_max` and `_maximum`
-      were three spellings of one concept, twice inside a single object. Where
-      a unit suffix must stay terminal (40:96) the bound word moves to the
+      were three spellings of one concept, twice inside a single object.
+      Where the name carries a unit suffix (40 `## Unit and numeric
+      policy`) the unit stays terminal and the bound word moves to the
       front instead: `maximum_control_resistance_percent`, not
       `control_resistance_maximum_percent`.
       Checked on KEY NAMES at any depth, so the abbreviation cannot return
@@ -333,15 +355,17 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       asserts its two sets: an undeclared member is a failure, and a member
       that no longer applies is a warning asking for the list to shrink.
       Mandate: docs/technical/40-content-data-and-validation.md:26
-      (snake_case property names) with 40:96 (the unit-suffix rule that fixes
-      which end of the name the bound word may occupy)                FAILURE
+      (snake_case property names) with 40 `## Unit and numeric policy`
+      (the unit-suffix list that fixes which end of the name the bound
+      word may occupy)                                                FAILURE
 
   A26 No `null` appears anywhere under content/, at any depth, in any file -
       including content/localization/en.json, which the definition loader
       skips. THERE IS NO EXCEPTION SET, and that is deliberate: an
       exception set is a place for a null to hide. A null in a source
-      definition is never legal, because 40:90 materializes an explicit
-      default for every absent optional field ("Optional fields have
+      definition is never legal, because 40 `## Common definition
+      envelope` materializes an explicit default for every absent optional
+      field ("Optional fields have
       explicit defaults materialized into the canonical bundle so runtime
       never guesses") - so an absent field gets its default and a
       present-and-null field asks runtime to guess. Absence is spelled by
@@ -360,7 +384,8 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       Negative control: `"probe_null": null` injected at the top level of
       content/enemies/EN-01.json -> FAIL, "1 null(s) under content/ ...
       ['content/enemies/EN-01.json.probe_null']".
-      Mandate: docs/technical/40-content-data-and-validation.md:90  FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## Common definition envelope`                                 FAILURE
 
   A27 No sentence-internal abbreviation period appears anywhere under
       docs/**/*.md. This asserts a property of the CORPUS on behalf of a
@@ -451,8 +476,9 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       third.
       SIX, not the nine an earlier draft asserted: the damage-pressure
       block (32 values) and the resonant hit counts (5) are the COMPARAND
-      40:114 has the compiler compare its derivation against, not derived
-      duplicates, and the stat price curve (14) would have moved fourteen
+      40 `### Enemies and bosses` has the compiler compare its derivation
+      against, not derived duplicates, and the stat price curve (14) would
+      have moved fourteen
       checkable numbers into an unchecked prose string. All 51 restored.
       See pulled_from_this_pass in the expectation file.
       TWO LAYERS, and neither is a complete guard on its own:
@@ -524,9 +550,11 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       expected_derived_value_removals.json rather than duplicated here, so
       the assertion and the prediction cannot drift apart.
       Mandate: per family, the docs/ line recorded in that file -
-      40:114 (world speeds; the survivability report), 40:136 ("Validators
-      recompute total catalog costs"), 40:140 ("their totals"), 40:203
-      ("Recalculate ... price curves, total costs ... resource totals")
+      40 `### Enemies and bosses` (world speeds; the survivability
+      report), 40 `### PowerUps and option unlocks` ("Validators recompute
+      total catalog costs"), 40 `### Mining sites` ("their totals"),
+      40 `### Analytical` ("Recalculate ... price curves, total costs ...
+      resource totals")
                                                                     FAILURE
 
   A29 The numeric multiset the tree LOST equals the committed expectation,
@@ -554,10 +582,11 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       while retuning EN-01 hull 20 -> 25 in place passes. So a future commit
       that legitimately deletes a field will false-fail A29 and the fix is
       to re-derive the expectation from a newer sweep ref, deliberately.
-      Mandate: docs/technical/40-content-data-and-validation.md:100
-      ("Derived values include source operands and calculation version in
-      reports"), which is what makes a stored operand-plus-result pair the
-      compiler's to emit and not content's to author         FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## Unit and numeric policy` ("Derived values include source
+      operands and calculation version in reports"), which is what makes a
+      stored operand-plus-result pair the compiler's to emit and not
+      content's to author                                             FAILURE
 
   A30 docs/data/contact-damage-pressure.csv and content/ agree on every
       value they share - 98 comparisons, seven columns x 14 actors, exact
@@ -579,10 +608,11 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       Not settled by this rule: which mirror is authoritative. When that
       lands the loser becomes derived and A30 becomes redundant in the good
       way rather than wrong.
-      Mandate: docs/technical/40-content-data-and-validation.md:114
-      ("Validation derives world speeds/footprints and compares them with
-      the survivability report") and :203 ("Reports compare with accepted
-      gameplay tables")                                     FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `### Enemies and bosses` ("Validation derives world
+      speeds/footprints and compares them with the survivability report")
+      and `### Analytical` ("Reports compare with accepted gameplay
+      tables")                                                        FAILURE
   LABEL MAP: A28 (this branch, before the merge with master) -> A31. Two
      streams independently claimed A28 - this branch's six derived-value
      families and the definition (path, id) manifest immediately below, which
@@ -665,8 +695,9 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       failure naming `BOSS-01 -> BOSS-99`); swapping BOSS-01 and BOSS-02's ids
       -> FAIL (1 failure naming both), all three having been PASS/exit 0
       before this check existed.
-      Mandate: docs/technical/40-content-data-and-validation.md:80 (`id` is an
-      envelope field, "stable category-valid ID") with :185, where the
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## Common definition envelope` (`id` is an envelope field, "stable
+      category-valid ID") with `## Compilation pipeline`, where the
       canonical bundle "is ordered by category and stable ID" and hashes
       identically "regardless of source file enumeration order". That last
       clause is why the pair is the thing to record: the ID carries the
@@ -717,8 +748,9 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
            nevertheless asserted here because A26 cannot see the defect this
            row exists for: `"canonical_letter": ""` and
            `"canonical_letter": "common-ore"` are both non-null, both pass
-           A26, and both assert the thing 40:106 does not say - that a
-           currency has a canonical letter. The omission is load-bearing
+           A26, and both assert the thing 40:106 (blob 4cded84) does not
+           say - that a currency has a canonical letter. The omission is
+           load-bearing
            content, so it is asserted as omission rather than inferred from
            the absence of a null.
         5. content/resources/ holds exactly 8 definition files, because
@@ -753,8 +785,9 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       did, which was true only before the RSC- migration. FAILURE
 
 Not asserted here: no structural JSON Schema validation happens, because
-content/schemas/ (40:36) does not exist yet. Domain field names outside the
-envelope are therefore unvalidated and will need one reconciliation pass when
+content/schemas/ (40 `## Accepted content repository layout`) does not exist
+yet. Domain field names outside the envelope are therefore unvalidated and
+will need one reconciliation pass when
 the schemas land. See content/transcription-notes.md.
 """
 
@@ -890,7 +923,7 @@ EXPECTED_LOCALIZATION_STRINGS = 165
 # --------------------------------------------------------------------------
 
 STATUS_VOCABULARY = ("development", "enabled", "disabled", "retired")
-# docs/technical/40-content-data-and-validation.md:83
+# docs/technical/40-content-data-and-validation.md `## Common definition envelope`
 
 # A5/A6/A19 - definitions with no stable ID.
 #
@@ -899,8 +932,9 @@ STATUS_VOCABULARY = ("development", "enabled", "disabled", "retired")
 # schedule is WAV-01, the standard map generation contract is MGC-01). Two files
 # that used to have no ID are gone entirely:
 #   - mechs/shared-baseline.json held player baseline values, not mech data. A
-#     mech definition carries OVERRIDES (40:110), and content/ has no player or
-#     run category yet; the schema stream owns that with PLY-001 as consumer.
+#     mech definition carries OVERRIDES (40 `### Mechs`), and content/ has no
+#     player or run category yet; the schema stream owns that with PLY-001 as
+#     consumer.
 #   - maps/world-props.json held the destructible-rock and health-pack values,
 #     now fields of the MGC-01 definition. A18 asserts both prop families still
 #     appear inside MGC-01.
@@ -917,8 +951,9 @@ STATUS_VOCABULARY = ("development", "enabled", "disabled", "retired")
 #     referenced BY". That is superseded: the canonical bundle is ordered by
 #     category and stable ID, so a file with no ID has no slot in that
 #     ordering. It is now an ordinary addressable definition. It keeps NO
-#     name_key - name_key is conditional on a player-facing name (40:84, 40:90)
-#     and this block has none - so it stays in NAME_KEY_OMITTED below. Its
+#     name_key - name_key is conditional on a player-facing name
+#     (40 `## Common definition envelope`) and this block has none - so it
+#     stays in NAME_KEY_OMITTED below. Its
 #     FILENAME is deliberately unchanged: the bundle orders by the id field,
 #     not by the file stem. It is still not an EXPECTATIONS item; it is the
 #     enemies directory's one aggregate file, and its id does not match the
@@ -934,7 +969,7 @@ STATUS_VOCABULARY = ("development", "enabled", "disabled", "retired")
 #     elite_eligible field.
 #   - resources/geode-resonance-effects.json was DELETED: each resonance effect
 #     moved onto the resource that owns it and the field radius onto the geode
-#     site class, per the mining-site schema (40:140).
+#     site class, per the mining-site schema (40 `### Mining sites`).
 #   - utilities/radar-unassigned-id.json is now utilities/UTL-R1.json. The
 #     radar is the thirteenth utility
 #     (docs/50-maps-resources-and-navigation.md:106) and the rulings pass gave
@@ -949,7 +984,7 @@ ID_NULL_EXPECTED: frozenset[str] = frozenset()
 # contracts, and shared-elite-modifiers (now ELT-01) is a constants block, not
 # an entity the UI ever names. Putting their titles in the localization catalog
 # would imply a UI surface that does not exist, so the compiler supplies the
-# default instead (40:90).
+# default instead (40 `## Common definition envelope`).
 #
 # Minting ELT-01 did not change this set. Having a stable ID and having a
 # player-facing name are independent: the ID makes the block addressable and
@@ -979,8 +1014,9 @@ NAME_KEY_OMITTED = frozenset(
 # on one quantity: `{target_minimum, target_maximum, hard_maximum}`, not
 # `{target_min, target_max, hard_max}`.
 #
-# Where the name carries a unit suffix, the unit stays terminal (40:96) and the
-# bound word moves to the front: `maximum_control_resistance_percent`,
+# Where the name carries a unit suffix (40 `## Unit and numeric policy`), the
+# unit stays terminal and the bound word moves to the front:
+# `maximum_control_resistance_percent`,
 # `maximum_pursuit_duration_seconds`, `minimum_percent`.
 BOUND_ABBREVIATIONS = frozenset({"cap", "max", "min"})
 
@@ -1061,8 +1097,9 @@ EXPECTATIONS = [
         selector=("id_regex", r"^MCH-\d{2}$"),
         items=6,
         aggregates=0,
-        # No shared-baseline file: a mech definition carries overrides (40:110)
-        # and the player baseline belongs to a player/run category the schema
+        # No shared-baseline file: a mech definition carries overrides
+        # (40 `### Mechs`) and the player baseline belongs to a player/run
+        # category the schema
         # stream owns (consumer PLY-001).
         label="mechs (no baseline aggregate)",
         source="docs/36-initial-mech-catalog.md:45",
@@ -1330,7 +1367,7 @@ UNLOCK_TOTAL_HYPER_GOLD = 2150  # docs/63-permanent-option-unlock-catalog.md:48
 # --------------------------------------------------------------------------
 
 # A16 - the NUMERIC percentage-point policy of
-# docs/technical/40-content-data-and-validation.md:95:
+# docs/technical/40-content-data-and-validation.md `## Unit and numeric policy`:
 #
 #   "Percentages in authoring use human-readable percentage points only when the
 #    property name says `_percent`; the compiler writes normalized factors into
@@ -1345,8 +1382,8 @@ UNLOCK_TOTAL_HYPER_GOLD = 2150  # docs/63-permanent-option-unlock-catalog.md:48
 # them needs content/schemas/, so all four are failures rather than warnings.
 #
 # A NAME "SAYS _percent" WHEREVER THE TOKEN APPEARS, not only at the end.
-# 40:95 constrains what the name says; 40:96's terminal-unit rule is about unit
-# suffixes. 52 names in this tree put the token mid-name
+# 40 `## Unit and numeric policy` constrains what the name SAYS; its unit-suffix
+# bullet is about unit tokens. 52 names in this tree put the token mid-name
 # (percent_of_mech_base_speed, shockwave_damage_percent_of_current_damage, ...)
 # and every one of them is correct, so a rule demanding a TERMINAL _percent would
 # have forced 52 renames no document asks for.
@@ -1355,12 +1392,14 @@ PERCENT_TOKEN_KEY = re.compile(r"(?i)(?:^|_)percent(?:age)?(?:_points?)?(?:$|_)"
 # percent-ness of the nearest ancestor key that says percent, so {"percent": 20}
 # and {"minimum": 40, "maximum": 80} are checked as percentage points.
 PERCENT_CONTAINER_KEY = frozenset({"minimum", "maximum", "percent", "value", "points"})
-# A16 rule 4 - the OTHER half of 40:95, which the previous rewrite claimed to fix
+# A16 rule 4 - the OTHER half of the percentage rule under
+# 40 `## Unit and numeric policy`, which the previous rewrite claimed to fix
 # and did not.
 #
-# 40:95 reads "Percentages in authoring use human-readable percentage points ONLY
-# WHEN the property name says `_percent`". Rules 1-3 all begin by asking whether
-# the name says percent, so every one of them is gated behind that question and a
+# 40 `## Unit and numeric policy` reads "Percentages in authoring use
+# human-readable percentage points ONLY WHEN the property name says `_percent`".
+# Rules 1-3 all begin by asking whether the name says percent, so every one of
+# them is gated behind that question and a
 # bare number under a name that does NOT say percent was never examined at all.
 # `sneaky_bonus: 25` and `damage_bonus: 150` both passed with zero failures.
 #
@@ -1368,9 +1407,10 @@ PERCENT_CONTAINER_KEY = frozenset({"minimum", "maximum", "percent", "value", "po
 # decidable from the number. But a name whose head noun is a RELATIVE magnitude -
 # a bonus, a penalty, an increase, a reduction - names a quantity that is
 # necessarily proportional to something else, so it is either percentage points or
-# a multiplicative scale, and both 40:95 (percentage points say `_percent`) and
-# 40:94 (ambiguous numeric names carry a unit suffix) require the name to say
-# which. A relative-magnitude name carrying neither is a number whose unit the
+# a multiplicative scale, and two bullets of 40 `## Unit and numeric policy`
+# (percentage points say `_percent`; ambiguous numeric names carry a unit suffix)
+# require the name to say which. A relative-magnitude name carrying neither is a
+# number whose unit the
 # reader cannot recover: 25 could be 25 percentage points or a 25x scale.
 #
 # A name that already declares its quantity kind ANYWHERE in the name is excluded,
@@ -1395,15 +1435,16 @@ RELATIVE_MAGNITUDE_TOKEN = re.compile(
     r"|reduction|boost|malus|discount|surcharge|uplift)(?:$|_)"
 )
 # Tokens that declare what kind of quantity the number is, so the name is not
-# ambiguous and 40:94 is satisfied. Matched as whole underscore-delimited segments
-# anywhere in the name.
+# ambiguous and 40 `## Unit and numeric policy` is satisfied. Matched as whole
+# underscore-delimited segments anywhere in the name.
 UNIT_OR_KIND_TOKEN = re.compile(
     r"(?i)(?:^|_)(?:m|m_per_s|meters?|seconds?|milliseconds?|per_second|hull|armor"
     r"|degrees|fraction|count|multiplier|scale|ore|hyper_gold|units?|ranks?|hits?"
     r"|diameters?|tier|weight)(?:$|_)"
 )
 # The compiler-owned normalized factor. Authoring it puts a second writer on a
-# derived field, which is the second half of 40:95.
+# derived field, which is the second half of that percentage rule under
+# 40 `## Unit and numeric policy`.
 NORMALIZED_FACTOR_TOKEN = re.compile(
     r"(?i)(?:^|_)(?:factor|multiplier|fraction|normalized|normalised)(?:$|_)"
 )
@@ -1749,7 +1790,7 @@ def check_scope_prefixes(docs: dict[Path, object]) -> list[tuple]:
                     f"not resolve in this definition ({reason}). A citation must annotate a field "
                     f"that exists: re-point it at the surviving field it documents, or drop the "
                     f"prefix and keep it file-level - never delete a citation that is the only "
-                    f"support for a value still present (40:87, 40:90)"
+                    f"support for a value still present (40 `## Common definition envelope`)"
                 )
     return [
         (
@@ -1797,7 +1838,7 @@ def check_bound_spelling(docs: dict[Path, object]) -> list[tuple]:
         fail(
             f"{len(offenders)} property name(s) abbreviate a bound as 'cap', 'max' or 'min'; a cap "
             f"is a maximum and the word is spelled out, with the unit suffix kept terminal (40:26, "
-            f"40:96): {offenders[:15]}"
+            f"40 `## Unit and numeric policy`): {offenders[:15]}"
         )
     if resolved:
         warn(
@@ -1833,43 +1874,44 @@ def check_definitions(docs: dict[Path, object], doc_index: dict[str, dict]) -> d
             stats["no_id"].add(name)
             state = "no top-level 'id'" if "id" not in doc else "top-level 'id' is null"
             if name in ID_NULL_EXPECTED:
-                warn(f"{name}: {state}; declared in ID_NULL_EXPECTED (40:80)")
+                warn(f"{name}: {state}; declared in ID_NULL_EXPECTED (40 `## Common definition envelope`)")
             else:
                 fail(
                     f"{name}: {state}; every definition must carry a stable category-valid ID "
-                    f"(40:80). Add the minted ID, or list the file in ID_NULL_EXPECTED with the "
+                    f"(40 `## Common definition envelope`). Add the minted ID, or list the file "
+                    f"in ID_NULL_EXPECTED with the "
                     f"reason no document assigns one"
                 )
         elif not isinstance(doc["id"], str) or not doc["id"].strip():
-            fail(f"{name}: 'id' is {doc['id']!r}, expected a non-empty string (40:80)")
+            fail(f"{name}: 'id' is {doc['id']!r}, expected a non-empty string (40 `## Common definition envelope`)")
 
         # ---- A2 envelope ----
         for field in ("schema_version", "content_version"):
             value = doc.get(field)
             if field not in doc:
-                fail(f"{name}: missing required '{field}' (40:81-82)")
+                fail(f"{name}: missing required '{field}' (40 `## Common definition envelope`)")
             elif isinstance(value, bool) or not isinstance(value, int):
-                fail(f"{name}: '{field}' is {value!r}, expected an integer (40:81-82)")
+                fail(f"{name}: '{field}' is {value!r}, expected an integer (40 `## Common definition envelope`)")
 
         if "status" not in doc:
-            fail(f"{name}: missing required 'status' (40:83)")
+            fail(f"{name}: missing required 'status' (40 `## Common definition envelope`)")
         elif doc["status"] not in STATUS_VOCABULARY:
             fail(
                 f"{name}: status {doc['status']!r} is not one of "
-                f"{list(STATUS_VOCABULARY)} (40:83)"
+                f"{list(STATUS_VOCABULARY)} (40 `## Common definition envelope`)"
             )
 
         if "tags" not in doc:
-            fail(f"{name}: missing required 'tags' array (40:86)")
+            fail(f"{name}: missing required 'tags' array (40 `## Common definition envelope`)")
         elif not isinstance(doc["tags"], list):
-            fail(f"{name}: 'tags' is {type(doc['tags']).__name__}, expected an array (40:86)")
+            fail(f"{name}: 'tags' is {type(doc['tags']).__name__}, expected an array (40 `## Common definition envelope`)")
 
         if "source_refs" not in doc:
-            fail(f"{name}: missing required 'source_refs' array (40:87)")
+            fail(f"{name}: missing required 'source_refs' array (40 `## Common definition envelope`)")
         elif not isinstance(doc["source_refs"], list) or not doc["source_refs"]:
-            fail(f"{name}: 'source_refs' must be a non-empty array (40:87)")
+            fail(f"{name}: 'source_refs' must be a non-empty array (40 `## Common definition envelope`)")
         elif not all(isinstance(r, str) and r.strip() for r in doc["source_refs"]):
-            fail(f"{name}: every 'source_refs' element must be a non-empty string (40:87)")
+            fail(f"{name}: every 'source_refs' element must be a non-empty string (40 `## Common definition envelope`)")
         else:
             # ---- A9 resolution ----
             for ref in doc["source_refs"]:
@@ -1879,13 +1921,13 @@ def check_definitions(docs: dict[Path, object], doc_index: dict[str, dict]) -> d
                 if entry is None:
                     fail(
                         f"{name}: source_refs {ref!r} names doc_id {doc_id!r}, which no file "
-                        f"under docs/ declares in its front matter (40:87)"
+                        f"under docs/ declares in its front matter (40 `## Common definition envelope`)"
                     )
                     continue
                 if anchor and anchor not in entry["anchors"]:
                     fail(
                         f"{name}: source_refs {ref!r} anchor '#{anchor}' is not a heading in "
-                        f"{rel(entry['path'])} (40:87)"
+                        f"{rel(entry['path'])} (40 `## Common definition envelope`)"
                     )
 
         # ---- A3 name_key is conditional on the definition being player-facing ----
@@ -1893,12 +1935,12 @@ def check_definitions(docs: dict[Path, object], doc_index: dict[str, dict]) -> d
             stats["no_name_key"].add(name)
             warn(
                 f"{name}: no 'name_key'; accepted only for a definition with no player-facing "
-                f"name, with the compiler supplying the default (40:84, 40:90)"
+                f"name, with the compiler supplying the default (40 `## Common definition envelope`)"
             )
         elif not isinstance(doc["name_key"], str) or not doc["name_key"].strip():
             fail(
                 f"{name}: 'name_key' is {doc['name_key']!r}; when present it must be a non-empty "
-                f"string (40:84)"
+                f"string (40 `## Common definition envelope`)"
             )
 
         # ---- A3 summary_key is conditional ----
@@ -1907,14 +1949,15 @@ def check_definitions(docs: dict[Path, object], doc_index: dict[str, dict]) -> d
         ):
             fail(
                 f"{name}: 'summary_key' is {doc['summary_key']!r}; when present it must be a "
-                f"non-empty string (40:85)"
+                f"non-empty string (40 `## Common definition envelope`)"
             )
 
         # ---- A4 presentation_id must be absent ----
         if "presentation_id" in doc:
             fail(
                 f"{name}: 'presentation_id' is present ({doc['presentation_id']!r}); it must be "
-                f"omitted entirely until content/presentation/ exists (40:52, 40:88)"
+                f"omitted entirely until content/presentation/ exists (40:52, "
+                f"40 `## Common definition envelope`)"
             )
 
         # ---- A7/A8/A11/A16/A17 - one traversal ----
@@ -1924,11 +1967,11 @@ def check_definitions(docs: dict[Path, object], doc_index: dict[str, dict]) -> d
             if re.search(r"[A-Z]", key):
                 fail(f"{name}{jpath[1:]}: property name '{key}' contains uppercase (40:26)")
             if key.startswith("_"):
-                fail(f"{name}{jpath[1:]}: property name '{key}' starts with '_' (40:26, 40:90)")
+                fail(f"{name}{jpath[1:]}: property name '{key}' starts with '_' (40:26, 40 `## Common definition envelope`)")
             if key in FORBIDDEN_KEYS:
                 fail(
                     f"{name}{jpath[1:]}: stale extraction metadata key '{key}'; provenance "
-                    f"belongs in source_refs (40:87, 40:90)"
+                    f"belongs in source_refs (40 `## Common definition envelope`)"
                 )
             if key.endswith("_key") and isinstance(value, str) and value.strip():
                 stats["key_refs"].add(value)
@@ -2000,7 +2043,8 @@ def report_reconciliation(stats: dict) -> None:
     numbers and key names and reports failures, not a warning list."""
     for key, hits in sorted(stats["formula_hits"].items()):
         warn(
-            f"40:99 formula held as a string rather than a registered formula kind plus "
+            f"40 `## Unit and numeric policy` formula held as a string rather than a registered "
+            f"formula kind plus "
             f"parameters: '{key}' ({len(hits)} occurrence(s)) e.g. {', '.join(hits[:2])}"
         )
 
@@ -2313,7 +2357,8 @@ def check_totals(docs: dict[Path, object]) -> list[tuple]:
 # --------------------------------------------------------------------------
 
 # A20 - the compiler-derived footprint values, which no definition may carry.
-# Both are derived under docs/technical/40-content-data-and-validation.md:114
+# Both are derived under docs/technical/40-content-data-and-validation.md
+# `### Enemies and bosses`
 # ("Validation derives world speeds/footprints and compares them with the
 # survivability report"), so storing either puts a second writer on a
 # compiler-owned value - exactly the 0.004 M disagreement that started this.
@@ -3020,9 +3065,11 @@ def check_canonical_letters(docs: dict[Path, object]) -> list[tuple]:
     if offenders:
         fail(
             f"A32 row 4: {offenders} carry the key {CANONICAL_LETTER_KEY!r}. common ore and "
-            f"Hyper Gold are the ordinary-crafting and cross-run currencies; 40:106 gives the "
+            f"Hyper Gold are the ordinary-crafting and cross-run currencies; 40:106 (blob "
+            f"4cded84) gives the "
             f"canonical letter to the six-material set only, so the right way to spell 'has no "
-            f"letter' is to OMIT the key (40:90 materializes the default for an absent optional "
+            f"letter' is to OMIT the key (40 `## Common definition envelope` materializes the "
+            f"default for an absent optional "
             f"field). A26 already rejects the null spelling repo-wide, but a non-null wrong "
             f"value - \"\" or \"common-ore\" - passes A26 and still asserts that a currency has a "
             f"canonical letter, which is what this row exists to catch."
@@ -3068,7 +3115,8 @@ def check_derived_footprint_fields(docs: dict[Path, object]) -> list[tuple]:
         if hits:
             fail(
                 f"{len(hits)} field(s) under {scope} hold a {label}, which the compiler derives "
-                f"as {derivation} (40:114, 40:100): {hits[:10]}"
+                f"as {derivation} (40 `### Enemies and bosses`, "
+                f"40 `## Unit and numeric policy`): {hits[:10]}"
             )
     return rows
 
@@ -4231,7 +4279,7 @@ def check_derived_values(docs: dict[Path, object]) -> list[tuple]:
         fail(
             f"{len(banned_hits)} deployment/ramp field(s) in content/weapons/ hold "
             f"{float(derived_total):g}, which is DERIVED from W-BE's authored operands "
-            f"({basis}), not authored (docs/71-initial-weapon-numeric-catalog.md:83, 40:100): "
+            f"({basis}), not authored (docs/71-initial-weapon-numeric-catalog.md:83, 40 `## Unit and numeric policy`): "
             f"{banned_hits}"
         )
 
@@ -4317,7 +4365,8 @@ def check_references(docs: dict[Path, object]) -> list[tuple]:
     if dangling:
         fail(f"{len(dangling)} branch weapon reference(s) do not resolve: {dangling[:10]}")
     if not refs:
-        fail("no branch -> weapon reference property found in content/branches/ (40:199)")
+        fail("no branch -> weapon reference property found in content/branches/ "
+             "(40 `### Relational`)")
 
     # encounters -> enemies: structured *enemy_id(s) properties plus any EN-nn token
     dangling = []
@@ -4351,7 +4400,7 @@ def check_references(docs: dict[Path, object]) -> list[tuple]:
     if dangling:
         fail(f"encounter schedule references enemy IDs with no enemy file: {dangling[:15]}")
     if not refs:
-        fail("no enemy reference found in content/encounters/ (40:199)")
+        fail("no enemy reference found in content/encounters/ (40 `### Relational`)")
 
     # mechs -> signature weapon
     dangling = []
@@ -4375,12 +4424,14 @@ def check_references(docs: dict[Path, object]) -> list[tuple]:
     if dangling:
         fail(f"{len(dangling)} mech signature-weapon reference(s) do not resolve: {dangling}")
     if not refs:
-        fail("no mech signature-weapon reference property found in content/mechs/ (40:199)")
+        fail("no mech signature-weapon reference property found in content/mechs/ "
+             "(40 `### Relational`)")
     return rows
 
 
 # --------------------------------------------------------------------------
-# A16 - the numeric percentage-point policy (40:95). Four rules, all decidable
+# A16 - the numeric percentage-point policy (40 `## Unit and numeric policy`).
+# Four rules, all decidable
 # from key names and numbers, so all four are failures. See the constants above
 # for what this replaced and why.
 # --------------------------------------------------------------------------
@@ -4426,7 +4477,8 @@ def check_percentage_point_policy(docs: dict[Path, object]) -> list[tuple]:
 
             says_percent = bool(PERCENT_TOKEN_KEY.search(key))
 
-            # Rule 3 - the compiler owns the normalized factor (40:95, 40:100).
+            # Rule 3 - the compiler owns the normalized factor
+            # (40 `## Unit and numeric policy`).
             if says_percent and NORMALIZED_FACTOR_TOKEN.search(key):
                 hybrid_names.append(f"{name}{jpath[1:]}")
             if isinstance(value, dict):
@@ -4444,7 +4496,8 @@ def check_percentage_point_policy(docs: dict[Path, object]) -> list[tuple]:
                 # the case rules 1-3 never reach, because all three ask "does the
                 # name say percent?" first. A relative-magnitude name that declares
                 # no unit and no kind cannot state whether its number is percentage
-                # points or a scale, and 40:95 permits percentage points only under
+                # points or a scale, and 40 `## Unit and numeric policy` permits
+                # percentage points only under
                 # a name that says percent.
                 elif (
                     is_number
@@ -4495,32 +4548,35 @@ def check_percentage_point_policy(docs: dict[Path, object]) -> list[tuple]:
     if no_number:
         fail(
             f"{len(no_number)} property name(s) say percent but hold no numeric value, so the "
-            f"percentage exists only as prose (40:95): {no_number[:10]}"
+            f"percentage exists only as prose (40 `## Unit and numeric policy`): {no_number[:10]}"
         )
     if factor_valued:
         fail(
             f"{len(factor_valued)} percent-named numeric value(s) satisfy 0 < |v| < 1, which is a "
-            f"normalized factor rather than human-readable percentage points (40:95): "
+            f"normalized factor rather than human-readable percentage points "
+            f"(40 `## Unit and numeric policy`): "
             f"{factor_valued[:10]}"
         )
     if hybrid_names:
         fail(
             f"{len(hybrid_names)} property name(s) combine a percent token with a normalized-factor "
-            f"token; the compiler writes the normalized factor as a separate derived field (40:95): "
+            f"token; the compiler writes the normalized factor as a separate derived field "
+            f"(40 `## Unit and numeric policy`): "
             f"{hybrid_names[:10]}"
         )
     if twins:
         fail(
             f"{len(twins)} object(s) author both percentage points and a same-stem normalized factor; "
-            f"the factor is compiler-derived (40:95, 40:100): {twins[:10]}"
+            f"the factor is compiler-derived (40 `## Unit and numeric policy`): {twins[:10]}"
         )
     if unnamed_magnitude:
         fail(
             f"{len(unnamed_magnitude)} numeric value(s) sit under a relative-magnitude name (bonus, "
             f"penalty, increase, reduction, ...) that says neither percent nor a unit, so the number "
             f"could be percentage points or a multiplicative scale and the name does not say which. "
-            f"40:95 allows human-readable percentage points only under a name that says percent, and "
-            f"40:94 requires an ambiguous numeric name to carry a unit suffix: rename to "
+            f"40 `## Unit and numeric policy` allows human-readable percentage points only under "
+            f"a name that says percent, and requires an ambiguous numeric name to carry a unit "
+            f"suffix: rename to "
             f"<stem>_percent, or to <stem>_multiplier if it is a scale, or add the unit suffix: "
             f"{unnamed_magnitude[:10]}"
         )
@@ -4535,8 +4591,8 @@ def check_percentage_point_policy(docs: dict[Path, object]) -> list[tuple]:
 # "(docs/68-utility-catalog.md:253)", a weapons note carried one, and
 # hyper-gold-sites.json held a repo path in a field named beacon_response_source.
 # A line number is unstable wherever it hides, and the doc_id#anchor form
-# (40:87) is the only citation form the envelope names, so the rule is scoped to
-# the value, not to one field.
+# (40 `## Common definition envelope`) is the only citation form the envelope
+# names, so the rule is scoped to the value, not to one field.
 #
 # WHAT THIS USED TO BE, AND WHY IT WAS REPLACED. The pattern was `docs/.*\.md`,
 # which pins three incidental spellings of one path - the literal directory name,
@@ -4561,11 +4617,13 @@ def check_percentage_point_policy(docs: dict[Path, object]) -> list[tuple]:
 #   A24b THE REPO PATH. A repository directory (docs, src, content, tools, assets)
 #        followed by a separator and a path character, in any case and with either
 #        separator. A repo path is a defect even with no line number on it, because
-#        40:87 names doc_id#anchor as the citation form and a path is not one.
+#        40 `## Common definition envelope` names doc_id#anchor as the citation
+#        form and a path is not one.
 #
 # A BARE `#anchor` IS DELIBERATELY OUT OF SCOPE, and the test below records it as
 # not matching. `#hyper-gold-sites` is not a defective citation form: it is HALF OF
-# THE SANCTIONED ONE. 40:87 names doc_id#anchor, A9 already resolves every anchor
+# THE SANCTIONED ONE. 40 `## Common definition envelope` names doc_id#anchor, A9
+# already resolves every anchor
 # that appears in source_refs against the real heading slugs of the cited document,
 # and a bare `#slug` carries neither a path nor a line number, so nothing about it
 # is unstable in the way this assertion is about. Flagging it would fire on the
@@ -4598,7 +4656,8 @@ A24_RULES = (
     (
         "no repository path in any string value",
         REPO_PATH_IN_VALUE,
-        "a repo path is not a citation form - 40:87 names doc_id#anchor - and it is a defect with "
+        "a repo path is not a citation form - 40 `## Common definition envelope` names "
+        "doc_id#anchor - and it is a defect with "
         "or without a line number attached",
     ),
 )
@@ -4622,7 +4681,7 @@ def check_no_doc_paths_in_values(docs: dict[Path, object]) -> list[tuple]:
         if hits:
             fail(
                 f"{len(hits)} string value(s) under content/ violate A24 ({label}): {why} "
-                f"(40:87): {hits[:10]}"
+                f"(40 `## Common definition envelope`): {hits[:10]}"
             )
     return rows
 
@@ -4632,8 +4691,8 @@ def check_no_doc_paths_in_values(docs: dict[Path, object]) -> list[tuple]:
 #
 # THE RULING. A null in a source definition is never legal. content/README.md
 # used to define a null as "the document states no value", which made absence
-# expressible two ways - an omitted key and a nulled key - for one meaning. 40:90
-# settles it: "Optional fields have explicit defaults materialized into the
+# expressible two ways - an omitted key and a nulled key - for one meaning.
+# 40 `## Common definition envelope` settles it: "Optional fields have explicit defaults materialized into the
 # canonical bundle so runtime never guesses." An absent optional field gets its
 # default; a present-and-null one asks runtime to guess, which is what that line
 # forbids. So absence is spelled by omitting the key.
@@ -4688,7 +4747,8 @@ def check_no_nulls() -> list[tuple]:
     "default": null or null inside an enum will fail this assertion. Measured, not
     predicted - a probe file with {"properties":{"presentation_id":{"default":null}}}
     fails as `...probe.schema.json.properties.presentation_id.default`. The mandate
-    behind A26 (40:90) is about absent optional fields in DEFINITIONS, so the
+    behind A26 (40 `## Common definition envelope`) is about absent optional fields
+    in DEFINITIONS, so the
     resolution is a scope decision that belongs to whoever lands the schemas; it is
     not this assertion silently acquiring an exception set, which is the one thing
     A26's docstring rules out.
@@ -4712,7 +4772,8 @@ def check_no_nulls() -> list[tuple]:
     if hits:
         fail(
             f"{len(hits)} null(s) under content/. A null in a source definition is never legal: "
-            f"40:90 materializes an explicit default for every absent optional field, so absence is "
+            f"40 `## Common definition envelope` materializes an explicit default for every "
+            f"absent optional field, so absence is "
             f"spelled by OMITTING the key and a present-and-null field asks runtime to guess. Omit "
             f"the key; if the field should not exist at all, remove it and record the removal. There "
             f"is no exception set to add it to: {sorted(hits)[:15]}"
@@ -4813,7 +4874,8 @@ def check_no_abbreviation_periods(docs_root: Path = DOCS) -> list[tuple]:
 #
 # This automates a check that had to be done by hand. Ruling 22 in
 # content/transcription-notes.md verified all six
-# resonance_behavior.modifier.direction values against docs/40:104-109 by eye
+# resonance_behavior.modifier.direction values against docs/40 `### Resources`
+# by eye
 # after one was reported wrong; nothing in the tree would have caught a seventh.
 #
 # The vocabulary is a CLOSED set of opposed pairs and +1 means "more of the
@@ -5001,7 +5063,7 @@ def main() -> int:
         world_prop_rows,
     )
     table(
-        "A16 Percentage-point policy (numbers and key names, 40:95)",
+        "A16 Percentage-point policy (numbers and key names, 40 `## Unit and numeric policy`)",
         ("check", "expected", "actual", "status"),
         percent_rows,
     )

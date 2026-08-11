@@ -4486,6 +4486,16 @@ owners.
   three times, all in running prose: `40:106`, `docs/73-…:156`, `docs/73-…:189`. By contrast the doc names
   real fields in backticks in the `## Common definition envelope` table at `40:74-88`. **So
   `canonical_letter` as a field name would be a choice, not a mandate.**
+  - **Resolved since — the bullet above is preserved as the record of what was argued, not corrected.**
+    Its grep was accurate when the audit ran and is false today. `canonical_letter` is a field name in
+    the tree: exactly six files under `content/resources/` carry it, one apiece — `A.json`, `B.json`,
+    `C.json`, `D.json`, `E.json` and `F.json` — added to `master` by commit `2691139`, and A32 in
+    `verify_content.py` now asserts that set and no other. `common-ore.json` and `hyper-gold.json` carry
+    no letter, so the count is six and not eight. What survives of the bullet is its narrower point,
+    which the resolution does not overturn: the resource-field prose enumeration alone did not mandate
+    the spelling. The `snake_case` field name comes from doc 40's `### Minted content-ID grammars`
+    section, which named it after this audit ran — so the choice was made and recorded, not inherited
+    from the enumeration this bullet read.
 - **Counter-evidence the ruling should have seen.** The inference "the letters `A`–`F` were never the
   resource ID" is contradicted by the shipped content: `content/resources/A.json` carries `"id": "A"` and
   `"name_key": "resource.A.name"`, and the same shape runs through `F.json`. No resource file carries a

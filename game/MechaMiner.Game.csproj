@@ -83,9 +83,22 @@
       (VER-FND-001-002) and is unaffected; build/verify-godot.sh cannot, because
       it deletes game/.godot for a cold cache and that is where this project's
       obj/ lives, so it must restore - which it does at the default
-      configuration, Debug, and therefore stays green. When the graph
-      legitimately changes, the escape hatch is a restore passing
-      force-evaluate: explicit, reviewable, and visible in the diff.
+      configuration, Debug, and therefore stays green.
+
+      HOW TO BUILD AN EXPORT CONFIGURATION, measured, because the obvious
+      recovery is the wrong one. Restore at Debug first, then build the export
+      configuration with the no-restore switch:
+
+        dotnet restore game/MechaMiner.Game.csproj
+        dotnet build game/MechaMiner.Game.csproj -c ExportRelease [no-restore]
+
+      That exits 0 and leaves packages.lock.json byte-identical. Do NOT reach
+      for force-evaluate here. force-evaluate is the escape hatch for a graph
+      that has LEGITIMATELY changed (a Godot SDK bump), where rewriting the lock
+      is the point and the rewrite lands in the diff for review. Used to get an
+      export past NU1004 it does the opposite: it rewrites the lock to the
+      GodotSharpEditor-less graph and silently re-creates the exact corruption
+      this property exists to prevent, with a green build to hide it.
 
       Do NOT "fix" this by setting RestorePackagesWithLockFile=false here. That
       would delete the guarantee rather than enforce it, leaving the one project

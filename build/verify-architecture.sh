@@ -258,6 +258,14 @@ project_name() {
   printf '%s' "${base%.*proj}"
 }
 
+project_lock_file() {
+  # Repository-relative path of a project's committed NuGet lock file. One
+  # definition on purpose: section 6 READS this file for the Godot boundary and
+  # section 11 ASSERTS it exists, and the convention must not be able to drift
+  # between the reader and the assertion.
+  printf '%s/packages.lock.json' "$(dirname "$1")"
+}
+
 echo "=== 1. accepted repository layout (VER-FND-001-003)"
 for path in "${EXPECTED_PATHS[@]}"; do
   if [[ -e "${REPO_ROOT}/${path}" ]]; then
@@ -438,7 +446,6 @@ echo "=== 6. only game/ may reference Godot (VER-FND-001-004)"
 # PublicKeyToken=null", regardless of what the file was called.
 for entry in "${EXPECTED_PROJECTS[@]}"; do
   IFS='|' read -r project _expected_refs godot_allowed <<<"${entry}"
-  directory="${REPO_ROOT}/$(dirname "${project}")"
   name="$(project_name "${project}")"
 
   if ! resolved_references="$(resolved_assembly_identities "${project}")"; then
@@ -453,7 +460,7 @@ for entry in "${EXPECTED_PROJECTS[@]}"; do
   fi
   godot_declared="$(printf '%s\n' "${declared_references}" | godot_assembly_names)"
 
-  lock_file="${directory}/packages.lock.json"
+  lock_file="${REPO_ROOT}/$(project_lock_file "${project}")"
   godot_locked=""
   if [[ -f "${lock_file}" ]]; then
     godot_locked="$(grep -oE '"Godot[A-Za-z.]*"' "${lock_file}" | tr -d '"' | sort -u | paste -sd, - || true)"
@@ -749,7 +756,15 @@ while IFS='|' read -r verdict detail; do
 done <<<"${configuration_map_report}"
 
 echo
-echo "=== 11. every accepted project has a committed NuGet lock file (VER-FND-001-001)"
+echo "=== 11. every accepted project has a committed NuGet lock file (VER-FND-001-003)"
+#
+# Tagged -003 like every other structural section here, NOT -001, even though
+# what it protects is VER-FND-001-001's guarantee. The registry decides that:
+# -003/-004/-005 are the entries whose selector IS this script, while -001's
+# selector is the command `dotnet restore MechaMiner.sln --locked-mode`.
+# Labelling this section -001 would attach script output to an entry that never
+# runs the script, so registry-driven evidence collection for -001 would execute
+# the restore and never see this assertion.
 #
 # VER-FND-001-001's selector is `dotnet restore MechaMiner.sln --locked-mode`,
 # and the natural reading of that is "the locked graph is enforced". It is not
@@ -781,17 +796,32 @@ echo "=== 11. every accepted project has a committed NuGet lock file (VER-FND-00
 # "[4.7.1, )" restored at exit 0 and was left mutated - and this section does
 # not diff a lock file against the graph a restore would produce. Like section
 # 10, it reads only committed state, so it needs no restore.
+#
+# The `git rev-parse --git-dir` probe is load-bearing, not redundant: it is the
+# only thing that can make the || fallback below fire. Without it the loop's own
+# exit status is a printf's, always 0, and a checkout that is not a git working
+# tree would report nine "not tracked" failures blaming repository content for
+# an absent tool. Do not delete it.
 lock_presence_report="$(cd "${REPO_ROOT}" && git rev-parse --git-dir >/dev/null 2>&1 && \
   for entry in "${EXPECTED_PROJECTS[@]}"; do
     IFS='|' read -r project _expected_refs _godot_allowed <<<"${entry}"
-    lock_path="$(dirname "${project}")/packages.lock.json"
+    lock_path="$(project_lock_file "${project}")"
     if [[ ! -f "${lock_path}" ]]; then
       printf 'FAIL|%s does not exist, so locked-mode restore silently regenerates it instead of enforcing it\n' "${lock_path}"
-    elif ! git ls-files --error-unmatch -- "${lock_path}" >/dev/null 2>&1; then
-      printf 'FAIL|%s exists on disk but is NOT tracked by git, so it is a restore artefact rather than a committed lock\n' "${lock_path}"
-    else
-      printf 'OK|%s exists and is tracked by git\n' "${lock_path}"
+      continue
     fi
+    # Exit 1 from --error-unmatch means "no such path in the index"; anything
+    # else (128 for a corrupt index, an unreadable .git, a git that broke after
+    # the probe above) is git failing, not the repository being wrong. Reporting
+    # both as "NOT tracked" is the same could-not-measure-versus-is-wrong
+    # conflation this file's header records as having twice cost a round.
+    git ls-files --error-unmatch -- "${lock_path}" >/dev/null 2>&1
+    tracked_status=$?
+    case "${tracked_status}" in
+      0) printf 'OK|%s exists and is tracked by git\n' "${lock_path}" ;;
+      1) printf 'FAIL|%s exists on disk but is NOT tracked by git, so it is a restore artefact rather than a committed lock\n' "${lock_path}" ;;
+      *) printf 'FAIL|%s could not be checked against the git index (git ls-files exited %s), so its tracking is unverified\n' "${lock_path}" "${tracked_status}" ;;
+    esac
   done)" || lock_presence_report="ERROR|the committed lock files could not be enumerated, so no project's locked graph is verified"
 
 if [[ -z "${lock_presence_report}" ]]; then

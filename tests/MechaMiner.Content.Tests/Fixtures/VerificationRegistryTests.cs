@@ -46,14 +46,28 @@ internal sealed class VerificationRegistryTests
     /// What an emptied <c>entries</c> array must be reported as, wherever it is found.
     /// </summary>
     /// <remarks>
-    /// Every test in this fixture is a walk over <c>entries</c>, and a walk over nothing
-    /// reports nothing wrong. Emptying the array - by hand, by a bad merge, or by a
-    /// generator that wrote an empty document - satisfied all five of them at once, which
-    /// is the one edit to a registry that no test could see. Each walk now counts what
-    /// it visited, in the same shape as <c>SchemaNullScan.DocumentsSeen</c> and
-    /// <c>SchemaFixturePartition.FilesChecked</c> elsewhere in this suite, and the
-    /// counters are counts rather than constants because emptying the array turns every
-    /// one of them red.
+    /// <para>
+    /// A walk over nothing reports nothing wrong. Emptying an <c>entries</c> array - by hand, by
+    /// a bad merge, or by a generator that wrote an empty document - satisfied every walk in this
+    /// fixture at once, which was the one edit to a registry no test could see. This message is
+    /// what the five per-package walks report instead: each counts what it visited, in the same
+    /// shape as <c>SchemaNullScan.DocumentsSeen</c> and
+    /// <c>SchemaFixturePartition.FilesChecked</c> elsewhere in this suite, and the counters are
+    /// counts rather than constants because emptying the array turns every one of them red.
+    /// </para>
+    /// <para>
+    /// What is no longer true is that every test here is such a walk, and the difference is worth
+    /// stating rather than leaving as a sentence that was accurate once. Of the eleven test
+    /// methods in this fixture, counted at <c>46366ea</c>: five are the per-package walks this
+    /// message serves; three are censuses -
+    /// <see cref="EverySelectorKindIsOneSomeWalkResolves"/>,
+    /// <see cref="TheSelectorCensusIsWhatIsDeclared"/> and
+    /// <see cref="TheFixtureReferenceCensusIsWhatIsDeclared"/> - which would now fail against
+    /// their own committed literals rather than pass over an empty sequence;
+    /// <see cref="EveryRegistryOnDiskIsDiscoveredAndWalked"/> reads the directory and not the
+    /// entries; and two are resolver negative controls that walk no registry at all. So an
+    /// emptied array is loud in two independent ways now, and this message is only the first.
+    /// </para>
     /// </remarks>
     private static string NoEntries(string package)
     {
@@ -71,10 +85,6 @@ internal sealed class VerificationRegistryTests
         return VerificationRegistry.Entries(registry);
     }
 
-    /// <summary>
-    /// Every cited file exists and, where a citation names a heading anchor, that heading
-    /// exists in the cited file.
-    /// </summary>
     /// <summary>
     /// The set of registries walked is the set on disk, and there are as many as stated.
     /// </summary>
@@ -113,6 +123,10 @@ internal sealed class VerificationRegistryTests
         });
     }
 
+    /// <summary>
+    /// Every cited file exists and, where a citation names a heading anchor, that heading
+    /// exists in the cited file.
+    /// </summary>
     [TestCaseSource(nameof(Packages))]
     public void EveryCitedSourceResolvesToARealFileAndHeading(string package)
     {
@@ -300,11 +314,13 @@ internal sealed class VerificationRegistryTests
             }
         }
 
-        // No "at least one nunit selector" assertion here, deliberately. DAT-007 and the FND
-        // registries are script and command gates and legitimately declare none, so a
-        // per-registry non-zero requirement would be false for them. The non-vacuity guarantee
-        // this walk needs is held one level up, over the whole set, by
-        // EverySelectorKindIsOneSomeWalkResolves.
+        // No "at least one nunit selector" assertion here, deliberately. Seven of the twenty-one
+        // registries declare none: DAT-007, FND-001, FND-002 and FND-005, which are script and
+        // command gates, and PRE-001, PRE-002 and UI-002, which are engine-scene gates. Not "the
+        // FND registries" - FND-003 is one and declares six - and the seven are pinned as
+        // RegistriesWithNoNunitSelector rather than restated here, because an enumeration in a
+        // comment is what went stale. The non-vacuity guarantee this walk needs is held one level
+        // up, over the whole set, by EverySelectorKindIsOneSomeWalkResolves.
         Expect.Multiple(() =>
         {
             Assert.That(entriesSeen, Is.GreaterThan(0), NoEntries(package));
@@ -323,11 +339,17 @@ internal sealed class VerificationRegistryTests
     /// <remarks>
     /// <para>
     /// The per-registry selector walk skips any entry whose kind is not <c>nunit</c>, so a
-    /// registry made entirely of <c>script</c> or <c>command</c> selectors passes it while
-    /// having no selector checked at all - which is the state DAT-007, FND-001, FND-002 and
-    /// FND-005 are in. That is a real gap and this assertion is deliberately <em>not</em> a
-    /// fix for it: it records which kinds exist and which are resolvable, so the gap is
-    /// stated by a test instead of living in a report. Teaching the walk to resolve
+    /// registry declaring no <c>nunit</c> selector passes it while having no selector checked at
+    /// all. Seven of the twenty-one are in that state: DAT-007, FND-001, FND-002 and FND-005,
+    /// which are script and command gates, and PRE-001, PRE-002 and UI-002, which are engine-scene
+    /// gates. FND-003 is an FND registry and is <em>not</em> among them - it declares six nunit
+    /// selectors - which is why the exposure is stated as a list of registries rather than as a
+    /// family. That is a real gap and this assertion is deliberately <em>not</em> a fix for it: it
+    /// records which kinds exist and which are resolvable, so the gap is stated by a test instead
+    /// of living in a report. The count of exposed registries is pinned as
+    /// <see cref="RegistriesWithNoNunitSelector"/> by
+    /// <see cref="TheSelectorCensusIsWhatIsDeclared"/>, because this paragraph's whole job is to
+    /// state exposure and it named four when there were seven. Teaching the walk to resolve
     /// <c>script</c>, <c>command</c> and <c>engine-scene</c> selectors is separate work.
     /// </para>
     /// <para>
@@ -413,14 +435,31 @@ internal sealed class VerificationRegistryTests
     /// deliberate statement about what this suite now covers.
     /// </para>
     /// <para>
-    /// <b>The kind counts are made to sum, in both directions.</b> Per-kind equality on its own
-    /// is not enough: a drift in one kind compensated by a drift in another passes if both
-    /// literals are edited to match, so the four committed literals are asserted to sum to the
-    /// committed entry total. Measuring the sum is not enough either, because
-    /// <c>kinds.Values.Sum()</c> equals the entry count by construction whatever the kinds are,
-    /// so what is asserted is that the four <em>named</em> kinds account for every entry
-    /// measured. An entry declaring a fifth kind fails that even while all four of the others
-    /// are right.
+    /// <b>Which of the sums are load-bearing, and which are arithmetic.</b> Two of the assertions
+    /// below compare a sum of committed literals against another committed literal:
+    /// <c>NunitSelectors + ScriptSelectors + CommandSelectors + EngineSceneSelectors</c> against
+    /// <c>RegistryEntries</c>, and <c>NunitSelectorsReflected + NunitSelectorsSourceDeclared</c>
+    /// against <c>NunitSelectors</c>. Every operand is a <c>const</c> in this file, so no state of
+    /// <c>tests/verification/</c> can redden either one. They were written as a defence against a
+    /// drift in one kind compensated by a drift in another, and they are not that: flip one
+    /// DAT-002 entry from <c>nunit</c> to <c>script</c>, edit both literals, and both sums still
+    /// hold - as they should, because the per-kind equalities above them are what catch that flip,
+    /// individually and without needing a sum. What the two sums actually have is narrower and
+    /// still worth keeping: a kind literal cannot be moved without the entry literal moving with
+    /// it, so re-measuring the census and transcribing three of four literals is caught here
+    /// rather than left to whichever per-kind assertion happens to run.
+    /// </para>
+    /// <para>
+    /// The assertions that do depend on the registries are the ones stated against measured
+    /// values: each per-kind equality; <c>namedKinds == entries</c>, which is not
+    /// <c>kinds.Values.Sum() == entries</c> - that holds by construction whatever the kinds are -
+    /// but the claim that the four <em>named</em> kinds account for every entry measured, so an
+    /// entry declaring a fifth kind fails it while all four of the others are right; the route
+    /// sum against <c>Kind("nunit")</c>; and
+    /// <see cref="RegistriesWithNoNunitSelector"/>, which is the one number in this census that no
+    /// other assertion here implies. That last one exists because the exposure it counts - a
+    /// registry the per-registry selector walk checks nothing in - had been enumerated in three
+    /// comments and was wrong in all three.
     /// </para>
     /// <para>
     /// <b>What these numbers do NOT prove.</b> "Resolves" is two claims of two different
@@ -443,11 +482,14 @@ internal sealed class VerificationRegistryTests
         Dictionary<string, int> kinds = new(StringComparer.Ordinal);
         Dictionary<RegistrySelectorTypes.Route, int> routes = new();
         HashSet<string> distinctNunitSelectors = new(StringComparer.Ordinal);
+        List<string> registriesWithNoNunitSelector = new();
         int entries = 0;
 
         foreach (string package in VerificationRegistry.Packages)
         {
             using JsonDocument registry = Registry(package);
+            int nunitInPackage = 0;
+
             foreach (JsonElement entry in Entries(registry))
             {
                 entries++;
@@ -460,10 +502,17 @@ internal sealed class VerificationRegistryTests
                     continue;
                 }
 
+                nunitInPackage++;
+
                 string value = selector.GetProperty("value").GetString()!;
                 distinctNunitSelectors.Add(value);
                 RegistrySelectorTypes.Route route = RegistrySelectorTypes.RouteOf(value);
                 routes[route] = routes.TryGetValue(route, out int answered) ? answered + 1 : 1;
+            }
+
+            if (nunitInPackage == 0)
+            {
+                registriesWithNoNunitSelector.Add(package);
             }
         }
 
@@ -518,9 +567,12 @@ internal sealed class VerificationRegistryTests
             Assert.That(
                 NunitSelectors + ScriptSelectors + CommandSelectors + EngineSceneSelectors,
                 Is.EqualTo(RegistryEntries),
-                "the committed kind counts must sum to the committed entry total, so one kind "
-                    + "drifting down while another drifts up cannot be made to pass by editing "
-                    + "both literals");
+                "the committed kind counts must sum to the committed entry total. Every operand "
+                    + "here is a const in this file, so this is arithmetic on the literals and no "
+                    + "state of tests/verification/ can redden it: what it catches is a census "
+                    + "re-measured and transcribed into three of the four kind literals. A drift "
+                    + "in one kind compensated by a drift in another is caught by the per-kind "
+                    + "equalities above, not by this");
             Assert.That(
                 namedKinds,
                 Is.EqualTo(entries),
@@ -547,8 +599,11 @@ internal sealed class VerificationRegistryTests
             Assert.That(
                 NunitSelectorsReflected + NunitSelectorsSourceDeclared,
                 Is.EqualTo(NunitSelectors),
-                "the committed split must sum to the committed nunit total, for the same reason "
-                    + "the kind counts must");
+                "the committed split must sum to the committed nunit total. Const arithmetic, like "
+                    + "the kind sum above and with the same narrow value: the assertion that a "
+                    + "selector really did change route is the pair of measured equalities above, "
+                    + "and the one that notices a selector answered by neither route is the "
+                    + "measured route sum below");
             Assert.That(
                 Answered(RegistrySelectorTypes.Route.Reflection)
                     + Answered(RegistrySelectorTypes.Route.SourceIndex),
@@ -561,6 +616,17 @@ internal sealed class VerificationRegistryTests
                 Is.EqualTo(DistinctNunitSelectors),
                 "distinct nunit selector values - fewer than the entries, because one fixture is "
                     + "legitimately the evidence for several entries");
+            Assert.That(
+                registriesWithNoNunitSelector.Count,
+                Is.EqualTo(RegistriesWithNoNunitSelector),
+                () => "registries declaring no nunit selector at all, which "
+                    + nameof(EveryNunitSelectorNamesSomethingThatExists)
+                    + " therefore checks no selector in. They are "
+                    + string.Join(", ", registriesWithNoNunitSelector)
+                    + ". This is the number the exposure paragraphs in this fixture and in "
+                    + "CategoryVerificationRegistryTests state in prose, and they stated four when "
+                    + "it was seven. Raising it says one more registry's gates are now checked by "
+                    + "no selector walk");
         });
     }
 
@@ -831,6 +897,15 @@ internal sealed class VerificationRegistryTests
     /// <see cref="NunitSelectors"/> because a fixture can be the evidence for several entries.
     /// </summary>
     private const int DistinctNunitSelectors = 150;
+
+    /// <summary>
+    /// Registries declaring no <c>nunit</c> selector at all, and so having no selector checked by
+    /// <see cref="EveryNunitSelectorNamesSomethingThatExists"/>. At <c>46366ea</c> they are
+    /// DAT-007, FND-001, FND-002, FND-005, PRE-001, PRE-002 and UI-002. No other assertion in this
+    /// census implies this number, which is why it is here: it is the measure of the gap the
+    /// exposure paragraphs describe, and those paragraphs had it wrong.
+    /// </summary>
+    private const int RegistriesWithNoNunitSelector = 7;
 
     /// <summary>
     /// The GitHub-style anchors of every heading in a Markdown file: lowercased, inline

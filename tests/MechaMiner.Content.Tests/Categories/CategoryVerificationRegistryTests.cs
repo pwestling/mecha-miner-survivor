@@ -160,14 +160,23 @@ internal sealed class CategoryVerificationRegistryTests
     /// What an emptied <c>entries</c> array must be reported as, wherever it is found.
     /// </summary>
     /// <remarks>
-    /// Every check in this fixture is a walk over <c>entries</c>, and a walk over nothing
-    /// reports nothing wrong. Emptying the array satisfied all five at once - the one
-    /// edit to a registry that no test here could see. Each walk now counts what it
-    /// visited, in the same shape as <c>SchemaNullScan.DocumentsSeen</c> and
-    /// <c>SchemaFixturePartition.FilesChecked</c> elsewhere in this suite. What makes
-    /// each counter a count rather than a constant is that emptying the array turns every
-    /// one of them red; nothing here asserts a number, only that the walk arrived
-    /// somewhere.
+    /// <para>
+    /// A walk over nothing reports nothing wrong. Emptying the array satisfied every walk in this
+    /// fixture at once - the one edit to a registry no test here could see. Each of the six
+    /// per-package walks now counts what it visited, in the same shape as
+    /// <c>SchemaNullScan.DocumentsSeen</c> and <c>SchemaFixturePartition.FilesChecked</c>
+    /// elsewhere in this suite. What makes each counter a count rather than a constant is that
+    /// emptying the array turns every one of them red.
+    /// </para>
+    /// <para>
+    /// "Nothing here asserts a number" has stopped being true, and so has "all five". Of the eight
+    /// test methods in this fixture, counted at <c>46366ea</c>: six are the per-package walks this
+    /// message serves; <see cref="TheResolverRejectsAMissingFileAndAMissingHeading"/> walks no
+    /// registry; and <see cref="TheCostOfExtendingTheRouteContractIsRecorded"/> asserts two
+    /// numbers - <see cref="DatOneEntries"/> at 49 and
+    /// <see cref="DatOneEntriesFailingTheRouteContract"/> at 40 - so an emptied DAT-001 fails it
+    /// on the entry count rather than passing over an empty sequence.
+    /// </para>
     /// </remarks>
     private static string NoEntries(string package)
     {
@@ -357,9 +366,13 @@ internal sealed class CategoryVerificationRegistryTests
     /// Resolution goes through <see cref="RegistrySelectorTypes"/> rather than
     /// <c>Assembly.GetType</c> against this assembly alone; see that class for why, and for
     /// what the route proves. The "at least one nunit selector" assertion this walk used to
-    /// make is gone: it was true of DAT-002 and DAT-003 and is false of DAT-007 and the FND
-    /// registries, which are script and command gates. The non-vacuity guarantee now sits over
-    /// the whole set in
+    /// make is gone: it was true of DAT-002 and DAT-003 and is false of the seven registries that
+    /// declare no nunit selector at all - DAT-007, FND-001, FND-002 and FND-005, which are script
+    /// and command gates, and PRE-001, PRE-002 and UI-002, which are engine-scene gates. Not "the
+    /// FND registries": FND-003 is one and declares six. That seven is pinned as
+    /// <c>VerificationRegistryTests.RegistriesWithNoNunitSelector</c>, because this is the third
+    /// place the list was written and it was wrong in all three. The non-vacuity guarantee now
+    /// sits over the whole set in
     /// <c>VerificationRegistryTests.EverySelectorKindIsOneSomeWalkResolves</c>.
     /// </remarks>
     [TestCaseSource(nameof(Packages))]

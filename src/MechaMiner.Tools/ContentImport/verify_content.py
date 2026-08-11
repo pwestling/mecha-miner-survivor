@@ -14,8 +14,9 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
 
   A1  Every *.json under content/ parses as UTF-8 JSON with no duplicate
       object properties.
-      Mandate: docs/technical/40-content-data-and-validation.md:26
-      ("duplicate object properties ... are errors")                  FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## JSON codec and schema baseline` ("duplicate object
+      properties ... are errors")                                     FAILURE
 
   A2  Envelope: every definition file carries schema_version (int),
       content_version (int), status in {development, enabled, disabled,
@@ -37,8 +38,9 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
 
   A4  presentation_id is ABSENT, not present-and-null. No presentation
       entry can exist until content/presentation/ is authored
-      (40 `## Common definition envelope` declares the field; 40:52
-      declares the directory)                                         FAILURE
+      (40 `## Common definition envelope` declares the field;
+      40 `## Accepted content repository layout` declares the
+      directory - the `presentation/` line of its layout block)       FAILURE
 
   A5  id must be present and a non-empty string, EXCEPT on the definitions
       listed in ID_NULL_EXPECTED below, where no design document assigns a
@@ -63,9 +65,10 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
   A7  Naming: no property name anywhere in a definition contains [A-Z] or
       starts with "_". Checked on KEYS ONLY - stable ID/enum/kind tokens in
       VALUES keep their exact case by the same mandate.
-      Mandate: docs/technical/40-content-data-and-validation.md:26
-      ("Property names use snake_case; stable enum/kind/ID tokens remain
-      exact case-sensitive ASCII"), restated by the naming rules under
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## JSON codec and schema baseline` ("Property names use
+      snake_case; stable enum/kind/ID tokens remain exact
+      case-sensitive ASCII"), restated by the naming rules under
       40 `## Unit and numeric policy`                                 FAILURE
 
   A8  No stale extraction metadata: no key named _provenance, _source,
@@ -354,10 +357,10 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       BOUND_SPELLING_ESCALATED, which is asserted for drift the way A19
       asserts its two sets: an undeclared member is a failure, and a member
       that no longer applies is a warning asking for the list to shrink.
-      Mandate: docs/technical/40-content-data-and-validation.md:26
-      (snake_case property names) with 40 `## Unit and numeric policy`
-      (the unit-suffix list that fixes which end of the name the bound
-      word may occupy)                                                FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## JSON codec and schema baseline` (snake_case property names)
+      with 40 `## Unit and numeric policy` (the unit-suffix list that
+      fixes which end of the name the bound word may occupy)          FAILURE
 
   A26 No `null` appears anywhere under content/, at any depth, in any file -
       including content/localization/en.json, which the definition loader
@@ -713,17 +716,19 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
            when the key is deleted from D.json and added to common-ore.json
            in the same edit; the named set does not.
         2. Each file's (id, canonical_letter) pair is one row of an EXPLICIT
-           EIGHT-ROW TABLE transcribed from 40:111 - RSC-01 -> A through
-           RSC-06 -> F, with RSC-07 and RSC-08 carrying NO letter. Until the
-           RSC- migration this row read "canonical_letter == that file's own
-           id", which held only while the two were the same string; the ids
-           are now RSC-01..RSC-08 and that comparison is gone. The table is
-           literal on purpose: 40:109 states "The ID and the letter are two
-           fields; neither is derived from the other", so computing the
-           letter from the id (chr(ord("A") + int(id[-2:]) - 1)) would
-           re-derive the document's mapping instead of checking it - it
-           would agree with itself for any tree and would keep passing if
-           40:111 were reassigned, which is the edit this row exists to
+           EIGHT-ROW TABLE transcribed from 40 `### Minted content-ID
+           grammars` ("Which number goes to which resource is fixed here")
+           - RSC-01 -> A through RSC-06 -> F, with RSC-07 and RSC-08
+           carrying NO letter. Until the RSC- migration this row read
+           "canonical_letter == that file's own id", which held only while
+           the two were the same string; the ids are now RSC-01..RSC-08 and
+           that comparison is gone. The table is literal on purpose: the
+           same section states "The ID and the letter are two fields;
+           neither is derived from the other", so computing the letter from
+           the id (chr(ord("A") + int(id[-2:]) - 1)) would re-derive the
+           document's mapping instead of checking it - it would agree with
+           itself for any tree and would keep passing if that mapping
+           paragraph were reassigned, which is the edit this row exists to
            catch. The two no-letter rows are asserted with the same weight,
            because arithmetic over "07" and "08" would invent "G" and "H".
            The eight comparisons are NAMED on the passing run, not counted:
@@ -748,7 +753,7 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
            nevertheless asserted here because A26 cannot see the defect this
            row exists for: `"canonical_letter": ""` and
            `"canonical_letter": "common-ore"` are both non-null, both pass
-           A26, and both assert the thing 40:106 (blob 4cded84) does not
+           A26, and both assert the thing 40 `### Resources` does not
            say - that a currency has a canonical letter. The omission is
            load-bearing
            content, so it is asserted as omission rather than inferred from
@@ -764,7 +769,8 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       commit that added canonical_letter, and it is why rows 1 and 2 are
       NAMED rather than counted. The RSC- migration is the opposite case: it
       DOES move the multiset (each letter loses its id copy, the two slugs
-      lose theirs, eight RSC-0n arrive), and 40:113 states that delta, so
+      lose theirs, eight RSC-0n arrive), and 40 `### Minted content-ID
+      grammars` ("the migration drops the `id` copy") states that delta, so
       the migration has a multiset proof and this table has the placement
       proof. Neither substitutes for the other.
       Negative controls, each injected alone, run, and reverted:
@@ -776,13 +782,15 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       and row 2 FAILs too, because RSC-07 takes no letter in the table;
       a ninth resources/*.json -> row 5 FAILs on the count. A.json's value
       set to null FAILs rows 2 and 3 here in addition to A26.
-      Mandate: docs/technical/40-content-data-and-validation.md:106, blob
-      4cded84 ("Resource definition fields include ID, canonical letter,
-      localization keys ...") for the field itself, PLUS 40:111 for row 2's
-      mapping table and 40:86 for the grammar A12's resources selector
-      transcribes. Row 2 DOES read the eight id values - it is the only row
-      here that reads one - and an earlier version of this line said no row
-      did, which was true only before the RSC- migration. FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `### Resources` ("Resource definition fields include ID, canonical
+      letter, localization keys ...") for the field itself, PLUS
+      `### Minted content-ID grammars` for row 2's mapping table ("Which
+      number goes to which resource is fixed here") and for the `RSC-`
+      grammar row A12's resources selector transcribes. Row 2 DOES read
+      the eight id values - it is the only row here that reads one - and an
+      earlier version of this line said no row did, which was true only
+      before the RSC- migration.                                    FAILURE
 
   A33 THE KEY/ID BINDING. Every name_key and every summary_key equals
       `<category>.<that definition's OWN id>.<role>`, with name_key taking
@@ -1153,19 +1161,23 @@ FORBIDDEN_KEYS = (
 EXPECTATIONS = [
     dict(
         dir="resources",
-        # The selector is the MINTED GRAMMAR ROW, transcribed verbatim from
-        # 40:86 ("| `RSC-` | `^RSC-[0-9]{2}$` | resource | `content/resources/`
-        # | this section |"), and deliberately NOT the narrower ^RSC-0[1-8]$
-        # that this population would also satisfy. The point of copying the row
-        # is that the selector and the grammar cannot drift: a reader comparing
-        # the two sees one string. Admitting RSC-09..RSC-99 on PATTERN is not a
+        # The selector is the MINTED GRAMMAR ROW, transcribed verbatim from the
+        # `RSC-` row of the grammar table under 40 `### Minted content-ID
+        # grammars` ("| `RSC-` | `^RSC-[0-9]{2}$` | resource |
+        # `content/resources/` | this section |"), and deliberately NOT the
+        # narrower ^RSC-0[1-8]$ that this population would also satisfy. The
+        # point of copying the row is that the selector and the grammar cannot
+        # drift: a reader comparing the two sees one string. Admitting
+        # RSC-09..RSC-99 on PATTERN is not a
         # hole, because `items` below is pinned at 8 - a ninth resource fails on
         # the COUNT rather than sliding in on a pattern widened to fit it.
         selector=("id_regex", r"^RSC-[0-9]{2}$"),
         items=8,
         aggregates=None,
         label="resources (6 specialized + common ore + Hyper Gold)",
-        source="docs/technical/40-content-data-and-validation.md:86 grammar row + :111 mapping; "
+        source="docs/technical/40-content-data-and-validation.md "
+               "`### Minted content-ID grammars` (the `RSC-` grammar row + the "
+               "\"Which number goes to which resource is fixed here\" mapping); "
                "docs/61-specialized-resource-identities.md:20 + docs/60-resources-crafting-progression.md:18",
     ),
     dict(
@@ -1913,8 +1925,9 @@ def check_bound_spelling(docs: dict[Path, object]) -> list[tuple]:
     if offenders:
         fail(
             f"{len(offenders)} property name(s) abbreviate a bound as 'cap', 'max' or 'min'; a cap "
-            f"is a maximum and the word is spelled out, with the unit suffix kept terminal (40:26, "
-            f"40 `## Unit and numeric policy`): {offenders[:15]}"
+            f"is a maximum and the word is spelled out, with the unit suffix kept terminal "
+            f"(40 `## JSON codec and schema baseline`, 40 `## Unit and numeric "
+            f"policy`): {offenders[:15]}"
         )
     if resolved:
         warn(
@@ -2032,7 +2045,8 @@ def check_definitions(docs: dict[Path, object], doc_index: dict[str, dict]) -> d
         if "presentation_id" in doc:
             fail(
                 f"{name}: 'presentation_id' is present ({doc['presentation_id']!r}); it must be "
-                f"omitted entirely until content/presentation/ exists (40:52, "
+                f"omitted entirely until content/presentation/ exists "
+                f"(40 `## Accepted content repository layout`, "
                 f"40 `## Common definition envelope`)"
             )
 
@@ -2041,9 +2055,12 @@ def check_definitions(docs: dict[Path, object], doc_index: dict[str, dict]) -> d
             if key is None:
                 continue
             if re.search(r"[A-Z]", key):
-                fail(f"{name}{jpath[1:]}: property name '{key}' contains uppercase (40:26)")
+                fail(f"{name}{jpath[1:]}: property name '{key}' contains uppercase "
+                     f"(40 `## JSON codec and schema baseline`)")
             if key.startswith("_"):
-                fail(f"{name}{jpath[1:]}: property name '{key}' starts with '_' (40:26, 40 `## Common definition envelope`)")
+                fail(f"{name}{jpath[1:]}: property name '{key}' starts with '_' "
+                     f"(40 `## JSON codec and schema baseline`, "
+                     f"40 `## Common definition envelope`)")
             if key in FORBIDDEN_KEYS:
                 fail(
                     f"{name}{jpath[1:]}: stale extraction metadata key '{key}'; provenance "
@@ -3101,7 +3118,7 @@ def check_file_inventory(manifest_size: int | None) -> list[tuple]:
 # --------------------------------------------------------------------------
 # A32 - canonical_letter on exactly the six letter resources.
 #
-# 40:106 (blob 4cded84) lists "canonical letter" among the resource definition
+# 40 `### Resources` lists "canonical letter" among the resource definition
 # fields. It says that about the six-material set; it does not say it about
 # common ore or Hyper Gold, which are the ordinary-crafting and cross-run
 # currencies and have no letter to carry. Their omission is therefore authored
@@ -3110,11 +3127,12 @@ def check_file_inventory(manifest_size: int | None) -> list[tuple]:
 # ROW 2 READS THE id VALUES, and since the RSC- migration it is the only row
 # that does. It used to compare each file's canonical_letter against its own id,
 # which worked only while the two were the same string. The ids are now
-# RSC-01..RSC-08 (40:86 grammar, 40:111 mapping), so that comparison is gone and
-# row 2 is the transcribed mapping table below instead. Rows 1/3/4/5 never read
-# an id and are unaffected. An earlier draft of this comment predicted the ids
-# would become "RSC-A..RSC-F"; 40:111 assigns RSC-01..RSC-08, and the prediction
-# was wrong about the form as well as needing re-statement.
+# RSC-01..RSC-08 - the grammar row and the mapping paragraph of 40 `### Minted
+# content-ID grammars` - so that comparison is gone and row 2 is the
+# transcribed mapping table below instead. Rows 1/3/4/5 never read an id and
+# are unaffected. An earlier draft of this comment predicted the ids would
+# become "RSC-A..RSC-F"; that section assigns RSC-01..RSC-08, and the
+# prediction was wrong about the form as well as needing re-statement.
 # --------------------------------------------------------------------------
 
 RESOURCES_DIR = CONTENT / "resources"
@@ -3125,28 +3143,30 @@ CANONICAL_LETTER_CARRIERS = tuple(f"{letter}.json" for letter in CANONICAL_LETTE
 CANONICAL_LETTER_OMITTERS = ("common-ore.json", "hyper-gold.json")
 RESOURCE_DEFINITION_COUNT = 8
 
-# Row 2's comparand: the eight-row mapping table, TRANSCRIBED from 40:111.
+# Row 2's comparand: the eight-row mapping table, TRANSCRIBED from the mapping
+# paragraph of 40 `### Minted content-ID grammars`.
 #
 # THE ORDERING SENTENCE THIS TRANSCRIBES, quoted so the table can be audited
 # without leaving this file: "Which number goes to which resource is fixed here:
 # `RSC-01` through `RSC-06` take `A` through `F` in letter order, `RSC-07` is
 # `common-ore`, and `RSC-08` is `hyper-gold`. Both halves are **assigned here**
-# and neither is transcribed." (40:111) The same paragraph records WHY the two
+# and neither is transcribed." (that paragraph) It also records WHY the two
 # currency rows are stated rather than inferred from the order the resources
 # appear in the catalog: "no assertion can catch a wrong choice of mapping - only
 # a wrong implementation of one - so the choice closes in this section or
 # nowhere."
 #
 # WHY EIGHT LITERAL ROWS AND NOT chr(ord("A") + int(id[-2:]) - 1). Arithmetic
-# was considered and is wrong here, not merely verbose. 40:109 states that "The
-# ID and the letter are two fields; neither is derived from the other", so a
-# computed letter would RE-DERIVE the document's mapping instead of CHECKING it:
+# was considered and is wrong here, not merely verbose. The same section states
+# that "The ID and the letter are two fields; neither is derived from the
+# other", so a computed letter would RE-DERIVE the document's mapping instead
+# of CHECKING it:
 # it would agree with itself for any tree, and it would keep passing unchanged if
-# 40:111 were ever edited to assign the numbers differently - which is the one
-# edit this row exists to catch. Eight literal rows disagree with the tree the
-# moment either side moves. The two None rows carry the same weight: they assert
-# that 40:111 gives RSC-07 and RSC-08 no letter, which arithmetic over "07" and
-# "08" would silently invent as "G" and "H".
+# the mapping paragraph were ever edited to assign the numbers differently -
+# which is the one edit this row exists to catch. Eight literal rows disagree
+# with the tree the moment either side moves. The two None rows carry the same
+# weight: they assert that that paragraph gives RSC-07 and RSC-08 no letter,
+# which arithmetic over "07" and "08" would silently invent as "G" and "H".
 RESOURCE_ID_TO_CANONICAL_LETTER = {
     "RSC-01": "A",
     "RSC-02": "B",
@@ -3154,13 +3174,14 @@ RESOURCE_ID_TO_CANONICAL_LETTER = {
     "RSC-04": "D",
     "RSC-05": "E",
     "RSC-06": "F",
-    "RSC-07": None,   # common ore - no canonical letter (40:111)
-    "RSC-08": None,   # Hyper Gold - no canonical letter (40:111)
+    "RSC-07": None,   # common ore - no canonical letter (the mapping paragraph)
+    "RSC-08": None,   # Hyper Gold - no canonical letter (the mapping paragraph)
 }
 
 
 def check_canonical_letters(docs: dict[Path, object]) -> list[tuple]:
-    """A32 - canonical_letter is on exactly A-F and pairs with the id per 40:111."""
+    """A32 - canonical_letter is on exactly A-F and pairs with the id per the
+    mapping paragraph of 40 `### Minted content-ID grammars`."""
     paths = sorted(RESOURCES_DIR.glob("*.json")) if RESOURCES_DIR.is_dir() else []
     carried: dict[str, object] = {}
     ids: dict[str, object] = {}
@@ -3178,8 +3199,9 @@ def check_canonical_letters(docs: dict[Path, object]) -> list[tuple]:
     row1_ok = carriers == expected_carriers
 
     # ---- row 2: each file's (id, canonical_letter) pair is one row of the
-    # transcribed 40:111 table. Keyed by the id, so a file whose id and letter
-    # were BOTH edited in step still has to land on a table row. `agreed` is
+    # table transcribed above from 40 `### Minted content-ID grammars`. Keyed
+    # by the id, so a file whose id and letter were BOTH edited in step still
+    # has to land on a table row. `agreed` is
     # collected for the PASSING display only: a green run used to print a count
     # and name the files solely on failure, so the reader auditing a passing run
     # had to take the comparand set on trust. `mismatches` alone decides status.
@@ -3201,15 +3223,17 @@ def check_canonical_letters(docs: dict[Path, object]) -> list[tuple]:
         seen_ids[rid] = name
         if not isinstance(rid, str) or rid not in RESOURCE_ID_TO_CANONICAL_LETTER:
             mismatches.append(
-                f"{name}: id is {rid!r}, which is not one of the eight ids the 40:111 "
-                f"table assigns ({', '.join(RESOURCE_ID_TO_CANONICAL_LETTER)})"
+                f"{name}: id is {rid!r}, which is not one of the eight ids the "
+                f"40 `### Minted content-ID grammars` mapping table assigns "
+                f"({', '.join(RESOURCE_ID_TO_CANONICAL_LETTER)})"
             )
             continue
         expected_letter = RESOURCE_ID_TO_CANONICAL_LETTER[rid]
         if actual != expected_letter:
             mismatches.append(
                 f"{name}: id {rid!r} takes {CANONICAL_LETTER_KEY}="
-                f"{expected_letter!r} in the 40:111 table, but this file has "
+                f"{expected_letter!r} in the 40 `### Minted content-ID grammars` "
+                f"mapping table, but this file has "
                 f"{actual!r}" + ("" if name in carried else " (key absent)")
             )
         else:
@@ -3222,7 +3246,8 @@ def check_canonical_letters(docs: dict[Path, object]) -> list[tuple]:
     unclaimed = [rid for rid in RESOURCE_ID_TO_CANONICAL_LETTER if rid not in seen_ids]
     if unclaimed:
         mismatches.append(
-            f"no definition carries {', '.join(unclaimed)}, which the 40:111 table assigns"
+            f"no definition carries {', '.join(unclaimed)}, which the "
+            f"40 `### Minted content-ID grammars` mapping table assigns"
         )
 
     # ---- row 3: six distinct letters covering exactly {A..F}. repr() so a
@@ -3252,8 +3277,8 @@ def check_canonical_letters(docs: dict[Path, object]) -> list[tuple]:
             "ok" if row1_ok else "FAIL",
         ),
         (
-            "row 2: (id, canonical_letter) matches the transcribed 40:111 table, "
-            "all eight rows",
+            "row 2: (id, canonical_letter) matches the table transcribed from "
+            "40 `### Minted content-ID grammars`, all eight rows",
             f"{len(RESOURCE_ID_TO_CANONICAL_LETTER)} agree, named",
             (
                 f"{len(agreed)} agree: " + ", ".join(agreed)
@@ -3287,7 +3312,7 @@ def check_canonical_letters(docs: dict[Path, object]) -> list[tuple]:
         fail(
             f"A32 row 1: the files under content/resources/ carrying "
             f"{CANONICAL_LETTER_KEY!r} are {carriers}, expected exactly {expected_carriers}. "
-            f"40:106 (blob 4cded84) gives the canonical letter to the six-material set and to "
+            f"40 `### Resources` gives the canonical letter to the six-material set and to "
             f"nothing else. This row NAMES the carriers rather than counting them because a "
             f"count of 6 also passes when the key is deleted from one letter file and added to "
             f"a currency in the same edit."
@@ -3295,15 +3320,17 @@ def check_canonical_letters(docs: dict[Path, object]) -> list[tuple]:
     if mismatches:
         fail(
             f"A32 row 2: {len(mismatches)} resource(s) whose (id, {CANONICAL_LETTER_KEY}) pair "
-            f"is not the pair 40:111 assigns: {mismatches}. The table in this file is a verbatim "
-            f"transcription of that paragraph - `RSC-01` through `RSC-06` take `A` through `F` in "
+            f"is not the pair 40 `### Minted content-ID grammars` assigns: {mismatches}. The "
+            f"table in this file is a verbatim transcription of that section's mapping "
+            f"paragraph - `RSC-01` through `RSC-06` take `A` through `F` in "
             f"letter order, `RSC-07` is common ore and `RSC-08` is Hyper Gold, and the last two "
             f"take no letter. Fix the tree to match the document, or - if the DOCUMENT changed - "
             f"re-transcribe the table deliberately in the same commit. Do not replace the table "
-            f"with arithmetic over the id: 40:109 states the ID and the letter are two fields "
-            f"with neither derived from the other, so a computed letter would agree with itself "
-            f"for any tree and would not notice 40:111 being reassigned. This row is also the "
-            f"only one that catches two letter files SWAPPING values: a swap leaves the value "
+            f"with arithmetic over the id: the same section states the ID and the letter are "
+            f"two fields with neither derived from the other, so a computed letter would agree "
+            f"with itself for any tree and would not notice that mapping being reassigned. "
+            f"This row is also the only one that catches two letter files SWAPPING values: "
+            f"a swap leaves the value "
             f"SET unchanged, so rows 1 and 3 both still pass."
         )
     if not row3_ok:
@@ -3311,13 +3338,13 @@ def check_canonical_letters(docs: dict[Path, object]) -> list[tuple]:
             f"A32 row 3: the {len(values)} {CANONICAL_LETTER_KEY} value(s) present are "
             f"{sorted(distinct)}, expected 6 distinct letters covering exactly "
             f"{list(CANONICAL_LETTERS)}. Two materials cannot share a letter and no letter of "
-            f"the accepted set may go unassigned (40:106, blob 4cded84)."
+            f"the accepted set may go unassigned (40 `### Resources`)."
         )
     if offenders:
         fail(
             f"A32 row 4: {offenders} carry the key {CANONICAL_LETTER_KEY!r}. common ore and "
-            f"Hyper Gold are the ordinary-crafting and cross-run currencies; 40:106 (blob "
-            f"4cded84) gives the "
+            f"Hyper Gold are the ordinary-crafting and cross-run currencies; "
+            f"40 `### Resources` gives the "
             f"canonical letter to the six-material set only, so the right way to spell 'has no "
             f"letter' is to OMIT the key (40 `## Common definition envelope` materializes the "
             f"default for an absent optional "
@@ -5417,9 +5444,10 @@ def main() -> int:
     )
     table("A21 File inventory", ("check", "expected", "actual", "status"), inventory_rows)
     table(
-        "A32 canonical_letter on exactly the six letter resources (40:106, blob 4cded84), "
-        "paired with the id per the transcribed 40:111 table; five rows, each blind to a "
-        "different edit",
+        "A32 canonical_letter on exactly the six letter resources "
+        "(40 `### Resources`), paired with the id per the eight-row table "
+        "transcribed from 40 `### Minted content-ID grammars`; five rows, each "
+        "blind to a different edit",
         ("check", "expected", "actual", "status"),
         canonical_letter_rows,
         (
@@ -5427,10 +5455,11 @@ def main() -> int:
             "values were the six ids, so they were already leaves of this tree and a leaf-value "
             "comparison reported 'nothing gained or lost' having checked nothing that changed. "
             "That is why rows 1 and 2 NAME their files instead of counting them. Row 2 binds each "
-            "file's letter to its id through the eight-row 40:111 table - never by arithmetic on "
-            "the id, which 40:109 forbids in substance by stating the two fields derive from each "
-            "other in neither direction; row 1 binds the carrier population by NAME, which is the "
-            "only row that survives a correlated delete-here/add-there edit keeping the count "
+            "file's letter to its id through that eight-row table - never by arithmetic on "
+            "the id, which the same section forbids in substance by stating the two fields "
+            "derive from each other in neither direction; row 1 binds the carrier population "
+            "by NAME, which is the only row that survives a correlated delete-here/add-there "
+            "edit keeping the count "
             "at 6.",
         ),
     )

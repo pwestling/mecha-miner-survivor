@@ -258,6 +258,7 @@
     "source_refs": {
       "title": "The sources this definition implements",
       "type": "array",
+      "uniqueItems": true,
       "items": {
         "type": "string",
         "pattern": "^(?:[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*|\\[\\]|\\[[0-9]+\\]|\\[[0-9]+\\.\\.[0-9]+\\])*: )?(?:(?:GDD|TDD)-[A-Z0-9-]+|DEC-[0-9]{3}|TDR-[0-9]{3}|TR-[A-Z]+-[0-9]{3})(?:#[a-z0-9-]+)?$"

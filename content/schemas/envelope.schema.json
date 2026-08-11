@@ -102,8 +102,9 @@
     },
     "source_refs": {
       "title": "The sources this definition implements",
-      "description": "Each element is an optional scope prefix followed by a stable reference. A file path, a line number, or any path:line pair is not a legal element: paths and line numbers move whenever a document is edited, so a reference built from them decays silently. A scope prefix is a selector into this definition's own JSON, which the typed validator additionally resolves against the definition.",
+      "description": "Each element is an optional scope prefix followed by a stable reference. A file path, a line number, or any path:line pair is not a legal element: paths and line numbers move whenever a document is edited, so a reference built from them decays silently. A scope prefix is a selector into this definition's own JSON, which the typed validator additionally resolves against the definition. uniqueItems restates the classification this field already carries rather than adding a rule to it: doc 40 source_refs element grammar calls it \"an array of stable-ID strings\", EnvelopeSchema declares it ArrayOrder.IdSet on that sentence, and CanonicalJsonWriter.WriteIdSet throws on a repeated element, so a set with a repeated member was already rejected on the way out and this is the same statement made on the way in. The typed envelope reader emits no diagnostic for a repeat, so at 715ef53 this keyword is the only read-time statement of it. No authored file repeats an element - 138 files under content/ excluding schemas/ and localization/, measured at 715ef53 - so the keyword forbids nothing that is authored today, and that is a claim about one corpus at one ref rather than a property of the field.",
       "type": "array",
+      "uniqueItems": true,
       "items": { "$ref": "#/$defs/source_ref" }
     },
     "source_ref": {

@@ -235,6 +235,14 @@ internal sealed class CategorySemanticRuleTests
                 () => "a recipe resolving to AC under the ID W-AB must fail; this is the check "
                     + "that replaces reading the pair by eye: "
                     + string.Join("; ", mismatched.Diagnostics));
+            Assert.That(
+                Codes(mismatched),
+                Does.Not.Contain(ContentDiagnosticCodes.RecipeResourceLetterUnresolved),
+                () => "and must fail as a mismatch only. Without this, the split into two codes is "
+                    + "proved in one direction: MMC-7009's own test shows the unresolved branch "
+                    + "does not emit MMC-7005, and nothing showed the mismatch branch does not "
+                    + "emit MMC-7009, so making the mismatch emit both would pass the suite: "
+                    + string.Join("; ", mismatched.Diagnostics));
         });
     }
 
@@ -431,6 +439,14 @@ internal sealed class CategorySemanticRuleTests
                     + "a sort, which makes the comparison AB == AB for either order and leaves "
                     + "a swapped recipe pair with no check at all: "
                     + string.Join("; ", spelling.Diagnostics));
+
+            Assert.That(
+                Codes(spelling),
+                Does.Not.Contain(ContentDiagnosticCodes.RecipeResourceLetterUnresolved),
+                () => "and as a mismatch only. Both of RSC-02 and RSC-01 carry letters, so the "
+                    + "unresolved branch has nothing to report here, and asserting its absence is "
+                    + "what makes the two codes a partition rather than one code that sometimes "
+                    + "brings a second along: " + string.Join("; ", spelling.Diagnostics));
 
             Assert.That(
                 Codes(pairs),

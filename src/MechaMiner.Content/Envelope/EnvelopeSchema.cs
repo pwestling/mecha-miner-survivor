@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text.Json;
+using MechaMiner.Content.Categories;
 using MechaMiner.Content.Codec;
 
 namespace MechaMiner.Content.Envelope;
@@ -150,6 +151,34 @@ public static class EnvelopeSchema
         [PresentationId] = JsonValueKind.String,
     };
 
+    private static readonly Dictionary<string, ArrayOrder> ArrayOrders = new(StringComparer.Ordinal)
+    {
+        // Doc 40 § tags vocabulary says what tags are - terms from a closed vocabulary that
+        // "never carries behavior, never selects an implementation, and never gates a rule" -
+        // and says nothing about their order. Of the two treatments doc 40 grants, canonical
+        // order is granted to stable-ID sets, and a vocabulary term is not a stable ID: the
+        // same document draws that contrast itself, calling source_refs "an array of stable-ID
+        // strings" one section later. Sorting tags would therefore mean asserting they are IDs.
+        // Authored order asserts nothing, so that is what they get, and the choice is currently
+        // unexercised: all 138 authored definitions hold an empty tags array, measured at
+        // 674376c. If a token-set order class is ever minted, this is the first field to move.
+        [Tags] = ArrayOrder.OrderedArray,
+
+        // Doc 40 § source_refs element grammar: "source_refs is an array of stable-ID strings",
+        // which is doc 40's set treatment verbatim.
+        //
+        // One question this leaves open, recorded rather than answered: an element may carry a
+        // scope prefix, "scope ': ' reference" per SourceRefGrammar, so ordinal order over whole
+        // elements sorts a scoped element under its scope name rather than under the reference
+        // it attributes - "currency: GDD-X#y" lands under 'c' while bare "GDD-X#y" lands under
+        // 'G'. Doc 40 does not say which key the order is over. Ordering on the whole element is
+        // total and deterministic, which is what a hash needs, so that is what canonical ID
+        // order does here; a document that wants the reference to be the key would change this
+        // one entry. No authored file has a repeated source_refs element (138 files, measured at
+        // 674376c), so the set treatment's ban on repeats costs nothing today.
+        [SourceRefs] = ArrayOrder.IdSet,
+    };
+
     /// <summary>The canonical emission order of the envelope's fields.</summary>
     public static SchemaFieldOrder Order { get; } = new("SCH-CNT-001 envelope", DeclaredOrder);
 
@@ -196,6 +225,49 @@ public static class EnvelopeSchema
         return Array.IndexOf(RequiredAbsentFields, field) >= 0;
     }
 
+    /// <summary>
+    /// The declared fields whose value is an array, in declared order.
+    /// </summary>
+    /// <remarks>
+    /// Derived from the same kind map the structural pass reads, so a field that becomes an
+    /// array, or stops being one, cannot be an array here and a scalar there.
+    /// </remarks>
+    public static IReadOnlyList<string> ArrayFields { get; } = BuildArrayFields();
+
+    /// <summary>
+    /// Which of doc 40's two array treatments <paramref name="field"/> gets from the
+    /// canonical writer.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Why this lives here at all.</b> The envelope's two arrays are declared as entries in
+    /// a field-to-kind map rather than through
+    /// <see cref="Categories.DefinitionField.ArrayOf(string, Categories.DefinitionField, ArrayOrder)"/>,
+    /// so the required parameter that forces every category field table to state an order class
+    /// does not reach them. They are also the two highest-traffic arrays in the tree: they are on
+    /// every definition of every category, so how they are emitted is in every canonical payload
+    /// and therefore in every hash. Being unreachable by the forcing is exactly why they are
+    /// stated explicitly here, and why
+    /// <c>DeclaredArrayOrderCoverageTests</c> asserts both mechanisms are covered rather than
+    /// leaving the second one to a reader's memory.
+    /// </para>
+    /// </remarks>
+    /// <exception cref="ArgumentException">
+    /// <paramref name="field"/> is not a declared envelope field whose value is an array.
+    /// </exception>
+    public static ArrayOrder ArrayOrderOf(string field)
+    {
+        ArgumentNullException.ThrowIfNull(field);
+        if (!ArrayOrders.TryGetValue(field, out ArrayOrder order))
+        {
+            throw new ArgumentException(
+                "'" + field + "' is not a declared envelope field whose value is an array",
+                nameof(field));
+        }
+
+        return order;
+    }
+
     /// <summary>The JSON value kind <paramref name="field"/> must have.</summary>
     /// <exception cref="ArgumentException"><paramref name="field"/> is not declared.</exception>
     public static JsonValueKind KindOf(string field)
@@ -209,5 +281,24 @@ public static class EnvelopeSchema
         }
 
         return kind;
+    }
+
+    private static IReadOnlyList<string> BuildArrayFields()
+    {
+        List<string> fields = new();
+        foreach (string field in DeclaredOrder)
+        {
+            // TryGetValue rather than the indexer: a field in the declared order and not in the
+            // kind map is a disagreement between two declarations, and the type initializer is
+            // the worst place to report one - every consumer of the envelope would fail with a
+            // TypeInitializationException naming nothing. DeclaredArrayOrderCoverageTests
+            // asserts the two agree, and reports the field.
+            if (Kinds.TryGetValue(field, out JsonValueKind kind) && kind == JsonValueKind.Array)
+            {
+                fields.Add(field);
+            }
+        }
+
+        return new ReadOnlyCollection<string>(fields);
     }
 }

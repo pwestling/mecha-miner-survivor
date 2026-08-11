@@ -98,11 +98,22 @@ internal sealed class RegistrySelectorTypesTests
     /// <c>MethodDeclaration</c> regex forbade a space in the return type and so recorded no
     /// member whose return type was a generic with more than one argument, and none whose return
     /// type was a tuple. Nothing compared <em>members</em>, so a whole class of parser fault was
-    /// invisible: 12 declarations under <c>tests/</c> were silently absent, and two members named
-    /// <c>static</c> were recorded that no type has. A type-level calibration cannot see either,
-    /// because the types those methods live in were all found. This walk named all 12; the three
-    /// tuple-returning ones - <c>Shrink</c>, <c>Split</c> and <c>Resolve</c> - it found on its
-    /// first run, after the generic-argument half of the regex fix was already in.
+    /// invisible: 13 declarations under <c>tests/</c> were silently absent, of which the four
+    /// tuple-returning ones - <c>Shrink</c>, <c>Split</c> and both <c>Resolve</c>s - this walk
+    /// found on its first run, after the generic-argument half of the regex fix was already in.
+    /// That figure was 12 when it was measured at <c>ebbc38a</c>; <c>455d22f</c> added the second
+    /// <c>Resolve</c> and moved it. A type-level calibration cannot see any of them, because the
+    /// types those methods live in were all found.
+    /// </para>
+    /// <para>
+    /// <b>What this walk cannot see, and what does.</b> Admitting the tuple also withdrew three
+    /// members named <c>static</c> that no type had - two, measured at <c>ebbc38a</c>, for the
+    /// same reason - but that direction was never this walk's to check, and it was not the end of
+    /// the phantoms: a tuple-typed <em>field or property</em> still produced four named
+    /// <c>readonly</c> and one named <c>static</c> at <c>455d22f</c>, because there the paren the
+    /// regex needs is present either way.
+    /// <see cref="NoRecordedMemberNameIsAReservedKeyword"/> is the assertion that reports those,
+    /// and it is the only one here that looks in that direction at all.
     /// </para>
     /// <para>
     /// <b>Which asymmetry is asserted, and why not the other one.</b> Only one direction is
@@ -203,6 +214,53 @@ internal sealed class RegistrySelectorTypesTests
     }
 
     /// <summary>
+    /// No member the index recorded is named with a C# reserved keyword.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>This is the only assertion in this fixture that can see over-recording at all.</b> The
+    /// member calibration above asserts reflection ⊆ index and deliberately not the converse, so a
+    /// member the index records that no type has is invisible to it by construction - and the
+    /// reasons that walk lists for the two answers differing in that direction (overload sets
+    /// collapsing to one name, accessors, local functions, <c>#if</c> branches) are all benign.
+    /// A member named <c>readonly</c> or <c>static</c> is none of those. It is a parser fault, and
+    /// nothing in this fixture reported it until this test existed.
+    /// </para>
+    /// <para>
+    /// <b>What produced it.</b> <c>MethodDeclaration</c> reads a tuple-typed <em>field or
+    /// property</em> as a method. On
+    /// <c>private static readonly (string Id, ContentCategory Category)[] AcceptedIds =</c> the
+    /// modifier loop cannot consume <c>readonly</c> - it is not in the alternation - so the match
+    /// that succeeds takes <c>static</c> as the return type, <c>readonly</c> as the name, and the
+    /// tuple's own opening paren as the name's paren. On
+    /// <c>internal static (ulong Master, ushort Family, ulong Instance) ConversionStream =&gt;</c>
+    /// the loop consumes nothing, <c>internal</c> is the return type and <c>static</c> the name.
+    /// Admitting tuple <em>return</em> types fixed the tuple-returning methods and left this shape
+    /// untouched, because here the paren the regex needs is present either way.
+    /// </para>
+    /// <para>
+    /// A recorded phantom only ever makes a method-granular selector pass that should have failed,
+    /// which is the harmless direction and the reason it survived so long - but "harmless" is not
+    /// "correct": <c>SomeFixture.readonly</c> is a selector that resolves against a member no type
+    /// declares.
+    /// </para>
+    /// </remarks>
+    [Test]
+    public void NoRecordedMemberNameIsAReservedKeyword()
+    {
+        IReadOnlyCollection<string> keywordNamed = RegistrySelectorTypes.MembersNamedWithAKeyword;
+
+        Assert.That(
+            keywordNamed,
+            Is.Empty,
+            () => "the source index recorded these members under names that are C# reserved "
+                + "keywords, so no declaration of them can exist and the parser captured a "
+                + "modifier in the name group. Each one is a selector that would resolve against "
+                + "nothing:" + Environment.NewLine
+                + string.Join(Environment.NewLine, keywordNamed));
+    }
+
+    /// <summary>
     /// Whether <paramref name="type"/> is a type a scan of this repository's test sources could
     /// be expected to have a declaration line for.
     /// </summary>
@@ -273,6 +331,15 @@ internal sealed class RegistrySelectorTypesTests
                     "MechaMiner.Content.Tests.Fixtures.RegistrySelectorTypesTests.NoSuchMember"),
                 Is.Not.Null,
                 "a real type in this assembly with a fabricated member must not resolve");
+            Assert.That(
+                RegistrySelectorTypes.Unresolved(
+                    "MechaMiner.Content.Tests.Fixtures.RegistrySelectorTypesTests.ToString"),
+                Is.Not.Null,
+                "a member this type inherits rather than declares must not resolve, because "
+                    + nameof(RegistrySelectorTypes.Route) + "."
+                    + nameof(RegistrySelectorTypes.Route.Reflection) + " says 'declared on it'. "
+                    + "Drop BindingFlags.DeclaredOnly from Resolve and this passes, along with "
+                    + "Equals, GetHashCode and every other member of object on every fixture");
         });
     }
 }

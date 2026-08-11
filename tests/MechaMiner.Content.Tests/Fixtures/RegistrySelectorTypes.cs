@@ -107,13 +107,21 @@ internal static class RegistrySelectorTypes
     /// space, and it also begins with a character no chain of identifiers can begin with. Without
     /// the alternation, <c>private static (string Before, string After) Split(</c> did not merely
     /// go unrecorded - the paren the regex found was the tuple's rather than the method's, so it
-    /// recorded a member named <c>static</c>. Admitting the tuple both records the three real
-    /// declarations of that shape and stops recording the two phantom <c>static</c> members.
+    /// recorded a member named <c>static</c>. Admitting the tuple records the <b>four</b> real
+    /// declarations of that shape and withdraws the <b>three</b> phantom <c>static</c> members
+    /// those lines had produced. Those two figures were three and two when they were measured at
+    /// <c>ebbc38a</c>; <c>455d22f</c> added a fourth tuple-returning declaration -
+    /// <see cref="Resolve"/> - and moved both, which is what a figure written into a comment does.
     /// </para>
     /// <para>
-    /// Nothing outside the bracketed groups consumes <c>=</c>, which is what keeps an initialiser,
-    /// a deconstruction or a lambda from being read as a declaration: a line carrying one before
-    /// the name's paren cannot match at all.
+    /// Nothing outside the bracketed groups consumes <c>=</c>, and that is a narrower guarantee
+    /// than it was first written as. It does keep an initialiser whose only paren follows the
+    /// <c>=</c> out - <c>private static readonly Regex Foo = new(</c> does not match. It does not
+    /// keep every initialiser out, because a tuple type carries a paren of its own <em>before</em>
+    /// the <c>=</c>: <c>private static readonly (int A, int B) Pair = default;</c> matches, with
+    /// the tuple's paren standing in for the name's. What it records in that case is whichever
+    /// modifier the alternation declined to consume, and discarding those is
+    /// <see cref="ReservedKeywords"/>'s job rather than this fragment's.
     /// </para>
     /// </remarks>
     private const string ReturnTypePattern =
@@ -143,6 +151,30 @@ internal static class RegistrySelectorTypes
         RegexOptions.CultureInvariant,
         TimeSpan.FromSeconds(1));
 
+    /// <summary>
+    /// Every C# reserved keyword. A captured member name that is one of these is never a member:
+    /// a reserved keyword cannot be an identifier in source without an <c>@</c> prefix, and a
+    /// name written <c>@readonly</c> does not begin with a character
+    /// <see cref="MethodDeclaration"/>'s name group accepts. So rejecting the whole set can only
+    /// discard a phantom, never a real declaration - which matters because under-recording is the
+    /// direction that makes a walk fail on a fixture that is genuinely there. Contextual keywords
+    /// - <c>partial</c>, <c>required</c>, <c>init</c>, <c>file</c>, <c>value</c>, <c>record</c> -
+    /// are deliberately absent: those are legal identifiers, so rejecting them could drop a real
+    /// member.
+    /// </summary>
+    private static readonly HashSet<string> ReservedKeywords = new(StringComparer.Ordinal)
+    {
+        "abstract", "as", "base", "bool", "break", "byte", "case", "catch", "char", "checked",
+        "class", "const", "continue", "decimal", "default", "delegate", "do", "double", "else",
+        "enum", "event", "explicit", "extern", "false", "finally", "fixed", "float", "for",
+        "foreach", "goto", "if", "implicit", "in", "int", "interface", "internal", "is", "lock",
+        "long", "namespace", "new", "null", "object", "operator", "out", "override", "params",
+        "private", "protected", "public", "readonly", "ref", "return", "sbyte", "sealed", "short",
+        "sizeof", "stackalloc", "static", "string", "struct", "switch", "this", "throw", "true",
+        "try", "typeof", "uint", "ulong", "unchecked", "unsafe", "ushort", "using", "virtual",
+        "void", "volatile", "while",
+    };
+
     private static readonly Lazy<SourceIndex> Sources = new(BuildSourceIndex);
 
     private static Assembly ThisAssembly => typeof(RegistrySelectorTypes).Assembly;
@@ -162,7 +194,10 @@ internal static class RegistrySelectorTypes
 
         /// <summary>
         /// The runtime loader answered: the type is in this assembly and, for a method-granular
-        /// selector, reflection found a member of that name declared on it.
+        /// selector, reflection found a member of that name declared on it. "Declared on it" is
+        /// literal - <see cref="Resolve"/> passes <see cref="BindingFlags.DeclaredOnly"/>, so an
+        /// inherited member does not answer, and this route agrees with the narrowing the member
+        /// calibration already made on the other side of the comparison.
         /// </summary>
         Reflection,
 
@@ -217,9 +252,16 @@ internal static class RegistrySelectorTypes
                 ?? ThisAssembly.GetType(owner.Replace('.', '+'));
             if (declaring is not null)
             {
+                // DeclaredOnly, because Route.Reflection says "declared on it" and without this
+                // flag every fixture answered for Equals, GetHashCode and ToString as well - a
+                // selector naming a member it inherits from object rather than one it declares.
+                // It is also the narrowing the member calibration passes on the reflection side,
+                // so the two agree about what a declaration is. Adding it moved no selector: all
+                // 126 nunit selectors that reflection answers at 455d22f still resolve.
                 bool declared = declaring.GetMethods(
                         BindingFlags.Public | BindingFlags.NonPublic
-                        | BindingFlags.Instance | BindingFlags.Static)
+                        | BindingFlags.Instance | BindingFlags.Static
+                        | BindingFlags.DeclaredOnly)
                     .Any(method => string.Equals(method.Name, member, StringComparison.Ordinal));
 
                 return declared
@@ -258,6 +300,25 @@ internal static class RegistrySelectorTypes
     /// <see cref="MethodDeclaration"/> regex stops matching is loud rather than silent.
     /// </summary>
     internal static int MembersIndexed => Sources.Value.Members.Values.Sum(members => members.Count);
+
+    /// <summary>
+    /// Every member the index recorded whose name is a C# reserved keyword, as
+    /// <c>Type.member</c>. Always empty when the parser is right, because no such member can be
+    /// declared; anything here is the <see cref="MethodDeclaration"/> regex having captured a
+    /// modifier in the name group.
+    /// </summary>
+    internal static IReadOnlyCollection<string> MembersNamedWithAKeyword
+    {
+        get
+        {
+            return Sources.Value.Members
+                .SelectMany(type => type.Value
+                    .Where(member => ReservedKeywords.Contains(member))
+                    .Select(member => type.Key + "." + member))
+                .OrderBy(name => name, StringComparer.Ordinal)
+                .ToArray();
+        }
+    }
 
     /// <summary>The fully qualified names the source index found, for the negative control.</summary>
     internal static bool Declares(string fullyQualifiedType)
@@ -312,13 +373,35 @@ internal static class RegistrySelectorTypes
     /// Records every type declared in one file, and the members declared directly in each.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Nesting is tracked by brace depth so a nested type is recorded under its enclosing
     /// type's name rather than beside it - otherwise a selector naming <c>Namespace.Nested</c>,
-    /// a name no type has, would resolve. Braces inside strings and comments are not
-    /// discounted; the only cost of miscounting is a type recorded at the wrong depth, which
-    /// makes a selector fail rather than pass, and
-    /// <see cref="RegistrySelectorTypesTests.TheIndexFindsEveryTypeReflectionFindsInThisAssembly"/>
-    /// holds the parser to reflection's answer on the one assembly where both are available.
+    /// a name no type has, would resolve.
+    /// </para>
+    /// <para>
+    /// Braces inside strings and comments are not discounted, and miscounting them is not
+    /// one-directional the way this remark used to claim. An unbalanced closing brace inside a
+    /// string pops the enclosing stack early, so the very case the paragraph above worries about
+    /// is the case a miscount produces: <c>Namespace.Nested</c> is recorded instead of
+    /// <c>Namespace.Outer.Nested</c>, which makes the correct selector fail <em>and</em> makes a
+    /// selector naming <c>Namespace.Nested</c> - a name no type has - pass. No live instance was
+    /// found: the member calibration reports any type it recorded no entry for, and it reports
+    /// none across <c>MechaMiner.Content.Tests</c>, <c>MechaMiner.Simulation.Tests</c> and
+    /// <c>MechaMiner.Persistence.Tests</c>, measured at <c>455d22f</c>. What holds the parser to
+    /// the loader's answer on the one assembly where both are available is
+    /// <see cref="RegistrySelectorTypesTests.TheIndexFindsEveryTypeReflectionFindsInThisAssembly"/>.
+    /// </para>
+    /// <para>
+    /// A comment counts too, and that is worth stating because it is easy to miss: a comment line
+    /// is skipped for <em>declaration</em> matching and not for brace counting, so an unbalanced
+    /// brace written inside one shifts the depth exactly as a string's would. Writing the closing
+    /// brace of the paragraph above literally rather than in words is what proved it - the two
+    /// calibrations went red on <c>Enclosing</c>, <c>SourceIndex</c> and <c>IndexFile</c>, which
+    /// is this class's own nested types and its own method being popped out from under it.
+    /// Discounting braces on comment lines would be a real narrowing of the fault and is not done
+    /// here; a block comment's interior lines would still count, so it is a change with its own
+    /// measurement to make.
+    /// </para>
     /// </remarks>
     private static void IndexFile(SourceIndex index, string file, string relative)
     {
@@ -362,7 +445,13 @@ internal static class RegistrySelectorTypes
                     else if (enclosing.Count > 0)
                     {
                         Match method = MethodDeclaration.Match(line);
-                        if (method.Success)
+
+                        // A captured name that is a reserved keyword is not a member: it is a
+                        // modifier the alternation declined to consume, taken as the name because
+                        // a paren followed - the tuple's own, on a tuple-typed field or property.
+                        // See ReservedKeywords for why discarding the whole set is safe.
+                        if (method.Success
+                            && !ReservedKeywords.Contains(method.Groups[1].Value))
                         {
                             string qualified = containingNamespace + "."
                                 + string.Join('.', enclosing.Select(level => level.Name));
@@ -390,6 +479,20 @@ internal static class RegistrySelectorTypes
             while (enclosing.Count > 0
                 && enclosing[^1].Entered
                 && depth <= enclosing[^1].OpenedAt)
+            {
+                enclosing.RemoveAt(enclosing.Count - 1);
+            }
+
+            // A positional record whose parameter list spans lines - `record struct Fixture(`
+            // over five lines, closing `);` - is bodyless, but the `;` is not on the declaration
+            // line, so the guard above pushed it. Nothing then opens a brace, so it is never
+            // entered and never popped, and every later declaration in the file is filed inside
+            // it. Popping an un-entered enclosing at the first line ending in `;` closes that:
+            // the only line that can end in `;` between a type's declaration and its opening
+            // brace is the `;` that says there is no body. Entered is already true by then for a
+            // type that has one, because its opening brace is processed before any member line.
+            // (Written in words rather than as the character, for the reason the remarks give.)
+            if (enclosing.Count > 0 && !enclosing[^1].Entered && line.TrimEnd().EndsWith(';'))
             {
                 enclosing.RemoveAt(enclosing.Count - 1);
             }

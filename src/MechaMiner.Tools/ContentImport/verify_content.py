@@ -860,6 +860,31 @@ EXPECTED_CONTENT_NON_JSON = (
     "content/transcription-notes.md",
 )
 
+# The number of strings in content/localization/en.json.
+#
+# This is a COMMITTED GOLDEN, not a derived value, and that is deliberate. The
+# A21 definition count above is derived from the A28 manifest because a
+# committed record of WHICH definitions exist already exists to derive from. No
+# such record exists for en.json: no document states how many release strings
+# the catalog holds, so there is nothing to derive from that is not simply a
+# second copy of this number. The house rule stated at the A21 comment above
+# applies directly - "two independent literals that a comment claims agree is a
+# defect this repository has already been burned by" - so nothing is derived
+# from a second literal here. One literal, reviewed when it changes.
+#
+# The row that reads this used to be
+#     rows.append(("en.json total strings", "", len(keys), "ok"))
+# with a literal empty expectation, a literal "ok", no comparison and no fail()
+# call - it could not fail under any input. That mattered beyond tidiness: the
+# neighbouring orphan and unresolved-reference rows only catch a key that is
+# unreferenced or a reference that is unresolved, so a key added to en.json
+# TOGETHER WITH a definition referencing it was invisible to the whole gate.
+# This constant is what makes that case a finding.
+#
+# Renaming the eight resource name keys to spell RSC-01..RSC-08 did not change
+# it: the keys were edited in place, so the count stayed 165.
+EXPECTED_LOCALIZATION_STRINGS = 165
+
 # --------------------------------------------------------------------------
 # A2/A4/A5 - envelope
 # --------------------------------------------------------------------------
@@ -1990,7 +2015,7 @@ def check_localization(stats: dict) -> list[tuple]:
     if not LOCALIZATION.is_file():
         fail(
             f"{rel(LOCALIZATION)} does not exist; every name_key/summary_key is therefore "
-            f"unresolvable and missing release strings are build errors (40:216)"
+            f"unresolvable and missing release strings are build errors (40 `## Localization contract`)"
         )
         rows.append(("en.json present", "yes", "no", "FAIL"))
         return rows
@@ -2020,7 +2045,7 @@ def check_localization(stats: dict) -> list[tuple]:
     if nested:
         fail(
             f"{rel(LOCALIZATION)}: {len(nested)} key(s) hold non-string values; the catalog is "
-            f"flat key -> string (40:211): {nested[:10]}"
+            f"flat key -> string (40 `### Source catalog format and key pattern`): {nested[:10]}"
         )
 
     unsorted_at = [
@@ -2032,7 +2057,7 @@ def check_localization(stats: dict) -> list[tuple]:
     if unsorted_at:
         fail(
             f"{rel(LOCALIZATION)}: not lexically sorted, {len(unsorted_at)} inversion(s), "
-            f"first at {unsorted_at[0][0]!r} before {unsorted_at[0][1]!r} (40:28)"
+            f"first at {unsorted_at[0][0]!r} before {unsorted_at[0][1]!r} (40 `### Source catalog format and key pattern`)"
         )
 
     present = set(keys)
@@ -2051,7 +2076,7 @@ def check_localization(stats: dict) -> list[tuple]:
     if envelope_missing:
         fail(
             f"{len(envelope_missing)} name_key/summary_key value(s) have no string in "
-            f"{rel(LOCALIZATION)} (40:216): {envelope_missing[:15]}"
+            f"{rel(LOCALIZATION)} (40 `## Localization contract`): {envelope_missing[:15]}"
         )
 
     rows.append(
@@ -2065,7 +2090,7 @@ def check_localization(stats: dict) -> list[tuple]:
     if other_missing:
         fail(
             f"{len(other_missing)} other localization key reference(s) have no string in "
-            f"{rel(LOCALIZATION)} (40:216): {other_missing[:15]}"
+            f"{rel(LOCALIZATION)} (40 `## Localization contract`): {other_missing[:15]}"
         )
 
     rows.append(
@@ -2074,10 +2099,26 @@ def check_localization(stats: dict) -> list[tuple]:
     if orphans:
         fail(
             f"{len(orphans)} key(s) in {rel(LOCALIZATION)} are referenced by no definition "
-            f"(40:212 keys are tied to content IDs and UI roles): {orphans[:15]}"
+            f"(40 `## Localization contract`: keys are tied to content IDs and UI roles): {orphans[:15]}"
         )
 
-    rows.append(("en.json total strings", "", len(keys), "ok"))
+    total_ok = len(keys) == EXPECTED_LOCALIZATION_STRINGS
+    rows.append(
+        (
+            "en.json total strings",
+            EXPECTED_LOCALIZATION_STRINGS,
+            len(keys),
+            "ok" if total_ok else "FAIL",
+        )
+    )
+    if not total_ok:
+        fail(
+            f"{rel(LOCALIZATION)} holds {len(keys)} string(s), expected "
+            f"{EXPECTED_LOCALIZATION_STRINGS}. This row used to print the count beside a blank "
+            f"expectation and a hardcoded 'ok', so it could never fail - it reported the catalog's "
+            f"size and tolerated any size in the same breath. Adding or removing a release string "
+            f"is a deliberate act and updating the constant is the record of it."
+        )
     return rows
 
 

@@ -64,21 +64,35 @@ internal sealed class CategoryVerificationRegistryTests
     /// </remarks>
     private static string? RouteContractFailure(string summary)
     {
-        if (summary.Length < 160)
+        if (summary.Length < RouteContractMinimumLength)
         {
             return "too short to state a route (" + summary.Length.ToString(
                 CultureInfo.InvariantCulture) + " characters)";
         }
 
-        if (!summary.Contains("route", StringComparison.Ordinal)
-            && !summary.Contains("matched", StringComparison.Ordinal)
-            && !summary.Contains("recomputed", StringComparison.Ordinal)
-            && !summary.Contains("compared", StringComparison.Ordinal))
+        if (NamesNoRoute(summary))
         {
             return "names no route to its subject";
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// True when a summary names none of the four route keywords.
+    /// </summary>
+    /// <remarks>
+    /// Split out of <see cref="RouteContractFailure"/> so the clause can be counted on its own
+    /// without a second copy of the keyword list. Two copies would let the count and the
+    /// contract drift, and the count exists precisely to say which clause the contract's cost
+    /// is a cost of.
+    /// </remarks>
+    private static bool NamesNoRoute(string summary)
+    {
+        return !summary.Contains("route", StringComparison.Ordinal)
+            && !summary.Contains("matched", StringComparison.Ordinal)
+            && !summary.Contains("recomputed", StringComparison.Ordinal)
+            && !summary.Contains("compared", StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -111,10 +125,34 @@ internal sealed class CategoryVerificationRegistryTests
         int entries = 0;
         int failing = 0;
 
+        int shorterThanTheThreshold = 0;
+        int namingNoRoute = 0;
+        int failingOnLengthAlone = 0;
+
         foreach (JsonElement entry in Entries(registry))
         {
             entries++;
-            if (RouteContractFailure(entry.GetProperty("summary").GetString()!) is not null)
+            string summary = entry.GetProperty("summary").GetString()!;
+
+            bool tooShort = summary.Length < RouteContractMinimumLength;
+            bool noRoute = NamesNoRoute(summary);
+
+            if (tooShort)
+            {
+                shorterThanTheThreshold++;
+            }
+
+            if (noRoute)
+            {
+                namingNoRoute++;
+            }
+
+            if (tooShort && !noRoute)
+            {
+                failingOnLengthAlone++;
+            }
+
+            if (RouteContractFailure(summary) is not null)
             {
                 failing++;
             }
@@ -141,10 +179,55 @@ internal sealed class CategoryVerificationRegistryTests
                     + "widening the contract to DAT-001 and it must stay current, because a "
                     + "stale price is worse than none - see this test's remarks");
             Assert.That(
+                namingNoRoute,
+                Is.EqualTo(DatOneEntriesFailingTheRouteContract),
+                "the whole of the failing count is the keyword clause. Asserted rather than "
+                    + "described because the two clauses are not distinguishable from the "
+                    + "total, and a reader taking the 40 for a route-naming figure when it had "
+                    + "become partly a length figure would be reading it wrong");
+            Assert.That(
+                failingOnLengthAlone,
+                Is.EqualTo(DatOneEntriesFailingOnLengthAlone),
+                "DAT-001 entries that fail ONLY the length clause, which is what would make the "
+                    + "length threshold load-bearing. It is 0 today - all "
+                    + shorterThanTheThreshold.ToString(CultureInfo.InvariantCulture)
+                    + " summaries shorter than the threshold also name no route - so "
+                    + nameof(RouteContractMinimumLength) + " decides nothing the keyword clause "
+                    + "does not already decide, and setting it to 1 leaves the cost figure at "
+                    + "40. This assertion is what makes that a checked property rather than a "
+                    + "claim: a move off 0 means the threshold has started deciding cases and "
+                    + "the number beside it has stopped being a pure count of keyword failures");
+            Assert.That(
+                shorterThanTheThreshold,
+                Is.EqualTo(DatOneEntriesShorterThanTheThreshold),
+                "DAT-001 summaries shorter than the length threshold. Counted separately from "
+                    + "the failures because the two coincide today and nothing said so; a count "
+                    + "that only ever appears inside a total cannot be checked against it");
+            Assert.That(
                 RegistriesUnderTheRouteContract,
                 Is.SubsetOf(VerificationRegistry.Packages),
                 "every registry the contract is declared to cover must be a registry that "
                     + "exists, or the contract silently covers nothing");
+            Assert.That(
+                RegistriesUnderTheRouteContract.Length,
+                Is.EqualTo(RegistriesUnderTheRouteContractCount),
+                "how many registries the route-naming contract covers, and the reason it is "
+                    + "asserted next to the subset check is that the subset check cannot say "
+                    + "it: Is.SubsetOf is satisfied by the empty set, so the one input on which "
+                    + "the contract covers literally nothing is the input it passes most "
+                    + "readily. THE HAZARD IS A CASE COUNT FALLING TO ZERO, NOT AN ASSERTION "
+                    + "FAILING. Emptying this array deletes the two "
+                    + nameof(EverySummaryStatesTheRouteAndNotOnlyTheRule) + " cases, which are "
+                    + "TestCaseSource-driven: they cease to exist rather than fail. Measured at "
+                    + "f9e616a - the empty array gives 0 failed and exit 0 with the total "
+                    + "falling 1498 to 1496, dropping DAT-003 alone gives 0 failed and 1497, "
+                    + "and NUnit warns about neither. No summary reporting only failures, or "
+                    + "only totals, can tell a vanished case from a case that never existed, "
+                    + "and the verb host's own non-vacuity check on a run is Total greater than "
+                    + "zero, which 1496 satisfies - so test-fast cannot see it either. Note "
+                    + "which operand the subset check does protect: naming a registry that does "
+                    + "not exist, [DAT-002, DAT-999], gives 2 failed. It guards the wrong "
+                    + "operand for the failure mode its own message names");
         });
     }
 
@@ -152,9 +235,68 @@ internal sealed class CategoryVerificationRegistryTests
     private const int DatOneEntries = 49;
 
     /// <summary>
+    /// The shortest a summary may be and still be capable of stating a route.
+    /// </summary>
+    /// <remarks>
+    /// Named rather than inline so the clause it belongs to can be counted separately from the
+    /// keyword clause - see <see cref="DatOneEntriesFailingOnLengthAlone"/>, which records that
+    /// on today's corpus this threshold decides nothing on its own.
+    /// </remarks>
+    private const int RouteContractMinimumLength = 160;
+
+    /// <summary>
+    /// How many registries the route-naming contract covers, written out.
+    /// </summary>
+    /// <remarks>
+    /// A literal for the reason the schema-fixture count is one: every other assertion about
+    /// <see cref="RegistriesUnderTheRouteContract"/> is derived from the array, and a figure
+    /// derived from the array agrees with the array on every input - including an emptied one,
+    /// where the walks over it do not fail but simply stop existing. Moving this number is a
+    /// deliberate statement that the contract's reach changed.
+    /// </remarks>
+    private const int RegistriesUnderTheRouteContractCount = 2;
+
+    /// <summary>
     /// DAT-001 entries that fail the route-naming contract - the cost of widening it there.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>This is a count of keyword failures, and only of those.</b>
+    /// <see cref="RouteContractFailure"/> has two clauses and this number is insensitive to one
+    /// of them: all <see cref="DatOneEntriesShorterThanTheThreshold"/> summaries below
+    /// <see cref="RouteContractMinimumLength"/> also name no route, so
+    /// <see cref="DatOneEntriesFailingOnLengthAlone"/> is 0 and setting the threshold to 1
+    /// leaves this figure at 40. Measured at f9e616a over DAT-001's 49 entries.
+    /// </para>
+    /// <para>
+    /// The threshold is kept rather than deleted, because a rule that is subsumed on today's
+    /// corpus is not the same as a rule that is wrong - it still states that a summary naming a
+    /// route has to be long enough to name one. What is not kept is the impression that the 40
+    /// prices both clauses. Whoever answers the owed decision is pricing the keyword clause.
+    /// </para>
+    /// </remarks>
     private const int DatOneEntriesFailingTheRouteContract = 40;
+
+    /// <summary>
+    /// DAT-001 entries that fail the length clause and not the keyword clause.
+    /// </summary>
+    /// <remarks>
+    /// 0 at f9e616a, and 0 is the informative value: it is what says
+    /// <see cref="RouteContractMinimumLength"/> is deciding no case on its own. A move off 0
+    /// means the threshold has become load-bearing and
+    /// <see cref="DatOneEntriesFailingTheRouteContract"/> has stopped being a pure count of
+    /// keyword failures - both facts a reader of that number needs.
+    /// </remarks>
+    private const int DatOneEntriesFailingOnLengthAlone = 0;
+
+    /// <summary>
+    /// DAT-001 summaries shorter than <see cref="RouteContractMinimumLength"/>.
+    /// </summary>
+    /// <remarks>
+    /// 8 at f9e616a, the shortest of them 99 characters. Every one of the 8 also names no
+    /// route, which is why the threshold changes nothing on this corpus.
+    /// </remarks>
+    private const int DatOneEntriesShorterThanTheThreshold = 8;
 
     /// <summary>
     /// What an emptied <c>entries</c> array must be reported as, wherever it is found.

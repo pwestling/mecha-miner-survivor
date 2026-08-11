@@ -444,9 +444,27 @@ internal sealed class CategorySemanticRuleTests
                 Codes(spelling),
                 Does.Not.Contain(ContentDiagnosticCodes.RecipeResourceLetterUnresolved),
                 () => "and as a mismatch only. Both of RSC-02 and RSC-01 carry letters, so the "
-                    + "unresolved branch has nothing to report here, and asserting its absence is "
-                    + "what makes the two codes a partition rather than one code that sometimes "
-                    + "brings a second along: " + string.Join("; ", spelling.Diagnostics));
+                    + "unresolved branch has nothing to report here, and asserting its absence "
+                    + "is what keeps the two codes mutually exclusive rather than one code that "
+                    + "sometimes brings a second along: "
+                    + string.Join("; ", spelling.Diagnostics));
+
+            Assert.That(
+                Codes(spelling),
+                Is.EqualTo(new[] { ContentDiagnosticCodes.RecipeLettersMismatch }),
+                () => "and it is the ONLY code this branch emits on this input. What was proved "
+                    + "before this assertion existed was narrower than it read: the two codes "
+                    + "are mutually exclusive in both directions, and a fault-free weapon is "
+                    + "silent - RecipeLettersSpellTheWeaponIdAndAMismatchIsCaught asserts "
+                    + "clean.Diagnostics is empty. Neither bounds a FAULT path. Naming the "
+                    + "sibling code in a Does.Not.Contain says which one other code is absent "
+                    + "and leaves the rest of the emit set open. Measured at f9e616a: emitting "
+                    + "MMC-7008 from this branch, or from the unresolved branch, left all 1498 "
+                    + "Content tests green, while emitting it unconditionally reddened exactly "
+                    + "one test - the fault-free assertion - which is what shows the probe was "
+                    + "live rather than inert. Comparing the whole set closes the fault path, "
+                    + "and bounds its size as well as its membership: "
+                    + string.Join("; ", spelling.Diagnostics));
 
             Assert.That(
                 Codes(pairs),
@@ -516,6 +534,17 @@ internal sealed class CategorySemanticRuleTests
                 Does.Contain("RSC-08"),
                 () => "and must name the resource that did not resolve, because that is the "
                     + "one the fix is applied to: " + string.Join("; ", bag.Diagnostics));
+
+            Assert.That(
+                Codes(bag),
+                Is.EqualTo(new[] { ContentDiagnosticCodes.RecipeResourceLetterUnresolved }),
+                () => "and it is the ONLY code this branch emits on this input - the other "
+                    + "fault path, bounded the same way and for the same reason. The absence "
+                    + "assertion above names one code; this one bounds the whole set, so a "
+                    + "third code added to this branch is red here instead of green everywhere. "
+                    + "Measured at f9e616a: MMC-7008 emitted from this branch left all 1498 "
+                    + "Content tests green before this line existed: "
+                    + string.Join("; ", bag.Diagnostics));
         });
     }
 

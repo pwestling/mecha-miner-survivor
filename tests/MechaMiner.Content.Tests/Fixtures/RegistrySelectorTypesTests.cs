@@ -321,9 +321,11 @@ internal sealed class RegistrySelectorTypesTests
     /// methods, which is every method that class declares - <c>Site</c>,
     /// <c>EachCallSiteReportsItsOwnFieldAtItsOwnPointer</c>,
     /// <c>TheCallSitesOnDiskAreExactlyTheOnesThisTableCovers</c>, <c>Render</c>, <c>Read</c>,
-    /// <c>Codes</c> and <c>Describe</c>. The delta is stated as a roster rather than as "+7"
-    /// because +7 is what a regression that lost one declaration and gained eight also looks
-    /// like.
+    /// <c>Codes</c> and <c>Describe</c>. Then to 1198 by one method,
+    /// <c>CategoryVerificationRegistryTests.NamesNoRoute</c>, split out of
+    /// <c>RouteContractFailure</c> so the keyword clause could be counted without a second copy
+    /// of the keyword list. The delta is stated as a roster rather than as "+8" because +8 is
+    /// what a regression that lost one declaration and gained nine also looks like.
     /// </para>
     /// <para>
     /// <b>Re-measuring this literal is not a neutral act.</b> Its job is to make a lost
@@ -335,7 +337,7 @@ internal sealed class RegistrySelectorTypesTests
     /// concrete thing a re-measurement here can hide.
     /// </para>
     /// </remarks>
-    private const int MembersIndexed = 1197;
+    private const int MembersIndexed = 1198;
 
     /// <summary>The negative control: the resolver must be able to fail.</summary>
     [Test]

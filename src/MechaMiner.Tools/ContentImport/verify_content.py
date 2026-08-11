@@ -784,6 +784,82 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       here that reads one - and an earlier version of this line said no row
       did, which was true only before the RSC- migration. FAILURE
 
+  A33 THE KEY/ID BINDING. Every name_key and every summary_key equals
+      `<category>.<that definition's OWN id>.<role>`, with name_key taking
+      the role `name` and summary_key taking `summary`. This is a RELATION
+      BETWEEN TWO FIELDS OF ONE FILE, deliberately not a pattern over the
+      key string. Label A33 is the next free number in this table; A32 is
+      the highest that shipped.
+      THE GAP IT CLOSES, MEASURED. Nothing in this tree constrained the
+      SHAPE of a name_key. Renaming a resource's name_key to
+      `resource.RSC-99.name` and adding the matching string to
+      content/localization/en.json left this script at exit 0, even though
+      no resource carries RSC-99: A10/A11 assert only that every key
+      RESOLVES and that no string is ORPHANED, and any consistent pair of
+      nonsense satisfies both.
+      WHY NOT A REGEX, twice over. (a) A regex spelling the ids - say
+      `^resource[.]RSC-0[1-8][.]name$`
+      (written `[.]` rather than an escape only because this docstring is
+      not a raw string) - would contradict a documented choice
+      recorded at A12 above, where the resources selector is deliberately
+      the grammar row `^RSC-[0-9]{2}$` and deliberately NOT the narrower
+      `^RSC-0[1-8]$`; it would also redden on a legitimate ninth resource,
+      which A12 catches on the COUNT instead. (b) More fundamentally, a
+      regex over the key ALONE cannot see a key that is perfectly
+      well-formed and belongs to a DIFFERENT definition. That is the defect
+      this row exists for, and only the relation catches it.
+      SCOPE: REPO-WIDE, because that is where it was MEASURED to hold. All
+      165 name_key/summary_key values under content/, across all 11
+      category directories that carry one - bosses, branches, enemies,
+      mechs, mining-sites, powerups, relics, resources, unlocks, utilities,
+      weapons - already satisfy the relation, with ZERO deviations, so no
+      category is carved out. Had a category deviated it would have been
+      reported with path:line and actual-vs-expected and left alone, and
+      this row scoped to the categories where the relation holds: a
+      deviation may be deliberate, and asserting past the measurement would
+      be inventing a mandate.
+      THE CATEGORY TOKEN IS DERIVED FROM THE DATA, not from a hardcoded
+      {directory: prefix} map. Per directory it is the leading dotted
+      segment of that directory's own keys, required to be UNANIMOUS across
+      the directory and to be snake_case (the document states "The category
+      is `snake_case`"). A hand map would assert by fiat what the corpus
+      already states - `mining_site` for `mining-sites/`, `utility` for
+      `utilities/` - and no rule turns those directory names into those
+      tokens (`bosses` -> `boss` but `branches` -> `branch`, not
+      `branche`). What the derivation cannot see is disclosed in the note
+      under the table on every passing run.
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `### Source catalog format and key pattern`, which DOES state the
+      pattern: "The key pattern is `<category>.<stable_id>.<role>`", the
+      category is snake_case, the stable ID appears "**verbatim**, in its
+      own case", and the roles begin with `name` and `summary` "matching
+      the `name_key` and `summary_key` envelope fields". WHAT THE DOCUMENT
+      DOES NOT SPELL OUT, and this row does not pretend it does, is that
+      the `<stable_id>` inside a definition's OWN name_key must be THAT
+      definition's id - a swap between two files satisfies the stated
+      grammar letter for letter. That binding is this tool's reading of
+      `## Localization contract`'s "Keys are stable semantic paths tied to
+      content IDs", measured across all 165 keys in this corpus, and the
+      failure message says exactly that rather than claiming a mandate.
+      NEGATIVE CONTROL - IT HAS TO BE A SWAP. Injecting one nonexistent
+      key proves nothing about this row: it also reddens A11's resolve row,
+      and adding the matching string to make it resolve also moves A10's
+      total-strings count. Neither isolates A33. The isolating injection
+      gives content/resources/A.json the name_key `resource.RSC-02.name`
+      and B.json `resource.RSC-01.name`. Both keys exist, the string count
+      is unchanged, nothing is orphaned and everything resolves, so A10's
+      flatness, sorting and total rows, A11's two resolve rows and the
+      orphan row ALL STAY GREEN. A SWAP PRESERVES EVERY SET AND EVERY
+      COUNT, so a set-based or count-based check is STRUCTURALLY BLIND to
+      it - the same shape as a multiset proof being blind to reordering.
+      Injected, run and reverted: A33 is the only row that reddens, and it
+      reddens EXACTLY TWICE, once naming A.json and once naming B.json,
+      each printing actual vs expected. The ARITY is the evidence of
+      attribution: a control firing once would mean this check stops at the
+      first mismatch, and one firing an unbounded number of times would
+      mean it counts something other than files. Two corrupted files, two
+      failures.                                                    FAILURE
+
 Not asserted here: no structural JSON Schema validation happens, because
 content/schemas/ (40 `## Accepted content repository layout`) does not exist
 yet. Domain field names outside the envelope are therefore unvalidated and
@@ -2164,6 +2240,181 @@ def check_localization(stats: dict) -> list[tuple]:
             f"is a deliberate act and updating the constant is the record of it."
         )
     return rows
+
+
+# --------------------------------------------------------------------------
+# A33 - the key/id binding, a RELATION between two fields of one file.
+#
+# WHAT THIS CLOSES, MEASURED RATHER THAN SUSPECTED. Nothing in this tree
+# constrained the SHAPE of a name_key. Renaming a resource's name_key to
+# `resource.RSC-99.name` and adding the matching string to
+# content/localization/en.json left this script at exit 0, even though no
+# resource carries RSC-99. check_localization() above asserts that every key
+# RESOLVES and that no string is ORPHANED - and any consistent pair of nonsense
+# satisfies both.
+#
+# WHY THIS IS NOT A REGEX. A pattern over the key alone, however tight, cannot
+# distinguish a key that is well-formed and belongs to THIS definition from one
+# that is well-formed and belongs to a DIFFERENT one. Pinning the ids instead
+# (`^resource[.]RSC-0[1-8][.]name$`) would also contradict the EXPECTATIONS
+# comment above, which chose the grammar row `^RSC-[0-9]{2}$` over the narrower
+# `^RSC-0[1-8]$` on purpose and catches a ninth resource on the COUNT.
+#
+# THE CATEGORY TOKEN IS DERIVED, NOT MAPPED. Per directory it is the leading
+# dotted segment of that directory's own keys, required to be unanimous and
+# snake_case (40 `### Source catalog format and key pattern`: "The category is
+# `snake_case`"). A hand-written {directory: prefix} map would assert by fiat
+# what the corpus already states, and no rule turns `mining-sites` into
+# `mining_site` and `branches` into `branch` without being that map.
+# WHAT THE DERIVATION CANNOT SEE, disclosed under the table on every passing
+# run rather than only here: a directory whose keys were ALL renamed to one new
+# consistent prefix would redefine its own category and bind against it. That
+# edit is not invisible to the script as a whole - it orphans every old string
+# and A11 reddens - but it is invisible to THIS row, and a limitation stated
+# only in a docstring is not disclosed to the person reading a green run.
+# --------------------------------------------------------------------------
+
+# The two envelope key fields and the role each takes, from 40 `### Source
+# catalog format and key pattern`: "The role comes from a small set, beginning
+# with `name` and `summary`, matching the `name_key` and `summary_key` envelope
+# fields." Other *_key references are OUT OF SCOPE here - they name someone
+# else's definition by design, so the relation to the CARRIER's own id does not
+# hold for them and asserting it would be wrong, not strict.
+KEY_FIELD_ROLES = (("name_key", "name"), ("summary_key", "summary"))
+
+# "The category is `snake_case`" - the one property of the derived token the
+# document states outright, so it is checked rather than assumed.
+CATEGORY_TOKEN = re.compile(r"^[a-z][a-z0-9_]*$")
+
+# Said once, in the failure message and in the note, so the two cannot drift:
+# the document gives the GRAMMAR, this tool supplies the BINDING to the
+# carrier's own id.
+A33_MANDATE = (
+    "40 `### Source catalog format and key pattern` states the pattern "
+    "`<category>.<stable_id>.<role>`, with the stable ID verbatim and `name`/`summary` as the "
+    "roles matching the name_key/summary_key envelope fields. That the <stable_id> is THIS "
+    "definition's OWN id is NOT a sentence the document writes - a swap between two files "
+    "satisfies its grammar exactly - it is this tool's reading of 40 `## Localization contract` "
+    "(\"Keys are stable semantic paths tied to content IDs\"), measured across every such key "
+    "under content/"
+)
+
+
+def check_key_id_binding(docs: dict[Path, object]) -> tuple[list[tuple], tuple[str, ...]]:
+    """A33 - name_key/summary_key == <category>.<that file's own id>.<role>."""
+    by_dir: dict[Path, list[tuple[Path, str, str, str, object]]] = {}
+    for path, doc in sorted(docs.items()):
+        if not isinstance(doc, dict):
+            continue
+        own_id = doc.get("id")
+        for field, role in KEY_FIELD_ROLES:
+            value = doc.get(field)
+            if not isinstance(value, str) or not value.strip():
+                continue
+            by_dir.setdefault(path.parent, []).append((path, field, role, value, own_id))
+
+    rows: list[tuple] = []
+    examined = 0
+    bound = 0
+    for directory in sorted(by_dir):
+        entries = by_dir[directory]
+        examined += len(entries)
+        label = f"{rel(directory)}/"
+        segments = sorted({value.split(".", 1)[0] for _, _, _, value, _ in entries})
+
+        # The category is derived from this directory's own keys. Two ways that
+        # derivation can fail, both reported instead of being papered over with
+        # a majority vote - a vote would let one directory carry two categories
+        # and still bind most of its keys.
+        if len(segments) != 1:
+            fail(
+                f"{label}: its {len(entries)} name_key/summary_key value(s) do not agree on a "
+                f"leading `<category>` segment ({', '.join(segments)}), so no category can be "
+                f"derived for this directory and the key/id binding cannot be checked here. "
+                f"{A33_MANDATE}"
+            )
+            rows.append(
+                (
+                    f"{label} category derived from its own keys",
+                    "1 leading segment",
+                    f"{len(segments)}: {', '.join(segments)}",
+                    "FAIL",
+                )
+            )
+            continue
+        category = segments[0]
+        if not CATEGORY_TOKEN.match(category):
+            fail(
+                f"{label}: the `<category>` segment its keys agree on is {category!r}, which is "
+                f"not snake_case; 40 `### Source catalog format and key pattern` states the "
+                f"category is `snake_case`"
+            )
+            rows.append(
+                (
+                    f"{label} category derived from its own keys",
+                    "snake_case token",
+                    f"{category!r}",
+                    "FAIL",
+                )
+            )
+            continue
+
+        deviating: list[str] = []
+        for path, field, role, value, own_id in entries:
+            if not isinstance(own_id, str) or not own_id.strip():
+                # A5/A6 owns a missing or non-string id and has already failed on
+                # it. Recording it here as not-comparable rather than failing
+                # again keeps one defect to one failure, and keeps the row from
+                # reporting a binding it could not evaluate.
+                deviating.append(f"{rel(path)}: {field}={value!r} but id is {own_id!r} (A5 owns the id)")
+                continue
+            expected = f"{category}.{own_id}.{role}"
+            if value == expected:
+                bound += 1
+                continue
+            deviating.append(f"{rel(path)}: {field} actual={value!r} expected={expected!r}")
+            fail(
+                f"{rel(path)}: A33 - {field} is {value!r}, but this definition's own id is "
+                f"{own_id!r}, so its key must be {expected!r}. A10/A11 cannot see this: the key "
+                f"resolves in {rel(LOCALIZATION)} and orphans nothing, because it is a "
+                f"well-formed key belonging to a DIFFERENT definition. {A33_MANDATE}"
+            )
+        rows.append(
+            (
+                f"{label} {len(entries)} key(s) == {category}.<own id>.<role>",
+                f"{len(entries)} bind",
+                f"{len(entries) - len(deviating)} bind"
+                + (f", {len(deviating)} do not: " + "; ".join(deviating[:5]) if deviating else ""),
+                "ok" if not deviating else "FAIL",
+            )
+        )
+
+    rows.append(
+        (
+            "every name_key/summary_key under content/ binds to its own id",
+            f"{examined} bind",
+            f"{bound} bind",
+            "ok" if bound == examined else "FAIL",
+        )
+    )
+    notes = (
+        "SCOPE IS THE MEASUREMENT. This row is repo-wide because the relation was measured to "
+        "hold repo-wide before it was asserted: every name_key/summary_key in every category "
+        "directory already binds to its own id, with zero deviations, so no category is carved "
+        "out and none is forced to conform.",
+        "WHAT THIS ROW CANNOT SEE. The `<category>` token is derived from each directory's own "
+        "keys, so a directory whose keys were ALL renamed to one new consistent prefix would "
+        "redefine its own category and bind against it. That edit orphans every old string and "
+        "reddens A11, but it is invisible HERE. The alternative - a hand-written directory-to-"
+        "prefix map - would assert by fiat what the corpus already states.",
+        "WHY IT IS A RELATION AND NOT A PATTERN. A regex over the key alone accepts a key that is "
+        "well-formed and belongs to a different definition. Swapping two files' name_key values "
+        "preserves every set and every count this script takes - the resolve rows, the orphan "
+        "row and the total-strings row all stay green - so a set-based or count-based check is "
+        "structurally blind to a swap, the way a multiset proof is blind to reordering. Only the "
+        "two-field relation sees it, and it reddens once per corrupted file.",
+    )
+    return rows, notes
 
 
 # --------------------------------------------------------------------------
@@ -5050,6 +5301,7 @@ def main() -> int:
     null_rows = check_no_nulls()
     abbreviation_rows = check_no_abbreviation_periods()
     loc_rows = check_localization(stats)
+    key_binding_rows, key_binding_notes = check_key_id_binding(docs)
 
     table(
         "A12 Per-directory entry counts",
@@ -5146,6 +5398,15 @@ def main() -> int:
         bound_rows,
     )
     table("A10/A11 Localization", ("check", "expected", "actual", "status"), loc_rows)
+    table(
+        "A33 Key/id binding: name_key and summary_key equal "
+        "<category>.<that definition's own id>.<role> "
+        "(40 `### Source catalog format and key pattern` for the pattern; the binding to the "
+        "carrier's OWN id is this tool's convention, measured, not a documented mandate)",
+        ("check", "expected", "actual", "status"),
+        key_binding_rows,
+        key_binding_notes,
+    )
     table("A19 Expected exception sets", ("set", "expected", "actual", "status"), set_rows)
     table(
         "A28 Definition (path, id) manifest "

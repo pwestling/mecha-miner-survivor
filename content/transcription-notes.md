@@ -2275,9 +2275,23 @@ on the 45 branch files, `PU-<L><NN>` (13), `UTL-<L><N>` (13), `W-<LL>` (15), the
 `A`–`F`** (6), and **lower-kebab-case** — `common-ore` and `hyper-gold` (2). So `<PREFIX>-<NN>` is not
 the tree's only shape, and lower-kebab is not unheard of in an `id`.
 
+**Added beside, not corrected: the `id`-shape census above is a preserved record, and the tree has
+moved under it.** The enumeration in the paragraph above — including "**lower-kebab-case** —
+`common-ore` and `hyper-gold` (2)" and the sentence "lower-kebab is not unheard of in an `id`" — is
+kept as the record of what this ruling measured, and it was accurate at the ref it was written against.
+It is **false at `origin/master` `e17b8b6` and at `1d6a9d2`**: the `RSC-01`–`RSC-08` migration has since
+landed on `master`, the eight resource definitions carry `RSC-01`…`RSC-08` (`common-ore.json` →
+`RSC-07`, `hyper-gold.json` → `RSC-08`), **no `id` anywhere in the tree is lower-kebab**, and the two
+slugs survive only as `resource_class` values. The same correction is recorded against the
+kebab-value-token count in the ruling headed "Ruling 39 — the eight camelCase value tokens are measured
+and left alone, pending a provenance answer" below, which is where the count and its shas live. The
+next paragraph's "pending" reads as of this ruling's own ref and not of `master`.
+
 **The rename is still right, on a narrower and true reason.** `common-ore` and `hyper-gold` are
 *transcribed* resource IDs, and they are themselves pending the `RSC-01`–`08` migration noted in
-Ruling 39. Of the IDs **minted here rather than transcribed** — `SITE-01`…`SITE-04` and `ELT-01`, per
+Ruling 39 (the number is used as this file has always used it — a single continuous series, one ruling
+per number; the target is the camelCase-value-token ruling below, whose final paragraph carries that
+migration note). Of the IDs **minted here rather than transcribed** — `SITE-01`…`SITE-04` and `ELT-01`, per
 `content/README.md`'s `id` row — **every one is `<PREFIX>-<NN>`**, and `weapon-stat-price-formula` was
 the only minted ID that was not. That is the grammar it failed: the one for newly minted IDs, not "any
 grammar in the tree".
@@ -2301,9 +2315,30 @@ directory's one aggregate and the row still reads 15 items + 1 aggregate.
 
 #### Ruling 39 — the eight camelCase value tokens are measured and left alone, pending a provenance answer
 
+**Cite this ruling by its heading, not as "Ruling 39".** Not because the number is ambiguous — it is
+not: this file's rulings are one continuous series, headings `Ruling 1` through `Ruling 46`, 46
+headings and 46 distinct numbers, verified by enumerating them at `1d6a9d2`. The reason is that this
+ruling has been **reported** as colliding with a second ruling of the same number about minted IDs, and
+that report is checkable and false: the "Ruling 39" that appears above inside **Ruling 38 —
+`FORMULA-01`, and the summary that says what the definition is** is a *cross-reference* into this
+ruling, for the `RSC-01`–`08` migration note in its final paragraph, and Ruling 38's own subject is
+minted IDs — which is how a cross-reference in a minted-ID paragraph can read as a second ruling. A
+heading is unambiguous where a number invites that reading twice, so the citations in and to this ruling
+give the heading. **Neither ruling is renumbered here**; renumbering reaches every cross-reference in
+this file and is not a mid-pass decision.
+
 An earlier revision of this pass converted eight camelCase **value** tokens to lower-kebab-case, 12
 occurrences across 9 files. **That conversion has been removed and the original camelCase strings
 restored.** The measurement it rested on stands and is recorded here; the change does not.
+
+**Why the conversion was removed rather than kept — a reason this ruling had omitted.** `b482304` did
+both things at once: it removed the kebab conversion *and* re-authored this ruling to justify the
+removal (the heading it replaced read "Ruling 39 — eight camelCase value tokens become
+lower-kebab-case"). The reason lives in that commit's message and never made it into this file. As the
+integration owner reads `b482304`, and quoting that commit rather than this ruling's prose: *"it was the
+one substantive data change in a PR that otherwise only moves citations, and its justification is not
+settled."* Recorded here because a ruling that states a decision without the reason for it invites the
+next pass to re-derive a different one; the reason is checkable at `git show b482304`.
 
 Measured over every string leaf of every `*.json` under `content/`, kebab-case value tokens occur
 **37 times across five token spaces** — `id`, `inventory_scope`, `pool_availability`, `site_class`,
@@ -2337,10 +2372,26 @@ directory-layout section and is not it.)
 `origin/master` `e17b8b6` and at `1d6a9d2` (this branch's head) kebab-case value tokens occur **43
 times across five token spaces** — `inventory_scope` 8, `pool_availability` 10, `resource_class` 8,
 `site_class` 4, `value_kind` 13 — with `id` contributing **zero**. camelCase is unchanged at 12
-occurrences of 8 tokens across four spaces on all three refs. The five spaces are not the same five,
-and the whole of the +6 is one migration: the `RSC-01`–`RSC-08` migration replaced the two lower-kebab
-resource `id`s (−2), and `resource_class` was re-authored from prose values to kebab tokens (+8). Each
-figure is true of the ref it is stamped at and of no other; neither supersedes the other.
+occurrences of 8 tokens across four spaces on all three refs. This 43 has been measured twice by
+different parties: once by the route above, and once by the integration owner at `e17b8b6` by a route
+reusing neither this file's script nor the brief's.
+
+**Both figures say "five token spaces" and they are not the same five, so the two lists are named in
+full and the arithmetic given — otherwise the pair reads as one population that grew.** The five at
+`b482304` are `id`, `inventory_scope`, `pool_availability`, `site_class`, `value_kind`. The five at
+`e17b8b6`/`1d6a9d2` are `inventory_scope`, `pool_availability`, **`resource_class`**, `site_class`,
+`value_kind`. Three are common to both and did not move: `inventory_scope` 8, `pool_availability` 10,
+`value_kind` 13 (`site_class` 4 is a fourth, unmoved). One left the list and one joined it:
+
+    37  kebab occurrences at b482304
+     −2  the two retired `id` slugs: common-ore → RSC-07, hyper-gold → RSC-08
+     +8  resource_class, which the 37 never counted because that field held prose then
+        ("ordinary crafting resource", "specialized ordinary resource", …)
+    ──
+    43  kebab occurrences at e17b8b6 and 1d6a9d2
+
+It reconciles exactly, and the whole of the ±6 is one migration. Each figure is true of the ref it is
+stamped at and of no other; neither supersedes the other.
 
 **A correction, not a stamp.** The sub-claim that the `id` contribution is "the two resource `id`s
 `common-ore` and `hyper-gold`" is **false at both `e17b8b6` and `1d6a9d2`**, so it is corrected here
@@ -2368,9 +2419,11 @@ The eight, found by scanning for the camelCase shape rather than by trusting a l
 missed a convention, resting on the record above that a transcription pass re-cased property *names*
 to `snake_case` and left values alone. Read literally, that record says stable ID, enum and kind
 tokens **in values** keep their exact case — which protects these eight as readily as it marks them
-as residue. Nobody has established which they are: none of the eight appears in `docs/`, `src/`, or
-elsewhere in `content/`, so there is no call site to settle it either way, and the absence of a
-document occurrence is equally consistent with both stories. The one piece of evidence either way is
+as residue. Nobody has established which they are: none of the eight appears **as an exact string** in
+`docs/`, in `src/`, or elsewhere in `content/`, so there is no call site *in that sense* to settle it
+either way, and the absence of a document occurrence is equally consistent with both stories. **That
+clause is narrowed to exact-string matching, because unqualified it is false** — all eight have
+same-meaning counterparts in other spellings, and the sharpest is recorded in the next paragraph. The one piece of evidence either way is
 suggestive rather than decisive — many per-definition notes below record "Field names are camelCase
 per the CAT-stream transcription convention", so the source these files came from was camelCase-native
 for *names*, which makes camelCase-native *values* plausible without establishing it. Meanwhile the schema stream has not
@@ -2378,6 +2431,19 @@ fixed the token grammar a converted value would have to satisfy. Converting twic
 than converting once, late, so these wait on a provenance answer and a grammar. The resource IDs,
 `canonical_letter` and `recipe_pair` are untouched for the separate reason that an `RSC-01`–`08`
 migration is pending and must land as one pass.
+
+**The counter-evidence to the exact-string clause, recorded with its own qualification.**
+`docs/technical/23-encounter-director-and-enemy-runtime.md:115` — verified by opening the file — reads
+"Projectile speed, damage, lifetime, terrain collision, and no-homing flags are snapshotted at
+creation." `EN-06`'s `specialist_attack.projectile.snapshot_at_creation` is
+`["speed", "damage", "lifetime", "terrainCollision", "noHoming"]`: **the same five members in the same
+order**, two of them among the eight tokens. So the document does describe these members, and an
+exact-string grep does not see it. The owner's qualification, which is the reason this is not treated as
+a provenance answer: **that sentence spells the items with a space and a hyphen in one sentence** —
+"terrain collision", "no-homing" — so it is *partial* provenance evidence that **favours neither form**.
+It shows the members were transcribed from prose rather than invented, and shows nothing about which
+casing the value should carry, because the prose carries neither casing. It therefore does not discharge
+the provenance precondition below, and it is not evidence for converting either.
 
 **This ruling is an OPEN PRECONDITION, not a closed decision, and it rests on TWO open items — a
 provenance answer *and* a declared token grammar.** The grammar is a **precondition rather than a
@@ -2398,7 +2464,13 @@ opinion about it.
    discard the hits in this file and in the nine carriers (`UNL-01`…`UNL-06`, `EN-06`,
    `W-AB-unbounded-bore`, `W-AE-replicator-swarm`). **Any remaining hit discharges this item; an empty
    remainder leaves it open.** Measured that way it is empty at both refs above. Somebody preferring an
-   answer does not discharge it.
+   answer does not discharge it. **The grep is exact-string, and that is a real limit on the check, not
+   a formality:** `docs/technical/23-encounter-director-and-enemy-runtime.md:115` describes two of the
+   eight in prose spelling ("terrain collision", "no-homing") and the grep cannot see it, as the
+   paragraph above records. A same-meaning occurrence in prose does **not** discharge this item, because
+   prose that carries neither casing cannot answer a casing question; what discharges it is an
+   occurrence that fixes a **spelling** — a document or call site carrying one of the eight tokens as a
+   token.
 2. **A declared token grammar. Open at `e17b8b6` and at `1d6a9d2`.** It would live in
    `content/schemas/` — the directory `docs/technical/40-content-data-and-validation.md`
    `## Accepted content repository layout` names, and whose files that document's
@@ -2409,7 +2481,12 @@ opinion about it.
    on an unmerged branch does not discharge this item** — which is exactly the state it has been in all
    along, since doc 40 records those two schema files as existing only on the unmerged branch
    `claude/hearth-thread-hrufl9`. The mechanical check: `git ls-tree <merged-ref> content/schemas` —
-   **non-empty output discharges this item; empty output leaves it open.**
+   **non-empty output discharges this item; empty output leaves it open.** The merged-ref requirement in
+   this item is **load-bearing and not a technicality**, and it is the sentence most likely to be
+   argued away: a grammar on an unmerged branch can be revised or abandoned without notice, so a
+   conversion checked against it is checked against nothing durable — which is the "converting twice"
+   this ruling refuses. A field space whose grammar is settled on an unmerged ref is therefore still
+   governed by this precondition here, however settled it looks over there.
 
 **This ruling has been rediscovered and re-routed as a new finding at least twice**: a pass re-measures
 some subset of the eight camelCase tokens, finds no recorded open precondition beside the reason, and
@@ -2418,14 +2495,20 @@ at the eight again should record that it matched this ruling and check the two c
 finding. Nothing here says which way the ruling should eventually go; that is not settled here, and
 discharging either item does not settle it either.
 
-**The corpus is not "overwhelmingly kebab", and no part of this ruling rests on its being so.**
-Measured at `1d6a9d2` over every string leaf of every `*.json` under `content/`, restricted to the
-field spaces whose *every* value is a whitespace-free token — 88 such spaces, 1,115 token occurrences —
-lower-kebab accounts for **43 of 1,115, i.e. 3.9%**; an
-independently taken measurement over **74 closed-vocabulary field spaces and 1,313 token occurrences**
-puts the share at **3.3%**. The two predicates differ in where they draw the boundary of a
-closed-vocabulary space, which is why the reproducible one is given here with its predicate and its
-sha rather than the other restated as if re-derived; both put lower-kebab in the low single digits of
+**The corpus is not "overwhelmingly kebab", and no part of this ruling rests on its being so.** Three
+measurements exist. All three find the same **43** lower-kebab value tokens; each divides that 43 by a
+different denominator, because each draws the boundary of a "closed-vocabulary field space" differently:
+
+| lower-kebab | of | share | route |
+| --: | --- | --: | --- |
+| 43 | 1,115 token occurrences in 88 field spaces, at `1d6a9d2` | 3.9% | this file's own: every string leaf of every `*.json` under `content/`, restricted to field spaces whose *every* value is a whitespace-free token |
+| 43 | 1,313 token occurrences in 74 field spaces | 3.3% | an **earlier measurement by the same author as this pass's brief**, under a different predicate — **not** an independent confirmation and not offered as one |
+| 43 | 2,190 token-shaped values, at `e17b8b6` | 2.0% | the **integration owner's** sweep, reusing neither script above — **this is the independent one** |
+
+**What is independently confirmed is the numerator, not the share.** The three percentages are counts
+over three different populations: they must not be averaged, reconciled, or presented as agreeing, and
+a single "share of the corpus" quoted from any one of them would be picking a predicate and hiding it.
+What holds on all three populations is that lower-kebab is 43 tokens and a low single-digit fraction of
 value tokens. So "most value tokens are kebab, these eight missed the convention" is not an argument
 available from the corpus, in either direction.
 
@@ -4403,6 +4486,7 @@ touched files. The file count is unchanged at 139, so A21 is unaffected.
 ##### `common-ore` — `content/resources/common-ore.json`
 
 1. Common ore has no RES-* or other stable ID in any design doc; the docs name it only as 'common ore' / 'common basic ore'. `id` is a kebab-case slug of that name because no doc identifier exists to copy verbatim, and RES-001..RES-006 are already taken by docs/research/.
+   - **Superseded since — the note above is preserved as the record of the transcription decision, not corrected.** It described the file accurately when written. At `origin/master` `e17b8b6` and at `1d6a9d2` this file's `id` is **`RSC-07`**, not the slug `common-ore`: the `RSC-01`–`RSC-08` migration has landed on `master`, and `common-ore` survives here only as the `resource_class` value. What survives of the note is its reason, which the migration does not overturn — no accepted document ever assigned this resource an ID token, which is why the ID had to be minted at all.
 2. scope / availability / primaryPurpose / persistence are the four columns of the docs/60-resources-crafting-progression.md:18-21 table. That table's first row covers the whole 'Ordinary crafting resources' scope, which includes the six specialized materials as well as common ore; there is no common-ore-only row anywhere in the docs.
 3. docs/technical/40-content-data-and-validation.md:106 expects a `maximum safe count`; no gameplay doc states one, so maximumSafeCount is null.
 4. Every numeric payout carries its own `_source` because those values come from docs/40-mining-and-extraction.md rather than from this file's main source section.
@@ -4423,6 +4507,7 @@ touched files. The file count is unchanged at 139, so A21 is unaffected.
 ##### `hyper-gold` — `content/resources/hyper-gold.json`
 
 1. Hyper Gold has no RES-* or other stable ID in any design doc. `id` is a kebab-case slug of the player-facing name because no doc identifier exists to copy verbatim, and RES-001..RES-006 are already taken by docs/research/.
+   - **Superseded since — the note above is preserved as the record of the transcription decision, not corrected.** It described the file accurately when written. At `origin/master` `e17b8b6` and at `1d6a9d2` this file's `id` is **`RSC-08`**, not the slug `hyper-gold`: the `RSC-01`–`RSC-08` migration has landed on `master`, and `hyper-gold` survives here only as the `resource_class` value. What survives of the note is its reason, which the migration does not overturn — no accepted document ever assigned this resource an ID token, which is why the ID had to be minted at all.
 2. scope / availability / primaryPurpose / persistence are the four columns of the docs/60-resources-crafting-progression.md:18-21 table (Hyper Gold row, line 21).
 3. docs/technical/40-content-data-and-validation.md:106 expects a `maximum safe count`; no gameplay doc states one, so maximumSafeCount is null.
 4. The Hyper Gold site's threat-beacon mechanics (first-progress activation and the 25% / 50% / 75% escalation thresholds at 11.25 / 22.5 / 33.75 seconds, docs/40-mining-and-extraction.md:123) are the mining-site class definition and belong to content/mining-sites/, not to this resource entry.

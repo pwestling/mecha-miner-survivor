@@ -185,14 +185,24 @@ rule:
   the resource letters `"A"`–`"F"` are transcribed verbatim. `docs/technical/40-content-data-and-validation.md:69`
   makes this explicit: "IDs are case-sensitive ASCII tokens ... and never localized."
 - **Lower-kebab is not this tree's value convention, and nothing here should be read as saying it
-  is.** Measured at `1d6a9d2` over every string leaf of every `*.json` under `content/`, restricted to
-  the field spaces whose *every* value is a whitespace-free token — 88 such spaces, 1,115 token
-  occurrences — lower-kebab accounts for **43 of 1,115, i.e. 3.9%** of value tokens; an independently
-  taken measurement over **74 closed-vocabulary field spaces and 1,313 token occurrences** puts the
-  share at **3.3%**. The two predicates draw the boundary of a closed-vocabulary space differently,
-  which is why the reproducible one is given here with its predicate and its sha rather than the other
-  restated as though re-derived — but both put lower-kebab in the low single digits, so "the corpus is
-  overwhelmingly kebab" is not a claim this tree supports and is not an argument available for or
+  is.** Three measurements, all finding the same **43** lower-kebab value tokens and each dividing it
+  by a different denominator, because each draws the boundary of a "closed-vocabulary field space"
+  differently:
+  - **43 of 1,115 token occurrences in 88 field spaces — 3.9%** — measured at `1d6a9d2` over every
+    string leaf of every `*.json` under `content/`, restricted to the field spaces whose *every* value
+    is a whitespace-free token. This is the predicate stated in full here because it is the one this
+    file's author can re-derive.
+  - **43 of 1,313 token occurrences in 74 field spaces — 3.3%** — an **earlier measurement by the same
+    author as this pass's brief**, under a different predicate. Not an independent confirmation, and it
+    is not offered as one.
+  - **43 of 2,190 token-shaped values — 2.0%** — the integration owner's sweep at `origin/master`
+    `e17b8b6`, by a route reusing neither of the scripts behind the two figures above. **This is the
+    independent one**, and what it independently confirms is the **numerator**.
+  The three shares are **not** to be averaged, reconciled, or reported as agreeing: they are counts
+  over three different populations, and quoting a single "share of the corpus" would be picking one
+  predicate and hiding it. What all three agree on is that lower-kebab is 43 tokens and a low
+  single-digit fraction of value tokens on any of the three populations — so "the corpus is
+  overwhelmingly kebab" is not a claim this tree supports, and it is not an argument available for or
   against re-casing anything.
 - **Kebab and camelCase value-token counts, each stamped at the ref it was measured at.** Measured over
   every string leaf of every `*.json` under `content/`:
@@ -203,9 +213,25 @@ rule:
     defect one migration later.
   - **43 across five token spaces at `origin/master` `e17b8b6` and at `1d6a9d2`** — `inventory_scope`
     8, `pool_availability` 10, `resource_class` 8, `site_class` 4, `value_kind` 13, with `id`
-    contributing **zero**. The five are not the same five, and the whole of the +6 is one migration:
-    the `RSC-01`–`RSC-08` migration replaced the two lower-kebab resource `id`s (−2) and
-    `resource_class` was re-authored from prose values to kebab tokens (+8).
+    contributing **zero**. This 43 was measured twice by different parties: once here, and once by the
+    integration owner at `e17b8b6` by a route reusing neither script.
+  - **The two fives are not the same five, and the figures reconcile exactly** — so the arithmetic is
+    given rather than two bare numbers left side by side, because "37 … 43 … five spaces" otherwise
+    reads as one population that grew:
+
+    | | in the 37 at `b482304` | in the 43 at `e17b8b6`/`1d6a9d2` |
+    | --- | --- | --- |
+    | `id` | **2** | — |
+    | `inventory_scope` | 8 | 8 |
+    | `pool_availability` | 10 | 10 |
+    | `resource_class` | — | **8** |
+    | `site_class` | 4 | 4 |
+    | `value_kind` | 13 | 13 |
+    | **total** | **37** | **43** |
+
+    **37 − 2 + 8 = 43**: minus the two retired `id` slugs (`common-ore` and `hyper-gold`, now `RSC-07`
+    and `RSC-08`), plus the 8 `resource_class` tokens the 37 never counted because that field held
+    prose then. Three of the five spaces are common to both and did not move at all.
   - **The resource `id`s are `RSC-01`…`RSC-08`** — `common-ore.json` carries `RSC-07`,
     `hyper-gold.json` carries `RSC-08` — and **no `id` in this tree is lower-kebab.** `common-ore` and
     `hyper-gold` were the two `id` values when the 37 was counted at `b482304`; they are
@@ -215,13 +241,17 @@ rule:
   - **12 occurrences of 8 camelCase tokens across four spaces**, unchanged at all three refs — `kind`
     on `UNL-01`…`UNL-06`, `snapshot_at_creation` on `EN-06`, `unchanged_stats` on `W-AB`,
     `clone_inherits_current` on `W-AE`.
-  - **The camelCase eight are deliberately left as they are** (`content/transcription-notes.md`,
-    Ruling 39), on **two open preconditions**, neither discharged at `e17b8b6` or `1d6a9d2`: a
-    **provenance answer** — a document occurrence in `docs/`, or a call site in `src/` or in a
-    `content/` file other than the nine that carry them, of which there are none — and a **declared
-    token grammar**, which would live in `content/schemas/` and would have to land on a *merged* ref;
-    that directory exists on neither ref. The grammar is a precondition rather than a preference, and
-    Ruling 39 states what would discharge each so a later pass can check the two conditions instead of
+  - **The camelCase eight are deliberately left as they are**, on **two open preconditions**, neither
+    discharged at `e17b8b6` or `1d6a9d2`: a **provenance answer** — no *exact-string* occurrence of any
+    of the eight exists in `docs/`, in `src/`, or in a `content/` file other than the nine that carry
+    them, though same-meaning counterparts in other spellings do exist and are recorded with the ruling
+    — and a **declared token grammar**, which would live in `content/schemas/` and would have to land
+    on a **merged** ref; that directory exists on neither ref, and a grammar declared only on an
+    unmerged branch does not discharge the precondition. The grammar is a precondition rather than a
+    preference. Cited by heading rather than by number, because a bare ruling number is not a checkable
+    citation: see `content/transcription-notes.md`, the ruling headed **"Ruling 39 — the eight
+    camelCase value tokens are measured and left alone, pending a provenance answer"**, which states
+    what would discharge each precondition so a later pass can check the two conditions instead of
     re-opening the question.
   - These bullets describe **values**, not property names.
 - **Units live in key-name suffixes**, per
@@ -292,7 +322,7 @@ independently addressable definition. The literal values this tree carries today
 
 | Field | Mandate | In this tree |
 | --- | --- | --- |
-| `id` | `40:80` — stable category-valid ID | present as a non-empty string on **all 138** definitions, including the aggregates (`WAV-01`, `MGC-01`) and the six IDs the integration owner minted rather than transcribed: the four prose-only mining-site classes (`docs/40-mining-and-extraction.md:58-132`) are `SITE-01`–`SITE-04` in document order, `enemies/shared-elite-modifiers.json` is `ELT-01`, and `weapons/stat-price-formula.json` is `FORMULA-01` (`content/transcription-notes.md`, Ruling 38 — it previously carried `weapon-stat-price-formula`, the only *minted* ID that was not `<PREFIX>-<NN>`; lower-kebab `id`s do exist here, but only as the two transcribed resource IDs `common-ore` and `hyper-gold`). Nothing here carries `"id": null` or omits the field, so the verifier treats a missing or null `id` as an unconditional failure |
+| `id` | `40:80` — stable category-valid ID | present as a non-empty string on **all 138** definitions, including the aggregates (`WAV-01`, `MGC-01`) and the six IDs the integration owner minted rather than transcribed: the four prose-only mining-site classes (`docs/40-mining-and-extraction.md:58-132`) are `SITE-01`–`SITE-04` in document order, `enemies/shared-elite-modifiers.json` is `ELT-01`, and `weapons/stat-price-formula.json` is `FORMULA-01` (`content/transcription-notes.md`, the ruling headed "Ruling 38 — `FORMULA-01`, and the summary that says what the definition is" — it previously carried `weapon-stat-price-formula`, the only *minted* ID that was not `<PREFIX>-<NN>`). **No `id` in this tree is lower-kebab.** This row previously ended "lower-kebab `id`s do exist here, but only as the two transcribed resource IDs `common-ore` and `hyper-gold`"; that was true until the `RSC-01`–`RSC-08` migration and is **false at `origin/master` `e17b8b6` and at `1d6a9d2`**, where the eight resource definitions carry `RSC-01`…`RSC-08` (`common-ore.json` → `RSC-07`, `hyper-gold.json` → `RSC-08`) and the two slugs survive only as `resource_class` values. Corrected rather than dated, because this row is a live description of the tree rather than a record of a past measurement. Nothing here carries `"id": null` or omits the field, so the verifier treats a missing or null `id` as an unconditional failure |
 | `schema_version` | `40:81` — integer version of its definition schema | `1` everywhere; no schema exists to version yet |
 | `content_version` | `40:82` — monotonic revision | `1` everywhere; this is the first authored revision |
 | `status` | `40:83` — exactly one of `development`, `enabled`, `disabled`, `retired` | `"enabled"` everywhere; nothing here is gated or retired |

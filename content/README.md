@@ -517,3 +517,207 @@ before the numbers here can be called final.
 claimable only once `DAT-006` is Done and the bundle compiler has accepted these files; a reviewer
 looking for the completion evidence of `DAT-007` will not find it here, and should not accept this
 `README`, the verifier's output, or `content/transcription-notes.md` as a substitute for it.
+
+## The line-citation release, and the citation surfaces this tree cannot gate
+
+A line-number citation such as `docs/72-…:96` breaks silently the moment its target document gains a
+line above the cited one: the coordinate still resolves, but to the wrong sentence, and nothing fails.
+Three commits — `c05aee9`, `e24a52a`, `85d0ced` — removed every such citation from the files this
+branch owns (everything under `src/MechaMiner.Tools/ContentImport/`, plus `content/README.md`,
+`content/transcription-notes.md` and `content/quote-verification-audit.md`) and re-pointed each to a
+section heading (`<doc>:<n>` removed, `` <doc> `## Heading` `` added). This section is the durable
+record of what that released, what it deliberately did **not**, and the citation surfaces no
+working-tree gate can walk. The reasoning below lived only in inter-session messages until now; it is
+written here so a later pass can act on it without them.
+
+### Released documents — their line counts may change freely
+
+A released document is one no file in this tree cites by line, so its owner may add or remove lines
+without breaking anything here. By the commits' own declarations, which are not sensitive to how one
+counts: `c05aee9` and `e24a52a` removed every line citation of
+`docs/technical/40-content-data-and-validation.md` ("so no line in that doc is load-bearing"), and
+`85d0ced` re-pointed the line citations of **36 further documents** and states plainly, "The owners of
+all 36 documents can change their line counts." That is **37 documents** released in total.
+
+The 33 confirmed by re-deriving from the three diffs, sorted:
+
+- `docs/10-core-game-loop.md`
+- `docs/30-combat-weapons-movement-camera.md`
+- `docs/31-initial-alien-roster.md`
+- `docs/32-standard-wave-and-beacon-schedule.md`
+- `docs/35-playable-mechs.md`
+- `docs/36-initial-mech-catalog.md`
+- `docs/40-mining-and-extraction.md`
+- `docs/50-maps-resources-and-navigation.md`
+- `docs/51-standard-map-generation-contract.md`
+- `docs/60-resources-crafting-progression.md`
+- `docs/61-specialized-resource-identities.md`
+- `docs/62-permanent-powerup-catalog.md`
+- `docs/63-permanent-option-unlock-catalog.md`
+- `docs/65-weapon-stat-and-branch-upgrades.md`
+- `docs/66-weapon-catalog-and-resource-graph.md`
+- `docs/68-utility-catalog.md`
+- `docs/69-initial-relic-catalog.md`
+- `docs/71-initial-weapon-numeric-catalog.md`
+- `docs/72-player-survivability-and-damage-baseline.md`
+- `docs/glossary.md`
+- `docs/open-questions.md`
+- `docs/data/README.md`
+- `docs/data/survivability-baseline.csv`
+- `docs/data/weapon-base-balance.csv`
+- `docs/weapons/README.md`
+- `docs/technical/22-combat-and-weapon-runtime.md`
+- `docs/technical/23-encounter-director-and-enemy-runtime.md`
+- `docs/technical/24-mining-fabrication-and-progression-runtime.md`
+- `docs/technical/40-content-data-and-validation.md`
+- `docs/technical/100-build-dependencies-and-release-operations.md`
+- `docs/technical/110-implementation-plan-for-ai-agents.md`
+- `docs/technical/114-autonomous-agent-execution-protocol.md`
+- `docs/technical/115-component-contract-and-schema-registry.md`
+
+**The count is method-sensitive, and "32" is an artifact of one method.** A scan that only matches
+`docs/…:<n>`-prefixed citations in the diffs surfaces exactly 32 documents — because it misses bare
+`<NN>:<n>` citations (`docs/technical/22` alone carried **58** such, re-pointed to its own headings and
+gone at HEAD) and citations spread across the other owned files. Two independently produced 32-lists
+each dropped a *different* single document — one omitted `docs/weapons/README.md`
+(its `docs/weapons/README.md:48` was re-pointed to `` `## Design state` `` and `` `## Catalog lookup` ``),
+the other omitted `docs/technical/22` — and coincidentally both landed on 32; **both documents are
+released.** The 33 above are what re-derivation confirms; the balance up to the commits' own 36 + doc-40
+are documents cited only in bare or verbatim-note form that a path-prefixed scan does not enumerate. Do
+not treat "32" as the release count.
+
+### Five documents are NOT released — the inverse of a release, not a smaller one
+
+These five are still cited by line, and they are the inverse of the release rather than a reduced
+version of it: they were never re-pointed, because they have no live citation to re-point. Their
+surviving line citations live **only inside a frozen measurement artifact**:
+
+- `docs/67-mech-relics.md`
+- `docs/73-interface-screen-flow-and-information-architecture.md`
+- `docs/20-run-structure-and-timing.md`
+- `docs/70-combat-and-economy-balance-framework.md`
+- `docs/decisions/DEC-120-accept-permanent-powerup-catalog.md`
+
+**The constraint, measured at HEAD: 111 surviving line citations, all of them in
+`src/MechaMiner.Tools/ContentImport/quote_mismatch_evidence.json`** — `67` 63, `73` 40, `20` 4, `70` 3,
+`DEC-120` 1. The sibling artifact `src/MechaMiner.Tools/ContentImport/expected_citation_deltas.json`
+carries **zero** citation of any of the five in any form, so the constraint lives wholly in the first
+file. Those 111 are the `(path.md:<a>-<b>)` tail of a `doc_id#anchor` reference, frozen at the sweep
+ref; `check_quote_mismatch_evidence.py` rebuilds every span from the live docs by anchor slug and never
+reads the stored numbers, so they do not resolve at runtime — but they are the surviving textual line
+citations, and rewriting them would corrupt a frozen measurement. **The one actionable fact for an
+owner:** these five may not be treated as freely re-flowable the way the 37 are; before their line
+geometry is changed, the frozen artifact must be re-derived, and the change lives at exactly one path,
+`quote_mismatch_evidence.json`.
+
+### Two documents were frozen at a fixed line count by their authors — both freezes are now lifted
+
+- **`docs/66-weapon-catalog-and-resource-graph.md`.** Commit `0648186` appended a pointer *in place* —
+  "the pointer is appended in place so docs/66 keeps its line count, because docs/66:37 and docs/66:39
+  are cited by line from verify_content.py and content/transcription-notes.md." That freeze is lifted:
+  `85d0ced` re-pointed those citations to `` `## Accepted base catalog assignment` ``, and doc 66 is in
+  the released set above.
+- **`docs/technical/40-content-data-and-validation.md`, held at 431 lines** (still 431 at HEAD). Its
+  line citations were the subject of `c05aee9` and `e24a52a`; with them gone, the fixed line count no
+  longer protects anything and the freeze is lifted.
+
+### Ownership — three relationships, and "owner unknown" is a measurement, not an omission
+
+- **No document has a recorded owner.** `CODEOWNERS` is absent from the working tree and from every
+  reachable git object (no ref and no history touches it), so "owner unknown" for a document is a
+  measured fact about this repository, not a gap in this record.
+- **Authored by the human owner.** The ten `docs/technical/*` documents and `docs/data/README.md` and
+  `docs/weapons/README.md` were authored by Porter Westling (`pwestling@gmail.com`) in commits
+  `21c555f` ("Add comprehensive gameplay design specification") and `739bf29` ("Add autonomous
+  implementation technical specification"). For those the record says *authored by the human owner*.
+  Every other document is owner-unknown.
+- **Reviewer-authored replacement text resides in documents the reviewer does not own**, including
+  `docs/technical/40-content-data-and-validation.md`. This is a third relationship, distinct from
+  authorship and from ownership.
+- **Git authorship cannot distinguish sessions.** Reachable commits are near-uniformly
+  `Claude <noreply@anthropic.com>` (only Porter's two commits and a handful of `claude[bot]` commits
+  differ), so who did what rests on the `Claude-Session` commit trailer, not on the author field.
+
+### A GitHub-side citation population no working-tree gate can reach
+
+A gate walks the working tree; it cannot see a pull-request body, a review, a review comment, an issue
+body, a commit message, or a cross-session message. A sweep of the GitHub artifacts found **506
+positional citations across 27 of 36 PRs**. Corpus: **113 text artifacts** — 36 PR bodies, 34 review
+bodies, 43 issue comments, and 0 inline review comments (a cross-checked empty set, not an unchecked
+one). Of the 506:
+
+- **79 are wrong against `master` today**, of which **26 were valid at their own PR head** — the
+  coordinates drifted after merge; the claim never changed;
+- **166 are uncheckable by construction**, because they cite an ambiguous bare document number — **149
+  of them `40`**, which names two documents (`docs/40-mining-and-extraction.md` and
+  `docs/technical/40-content-data-and-validation.md`) differing by 207 lines;
+- **26 are verified correct**;
+- **239 are in range but unverified** — 213 of them make their claim in prose rather than in a quotable
+  fragment.
+
+**This surface is not swept and mostly cannot be:** a merged PR body is a historical record with no
+routine edit path. So for this population the record itself is the delivery, not a fix.
+
+### Three GitHub-side citations that resolve to a plausible-but-wrong line — three different dispositions
+
+Calling all three "wrong" would be false; each is a distinct thing.
+
+- **PR #16 — `docs/72:236`, an INVERTED citation (repair drafted; applied pending verification).** On
+  `master`, line 236 is the elite/boss resistance sentence, while the claim it is cited for — "multiply
+  the already resisted displacement magnitude or timed-control duration by 0.80" — sits at **line 234**,
+  under the h2 at line 223. A reader who checks 236 lands on a sentence about resistance, believes the
+  claim verified, and stops; that inversion is what distinguishes it from a merely stale coordinate. The
+  drafted replacement is
+  `` docs/72-player-survivability-and-damage-baseline.md `## Control Resistance and Status Stacking` ``.
+- **PR #14 — `docs/technical/40-content-data-and-validation.md:106`, DRIFTED COORDINATES, not an
+  error (repair drafted; applied pending verification).** It was correct against blob `4cded84`, and the
+  surrounding prose pins it to that blob explicitly; `master` later re-flowed the sentence to line 231.
+  "The citation was wrong" would be false — the coordinates moved, the claim never changed. The drafted
+  replacement is `` docs/technical/40-content-data-and-validation.md `### Resources` `` — an **h3, three
+  hashes**, not an h2.
+- **PR #4 — `docs/51:161`, STRUCTURALLY UNREPAIRABLE.** It sits in a submitted **review** body, and
+  GitHub exposes no edit for a submitted review; neither a new review nor a dismissal alters the
+  original text. No follow-up review comment was posted, deliberately: it would add a second artifact to
+  the record without fixing the first.
+
+**The durable lesson, stated at the reader rather than the writer:** a read-modify-write through a
+lossy reader is corrupted *before* the write happens. The MCP reader of a PR body drops the
+`<!-- ccr-projects-attribution -->` marker that every body in this repository must open with and
+HTML-escapes quotes (measured: 19,392 raw characters against 19,359 through the reader, the 33-byte gap
+being exactly the marker), so the safe repair path reads the raw body by plain unauthenticated request
+(the repo is public), edits that string, and submits it — never round-trips through the lossy reader.
+
+### One frozen wrong claim, named because it cannot be fixed
+
+Commit `85d0ced`'s message asserts that doc 22's owner "chose NOT to cite its table cells by line."
+**That is a misreading.** Commit `e77fa0d` ("docs(40): grant the behavior-token vocabularies for all
+twelve call sites") is a change to `docs/technical/40` that restrains **its own** citations of doc 22's
+closed-list cells — it classifies against doc 22's lists rather than citing their cells by line. It is
+not doc 22's owner acting; like nearly every commit here it is authored `Claude <noreply@anthropic.com>`.
+History is not rewritten, so the false claim survives in `85d0ced`'s message forever; this entry is the
+only place a reader who finds that commit can learn the correct reading.
+
+### Trailer and attribution census
+
+Measured over **35 remote refs on 2026-08-11**: one git author across essentially all commits, six
+distinct `Claude-Session` trailer values, and roughly **82%** of commits attributable from the commit
+object alone. The figure carries its ref count and its moment because it is unauditable without them —
+a later fetch changes the ref set. No internal sum is offered here as a cross-check: an identity that
+closes within one enumeration verifies the addition, not the population.
+
+**The trailer-less residual — 78 commits that carry no `Claude-Session` trailer — is unmeasured.** (This
+78 is a count of *trailer-less* commits; it is not the unrelated "78" some measurements use as a floor on
+*trailered* commits over a 230-commit union — opposite property, incompatible denominator, same digits.)
+It is known to be **two populations**: some share is compliance with a since-superseded prohibition on
+model identifiers in commit footers — not carelessness — and the split between that and the rest has not
+been measured. It is not derived by subtraction here, because a subtraction from a total is not a
+measurement of the remainder.
+
+### Enforcement of the release is not yet gated in the tree
+
+No citation-prohibition assertion has landed in the verifier: the highest assertion at HEAD is `A34`
+(the `resource_class` coupling). `A24` already forbids a `:<digits>` line number inside a `content/`
+domain **value**, but that is the content-JSON surface, not the design-document citations in this tree's
+prose, comments, and failure messages. So **regrowth of `<doc>:<n>` citations in the owned files is not
+yet gated** — an assertion that would gate it is forthcoming, and this record should not be read as
+claiming a check already prevents the defect from returning.

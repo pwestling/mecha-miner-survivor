@@ -2306,15 +2306,50 @@ occurrences across 9 files. **That conversion has been removed and the original 
 restored.** The measurement it rested on stands and is recorded here; the change does not.
 
 Measured over every string leaf of every `*.json` under `content/`, kebab-case value tokens occur
-**37 times across five token spaces** — `id` (`common-ore`, `hyper-gold`), `inventory_scope`,
-`pool_availability`, `site_class`, `value_kind` — against camelCase's **12 occurrences of 8 distinct
-tokens across four spaces**. (The brief for the earlier revision said "six token spaces … against
-camelCase twice"; neither figure reproduces. That revision's own prose said 38 kebab occurrences;
-enumerating them gives **37**, and the enumeration is in `content/README.md:164-189` under
-"Property names are `snake_case`; values keep their exact case" — the stable-ID/enum/kind-token bullet
-that protects a value's exact case is `content/README.md:173`. Both ranges were verified by opening the
-file; an earlier brief for this pass cited this passage as `content/README.md:108-120`, which is inside
-the directory-layout section and is not it.)
+**37 times across five token spaces** — `id`, `inventory_scope`, `pool_availability`, `site_class`,
+`value_kind` — against camelCase's **12 occurrences of 8 distinct tokens across four spaces**. **That
+figure is stamped at `b482304`**, the commit this ruling was written against, and it is kept rather
+than overwritten because it is exactly right there: re-deriving the same predicate against that tree
+reproduces 37 — `id` 2, `inventory_scope` 8, `pool_availability` 10, `site_class` 4, `value_kind` 13.
+An unstamped figure is what let it go stale unnoticed, so the current figure is **added beside it**
+below rather than substituted for it. (The brief for the earlier revision said "six token spaces …
+against camelCase twice"; neither figure reproduces. That revision's own prose said 38 kebab
+occurrences; enumerating them gives **37**, and the enumeration is in `content/README.md` under the
+section heading "Property names are `snake_case`; values keep their exact case" — the
+stable-ID/enum/kind-token bullet that protects a value's exact case is the one in that section opening
+"**Stable ID, enum, and kind tokens in *values* keep their exact case.**", and the enumeration is the
+bullet group that follows it. **This citation is corrected, and the correction is left visible rather
+than made silently:** the passage previously read "the enumeration is in `content/README.md:164-189`
+… is `content/README.md:173`. Both ranges were verified by opening the file", and that verification
+claim does not hold on any ref this pass can check — at `origin/master` `e17b8b6` and at `1d6a9d2`,
+`:173` is blank, the section heading is at `:174`, the exact-case bullet spans `:183-186` and the
+enumeration `:187-197`; and even at `b482304`, where `:173` did land on the exact-case bullet's first
+line and `:164` on the heading, `:164-189` ran two lines past the enumeration (which ends at `:187`)
+into the units bullet, so neither range was ever exactly the passage named. A sentence claiming a
+verification that does not hold is worse than an uncited claim, so the assertion is withdrawn and the
+citation now
+names the section heading and the bullet's opening words instead of fresh line numbers — the form
+`8101da0` established across this file precisely because `path:line` into a moving file decays. An
+earlier brief for this pass cited this passage as `content/README.md:108-120`, which is inside the
+directory-layout section and is not it.)
+
+**Added beside, not substituted — the same predicate re-derived at the current refs.** At
+`origin/master` `e17b8b6` and at `1d6a9d2` (this branch's head) kebab-case value tokens occur **43
+times across five token spaces** — `inventory_scope` 8, `pool_availability` 10, `resource_class` 8,
+`site_class` 4, `value_kind` 13 — with `id` contributing **zero**. camelCase is unchanged at 12
+occurrences of 8 tokens across four spaces on all three refs. The five spaces are not the same five,
+and the whole of the +6 is one migration: the `RSC-01`–`RSC-08` migration replaced the two lower-kebab
+resource `id`s (−2), and `resource_class` was re-authored from prose values to kebab tokens (+8). Each
+figure is true of the ref it is stamped at and of no other; neither supersedes the other.
+
+**A correction, not a stamp.** The sub-claim that the `id` contribution is "the two resource `id`s
+`common-ore` and `hyper-gold`" is **false at both `e17b8b6` and `1d6a9d2`**, so it is corrected here
+rather than dated — a sha makes a true-then figure honest, but behind a false claim it would read as
+provenance while functioning as cover. What they are now: the eight resource definitions carry
+`RSC-01`…`RSC-08`, with `content/resources/common-ore.json` carrying `RSC-07` and
+`content/resources/hyper-gold.json` carrying `RSC-08`, and **no `id` anywhere in the tree is
+lower-kebab**. What they were when the 37 was counted: at `b482304` those two files carried `id`
+values `common-ore` and `hyper-gold`, which were the entire `id` contribution to the 37.
 
 The eight, found by scanning for the camelCase shape rather than by trusting a list:
 
@@ -2343,6 +2378,56 @@ fixed the token grammar a converted value would have to satisfy. Converting twic
 than converting once, late, so these wait on a provenance answer and a grammar. The resource IDs,
 `canonical_letter` and `recipe_pair` are untouched for the separate reason that an `RSC-01`–`08`
 migration is pending and must land as one pass.
+
+**This ruling is an OPEN PRECONDITION, not a closed decision, and it rests on TWO open items — a
+provenance answer *and* a declared token grammar.** The grammar is a **precondition rather than a
+preference**: a converted value cannot be checked against a grammar that has not been declared, so a
+conversion landed before the grammar would have to be redone if the declared grammar disagreed, which
+is the "converting twice" this ruling refuses. Each item is stated below with the artifact that would
+discharge it, so that a later pass can **check** whether it is still open instead of re-forming an
+opinion about it.
+
+1. **A provenance answer. Open at `e17b8b6` and at `1d6a9d2`.** What discharges it is an *occurrence*,
+   not a decision: either a **document occurrence** of one of the eight tokens in `docs/` — which
+   places them under the "stable ID, enum and kind tokens in values keep their exact case" bullet as
+   transcribed material and settles them as protected — or a **call site** in `src/`, or in a
+   `content/` file other than the nine definitions that carry them, that reads one of the eight —
+   which fixes a spelling a consumer depends on. The mechanical check: grep the eight literals
+   (`relicCachePoolEntry`, `utilityBlueprints`, `terrainCollision`, `noHoming`, `beamWidth`,
+   `projectileSpeed`, `attackRate`, `operationalRange`) across `docs/`, `src/` and `content/`, and
+   discard the hits in this file and in the nine carriers (`UNL-01`…`UNL-06`, `EN-06`,
+   `W-AB-unbounded-bore`, `W-AE-replicator-swarm`). **Any remaining hit discharges this item; an empty
+   remainder leaves it open.** Measured that way it is empty at both refs above. Somebody preferring an
+   answer does not discharge it.
+2. **A declared token grammar. Open at `e17b8b6` and at `1d6a9d2`.** It would live in
+   `content/schemas/` — the directory `docs/technical/40-content-data-and-validation.md`
+   `## Accepted content repository layout` names, and whose files that document's
+   `## Minted value vocabularies` section cites as `content/schemas/resource.schema.json` and
+   `content/schemas/encounter-schedule.schema.json` — and **it has to land on a merged ref to count.**
+   `content/schemas/` exists on neither `origin/master` `e17b8b6` nor `1d6a9d2`: `git ls-tree -d <ref>
+   content/` lists fourteen directories on each and no `schemas` among them. **A grammar declared only
+   on an unmerged branch does not discharge this item** — which is exactly the state it has been in all
+   along, since doc 40 records those two schema files as existing only on the unmerged branch
+   `claude/hearth-thread-hrufl9`. The mechanical check: `git ls-tree <merged-ref> content/schemas` —
+   **non-empty output discharges this item; empty output leaves it open.**
+
+**This ruling has been rediscovered and re-routed as a new finding at least twice**: a pass re-measures
+some subset of the eight camelCase tokens, finds no recorded open precondition beside the reason, and
+files it afresh — which is the defect the two numbered items above exist to stop. A pass that arrives
+at the eight again should record that it matched this ruling and check the two conditions, not open a
+finding. Nothing here says which way the ruling should eventually go; that is not settled here, and
+discharging either item does not settle it either.
+
+**The corpus is not "overwhelmingly kebab", and no part of this ruling rests on its being so.**
+Measured at `1d6a9d2` over every string leaf of every `*.json` under `content/`, restricted to the
+field spaces whose *every* value is a whitespace-free token — 88 such spaces, 1,115 token occurrences —
+lower-kebab accounts for **43 of 1,115, i.e. 3.9%**; an
+independently taken measurement over **74 closed-vocabulary field spaces and 1,313 token occurrences**
+puts the share at **3.3%**. The two predicates differ in where they draw the boundary of a
+closed-vocabulary space, which is why the reproducible one is given here with its predicate and its
+sha rather than the other restated as if re-derived; both put lower-kebab in the low single digits of
+value tokens. So "most value tokens are kebab, these eight missed the convention" is not an argument
+available from the corpus, in either direction.
 
 #### Ruling 40 — the repo-`path:line`-in-a-value item is already closed, and the count is recorded
 

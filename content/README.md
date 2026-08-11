@@ -184,17 +184,46 @@ rule:
   `"MCH-01"`, `"BOSS-02"`, `"UTL-C2"`, `"PU-S04"`, `"REL-07"`, `"UNL-03"`, `"WAV-01"`, `"MGC-01"`, and
   the resource letters `"A"`–`"F"` are transcribed verbatim. `docs/technical/40-content-data-and-validation.md:69`
   makes this explicit: "IDs are case-sensitive ASCII tokens ... and never localized."
-- **Most value tokens this tree mints are lower-kebab-case, and eight camelCase tokens are a known
-  unresolved exception.** Measured over every string leaf of every `*.json` under `content/`:
-  **37 kebab-case value tokens across five token spaces** — `inventory_scope` (`run-local`,
-  `cross-run`), `pool_availability`, `site_class`, `value_kind`, and the two resource `id`s
-  `common-ore` and `hyper-gold` — against **12 occurrences of 8 camelCase tokens across four spaces**
-  (`kind` on `UNL-01`…`UNL-06`, `snapshot_at_creation` on `EN-06`, `unchanged_stats` on `W-AB`,
-  `clone_inherits_current` on `W-AE`). **The camelCase eight are deliberately left as they are**
-  (`content/transcription-notes.md`, Ruling 39): whether they were transcribed from a document — in
-  which case the bullet above protects them — or minted here, has not been established, and the
-  schema stream has not yet fixed the token grammar a converted value would have to satisfy. This
-  bullet describes **values**, not property names.
+- **Lower-kebab is not this tree's value convention, and nothing here should be read as saying it
+  is.** Measured at `1d6a9d2` over every string leaf of every `*.json` under `content/`, restricted to
+  the field spaces whose *every* value is a whitespace-free token — 88 such spaces, 1,115 token
+  occurrences — lower-kebab accounts for **43 of 1,115, i.e. 3.9%** of value tokens; an independently
+  taken measurement over **74 closed-vocabulary field spaces and 1,313 token occurrences** puts the
+  share at **3.3%**. The two predicates draw the boundary of a closed-vocabulary space differently,
+  which is why the reproducible one is given here with its predicate and its sha rather than the other
+  restated as though re-derived — but both put lower-kebab in the low single digits, so "the corpus is
+  overwhelmingly kebab" is not a claim this tree supports and is not an argument available for or
+  against re-casing anything.
+- **Kebab and camelCase value-token counts, each stamped at the ref it was measured at.** Measured over
+  every string leaf of every `*.json` under `content/`:
+  - **37 kebab-case value tokens across five token spaces at `b482304`** — `id` 2, `inventory_scope`
+    8, `pool_availability` 10, `site_class` 4, `value_kind` 13. This figure is kept with its sha
+    rather than overwritten, because it was exactly right when written; an unstamped number is what
+    let it go stale unnoticed here, and replacing it with a bare new number would rebuild the same
+    defect one migration later.
+  - **43 across five token spaces at `origin/master` `e17b8b6` and at `1d6a9d2`** — `inventory_scope`
+    8, `pool_availability` 10, `resource_class` 8, `site_class` 4, `value_kind` 13, with `id`
+    contributing **zero**. The five are not the same five, and the whole of the +6 is one migration:
+    the `RSC-01`–`RSC-08` migration replaced the two lower-kebab resource `id`s (−2) and
+    `resource_class` was re-authored from prose values to kebab tokens (+8).
+  - **The resource `id`s are `RSC-01`…`RSC-08`** — `common-ore.json` carries `RSC-07`,
+    `hyper-gold.json` carries `RSC-08` — and **no `id` in this tree is lower-kebab.** `common-ore` and
+    `hyper-gold` were the two `id` values when the 37 was counted at `b482304`; they are
+    `resource_class` values now. This one is a **correction, not a stamp**: the claim that the tree's
+    kebab `id`s are `common-ore` and `hyper-gold` is false at both refs above rather than true-then, and
+    dating a false claim would read as provenance while functioning as cover.
+  - **12 occurrences of 8 camelCase tokens across four spaces**, unchanged at all three refs — `kind`
+    on `UNL-01`…`UNL-06`, `snapshot_at_creation` on `EN-06`, `unchanged_stats` on `W-AB`,
+    `clone_inherits_current` on `W-AE`.
+  - **The camelCase eight are deliberately left as they are** (`content/transcription-notes.md`,
+    Ruling 39), on **two open preconditions**, neither discharged at `e17b8b6` or `1d6a9d2`: a
+    **provenance answer** — a document occurrence in `docs/`, or a call site in `src/` or in a
+    `content/` file other than the nine that carry them, of which there are none — and a **declared
+    token grammar**, which would live in `content/schemas/` and would have to land on a *merged* ref;
+    that directory exists on neither ref. The grammar is a precondition rather than a preference, and
+    Ruling 39 states what would discharge each so a later pass can check the two conditions instead of
+    re-opening the question.
+  - These bullets describe **values**, not property names.
 - **Units live in key-name suffixes**, per
   `docs/technical/40-content-data-and-validation.md:94` (`_m`, `_m_per_s`, `_seconds`, `_per_second`,
   `_hull`, `_degrees`, `_fraction`, `_count`): `movement_speed_m_per_s`,

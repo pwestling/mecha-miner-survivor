@@ -13,11 +13,57 @@ namespace MechaMiner.Content.Tests.Fixtures;
 /// <see cref="RegistrySelectorTypes"/> resolves what is there and refuses what is not.
 /// </summary>
 /// <remarks>
+/// <para>
 /// A resolver that cannot fail turns every selector walk into a walk that proves nothing, and
 /// this one is a hand-written source scan rather than the runtime's own loader, so the case for
 /// trusting it has to be made here rather than assumed. Two claims are made: the scan agrees
 /// with reflection on the one assembly where both answers are available, and it refuses names
 /// that are close to real ones.
+/// </para>
+/// <para>
+/// <b>WHY THE REFLECTION IN THIS FILE IS PERMITTED, AND EXACTLY HOW FAR THAT REACHES.</b> This
+/// fixture calls <see cref="Assembly.GetTypes"/> twice and <see cref="Type.GetMethods()"/> once
+/// with <see cref="BindingFlags.NonPublic"/>. Two accepted clauses are in the area and neither
+/// is violated, but the reasons are narrow and are written out because the natural next step -
+/// treating this as a general licence to reflect inside tests - does not follow from them.
+/// </para>
+/// <para>
+/// <c>docs/technical/100-build-dependencies-and-release-operations.md:79</c> says
+/// "Reflection-based gameplay registration and runtime assembly scanning are avoided;
+/// generated/explicit registries make missing behavior a build error". That clause is
+/// <b>registration-scoped</b>, on three grounds that can each be checked against the text. Its
+/// subject is gameplay <em>registration</em>; its own second half prescribes a registration
+/// remedy rather than a prohibition on enumeration; and
+/// <c>docs/technical/40-content-data-and-validation.md:321</c> forbids the identical thing -
+/// "runtime assembly scanning, reflection discovery, source-generator magic, and a separately
+/// hand-edited manifest are forbidden" - in a paragraph about registration tables and the
+/// registry manifest, listing it alongside two other <em>registration</em> mechanisms. A fixture
+/// enumerating types to calibrate a parser registers nothing and wires no behaviour into
+/// anything, so the clause does not reach it.
+/// </para>
+/// <para>
+/// <b>Do not defend this with "that section is about production code".</b> That argument is
+/// false and collapses on inspection: line 81 of the same section prescribes NUnit for the test
+/// projects, so the section plainly addresses tests too. The ground is the registration scope,
+/// not the audience.
+/// </para>
+/// <para>
+/// <c>docs/technical/91-verification-strategy.md:35</c> says "Test-only access occurs through
+/// explicit diagnostic APIs/assemblies, not reflection into private state". Not violated,
+/// because <b>no state is read</b>. The <see cref="BindingFlags.NonPublic"/> call reads method
+/// <em>names and modifiers</em>; it is called on a <see cref="Type"/>, so there is no instance
+/// whose state could be reached; and nothing here invokes anything.
+/// </para>
+/// <para>
+/// <b>THE FLIP CONDITION, phrased so it can be checked against the code rather than
+/// reconstructed.</b> The acquittal covers the two <see cref="Assembly.GetTypes"/> calls and the
+/// <see cref="Type.GetMethods()"/> call as they currently read, and nothing wider. If this file
+/// ever reads the <em>value</em> of a private field or property - any <c>GetField</c>,
+/// <c>GetProperty</c> or <c>GetValue</c> - or invokes a non-public member, then doc 91:35 bites
+/// and this paragraph stops covering it. At the ref that wrote this, the file contains no
+/// <c>GetValue</c>, no <c>Invoke</c>, no <c>GetField</c> and no <c>GetProperty</c>, which is the
+/// state a reader should re-check rather than take on trust.
+/// </para>
 /// </remarks>
 [TestFixture]
 internal sealed class RegistrySelectorTypesTests
@@ -162,6 +208,12 @@ internal sealed class RegistrySelectorTypesTests
             string full = NameInSource(type.FullName!);
             IReadOnlyCollection<string>? recorded = RegistrySelectorTypes.MembersOf(full);
 
+            // NonPublic here reads method NAMES AND MODIFIERS and nothing else. It is called on
+            // a Type, so no instance exists whose state could be reached, and nothing below
+            // invokes what it finds - which is what keeps it clear of doc 91:35, "not reflection
+            // into private state". See this fixture's remarks for the scope of that reasoning and
+            // for the condition that would end it: reading a private field or property VALUE, or
+            // invoking a non-public member, is not covered by it.
             MethodInfo[] declared = type.GetMethods(
                 BindingFlags.Public | BindingFlags.NonPublic
                 | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly);

@@ -522,21 +522,109 @@ looking for the completion evidence of `DAT-007` will not find it here, and shou
 
 A line-number citation such as `docs/72-…:96` breaks silently the moment its target document gains a
 line above the cited one: the coordinate still resolves, but to the wrong sentence, and nothing fails.
-Three commits — `c05aee9`, `e24a52a`, `85d0ced` — removed every such citation from the files this
-branch owns (everything under `src/MechaMiner.Tools/ContentImport/`, plus `content/README.md`,
+Three commits — `c05aee9`, `e24a52a`, `85d0ced` — removed every **live** such citation from the files
+this branch owns (everything under `src/MechaMiner.Tools/ContentImport/`, plus `content/README.md`,
 `content/transcription-notes.md` and `content/quote-verification-audit.md`) and re-pointed each to a
 section heading (`<doc>:<n>` removed, `` <doc> `## Heading` `` added). This section is the durable
 record of what that released, what it deliberately did **not**, and the citation surfaces no
 working-tree gate can walk. The reasoning below lived only in inter-session messages until now; it is
 written here so a later pass can act on it without them.
 
+**Amended 2026-08-11, at `3db56c5`. The word "live" in the paragraph above is the amendment, and it
+carries the rest of it.** This section previously read as though the release had removed *every*
+citation; **1251 line citations of 31 documents survive in those files**, deliberately, as frozen note
+text. (That 1251 is the population this section measures: `<token>:<digits>` occurrences resolving to a
+`docs/**` document. It is not `A35`'s 1312, which counts a wider set of seven spellings over the same
+twelve files; the two figures are not reconciled and should not be.) Three things changed here as a
+result: the definition of *released* has been replaced with the
+property that was actually proved, the released membership has moved from **33 to 32**, and every
+surviving-citation figure is now labelled a **floor** rather than a count. The earlier wording is kept
+in place, marked superseded, so a reader who saw the first version can see what changed and why.
+
 ### Released documents — their line counts may change freely
 
-A released document is one no file in this tree cites by line, so its owner may add or remove lines
-without breaking anything here. **The membership figure is 33** — the documents positively confirmed
-released by full-path diff evidence from the diffs of `c05aee9`, `e24a52a` and `85d0ced`, enumerated
-below. That is the figure to take away, because every one of its members is a named document with a diff
-behind it.
+**AMENDMENT, 2026-08-11 — the criterion this subsection published has been replaced, and the
+membership figure has moved from 33 to 32.** What a document owner was told is unchanged and was
+always true. What was wrong is the grounds this record gave for it. The superseded paragraphs are kept
+below rather than deleted, marked as superseded, the same way the retired 37 is kept.
+
+**The criterion as it now stands: a document is released when no runtime or gate behaviour in this
+tree depends on a `docs/**` line coordinate of it.** That is measured directly, by two probes:
+
+- **The shift probe.** All 36 cited documents were shifted at once — 108 inserted lines — and all four
+  gates re-run. The **complete stdout** of every gate came back byte-identical, not merely its
+  `RESULT:` line.
+- **The forced-failure probe.** The same comparison was repeated with a gate driven down a
+  deliberately failing path, so the identity is not an artefact of the passing path printing the same
+  summary whatever the tree looks like.
+
+Nothing in this tree resolves a `docs/**` line position at runtime, and those two probes are what
+establish that rather than assert it.
+
+**Why the replacement is the primary finding here and not a tidier wording of the old definition.**
+The shift probe does not enumerate citations at all: it moves line geometry and observes behaviour.
+The criterion it replaces — *no file in this tree cites the document by line* — can be no more
+reliable than the citation enumeration it rests on, and citation enumeration in this repository is
+measured to miss spellings (below). Of the two candidate definitions, **only one survives the
+instrument finding**, and it is the one now published.
+
+**~~SUPERSEDED — the definition this subsection used to publish, and the figure that went with it.~~**
+It read: *"A released document is one no file in this tree cites by line, so its owner may add or
+remove lines without breaking anything here. **The membership figure is 33** — the documents
+positively confirmed released by full-path diff evidence from the diffs of `c05aee9`, `e24a52a` and
+`85d0ced`, enumerated below."* **That definition is false of 26 of the 33 documents it was applied
+to.** The three commits removed the **live** citations and deliberately preserved the **frozen** ones,
+so citation-free-ness is not what they delivered and never was. The definition is retired, not
+softened. The diff evidence behind the list is unaffected: it establishes which documents the release
+commits actually touched, which is a different claim and a sound one.
+
+**The two properties, kept apart, because conflating them is exactly what produced the defect:**
+
+- **(a) No live consumer resolves a line position in these documents.** **Proved**, by the two probes
+  above. This is the property a document owner cares about, and it is the one owners were told:
+  *change your line count freely* — true, and true for all of them.
+- **(b) No file in this tree contains a line citation of the document.** **False for 26 of the 33.**
+  It is strictly stronger than (a) and was only ever a proxy for it.
+
+**Once the criterion is (a), the surviving frozen citations stop being a defect in the release.** They
+become what they were always meant to be — deliberately preserved note text. The per-document counts
+below are kept because they are useful to anyone editing the files that hold them, not because their
+subjects fail a test.
+
+**Every surviving-citation figure below is a FLOOR, not a count, and the direction is the unhelpful
+one.** Citation spellings vary in this repository and a pattern aimed at one spelling misses the
+others. Two measured instances, each carrying its population:
+
+- A `\.md:[0-9]+` pattern found **1 of 26** citations of one document, the other 25 being written in
+  the abbreviated extensionless form.
+- The re-point pass reported **311** live citations where an exhaustive pass measured **351** genuine
+  ones at that pass's own base ref. `verify_content.py` records this under `A35`: "311 collapsed a
+  range to one occurrence and came from an instrument that could not see the extensionless or
+  bare-short spellings; 351 counts each coordinate."
+
+A third instance was measured for this amendment, inside this tree's own accounting, and it is the
+same shape. `content/transcription-notes.md` states **419** frozen citations over **twenty**
+documents in its per-definition-notes section; an exhaustive sweep of that same region measures **430
+over 21 documents**, and the file's own table directly beneath the claim has **21 rows summing to
+419**. Every per-document row agrees with the sweep except two, and the entire 11-citation gap is one
+spelling — the elided-slug form `docs/NN-...md` — 10 citations of
+`docs/31-initial-alien-roster.md` and 1 of `docs/72-player-survivability-and-damage-baseline.md`. The
+claim here is about spellings and stays that size: it is **not** a claim that every citation
+instrument in this project sees only one spelling.
+
+**The remedy, recorded because it is the one that worked when it was tried: sweep exhaustively over
+the general shape and enumerate the permitted forms, rather than assembling a union of patterns each
+aimed at a spelling somebody remembered.** A union of remembered spellings is not a corpus. Every
+figure below comes from such a sweep, run at `3db56c5` over the twelve files this tool owns: every
+`<token>:<digits>` occurrence extracted first, then each occurrence resolved to a document through an
+enumerated form vocabulary — full path with extension, abbreviated path without extension, bare
+filename without the `docs/` prefix, elided slug, bare document number — with clock timecodes,
+`content/` paths and one uppercase illustrative exhibit separated out and named.
+
+**So the confirmed count is "at most 7 of the 33", not 7.** A document for which the sweep found no
+surviving citation may hold one in a spelling the sweep does not enumerate, and the instrument that
+produced these figures is from the same family as the two above. `A35`'s own recall measurement is the
+calibration: it catches 308 of 351 genuine citations, missing 43 of a single shape.
 
 **The commits' own declarations assert 37; that number is recorded here as a declaration, not as a
 measurement.** `c05aee9` and `e24a52a` removed every line citation of
@@ -553,7 +641,9 @@ enumeration, and it does not name the four either.)
 methods agreed on a count of 32 while omitting *different* documents, so their agreement manufactured a
 confidence neither had earned, which is why this record publishes membership rather than cardinality.
 
-The 33 confirmed by full-path diff evidence, sorted:
+The 33 as the list stood, sorted — read now as *the documents the release commits demonstrably
+touched*, and with `docs/weapons/README.md` **struck** from it by the verdict recorded below, leaving
+membership at **32**:
 
 - `docs/10-core-game-loop.md`
 - `docs/30-combat-weapons-movement-camera.md`
@@ -579,7 +669,7 @@ The 33 confirmed by full-path diff evidence, sorted:
 - `docs/data/README.md`
 - `docs/data/survivability-baseline.csv`
 - `docs/data/weapon-base-balance.csv`
-- `docs/weapons/README.md`
+- ~~`docs/weapons/README.md`~~ — struck; see the verdict below
 - `docs/technical/22-combat-and-weapon-runtime.md`
 - `docs/technical/23-encounter-director-and-enemy-runtime.md`
 - `docs/technical/24-mining-fabrication-and-progression-runtime.md`
@@ -589,12 +679,147 @@ The 33 confirmed by full-path diff evidence, sorted:
 - `docs/technical/114-autonomous-agent-execution-protocol.md`
 - `docs/technical/115-component-contract-and-schema-registry.md`
 
-**One member's status is unresolved: `docs/weapons/README.md`.** Two passes disagree about it — one
+**The 7 confirmed under the retired criterion (b), re-measured at `3db56c5`** — zero surviving line
+citations in any enumerated spelling across the twelve owned files, and each of them cited at
+`origin/master`, so it is the release that removed them. The count in brackets is the `origin/master`
+figure falling to zero:
+
+- `docs/35-playable-mechs.md` (2 → 0)
+- `docs/open-questions.md` (2 → 0)
+- `docs/data/survivability-baseline.csv` (1 → 0)
+- `docs/data/weapon-base-balance.csv` (1 → 0)
+- `docs/technical/100-build-dependencies-and-release-operations.md` (1 → 0)
+- `docs/technical/114-autonomous-agent-execution-protocol.md` (2 → 0)
+- `docs/technical/115-component-contract-and-schema-registry.md` (2 → 0)
+
+**The other 26 still carry surviving line citations at `3db56c5`. Every figure in the right column is
+a floor over the twelve owned files, not a count**, for the reason given above:
+
+| document | surviving citations at `3db56c5` (floor) |
+| --- | --- |
+| `docs/68-utility-catalog.md` | 232 |
+| `docs/technical/40-content-data-and-validation.md` | 113 |
+| `docs/69-initial-relic-catalog.md` | 92 |
+| `docs/36-initial-mech-catalog.md` | 64 |
+| `docs/65-weapon-stat-and-branch-upgrades.md` | 64 |
+| `docs/71-initial-weapon-numeric-catalog.md` | 60 |
+| `docs/60-resources-crafting-progression.md` | 57 |
+| `docs/50-maps-resources-and-navigation.md` | 50 |
+| `docs/66-weapon-catalog-and-resource-graph.md` | 47 |
+| `docs/40-mining-and-extraction.md` | 43 |
+| `docs/61-specialized-resource-identities.md` | 42 |
+| `docs/72-player-survivability-and-damage-baseline.md` | 36 |
+| `docs/51-standard-map-generation-contract.md` | 33 |
+| `docs/63-permanent-option-unlock-catalog.md` | 33 |
+| `docs/31-initial-alien-roster.md` | 31 |
+| `docs/technical/24-mining-fabrication-and-progression-runtime.md` | 30 |
+| `docs/technical/23-encounter-director-and-enemy-runtime.md` | 25 |
+| `docs/32-standard-wave-and-beacon-schedule.md` | 23 |
+| ~~`docs/weapons/README.md`~~ (struck from the list) | 20 |
+| `docs/data/README.md` | 15 |
+| `docs/62-permanent-powerup-catalog.md` | 13 |
+| `docs/technical/22-combat-and-weapon-runtime.md` | 10 |
+| `docs/10-core-game-loop.md` | 2 |
+| `docs/30-combat-weapons-movement-camera.md` | 2 |
+| `docs/glossary.md` | 2 |
+| `docs/technical/110-implementation-plan-for-ai-agents.md` | 1 |
+
+**The arithmetic, so the two figures in this subsection do not read as a conflict:** 33 was 7 + 26 over
+the list as published. Striking `docs/weapons/README.md` — one of the 26 — leaves membership at **32 =
+7 confirmed citation-free + 25 carrying frozen citations**. The row above is kept in the table, struck,
+because its measured figure is part of the evidence for striking it.
+
+**Three of those figures disagree with the ones this amendment was briefed with, and all three
+disagreements are the instrument, not the arithmetic.** `docs/31-initial-alien-roster.md` measures 31
+against a reported 21 — the 10 extra are the elided-slug spelling, the same 10 the tree's own frozen
+table misses. `docs/72-player-survivability-and-damage-baseline.md` measures 36 against a reported 34
+— 2 extra, elided-slug again. `docs/technical/40-content-data-and-validation.md` measures 113 here and
+agrees, but was **118** one commit earlier at `39b88b3`: five bare-number citations invisible to a
+path-prefixed instrument, which `3db56c5` has since re-pointed. A fourth, smaller disagreement: the
+brief's "five at 1–2" is four in this population — `docs/10-core-game-loop.md`,
+`docs/30-combat-weapons-movement-camera.md`, `docs/glossary.md` and
+`docs/technical/110-implementation-plan-for-ai-agents.md`. The fifth was
+`docs/00-game-vision.md`, which is not a member of the 33 and is recorded separately below as a
+regrowth case.
+
+**The structural reason the 26 still carry citations, quoted from the tree rather than paraphrased.**
+`content/transcription-notes.md` says of its doc-40 citations that they are "reproduced verbatim from
+the deleted `notes` arrays, under the rule stated at the top of this file ('Note text stays verbatim
+even where a ruling has since superseded it'), so they are **not** rewritten here." And of the
+remainder: "**The other 419 `<doc>:<n>` citations below are frozen note text too, and every one of
+them still resolves** … Same rule, same reason: they are reproduced verbatim from the deleted `notes`
+arrays and are **not** rewritten." Measured at `3db56c5`: **558 citations survive in
+`content/transcription-notes.md`** — that figure is over the whole file, and the file's own two notes
+account for 530 of them over the subsections those notes head — and **656 survive in
+`src/MechaMiner.Tools/ContentImport/quote_mismatch_evidence.json`**, spread across 22 documents.
+Preservation was the instruction those files were following, so the survivors are compliance with it,
+not drift from it.
+
+**~~SUPERSEDED — `docs/weapons/README.md`'s status was published as unresolved.~~** The paragraph read:
+*"One member's status is unresolved: `docs/weapons/README.md`. Two passes disagree about it — one
 reports its citation removed and re-added, which means the claim was withdrawn in place and therefore
 never re-pointed; the other reports its `docs/weapons/README.md:48` re-pointed to `` `## Design state` ``
 and `` `## Catalog lookup` ``. A full-path diff is being run to settle it. Neither reading is adopted
-here: the membership figure stands at **33 with this one document's status pending**, and **a second
-amendment to this section will follow when the verdict lands.**
+here: the membership figure stands at 33 with this one document's status pending, and a second
+amendment to this section will follow when the verdict lands."*
+
+**RESOLVED: `docs/weapons/README.md` is NOT released, and it is struck from the list above.** The full-
+path diff settles it four ways, and its citations **increased** rather than falling — 18 at
+`origin/master`, 20 at `3db56c5`:
+
+- The coordinate the second reading called re-pointed appears **verbatim on both sides** of
+  `85d0ced`'s diff. Only the sentence around it was withdrawn — "is worth recording as unresolvable"
+  became "was recorded here as unresolvable". That is a line rewritten around a surviving citation,
+  not a re-point.
+- `85d0ced` **added** a further occurrence of that same coordinate, as a resolution aid stating which
+  heading it means. A commit in the release increased this document's citation count.
+- Its fifteen citations of a second coordinate were never touched at all: fifteen at `origin/master`,
+  fifteen at `3db56c5`, absent from every release diff.
+- The remaining occurrence is in this file, in the pull-request paragraphs below.
+
+**The coordinates themselves are not reproduced in this paragraph, deliberately**, for the reason
+given in the enforcement subsection: naming one here would add a citation `A35` exists to forbid, and
+would redden the gate.
+
+**Where the contrary reading came from: a resolution table read as a re-pointing table.**
+`content/transcription-notes.md` carries a table headed "heading each `:<n>` below resolves to", whose
+purpose is to say what frozen coordinates *mean* so a reader need not resolve them. Read as a record
+of re-pointing, it turns preserved citations into removed ones. It is the second table in that file to
+be read that way, and both readings inverted the same distinction this subsection now leads with —
+live citations removed, frozen citations kept.
+
+**The verdict was right by the wrong route, and that is worth recording separately.** The peer ruling
+that `docs/weapons/README.md` was a spurious member is **upheld** — but it was reached by reconciling
+counts, and it is upheld here by a full-path diff. The derivation changed even though the verdict did
+not. A conclusion being correct does not retroactively license the route that produced it, and a
+record that quietly keeps the right answer teaches the wrong method.
+
+**`docs/00-game-vision.md` is a regrowth case, and the regrowth happened in the gate file itself.**
+Zero line citations at `origin/master`. **Two** at `39b88b3`, both of one coordinate in
+`src/MechaMiner.Tools/ContentImport/verify_content.py`, introduced by commit `29a9b8d` — *after* all
+three release commits. The regrowth this section warned was ungated had already happened once, in the
+file that does the gating. It is now repaired: `3db56c5` re-pointed both to `docs/00-game-vision.md`
+`## Player fantasy`, and the figure at `3db56c5` is **zero**.
+
+**The 2 and the 3 on that document are two populations, not a discrepancy.** The **2** counts line
+citations *of* `docs/00-game-vision.md` across the twelve owned files at `39b88b3`. A separate
+stream's **3** counts `docs/technical/40-content-data-and-validation.md`'s own citations of
+`docs/00-game-vision.md`, three occurrences among that document's 26. Different denominators; neither
+figure corrects the other. The third occurrence stays named as unaccounted-for in this record rather
+than guessed at.
+
+**`docs/technical/10-runtime-architecture.md` was never cited by line at all, and the coordinate
+credited to it belongs to a different document.** That path occurs zero times in any enumerated
+spelling across the twelve owned files at `origin/master` and at `3db56c5`. The single bare-number
+coordinate read as its citation sat in `content/transcription-notes.md` at `origin/master`, and
+`85d0ced`'s replacement line **in the same hunk** names what it meant: the bare pair became
+`docs/50-maps-resources-and-navigation.md` `` `## Randomized resource profile` `` and
+`docs/10-core-game-loop.md` `` `### Crafting and upgrades` ``. So the coordinate was
+`docs/10-core-game-loop.md`'s. **And that document is not released either** — 3 citations at
+`origin/master`, **2 surviving** at `3db56c5`, both in
+`src/MechaMiner.Tools/ContentImport/expected_citation_deltas.json`. The reassignment is recorded
+because a zero credited to the wrong document is worse than no measurement: it retires a question
+nobody answered.
 
 **The count is method-sensitive, and a path-prefixed scan undercounts.** A scan that only matches
 `docs/…:<n>`-prefixed citations in the diffs surfaces fewer documents than were actually released,
@@ -604,11 +829,40 @@ entirely — and it also misses citations spread across the other owned files. T
 32, each dropping a *different* single document (one `docs/weapons/README.md`, the other
 `docs/technical/22`). Do not treat "32" as the release count.
 
+**That paragraph stands, and the exhaustive sweep confirms its exhibit:** the bare spelling of
+`docs/technical/22-combat-and-weapon-runtime.md` measures exactly **58** occurrences at
+`origin/master` and zero at `3db56c5`. What has changed is its status — it was written as a caution
+about one instrument, and the amendment above generalises it: spelling blindness is the reason every
+surviving-citation figure in this section is a floor.
+
 ### Five documents are NOT released — the inverse of a release, not a smaller one
 
-These five are still cited by line, and they are the inverse of the release rather than a reduced
-version of it: they were never re-pointed, because they have no live citation to re-point. Their
-surviving line citations live **only inside a frozen measurement artifact**:
+**AMENDMENT, 2026-08-11 — this list carries the same defect as the released list, and gets the same
+fix.** Its stated criterion is *surviving citations that live only inside the frozen measurement
+artifact* — and that artifact,
+`src/MechaMiner.Tools/ContentImport/quote_mismatch_evidence.json`, carries **656 citations across 22
+documents** at `3db56c5`, verified by the sweep described above. So the criterion as published does not
+pick out five documents, on either reading of it:
+
+- **Read strictly — cited by line, and only inside that artifact — seven documents qualify, not five.**
+  The two additions are `docs/technical/22-combat-and-weapon-runtime.md` (10 citations, all in that
+  file) and `docs/technical/24-mining-fabrication-and-progression-runtime.md` (30 citations, all in
+  that file). **Both of them are also listed as released by this same section**, so under the two
+  criteria as published, two documents sit in both lists at once.
+- **Read loosely — has surviving citations inside that artifact — twenty-two qualify**, seventeen
+  further than the five. The other fifteen of the 22 carry citations in that artifact *and* in
+  `content/transcription-notes.md`, which is why they fail the strict reading.
+
+**The property that actually distinguishes these five, stated so the list has a criterion it
+satisfies: the three release commits touched no citation of them, because they carried no live
+citation to re-point.** That is a fact about the release, not about runtime. Under the criterion now
+published — no runtime or gate behaviour depending on a `docs/**` line coordinate — these five are
+released like everything else, and this subsection's own next paragraph is the evidence:
+`check_quote_mismatch_evidence.py` rebuilds every span from the live documents by anchor slug and never
+reads the stored numbers. What their owners owe is not a runtime break but a re-derivation of a frozen
+measurement, at exactly one path.
+
+The five, unchanged as a list:
 
 - `docs/67-mech-relics.md`
 - `docs/73-interface-screen-flow-and-information-architecture.md`
@@ -616,17 +870,23 @@ surviving line citations live **only inside a frozen measurement artifact**:
 - `docs/70-combat-and-economy-balance-framework.md`
 - `docs/decisions/DEC-120-accept-permanent-powerup-catalog.md`
 
-**The constraint, measured at HEAD: 111 surviving line citations, all of them in
-`src/MechaMiner.Tools/ContentImport/quote_mismatch_evidence.json`** — `67` 63, `73` 40, `20` 4, `70` 3,
-`DEC-120` 1. The sibling artifact `src/MechaMiner.Tools/ContentImport/expected_citation_deltas.json`
+**The constraint, re-measured at `3db56c5` and unchanged: 111 surviving line citations *of these five
+documents*, all of them in `src/MechaMiner.Tools/ContentImport/quote_mismatch_evidence.json`, which
+holds 656 citations of 22 documents in total** — `67` 63, `73` 40, `20` 4, `70` 3, `DEC-120` 1. **That
+111 is one of two different 111s in this section, and each needs its population attached whenever it
+appears:** this one is *the five not-released documents' citations inside
+`quote_mismatch_evidence.json`*; the other is *`content/transcription-notes.md`'s own count of its
+doc-40 citations in one subsection of that file*, which the sweep confirms at 111 and which is a
+population of one document in one file. Same digits, unrelated denominators. The sibling artifact `src/MechaMiner.Tools/ContentImport/expected_citation_deltas.json`
 carries **zero** citation of any of the five in any form, so the constraint lives wholly in the first
 file. Those 111 are the `(path.md:<a>-<b>)` tail of a `doc_id#anchor` reference, frozen at the sweep
 ref; `check_quote_mismatch_evidence.py` rebuilds every span from the live docs by anchor slug and never
 reads the stored numbers, so they do not resolve at runtime — but they are the surviving textual line
 citations, and rewriting them would corrupt a frozen measurement. **The one actionable fact for an
-owner:** these five may not be treated as freely re-flowable the way the 37 are; before their line
-geometry is changed, the frozen artifact must be re-derived, and the change lives at exactly one path,
-`quote_mismatch_evidence.json`.
+owner:** these five may not be treated as freely re-flowable the way **the 32 documents the release
+commits re-pointed** are — the released set as this section now lists it, not the retired declaration
+figure of 37; before their line geometry is changed, the frozen artifact must be re-derived, and the
+change lives at exactly one path, `quote_mismatch_evidence.json`.
 
 ### Two documents were frozen at a fixed line count by their authors — both freezes are now lifted
 
@@ -731,11 +991,62 @@ model identifiers in commit footers — not carelessness — and the split betwe
 been measured. It is not derived by subtraction here, because a subtraction from a total is not a
 measurement of the remainder.
 
-### Enforcement of the release is not yet gated in the tree
+### Enforcement of the release — gated as of `3db56c5`, amended 2026-08-11
 
-No citation-prohibition assertion has landed in the verifier: the highest assertion at HEAD is `A34`
-(the `resource_class` coupling). `A24` already forbids a `:<digits>` line number inside a `content/`
-domain **value**, but that is the content-JSON surface, not the design-document citations in this tree's
-prose, comments, and failure messages. So **regrowth of `<doc>:<n>` citations in the owned files is not
-yet gated** — an assertion that would gate it is forthcoming, and this record should not be read as
-claiming a check already prevents the defect from returning.
+**~~SUPERSEDED — this subsection used to read as follows.~~** *"No citation-prohibition assertion has
+landed in the verifier: the highest assertion at HEAD is `A34` (the `resource_class` coupling). `A24`
+already forbids a `:<digits>` line number inside a `content/` domain **value**, but that is the
+content-JSON surface, not the design-document citations in this tree's prose, comments, and failure
+messages. So **regrowth of `<doc>:<n>` citations in the owned files is not yet gated** — an assertion
+that would gate it is forthcoming, and this record should not be read as claiming a check already
+prevents the defect from returning."* The `A24` sentence remains true and its scope distinction still
+holds. The rest is out of date: commit `3db56c5` landed `A35` and `A36`, and the highest assertion at
+HEAD is now `A36`.
+
+**The instance worth more than any count in this subsection: a repair reintroduced the very defect it
+was repairing, and the new gate caught it on its first live use.** The pass that removed the bare-number
+citations from `content/transcription-notes.md` wrote a dated note recording what it had removed — and
+that note *named the coordinate it was removing*, so the record of the removal carried the form the
+removal existed to delete. The repaired note now states the rule in its own words: *"The coordinate
+itself is not reproduced here: naming it would reintroduce the very form this repair removes."* The
+same commit repaired the same shape one layer up, in an unqualified negative about a phrase: *"a
+negative claim about a phrase falsifies itself the moment it is written down, because the record of the
+claim contains the phrase."* Both are one failure — **a record of an absence that quotes what it says
+is absent restores it** — and it is the failure most likely to recur here, because this section is
+nothing but records of removals. **This amendment follows the rule rather than describing it:** every
+coordinate discussed above is named by document and heading, never reproduced. The `docs/weapons/README.md`
+paragraph says so where it applies.
+
+`A35` — **no positional citation of a design document in the twelve files this tool owns.** Seven
+spellings are matched: a `docs/` path with the extension present or absent, a bare document filename, a
+bare short document name, ranges in any punctuation, a bare coordinate inheriting its document from an
+antecedent, the `line`/`lines` form, and the `L` / `#L` forms. The short-name and filename sets are read
+from a recursive walk of `docs/` on every run rather than listed in the file. At `3db56c5` it reports
+**0 files carrying a non-exempt citation** — and the assertion says so in its own output, so it is
+recorded here too: **that zero is a count over files, not over citations**, and the six citation
+surfaces no working-tree gate can reach are printed beside it on every run.
+
+**The exemptions are an exact declared set, not a pattern — 13 buckets holding 1312 citations, each
+with its own reason and a pinned count.** Adding a citation to an already-exempt bucket **fails** the
+gate, which is the designed difference between an exact set and a pattern: the exemption covers the
+citations that were audited, not the location they happen to sit in. **`content/README.md` is one of
+those buckets, with five entries covering six citations** — so this file can no longer record a
+coordinate in passing, and an amendment to this section must use the heading form. Recall is measured
+rather than assumed: against the file contents at `e24a52a`, `A35` catches **308 of 351** genuine
+citations, and the **43** it misses are one undecidable shape — a bare short name followed by a
+two-digit number in clock range, a string indistinguishable from the schedule timecodes this
+repository's notes transcribe verbatim.
+
+`A36` — **an ambiguous short-name reference must carry its full path.** The collision set is computed
+from a recursive walk of `docs/**/*.md` on every run and printed in full: **201 documents, 12 colliding
+short names** (9 numeric, plus `README` shared by 7 documents and `conventions` and `open-questions`
+each shared by 2). **253 short-name references all resolve to exactly one document, and 0 carry a line
+number.** The recursive walk is load-bearing: non-recursively there is exactly one document numbered
+40, the collision set computes empty, and the row would pass forever while the ambiguity sat one
+directory below.
+
+**What is gated and what is not.** Regrowth of a `<doc>:<n>` citation in the twelve owned files is now
+gated, and the `docs/00-game-vision.md` case above is the proof that it needed to be — that regrowth
+had already happened, in the gate file itself, after the release. What remains ungated is everything
+outside those twelve files, including the whole GitHub-side population recorded above, and the 43-case
+shape `A35` records as beyond a text scan.

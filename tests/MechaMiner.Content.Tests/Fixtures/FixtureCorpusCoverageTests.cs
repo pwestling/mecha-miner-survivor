@@ -513,8 +513,8 @@ internal sealed class FixtureCorpusCoverageTests
     /// </summary>
     /// <remarks>
     /// The citation outliving its file is also caught by
-    /// <c>VerificationRegistryTests.EveryNamedFixturePathExists</c>, which is why this is the
-    /// milder of the two deletion controls; the point here is that the partition's own
+    /// <c>VerificationRegistryTests.EveryNamedFixtureReferenceResolves</c>, which is why this
+    /// is the milder of the two deletion controls; the point here is that the partition's own
     /// emptiness assertions see nothing, because nothing on disk is misclassified.
     /// </remarks>
     [Test]
@@ -548,8 +548,8 @@ internal sealed class FixtureCorpusCoverageTests
     /// <see cref="TheSchemaFixtureCountTheRegistryClaims"/> is a literal rather than
     /// something derived. The directory and the registry agree with each other perfectly on
     /// this input: no orphan, no contradiction, no stale declaration, and no citation
-    /// pointing at a missing file for <c>EveryNamedFixturePathExists</c> to find. The corpus
-    /// is simply one proof smaller.
+    /// pointing at a missing file for <c>EveryNamedFixtureReferenceResolves</c> to find. The
+    /// corpus is simply one proof smaller.
     /// </para>
     /// <para>
     /// The second assertion is the whole argument: a count taken from what is present equals

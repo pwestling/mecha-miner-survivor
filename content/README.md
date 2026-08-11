@@ -34,7 +34,7 @@ re-nesting, and outright rejection of fields at that point.
 
 ## Mandated directory layout
 
-The layout is fixed by `docs/technical/40-content-data-and-validation.md:34-63`
+The layout is fixed by `docs/technical/40-content-data-and-validation.md` `## Accepted content repository layout`
 (`## Accepted content repository layout`), quoted verbatim:
 
 ```text
@@ -68,7 +68,7 @@ generated/
 > smallest cohesive aggregate such as the standard encounter schedule; generated/source separation is
 > mandatory. A layout change must update build tooling, schemas, importers, documentation, and
 > clean-checkout tests atomically rather than adding a second search path.
-> — `docs/technical/40-content-data-and-validation.md:63`
+> — `docs/technical/40-content-data-and-validation.md` `## Accepted content repository layout`
 
 Corroborated by `docs/technical/100-build-dependencies-and-release-operations.md:41`
 (`content/   source JSON and localization`). **No document specifies individual JSON file names**
@@ -123,7 +123,7 @@ belong to other streams, not because they are optional.
 Five files that used to be here are gone, and their absence is deliberate:
 
 - **`mechs/shared-baseline.json`** held player baseline values. A mech definition carries *overrides*
-  (`docs/technical/40-content-data-and-validation.md:110`), and `content/` has no player or run
+  (`docs/technical/40-content-data-and-validation.md` `### Mechs`), and `content/` has no player or run
   category yet; the schema stream owns that category, with `PLY-001` as its consumer.
 - **`maps/world-props.json`** held the destructible-rock and health-pack values
   (`docs/72-player-survivability-and-damage-baseline.md:180,190`). Those are now fields of the
@@ -132,12 +132,12 @@ Five files that used to be here are gone, and their absence is deliberate:
   Each effect now sits on the resource that owns it — `resources/A.json`…`F.json` each carry
   `resonance_effect_name` and a `resonance_behavior` block — and the resonance field lives on the geode
   site class (`resonance_field` in `mining-sites/specialized-material-geodes.json`), per the mining-site
-  schema (`docs/technical/40-content-data-and-validation.md:140`). Its `radius_m` key is currently
+  schema (`docs/technical/40-content-data-and-validation.md` `### Mining sites`). Its `radius_m` key is currently
   omitted: `DEC-128` sets it at 6.0 M, but that decision record is not reachable from this branch, so the
-  number waits for a citation `source_refs` can carry (`40:87`).
+  number waits for a citation `source_refs` can carry (40 `## Common definition envelope`).
 - **`enemies/elite-modifier-profile.json`** treated elite status as its own entity. It is not one:
   elite *eligibility* is a validated `elite_eligible` field on each of the ten enemies
-  (`docs/technical/40-content-data-and-validation.md:114` lists "elite eligibility" among the enemy
+  (`docs/technical/40-content-data-and-validation.md` `### Enemies and bosses` lists "elite eligibility" among the enemy
   fields), and the shared elite multipliers (`docs/31-initial-alien-roster.md:104`) are now the
   constants block `enemies/shared-elite-modifiers.json`, which the enemies read.
 - **`utilities/radar-unassigned-id.json`** is now **`utilities/UTL-R1.json`**. The rulings pass
@@ -155,7 +155,7 @@ list, and the verifier under
 - **One JSON file per stable catalog item, named by its exact doc ID.** `MCH-01.json`, `EN-07.json`,
   `BOSS-03.json`, `W-BE.json`, `REL-10.json`, `UTL-C2.json`, `UNL-04.json`, `PU-*.json`. IDs are
   copied verbatim from the design docs and never re-cased or re-numbered
-  (`docs/technical/40-content-data-and-validation.md:67`: "Reuse accepted gameplay IDs exactly").
+  (`docs/technical/40-content-data-and-validation.md` `## Stable ID policy`: "Reuse accepted gameplay IDs exactly").
 - **Kebab-case file names for cohesive aggregates** — `shared-elite-modifiers.json`,
   `stat-price-formula.json` (`FORMULA-01`), `standard-encounter-schedule.json` (`WAV-01`),
   `standard-map-generation-contract.json` (`MGC-01`), and the four `*-seams`/`*-geodes`/`*-sites`
@@ -164,7 +164,7 @@ list, and the verifier under
   `enemies/shared-elite-modifiers.json` (`ELT-01`) keep their kebab-case names while carrying stable
   IDs, because the canonical bundle is ordered by category and stable ID and "hashes identically for
   identical semantic input regardless of source file enumeration order"
-  (`docs/technical/40-content-data-and-validation.md:185`) — the `id` field is load-bearing, the file
+  (`docs/technical/40-content-data-and-validation.md` `## Compilation pipeline`) — the `id` field is load-bearing, the file
   stem is not. The resource radar *was* renamed to `UTL-R1.json`, but that was a choice about matching
   its twelve sibling utility files, not a rule.
 - **Branch files** are named `<weapon-id>-<branch-name-kebab-case>.json` (e.g.
@@ -173,7 +173,7 @@ list, and the verifier under
 
 ### Property names are `snake_case`; values keep their exact case
 
-`docs/technical/40-content-data-and-validation.md:26` is the single mandate behind both halves of this
+`docs/technical/40-content-data-and-validation.md` `## JSON codec and schema baseline` is the single mandate behind both halves of this
 rule:
 
 > Property names use `snake_case`; stable enum/kind/ID tokens remain exact case-sensitive ASCII.
@@ -182,7 +182,7 @@ rule:
   never `_`-prefixed. No key anywhere in this tree contains an uppercase letter.
 - **Stable ID, enum, and kind tokens in *values* keep their exact case.** `"W-BE"`, `"EN-06"`,
   `"MCH-01"`, `"BOSS-02"`, `"UTL-C2"`, `"PU-S04"`, `"REL-07"`, `"UNL-03"`, `"WAV-01"`, `"MGC-01"`, and
-  the resource letters `"A"`–`"F"` are transcribed verbatim. `docs/technical/40-content-data-and-validation.md:69`
+  the resource letters `"A"`–`"F"` are transcribed verbatim. `docs/technical/40-content-data-and-validation.md` `## Stable ID policy`
   makes this explicit: "IDs are case-sensitive ASCII tokens ... and never localized."
 - **Lower-kebab is not this tree's value convention, and nothing here should be read as saying it
   is.** Three measurements, all finding the same **43** lower-kebab value tokens and each dividing it
@@ -255,15 +255,15 @@ rule:
     re-opening the question.
   - These bullets describe **values**, not property names.
 - **Units live in key-name suffixes**, per
-  `docs/technical/40-content-data-and-validation.md:94` (`_m`, `_m_per_s`, `_seconds`, `_per_second`,
+  `docs/technical/40-content-data-and-validation.md` `## Unit and numeric policy` (`_m`, `_m_per_s`, `_seconds`, `_per_second`,
   `_hull`, `_degrees`, `_fraction`, `_count`): `movement_speed_m_per_s`,
   `extraction_duration_seconds`, `reference_diameter_m`, `recovery_hull_per_second`,
   `cost_hyper_gold`, `warning_seconds`.
 - **Percentage points belong only on a property whose name says `_percent`**
-  (`docs/technical/40-content-data-and-validation.md:95`). The normalized factor is *not* authored
+  (`docs/technical/40-content-data-and-validation.md` `## Unit and numeric policy`). The normalized factor is *not* authored
   here — the compiler writes it into the runtime bundle as a separate derived field.
 - **Geometry names distinguish radius, diameter, width, and range**; `area` is never a vague scalar
-  (`docs/technical/40-content-data-and-validation.md:98`). **`Area` the stat is exempt**, because it is
+  (`docs/technical/40-content-data-and-validation.md` `## Unit and numeric policy`). **`Area` the stat is exempt**, because it is
   an established stat classification rather than a geometric measurement: `docs/36-initial-mech-catalog.md:137`
   defines its membership as "scalable radii, widths, blast areas, projectile bodies, cones, and
   persistent damage zones", so `weapon_area_multiplier` deliberately scales a *set* of dimensions and
@@ -278,18 +278,18 @@ rule:
 - **A bound is always `maximum` or `minimum`, spelled out** — never `_cap`, `_max` or `_min`. A cap is
   a maximum, and the qualifier rather than the noun carries the distinction between two bounds on one
   quantity: `{target_minimum, target_maximum, hard_maximum}`. Where the name carries a unit suffix the
-  unit stays terminal (`40:94`) and the bound word moves to the front instead:
+  unit stays terminal (40 `## Unit and numeric policy`) and the bound word moves to the front instead:
   `maximum_control_resistance_percent`, `maximum_pursuit_duration_seconds`.
 - **Formulas are not script strings.** A player-facing formula such as the weapon upgrade price must
   become a registered formula kind plus parameters
-  (`docs/technical/40-content-data-and-validation.md:99`).
+  (`docs/technical/40-content-data-and-validation.md` `## Unit and numeric policy`).
 - **Ranges are `{minimum, maximum}` objects**, never a string like `"8-10"`.
 - **Per-rank values are rank-ordered arrays** (`ranks[0]` is rank 1), variable length: PowerUp rank
   arrays have 1, 3, 4, or 5 entries matching each entry's `maximum`, and `PU-S04` has exactly one rank.
 - **Values are transcribed, not derived.** No value is computed, rounded, or filled in.
 - **Absence is spelled by omitting the key. `null` appears nowhere in this tree.** Where the docs state
   no fact, the property is **absent**, not present-and-`null`.
-  `docs/technical/40-content-data-and-validation.md:90` is the mandate: "Optional fields have explicit
+  `docs/technical/40-content-data-and-validation.md` `## Common definition envelope` is the mandate: "Optional fields have explicit
   defaults materialized into the canonical bundle so runtime never guesses." An absent optional field
   gets its materialized default; a present-and-`null` one asks runtime to guess, which is what that line
   forbids. So absence has exactly one spelling.
@@ -303,8 +303,8 @@ rule:
   instead — and four further gap families found by re-deriving the inventory were recorded with them.
   Of the 275: 246 keys were omitted; 24 fields were **removed** as fields no schema will declare (the 20
   `relics/REL-01`–`REL-10 :: rarity_and_weighting.{rarity_tier, cache_selection_weight}` fields, which no
-  design document mentions and `40:132`'s relic field list omits, and the 4 boss `armor` fields, which
-  `40:114`'s enemies-and-bosses field list omits while `40:110`'s mech list includes Armor); 3
+  design document mentions and 40 `### Relics`'s relic field list omits, and the 4 boss `armor` fields, which
+  40 `### Enemies and bosses`'s enemies-and-bosses field list omits while 40 `### Mechs`'s mech list includes Armor); 3
   `external_numerics[n].value` keys were removed as shape defects; and 2 nested `id` keys were removed
   because the objects holding them are parameters of `MGC-01` rather than independently addressable
   definitions. `A26` in the verifier now fails on any `null` anywhere under `content/`, **with no
@@ -317,26 +317,26 @@ rule:
 
 ### The common definition envelope
 
-`docs/technical/40-content-data-and-validation.md:76-88` requires the following on every
+`docs/technical/40-content-data-and-validation.md` `## Common definition envelope` requires the following on every
 independently addressable definition. The literal values this tree carries today:
 
 | Field | Mandate | In this tree |
 | --- | --- | --- |
-| `id` | `40:80` — stable category-valid ID | present as a non-empty string on **all 138** definitions, including the aggregates (`WAV-01`, `MGC-01`) and the six IDs the integration owner minted rather than transcribed: the four prose-only mining-site classes (`docs/40-mining-and-extraction.md:58-132`) are `SITE-01`–`SITE-04` in document order, `enemies/shared-elite-modifiers.json` is `ELT-01`, and `weapons/stat-price-formula.json` is `FORMULA-01` (`content/transcription-notes.md`, the ruling headed "Ruling 38 — `FORMULA-01`, and the summary that says what the definition is" — it previously carried `weapon-stat-price-formula`, the only *minted* ID that was not `<PREFIX>-<NN>`). **No `id` in this tree is lower-kebab.** This row previously ended "lower-kebab `id`s do exist here, but only as the two transcribed resource IDs `common-ore` and `hyper-gold`"; that was true until the `RSC-01`–`RSC-08` migration and is **false at `origin/master` `e17b8b6` and at `1d6a9d2`**, where the eight resource definitions carry `RSC-01`…`RSC-08` (`common-ore.json` → `RSC-07`, `hyper-gold.json` → `RSC-08`) and the two slugs survive only as `resource_class` values. Corrected rather than dated, because this row is a live description of the tree rather than a record of a past measurement. Nothing here carries `"id": null` or omits the field, so the verifier treats a missing or null `id` as an unconditional failure |
-| `schema_version` | `40:81` — integer version of its definition schema | `1` everywhere; no schema exists to version yet |
-| `content_version` | `40:82` — monotonic revision | `1` everywhere; this is the first authored revision |
-| `status` | `40:83` — exactly one of `development`, `enabled`, `disabled`, `retired` | `"enabled"` everywhere; nothing here is gated or retired |
-| `name_key` | `40:84` — localization key, never literal player-facing text | **conditional**, like `presentation_id`: required only where a definition has a genuinely player-facing name, with the compiler supplying the default otherwise (`40:90`). Present on 135 of the 138 definitions, always resolving into `content/localization/en.json`. The three omissions — `WAV-01`, `MGC-01`, and `ELT-01` — are authoring contracts and a constants block; naming them in the localization catalog would imply a UI surface that does not exist. Having a stable ID and having a player-facing name are independent: `ELT-01` is addressable without being named |
-| `summary_key` | `40:85` — "concise player-facing summary key **where relevant**" | conditional, so it is present only where a summary exists (29 definitions); its absence is never an error |
-| `tags` | `40:86` — closed or validated vocabulary, never hidden behavior | present as an array on every definition, currently empty: no tag vocabulary has been minted, and inventing one here would be hidden behavior |
-| `source_refs` | `40:87` — gameplay document IDs/anchors and decision IDs implemented | present and non-empty on every definition; see below |
-| `presentation_id` | `40:88` — logical presentation entry | **omitted entirely**, not set to `null`. `content/presentation/` (`40:52`) does not exist, so there is no logical presentation entry to name; the presentation stream adds the field with its value |
+| `id` | 40 `## Common definition envelope` — stable category-valid ID | present as a non-empty string on **all 138** definitions, including the aggregates (`WAV-01`, `MGC-01`) and the six IDs the integration owner minted rather than transcribed: the four prose-only mining-site classes (`docs/40-mining-and-extraction.md:58-132`) are `SITE-01`–`SITE-04` in document order, `enemies/shared-elite-modifiers.json` is `ELT-01`, and `weapons/stat-price-formula.json` is `FORMULA-01` (`content/transcription-notes.md`, the ruling headed "Ruling 38 — `FORMULA-01`, and the summary that says what the definition is" — it previously carried `weapon-stat-price-formula`, the only *minted* ID that was not `<PREFIX>-<NN>`). **No `id` in this tree is lower-kebab.** This row previously ended "lower-kebab `id`s do exist here, but only as the two transcribed resource IDs `common-ore` and `hyper-gold`"; that was true until the `RSC-01`–`RSC-08` migration and is **false at `origin/master` `e17b8b6` and at `1d6a9d2`**, where the eight resource definitions carry `RSC-01`…`RSC-08` (`common-ore.json` → `RSC-07`, `hyper-gold.json` → `RSC-08`) and the two slugs survive only as `resource_class` values. Corrected rather than dated, because this row is a live description of the tree rather than a record of a past measurement. Nothing here carries `"id": null` or omits the field, so the verifier treats a missing or null `id` as an unconditional failure |
+| `schema_version` | 40 `## Common definition envelope` — integer version of its definition schema | `1` everywhere; no schema exists to version yet |
+| `content_version` | 40 `## Common definition envelope` — monotonic revision | `1` everywhere; this is the first authored revision |
+| `status` | 40 `## Common definition envelope` — exactly one of `development`, `enabled`, `disabled`, `retired` | `"enabled"` everywhere; nothing here is gated or retired |
+| `name_key` | 40 `## Common definition envelope` — localization key, never literal player-facing text | **conditional**, like `presentation_id`: required only where a definition has a genuinely player-facing name, with the compiler supplying the default otherwise (40 `## Common definition envelope`). Present on 135 of the 138 definitions, always resolving into `content/localization/en.json`. The three omissions — `WAV-01`, `MGC-01`, and `ELT-01` — are authoring contracts and a constants block; naming them in the localization catalog would imply a UI surface that does not exist. Having a stable ID and having a player-facing name are independent: `ELT-01` is addressable without being named |
+| `summary_key` | 40 `## Common definition envelope` — "concise player-facing summary key **where relevant**" | conditional, so it is present only where a summary exists (29 definitions); its absence is never an error |
+| `tags` | 40 `## Common definition envelope` — closed or validated vocabulary, never hidden behavior | present as an array on every definition, currently empty: no tag vocabulary has been minted, and inventing one here would be hidden behavior |
+| `source_refs` | 40 `## Common definition envelope` — gameplay document IDs/anchors and decision IDs implemented | present and non-empty on every definition; see below |
+| `presentation_id` | 40 `## Common definition envelope` — logical presentation entry | **omitted entirely**, not set to `null`. `content/presentation/` (40 `## Accepted content repository layout`) does not exist, so there is no logical presentation entry to name; the presentation stream adds the field with its value |
 
 ### `source_refs` is the provenance carrier
 
 Provenance no longer lives in a `_provenance` block, and no `_`-prefixed key exists anywhere in this
 tree. It lives in the required `source_refs` envelope field
-(`docs/technical/40-content-data-and-validation.md:87`), in this shape:
+(`docs/technical/40-content-data-and-validation.md` `## Common definition envelope`), in this shape:
 
 ```json
 "source_refs": [
@@ -347,7 +347,7 @@ tree. It lives in the required `source_refs` envelope field
 
 - The reference is a **stable document ID plus a heading anchor** — the `doc_id` from that document's
   front matter, never a repo-relative path and never a line number. Line numbers were the old
-  convention; they churn on every doc edit, and `40:87` asks for "document IDs/anchors".
+  convention; they churn on every doc edit, and 40 `## Common definition envelope` asks for "document IDs/anchors".
 - An optional `<json.path>: ` prefix attributes a **single property** to a different document than the
   rest of the file, replacing the old per-field `_source` blocks.
 - Every document ID must resolve to a real `doc_id` declared under `docs/`, and every `#anchor` to a
@@ -356,12 +356,12 @@ tree. It lives in the required `source_refs` envelope field
 ### Localization
 
 Player-facing text is not authored in definition files
-(`docs/technical/40-content-data-and-validation.md:211`). Every `name_key` and `summary_key` that is
+(`docs/technical/40-content-data-and-validation.md` `## Localization contract`). Every `name_key` and `summary_key` that is
 present resolves into `content/localization/en.json` — 164 strings today — a flat, lexically sorted,
 duplicate-free map of key to English string. Missing release strings are build errors
-(`docs/technical/40-content-data-and-validation.md:216`), so an unresolved key and an orphaned string
+(`docs/technical/40-content-data-and-validation.md` `## Localization contract`), so an unresolved key and an orphaned string
 are both failures, not warnings. An *omitted* conditional key is not an unresolved key: the compiler
-materializes its default (`docs/technical/40-content-data-and-validation.md:90`).
+materializes its default (`docs/technical/40-content-data-and-validation.md` `## Common definition envelope`).
 
 ## Known gaps, contradictions, and transcription decisions
 
@@ -392,25 +392,25 @@ python3 src/MechaMiner.Tools/ContentImport/verify_content.py
 It asserts, with every claim citing the mandate behind it (see the assertion table at the top of that
 file, and `src/MechaMiner.Tools/ContentImport/README.md`):
 
-- every file parses, with no duplicate object properties (`40:26`);
-- the full envelope above, including `status` from exactly the four accepted literals (`40:83`) and
+- every file parses, with no duplicate object properties (40 `## JSON codec and schema baseline`);
+- the full envelope above, including `status` from exactly the four accepted literals (40 `## Common definition envelope`) and
   `presentation_id` being absent rather than null;
 - a non-empty string `id` on every definition — a missing or null `id` is an unconditional failure,
   because the exception list is now empty;
 - that **no `null` appears anywhere under `content/`**, at any depth, in any of the 139 `*.json` files
-  including `localization/en.json`, with **no exception set at all** (`40:90`);
+  including `localization/en.json`, with **no exception set at all** (40 `## Common definition envelope`);
 - that no number sits under a relative-magnitude name (`bonus`, `penalty`, `increase`, `reduction`, ...)
   which says neither percent nor any unit, so a percentage cannot arrive under a name that hides whether
-  it is percentage points or a scale (`40:95`, `40:94`);
+  it is percentage points or a scale (40 `## Unit and numeric policy`, 40 `## Unit and numeric policy`);
 - that no string value carries a `:<digits>` line number after any path-like token, in either slash
   direction and any case with the extension optional, and that no repository path appears in a value at
-  all — matched on the unstable thing rather than on one spelling of a path (`40:87`);
+  all — matched on the unstable thing rather than on one spelling of a path (40 `## Common definition envelope`);
 - the two exception sets, so drift stays visible: the definitions carrying a null *or absent* `id`
   (currently none) and the definitions omitting `name_key` (currently three) must each match a list
   declared at the top of the verifier. A new member is a failure; a member that no longer belongs is a
   warning to shrink the list;
 - `snake_case` property names everywhere, keys only, so ID/enum tokens in values keep their case
-  (`40:26`);
+  (40 `## JSON codec and schema baseline`);
 - that no property name abbreviates a bound as `cap`, `max` or `min` at any depth, so the spelled-out
   `maximum`/`minimum` cannot drift back into three spellings. The only accepted exceptions are the two
   fields declared in the verifier's `BOUND_SPELLING_ESCALATED`, which is now **empty**: its two
@@ -419,16 +419,16 @@ file, and `src/MechaMiner.Tools/ContentImport/README.md`):
   `maximum_speed_bonus_percent` and `maximum_total_contact_damage_percent`;
 - no stale extraction metadata keys survive anywhere at any depth, including the retired
   `shared_rule_refs`, whose content now lives in `source_refs`;
-- every `source_refs` document ID and `#anchor` resolves against `docs/` front matter (`40:87`), and
+- every `source_refs` document ID and `#anchor` resolves against `docs/` front matter (40 `## Common definition envelope`), and
   every `source_refs` scope prefix names a field that actually exists in the definition it annotates —
   a citation pointing at a removed or renamed field is as dangling as an anchor pointing at a missing
   heading;
 - `content/localization/en.json` is flat, sorted, duplicate-free, fully referenced, and has no
-  orphaned strings (`40:216`);
+  orphaned strings (40 `## Localization contract`);
 - per-catalog entry counts and aggregate row counts, each row citing its own source `doc:line`;
 - the two doc-stated grand totals recomputed from the JSON (PowerUp ranks = 9,450 Hyper Gold;
   option unlocks = 2,150);
-- branch→weapon, encounter→enemy, and mech→signature-weapon referential integrity (`40:199`);
+- branch→weapon, encounter→enemy, and mech→signature-weapon referential integrity (40 `### Relational`);
 - two derived-value guards. The first is a regression guard on the one known transcription bug: the
   Sentry Pod deployment interval is the authored 6.0 s
   (`docs/71-initial-weapon-numeric-catalog.md:83`), and the derived 12 s must not appear as an
@@ -436,7 +436,7 @@ file, and `src/MechaMiner.Tools/ContentImport/README.md`):
   scopes. No definition under `enemies/` may carry a contact **diameter**, because an enemy authors
   `body_scale_multiplier` and the diameter is `scale × 0.80 M`; and no definition under `enemies/`
   **or** `bosses/` may carry the **centre distance that begins contact**, which for both is
-  `diameter ÷ 2 + the player's 0.50 M collision radius` (`40:114`). The diameter rule deliberately
+  `diameter ÷ 2 + the player's 0.50 M collision radius` (40 `### Enemies and bosses`). The diameter rule deliberately
   stops at enemies: a boss diameter is *authored*, since the boss roster gives bosses no body-scale
   column to derive one from (`docs/31-initial-alien-roster.md:121-128`) and
   `docs/72-player-survivability-and-damage-baseline.md:105-110` states the four boss diameters flat.
@@ -448,7 +448,7 @@ file, and `src/MechaMiner.Tools/ContentImport/README.md`):
 ## Reconciling with the canonical schemas
 
 **The envelope is settled; the domain field names outside it are not.** Every property name in this
-tree is `snake_case` with unit suffixes, so the naming mandate at `40:26` and `40:92-100` is satisfied
+tree is `snake_case` with unit suffixes, so the naming mandate at 40 `## JSON codec and schema baseline` and 40 `## Unit and numeric policy` is satisfied
 mechanically — but *which* domain fields exist, what they are called, and how they nest has never been
 checked against a schema, because none exists. **Expect exactly one reconciliation pass over the
 non-envelope field names when `content/schemas/` lands.** The verifier cannot anticipate it; it checks
@@ -458,8 +458,8 @@ Two shapes are known to be most likely wrong at that point, and the verifier war
 than failing, since no schema can settle them yet:
 
 - properties that carry a percentage in prose or in a `text`-style field instead of a `*_percent`
-  numeric with the compiler-derived factor (`40:95`); and
-- formulas held as strings rather than a registered formula kind plus parameters (`40:99`).
+  numeric with the compiler-derived factor (40 `## Unit and numeric policy`); and
+- formulas held as strings rather than a registered formula kind plus parameters (40 `## Unit and numeric policy`).
 
 What to run once the schemas land, in this order:
 
@@ -468,7 +468,7 @@ What to run once the schemas land, in this order:
 2. `DAT-002`/`DAT-003` per-category schema validation, including the cardinality and price validators
    (15 unordered material-pair recipes with no duplicate pair and exactly three stats each; one
    amplification, functional, and conversion branch per weapon —
-   `docs/technical/40-content-data-and-validation.md:120`).
+   `docs/technical/40-content-data-and-validation.md` `### Weapons`).
 3. `DAT-004` behavior-registry validation — every `behavior_kind`, targeting policy, formula, modifier
    hook, formation, and effect must resolve to exactly one registered descriptor
    (`CTR-CNT-002`, `docs/technical/115-component-contract-and-schema-registry.md:62`). **No registry
@@ -501,7 +501,7 @@ What to run once the schemas land, in this order:
 6. `DAT-008` report generation, then diff the generated balance report against
    `docs/data/*.csv` and `docs/70-combat-and-economy-balance-framework.md`.
 
-Two classes of blocker survive that sequence: the missing tag vocabulary (`40:86`), and every
+Two classes of blocker survive that sequence: the missing tag vocabulary (40 `## Common definition envelope`), and every
 contradiction in section 1 of `content/transcription-notes.md`, which a document owner must decide
 before the numbers here can be called final.
 

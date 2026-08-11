@@ -12,7 +12,8 @@ Where a note below says "the DAT-007 catalog" or "the DAT-007 field conventions"
 package the work anticipates, not a package this branch closed; note text is reproduced verbatim and
 was not edited to say so.
 `notes` is extraction metadata, no schema will declare it, and unknown fields are errors
-(`docs/technical/40-content-data-and-validation.md:26`, `:90`), so the arrays were deleted from
+(`docs/technical/40-content-data-and-validation.md` `## JSON codec and schema baseline` and
+`## Common definition envelope`), so the arrays were deleted from
 all 141 files and their contents moved here verbatim.
 
 **Count assertion.** 945 note strings were removed from 141 `notes` arrays. This file
@@ -57,7 +58,7 @@ resolved, not ruled on; see “Sentry Pod deployment interval” in the shape no
 - **RULED — third option, and the content-side disagreement dissolves.** See
   “Ruling 1 — enemies store a body scale, not a derived collision diameter” below. The authored
   quantity is the `0.62×` scale at `docs/31:45`; the diameter is derived and is now the compiler's
-  to produce (`docs/technical/40-content-data-and-validation.md:114`). The JSON no longer carries a
+  to produce (`docs/technical/40-content-data-and-validation.md` `### Enemies and bosses`). The JSON no longer carries a
   diameter, so nothing under `content/` is internally inconsistent, and `0.496` correctly appears in
   no definition file.
 - **The reading behind that ruling, recorded here as an interpretation and not as a convention
@@ -195,12 +196,12 @@ present twice, re-prefixed with the two new field paths.
 Two placement decisions, recorded separately because they have different standing:
 
 1. **Rock rules inside `MGC-01`: stated by the spec.**
-   `docs/technical/40-content-data-and-validation.md:148` lists “rock rules” explicitly among
+   `docs/technical/40-content-data-and-validation.md` `### Map generation` lists “rock rules” explicitly among
    the map-generation definition's fields. The rock's own property table therefore went into
    the existing `destructible_rock_rules` field, as `destructible_rock_rules.destructible_rock`,
    beside the spawn and replenishment rules already there.
 2. **Health packs inside rock rules: a structural decision by the integration owner, not
-   stated by `40:148`.** `40:148` says nothing about health packs. They were nested as
+   stated by 40 `### Map generation`.** 40 `### Map generation` says nothing about health packs. They were nested as
    `destructible_rock_rules.health_pack` on the reasoning that a pack is an outcome of rock
    destruction rather than an independent pickup class — the pack chance is a rock outcome and
    the 25 Hull / 0.25 M values exist only as its payload. If the schema stream later promotes
@@ -220,8 +221,8 @@ Also in this fold:
   an open question (OQ-008, `docs/open-questions.md:42`; landmark content is named in its
   candidate-answers entry at `:47`). Rocks and health packs are not
   landmarks, so folding them in does not touch OQ-008.
-- **Field naming needs confirming against `40:148` when the map schema lands.**
-  `40:148` names the field group “rock rules”; the sub-field names `destructible_rock` and
+- **Field naming needs confirming against 40 `### Map generation` when the map schema lands.**
+  40 `### Map generation` names the field group “rock rules”; the sub-field names `destructible_rock` and
   `health_pack`, and the nesting depth, were chosen here and are not stated anywhere.
 - Both nested props keep `id: null` and a literal `prop` display name
   (“Destructible rock”, “Health pack”). Neither is an independently addressable definition any
@@ -230,9 +231,9 @@ Also in this fold:
 
 Verbatim notes from the deleted file (`content/maps/world-props.json`):
 
-1. Two entries in one aggregate: docs/technical/40-content-data-and-validation.md:148 lists "rock rules" under map generation, and the health pack exists only as the destructible rock's drop, so the pair is the smallest cohesive aggregate (docs/technical/40-content-data-and-validation.md:63).
+1. Two entries in one aggregate: docs/technical/40-content-data-and-validation.md `### Map generation` lists "rock rules" under map generation, and the health pack exists only as the destructible rock's drop, so the pair is the smallest cohesive aggregate (docs/technical/40-content-data-and-validation.md `## Accepted content repository layout`).
 2. Secondary source for both entries: docs/51-standard-map-generation-contract.md:144-156 ("## Destructible rocks"), which states the same 100 Hull, 0 Armor, 0.80M footprint, 20% health-pack chance, 0.25M pickup radius, and 25-Hull repair.
-3. id is null for both entries: neither the rock nor the health pack receives an ID in any document, and docs/technical/40-content-data-and-validation.md:67 lists no ID scheme for world props. A stable-ID decision is required.
+3. id is null for both entries: neither the rock nor the health pack receives an ID in any document, and docs/technical/40-content-data-and-validation.md `## Stable ID policy` lists no ID scheme for world props. A stable-ID decision is required.
 4. Rock field order follows the "Property | Initial value" table at docs/72-player-survivability-and-damage-baseline.md:192-201.
 5. Spawn/replenishment behavior (16-rock cap, one attempt per second, 10% success) is transcribed in content/maps/standard-map-generation-contract.json under destructibleRockRules; the distance and camera-margin values are repeated here because they appear in the rock's own property table.
 6. presentation is null: docs/51-standard-map-generation-contract.md:156 states "Audiovisual treatment remains production work".
@@ -241,7 +242,7 @@ Verbatim notes from the deleted file (`content/maps/world-props.json`):
 
 **This is the handoff entry. The file has been deleted; everything needed to re-home its
 values without re-transcribing them is reproduced below.** The values are not mech data.
-`docs/technical/40-content-data-and-validation.md:110` says a mech definition carries Hull,
+`docs/technical/40-content-data-and-validation.md` `### Mechs` says a mech definition carries Hull,
 Armor, Recovery, movement and footprint **overrides**, so the thing being overridden is not a
 mech definition, and `content/` has no player or run category for it yet. `PLY-001` is the
 intended consumer and the schema stream will mint the stable ID. The mech catalog is now six
@@ -353,7 +354,7 @@ contradiction:
   the localization keys rewritten from `utility.radar-unassigned-id.*` to `utility.UTL-R1.*`. See
   “Ruling 2” above. This is the entry the “BOUNDARY DECISION REQUIRED” note below asked for.
 - Still `"id": null`, and still needing a decision — no document assigns these an ID, and
-  `40:67` forbids inventing one. Their localization keys therefore use the **filename stem** as
+  40 `## Stable ID policy` forbids inventing one. Their localization keys therefore use the **filename stem** as
   the `<stable_id>` segment, which is **provisional** and must be rewritten when IDs are minted:
   - `content/mining-sites/standard-ore-seams.json` → `mining_site.standard-ore-seams.name`
   - `content/mining-sites/rich-ore-seams.json` → `mining_site.rich-ore-seams.name`
@@ -377,8 +378,8 @@ contradiction:
 #### Localization keys: what was minted and what was not
 
 Key grammar is `<category>.<stable_id>.<role>`, category `snake_case`, stable ID verbatim
-(`40:67`), role from `name` / `summary`. English lives only in
-`content/localization/en.json` (`40:209-217`); no `name_key` holds literal text (`40:82`).
+(40 `## Stable ID policy`), role from `name` / `summary`. English lives only in
+`content/localization/en.json` (40 `## Localization contract`); no `name_key` holds literal text (40 `## Common definition envelope`).
 
 `name_key` was **not** minted for four definitions, because no document authors a player-facing
 display name for them and inventing one would be authoring, not transcription:
@@ -400,7 +401,7 @@ this pass was the radar's two keys moving from `utility.radar-unassigned-id.*` t
 `summary_key` was minted only where a definition already carried short player-facing prose:
 mechs (`selection_summary`), relics (`discovery_sentence`, whose object held nothing but that
 string once its line number was removed, so the key was deleted outright), and utilities
-(`description`). It was **not** invented anywhere (`40:76`, “where relevant”).
+(`description`). It was **not** invented anywhere (40 `## Common definition envelope`, “where relevant”).
 
 Player-facing-looking strings deliberately left as data, because they are denormalized copies,
 internal descriptors, or verbatim mechanical rule text, and because none of them has an
@@ -424,7 +425,7 @@ envelope key slot to point at:
 
 `refs` arrays holding `docs/<file>.md:<line>` strings (30 `availability.refs` + 30
 `exclusivity.refs`, all in `content/branches/`), `lines` fields sitting beside `text`, and
-`rules[].line` were all deleted. Line numbers are explicitly unstable (`40:70`, `TDR-006:25`).
+`rules[].line` were all deleted. Line numbers are explicitly unstable (40 `## Stable ID policy`, `TDR-006:25`).
 Each was resolved to the enclosing heading of the cited document and merged into that file's
 top-level `source_refs` in the existing `<snake_case json path>: <DOC-ID>#<anchor>` form, then
 deduplicated against the entries already there. `text` values were kept: they are verbatim
@@ -460,14 +461,14 @@ point.
 **Citations.** `docs/31:45` authors `EN-07` (Razorling) a `0.62×` body scale.
 `docs/72:86` — “The Ripper's rank-zero contact diameter is 0.80M. Every ordinary body scale in the
 alien roster multiplies that diameter.” So the diameter is a product, not an authored number.
-`docs/technical/40-content-data-and-validation.md:114` assigns producing it to the compiler:
+`docs/technical/40-content-data-and-validation.md` `### Enemies and bosses` assigns producing it to the compiler:
 “Validation derives world speeds/footprints and compares them with the survivability report.”
 Storing it alongside the scale would put a second writer on a compiler-owned value.
 
 **Change.** In all ten ordinary enemy definitions (`content/enemies/EN-01.json` … `EN-10.json`):
 
 - `body_scale_multiplier` is renamed **`body_scale_factor`** — a scale, so no unit suffix
-  (`40:92-94` only requires suffixes on ambiguous *dimensional* names). The value is unchanged.
+  (40 `## Unit and numeric policy` only requires suffixes on ambiguous *dimensional* names). The value is unchanged.
 - `contact_footprint.contact_diameter_m` is **removed**. It was the derived collision diameter.
 
 The ten scales were re-verified against the “Ordinary roster overview” table at
@@ -525,7 +526,7 @@ are withdrawn: the first settles a question that is open, the second reported wo
 
 #### Ruling 2 — the resource radar is a utility and gets `UTL-R1`
 
-**Citations.** `40:128` gives the Utilities schema a field for the “assigned material or ore-only
+**Citations.** 40 `### Utilities` gives the Utilities schema a field for the “assigned material or ore-only
 radar exception”, so the schema expects the radar *inside* the utility catalog with a marked
 exception rather than outside it. `docs/68:31` — the radar “remains outside the material table: it
 costs 300 common ore, has no ranks” — places it outside the *material table*, which is not the
@@ -559,11 +560,11 @@ the seven tracked categories, `effect_rules`, and all seven `external_numerics` 
 
 **What the ruling did not determine, and I chose:** the four added `source_refs` entries and their
 `json.path:` prefixes. The ruling named `docs/glossary.md:220` and `docs/63:28` as name authorities
-and `40:128` / `docs/68:31` as ID authorities but did not say to cite them in the file.
+and 40 `### Utilities` / `docs/68:31` as ID authorities but did not say to cite them in the file.
 
 #### Ruling 3 — `elite-modifier-profile.json` is not a definition; decomposed and deleted
 
-**Citations.** `40:114` puts “elite eligibility” in the *enemy* schema's field list.
+**Citations.** 40 `### Enemies and bosses` puts “elite eligibility” in the *enemy* schema's field list.
 `docs/technical/23:137` — an elite “snapshots the base enemy definition plus the shared elite
 modifiers at spawn. It does not create a second duplicated enemy catalog row.” So there is no
 elite definition to own an ID: there is a per-enemy flag and a block of shared constants.
@@ -591,9 +592,9 @@ not a definition and has no player-facing name. Envelope (`schema_version`, `con
 | `movement_speed_multiplier` | 1.1 | |
 | `contact_damage_multiplier` | 1.5 | |
 | `body_scale_multiplier` | 1.25 | stays a **scale**, per the ruling and Ruling 1 |
-| `added_control_resistance_percent` | 25 | **percentage points**, so the name ends `_percent` (`40:95`); the normalized factor is the compiler's |
+| `added_control_resistance_percent` | 25 | **percentage points**, so the name ends `_percent` (40 `## Unit and numeric policy`); the normalized factor is the compiler's |
 
-Also renamed for the same `40:95` reason: `added_control_resistance.cap_percent` (90) is now the
+Also renamed for the same 40 `## Unit and numeric policy` reason: `added_control_resistance.cap_percent` (90) is now the
 top-level `control_resistance_cap_percent`. `added_control_resistance.percentage_points` was the
 one property in the file that failed the `*_percent` policy.
 
@@ -652,9 +653,9 @@ byte-identically: `adds_behavior`, `adds_attacks_phases_aura_or_support_ai`, `ad
 
 #### Ruling 4 — `geode-resonance-effects.json` is not a definition; decomposed and deleted
 
-**Citations.** Doc 40 splits this deliberately. `40:106` gives the *resource* definition a
+**Citations.** Doc 40 splits this deliberately. 40 `### Resources` gives the *resource* definition a
 “resonance behavior registration if applicable”, and the authored table is keyed by Material
-(`docs/61:90`, “Geode resonance behavior”), so the shape already matches. `40:140` gives the
+(`docs/61:90`, “Geode resonance behavior”), so the shape already matches. 40 `### Mining sites` gives the
 *mining-site* definition the “zone/field dimensions”. Runtime agrees: `docs/technical/24:23` has
 each site store “resonance material and field radius if a geode” — the site references the
 material, the material owns the behavior.
@@ -726,11 +727,11 @@ zone’; no dimension is given.”
 1. **The three added `resonance_field` keys, and which seven I treated as already present.** The
    ruling said to move “the field radius”. The remaining ten `field_rules` values had to go
    somewhere or be lost, and the site's `resonance_field` is where the spec puts field dimensions
-   (`40:140`). `active_before_extraction_begins: true` now sits beside the site's existing
+   (40 `### Mining sites`). `active_before_extraction_begins: true` now sits beside the site's existing
    `active_while_unopened: true`, which is arguably the same fact under two names — I kept both
    rather than judge one redundant and drop an authored value. De-duplicating them is a schema
    decision, exactly as the `world-props` fold's duplicated distance pair was.
-2. **The property names `resonance_behavior` and `behavior_kind_registration_pending`.** `40:106`
+2. **The property names `resonance_behavior` and `behavior_kind_registration_pending`.** 40 `### Resources`
    says “resonance behavior registration”; the snake_case rendering and the pending flag's name are
    mine. **→ Partly superseded by Ruling 9:** `behavior_kind_registration_pending` is gone, so only
    `resonance_behavior` remains my naming choice.
@@ -772,7 +773,7 @@ lands, and until then the four times must not be treated as accepted content:
    minute-29 and minute-34 rows do. If those times are the four written here, the flag is deleted
    and `source_refs` gains nothing; if they differ, the data changes and only the flag's removal is
    shared with this pass. This is the expected resolution.
-2. Or the schedule schema grows a validated interval grammar (`40:144` — “Aggregate validation
+2. Or the schedule schema grows a validated interval grammar (40 `### Encounter schedule` — “Aggregate validation
    compares 35 contiguous rows, totals, earliest appearance, boss cadence, formation grammar”), in
    which case the row should hold the interval, not four expanded timestamps, and this
    reconstruction is discarded rather than confirmed.
@@ -795,7 +796,7 @@ each entry gives the citations, exactly what changed, and separately what the ru
 **These are deliberate removals, not transcription gaps.** Five fields are absent from `content/`
 by decision rather than because no document supplied them:
 `contact_footprint.contact_diameter_m` and `contact_footprint.center_distance_that_begins_contact_m`
-on the ten enemies (Rulings 1 and 6 — the compiler owns both under `40:114`), and
+on the ten enemies (Rulings 1 and 6 — the compiler owns both under 40 `### Enemies and bosses`), and
 `resonance_behavior.behavior_kind`, `resonance_behavior.behavior_kind_registration_pending` and
 `exclusion_reason` (Rulings 8 and 9 — invented metadata no schema declares). A reviewer should not
 read any of the five as missing data, and none should be re-added by a later transcription pass
@@ -807,7 +808,7 @@ finding the value in `docs/` and assuming it was overlooked.
 contact diameter is 0.80M. Every ordinary body scale in the alien roster multiplies that diameter.
 Contact begins when the enemy contact circle and the mech's 0.50M-radius collision circle overlap.”
 So the centre distance is `enemy contact diameter ÷ 2 + 0.50 M`, and
-`docs/technical/40-content-data-and-validation.md:114` assigns producing it to the compiler along
+`docs/technical/40-content-data-and-validation.md` `### Enemies and bosses` assigns producing it to the compiler along
 with the footprint: “Validation derives world speeds/footprints and compares them with the
 survivability report.”
 
@@ -887,10 +888,10 @@ like two unrelated ideas. `content/enemies/shared-elite-modifiers.json` was alre
 
 #### Ruling 8 — `exclusion_reason` comes out of the shared elite modifiers
 
-**Citations.** `40:249` — an agent “must not … add an unvalidated optional field”. The exclusion
+**Citations.** 40 `## Agent content-change workflow` — an agent “must not … add an unvalidated optional field”. The exclusion
 already has a machine-readable carrier: `docs/technical/23:141` says “Needler is excluded by content
 validation”, and that validation reads `EN-06`'s `elite_eligible: false`, which is the field
-`40:114` puts in the enemy schema. The *reason* is authored prose at `docs/31:102` (“Needler does not
+40 `### Enemies and bosses` puts in the enemy schema. The *reason* is authored prose at `docs/31:102` (“Needler does not
 become an elite in the initial standard schedule because combining its projectile with the shared
 elite multipliers reduces readability”) and restated at `docs/technical/23:141`.
 
@@ -905,7 +906,7 @@ the assertion a validator can act on, and it is already in the data.
 
 #### Ruling 9 — `behavior_kind: null` and the pending flag come out of the six resources
 
-**Citations.** `40:249` again — no unvalidated optional fields, and `40:90` — “Unknown fields are
+**Citations.** 40 `## Agent content-change workflow` again — no unvalidated optional fields, and 40 `## Common definition envelope` — “Unknown fields are
 errors rather than silently ignored.” `behavior_kind_registration_pending` is a field no schema will
 ever declare: it describes the state of this transcription, not the state of the game. And
 `behavior_kind: null` is a *nulled* optional field where the envelope's own rule for an
@@ -935,7 +936,7 @@ all authored in the “Geode resonance fields” table at **`docs/40-mining-and-
 | `E` | Eidolon Coral | **Synchronized Aggression** | enemy attack cadence is 20% faster without increasing movement speed |
 | `F` | Flux Amber | **Overclocked Motion** | enemy movement speed is 20% higher without increasing attack cadence |
 
-`40:156` requires that every content `behavior_kind` have exactly one registered descriptor with a
+40 `## Behavior registries` requires that every content `behavior_kind` have exactly one registered descriptor with a
 compatible parameter schema. When the registry exists, each of the six resources gains a
 `behavior_kind` holding its minted token. Until then the six `resonance_behavior` blocks carry the
 authored effect and its `modifier` and no registration — which is accurate, because there is no
@@ -973,12 +974,12 @@ finds the four values at `docs/72:105-110` must not re-add them.
 
 #### Ruling 11 — the last five stable IDs are minted: `SITE-01`–`SITE-04` and `ELT-01`
 
-**Citations.** `40:80` requires a stable category-valid `id` on every independently addressable
-definition. `40:185` is what makes an ID-less file untenable rather than merely untidy: “The canonical
+**Citations.** 40 `## Common definition envelope` requires a stable category-valid `id` on every independently addressable
+definition. 40 `## Compilation pipeline` is what makes an ID-less file untenable rather than merely untidy: “The canonical
 bundle is ordered by category and stable ID, uses normalized numeric formatting, includes
 schema/generation versions, and hashes identically for identical semantic input regardless of source
 file enumeration order.” There is no slot in that ordering for a file with no stable ID, so an ID-less
-file cannot be deterministically placed in the artifact every consumer reads. `40:67` (“Reuse accepted
+file cannot be deterministically placed in the artifact every consumer reads. 40 `## Stable ID policy` (“Reuse accepted
 gameplay IDs exactly”) still forbids *inventing* IDs during transcription, which is why this pass did
 not mint them and the integration owner did.
 
@@ -1005,17 +1006,17 @@ minted” obligation the Stable IDs section above recorded.
 than an ID-less constants block. Three things it does **not** gain, each for its own reason:
 
 - **No `name_key`.** `name_key` is conditional on a definition having a genuinely player-facing name
-  (`40:84` with `40:90`), and this one has none — it is a block of multipliers the UI never names.
+  (40 `## Common definition envelope` with 40 `## Common definition envelope`), and this one has none — it is a block of multipliers the UI never names.
   Having a stable ID and having a name are independent properties, so `ELT-01` stays in the verifier's
   `NAME_KEY_OMITTED` list beside `WAV-01` and `MGC-01`, and the list is unchanged at three members.
   Nothing was added to `en.json` for it.
 - **No rename.** The file stays at `content/enemies/shared-elite-modifiers.json`, the path Ruling 10
   confirmed. The bundle orders by the `id` field and hashes independently of source file enumeration
-  order (`40:185`), so the stem is not load-bearing; renaming would churn every `content/README.md`
+  order (40 `## Compilation pipeline`), so the stem is not load-bearing; renaming would churn every `content/README.md`
   and verifier reference for no gain. The file's stem remains unsourced, as Rulings 3 and 10 noted.
 - **No new `source_refs` entry.** No document assigns either `ELT-01` or `SITE-01`–`SITE-04`, so there
   is nothing to cite: a `id: <DOC>#<anchor>` prefix here would attribute a minted token to a document
-  that does not contain it. (`UTL-R1` got such refs under Ruling 2 because `40:128` and `docs/68:31`
+  that does not contain it. (`UTL-R1` got such refs under Ruling 2 because 40 `### Utilities` and `docs/68:31`
   genuinely argue for putting the radar in the utility catalog; nothing comparable exists here.)
 
 **What the ruling did not determine, and I chose:**
@@ -1031,7 +1032,7 @@ than an ID-less constants block. Three things it does **not** gain, each for its
 **Citations.** `docs/72:86` states one derivation for every contact circle in the game: “Contact begins
 when the enemy contact circle and the mech's 0.50M-radius collision circle overlap.” So the centre
 distance is `contact diameter ÷ 2 + 0.50 M` for a boss exactly as for an enemy, and
-`docs/technical/40-content-data-and-validation.md:114` assigns producing it to the compiler
+`docs/technical/40-content-data-and-validation.md` `### Enemies and bosses` assigns producing it to the compiler
 (“Validation derives world speeds/footprints and compares them with the survivability report”).
 Ruling 6 removed it from the ten enemies and stopped there, because the ruling it applied “named the
 enemy definitions”. The defect it was removing did not stop there.
@@ -1097,7 +1098,7 @@ the enemies.
 Not an integration-owner ruling: an audit this pass ran and fixed, recorded here with the rest.
 
 **The defect class.** A `source_refs` element may carry an optional `<json.path>: ` prefix attributing
-a single property to a document (`40:87`, and the shape documented in `content/README.md`). A prefix
+a single property to a document (40 `## Common definition envelope`, and the shape documented in `content/README.md`). A prefix
 naming a field that does not exist in the definition is a **dangling citation** — it claims to
 document something that is not there. It is the same defect class as an `#anchor` pointing at a heading
 that does not exist, which `A9` has always failed on, and it had no check at all.
@@ -1151,7 +1152,7 @@ at the end of this file.
 
 #### Ruling 14 — a multiplicative scale is spelled `_multiplier`, and nothing else
 
-**Citation.** `docs/technical/40-content-data-and-validation.md:26` ("Property names use `snake_case`")
+**Citation.** `docs/technical/40-content-data-and-validation.md` `## JSON codec and schema baseline` ("Property names use `snake_case`")
 with `:96` (the unit-suffix list) is the whole of the naming mandate; neither names a spelling for a
 multiplicative scale, so the tree had drifted into four — `_multiplier` (43 names, 52 leaves),
 `_scaling` (4 names), `_multiple_of_` (1 name), and a `_scale` grouping key over non-factors. The ruling
@@ -1172,7 +1173,7 @@ be the wrong name for it and no rename applies. It stays as authored.
 #### Ruling 15 — three fields whose multiplicativity was inferred from prose are omitted, not renamed
 
 **The ruling.** Inferring multiplicativity from prose in order to choose a field name is inventing a
-semantic from a name, which `40:90` ("Unknown fields are errors") and the transcribe-don't-derive rule
+semantic from a name, which 40 `## Common definition envelope` ("Unknown fields are errors") and the transcribe-don't-derive rule
 both forbid. **A declared optional field whose semantics we guessed is worse than an absent one**, because
 the guess survives into the schema as if a document had stated it. So a `_scaling` field whose value is
 `null` is omitted entirely rather than renamed to `_multiplier`.
@@ -1202,7 +1203,7 @@ question for the integration owner: omit `explosion_area_multiplier` too, or kee
 
 #### Ruling 16 — an upper bound is spelled `maximum`, a lower bound `minimum`
 
-**Citation.** `40:26` again for property-name form, and `40:94` for why the bound word cannot always take
+**Citation.** 40 `## JSON codec and schema baseline` again for property-name form, and 40 `## Unit and numeric policy` for why the bound word cannot always take
 the suffix slot: units live in key-name suffixes, so a name carrying `_percent` or `_seconds` must keep
 that terminal.
 
@@ -1259,7 +1260,7 @@ mistake?**
 
 #### Ruling 17 — `Area` the stat keeps its name; the geometry rule does not bind it
 
-**Citation.** `40:98` — "Geometry dimensions distinguish radius, diameter, width, range, and area; `area`
+**Citation.** 40 `## Unit and numeric policy` — "Geometry dimensions distinguish radius, diameter, width, range, and area; `area`
 is never used as a vague scalar name" — read against `docs/35-playable-mechs.md:65`, which lists "weapon
 Area" in "the shared stat vocabulary", and `docs/36-initial-mech-catalog.md:137`, which defines its
 membership: "scalable radii, widths, blast areas, projectile bodies, cones, and persistent damage zones
@@ -1268,7 +1269,7 @@ qualify".
 **The ruling.** `content/relics/REL-04.json :: effects.weapon_area_multiplier` is **not renamed**. It
 deliberately scales a *set* of dimensions, so forcing a specific dimension into the name would encode a
 falsehood — `REL-04 :: rules[1]` restates `docs/69-initial-relic-catalog.md:99` verbatim ("weapon Area is
-doubled"). `40:98` binds a field naming a measured dimension of a specific shape, not a field naming the
+doubled"). 40 `## Unit and numeric policy` binds a field naming a measured dimension of a specific shape, not a field naming the
 Area stat. `content/README.md`'s geometry bullet now records the exemption.
 
 This is one of two rules in the planned validator set that **would have produced a wrong answer** if
@@ -1320,7 +1321,7 @@ array, which still exists with element 0 intact; no prefix named either removed 
 
 #### Ruling 20 — counts carry `_count`, not a bare `size`
 
-`40:94` lists `_count` among the required suffixes. `rarity_and_weighting.fresh_profile_pool_size` and
+40 `## Unit and numeric policy` lists `_count` among the required suffixes. `rarity_and_weighting.fresh_profile_pool_size` and
 `rarity_and_weighting.fully_unlocked_pool_size` are counts of relics in a pool (5 and 10), so across
 `REL-01`–`REL-10` — 20 occurrences — they become `fresh_profile_pool_count` and
 `fully_unlocked_pool_count`. Values unchanged.
@@ -1330,7 +1331,7 @@ array, which still exists with element 0 intact; no prefix named either removed 
 
 #### Ruling 21 — the factor-and-percentage twins are audited, and none is removed
 
-`40:95` says the compiler writes the normalized factor into the runtime bundle "as a separate derived
+40 `## Unit and numeric policy` says the compiler writes the normalized factor into the runtime bundle "as a separate derived
 field", which argues a hand-authored factor sitting beside its percentage is a second writer. The ruling
 set two mandatory conditions: the factor must actually agree with the percentage, and the factor may be
 removed **only where the design document states the value as a percentage**. Where the source states a
@@ -1378,7 +1379,7 @@ is treated as prose. **Not decided here.**
 Neither is a naming matter; both are recorded so a reviewer does not read them as oversights.
 
 - **The extraction-zone and resonance-field radii (3.0 M / 6.0 M) are not added.** The values are confirmed,
-  but `source_refs` has nothing real to point at until a decision record exists, and `40:87` wants
+  but `source_refs` has nothing real to point at until a decision record exists, and 40 `## Common definition envelope` wants
   "gameplay document IDs/anchors and decision IDs implemented". An uncitable value is not transcribed.
 - **Minute 33's `timestamps_reconstructed`, `timestamp_provenance` and `reconstruction_basis` markers stay,
   and the preserved malformed token stays.** They record that the row was reconstructed rather than read.
@@ -1509,7 +1510,7 @@ domain field is a defect rather than a convenience.
 
 This is the pass's most important output. In each case the guard was green, and green meant nothing.
 
-**A16 — checked prose, not the numeric rule it cited.** A16 cited `40:95` ("Percentages in authoring
+**A16 — checked prose, not the numeric rule it cited.** A16 cited 40 `## Unit and numeric policy` ("Percentages in authoring
 use human-readable percentage points only when the property name says `_percent`; the compiler writes
 normalized factors into the runtime bundle as a separate derived field") but ran only on *string* values
 and matched a literal `%` glyph. A numeric `25` under a non-`_percent` name was not even warned, while
@@ -1543,7 +1544,7 @@ unit-or-kind token, is a failure. It does **not** claim to detect a percentage a
 that hides its unit — whether an arbitrary number "is a percentage" is not decidable from the number,
 and a percentage stored as `sneaky_value: 25` sails past. What is decidable is that a *relative*
 magnitude is necessarily proportional to something else, so it is either percentage points or a
-multiplicative scale, and `40:95` (percentage points say `_percent`) and `40:94` (an ambiguous numeric
+multiplicative scale, and 40 `## Unit and numeric policy` (percentage points say `_percent`) and 40 `## Unit and numeric policy` (an ambiguous numeric
 name carries a unit suffix) both require the name to say which. A unit-or-kind token **anywhere** in
 the name excludes it, not merely terminally: `single_target_ceiling_multiplier_at_full_bonus` is the
 tree's one such name — head noun `multiplier`, `bonus` a mid-name qualifier, and Ruling 14 makes
@@ -1557,8 +1558,8 @@ FAIL, `1 numeric value(s) sit under a relative-magnitude name … ['content/enem
 Nothing beyond those two forms is claimed.
 
 **The 52 names that are *not* violations.** `percent_of_mech_base_speed`,
-`shockwave_damage_percent_of_current_damage` and 50 others put the percent token mid-name. `40:95`
-requires that the name *says* `_percent`, not that it *ends* in it, and `40:96`'s terminal-unit rule is
+`shockwave_damage_percent_of_current_damage` and 50 others put the percent token mid-name. 40 `## Unit and numeric policy`
+requires that the name *says* `_percent`, not that it *ends* in it, and 40 `## Unit and numeric policy`'s terminal-unit rule is
 about unit suffixes. A rule demanding a terminal `_percent` would have condemned all 52 and forced a
 rename that no document asks for — the same trap Checks 2 and 3 of the pre-clear audit describe.
 
@@ -1637,7 +1638,7 @@ this branch is now checked against the actual diff before it is written.
 
 **The ruling.** A `null` in a source definition is never legal. `content/README.md` used to define a
 `null` as "the document states no value", which made absence expressible two ways — an omitted key and
-a nulled key — for one meaning. `docs/technical/40-content-data-and-validation.md:90` settles it:
+a nulled key — for one meaning. `docs/technical/40-content-data-and-validation.md` `## Common definition envelope` settles it:
 "Optional fields have explicit defaults materialized into the canonical bundle so runtime never
 guesses." An optional field that is absent gets its default; an optional field that is present and
 `null` asks runtime to guess, which is the thing that line forbids. So absence is spelled by omitting
@@ -1771,7 +1772,7 @@ Data leaving the tree must not be described as a conversion. These fields were d
 **(c1) The 20 relic rarity-and-weighting fields.** `rarity_and_weighting.rarity_tier` and
 `rarity_and_weighting.cache_selection_weight` on all ten of `REL-01`–`REL-10`. **Ruled: these are fields
 that should not exist.** No design document mentions relic rarity or relic weighting anywhere;
-`docs/technical/40-content-data-and-validation.md:132`'s relic field list — pool availability/unlock,
+`docs/technical/40-content-data-and-validation.md` `### Relics`'s relic field list — pool availability/unlock,
 discovery sentence key, sale value, behavior registration, benefit/tradeoff parameters, hook points,
 affected weapon categories, live-state meter, presentation — omits both; and `DEC-127` fixes cache
 selection by drawing without replacement from the unlocked pool rather than by weight, so a per-relic
@@ -1784,7 +1785,7 @@ three `rarity_and_weighting:` scoped `source_refs` prefixes still resolve, so no
 (Ruling 13, `A22`).
 
 **(c2) Boss `armor`, on all four bosses.** **Ruled: the field should not exist on a boss.**
-`docs/technical/40-content-data-and-validation.md:114`'s enemies-and-bosses field list — Hull, movement,
+`docs/technical/40-content-data-and-validation.md` `### Enemies and bosses`'s enemies-and-bosses field list — Hull, movement,
 contact damage/diameter/cadence, control resistance, behavior registration, projectile or boss-ability
 parameters, elite eligibility, presentation, spawn classification, telemetry tags — omits Armor
 entirely, while `:110`'s mech list includes it. Armor is a mech stat. This is the same class as (c1): an
@@ -1792,7 +1793,7 @@ invented field, not a missing value.
 
 **Reported, not acted on at the time: the ten enemies also carry `armor`.** Every one of
 `EN-01`–`EN-10` holds a top-level `armor: 0` — a value, not a null, so it is outside Ruling 29's scope,
-and the `40:114` argument above would apply to it identically. The 0 comes from one prose sentence at
+and the 40 `### Enemies and bosses` argument above would apply to it identically. The 0 comes from one prose sentence at
 `docs/31:25` ("Ordinary enemies have no Armor"), not from a roster column. The ruling named bosses only,
 so the ten enemy fields were **left exactly as authored** and referred back to the integration owner
 rather than removed under an extended reading of a ruling that did not mention them.
@@ -1830,7 +1831,7 @@ set at all**, which is a stronger assertion than one carrying two permanent exem
   (specialized-material geodes)** — keys omitted, and these are **not gaps**: `DEC-128` sets them at
   3.0 M and 6.0 M respectively, so a document does now supply the values. They are **resolved values
   awaiting a reachable citation**. The numbers are deliberately not written in: the decision record is
-  not reachable from this branch, and `source_refs` must not point at nothing (40:87, and Ruling 13's
+  not reachable from this branch, and `source_refs` must not point at nothing (40 `## Common definition envelope`, and Ruling 13's
   dangling-citation rule). This is a distinct state from "no document supplies this" and is recorded as
   such so the next pass adds the numbers with their citation rather than re-deriving the gap.
 - **`presentation` on the destructible rock and the health pack** — keys omitted, no gap entry, per
@@ -1905,7 +1906,7 @@ forms walked through it: no extension, a backslash separator, no `docs/` prefix,
 `.markdown`. It is now two rules keyed on what is actually wrong: **a `:<digits>` line number after any
 path-like token**, in either separator and any case with the extension optional; and **any repository
 path at all** (`docs`, `src`, `content`, `tools`, `assets` followed by a separator), because
-`40:87` names `doc_id#anchor` as the citation form and a path is not one, line number or no line number.
+40 `## Common definition envelope` names `doc_id#anchor` as the citation form and a path is not one, line number or no line number.
 
 A bare `#anchor` is **out of scope by design**: it is half of the sanctioned form, `A9` already resolves
 every anchor in `source_refs` against real heading slugs, and it carries neither a path nor a line
@@ -1920,7 +1921,7 @@ against the existing tree rather than by injection:
   notes beside this catalog."; the pointer's meaning is unchanged.
 - `UTL-A1 :: external_numerics[1].statement` said "`docs/68` calls it Harmonic Calibrator" — a `docs/`
   path with no extension and no line number, which `docs/.*\.md` could not match. Rewritten to
-  "`GDD-UTILITY-CATALOG` calls it Harmonic Calibrator", which is the citation form `40:87` names. The
+  "`GDD-UTILITY-CATALOG` calls it Harmonic Calibrator", which is the citation form 40 `## Common definition envelope` names. The
   `UTL-A1` naming contradiction itself is unchanged and is still recorded as `C-2` above.
 
 #### Value-preservation record, corrected
@@ -2027,7 +2028,7 @@ Confirmed at the source before editing, as required:
 - Armor is a player-side stat: `docs/72-player-survivability-and-damage-baseline.md:36` gives the mech
   Armor 0 in the Shared Player Baseline, and `docs/72:121` applies it to *incoming* damage ("Subtract
   current Armor, to a minimum of one damage unless the effect ignores Armor").
-- `docs/technical/40-content-data-and-validation.md:114`'s enemies-and-bosses field list omits Armor,
+- `docs/technical/40-content-data-and-validation.md` `### Enemies and bosses`'s enemies-and-bosses field list omits Armor,
   while `:110`'s mech list includes it.
 
 So `armor: 0` on an enemy is **an invented field holding a value the document denies exists** — the same
@@ -2306,7 +2307,7 @@ from a formula kind**. A registry separately mints formula kinds as `snake_case`
 parameters. The disambiguation belongs where a reader meets the definition rather than in a note
 elsewhere. The summary also states, truthfully, that this definition still holds its rule as the
 literal expression `5n(n + 1)` rather than as a registered kind — which is what `verify_content.py`
-already warns about at 40:99 for `stat-price-formula.json.formula` and
+already warns about at 40 `## Unit and numeric policy` for `stat-price-formula.json.formula` and
 `.equivalent_by_depth.formula`. Claiming the file already carries a registered kind would have been
 prose contradicted by the artifact.
 
@@ -2760,9 +2761,9 @@ expectation (which touches no `content/` file) to the commit making the change. 
 #### Ruling 45 — 115 authored derived values removed, after three families were pulled back
 
 `docs/technical/40-content-data-and-validation.md` assigns these to the compiler, so a stored copy puts a
-second writer on each one: `40:114` derives world speeds and compares them with the survivability report,
-`40:136` has validators "recompute total catalog costs", `40:140` validates the four mining-site classes
-"and their totals", and `40:203` recalculates "price curves, total costs ... resource totals". Two earlier
+second writer on each one: 40 `### Enemies and bosses` derives world speeds and compares them with the survivability report,
+40 `### PowerUps and option unlocks` has validators "recompute total catalog costs", 40 `### Mining sites` validates the four mining-site classes
+"and their totals", and 40 `### Analytical` recalculates "price curves, total costs ... resource totals". Two earlier
 instances of exactly this are already gone (Ruling 30's boss centre distances, and the health pack's
 collection distance). **Every one of the 115 reproduced exactly** from operands that survive the removal,
 computed in exact rational arithmetic rather than binary float, so this pass found **no new value defect** —
@@ -2815,11 +2816,11 @@ therefore applied to all six surviving families:
 
 | Surviving family | Is the removed leaf a comparand? | Where the independent side lives |
 | --- | --- | --- |
-| enemy and boss world speed (17) | No — it is the **derived** side `40:114` names | the survivability report, now restored |
+| enemy and boss world speed (17) | No — it is the **derived** side 40 `### Enemies and bosses` names | the survivability report, now restored |
 | PowerUp cumulative cost (58) | No | the doc-stated 9,450 that A14 checks, in `docs/` |
-| utility total rank ore cost (13) | No | `40:203`; operands (`rank_ore_costs`) retained |
+| utility total rank ore cost (13) | No | 40 `### Analytical`; operands (`rank_ore_costs`) retained |
 | resource aggregate total (13) | No | the 400-unit run ceiling stated at `50:24` and `10:86` |
-| mining-site aggregate total (13) | No | `40:140` "their totals" |
+| mining-site aggregate total (13) | No | 40 `### Mining sites` "their totals" |
 | map-contract site-based Hyper Gold (1) | No | the 300 per map stated at `50:24` |
 
 **None of the six is a comparand that lives only in `content/`** — in every case the independent side is a
@@ -2840,10 +2841,10 @@ values across `docs/` is uninformative, because small integers like `3`, `4` and
 
 **Nothing whose derivation a document does not assign was removed, even where the arithmetic works.** Six
 such things reproduce exactly and stay, each recorded with its arithmetic in
-`expected_derived_value_removals.json`: the Hyper Gold beacon threshold times (`40:140` lists beacon
+`expected_derived_value_removals.json`: the Hyper Gold beacon threshold times (40 `### Mining sites` lists beacon
 thresholds among a site's *authored* fields and gives the compiler only "their totals"),
 `sources[].depletion_seconds` in `content/resources/` (a duration is not a resource total — while the
-identically-derived `total_depletion_seconds` under `content/mining-sites/` *is* removed, because `40:140`
+identically-derived `total_depletion_seconds` under `content/mining-sites/` *is* removed, because 40 `### Mining sites`
 names those totals), `resonant_damage` (see below — it is the cheapest open item, and it is *not* missing a
 rounding clause), `BOSS-01 :: ability.ordinary_contact_damage_replaced_during_charge`, and the three
 `relative_to_standard_seam` multipliers.
@@ -2866,12 +2867,12 @@ It reproduces as `ceil(base_damage × 1.20)` for **all five**, verified in exact
 `ceil` is also the **only** rounding that reproduces all five: `32.4 → 33` and `43.2 → 44` rule out both
 `floor` and round-half. So nothing about this value is undecided. It stays only because it is the operand
 the removed `fresh_mech_hits_to_defeat_at_resonant_value` derives from, and the remaining question is
-narrow: no line in `40:` names *resonance damage* among what the compiler recomputes, the way `40:114` names
+narrow: no line in `40:` names *resonance damage* among what the compiler recomputes, the way 40 `### Enemies and bosses` names
 world speeds. **This is the cheapest of the open items to close, and closing it is a documentation edit
 rather than a decision** — the arithmetic, the multiplier, the rounding and all five results are already
 written down; one `40:` line needs to say the compiler owns it.
 
-**The largest exclusion is the 45 weapon DPS estimates. State the gap precisely: `40:203` assigns the
+**The largest exclusion is the 45 weapon DPS estimates. State the gap precisely: 40 `### Analytical` assigns the
 derivation to the compiler without stating a derivation that covers the set.** Not "45 values may be
 derived" — the assignment is explicit ("Recalculate DPS estimates"), and the set is 15 weapons × three
 fields (`burst_10_dps`, `sustained_30_dps`, `favorable_horde_dps`). What no document states is a rule, or a
@@ -2945,7 +2946,7 @@ arithmetic, never binary float; **no stored value was changed to make any of it 
 this is not an ad-hoc-computation problem. It needs **one rule for `sustained_30_dps`, six for
 `burst_10_dps` grouped by the warmup families `docs/70` § *Opening burst and sustained DPS* already names, and an admission that
 `favorable_horde_dps` is an analytic placeholder for a measurement, per `docs/71` § *Base Weapon Summary*.**. The documentation edit is
-correspondingly small: `40:203` should say DPS estimates are derived **per warmup family**, name each
+correspondingly small: 40 `### Analytical` should say DPS estimates are derived **per warmup family**, name each
 family's rule, cross-reference `docs/71` § *Base Weapon Summary* for the horde multipliers it already states, state
 the one-decimal rounding (load-bearing only for `W-EF` sustained and `W-BE` burst), and stop assigning
 `favorable_horde_dps` to the compiler until its per-weapon `k` is authored somewhere. Until that exists,
@@ -3217,6 +3218,20 @@ touched files. The file count is unchanged at 139, so A21 is unaffected.
   catalog — was never a candidate.
 
 ### Per-definition notes, by catalog
+
+**Doc-40 line citations below are frozen note text, and are stale — dated note, 2026-08-11.**
+The 111 `docs/technical/40-content-data-and-validation.md:<n>` citations in this subsection are
+reproduced verbatim from the deleted `notes` arrays, under the rule stated at the top of this
+file ("Note text stays verbatim even where a ruling has since superseded it"), so they are **not**
+rewritten here. They resolve against blob `4cded84` of that document (267 lines), not against it
+as it now stands (431 lines): at the current revision lines 106, 114, 136 and 140 are blank and
+line 203 is a heading. Read every `:<n>` below as a pointer into blob `4cded84`. The section
+headings those citations meant are the ones this file's own prose now names directly — chiefly
+`## Common definition envelope` for `:76-89`, `## Unit and numeric policy` for `:92-100`,
+`## Accepted content repository layout` for `:34-63`, `### Resources` for `:106`, and
+`### Enemies and bosses` for `:114`. Nothing in `src/MechaMiner.Tools/ContentImport/` resolves
+any of these coordinates at runtime, so none of them is load-bearing on a gate; they are a
+record, and their staleness is recorded rather than repaired.
 
 #### Weapons (`content/weapons/`)
 
@@ -4633,28 +4648,28 @@ owners.
 
 **The rules checked.**
 
-1. `40:106` and `40:67` — whether the resource-field enumeration and the stable-ID reuse policy support
+1. 40 `### Resources` and 40 `## Stable ID policy` — whether the resource-field enumeration and the stable-ID reuse policy support
    the premise behind a downstream ID ruling.
-2. `40:96` (`_m`, `_m_per_s`, `_seconds`, `_per_second`, `_hull`, `_degrees`, `_fraction`, `_count`) and
-   `40:97` (percentage points only on a `_percent` name, the normalized factor left to the compiler) —
+2. 40 `## Unit and numeric policy` (`_m`, `_m_per_s`, `_seconds`, `_per_second`, `_hull`, `_degrees`, `_fraction`, `_count`) and
+   40 `## Unit and numeric policy` (percentage points only on a `_percent` name, the normalized factor left to the compiler) —
    the one-spelling rule for a multiplicative scale.
-3. `40:98` — "Geometry dimensions distinguish radius, diameter, width, range, and area; `area` is never
+3. 40 `## Unit and numeric policy` — "Geometry dimensions distinguish radius, diameter, width, range, and area; `area` is never
    used as a vague scalar name."
 
 ### Check 1 — the premise behind a downstream ID ruling
 
-- **`docs/technical/40-content-data-and-validation.md:106` enumerates resource fields — CONFIRMED
+- **`docs/technical/40-content-data-and-validation.md` `### Resources` enumerates resource fields — CONFIRMED
   verbatim.** "Resource definition fields include ID, canonical letter, localization keys,
   icon/pattern/audio identity, inventory scope, persistence class, maximum safe count, and resonance
   behavior registration if applicable." So the prose does list "ID" and "canonical letter" as two
   separate entries in one enumeration.
-- **The ID-reuse rule omits resources — CONFIRMED.** `40:67` reads "Reuse accepted gameplay IDs exactly
+- **The ID-reuse rule omits resources — CONFIRMED.** 40 `## Stable ID policy` reads "Reuse accepted gameplay IDs exactly
   for defined content: `MCH-01`, `EN-01`, `BOSS-01`, `W-AB`, `REL-01`, and equivalent utility/PowerUp/unlock
   IDs." Resources are absent, confirmed by reading all of `## Stable ID policy` (lines 65–72).
 - **`canonical_letter` is prose only, never a field name.** The token is absent from the entire
   repository (`grep -rn "canonical_letter" docs/ src/ content/` → no matches). "canonical letter" appears
-  three times, all in running prose: `40:106`, `docs/73-…:156`, `docs/73-…:189`. By contrast the doc names
-  real fields in backticks in the `## Common definition envelope` table at `40:74-88`. **So
+  three times, all in running prose: 40 `### Resources`, `docs/73-…:156`, `docs/73-…:189`. By contrast the doc names
+  real fields in backticks in the `## Common definition envelope` table at 40 `## Common definition envelope`. **So
   `canonical_letter` as a field name would be a choice, not a mandate.**
   - **Resolved since — the bullet above is preserved as the record of what was argued, not corrected.**
     Its grep was accurate when the audit ran and is false today. `canonical_letter` is a field name in
@@ -4735,12 +4750,12 @@ files), `scales_with_attack_rate_ranks_and_global_modifiers`, `scales_with`,
    `secondary_blast_radius_percent_of_current_radius = 60`, `shell_blast_radius_percent_of_current_radius = 160`,
    `singularity_radius_percent_of_current_radius = 150`, `blade_radius_percent_of_current_cutter_radius`,
    `burst_damage_percent_of_full_duration_damage_budget`) — relative scales in percentage points.
-   **Compliant** under `40:97`, which permits percentage points when the name says `_percent`. Listed so
+   **Compliant** under 40 `## Unit and numeric policy`, which permits percentage points when the name says `_percent`. Listed so
    they are not miscounted as violations.
 7. Formula strings that encode multipliers instead of naming them —
    `W-BD-selective-detonators :: damage_multiplier_formula`, `W-AE-containment-lattice :: link_damage_per_second_formula`,
    `W-AD-singularity-forge :: singularity_damage_per_second_formula`, `W-AD-gravity-slingshot :: burst_damage_formula`.
-   `40:99` requires "a registered formula kind plus parameters, not arbitrary script strings".
+   40 `## Unit and numeric policy` requires "a registered formula kind plus parameters, not arbitrary script strings".
    **Open — a separate rule, already reported by the verifier as an A17 warning.**
 
 **`body_scale_factor` in this file is deliberately not scrubbed.** The audit found the dead spelling
@@ -4772,9 +4787,9 @@ clean: no `_factor`/`_scale`/`_ratio`/`_times`/`_x` suffix anywhere in the JSON.
 | Property | Value | Problem | Status |
 | --- | --- | --- | --- |
 | `maps/… :: deployment_and_opening_fairness.obstacle_free_radius_in_mining_zone_diameters` | 1 | a **radius** measured in **diameters**; `docs/51-…:70` ("obstacle-free space at least one mining-zone diameter around the mech") does not say whether the radius or the diameter of the clear envelope is meant. `docs/technical/50-…:99` and `docs/51-…:47` use "diameters" as a unit of *width* elsewhere. Factor-of-two risk. | **not touched — Ruling 18**, escalated for a doc correction |
-| `W-DF :: fixed_properties.forward_reach_m` | 1.2 | "reach" is not one of `40:98`'s five words; `docs/71-…:89` and `docs/data/weapon-base-balance.csv:15` both say "1.2M forward reach" and neither says whether it is measured from mech centre or hull front | **open** |
+| `W-DF :: fixed_properties.forward_reach_m` | 1.2 | "reach" is not one of 40 `## Unit and numeric policy`'s five words; `docs/71-…:89` and `docs/data/weapon-base-balance.csv:15` both say "1.2M forward reach" and neither says whether it is measured from mech centre or hull front | **open** |
 | `W-AF-cutting-vector :: effects.range` | `"the upgradeable laser range"` | a bare `range` — an allowed dimension word, but not *which* range | **open** |
-| `W-DF-siege-anchor :: effects.barrier_thickness_source` | `"current ram width"` | dimension-word mismatch: key says *thickness*, value says *width*; "thickness" is outside `40:98`'s five words | **open** |
+| `W-DF-siege-anchor :: effects.barrier_thickness_source` | `"current ram width"` | dimension-word mismatch: key says *thickness*, value says *width*; "thickness" is outside 40 `## Unit and numeric policy`'s five words | **open** |
 | `W-AB-fracture-lance :: effects.shockwave_reach_per_side_m` | 2.5 | "reach" again; `per_side` resolves the half-vs-full ambiguity, but no doc line states the dimension or the value | **open** |
 
 **Dimension-by-reference strings are compliant** — the dimension word is present and no unit is expected
@@ -4786,7 +4801,7 @@ the key; the audit enumerated all of them across `radius`, `diameter`, `width`, 
 `area` and found zero cases where an `_m` value could be either.
 
 **Bare `size`.** `REL-01`–`REL-10 :: rarity_and_weighting.fresh_profile_pool_size` and
-`fully_unlocked_pool_size` — 20 occurrences, counts wearing a bare `size`, a `40:96` unit-suffix defect
+`fully_unlocked_pool_size` — 20 occurrences, counts wearing a bare `size`, a 40 `## Unit and numeric policy` unit-suffix defect
 rather than a geometry one. **Fixed — Ruling 20.** `W-AE-replicator-swarm :: max_total_squad_size_multiplier`
 and `W-AE-containment-lattice :: link_length_and_formation_size_scale_with` were also flagged; the first
 keeps `size` deliberately (it multiplies a size, it is not a count) and the second, which bundles a length
@@ -4802,7 +4817,7 @@ Two rules in the planned validator set **would have produced a wrong answer** ha
 as written and run unattended. This is the audit's most important output, and the reason it is preserved
 rather than summarized away.
 
-1. **`40:98` applied to the `Area` stat.** Read literally, "`area` is never used as a vague scalar name"
+1. **40 `## Unit and numeric policy` applied to the `Area` stat.** Read literally, "`area` is never used as a vague scalar name"
    condemns `REL-04 :: effects.weapon_area_multiplier` — and a validator enforcing it would have demanded
    a specific dimension in the name. That would have been **wrong**: `Area` is an established stat
    classification (`docs/35-playable-mechs.md:65`), whose membership `docs/36-initial-mech-catalog.md:137`
@@ -4942,7 +4957,7 @@ from the assertion-table docstring** that enumerates A1–A29. Both fixed.
 **section heading** (`docs/71` § *Base Weapon Summary*) rather than a bare `file:line`. Line numbers on
 this project have been wrong twice already and do not survive an editorial pass; a heading does, and
 heading-plus-anchor is what `source_refs` uses throughout `content/`, so a bare `file:line` in these
-notes was inconsistent with the data beside it. (The `40:114` spelling in the previous sentence names the
+notes was inconsistent with the data beside it. (The 40 `### Enemies and bosses` spelling in the previous sentence names the
 **form** being retired; it is not a citation.) Pre-existing references in that form, in rulings written
 before this convention, are left as they are — rewriting them is an editorial pass of its own, and
 quotations that record what a *source* said keep the reference that source used.
@@ -5054,9 +5069,9 @@ Both edits were reverted and the file is byte-identical to `b7aea04`; the suite 
 | `obstacle_free_radius_in_mining_zone_diameters` — radius or diameter? Factor of two. | document owner (`docs/51`) |
 | `REL-07 :: effects.explosion_area_multiplier` is still `null` from the same sentence whose sibling was omitted | integration owner |
 | One focus ceiling under two names across `W-AF.json` and `W-AF-coherence-memory.json`, plus a boolean named `changes_focus_maximum_multiplier` | schema stream |
-| Percentage-and-factor twins on `REL-04`, `REL-07`, `REL-09` versus the compiler's derived field (`40:95`) | schema stream, at `DAT-006` |
+| Percentage-and-factor twins on `REL-04`, `REL-07`, `REL-09` versus the compiler's derived field (40 `## Unit and numeric policy`) | schema stream, at `DAT-006` |
 | `world_scale`, `eruption_damage_as_seconds_of_current_segment_damage`, `forward_reach_m`, bare `range`, `barrier_thickness_source`, `shockwave_reach_per_side_m`, `link_length_and_formation_size_scale_with` | schema stream / document owners |
-| Formula strings versus a registered formula kind (`40:99`) — already an A17 warning | schema stream |
+| Formula strings versus a registered formula kind (40 `## Unit and numeric policy`) — already an A17 warning | schema stream |
 | Extraction-zone / resonance-field radii (3.0 M / 6.0 M) awaiting a decision-record citation; minute 33's reconstruction markers awaiting a doc correction | document owner (Ruling 22) |
 
 ## Behavior-token grant handoff — decision material for the mint
@@ -5073,7 +5088,7 @@ other tree. Two classes of fact come from a second ref and are marked where they
 shapes, the definition-reader call sites and the fixture-coverage figures** were measured at
 `origin/claude/hearth-thread-hrufl9` = `551d0ebecedb7e22444d4ccf65342b2553265719`, because
 `content/schemas/` and the readers exist on that ref and on no other — the same absence this file's own
-header records, and the same absence `40:125` runs into when it cites two `content/schemas/*.json` files.
+header records, and the same absence 40 `## Minted value vocabularies` runs into when it cites two `content/schemas/*.json` files.
 
 **This section deliberately carries no resource `id`, in any of its spellings.** A resource `id` is a
 per-ref fact rather than a property of the vocabulary being granted, so decision material that quotes one
@@ -5119,12 +5134,12 @@ three-way choice — `-expander` for a radius, area or capacity, `-amplifier` fo
 5. `UTL-C1` → `attack-rate-accelerator` — `["Weapon attack rate"]`, a rate; "weapon" is dropped because every weapon-facing utility would carry it. A strict-verbatim reader should prefer `weapon-attack-rate-accelerator`.
 6. `UTL-C2` → `stored-charge-recharger` — the only two-entry list, `["Recharge time","Stored charges"]`, and the only utility with no `stacking_classification` key; the token names the refilling pool, not either statistic alone.
 7. `UTL-D1` → `movement-speed-accelerator` — `["Movement speed"]`; this also keeps the fixture corpus's `extraction-zone-expander` off this ID, which here is not an arguable classification but a wrong one.
-8. `UTL-D2` → `extraction-zone-expander` — `["Extraction-zone radius"]`, a radius, so both halves come from the definition; the fixture corpus guessed this same spelling, which is corroboration and never authority (`40:125`).
+8. `UTL-D2` → `extraction-zone-expander` — `["Extraction-zone radius"]`, a radius, so both halves come from the definition; the fixture corpus guessed this same spelling, which is corroboration and never authority (40 `## Minted value vocabularies`).
 9. `UTL-E1` → `hull-recovery-regenerator` — `["Recovery"]` alone is too bare to name a behavior, so "hull" is borrowed from `value_kind`'s `additive-hull-per-second`, the sibling that says what recovers.
 10. `UTL-E2` → `elite-and-boss-damage-amplifier` — `["Weapon damage to elites and bosses"]`; the conditional audience *is* the behavior, and dropping it makes this token a synonym of `UTL-A1`'s.
 11. `UTL-F1` → `common-ore-yield-amplifier` — `["Mined common ore"]` names a material while the utility modifies a quantity, so "yield" is what makes the token a behavior rather than a resource.
 12. `UTL-F2` → `weapon-area-expander` — `["Weapon area"]`; an area is a volume, and "weapon" is kept — unlike `UTL-C1` — because bare "area" would collide with the extraction-zone and discovery-radius geometries.
-13. `UTL-R1` → `directional-resource-radar` — the only utility whose `stat_names` is **empty**, which is why the struck `directional-bearings` named an output format instead; `40:273`'s "assigned material or ore-only radar exception" licenses "radar".
+13. `UTL-R1` → `directional-resource-radar` — the only utility whose `stat_names` is **empty**, which is why the struck `directional-bearings` named an output format instead; 40 `### Utilities`'s "assigned material or ore-only radar exception" licenses "radar".
 
 #### `weapon.rock_targeting_behavior` (15) — both spellings assigned
 
@@ -5162,7 +5177,7 @@ from the next sentence and adds "only" to mark that this side has no other route
 
 ### The 8 declinations — what is missing, and what would settle each
 
-- **`weapon.behavior_kind` · `W-AB`.** `22:45`'s "fast finite piercing **projectile/trace** along selected direction" names two members of `22:35` at once (`finite projectile`, `hitscan trace`) and the rule may neither pick one nor concatenate them; both readings are live (`projectile_speed_m_per_s: 30` argues finite projectile, while branch `W-BC-zero-lag-emitter` exists to convert a projectile *to* a trace). The slug rule cannot help — it would happily mint a sixteenth primitive. **Settled by:** an edit to `22:45` replacing `projectile/trace` with one member, or, if the slash is deliberate, a doc-22 sentence permitting two primitives per weapon *plus* a ruling on what `40:311`'s "exactly one registered descriptor" then means.
+- **`weapon.behavior_kind` · `W-AB`.** `22:45`'s "fast finite piercing **projectile/trace** along selected direction" names two members of `22:35` at once (`finite projectile`, `hitscan trace`) and the rule may neither pick one nor concatenate them; both readings are live (`projectile_speed_m_per_s: 30` argues finite projectile, while branch `W-BC-zero-lag-emitter` exists to convert a projectile *to* a trace). The slug rule cannot help — it would happily mint a sixteenth primitive. **Settled by:** an edit to `22:45` replacing `projectile/trace` with one member, or, if the slash is deliberate, a doc-22 sentence permitting two primitives per weapon *plus* a ruling on what 40 `## Behavior registries`'s "exactly one registered descriptor" then means.
 - **`weapon.behavior_kind` · `W-DF`.** `22:58`'s "persistent facing-aligned contact capsule/rectangle" matches no member of the fifteen: `persistent field` is placed in the world while `W-DF`'s volume is rigidly attached to facing and gated on movement, and `orbit contact` is an orbiting actor. **Settled by:** a sixteenth member on `22:35` naming a mech-attached contact volume, or a doc-22 sentence filing `W-DF` under `persistent field`. A schema change cannot settle it.
 - **`weapon.targeting_policy` · `W-AF`.** Retention, not acquisition: `22:85` lists "current target retention/hysteresis" as a bullet separate from `22:34`'s six policies, `22:92` says "Beams and homing actors use behavior-specific retention hysteresis", and the file says "locks to one target in range" without saying which. **Settled by:** a seventh member on `22:34` naming retention/hysteresis targeting, or a separately granted `target_retention` field, so the two concerns `22:85` keeps apart are not forced into one token.
 - **`weapon.targeting_policy` · `W-AE`.** The policy belongs to the spawned actor: drones "acquire targets independently" and "Several drones may choose the same target", and `22:48` books "actor transforms and targets" as the persistent state, so `nearest` would be true of the drone and false of the weapon. **Settled by:** a decision on where two-level targeting lives — an `actor_targeting_policy` field, or a nested actor block for weapons that spawn autonomous actors — or a doc-22 sentence stating that a weapon's `targeting_policy` is the policy of whatever actor performs the attack.
@@ -5310,17 +5325,17 @@ The pattern being satisfied throughout, identically on all twelve fields:
 
 ### The eleven flagged inconsistencies — these go into the grant as flagged, not smoothed
 
-- **I-1.** The ruling that hrufl9 is the transcription source has an **empty antecedent**: no definition on that ref carries a minted behavior token — every one lives under `tests/**/Fixtures/` — and `40:125` denies fixture strings authority anyway ("a token that has only ever appeared in a schema `enum`, a code comment, or a chat log carries no authority here"). An earlier pass applied that ruling five times; all five applications are withdrawn. What hrufl9 legitimately supplies is the grammar and the field names, not tokens.
+- **I-1.** The ruling that hrufl9 is the transcription source has an **empty antecedent**: no definition on that ref carries a minted behavior token — every one lives under `tests/**/Fixtures/` — and 40 `## Minted value vocabularies` denies fixture strings authority anyway ("a token that has only ever appeared in a schema `enum`, a code comment, or a chat log carries no authority here"). An earlier pass applied that ruling five times; all five applications are withdrawn. What hrufl9 legitimately supplies is the grammar and the field names, not tokens.
 - **I-2.** hrufl9's `relic.schema.json` says a relic-to-hook mapping "is therefore not derivable today", yet the same sentence's tail permits the slug ("this token asserts neither a hook vocabulary nor a one-hook-per-relic shape"). The grant must **quote the tail clause, not the head**, or a reader who quotes only the head will conclude the mint defied the schema author.
 - **I-3.** `W-EF` was assigned under one ruling and declined under another; **the discriminator test resolves it to declined**, which is what empties `weapon.targeting_policy`'s `assigned` cell. An empty `assigned` cell is an acceptable outcome, not a defect.
 - **I-4.** `22:58` is unusable for one of `W-DF`'s fields and authoritative for another: its `behavior_kind` is declined because the eleven words match no member of `22:35`, while `targeting_policy` transcribes `facing` from the same words. This is weaker than previously stated — `W-DF`'s own `base_behavior` also contains "pushed along the mech's **facing** direction", so the site survives on the definition and not only on doc 22.
 - **I-5.** The two-level-actor finding is answered on `rock_targeting_behavior` and refused on `targeting_policy` for the **same four** weapons (`W-AE`, `W-BE`, `W-AF`, and now `W-EF`): each gets a rock token reasoned at the spawned actor's or the retained target's level, while its policy is declined or omitted because the weapon level is the wrong level. Defensible, because `22:90` is written about *attacks* and `22:34` about *weapons* — but the grant must say so, or one defect appears to get two dispositions.
-- **I-6.** The framing paragraph's citation and count were both wrong: the compiler assertion is at **`40:311`**, not `40:307`, and it asserts the one-descriptor check over **seven** kinds of thing (`behavior_kind`, targeting policy, formula, modifier hook, formation, effect, presentation recipe), two of which are outside this family and one of which is not the relic hook. State it as **four granted, seven asserted, zero overlap** — stronger, and true.
-- **I-7.** Five of the twelve fields end with a vocabulary `40:127` will not call grounded (`branch`, `relic`, `utility`, `mech.inherent_trait`, `resource.resonance_behavior` — 80 of the 141 instances): "A vocabulary is **grounded** only when the document it cites **states the set**. A resolving citation is necessary and not sufficient." Use doc 40's own "Token provenance" column (`40:159`) and record `branch` as fragments rather than as a vocabulary.
+- **I-6.** The framing paragraph's citation and count were both wrong: the compiler assertion is at **40 `## Behavior registries`**, not 40 `### Presentation and audio`, and it asserts the one-descriptor check over **seven** kinds of thing (`behavior_kind`, targeting policy, formula, modifier hook, formation, effect, presentation recipe), two of which are outside this family and one of which is not the relic hook. State it as **four granted, seven asserted, zero overlap** — stronger, and true.
+- **I-7.** Five of the twelve fields end with a vocabulary 40 `## Minted value vocabularies` will not call grounded (`branch`, `relic`, `utility`, `mech.inherent_trait`, `resource.resonance_behavior` — 80 of the 141 instances): "A vocabulary is **grounded** only when the document it cites **states the set**. A resolving citation is necessary and not sufficient." Use doc 40's own "Token provenance" column (40 `## Minted value vocabularies`) and record `branch` as fragments rather than as a vocabulary.
 - **I-8.** The utility head nouns `-expander`, `-amplifier` and `-accelerator` appear in no document and in no definition — the only place in the package where a morpheme has no source at all. Only the qualifiers are transcribed. The utility vocabulary must not be presented on the same footing as `enemy.behavior_kind`'s, whose tokens are the authored strings themselves.
-- **I-9.** `boss.behavior_kind`'s single token is shared by all four bosses, so `40:311`'s "exactly one registered descriptor" gives four bosses with differing abilities one descriptor whose parameter schema must then carry the ability. Correct as a transcription — what differs per boss lives in the excluded field `boss.ability.kind` — but a registry-shape consequence to raise before the grant lands, not after the manifest is emitted.
-- **I-10.** The registry namespace is undeclared. `SemanticCheck.BehaviorToken` applies one grammar with **no per-field namespace**, and `40:311` speaks of "every content `behavior_kind`" as one population, so `facing` as a targeting policy and any future `facing` as a behavior kind would be one descriptor. No collision exists today (`facing`, `facing-beam-hysteresis` and `targeting-replacement-and-facing-conversion` are distinct). The grant must say whether the registry is one namespace or twelve: it reads as one and is authored as twelve.
-- **I-11.** Four survivors, one line each: `22:34`'s unused `fallback-rock` member covers the same distinction as the whole of `rock_targeting_behavior`, which `22:86` frames as a **boolean** ("whether destructible rocks are fallback candidates") rather than as a token pair; granting lower-kebab on twelve fields settles the eight camelCase value tokens' grammar by implication unless the grant says it binds only the fields it names (those eight are measured in Ruling 39 above, and Ruling 39's reason for leaving them alone still stands); and `40:125` still cites two `content/schemas/*.json` files that exist on no ref but hrufl9 — a defect doc 40 now names in its own text, which is the model to copy.
+- **I-9.** `boss.behavior_kind`'s single token is shared by all four bosses, so 40 `## Behavior registries`'s "exactly one registered descriptor" gives four bosses with differing abilities one descriptor whose parameter schema must then carry the ability. Correct as a transcription — what differs per boss lives in the excluded field `boss.ability.kind` — but a registry-shape consequence to raise before the grant lands, not after the manifest is emitted.
+- **I-10.** The registry namespace is undeclared. `SemanticCheck.BehaviorToken` applies one grammar with **no per-field namespace**, and 40 `## Behavior registries` speaks of "every content `behavior_kind`" as one population, so `facing` as a targeting policy and any future `facing` as a behavior kind would be one descriptor. No collision exists today (`facing`, `facing-beam-hysteresis` and `targeting-replacement-and-facing-conversion` are distinct). The grant must say whether the registry is one namespace or twelve: it reads as one and is authored as twelve.
+- **I-11.** Four survivors, one line each: `22:34`'s unused `fallback-rock` member covers the same distinction as the whole of `rock_targeting_behavior`, which `22:86` frames as a **boolean** ("whether destructible rocks are fallback candidates") rather than as a token pair; granting lower-kebab on twelve fields settles the eight camelCase value tokens' grammar by implication unless the grant says it binds only the fields it names (those eight are measured in Ruling 39 above, and Ruling 39's reason for leaving them alone still stands); and 40 `## Minted value vocabularies` still cites two `content/schemas/*.json` files that exist on no ref but hrufl9 — a defect doc 40 now names in its own text, which is the model to copy.
 
 **Ruling A, offered to resolve I-4 and the two "movement stacks" assignments.** That `22:58` names a
 movement effect usable as a `behavior_kind` source, **and** that its phrase "movement stacks" fails to

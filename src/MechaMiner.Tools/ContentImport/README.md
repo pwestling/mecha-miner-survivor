@@ -47,7 +47,7 @@ checks:
 - that **no `null` appears anywhere under `content/`**, at any depth, in any of the 139 `*.json` files —
   `localization/en.json` included, which the definition loader skips — and with **no exception set at
   all**, because an exception set is a place for a null to hide. A `null` in a source definition is never
-  legal: `40:90` materializes an explicit default for every absent optional field, so an absent field gets
+  legal: 40 `## Common definition envelope` materializes an explicit default for every absent optional field, so an absent field gets
   its default while a present-and-`null` one asks runtime to guess. 275 nulls across 101 of 138 definition
   files were disposed of in one pass — 246 keys omitted, 24 fields removed as fields no schema will declare
   (20 relic rarity/weighting, 4 boss `armor`), 3 `external_numerics[n].value` keys removed as shape
@@ -72,7 +72,7 @@ checks:
   "20% faster without increasing movement speed" is not reported. This automates a check that had to be
   done by hand: six geode resonance directions were verified against `docs/40:104-109` by eye, and
   nothing would have caught a seventh;
-- the **percentage-point policy** (`40:95`) on numbers and key names, not prose: every percent-named
+- the **percentage-point policy** (40 `## Unit and numeric policy`, the percentage bullet) on numbers and key names, not prose: every percent-named
   property resolves to at least one numeric leaf; no percent-named numeric value satisfies
   `0 < |v| < 1`, which would be the compiler's normalized factor stored where percentage points belong;
   and no name or object authors the normalized factor beside the points. A name "says `_percent`"
@@ -84,8 +84,8 @@ checks:
   advertised the rewrite as fixing exactly that. Rule 4 fails any **number** under a relative-magnitude
   name (`bonus`, `penalty`, `increase`, `decrease`, `reduction`, `boost`, `malus`, `discount`,
   `surcharge`, `uplift`) that says neither percent nor any unit-or-kind token: such a number is either
-  percentage points or a multiplicative scale and the name does not say which, which `40:95` forbids for
-  the first and `40:94` forbids for the second. A unit-or-kind token anywhere in the name excludes it, so
+  percentage points or a multiplicative scale and the name does not say which, which 40 `## Unit and numeric policy` forbids for
+  the first (percentage bullet) and for the second (ambiguous-numeric-name bullet). A unit-or-kind token anywhere in the name excludes it, so
   `single_target_ceiling_multiplier_at_full_bonus` — head noun `multiplier`, `bonus` a mid-name qualifier
   — is not flagged. Rule 4 flags **nothing** authored in this tree: it is a regression guard, and its
   evidence is its negative control, the two injections above, each run and reverted individually;
@@ -313,7 +313,7 @@ Only `derive --check` caught those, and it caught them by regenerating and byte-
 file-integrity check rather than an assertion inside the rule.
 
 One reconciliation heuristic still reports as a warning rather than a failure, because no schema exists
-to settle it: formulas held as strings rather than a registered formula kind plus parameters (`40:99`).
+to settle it: formulas held as strings rather than a registered formula kind plus parameters (40 `## Unit and numeric policy`, the formula bullet).
 It is grouped by property name so the list stays actionable. The percentage heuristic that used to sit
 beside it is gone: it matched a `%` glyph in prose, so it emitted 21 warnings about English sentences
 while leaving the numeric rule it cited unchecked. A warning list a reader learns to ignore is worse
@@ -525,7 +525,7 @@ Six things reproduce exactly and are still retained, listed with their arithmeti
 no `docs/` line assigns them: the beacon threshold times, `sources[].depletion_seconds`,
 `resonant_damage`, `ordinary_contact_damage_replaced_during_charge`, the three
 `relative_to_standard_seam` multipliers, and the 45 weapon DPS estimates. The DPS family is the
-interesting one — `40:203` *does* assign "DPS estimates" to the compiler, so it passes the document test
+interesting one — 40 `### Analytical` *does* assign "DPS estimates" to the compiler, so it passes the document test
 and fails the arithmetic one: the burst and horde rules vary with each weapon's behaviour kind and no
 single rule reproduces all 45. It is out of scope, not cleared.
 

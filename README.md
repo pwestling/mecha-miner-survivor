@@ -62,7 +62,7 @@ cd mecha-miner-survivor
 git checkout claude/hearth-thread-3aamx2   # exists only until the scene reaches master
 ```
 
-If that checkout fails with `did not match any file(s) known to git`, the branch is gone because the work landed — stay on the default branch and carry on with the next block. `claude/hearth-thread-3aamx2` exists for exactly as long as the merge chain above is unfinished, and disappears when it completes. To pin the precise tree the verification below describes, `git checkout 5f9e28cc` instead — or `git checkout dccc9588`, the sha the measurements were taken at, whose tree is identical to `5f9e28cc`'s. A sha never disappears, but it leaves you on a detached HEAD. (The earlier branch this page named, `claude/ui-002-first-playable`, is the merged side of #19; it is no longer the branch to check out and may be deleted at any time.)
+If that checkout fails with `did not match any file(s) known to git`, the branch has been deleted or renamed — do **not** just stay where you are and carry on. `master` carries neither `./build.sh` nor `game/scenes/Run.tscn`, so every command in the next block fails there: the `./build.sh` lines with exit 127, command not found, and the launch with a missing scene. Run `git fetch origin` and try the checkout again; if it still fails, `git branch -r | grep hearth-thread` shows where the playable scene lives now. If the work has genuinely landed on `master`, then `game/scenes/Run.tscn` is there — check that it is before you continue. `claude/hearth-thread-3aamx2` exists for exactly as long as the merge chain above is unfinished. To pin the precise tree the verification below describes, `git checkout 5f9e28cc` instead — or `git checkout dccc9588`, the sha the measurements were taken at, whose tree is identical to `5f9e28cc`'s. A sha never disappears, but it leaves you on a detached HEAD. (The earlier branch this page named, `claude/ui-002-first-playable`, is the merged side of #19; it is no longer the branch to check out and may be deleted at any time.)
 
 ```bash
 sudo build/bootstrap-linux.sh   # once per machine, about a minute
@@ -72,6 +72,8 @@ sudo build/bootstrap-linux.sh   # once per machine, about a minute
 
 godot --path game res://scenes/Run.tscn
 ```
+
+If that last line reports it cannot load `res://scenes/Run.tscn`, the game is not broken — you are on the wrong ref. `game/scenes/Run.tscn` is on `claude/hearth-thread-3aamx2` and is not on `master`. Do not work around it by dropping the scene argument; that runs `Boot.tscn`, which *is* on `master` and renders nothing, so you get a blank window and a worse diagnosis. Go back to the checkout above.
 
 WASD or the arrow keys drive the mech at 3 m/s; a gamepad left stick works too. The camera is orthographic and north-up. There is no HUD, no pause and no quit button — close the window.
 
@@ -108,16 +110,16 @@ brew install bash coreutils gnu-sed
 export PATH="$(brew --prefix)/bin:$(brew --prefix)/opt/gnu-sed/libexec/gnubin:$(brew --prefix)/opt/coreutils/libexec/gnubin:$PATH"
 ```
 
-**These are needed only for the `./build.sh` verbs. Playing the game does not require any of them** — if you only want to drive the mech, skip this step; nothing in steps 2 to 4 invokes a gate script. Put the export in your shell profile if you want it to survive a new terminal.
+**These are needed only for the `./build.sh` verbs, and `build.sh` and the gate scripts are on `claude/hearth-thread-3aamx2` — none of them are on `master`. Playing the game does not require any of them** — if you only want to drive the mech, skip this step; nothing in steps 2 to 4 invokes a gate script. Put the export in your shell profile if you want it to survive a new terminal.
 
-The gate scripts use `mapfile` (bash 4+) in 32 places, and stock macOS ships bash 3.2.57. They also invoke `bash`, `sed`, `sha256sum` and `readlink` by unprefixed name from `PATH`, so Homebrew's `bin` and the relevant `libexec/gnubin` directories have to precede the system ones: otherwise `sed` and `readlink` resolve to the BSD builds, whose flags differ from the ones these scripts pass, and `sha256sum` and `timeout` do not resolve at all — macOS ships neither. The export writes `$(brew --prefix)/opt/<formula>` rather than `brew --prefix <formula>` deliberately: the latter errors when the formula is absent, and an erroring command substitution in a shell profile breaks the whole login rather than the one path it was meant to add. The command host invokes `bash` by name from `PATH` rather than through each script's shebang, so a Homebrew bash ahead of `/bin` is enough; no file in the repo needs editing.
+The gate scripts on that branch use `mapfile` (bash 4+) in 32 places (on `master`, which carries none of them, the count is 0), and stock macOS ships bash 3.2.57. They also invoke `bash`, `sed`, `sha256sum` and `readlink` by unprefixed name from `PATH`, so Homebrew's `bin` and the relevant `libexec/gnubin` directories have to precede the system ones: otherwise `sed` and `readlink` resolve to the BSD builds, whose flags differ from the ones these scripts pass, and `sha256sum` and `timeout` do not resolve at all — macOS ships neither. The export writes `$(brew --prefix)/opt/<formula>` rather than `brew --prefix <formula>` deliberately: the latter errors when the formula is absent, and an erroring command substitution in a shell profile breaks the whole login rather than the one path it was meant to add. The command host invokes `bash` by name from `PATH` rather than through each script's shebang, so a Homebrew bash ahead of `/bin` is enough; no file in the repo needs editing.
 
 **2. Install .NET SDK exactly 10.0.302.**
 
 - Apple Silicon: <https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.302/dotnet-sdk-10.0.302-osx-arm64.pkg>
 - Intel: <https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.302/dotnet-sdk-10.0.302-osx-x64.pkg>
 
-Do not use `brew install dotnet` and do not accept a later 10.0.3xx patch. `./build.sh doctor` compares the SDK against the pin by exact patch, so a same-band newer patch passes the launcher's own probe and then fails `doctor` with exit class 3 — and the remedy it prints on macOS is a Linux script. The `.pkg` installs to `/usr/local/share/dotnet`, which is where you want it. If Godot later cannot load the runtime, `export DOTNET_ROOT=/usr/local/share/dotnet`.
+Do not use `brew install dotnet` and do not accept a later 10.0.3xx patch. `./build.sh doctor` — again, on `claude/hearth-thread-3aamx2`, not on `master` — compares the SDK against the pin by exact patch, so a same-band newer patch passes the launcher's own probe and then fails `doctor` with exit class 3 — and the remedy it prints on macOS is a Linux script. The `.pkg` installs to `/usr/local/share/dotnet`, which is where you want it. If Godot later cannot load the runtime, `export DOTNET_ROOT=/usr/local/share/dotnet`.
 
 **3. Install Godot 4.7.1-stable mono.** One universal binary covers both architectures. Note the separator in the filename is a dot, not an underscore.
 
@@ -151,11 +153,13 @@ One consequence, read from the scripts rather than run on the Mac: `build/verify
 ```bash
 git clone https://github.com/pwestling/mecha-miner-survivor.git
 cd mecha-miner-survivor
-git checkout claude/hearth-thread-3aamx2   # if this fails, the work landed; stay on the default branch
+git checkout claude/hearth-thread-3aamx2   # if this fails, read the note below before going further
 dotnet build game/MechaMiner.Game.csproj
 /Applications/Godot_mono.app/Contents/MacOS/Godot --headless --path game --import
 /Applications/Godot_mono.app/Contents/MacOS/Godot --path game res://scenes/Run.tscn
 ```
+
+If that checkout fails, the branch has been deleted or renamed; do not simply continue on the default branch, because `master` has no `game/scenes/Run.tscn` and the last line above will fail on it. `git fetch origin` and try again, or `git branch -r | grep hearth-thread` to find where the playable scene lives now. If the work has genuinely landed on `master`, `game/scenes/Run.tscn` is there — verify that before continuing, and note that dropping the scene argument to get past a missing-scene error only gets you `Boot.tscn`, which renders nothing.
 
 WASD or the arrow keys drive the mech at 3 m/s. There is no HUD, no pause and no quit button — close the window.
 
@@ -163,13 +167,13 @@ The import line is needed only the first time and is a no-op once `game/.godot` 
 
 **On macOS, a silent hang is this program's normal way of reporting a mistake.** Godot reports errors through a modal dialog even under `--headless`, and a process launched from a terminal never brings its alert to the front. So *every* Godot error on a Mac — a .NET runtime it cannot find, a mistyped scene path — presents identically: the command sits there at 0% CPU, printing nothing, with no error text anywhere. Before you conclude it is wedged, look in the Dock and in Mission Control for a Godot window waiting on a click, or re-run the same command headed so the message has somewhere to go. To settle it from the terminal, `sample $(pgrep -i godot) 5` — a stack containing `-[NSAlert runModal]` is the confirmation. Dismissing the alert can then produce a null-dereference crash inside `-[NSApplication _postDidFinishNotification]`; that is the same root cause one step further along, not a second fault to chase.
 
-**The `verify-gate-wiring` gate.** A real Mac has reached and passed that gate's real checks — sections 1 to 4, the ones that analyse this repository — with zero findings about the repository. It still reports FAIL, and the FAIL is section 5: the negative controls the script runs against copies of the tree to prove its own checks can go red, one of which rewrites a call site with `sed -i` and, under BSD sed, dies with `sed: 1: ... invalid command code` instead. That is the script's self-test failing, not a finding about this repository — the defect is `sed -i` portability; the FAIL is the gate being honest.
+**The `verify-gate-wiring` gate.** It is `build/verify-gate-wiring.sh`, run as `bash build/verify-gate-wiring.sh` from the checkout root, and it is on the feature branches — `claude/hearth-thread-3aamx2` among them — and not on `master`. A real Mac has reached and passed that gate's real checks — sections 1 to 4, the ones that analyse the checkout it is run from — with zero findings about the repository. It still reports FAIL, and the FAIL is section 5: the negative controls the script runs against copies of the tree to prove its own checks can go red, one of which rewrites a call site with `sed -i` and, under BSD sed, dies with `sed: 1: ... invalid command code` instead. That is the script's self-test failing, not a finding about this repository — the defect is `sed -i` portability; the FAIL is the gate being honest.
 
 If you would rather not install the GNU tools, skip step 1 — step 4 above already avoids `./build.sh` entirely, and the Linux write-up of the same route is at [Running the pinned tools directly](#running-the-pinned-tools-directly--verified-on-linux).
 
 ### Windows — not supported
 
-`build.ps1` exists as a launcher counterpart to `build.sh`, but it has never been executed on any host and there is no Windows provisioning script.
+`build.ps1` exists as a launcher counterpart to `build.sh` — both on `claude/hearth-thread-3aamx2` only, neither on `master` — but it has never been executed on any host and there is no Windows provisioning script.
 
 ## What has and hasn't been verified
 
@@ -195,8 +199,9 @@ Not verified, and not claimed:
 
 ## Things that will trip you up
 
-- `./build.sh run` reads like the launch command and is not implemented — it exits 2 and names FND-006 as its owner. Use the `--path game res://scenes/Run.tscn` form instead — as bare `godot` on Linux, and as `/Applications/Godot_mono.app/Contents/MacOS/Godot` on macOS, where you must not put Godot on `PATH` at all.
+- `./build.sh run` reads like the launch command and is not implemented — on `claude/hearth-thread-3aamx2` it exits 2 and names FND-006 as its owner. On `master` there is no `build.sh` at all, so the shell answers 127, command not found, which is the same problem wearing a different symptom. Use the `--path game res://scenes/Run.tscn` form instead — as bare `godot` on Linux, and as `/Applications/Godot_mono.app/Contents/MacOS/Godot` on macOS, where you must not put Godot on `PATH` at all.
 - If `./build.sh` is missing after a clone, you are on `master`, which does not have it yet. Check out the branch above.
+- If Godot cannot load `res://scenes/Run.tscn`, that is the same problem, not a broken game: `game/scenes/Run.tscn` is on `claude/hearth-thread-3aamx2` and is not on `master` either. Check out the branch; do not drop the scene argument to get past it, for the reason in the next bullet.
 - `godot --path game` with no scene argument runs `Boot.tscn`, which prints one line and renders nothing. The scene has to be passed explicitly; `project.godot`'s main scene is deliberately still `Boot.tscn`.
 - No automated check launches `Run.tscn`. `./build.sh godot-import` and `build/verify-godot.sh` exercise `Boot.tscn` only, and no verb invokes either run-slice harness in `game/tests/`, so a break in the playable scene would not turn a gate red.
 

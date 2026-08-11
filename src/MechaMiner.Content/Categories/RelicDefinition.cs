@@ -95,7 +95,11 @@ public static class RelicSchema
         "a relic definition",
         DefinitionField.Text("transformation_key"),
         DefinitionField.Text("tradeoff_key"),
-        // A three-member enum of scope tokens, not stable IDs.
+        // Scope tokens, not stable IDs, so the set clause does not apply. The schema no
+        // longer enumerates them: relic.schema.json's element enum was struck at b6c9f86
+        // because doc 67 states three mutually incompatible scope sets, and AffectedScopes
+        // below is now the only side asserting the three. Interim either way, and unobservable
+        // today: all ten relics author this field as a string rather than an array.
         DefinitionField.ArrayOf(
             "affected_scope", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.OrderedArray),
         DefinitionField.Text("behavior_kind"),

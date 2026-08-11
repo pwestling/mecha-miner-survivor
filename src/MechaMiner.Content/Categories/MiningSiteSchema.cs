@@ -77,7 +77,11 @@ public static class MiningSiteSchema
         DefinitionField.Flag("uses_progress_thresholds"),
         DefinitionField.Flag("fields_overlap_on_standard_maps"),
         DefinitionField.Flag("modifier_named_in_geode_label_or_contextual_hud"),
-        // A three-member enum of audience tokens, not stable IDs.
+        // A three-member enum of audience tokens, not stable IDs, so the set clause does not
+        // apply and no document classifies a token vocabulary. Interim, and the one authored
+        // occurrence is why it matters: specialized-material-geodes authors ["ordinary
+        // enemies", "elites", "bosses"], which a set treatment would resort, measured at
+        // b6c9f86.
         DefinitionField.ArrayOf(
             "applies_to", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.OrderedArray),
         DefinitionField.Text("generation_constraint"));
@@ -143,7 +147,8 @@ public static class MiningSiteSchema
         DefinitionField.Text("depleted_state_kind"),
         DefinitionField.Flag("reactivatable"),
         DefinitionField.Text("persistence_class"),
-        // Prose placement exclusions, not stable IDs.
+        // Prose placement exclusions, not stable IDs, so the set clause does not apply.
+        // Interim: no authored file holds this field, so nothing is observable yet.
         DefinitionField.OptionalArrayOf(
             "spawn_exclusions",
             DefinitionField.ElementOf(FieldShape.Text),

@@ -161,7 +161,10 @@ public static class EnvelopeSchema
         // strings" one section later. Sorting tags would therefore mean asserting they are IDs.
         // Authored order asserts nothing, so that is what they get, and the choice is currently
         // unexercised: all 138 authored definitions hold an empty tags array, measured at
-        // 674376c. If a token-set order class is ever minted, this is the first field to move.
+        // 674376c. Nothing needs minting for that to change: doc 40:28's fourth clause is
+        // already granted and simply names no member, so what is missing is a document
+        // assigning this field to one of the two clauses, not a third class. Until then this
+        // is an interim choice with the basis above and not something doc 40 says.
         [Tags] = ArrayOrder.OrderedArray,
 
         // Doc 40 § source_refs element grammar: "source_refs is an array of stable-ID strings",

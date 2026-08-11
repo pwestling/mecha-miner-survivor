@@ -63,8 +63,16 @@ public static class CombatShapes
         DefinitionField.Flag("explodes"),
         DefinitionField.Flag("leaves_hazard"),
         DefinitionField.Flag("applies_status"),
-        // A closed token vocabulary of five property names, not stable IDs, so doc 40's set
-        // treatment does not reach it and authored order is the only treatment left.
+        // An interim choice, not a grant, and not reached by elimination either. Doc 40:28's
+        // fourth clause - "semantically ordered arrays in their authored/explicit order" -
+        // exists and is granted; what it does not do is name a member, here or anywhere. So
+        // the basis is: the elements are a closed vocabulary of five property names rather
+        // than stable IDs, so the set clause does not apply, and no document has classified a
+        // token vocabulary either way. Preserving authored order is the treatment that asserts
+        // nothing and cannot change what a definition says, while sorting can: EN-06 authors
+        // ["speed", "damage", "lifetime", "terrainCollision", "noHoming"], which is not
+        // ordinal order, so a set treatment would rewrite it - the only authored occurrence of
+        // this field, measured at b6c9f86.
         DefinitionField.ArrayOf(
             "snapshot_at_creation",
             DefinitionField.ElementOf(FieldShape.Text),

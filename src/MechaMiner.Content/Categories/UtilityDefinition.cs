@@ -129,7 +129,9 @@ public static class UtilitySchema
         DefinitionField.Integer("maximum_simultaneous_bearings"),
         DefinitionField.Integer("bearing_fan_threshold_degrees"),
         DefinitionField.Integer("bearing_cluster_collapse_above_count"),
-        // Free-text category descriptions, not stable IDs.
+        // Free-text category descriptions, not stable IDs, so the set clause does not apply.
+        // Interim, on the basis that authored order asserts nothing and sorting would assert
+        // that these are interchangeable.
         DefinitionField.ArrayOf(
             "tracked_categories",
             DefinitionField.ElementOf(FieldShape.Text),
@@ -144,7 +146,9 @@ public static class UtilitySchema
         DefinitionField.OptionalText("coverage_role"),
         DefinitionField.Text("behavior_kind"),
         DefinitionField.Text("effect_kind"),
-        // Statistic names from a seventeen-member shared enum, not stable IDs.
+        // Statistic names from a seventeen-member shared enum, not stable IDs, so the set
+        // clause does not apply. Interim: no authored file holds this field, measured at
+        // b6c9f86, so the choice is currently unexercised.
         DefinitionField.ArrayOf(
             "affected_stat_names",
             DefinitionField.ElementOf(FieldShape.Text),

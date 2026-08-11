@@ -92,7 +92,9 @@ public static class WeaponSchema
     /// </remarks>
     public static DefinitionShape GlobalAttackRateMapping { get; } = DefinitionShape.Of(
         "the global attack rate mapping",
-        // Free-text timing names, not stable IDs.
+        // Free-text timing names, not stable IDs, so the set clause does not apply, and the
+        // vocabulary is not closed either - see the remarks above. Interim, unexercised: no
+        // authored file holds this field.
         DefinitionField.ArrayOf(
             "affected_timings",
             DefinitionField.ElementOf(FieldShape.Text),

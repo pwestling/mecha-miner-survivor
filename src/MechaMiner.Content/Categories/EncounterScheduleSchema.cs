@@ -89,7 +89,10 @@ public static class EncounterScheduleSchema
         DefinitionField.ArrayOf(
             "enemy_ids", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.IdSet),
 
-        // formations names formations from a seven-member enum, not stable IDs.
+        // formations names formations from a seven-member enum, not stable IDs, so the set
+        // clause does not apply and no document classifies a token vocabulary. Interim, on the
+        // basis that authored order asserts nothing: every one of the 15 authored occurrences
+        // holds exactly one element, so no order is observable either way, measured at b6c9f86.
         DefinitionField.ArrayOf(
             "formations", DefinitionField.ElementOf(FieldShape.Text), ArrayOrder.OrderedArray),
         DefinitionField.OptionalText("timestamp_provenance"),

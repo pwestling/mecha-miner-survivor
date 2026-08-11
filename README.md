@@ -81,7 +81,7 @@ On a machine with no display, also `sudo apt-get install -y xvfb` (the bootstrap
 
 ### Running the pinned tools directly — verified on Linux
 
-You can skip `./build.sh` entirely and drive the two pinned tools yourself. This is the only route on this page that invokes no gate script, which is what makes it the way out of the GNU-userland requirement the macOS section below opens with. This three-command sequence was executed on Linux from a fresh clone at `5f9e28cc` with **no `./build.sh` verb invoked at all**, and reached a running scene:
+You can skip `./build.sh` entirely and drive the two pinned tools yourself. This is the only route on this page that invokes no gate script, which is why the macOS section below is built on it: it is that section's primary path and the only one a Mac has run, and because no gate script is involved it needs none of the GNU userland that section opens with. This three-command sequence was executed on Linux from a fresh clone at `5f9e28cc` with **no `./build.sh` verb invoked at all**, and reached a running scene:
 
 ```bash
 dotnet build game/MechaMiner.Game.csproj   # exit 0, "Build succeeded", 0 warnings
@@ -89,7 +89,7 @@ godot --headless --path game --import      # exit 0
 godot --path game res://scenes/Run.tscn    # the game window
 ```
 
-Verified exit codes for that run: the build printed `Build succeeded` and exited 0; the import exited 0; the launch stayed up until killed and printed `MechaMiner: run scene ready`, and the same command with `--quit-after 120` exited 0. Only the Linux behaviour of these three commands is verified; running them on a Mac is not.
+Verified exit codes for that run: the build printed `Build succeeded` and exited 0; the import exited 0; the launch stayed up until killed and printed `MechaMiner: run scene ready`, and the same command with `--quit-after 120` exited 0. Two of these three commands are confirmed on a Mac as well — `dotnet build game/MechaMiner.Game.csproj` and the `--path game res://scenes/Run.tscn` launch, on Apple Silicon under macOS 26.6, because they are exactly what step 4 of the macOS section runs, with Godot invoked there by its full bundle path rather than as a bare `godot`. The middle command, the import, is the one line no Mac has established.
 
 What you give up is `doctor`, so check the two pins by hand: `dotnet --version` must print exactly `10.0.302` and `godot --version` must print `4.7.1.stable.mono.official.a13da4feb`. You also give up `test-fast` and the evidence bundles, so use this to look at the game, not to validate a change.
 
@@ -182,14 +182,14 @@ Neither harness is wired to a `./build.sh` verb; both are run by hand, so neithe
 Not verified, and not claimed:
 
 - ⚠️ **A real keyboard, on the Linux evidence only.** Every ✅ above was produced in a container, and a container cannot press keys: the input map — WASD, arrows and stick, bound by physical keycode — and the movement path driven from action state are verified there, but no key was pressed in any of those runs. This caveat does **not** extend to macOS, where a human drove the mech with a keyboard in a real window; it stands unchanged for the Linux and container evidence, which never pressed one.
-- ⚠️ A real GPU. Everything above rendered through `llvmpipe`, a software Vulkan implementation. Audio fell back to the dummy driver, and every launch was under Xvfb rather than a window on a real desktop.
+- ⚠️ **A real GPU, on the Linux evidence only.** Every ✅ above rendered through `llvmpipe`, a software Vulkan implementation. Audio fell back to the dummy driver, and every one of those launches was under Xvfb rather than a window on a real desktop. The macOS run described above was headed on Apple Silicon hardware; it is not covered by this caveat, and it produced none of the ✅ measurements here.
 - ⚠️ Exports and packaging. The `export`, `package-demo`, `release-validate` and `run` verbs are unimplemented, and the 1.2 GB Godot export templates are not fetched.
 - ⚠️ **Any Linux that is not Debian or Ubuntu.** The block opens with `apt-get`, and `build/bootstrap-linux.sh` installs `mesa-vulkan-drivers` by that name — on a non-apt distro it logs `WARNING: no apt-get` and skips the Vulkan driver rather than failing. Install `git`, `curl`, `unzip` and a Vulkan ICD with your own package manager; the rest of the block is unchanged.
 - ⚠️ **One step of the macOS path, and every Windows instruction on this page.** macOS is confirmed as far as the game running with the mech drivable — on Apple Silicon, macOS 26.6, launched from the full bundle path. What is *not* established on Mac hardware is whether a fresh clone needs the explicit `--headless --path game --import` before its first launch: the single report that it was unnecessary came from an already-warm `game/.godot`, which proves nothing about a cold one. Windows has never been run at all.
 
 ## Things that will trip you up
 
-- `./build.sh run` reads like the launch command and is not implemented — it exits 2 and names FND-006 as its owner. Use the `godot --path game res://scenes/Run.tscn` form.
+- `./build.sh run` reads like the launch command and is not implemented — it exits 2 and names FND-006 as its owner. Use the `--path game res://scenes/Run.tscn` form instead — as bare `godot` on Linux, and as `/Applications/Godot_mono.app/Contents/MacOS/Godot` on macOS, where you must not put Godot on `PATH` at all.
 - If `./build.sh` is missing after a clone, you are on `master`, which does not have it yet. Check out the branch above.
 - `godot --path game` with no scene argument runs `Boot.tscn`, which prints one line and renders nothing. The scene has to be passed explicitly; `project.godot`'s main scene is deliberately still `Boot.tscn`.
 - No automated check launches `Run.tscn`. `./build.sh godot-import` and `build/verify-godot.sh` exercise `Boot.tscn` only, and no verb invokes either run-slice harness in `game/tests/`, so a break in the playable scene would not turn a gate red.

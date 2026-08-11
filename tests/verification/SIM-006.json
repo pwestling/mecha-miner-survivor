@@ -1,0 +1,400 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "SIM-006",
+  "workPackageTitle": "Domain/presentation event buffers, provenance, stable ordering",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91 \u00a7 Verification registry). This file is the first commit of the W1-SIM stream: no SIM production type or test class named by a selector below exists yet.",
+    "The structural validator for this file is owned by TASK-FND-009-002. Until it lands, the shape here matches tests/verification/FND-002.json and tests/verification/FND-003.json exactly.",
+    "Status is current status: every entry is 'registered' because no implementing task has landed. A later commit flips an entry to 'implemented' only when its selector actually runs and passes, as tests/verification/FND-002.json and tests/verification/FND-003.json do.",
+    "Every nunit selector is a fully qualified 'Namespace.Class.Method' so one entry names exactly one test method. Test namespaces mirror production namespaces per doc 114 \u00a7 Naming and file-placement defaults; the full type and method layout the implementation must produce is fixed in the W1-SIM design contract handed to the implementation tasks.",
+    "doc 110 registers the SIM work packages but not their task IDs. SIM-006 does not split: the domain buffer, the presentation buffer, provenance, and the shared ordering rule are one contract - CTR-SIM-001 and CTR-SIM-002 differ precisely in their loss behaviour, which cannot be asserted for one without the other - so every entry belongs to TASK-SIM-006-001.",
+    "The event kinds themselves are not enumerated here. doc 20 \u00a7 Domain and presentation events gives examples, not a closed set, and each authoritative system registers the kinds it emits. This package proves the buffer, provenance, ordering, and loss contract that every later kind inherits.",
+    "'retired' is a new status value, used here for the first time in any registry in this repository. It means the entry's stated contract no longer exists and a named successor verifies the contract that replaced it. A retired entry is not a deleted entry: its id, summary and task are left exactly as committed, because the summary is the historical record of what was once verified and rewording it would erase the fact that the contract changed. A retired entry is also not an implemented entry, so it is excluded from the check that every 'implemented' selector names a test that ran and passed.",
+    "VER-SIM-006-003 was retired rather than reworded because its summary enumerates the comparator it verifies - \"system phase, then explicit emission sequence, then the full entity ID\" - and that three-key comparator no longer exists. The emission sequence is per-tick global (doc 20 \u00a7 Domain and presentation events; CMP-SIM-003 owns the sequence per doc 115 \u00a7 Component registry), so (tick, sequence) is a total order by itself and neither the phase nor the emitting entity ID could discriminate any legal pair. Those were different comparators, not the same behaviour described differently, so a reader checking the entry against the code needs to see that the contract moved. VER-SIM-006-011 states the two-key comparator and the two invariants that replaced the dead keys.",
+    "'successor' on VER-SIM-006-003 names a VER-* id, which is now the only correct form of the field. This note previously said that two forms of successor existed and meant different things, a VER-* one that redirects and a TASK-*/work-package one that defers unfinished verification, and that the structural validator TASK-FND-009-002 owns would have to accept both. The base has settled it the other way and this note is corrected rather than left to be discovered: doc 91 \u00a7 What 'successor' means restricts the field to a retired entry naming a VER-* ID, and doc 91 \u00a7 What 'deferredTo' means mints a separate field for the deferral, legal on any status with a work-package or task target. So the validator has to accept exactly one form of successor and reject the other, which is a simpler obligation than the one this note recorded. The rows that motivated the two-form reading are gone: the TASK-* successor in SIM-001.json was removed as an error and the QUA-005 successors in SIM-003.json and SIM-007.json are now deferredTo. This note deliberately no longer says how many entries carry either field in which file, because that is a measurement of one ref that the next merge falsifies, and doc 91 gives a jq search for each field instead. On placement, which is not settled by any document: this file puts 'successor' before 'status', and SIM-003.json and SIM-007.json put 'deferredTo' in the same position, so the SIM family is internally consistent whichever of the two fields an entry carries.",
+    "SIM-006 does not split into two implementation tasks for its original contract, as the note above records. TASK-SIM-006-002 is nonetheless a real second task: it is the independently landable change that reduced the event comparator to (tick, sequence) and added the uniqueness and phase-agreement invariants, per the TASK-SIM-00N-002 convention in tests/verification/SIM-001.json's notes.",
+    "TASK-SIM-006-003 is the third independently landable task on this package: it fences the assembled event batch to the publishing run session. The guard lives in SnapshotPublisher rather than in either buffer, so VER-SIM-006-012's selector names a test under MechaMiner.Simulation.Tests.Snapshots even though the entry belongs to SIM-006. That is deliberate and matches how the ordering invariant is placed: CMP-SIM-003 owns the assembled batch, and a buffer that carried a run session of its own would give that fact a second owner. Test namespaces mirror production namespaces, so a guard in the Snapshots namespace is tested from the Snapshots test namespace whichever package registers it.",
+    "VER-SIM-006-011's fixtures name the retained-multi-tick-records case, not only the file that holds it, because until that case landed every row in this golden shared tick 7 and the tick key the summary states was unreachable from any fixture the entry named. An entry whose summary describes a claim while its evidence names only the artifacts that could not test it is a specific failure shape rather than a loose pointer: nothing in the entry is false, and nothing in it separates a key under test from a key no input can reach, so the gap is invisible to a reader checking the entry against its own fields. Naming the case that closed it is what stops the entry reading as though it was always covered, which a bare file path cannot do now that the file carries both cases. No new entry was added for the case: this summary already states the tick key, so a second entry would restate the claim rather than record the artifact that made it testable. The 'case=' form follows tests/verification/FND-003.json, which already qualifies a fixture path by case. Nothing was added to evidenceKinds: the case produces golden text and a diff, both already listed, and minting doc 91 \u00a7 What a kind may name's unused 'canonical-ordering' here would report coverage the case did not add.",
+    "The 'platforms' list records the platforms an entry has actually been executed on, not the platforms its subject is intended to support, following tests/verification/FND-001.json and FND-002.json, which state the same convention and were corrected to it. On that reading windows-x64 and osx-arm64 are declared applicable and unexercised for every entry in this file: the subjects are portable .NET with no platform-conditional code, so they are expected to hold there, and that expectation is not coverage. linux-x64 is the only platform any run has covered. The linux-x64 result is now a runner's record and not only a local invocation: workflow 'fast suite' run 31097680603, job 'fast (bootstrap, format-check, build, test-fast, godot-import)', completed successfully on head 5a3f3ac at 2026-08-06T11:38:04Z on a pinned ubuntu-24.04 runner, reporting test-fast total 147, passed 147, failed 0, skipped 0. Read that record as covering the merged tree rather than this branch's tree: when it was taken .github/workflows/fast.yml was not in this branch at all, it was on the base branch, and a pull_request event resolves workflows from the merge of head into base, so what ran green was the tree that would land. The rest of what this note used to say here has been falsified by the base and is corrected rather than left to rot. It said this branch's own commit had never been run alone by a runner and that a push to it starts no workflow because its tree contains none; the base merge brought that workflow into this branch's tree, so the second clause is now false. Its triggers are pull_request, push, unfiltered on purpose, and workflow_dispatch, so a push to this branch does start a run, of this branch's own tree, and a pull request also gets pull_request runs of the merged tree whenever the branch it merges into carries the workflow too. Which runs exist for a given commit is a fact about the remote at the moment of reading and not about this file, so the run named above is recorded as the past measurement it is, with its head and its timestamp, and no claim is made here about what has run since. The retained artifact under artifacts/verbs/ still names the local invocation and its source_revision. Adding a platform back to any entry here requires a real run on it, which needs a runner FND-005 owns. No entry field holds 'applicable but unexercised': doc 91 \u00a7 Verification registry lists the accepted fields and there is no 'pendingPlatforms', so this note is where the applicability claim lives rather than a field invented for it.",
+    "tests/verification/SIM-negative-controls.md, a sibling of this file, is the whole negative-control record for the seven SIM packages: for each control the perturbation, the exact command, the exact failure text, and the forced-rebuild method that makes a transcript a claim about a build rather than about a source file. It is committed rather than cited from a reviewer's scratch directory, because a path only one person can open is not evidence; the transcripts that used to live in five session evidence files outside the repository are now in it. It is not scoped by an evidenceKinds value: the entries whose control it records name it in their own fixtures, qualified by section. Its \"Which entry each section controls\" table is the index over all seven files and is authoritative for what follows. In this file 8 entries name it: VER-SIM-006-001, VER-SIM-006-002, VER-SIM-006-006, VER-SIM-006-008, VER-SIM-006-009, VER-SIM-006-010, VER-SIM-006-011, VER-SIM-006-012. Two things this file previously recorded as gaps are closed. VER-SIM-006-012's controls are in the tree, both of them, the assembled-batch fence and the subject half of it alone. VER-SIM-006-011 now names the transcript of the perturbation that showed the comparator had a tick key no input reached, which is why this entry exists and VER-SIM-006-003 is retired; that transcript is the record of the hole rather than a substitute for the control this entry keeps inside its own gate. VER-SIM-006-010 keeps its pointer to the ceiling-drop section, now labelled as the same perturbation applied to production rather than to a stub, and gains the section that does show its own selector going red. 3 entries name it nowhere: VER-SIM-006-004, VER-SIM-006-005, VER-SIM-006-007. VER-SIM-006-003 is retired and points at nothing, because the transcript that matters for its selector belongs to its successor.",
+    "On 'negative-control' in evidenceKinds. doc 91 \u00a7 What a kind may name rules that a technique is not a kind, and excludes the value from the minted inventory a kind must be added to before it may appear in a registry file, so it is a defect to correct in this file rather than a value grandfathered into it. Correcting it is a removal and not a substitution, because a negative control's evidence is not a different form of thing from an ordinary test's: a control run as an NUnit test produces exactly the artifact form a positive NUnit test produces. So an affected entry takes the kind its artifact form already gives it, which is the kind it already carries: 'test-counts' with 'test-output' for an nunit selector, the pair 53 positive nunit entries of that shape across these registries carry, and 'golden-text' with 'test-counts' and 'text-diff' for a golden comparison, the shape 11 positive entries carry. Nothing is minted, no kind is added, and no entry loses a kind its evidence needs. What the label carried is that the gate has a negative control, which is a fact about the gate and not about the form of its evidence, so it is required here to appear in prose that can say what a label could not: the entry summary names the perturbation injected and what was observed, and where tests/verification/SIM-negative-controls.md records that control the entry's fixtures name it, qualified by section, so the entry's own pointer reaches the transcript rather than only the artifact that cannot demonstrate a control. Summary text in these files is otherwise not reworded; the integration owner authorized 'summary or notes' for this correction specifically, and summary is the only per-entry prose field available, because doc 91 \u00a7 Verification registry lists the accepted entry fields and no per-entry 'notes' is among them, while doc 115 \u00a7 Schema registry has SCH-QUA-001 reject unknown fields. A field invented to hold it would repeat exactly the coining that produced this defect."
+  ],
+  "entries": [
+    {
+      "id": "VER-SIM-006-001",
+      "summary": "A domain event is never dropped: at and beyond the buffer's initial capacity the buffer grows and every appended event appears in the tick's batch, and a buffer that genuinely cannot accept an event fails the tick invariant rather than discarding it.",
+      "task": "TASK-SIM-006-001",
+      "requirements": [
+        "TR-RUN-007",
+        "TR-CTR-002"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#domain-and-presentation-events",
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Events.DomainEventBufferTests.DomainEventsAreNeverDropped"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 Events: the domain buffer drops at its ceiling"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-006-002",
+      "summary": "Presentation events are coalesced only by an explicit named policy: an event kind with no policy is delivered verbatim, a policy never merges events of different kinds or different provenance, and the coalesced batch records how many source events it represents.",
+      "task": "TASK-SIM-006-001",
+      "requirements": [
+        "TR-CTR-004",
+        "TR-RUN-001"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#domain-and-presentation-events",
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Events.PresentationEventBufferTests.CoalescingHappensOnlyUnderAnExplicitNamedPolicy"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 The coalescing policy merges every kind"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-006-003",
+      "summary": "Simultaneous events order by system phase, then explicit emission sequence, then the full entity ID: two runs that emit the same events in different collection order produce identical batches, so no observable order can come from collection or thread timing.",
+      "task": "TASK-SIM-006-001",
+      "requirements": [
+        "TR-RUN-005",
+        "TR-RUN-006"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#system-phase-ordering",
+        "docs/technical/20-simulation-core.md#boundary-and-tie-ordering",
+        "docs/technical/10-runtime-architecture.md#concurrency-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Events.EventOrderingTests.SimultaneousEventsUseDocumentedStableOrdering"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Simulation.Tests/Goldens/events-simultaneous-ordering.txt"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "golden-text",
+        "text-diff"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "successor": "VER-SIM-006-011",
+      "status": "retired"
+    },
+    {
+      "id": "VER-SIM-006-004",
+      "summary": "Every event carries its tick, sequence, stable event kind, relevant entity and content IDs, position, and typed payload, and an event missing any required field cannot be constructed rather than being emitted with a default.",
+      "task": "TASK-SIM-006-001",
+      "requirements": [
+        "TR-CTR-004"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#domain-and-presentation-events",
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Events.EventProvenanceTests.EveryEventCarriesItsCompleteProvenance"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-006-005",
+      "summary": "The pair of tick and sequence is a total order across a run: sequence is strictly increasing within a tick, its per-tick origin is documented and asserted, and no two events in one run share the same pair.",
+      "task": "TASK-SIM-006-001",
+      "requirements": [
+        "TR-CTR-004",
+        "TR-RUN-005"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#domain-and-presentation-events"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Events.EventProvenanceTests.TickAndSequenceFormATotalOrder"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-006-006",
+      "summary": "Statistics consume domain and damage records before their buffers are released: releasing a buffer that still holds unconsumed records fails the invariant instead of dropping them, and the consumed count equals the emitted count exactly.",
+      "task": "TASK-SIM-006-001",
+      "requirements": [
+        "TR-RUN-007",
+        "TR-CTR-002"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#domain-and-presentation-events",
+        "docs/technical/20-simulation-core.md#tick-transaction"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Events.DomainEventBufferTests.BuffersAreNotReleasedWithUnconsumedRecords"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 The domain buffer releases with records unconsumed"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-006-007",
+      "summary": "Presentation events are disposable: discarding an entire tick's presentation batch leaves the committed state, that tick's domain events, and the following tick's behaviour bit-identical, so no authority can leak into the presentation channel.",
+      "task": "TASK-SIM-006-001",
+      "requirements": [
+        "TR-RUN-001",
+        "TR-CTR-004"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#domain-and-presentation-events",
+        "docs/technical/10-runtime-architecture.md#architectural-style"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Events.PresentationEventBufferTests.DiscardingThePresentationBatchChangesNothingAuthoritative"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-006-008",
+      "summary": "Event buffers are tick-local: every buffer is empty at the start of each tick, and an event appended during tick N never appears in the batch published for tick N+1.",
+      "task": "TASK-SIM-006-001",
+      "requirements": [
+        "TR-RUN-005",
+        "TR-CTR-002"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#tick-transaction",
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Events.EventOrderingTests.BuffersAreTickLocalAndStartEmpty"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 The tick-locality check is removed"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-006-009",
+      "summary": "Over randomized multi-system emission sequences the published batch equals a deliberately simple reference ordering and the domain record count equals the emitted count exactly, with the seed logged before the body runs.",
+      "task": "TASK-SIM-006-001",
+      "requirements": [
+        "TR-RUN-005",
+        "TR-QUA-002"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#reference-models",
+        "docs/technical/20-simulation-core.md#domain-and-presentation-events"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Events.EventOrderingPropertyTests.OrderedBatchMatchesTheReferenceOrdering"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 Event ordering drops the system-phase key"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "seed-identity",
+        "minimized-input-artifact"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-006-010",
+      "summary": "A negative control proves the loss and ordering gates can fail: a stub buffer that silently drops on overflow makes VER-SIM-006-001 fail, and a stub that publishes in hash-container enumeration order makes VER-SIM-006-011 fail.",
+      "task": "TASK-SIM-006-001",
+      "requirements": [
+        "TR-QUA-001",
+        "TR-RUN-005"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#acceptance-evidence",
+        "docs/technical/20-simulation-core.md#domain-and-presentation-events"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Events.EventBufferNegativeControlTests.LossAndOrderingAssertionsFailAgainstDeliberatelyBrokenStubs"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 Events: the domain buffer drops at its ceiling",
+        "tests/verification/SIM-negative-controls.md \u00a7 Event ordering drops the system-phase key"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-006-011",
+      "summary": "Simultaneous events order by tick, then explicit emission sequence, and by nothing further: two runs that emit the same events in different collection order produce identical batches, so no observable order can come from collection or thread timing. The emission sequence is per-tick global, so the two facts that make a phase key and an entity-ID key unreachable are asserted instead of being encoded as dead comparator keys - a duplicate sequence within a tick fails loudly, and the system phase must not decrease as the emission sequence rises. The negative control is inside the gate and runs on every invocation rather than being a transcript of a perturbation someone once applied: each case is sorted through a comparison with the tick key deleted and again with the emission-sequence key deleted, in both arrival orders because a dropped key shows up as a tie and a tie under a stable sort is only visible as a disagreement between permutations. The gate then asserts which degradation each case notices and which it is blind to. The retained-multi-tick case notices both deletions, the one-tick case notices the missing sequence key, and the one-tick case is asserted to be blind to the missing tick key because every row in it shares tick 7, which is the hole the retained case was added to fill.",
+      "task": "TASK-SIM-006-002",
+      "requirements": [
+        "TR-RUN-005",
+        "TR-RUN-006"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#system-phase-ordering",
+        "docs/technical/20-simulation-core.md#domain-and-presentation-events",
+        "docs/technical/10-runtime-architecture.md#concurrency-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Events.EventOrderingTests.SimultaneousEventsUseDocumentedStableOrdering"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Simulation.Tests/Goldens/events-simultaneous-ordering.txt",
+        "tests/MechaMiner.Simulation.Tests/Goldens/events-simultaneous-ordering.txt case=retained-multi-tick-records",
+        "tests/verification/SIM-negative-controls.md \u00a7 The event comparator loses its tick key"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "golden-text",
+        "text-diff"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-006-012",
+      "summary": "The assembled event batch is fenced to the publishing run session: after the ordered batches are filled, a domain or presentation event whose emitting entity or whose subject carries a different run session fails the tick invariant and publishes nothing. Checked on the batch rather than at each append, for the same reason the total-order check is: the publisher is the one component that knows the run session, and giving a buffer a second copy of that fact would give it a second owner. The foreign identity is minted by a second EntityIdAllocator on a different run session.",
+      "task": "TASK-SIM-006-003",
+      "requirements": [
+        "TR-CTR-004",
+        "TR-SIM-001"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#entity-identity",
+        "docs/technical/20-simulation-core.md#domain-and-presentation-events",
+        "docs/technical/20-simulation-core.md#tick-transaction"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Snapshots.SnapshotRunSessionFenceTests.AForeignRunSessionEventCannotBePublished"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 The assembled-batch run-session fence",
+        "tests/verification/SIM-negative-controls.md \u00a7 The subject half of the batch fence"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+# authority: docs/technical/10-runtime-architecture.md § Clock domains
+#   "The simulation frequency is 60 ticks per second. ... Game time is derived from
+#   integer tick count, not accumulated floating-point frame deltas."
+#   docs/technical/20-simulation-core.md § Numeric and unit conventions: run time is a
+#   "64-bit integer simulation tick plus derived seconds".
+#
+# derived by: an independent Python reference that divides the tick index by the exact
+#   rational rate 60/1 exactly once, not by the C# implementation under test. Any
+#   implementation that accumulates SecondsPerTick instead of dividing once disagrees
+#   with this file.
+#
+# The seconds column is the IEEE 754 binary64 bit pattern of index/60, not a decimal
+# rendering: a bit pattern has no formatting ambiguity, so a mismatch here is always a
+# disagreement about the value and never about how it was printed.
+#
+# Tick 126000 is the 35:00 terminal boundary (docs/technical/20 § Boundary and tie
+# ordering); it is included because its derived seconds must be exactly 2100.
+#
+# columns (tab separated): tickIndex, derivedSecondsIeee754Bits
+# entries=20
+0	0x0000000000000000
+1	0x3F91111111111111
+2	0x3FA1111111111111
+3	0x3FA999999999999A
+4	0x3FB1111111111111
+30	0x3FE0000000000000
+59	0x3FEF777777777777
+60	0x3FF0000000000000
+61	0x3FF0444444444444
+120	0x4000000000000000
+600	0x4024000000000000
+1800	0x403E000000000000
+3599	0x404DFDDDDDDDDDDE
+3600	0x404E000000000000
+60000	0x408F400000000000
+125996	0x40A067DDDDDDDDDE
+125997	0x40A067E666666666
+125998	0x40A067EEEEEEEEEF
+125999	0x40A067F777777777
+126000	0x40A0680000000000

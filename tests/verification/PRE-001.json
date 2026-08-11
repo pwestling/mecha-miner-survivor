@@ -1,0 +1,80 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "PRE-001",
+  "workPackageTitle": "Run scene, snapshot bridge, entity-handle lifecycle",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91-verification-strategy.md § Verification registry). This file was created in the same commit that first implements against it, and every entry below was authored before the production code it names.",
+    "'status' takes exactly one of 'registered', 'implemented', 'retired' (doc 91 § Entry status). 'evidenceKinds' is read against 'status' (doc 91 § What evidenceKinds means): for a 'registered' entry the list is evidence the verification will produce once built, and nothing may treat it as produced.",
+    "The structural validator for this file is owned by TASK-FND-009-002. Until it lands, this file is checked against tests/verification/SIM-007.json by hand, and the claim is about SHAPE only: every entry here carries the same field names with the same types - 'status' a bare string, 'scenarios', 'evidenceKinds', and 'fixtures' arrays - and the optional 'deferredTo' is absent. An earlier revision of this file rotated four of those fields against each other, so 'status' held a scenario ID in an array and 'evidenceKinds' held an artifact path, which doc 91:63 names as its own example of a value that is not a kind. It is corrected above. What is NOT yet matched is the kind vocabulary: 'engine-report', 'canonical-transcript', and 'reference-capture' are absent from doc 91 § What a kind may name's inventory, doc 91:78 requires a kind to be minted there before it may appear in a registry file, and minting those three is a correction this file still owes.",
+    "This file is deliberately NOT named SIM-0*.json. tests/MechaMiner.Simulation.Tests/Support/NegativeControlCoverageTests.cs globs 'SIM-0*.json' and asserts a totals line accounting for every entry across those seven files, so adding an entry to one of them from another work package would break an unrelated package's gate.",
+    "Every entry in this file is 'registered', and that is a structural fact about this repository rather than an omission. tests/MechaMiner.Game.Tests references MechaMiner.Content, MechaMiner.Persistence, and MechaMiner.Simulation and does NOT reference MechaMiner.Game, and build/verify-architecture.sh § 3 asserts that reference set exactly, so adding the edge would fail the accepted project boundary. No code under game/ is reachable from any test project as the boundary stands. Until that is resolved, presentation verification is an engine-tier procedure driven through a scene, not an NUnit selector.",
+    "The engine-tier procedure these entries name is game/tests/RunSliceEvidenceHarness.tscn, development scaffolding on the same footing as game/tests/GodotTestRunner.tscn: game/MechaMiner.Game.csproj removes game/tests/ from compilation under ExportRelease, so it is absent from the assembly in a Release build rather than merely filtered from an export.",
+    "The harness is not yet wired into a verb. It is run by hand and its transcript is retained as evidence; promoting these entries to 'implemented' is the work of wiring it into the engine tier alongside verify-godot-runner.sh, and that wiring is owned by the same integration owner as build/verify-gate-wiring.sh's exemption list.",
+    "Entity-handle lifecycle - the simulation-ID to presentation-handle mapping, its idempotent disposal, and a death effect outliving its authoritative entity - is the rest of PRE-001's payload. This slice renders exactly one body, the player, which needs no handle map, so those have no entry here yet."
+  ],
+  "entries": [
+    {
+      "id": "VER-PRE-001-001",
+      "summary": "The run scene consumes the two most recent committed snapshots and interpolates presentation only: the rendered body follows the authoritative pair through the mapping, and no frame writes simulation state, so disabling interpolation changes what is seen and not where the body authoritatively is.",
+      "task": "TASK-PRE-001-001",
+      "requirements": [
+        "TR-PRE-001",
+        "TR-RUN-001"
+      ],
+      "technicalSources": [
+        "docs/technical/30-presentation-and-rendering.md#snapshot-consumption-and-interpolation",
+        "docs/technical/10-runtime-architecture.md#architectural-style"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "engine-scene",
+        "value": "game/tests/RunSliceEvidenceHarness.tscn § interpolation-is-presentation-only"
+      },
+      "fixtures": [],
+      "scenarios": [
+        "run-slice-drive"
+      ],
+      "evidenceKinds": [
+        "engine-report",
+        "canonical-transcript"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "main",
+      "status": "registered"
+    },
+    {
+      "id": "VER-PRE-001-002",
+      "summary": "The run scene contains no gameplay rule: the authoritative position it renders is the one the snapshot carries, the model pivot and any presentation offset never modify it, and the scene reaches player position through no path but the snapshot.",
+      "task": "TASK-PRE-001-001",
+      "requirements": [
+        "TR-PRE-001",
+        "TR-RUN-001"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#architectural-style",
+        "docs/technical/decisions/TDR-005-simulate-gameplay-on-a-two-dimensional-plane.md#coordinate-contract"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "engine-scene",
+        "value": "game/tests/RunSliceEvidenceHarness.tscn § presentation-holds-no-rule"
+      },
+      "fixtures": [],
+      "scenarios": [
+        "run-slice-drive"
+      ],
+      "evidenceKinds": [
+        "engine-report",
+        "canonical-transcript"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "main",
+      "status": "registered"
+    }
+  ]
+}

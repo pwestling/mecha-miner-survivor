@@ -30,3 +30,70 @@ project/assembly_name="MechaMiner.Game"
 
 renderer/rendering_method="mobile"
 renderer/rendering_method.mobile="mobile"
+
+[input]
+
+; Active-play move vector (UI-002). docs/technical/60-ui-input-and-accessibility.md
+; § Logical input actions makes "move vector" the first active-play logical action and
+; requires gameplay to "consume logical actions rather than physical key/button checks".
+;
+; Four one-directional actions rather than one two-dimensional one, because the engine's
+; action system is one-dimensional; Input.GetVector composes them into the logical vector
+; that MovementInputAdapter returns. The names are simulation-relative, not screen-relative:
+; TDR-005 § Coordinate contract has X increase east and Y increase north, and north is
+; screen-up on the fixed north-up camera, so east/north/west/south read the same on the
+; plane and on screen.
+;
+; Bindings are by PHYSICAL keycode, which is layout-independent: the same three keys sit in
+; the same places on an AZERTY keyboard, where a keycode binding would put "move_west" on Q.
+; Arrow keys are bound as well as WASD because the arrows are what a person tries first when
+; a build does not say which keys it uses. The joypad left stick is axis 0 for east/west and
+; axis 1 for north/south, where axis 1 is positive DOWNWARD - hence -1.0 for north.
+;
+; deadzone is 0 on every action deliberately. doc 60 § Movement:65 specifies ONE radial
+; deadzone of 0.18, applied to the composed vector; a per-action deadzone here would compose
+; with it into a square deadzone that neither that number nor the engine default describes.
+; MovementInputAdapter owns the radial rule and passes 0 to Input.GetVector for the same
+; reason.
+;
+; Remapping, alternate bindings, and the configurable deadzone are UI-009's settings work.
+;
+; The encoding matters and is easy to get wrong. project.godot serializes an event as
+; Object(ClassName,"prop":value,...); the JSON {"type": "InputEventKey", ...} form belongs to
+; .tscn files. An earlier revision of this file used the .tscn form, and the result was silent:
+; every action was created and InputMap.HasAction returned true for all four, but each one had
+; an EMPTY event list, so no key was bound to anything and the mech could not be moved by a
+; player. game/tests/RunSliceCaptureHarness.cs logs InputMap.ActionGetEvents counts and
+; InputMap.EventIsAction per binding for exactly that reason.
+
+move_east={
+"deadzone": 0.0,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":68,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+, Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194321,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+, Object(InputEventJoypadMotion,"resource_local_to_scene":false,"resource_name":"","device":-1,"axis":0,"axis_value":1.0,"script":null)
+]
+}
+
+move_west={
+"deadzone": 0.0,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":65,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+, Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194319,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+, Object(InputEventJoypadMotion,"resource_local_to_scene":false,"resource_name":"","device":-1,"axis":0,"axis_value":-1.0,"script":null)
+]
+}
+
+move_north={
+"deadzone": 0.0,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":87,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+, Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194320,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+, Object(InputEventJoypadMotion,"resource_local_to_scene":false,"resource_name":"","device":-1,"axis":1,"axis_value":-1.0,"script":null)
+]
+}
+
+move_south={
+"deadzone": 0.0,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":83,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+, Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194322,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+, Object(InputEventJoypadMotion,"resource_local_to_scene":false,"resource_name":"","device":-1,"axis":1,"axis_value":1.0,"script":null)
+]
+}

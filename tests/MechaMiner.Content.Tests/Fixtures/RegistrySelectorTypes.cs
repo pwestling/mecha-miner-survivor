@@ -97,8 +97,13 @@ internal static class RegistrySelectorTypes
     /// argument contains a space - <c>Dictionary&lt;string, JsonSchemaNode&gt;?</c> is the
     /// shape - and a flat class has only two options, both wrong. Forbidding the space is what
     /// the flat class did, and it dropped 9 declarations from the sources this index reads, 18
-    /// across <c>src/</c> and <c>tests/</c> together. Permitting the space everywhere is the
-    /// other option, and it lets the return type span two identifiers instead of one, so
+    /// across <c>src/</c> and <c>tests/</c> together. Both figures re-measured at <c>455d22f</c>
+    /// and unchanged. <c>f16b553</c>'s message puts the second at 17, one commit earlier, and that
+    /// is not a figure that moved: the three files changed between <c>f16b553</c> and
+    /// <c>455d22f</c> declare none of the 18, so the population was identical and the 17 was an
+    /// undercount when it was written. Recorded here because the branch carries both numbers for
+    /// one measurement and neither commit says which is right. Permitting the space everywhere is
+    /// the other option, and it lets the return type span two identifiers instead of one, so
     /// <c>owners ?? new List&lt;string&gt;()));</c> reads as the return type <c>owners ??</c>
     /// declaring a member named <c>List</c>.
     /// </para>

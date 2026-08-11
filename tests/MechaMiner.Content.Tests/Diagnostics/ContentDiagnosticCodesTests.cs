@@ -220,7 +220,7 @@ internal sealed class ContentDiagnosticCodesTests
 
         // Relational, band 7xxx.
         "MMC-7001", "MMC-7002", "MMC-7003", "MMC-7004", "MMC-7005", "MMC-7006", "MMC-7007",
-        "MMC-7008",
+        "MMC-7008", "MMC-7009",
     };
 
     /// <summary>

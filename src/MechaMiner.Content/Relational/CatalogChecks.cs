@@ -248,6 +248,16 @@ public static class CatalogChecks
     /// <c>CategorySemanticRuleTests</c> is the wall: it asserts this diagnostic fires on a
     /// reversed pair, and it goes red the moment a sort is introduced.
     /// </para>
+    /// <para>
+    /// <b>Two faults, two codes.</b> A recipe naming a resource that carries no canonical
+    /// letter reports
+    /// <see cref="ContentDiagnosticCodes.RecipeResourceLetterUnresolved"/> and stops there;
+    /// only a recipe every resource of which resolved can reach
+    /// <see cref="ContentDiagnosticCodes.RecipeLettersMismatch"/>. They were one code, which
+    /// left no test able to say which branch had run and left the unresolved branch with no
+    /// negative control of its own - a state in which that branch could stop firing, or
+    /// start firing everywhere, without a single assertion changing colour.
+    /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException">Any argument is null.</exception>
     public static void RecipeLettersSpellTheWeaponId(
@@ -290,7 +300,7 @@ public static class CatalogChecks
             if (unresolved.Count > 0)
             {
                 bag.Add(ContentDiagnostic.CreateError(
-                    ContentDiagnosticCodes.RecipeLettersMismatch,
+                    ContentDiagnosticCodes.RecipeResourceLetterUnresolved,
                     sourcePath,
                     pointer,
                     weapon.Id,

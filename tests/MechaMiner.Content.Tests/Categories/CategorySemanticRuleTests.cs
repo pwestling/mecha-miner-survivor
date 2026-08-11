@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text.Json.Nodes;
@@ -439,6 +440,81 @@ internal sealed class CategorySemanticRuleTests
                     + "difference between the two checks is load-bearing rather than an "
                     + "inconsistency to harmonise: " + string.Join("; ", pairs.Diagnostics));
         });
+    }
+
+    /// <summary>
+    /// A recipe naming a resource that carries no canonical letter is reported as an
+    /// unresolved letter and never as a spelling mismatch.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <see cref="CatalogChecks.RecipeLettersSpellTheWeaponId"/> has two rejections and
+    /// they used to share one code, which meant no test could say which of them had run.
+    /// The unresolved branch had no negative control at all: the only thing reaching it
+    /// did so by accident, and it asserted nothing about which branch fired. A branch in
+    /// that state can stop firing, or start firing on every weapon in the catalog, without
+    /// one assertion changing colour.
+    /// </para>
+    /// <para>
+    /// So the assertion here is a pair. <c>RSC-08</c> is hyper gold: a resource the catalog
+    /// really holds, loaded alongside the six lettered materials, that simply has no
+    /// <c>canonical_letter</c> to resolve to - which is what makes this a test of the
+    /// letter table rather than of catalog membership. The unresolved code must fire, and
+    /// the spelling code must not, because an unresolvable recipe has no spelling to
+    /// disagree with the weapon ID and reporting one as the other sends the reader to edit
+    /// the recipe when the fix is to give the resource its letter.
+    /// </para>
+    /// </remarks>
+    [Test]
+    public void ARecipeNamingAnUnletteredResourceIsUnresolvedAndNotAMismatch()
+    {
+        List<ResourceDefinition> resources = SixMaterials();
+        resources.Add(Load<ResourceDefinition>(
+            "resources/valid-currency-hyper-gold.json", DefinitionKind.Resource));
+
+        WeaponDefinition unlettered = Load<WeaponDefinition>(
+            "weapons/catalog-recipe-resource-unlettered.json", DefinitionKind.Weapon);
+
+        DiagnosticBag bag = new();
+        CatalogChecks.RecipeLettersSpellTheWeaponId(
+            new[] { unlettered }, resources, CatalogPath, bag);
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                Codes(bag),
+                Does.Contain(ContentDiagnosticCodes.RecipeResourceLetterUnresolved),
+                () => "W-AB naming RSC-08, which carries no canonical letter, must be "
+                    + "reported as an unresolved letter: " + string.Join("; ", bag.Diagnostics));
+
+            Assert.That(
+                Codes(bag),
+                Does.Not.Contain(ContentDiagnosticCodes.RecipeLettersMismatch),
+                () => "and must not be reported as a spelling mismatch - a recipe that "
+                    + "cannot be resolved has no spelling to compare against the weapon ID, "
+                    + "and one code for both faults is a report no reader can act on: "
+                    + string.Join("; ", bag.Diagnostics));
+
+            Assert.That(
+                RelatedIdsOf(bag, ContentDiagnosticCodes.RecipeResourceLetterUnresolved),
+                Does.Contain("RSC-08"),
+                () => "and must name the resource that did not resolve, because that is the "
+                    + "one the fix is applied to: " + string.Join("; ", bag.Diagnostics));
+        });
+    }
+
+    private static IReadOnlyList<string> RelatedIdsOf(DiagnosticBag bag, string code)
+    {
+        List<string> related = new();
+        foreach (ContentDiagnostic diagnostic in bag.Diagnostics)
+        {
+            if (string.Equals(diagnostic.Code, code, StringComparison.Ordinal))
+            {
+                related.AddRange(diagnostic.RelatedIds);
+            }
+        }
+
+        return related;
     }
 
     private static List<ResourceDefinition> SixMaterials()

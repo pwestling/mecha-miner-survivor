@@ -1356,6 +1356,41 @@
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-003-040",
+      "summary": "The unresolved-resource branch of RecipeLettersSpellTheWeaponId reports a code of its own, MMC-7009, and never the spelling mismatch MMC-7005. Route: weapons/catalog-recipe-resource-unlettered.json is W-AB carrying [RSC-01, RSC-08] and is checked against the six lettered materials plus RSC-08, hyper gold - a resource the catalog really holds and gives no canonical_letter, which makes this a test of the letter table rather than of catalog membership. Three assertions are matched against one bag: the unresolved code is present, the mismatch code is absent, and the diagnostic's related IDs name RSC-08, so the test pins which of the two branches ran rather than that something was reported. Why it exists: the two branches emitted one code, which made them indistinguishable to every test, and the unresolved branch had no negative control at all - the only thing reaching it was CategoryDiagnosticProbe, by accident, through two resource fixtures whose helper varied the source-path label and not the ID so they collapsed to one entry in the letter table, and which asserted nothing about which branch fired. Technique: pointing the unresolved branch back at MMC-7005 failed this test with 'Expected: some item equal to \"MMC-7009\" / But was: < \"MMC-7005\" >' and 'Expected: not some item equal to \"MMC-7005\" / But was: < \"MMC-7005\" >'; deleting the MMC-7009 descriptor from ContentDiagnosticCodes.Declared while leaving the branch emitting it failed TheCodesTheSuiteProvokesAreExactlyTheCodesDeclared with System.ArgumentException : diagnostic code 'MMC-7009' is not declared in ContentDiagnosticCodes (Parameter 'code'), thrown on the emit path itself. Route not covered: whether the migration that will first fire this branch fires it for the reason it reports, which only that migration's own fixtures can decide.",
+      "task": "TASK-DAT-003-001",
+      "requirements": [
+        "TR-DAT-004",
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#weapons",
+        "docs/technical/91-verification-strategy.md#negative-control-adequacy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/catalog-recipe-resource-unlettered.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/resources/valid-currency-hyper-gold.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id",
+        "absent-value-assertion"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
     }
   ]
 }

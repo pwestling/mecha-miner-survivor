@@ -69,6 +69,7 @@ internal static class CategoryFixtureCorpus
         Good("weapons/catalog-duplicate-recipe-pair.json", DefinitionKind.Weapon),
         Good("weapons/catalog-recipe-letters-mismatch.json", DefinitionKind.Weapon),
         Good("weapons/catalog-recipe-pair-reversed.json", DefinitionKind.Weapon),
+        Good("weapons/catalog-recipe-resource-unlettered.json", DefinitionKind.Weapon),
         Good("branches/catalog-duplicate-branch-class.json", DefinitionKind.Branch),
         Good("utilities/catalog-duplicate-installed-identity.json", DefinitionKind.Utility),
         Good("utilities/catalog-shifted-pool-availability.json", DefinitionKind.Utility),

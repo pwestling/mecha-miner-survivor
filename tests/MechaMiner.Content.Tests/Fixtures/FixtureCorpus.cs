@@ -130,6 +130,11 @@ internal static class FixtureCorpus
         // --- traceability --------------------------------------------------
         Bad("traceability-source-ref-malformed.json", ContentDiagnosticCodes.SourceRefMalformed),
         Bad("traceability-source-ref-path-line.json", ContentDiagnosticCodes.SourceRefPathLine),
+        // The duplicate a real author writes: two fields traced to one document, the scope
+        // prefixes dropped in an edit, and the two per-field citations collapse into the same
+        // string with both left in. A synthetic repeat of an arbitrary token would exercise the
+        // same branch and would not be evidence that the check catches anything anybody writes.
+        Bad("traceability-source-ref-duplicate.json", ContentDiagnosticCodes.SourceRefDuplicated),
         Bad("traceability-scope-unresolved.json", ContentDiagnosticCodes.SourceRefScopeUnresolved),
     };
 

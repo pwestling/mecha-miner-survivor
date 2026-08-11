@@ -209,6 +209,9 @@ public static class ContentDiagnosticCodes
     /// <summary>A sum recomputed from a definition's own parts does not equal the accepted total.</summary>
     public const string SumMismatch = "MMC-6010";
 
+    /// <summary>A definition repeats an element of <c>source_refs</c>.</summary>
+    public const string SourceRefDuplicated = "MMC-4004";
+
     /// <summary>A value required to be unique within one definition appears twice.</summary>
     public const string DuplicateValueInDefinition = "MMC-6011";
 
@@ -327,6 +330,17 @@ public static class ContentDiagnosticCodes
             "a source_refs element does not match the element grammar"),
         Describe(SourceRefPathLine, nameof(SourceRefPathLine), ContentValidationStage.Traceability,
             "a source_refs element is a file path or a path:line pair, which decays silently whenever the document is edited"),
+        Describe(SourceRefDuplicated, nameof(SourceRefDuplicated), ContentValidationStage.Traceability,
+            "a definition lists the same source_refs element twice; the diagnostic points at the second "
+                + "occurrence and names the element. The schema declares uniqueItems on this array, so this is the "
+                + "typed statement of a rule the mirror already carried. This never means two elements citing the "
+                + "same document: \"recipe_pair: GDD-X#y\" and \"branches: GDD-X#y\" attribute one source to two "
+                + "fields and are two distinct elements, which is the ordinary way a definition traces two fields to "
+                + "one document, and rejecting that would make per-field traceability impossible. It also never "
+                + "means a repeated element in a category's own array, which is the duplicate-value-in-definition "
+                + "code at the semantic stage: this one is checked at the traceability stage over the envelope's "
+                + "array before any category shape is read, and folding the two together would let a definition "
+                + "satisfy a test for either fault while carrying the other."),
         Describe(SourceRefScopeUnresolved, nameof(SourceRefScopeUnresolved), ContentValidationStage.Traceability,
             "a source_refs scope prefix names a path that does not exist in the definition it annotates"),
 

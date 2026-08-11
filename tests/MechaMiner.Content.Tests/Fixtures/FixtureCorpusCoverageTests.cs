@@ -101,6 +101,7 @@ internal sealed class FixtureCorpusCoverageTests
         new("MMC-4001", "invalid/traceability-source-ref-malformed.json"),
         new("MMC-4002", "invalid/traceability-source-ref-path-line.json"),
         new("MMC-4003", "invalid/traceability-scope-unresolved.json"),
+        new("MMC-4004", "invalid/traceability-source-ref-duplicate.json"),
     };
 
     private static string InvalidDirectory => Path.Combine(FixtureCorpus.Root, "invalid");

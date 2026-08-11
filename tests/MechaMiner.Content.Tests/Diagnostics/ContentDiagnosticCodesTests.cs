@@ -206,7 +206,7 @@ internal sealed class ContentDiagnosticCodesTests
         "MMC-3001", "MMC-3002",
 
         // Traceability, band 4xxx.
-        "MMC-4001", "MMC-4002", "MMC-4003",
+        "MMC-4001", "MMC-4002", "MMC-4003", "MMC-4004",
 
         // Schema infrastructure, band 5xxx.
         "MMC-5001", "MMC-5002", "MMC-5003",

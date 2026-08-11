@@ -525,6 +525,13 @@ public static class EnvelopeReader
             return parsed;
         }
 
+        // Every element seen so far, so a repeat is reported at its second occurrence rather
+        // than at the first. The comparison is ordinal over the whole authored element,
+        // including any scope prefix, because the prefix is part of what the author wrote: two
+        // elements attributing one document to two different fields are two distinct elements
+        // and both belong. See ContentDiagnosticCodes.SourceRefDuplicated for the split.
+        HashSet<string> seen = new(elements.Count, StringComparer.Ordinal);
+
         for (int index = 0; index < elements.Count; index++)
         {
             string element = elements[index];
@@ -571,6 +578,23 @@ public static class EnvelopeReader
                         + ", which does not exist in this definition; a scope attributes one "
                         + "part of the definition to a source, so it must name a part that is "
                         + "there",
+                    new[] { reference.DocumentId }));
+                continue;
+            }
+
+            if (!seen.Add(element))
+            {
+                // Reported, and the element still parses and resolves, so nothing downstream is
+                // deprived of it: this is a statement about the array holding it twice.
+                bag.Add(ContentDiagnostic.CreateError(
+                    ContentDiagnosticCodes.SourceRefDuplicated,
+                    context.SourcePath,
+                    pointer,
+                    contentId,
+                    "'" + element + "' is already listed in source_refs; the array is declared "
+                        + "unique, and one source cited twice for the same reason is one "
+                        + "citation. Two elements attributing the same document to two "
+                        + "different fields carry different scope prefixes and are not this",
                     new[] { reference.DocumentId }));
                 continue;
             }

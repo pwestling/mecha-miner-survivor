@@ -1,0 +1,76 @@
+# authority: docs/technical/20-simulation-core.md § Authoritative random-number contract
+# random schema version: 1
+# derived by: an independent pure-Python PCG-XSH-RR 64/32 + SplitMix64 reference,
+#   not by the C# implementation under test. See Goldens/README.md.
+#
+# Degenerate selection, doc 20:88-89: "Selection from a collection first
+# establishes canonical candidate order, then draws an index." and "An
+# empty/singleton selection consumes no draw; this convention is fixture-
+# pinned." This file is that fixture.
+#
+# An empty or singleton selection short-circuits BEFORE any bounded draw, so it
+# consumes zero draws and leaves the stream state bit-identical. The two-
+# candidate and three-candidate cases are included as controls: they do consume
+# a draw and do change the state, which is what makes the zero-draw claim
+# meaningful rather than vacuous.
+#
+# Candidates are given as authored input order; 'ordered' is the canonical
+# candidate order actually selected from (ordinal ascending), establishing that
+# canonical order is applied before the index draw and that authored input order
+# does not reach the generator.
+#
+# Every case starts from a freshly initialized stream
+#   master=0x0123456789ABCDEF family=0x0205 instance=0x0000000000000000
+# so state-before is the primed state in every case.
+#
+# columns: 'case', candidate count, draws consumed, state-before, state-after,
+#   'unchanged'/'advanced', selected value
+# cases=6
+
+case	empty
+candidates	0	[]
+ordered	[]
+draws	0
+state-before	0x3698D3D608510AB4
+state-after	0x3698D3D608510AB4	unchanged
+selected	<none>
+
+case	singleton
+candidates	1	[MCH-01]
+ordered	[MCH-01]
+draws	0
+state-before	0x3698D3D608510AB4
+state-after	0x3698D3D608510AB4	unchanged
+selected	MCH-01
+
+case	pair, authored order reversed
+candidates	2	[W-BD, W-AB]
+ordered	[W-AB, W-BD]
+draws	1
+state-before	0x3698D3D608510AB4
+state-after	0x9479D62A802EBF6D	advanced
+selected	W-AB
+
+case	triple, authored order unsorted
+candidates	3	[REL-01, BOSS-01, EN-01]
+ordered	[BOSS-01, EN-01, REL-01]
+draws	1
+state-before	0x3698D3D608510AB4
+state-after	0x9479D62A802EBF6D	advanced
+selected	EN-01
+
+case	singleton integer
+candidates	1	[7]
+ordered	[7]
+draws	0
+state-before	0x3698D3D608510AB4
+state-after	0x3698D3D608510AB4	unchanged
+selected	7
+
+case	four integers, authored order unsorted
+candidates	4	[9, 3, 5, 1]
+ordered	[1, 3, 5, 9]
+draws	1
+state-before	0x3698D3D608510AB4
+state-after	0x9479D62A802EBF6D	advanced
+selected	1

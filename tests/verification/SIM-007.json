@@ -1,0 +1,396 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "SIM-007",
+  "workPackageTitle": "Immutable/double-buffered presentation snapshot and view-model primitives",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91 \u00a7 Verification registry). This file is the first commit of the W1-SIM stream: no SIM production type or test class named by a selector below exists yet.",
+    "The structural validator for this file is owned by TASK-FND-009-002. Until it lands, the shape here matches tests/verification/FND-002.json and tests/verification/FND-003.json exactly.",
+    "Status is current status: every entry is 'registered' because no implementing task has landed. A later commit flips an entry to 'implemented' only when its selector actually runs and passes, as tests/verification/FND-002.json and tests/verification/FND-003.json do.",
+    "Every nunit selector is a fully qualified 'Namespace.Class.Method' so one entry names exactly one test method. Test namespaces mirror production namespaces per doc 114 \u00a7 Naming and file-placement defaults; the full type and method layout the implementation must produce is fixed in the W1-SIM design contract handed to the implementation tasks.",
+    "doc 110 registers the SIM work packages but not their task IDs. SIM-007 does not split: CTR-SIM-003 is one payload, and its immutability, versioning, double buffering, and reconstruction guarantees cannot be landed or asserted separately. Every entry belongs to TASK-SIM-007-001.",
+    "The snapshot's field list grows with every later gameplay package. This package registers the structural contract - immutability, no exposed mutable store, run and tick and version identity, double buffering, reconstruction without mutation, and the interpolation-snap policy - plus the HUD view-model rounding rule. Each later package registers its own entries for the fields it adds.",
+    "The interpolation-snap distance threshold is a derived value, not a tuning knob. Its derivation from the fastest documented authoritative movement, the tick rate, and the camera scale is recorded in the W1-SIM design contract; VER-SIM-007-007 asserts the derivation rather than a bare constant.",
+    "VER-SIM-007-009 asserts allocation-freedom as an object-identity invariant rather than a byte measurement: across many publications the double buffer cycles through exactly two PresentationSnapshot instances, never creates a third, and each page keeps the same backing storage, which is what sharing pages rather than copying untouched map state means for this design. A GC.GetAllocatedBytesForCurrentThread assertion was tried first and removed: replacing any statement in SnapshotPublisher.Publish with a stub made it pass, so the residual tracked codegen of the measuring scaffold rather than the publisher, and doc 91 \u00a7 Flake policy makes a flaky required test a defect. A byte-denominated per-frame allocation budget belongs to a main-tier benchmark scenario, recorded in this entry's deferredTo as QUA-005. It sat in the summary as prose until doc 91 \u00a7 What 'deferredTo' means minted the field, and it was in successor before that, which was wrong in both halves at once: a work-package ID where a VER-* ID belongs, on an entry that has not been retired.",
+    "The note above records that SIM-007's original contract does not split. TASK-SIM-007-002 is nonetheless a real second task, on the TASK-SIM-00N-002 convention recorded in tests/verification/SIM-001.json's notes: it is the independently landable change that fenced SnapshotPublisher's staging and publication paths to the publisher's run session. It closes a gap the original contract left open rather than extending that contract, so it is its own task and its own entry.",
+    "One guard in the snapshot path is structurally unreachable from any public entry point, so nothing in this file verifies it, and its reason is stated as something someone could try to falsify, naming the grep that would do it, because a label is the one claim in this file no negative control can test. SnapshotDoubleBuffer.Publish's refusal of a publication carrying more visible entities than a page holds. Publish is internal with one caller, SnapshotPublisher.Publish, which passes a span over _stagedEntities; that span's length cannot exceed the array, because StageVisibleEntity refuses the entity that would exceed it, and both arrays are sized from the same visibleEntityCapacity constructor argument. To falsify: add a second caller of SnapshotDoubleBuffer.Publish, pass a span not derived from _stagedEntities, or size the page and the staging array from different arguments. Grep: '_stagedEntities', 'SnapshotDoubleBuffer', '.Publish('. So the staging guard fires first in every case and this one cannot fire at all. It is kept, and Publish is not made public in order to reach it, because the buffer owns its own page capacity and must not depend on its caller having checked, which is precisely what a future second caller would get wrong.",
+    "The 'platforms' list records the platforms an entry has actually been executed on, not the platforms its subject is intended to support, following tests/verification/FND-001.json and FND-002.json, which state the same convention and were corrected to it. On that reading windows-x64 and osx-arm64 are declared applicable and unexercised for every entry in this file: the subjects are portable .NET with no platform-conditional code, so they are expected to hold there, and that expectation is not coverage. linux-x64 is the only platform any run has covered. The linux-x64 result is now a runner's record and not only a local invocation: workflow 'fast suite' run 31097680603, job 'fast (bootstrap, format-check, build, test-fast, godot-import)', completed successfully on head 5a3f3ac at 2026-08-06T11:38:04Z on a pinned ubuntu-24.04 runner, reporting test-fast total 147, passed 147, failed 0, skipped 0. Read that record as covering the merged tree rather than this branch's tree: when it was taken .github/workflows/fast.yml was not in this branch at all, it was on the base branch, and a pull_request event resolves workflows from the merge of head into base, so what ran green was the tree that would land. The rest of what this note used to say here has been falsified by the base and is corrected rather than left to rot. It said this branch's own commit had never been run alone by a runner and that a push to it starts no workflow because its tree contains none; the base merge brought that workflow into this branch's tree, so the second clause is now false. Its triggers are pull_request, push, unfiltered on purpose, and workflow_dispatch, so a push to this branch does start a run, of this branch's own tree, and a pull request also gets pull_request runs of the merged tree whenever the branch it merges into carries the workflow too. Which runs exist for a given commit is a fact about the remote at the moment of reading and not about this file, so the run named above is recorded as the past measurement it is, with its head and its timestamp, and no claim is made here about what has run since. The retained artifact under artifacts/verbs/ still names the local invocation and its source_revision. Adding a platform back to any entry here requires a real run on it, which needs a runner FND-005 owns. No entry field holds 'applicable but unexercised': doc 91 \u00a7 Verification registry lists the accepted fields and there is no 'pendingPlatforms', so this note is where the applicability claim lives rather than a field invented for it.",
+    "tests/verification/SIM-negative-controls.md, a sibling of this file, is the whole negative-control record for the seven SIM packages: for each control the perturbation, the exact command, the exact failure text, and the forced-rebuild method that makes a transcript a claim about a build rather than about a source file. It is committed rather than cited from a reviewer's scratch directory, because a path only one person can open is not evidence; the transcripts that used to live in five session evidence files outside the repository are now in it. It is not scoped by an evidenceKinds value: the entries whose control it records name it in their own fixtures, qualified by section. Its \"Which entry each section controls\" table is the index over all seven files and is authoritative for what follows. In this file 9 entries name it: VER-SIM-007-001, VER-SIM-007-003, VER-SIM-007-005, VER-SIM-007-006, VER-SIM-007-007, VER-SIM-007-008, VER-SIM-007-009, VER-SIM-007-011, VER-SIM-007-012. The gap this file previously recorded is closed: VER-SIM-007-012's staging-fence control is in the tree, and so is the third control for the subject half of the batch fence, which belongs to VER-SIM-006-012. VER-SIM-007-011 does now name the document, because the perturbation that adds a public member of a mutable type reddens its selector as well as VER-SIM-007-001's. 3 entries name it nowhere because no transcript records a control for them: VER-SIM-007-002, VER-SIM-007-004, VER-SIM-007-010.",
+    "On 'negative-control' in evidenceKinds. doc 91 \u00a7 What a kind may name rules that a technique is not a kind, and excludes the value from the minted inventory a kind must be added to before it may appear in a registry file, so it is a defect to correct in this file rather than a value grandfathered into it. Correcting it is a removal and not a substitution, because a negative control's evidence is not a different form of thing from an ordinary test's: a control run as an NUnit test produces exactly the artifact form a positive NUnit test produces. So an affected entry takes the kind its artifact form already gives it, which is the kind it already carries: 'test-counts' with 'test-output' for an nunit selector, the pair 53 positive nunit entries of that shape across these registries carry, and 'golden-text' with 'test-counts' and 'text-diff' for a golden comparison, the shape 11 positive entries carry. Nothing is minted, no kind is added, and no entry loses a kind its evidence needs. What the label carried is that the gate has a negative control, which is a fact about the gate and not about the form of its evidence, so it is required here to appear in prose that can say what a label could not: the entry summary names the perturbation injected and what was observed, and where tests/verification/SIM-negative-controls.md records that control the entry's fixtures name it, qualified by section, so the entry's own pointer reaches the transcript rather than only the artifact that cannot demonstrate a control. Summary text in these files is otherwise not reworded; the integration owner authorized 'summary or notes' for this correction specifically, and summary is the only per-entry prose field available, because doc 91 \u00a7 Verification registry lists the accepted entry fields and no per-entry 'notes' is among them, while doc 115 \u00a7 Schema registry has SCH-QUA-001 reject unknown fields. A field invented to hold it would repeat exactly the coining that produced this defect."
+  ],
+  "entries": [
+    {
+      "id": "VER-SIM-007-001",
+      "summary": "The published snapshot is immutable and exposes no mutable store: every member is read-only, no collection it returns is a store's own backing array, and no path through it reaches a mutable simulation collection.",
+      "task": "TASK-SIM-007-001",
+      "requirements": [
+        "TR-SIM-005",
+        "TR-CTR-004"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#presentation-snapshot",
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Snapshots.PresentationSnapshotTests.SnapshotIsImmutableAndExposesNoMutableStore"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 The snapshot gains a public member of a mutable type",
+        "tests/verification/SIM-negative-controls.md \u00a7 The snapshot keeps a private mutable array field"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-007-002",
+      "summary": "Every snapshot carries run identity, tick, and a version that is strictly increasing across publications, so a consumer can always tell which of two snapshots is newer and whether either belongs to its run.",
+      "task": "TASK-SIM-007-001",
+      "requirements": [
+        "TR-SIM-005",
+        "TR-CTR-004"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#presentation-snapshot",
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Snapshots.PresentationSnapshotTests.RunTickAndVersionIdentityIsCompleteAndIncreasing"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-007-003",
+      "summary": "The snapshot is double-buffered: publishing for tick N+1 does not mutate a snapshot a consumer already holds for tick N, and the two most recent complete snapshots are simultaneously readable so presentation can interpolate between them.",
+      "task": "TASK-SIM-007-001",
+      "requirements": [
+        "TR-SIM-005",
+        "TR-CTR-004"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#presentation-snapshot",
+        "docs/technical/30-presentation-and-rendering.md#snapshot-synchronization"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Snapshots.SnapshotDoubleBufferTests.PublishingDoesNotMutateAHeldSnapshot"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 Publication writes the page a consumer already holds"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-007-004",
+      "summary": "A consumer can fully rebuild its presentation from one mid-run snapshot without mutating simulation state: after a complete rebuild pass the committed state, the next tick's behaviour, and the run's diagnostic checksum are bit-identical to a run in which no rebuild occurred.",
+      "task": "TASK-SIM-007-001",
+      "requirements": [
+        "TR-SIM-005",
+        "TR-RUN-001"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#presentation-snapshot",
+        "docs/technical/10-runtime-architecture.md#verification-requirements"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Snapshots.SnapshotReconstructionTests.RebuildingFromASnapshotMutatesNothing"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-007-005",
+      "summary": "A snapshot is published only in the final phase of a committed tick: no partial snapshot is ever observable, and a tick invalidated before commit publishes nothing at all rather than a partial state.",
+      "task": "TASK-SIM-007-001",
+      "requirements": [
+        "TR-RUN-007",
+        "TR-RUN-005"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#tick-transaction",
+        "docs/technical/10-runtime-architecture.md#system-phase-ordering"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Snapshots.PresentationSnapshotTests.AnInvalidatedTickPublishesNoSnapshot"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 An invalidated tick publishes a partial snapshot"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-007-006",
+      "summary": "Presentation snaps rather than interpolates on spawn, teleport, boss re-entry, terminal transition, and a between-snapshot displacement above the documented distance threshold, and interpolates for every displacement below it.",
+      "task": "TASK-SIM-007-001",
+      "requirements": [
+        "TR-SIM-005"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#presentation-snapshot",
+        "docs/technical/30-presentation-and-rendering.md#snapshot-synchronization"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Snapshots.InterpolationSnapPolicyTests.SnapsOnSpawnTeleportReEntryTerminalAndAboveTheDistanceThreshold"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 The snap policy stops evaluating the distance backstop"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-007-007",
+      "summary": "The interpolation-snap distance threshold is the derived value and not a chosen constant: it is not reached by the fastest documented authoritative movement across the number of snapshot intervals the policy tolerates, and it is exceeded by the first interval beyond that, so the derivation is asserted rather than assumed.",
+      "task": "TASK-SIM-007-001",
+      "requirements": [
+        "TR-SIM-005",
+        "TR-QUA-001"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#presentation-snapshot",
+        "docs/technical/30-presentation-and-rendering.md#camera",
+        "docs/technical/20-simulation-core.md#numeric-and-unit-conventions"
+      ],
+      "gameplaySources": [
+        "docs/72-player-survivability-and-damage-baseline.md#movement-and-speed-modifiers",
+        "docs/51-standard-map-generation-contract.md#world-scale-and-major-regions"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Snapshots.InterpolationSnapPolicyTests.ThresholdMatchesItsDocumentedDerivation"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 The interpolation-snap threshold tolerates a third interval",
+        "tests/verification/SIM-negative-controls.md \u00a7 The snap policy stops evaluating the distance backstop"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-007-008",
+      "summary": "HUD view models carry numbers that already reflect authoritative calculation and rounding: every displayed whole value equals the authoritative value after the documented rounding exactly, with no tolerance, and the view model is versioned so a consumer can detect a change without diffing fields.",
+      "task": "TASK-SIM-007-001",
+      "requirements": [
+        "TR-SIM-005",
+        "TR-CTR-004"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#presentation-snapshot",
+        "docs/technical/91-verification-strategy.md#numeric-tolerance"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Snapshots.HudViewModelTests.DisplayedWholeValuesEqualAuthoritativeValuesAfterDocumentedRounding"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 The HUD rounds to nearest instead of truncating"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-007-009",
+      "summary": "Untouched static map state is not copied per tick: publishing a snapshot across a churn-free tick performs zero managed allocation after warm-up, so double buffering shares immutable pages rather than duplicating the map every tick. The fast-tier method is an identity invariant and not a measurement: 64 publications must cycle through exactly two PresentationSnapshot instances with no third, each page must keep the same backing storage for every publication that writes it (ReadOnlyMemory<T> equality compares the underlying array reference together with its offset and length), and every field holding a page or a page's array is asserted readonly. A budget in measured bytes is deferred to a benchmark scenario the QUA-005 work package owns, which the deferredTo field now records: doc 91 \u00a7 What 'deferredTo' means makes the field legal on any status and its target a work-package or task ID, so QUA-005 on an implemented entry is a well-formed row rather than the defect it was in successor. The deferral was in this summary alone until that section landed, because using a field before its rule is in the document is how the wrong field got used in the first place. The status is unchanged and means what it meant: this entry is implemented for the identity invariant it asserts, and the byte measurement it deliberately does not assert is owed elsewhere at the same moment.",
+      "task": "TASK-SIM-007-001",
+      "requirements": [
+        "TR-SIM-005"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#presentation-snapshot",
+        "docs/technical/10-runtime-architecture.md#performance-posture"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Snapshots.SnapshotDoubleBufferTests.PublishingAChurnFreeTickAllocatesNothing"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 Snapshot publication allocates per tick",
+        "tests/verification/SIM-negative-controls.md \u00a7 A new snapshot instance is created per publication",
+        "tests/verification/SIM-negative-controls.md \u00a7 A page's backing storage is replaced per publication"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "deferredTo": "QUA-005",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-007-010",
+      "summary": "A stale snapshot is droppable: a consumer that skips an arbitrary number of published snapshots still reconstructs a state consistent with the latest snapshot it did read, and never one blended from two non-adjacent snapshots.",
+      "task": "TASK-SIM-007-001",
+      "requirements": [
+        "TR-SIM-005",
+        "TR-CTR-004"
+      ],
+      "technicalSources": [
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry",
+        "docs/technical/30-presentation-and-rendering.md#snapshot-synchronization"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Snapshots.SnapshotReconstructionTests.SkippedSnapshotsStillYieldAConsistentReconstruction"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "seed-identity"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-007-011",
+      "summary": "A negative control proves the immutability and no-mutation gates can fail: a stub snapshot that hands out a store's backing array makes VER-SIM-007-001 fail, and a rebuild pass that writes through to simulation state makes VER-SIM-007-004 fail.",
+      "task": "TASK-SIM-007-001",
+      "requirements": [
+        "TR-QUA-001",
+        "TR-SIM-005"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#acceptance-evidence",
+        "docs/technical/20-simulation-core.md#presentation-snapshot"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Snapshots.SnapshotNegativeControlTests.ImmutabilityAndNoMutationAssertionsFailAgainstDeliberatelyBrokenStubs"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 The snapshot gains a public member of a mutable type"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-007-012",
+      "summary": "Staging is fenced to the publisher's run session: a snapshot entity whose identity carries a different run session is refused by StageVisibleEntity, so a reference that leaked from an earlier run cannot be published as live. The refused identity is minted by a second EntityIdAllocator on a different run session rather than by a factory, so the control exercises the only route a real caller has and collides with a live local identity on both storage index and generation.",
+      "task": "TASK-SIM-007-002",
+      "requirements": [
+        "TR-SIM-005",
+        "TR-SIM-001"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#entity-identity",
+        "docs/technical/20-simulation-core.md#presentation-snapshot"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Snapshots.SnapshotRunSessionFenceTests.AForeignRunSessionEntityCannotBeStaged"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 The staging run-session fence"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    }
+  ]
+}

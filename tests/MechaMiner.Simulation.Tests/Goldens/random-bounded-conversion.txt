@@ -1,0 +1,219 @@
+# authority: docs/technical/20-simulation-core.md § Authoritative random-number contract
+# random schema version: 1
+# derived by: an independent pure-Python PCG-XSH-RR 64/32 + SplitMix64 reference,
+#   not by the C# implementation under test. See Goldens/README.md.
+#
+# Bounded integer conversion, doc 20:86: "Unbiased bounded integers use
+# rejection sampling rather than modulo reduction."
+#
+# DECISION fixed here (doc 20:86 mandates rejection sampling but does not state
+# the threshold): threshold = (2^32 - bound) mod bound. A draw r is REJECTED
+# when r < threshold; otherwise the result is r mod bound. Exactly 2^32 -
+# threshold values are accepted and that count is an exact multiple of bound, so
+# every residue is produced by an equal number of accepted draws: unbiased.
+# This is pcg32_boundedrand_r from the PCG reference C implementation.
+#
+# bound 1 yields threshold 0, so the first draw is always accepted and ONE draw
+# is consumed. The no-draw rule of doc 20:89 is a property of selection, not of
+# this primitive; see random-degenerate-selection.txt.
+#
+# 'draws' is the number of 32-bit draws consumed to produce that one result, so
+# rejection behaviour is pinned and not merely the accepted outputs. bound
+# 0xC0000000 rejects one draw in four and exists to make draws>1 observable.
+#
+# Each block restarts a fresh stream from
+#   master=0x0123456789ABCDEF family=0x0100 instance=0x0000000000000000
+# so every block is independently reproducible.
+#
+# columns: 'result', zero-based index, value (decimal), draws consumed
+# blocks=10
+
+bound	1	0x00000001	threshold	0	0x00000000
+result	00	0	1
+result	01	0	1
+result	02	0	1
+result	03	0	1
+result	04	0	1
+result	05	0	1
+result	06	0	1
+result	07	0	1
+result	08	0	1
+result	09	0	1
+result	10	0	1
+result	11	0	1
+result	12	0	1
+result	13	0	1
+result	14	0	1
+result	15	0	1
+total-draws	16
+
+bound	2	0x00000002	threshold	0	0x00000000
+result	00	0	1
+result	01	1	1
+result	02	0	1
+result	03	0	1
+result	04	1	1
+result	05	0	1
+result	06	0	1
+result	07	1	1
+result	08	1	1
+result	09	0	1
+result	10	0	1
+result	11	0	1
+result	12	0	1
+result	13	0	1
+result	14	1	1
+result	15	0	1
+total-draws	16
+
+bound	3	0x00000003	threshold	1	0x00000001
+result	00	1	1
+result	01	0	1
+result	02	1	1
+result	03	0	1
+result	04	1	1
+result	05	0	1
+result	06	2	1
+result	07	1	1
+result	08	2	1
+result	09	1	1
+result	10	1	1
+result	11	2	1
+result	12	2	1
+result	13	0	1
+result	14	2	1
+result	15	0	1
+total-draws	16
+
+bound	6	0x00000006	threshold	4	0x00000004
+result	00	4	1
+result	01	3	1
+result	02	4	1
+result	03	0	1
+result	04	1	1
+result	05	0	1
+result	06	2	1
+result	07	1	1
+result	08	5	1
+result	09	4	1
+result	10	4	1
+result	11	2	1
+result	12	2	1
+result	13	0	1
+result	14	5	1
+result	15	0	1
+total-draws	16
+
+bound	10	0x0000000A	threshold	6	0x00000006
+result	00	2	1
+result	01	9	1
+result	02	0	1
+result	03	0	1
+result	04	7	1
+result	05	2	1
+result	06	4	1
+result	07	9	1
+result	08	1	1
+result	09	8	1
+result	10	0	1
+result	11	4	1
+result	12	0	1
+result	13	8	1
+result	14	9	1
+result	15	0	1
+total-draws	16
+
+bound	52	0x00000034	threshold	48	0x00000030
+result	00	50	1
+result	01	43	1
+result	02	28	1
+result	03	26	1
+result	04	49	1
+result	05	14	1
+result	06	12	1
+result	07	43	1
+result	08	3	1
+result	09	38	1
+result	10	34	1
+result	11	42	1
+result	12	26	1
+result	13	30	1
+result	14	45	1
+result	15	4	1
+total-draws	16
+
+bound	100	0x00000064	threshold	96	0x00000060
+result	00	62	1
+result	01	99	1
+result	02	80	1
+result	03	10	1
+result	04	37	1
+result	05	62	1
+result	06	4	1
+result	07	99	1
+result	08	51	1
+result	09	78	1
+result	10	30	1
+result	11	94	1
+result	12	30	1
+result	13	18	1
+result	14	89	1
+result	15	40	1
+total-draws	16
+
+bound	1000	0x000003E8	threshold	296	0x00000128
+result	00	162	1
+result	01	799	1
+result	02	680	1
+result	03	510	1
+result	04	837	1
+result	05	362	1
+result	06	704	1
+result	07	899	1
+result	08	151	1
+result	09	978	1
+result	10	330	1
+result	11	494	1
+result	12	530	1
+result	13	918	1
+result	14	389	1
+result	15	740	1
+total-draws	16
+
+bound	3221225472	0xC0000000	threshold	1073741824	0x40000000
+result	00	1611911799	2
+result	01	1516283680	1
+result	02	1695255510	1
+result	03	2354308837	1
+result	04	3215514704	2
+result	05	2584658899	1
+result	06	327961679	1
+result	07	645707506	1
+result	08	2323045330	1
+result	09	3212817530	2
+result	10	1140507918	1
+result	11	1725717389	1
+result	12	167787309	2
+result	13	291174601	1
+result	14	2640312951	1
+result	15	2354494726	2
+total-draws	21
+
+bound	4294967295	0xFFFFFFFF	threshold	1	0x00000001
+result	00	72691162	1
+result	01	1611911799	1
+result	02	1516283680	1
+result	03	1695255510	1
+result	04	2354308837	1
+result	05	151330362	1
+result	06	3215514704	1
+result	07	2584658899	1
+result	08	3549187151	1
+result	09	3866932978	1
+result	10	2323045330	1
+result	11	348494	1
+result	12	3212817530	1
+result	13	1140507918	1
+result	14	1725717389	1
+result	15	76045740	1
+total-draws	16

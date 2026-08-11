@@ -52,12 +52,16 @@ namespace MechaMiner.Content.Categories;
 /// <b>No vocabulary is asserted for <c>affected_scope</c>, by either artifact, and that is a
 /// decision rather than an omission.</b> <c>relic.schema.json</c>'s element enum was struck at
 /// <c>b6c9f86</c> on the document owner's ruling that the constraint is not enforceable as
-/// written: <c>docs/67</c> states three mutually incompatible scope rules - five members plus
-/// an open tail at <c>:24</c>, "only a tagged subset of systems" at <c>:55</c>, a closed
-/// three-way partition at <c>:67</c> - so there is no single documented set for an enum to
-/// match, and the member the partition names that the enum dropped, "only a clearly defined
-/// weapon family", is ungroundable because no document defines a weapon-family taxonomy and
-/// <c>docs/30:50</c> denies one exists. <b>That ruling was about the constraint, not about the
+/// written: <c>docs/67-mech-relics.md</c> states three mutually incompatible scope rules, one
+/// in each of three different sections, all three read at <c>61b5aa9</c> - five members plus
+/// an open tail under § Loadout rule, "only a tagged subset of systems" under § Effect
+/// design, a closed three-way partition under § Replacement and interaction rules - so there
+/// is no single documented set for an enum to match, and the member the partition names that
+/// the enum dropped, "only a clearly defined weapon family", is ungroundable because no
+/// document defines a weapon-family taxonomy and
+/// <c>docs/30-combat-weapons-movement-camera.md</c> § Weapon boundary and automatic behavior,
+/// "Form does not determine slot category; primary gameplay purpose does", read at
+/// <c>61b5aa9</c>, denies one exists. <b>That ruling was about the constraint, not about the
 /// file it happened to live in.</b> This class held the same constraint in a different
 /// artifact - a three-token <c>ClosedVocabulary</c> with one consuming call site in
 /// <c>RelicReader</c> - so leaving it would have implemented the ruling in the mirror and not

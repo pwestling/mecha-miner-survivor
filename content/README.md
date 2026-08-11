@@ -541,6 +541,20 @@ property that was actually proved, the released membership has moved from **33 t
 surviving-citation figure is now labelled a **floor** rather than a count. The earlier wording is kept
 in place, marked superseded, so a reader who saw the first version can see what changed and why.
 
+**Amended again 2026-08-11 — the two lists in this section do not partition the cited documents, and
+this section no longer reads as though they do.** Both lists were derived from citation enumeration,
+while the criterion for *released* has since been replaced by the property that was actually proved —
+no runtime or gate behaviour in this tree depends on a `docs/**` line coordinate. On that criterion
+**there is no "not released" set at all**: the shift experiment covered all 36 cited documents, every
+gate returned byte-identical output, and the result was reproduced on a forced failure path, so **every
+document is free to re-flow, and that is the entire content of "released" now**. The five-document list
+below survives as a **non-exclusive annotation** answering a different question — which documents have
+line citations *pinned inside frozen artifacts*, so that re-flowing them strands those citations — and
+under the proved property a stranded pinned citation is a **documentation defect, not a breakage**. A
+document may therefore appear in both lists, and `docs/technical/22` and `docs/technical/24` appearing
+in both is **not a contradiction**. Both subsections below carry this ruling with their earlier framing
+kept in place and marked superseded, as the amendment above did.
+
 ### Released documents — their line counts may change freely
 
 **AMENDMENT, 2026-08-11 — the criterion this subsection published has been replaced, and the
@@ -640,6 +654,12 @@ enumeration, and it does not name the four either.)
 **Why this correction exists** — it is this section's own subject turned on itself: two independent
 methods agreed on a count of 32 while omitting *different* documents, so their agreement manufactured a
 confidence neither had earned, which is why this record publishes membership rather than cardinality.
+
+**Membership of this list is not a boundary, because on the published criterion it has no complement.**
+Amended 2026-08-11: the criterion above holds of every cited document, so this list is not the set of
+documents permitted to re-flow — all 36 are permitted, and the five annotated further down are not the
+remainder of it. What the list records is which documents the release commits demonstrably touched, and
+nothing more.
 
 The 33 as the list stood, sorted — read now as *the documents the release commits demonstrably
 touched*, and with `docs/weapons/README.md` **struck** from it by the verdict recorded below, leaving
@@ -835,7 +855,29 @@ entirely — and it also misses citations spread across the other owned files. T
 about one instrument, and the amendment above generalises it: spelling blindness is the reason every
 surviving-citation figure in this section is a floor.
 
-### Five documents are NOT released — the inverse of a release, not a smaller one
+### Five documents whose line citations are pinned inside a frozen artifact — a non-exclusive annotation, not a not-released set
+
+**~~SUPERSEDED — this subsection was headed "Five documents are NOT released — the inverse of a
+release, not a smaller one", and it published these five as the complement of the released list.~~**
+Amended 2026-08-11, the second amendment to this subsection, and the heading above is the amendment.
+**On the criterion this section now publishes there is no not-released set for this list to be.** The
+shift experiment covered all 36 cited documents, every gate returned byte-identical output, and it was
+reproduced on a forced failure path: nothing in this tree — no runtime path and no gate — depends on a
+`docs/**` line coordinate. So **every document is free to re-flow, these five included**, and that is
+the entire content of "released" now. An inverse list has nothing left to hold.
+
+**What this list does hold is the question the retired criterion was actually tracking: which documents
+have line citations *pinned inside frozen artifacts*, so that re-flowing them leaves those pinned
+citations stale.** Under the proved property that is a **documentation defect, not a breakage** —
+nothing reads the stored numbers, so nobody will be stopped by a stale one, and that is precisely why
+it needs recording rather than leaving to be noticed.
+
+**This annotation is explicitly NON-EXCLUSIVE, and overlap with the released list is expected rather
+than tolerated.** The two lists answer different questions — *may this document re-flow* (yes, of every
+one of them) and *does re-flowing it strand a pinned citation* — so a document can sit in both at once
+with both entries correct. `docs/technical/22` and `docs/technical/24` do sit in both, and that is
+**not a contradiction**; neither entry is struck for it, and a later pass should not reconcile them by
+removing one.
 
 **AMENDMENT, 2026-08-11 — this list carries the same defect as the released list, and gets the same
 fix.** Its stated criterion is *surviving citations that live only inside the frozen measurement
@@ -844,14 +886,18 @@ artifact* — and that artifact,
 documents** at `3db56c5`, verified by the sweep described above. So the criterion as published does not
 pick out five documents, on either reading of it:
 
-- **Read strictly — cited by line, and only inside that artifact — seven documents qualify, not five.**
-  The two additions are `docs/technical/22-combat-and-weapon-runtime.md` (10 citations, all in that
-  file) and `docs/technical/24-mining-fabrication-and-progression-runtime.md` (30 citations, all in
-  that file). **Both of them are also listed as released by this same section**, so under the two
-  criteria as published, two documents sit in both lists at once.
-- **Read loosely — has surviving citations inside that artifact — twenty-two qualify**, seventeen
-  further than the five. The other fifteen of the 22 carry citations in that artifact *and* in
-  `content/transcription-notes.md`, which is why they fail the strict reading.
+- **Read strictly — cited by line, and only inside that artifact — TWO further documents qualify, for
+  seven in place of five.** The two are `docs/technical/22-combat-and-weapon-runtime.md` (10 citations,
+  all in that file) and `docs/technical/24-mining-fabrication-and-progression-runtime.md` (30
+  citations, all in that file). **Both are also listed as released by this same section**, which the
+  ruling above settles: the two lists answer different questions, so appearing in both is expected and
+  is not a contradiction.
+- **Read loosely — has surviving citations inside that artifact — SEVENTEEN further documents qualify,
+  for twenty-two in place of five.** The other fifteen of the 22 carry citations in that artifact *and*
+  in `content/transcription-notes.md`, which is why they fail the strict reading.
+- **The pairing is strict → two further, loose → seventeen further, in that order.** It is stated twice
+  here because an earlier brief carried the two figures the other way round; the order above is the
+  corrected one and a pass that finds them reversed anywhere is looking at the uncorrected brief.
 
 **The property that actually distinguishes these five, stated so the list has a criterion it
 satisfies: the three release commits touched no citation of them, because they carried no live
@@ -874,19 +920,27 @@ The five, unchanged as a list:
 documents*, all of them in `src/MechaMiner.Tools/ContentImport/quote_mismatch_evidence.json`, which
 holds 656 citations of 22 documents in total** — `67` 63, `73` 40, `20` 4, `70` 3, `DEC-120` 1. **That
 111 is one of two different 111s in this section, and each needs its population attached whenever it
-appears:** this one is *the five not-released documents' citations inside
-`quote_mismatch_evidence.json`*; the other is *`content/transcription-notes.md`'s own count of its
+appears:** this one is *the five annotated documents' citations inside
+`quote_mismatch_evidence.json`* — annotated, not "not released", per the ruling at the head of this
+subsection; the other is *`content/transcription-notes.md`'s own count of its
 doc-40 citations in one subsection of that file*, which the sweep confirms at 111 and which is a
 population of one document in one file. Same digits, unrelated denominators. The sibling artifact `src/MechaMiner.Tools/ContentImport/expected_citation_deltas.json`
 carries **zero** citation of any of the five in any form, so the constraint lives wholly in the first
 file. Those 111 are the `(path.md:<a>-<b>)` tail of a `doc_id#anchor` reference, frozen at the sweep
 ref; `check_quote_mismatch_evidence.py` rebuilds every span from the live docs by anchor slug and never
 reads the stored numbers, so they do not resolve at runtime — but they are the surviving textual line
-citations, and rewriting them would corrupt a frozen measurement. **The one actionable fact for an
-owner:** these five may not be treated as freely re-flowable the way **the 32 documents the release
-commits re-pointed** are — the released set as this section now lists it, not the retired declaration
-figure of 37; before their line geometry is changed, the frozen artifact must be re-derived, and the
-change lives at exactly one path, `quote_mismatch_evidence.json`.
+citations, and rewriting them would corrupt a frozen measurement. **~~SUPERSEDED — the actionable fact
+as this paragraph used to state it.~~** It read: *"**The one actionable fact for an owner:** these five
+may not be treated as freely re-flowable the way **the 32 documents the release commits re-pointed**
+are — the released set as this section now lists it, not the retired declaration figure of 37; before
+their line geometry is changed, the frozen artifact must be re-derived, and the change lives at exactly
+one path, `quote_mismatch_evidence.json`."* That is the partition reading, and the ruling at the head of
+this subsection replaces it: **these five are as freely re-flowable as every other document**, because
+no runtime or gate behaviour depends on a `docs/**` line coordinate of any of them. **The actionable
+fact as it now stands:** re-flowing one of these five leaves its pinned spans stale inside
+`quote_mismatch_evidence.json` — a documentation defect at exactly one path, not a break and not a
+precondition — so the owner may re-flow first and re-derive the artifact after, and the re-derivation is
+owed either way because nothing will fail to remind them.
 
 ### Two documents were frozen at a fixed line count by their authors — both freezes are now lifted
 
@@ -1036,6 +1090,19 @@ rather than assumed: against the file contents at `e24a52a`, `A35` catches **308
 citations, and the **43** it misses are one undecidable shape — a bare short name followed by a
 two-digit number in clock range, a string indistinguishable from the schedule timecodes this
 repository's notes transcribe verbatim.
+
+**The pinned count also enforces supersede-not-delete mechanically, and this paragraph is addressed to
+whoever arrives later wanting to tidy a superseded paragraph out of this file.** A bucket's count is
+pinned in **both** directions — `A35` fails when the population it finds differs from the declared one
+either way — so **deleting a superseded paragraph that contains one of `content/README.md`'s six exempt
+citations drops that bucket below its pinned count and fails the gate**, exactly as adding an
+unaudited citation would. That is a property of the design rather than a coincidence of these
+particular counts: the exemption covers the citations that were **audited**, so removing one changes the
+audited set as surely as adding one does. The consequence, stated plainly so it is learned here instead
+of by reddening a gate: the superseded paragraphs above cannot be deleted, only superseded — marked,
+quoted, and explained by what replaced them, the way every amendment in this section does it. If a
+deletion is genuinely correct, it takes an edit to that bucket's declared count and a reason recorded in
+the entry, never a quiet removal.
 
 `A36` — **an ambiguous short-name reference must carry its full path.** The collision set is computed
 from a recursive walk of `docs/**/*.md` on every run and printed in full: **201 documents, 12 colliding

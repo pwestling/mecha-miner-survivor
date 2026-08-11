@@ -6,9 +6,12 @@
 # recorded in a report is a limit the reader never meets:
 #  - Realised divergence only. A constraint no authored value exercises produces
 #    no row, so zero rows would mean nothing is realised and never that the
-#    schemas and the content agree. The worked example is the empty tag enum,
-#    which forbids every possible tag in all seventeen schemas and contributes
-#    zero rows because all 138 files author tags: [].
+#    schemas and the content agree. The worked example is the empty tag enum
+#    all seventeen schemas declare: it admits no tag, which is the documented
+#    initial state of a vocabulary that grows a term in the same change that
+#    first uses one, and all 138 files comply by authoring tags: [] - so a
+#    designed and working constraint contributes zero rows here, and this file
+#    cannot tell an unexercised constraint from an absent one.
 #  - Blind to a swap within one position: two required properties trading
 #    places at one object is one line at one count. Asserted by a test, not
 #    assumed.

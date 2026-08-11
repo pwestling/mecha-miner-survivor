@@ -97,22 +97,30 @@ internal sealed record DivergenceRow(
 /// from the schemas.
 /// </para>
 /// <para>
-/// <b>The worked example, measured at <c>59a4986</c>.</b> The sixteen category schemas each
-/// declare <c>"enum": []</c> inline for a tag value, and <c>envelope.schema.json</c>
-/// reaches the same constraint through a <c>$ref</c> to <c>$defs/tag</c> - so the defect is
-/// in all seventeen documents, declared in sixteen. An empty <c>enum</c> matches nothing,
-/// which makes it the most assertive value the keyword has rather than a placeholder: no
-/// tag value can validate under any implementation. Every one of the 138 authored files
-/// authors <c>tags: []</c> on both this branch's corpus and <c>origin/master</c>'s, so
-/// <c>items</c> never applies and the trap yields <b>zero</b> rows here - <c>{"tags": []}</c>
-/// produces no error and <c>{"tags": ["x"]}</c> produces one. It is a live trap for
-/// whoever authors the first tag, and it is exactly what this gate cannot see. The second
-/// example is smaller and the same shape: <c>relic.schema.json</c> declared an element
-/// pattern on <c>overrides_or_replaces</c>, which every relic authors at a different
-/// pointer, so no element ever reached the pattern. <b>If this pin ever reads zero, the
-/// correct reading is "no disagreement is realised", never "the schemas and the content
-/// agree."</b> Latent defects are found by reading the schemas, not by counting rows, and
-/// this class cannot be extended to find them.
+/// <b>The worked example is an intended constraint, not a defect, which is what makes it the
+/// clean case.</b> All seventeen schemas declare <c>"enum": []</c> inline for a tag value -
+/// sixteen at <c>$defs/tags/items</c> and <c>envelope.schema.json</c> at <c>$defs/tag</c>,
+/// which <c>tags.items</c> reaches by a <c>$ref</c> hop upstream of the declaration. An empty
+/// <c>enum</c> matches nothing, and that is the mechanism rather than an oversight: doc 40
+/// § <c>tags</c> vocabulary says "the closed vocabulary starts empty and gains a term only
+/// when a concrete query or tooling need requires it; the term is added to the vocabulary in
+/// the same change that first uses it", the schema's own <c>description</c> states the same
+/// protocol, and <c>TagVocabulary</c> mirrors it in typed code with an empty
+/// <c>Declared</c>. Every one of the 138 authored files authors <c>tags: []</c> on both this
+/// branch's corpus and <c>origin/master</c>'s, which is unanimous compliance with that
+/// protocol, so <c>items</c> never applies and the constraint yields <b>zero</b> rows here -
+/// <c>{"tags": []}</c> produces no error and <c>{"tags": ["x"]}</c> produces one. That is the
+/// point: a designed, working, currently unexercised constraint is invisible to a baseline
+/// over observed failures, exactly as an unnoticed one would be, and this gate cannot tell
+/// the two apart. <b>If this pin ever reads zero, the correct reading is "no disagreement is
+/// realised", never "the schemas and the content agree."</b> Whether a constraint that is
+/// unexercised is intended is found by reading the schema and the document, not by counting
+/// rows, and this class cannot be extended to answer it. One open question is recorded and
+/// not taken here: the empty <c>enum</c> is reported to be incompatible with at least one
+/// mainstream validator, and the choice between keeping the in-tree evaluator as the
+/// enforcing instrument - already the ruling - and expressing "no value admitted yet" in a
+/// form every implementation compiles while preserving the documented protocol belongs to
+/// the schema's owner.
 /// </para>
 /// <para>
 /// <b>The instrument, and why the instrument is part of the finding.</b> The evaluator is
@@ -397,9 +405,12 @@ internal sealed class SchemaCorpusDivergence
         text.Append("# recorded in a report is a limit the reader never meets:\n");
         text.Append("#  - Realised divergence only. A constraint no authored value exercises produces\n");
         text.Append("#    no row, so zero rows would mean nothing is realised and never that the\n");
-        text.Append("#    schemas and the content agree. The worked example is the empty tag enum,\n");
-        text.Append("#    which forbids every possible tag in all seventeen schemas and contributes\n");
-        text.Append("#    zero rows because all 138 files author tags: [].\n");
+        text.Append("#    schemas and the content agree. The worked example is the empty tag enum\n");
+        text.Append("#    all seventeen schemas declare: it admits no tag, which is the documented\n");
+        text.Append("#    initial state of a vocabulary that grows a term in the same change that\n");
+        text.Append("#    first uses one, and all 138 files comply by authoring tags: [] - so a\n");
+        text.Append("#    designed and working constraint contributes zero rows here, and this file\n");
+        text.Append("#    cannot tell an unexercised constraint from an absent one.\n");
         text.Append("#  - Blind to a swap within one position: two required properties trading\n");
         text.Append("#    places at one object is one line at one count. Asserted by a test, not\n");
         text.Append("#    assumed.\n");

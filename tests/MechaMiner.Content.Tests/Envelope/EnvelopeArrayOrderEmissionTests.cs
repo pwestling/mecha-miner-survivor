@@ -57,15 +57,17 @@ internal sealed class EnvelopeArrayOrderEmissionTests
         {
             Assert.That(
                 EnvelopeSchema.ArrayOrderOf(EnvelopeSchema.SourceRefs),
-                Is.EqualTo(ArrayOrder.IdSet),
-                "doc 40 § source_refs element grammar: \"source_refs is an array of stable-ID "
-                    + "strings\", which is doc 40's set treatment verbatim");
+                Is.EqualTo(ArrayOrder.OrderedArray),
+                "a sort over these elements sorts by whole-element text, and on a "
+                    + "scope-prefixed element that is a sort by the prefix rather than by the "
+                    + "ID, which doc 40's clause granting canonical ID order does not "
+                    + "authorise. Authored order is the treatment that asserts nothing");
             Assert.That(
                 EnvelopeSchema.ArrayOrderOf(EnvelopeSchema.Tags),
-                Is.EqualTo(ArrayOrder.OrderedArray),
-                "doc 40 § tags vocabulary does not classify tags, and of the two treatments it "
-                    + "grants, canonical order is granted to stable-ID sets; a vocabulary term "
-                    + "is not a stable ID, so sorting tags would assert that it is");
+                Is.EqualTo(ArrayOrder.IdSet),
+                "tags holds terms from a closed vocabulary that TagVocabulary keeps in a set "
+                    + "and whose schema description treats the array as unordered, so two "
+                    + "authorings mean the same thing and ordering is the unsupported claim");
         });
     }
 
@@ -85,6 +87,16 @@ internal sealed class EnvelopeArrayOrderEmissionTests
             expected.Sort(static (left, right) => string.CompareOrdinal(left, right));
         }
 
+        // The fixture's authored order is deliberately not its ordinal order, so the two
+        // classes disagree about what this array emits. Which side of that disagreement is
+        // the assertion therefore flips with the declaration: under IdSet the expectation is
+        // the sorted order and equality with the authored order would prove nothing, and
+        // under OrderedArray the expectation is the authored order and equality with the
+        // sorted order would prove nothing. Both are stated, so neither direction can go
+        // vacuous unnoticed.
+        List<string> sorted = new(ThreeUnsortedRefs);
+        sorted.Sort(static (left, right) => string.CompareOrdinal(left, right));
+
         Expect.Multiple(() =>
         {
             Assert.That(
@@ -93,10 +105,10 @@ internal sealed class EnvelopeArrayOrderEmissionTests
                 "an array with fewer than two elements has one order, so it cannot show which "
                     + "of the two treatments produced it");
             Assert.That(
-                expected,
+                sorted,
                 Is.Not.EqualTo(ThreeUnsortedRefs),
-                "the fixture's authored order must differ from the order the declared class "
-                    + "produces, or agreement holds for both classes and this asserts nothing");
+                "the fixture's authored order must differ from its ordinal order, or the two "
+                    + "treatments agree on it and this asserts nothing whichever is declared");
             Assert.That(
                 emitted,
                 Is.EqualTo(expected),
@@ -117,16 +129,17 @@ internal sealed class EnvelopeArrayOrderEmissionTests
     /// per-category gate records that reach limit in its own census.
     /// </remarks>
     [Test]
-    public void EveryOrderingOfASourceRefsSetProducesTheSameCanonicalBytes()
+    public void EveryOrderingOfASourceRefsArrayProducesTheOrderItWasAuthoredIn()
     {
         Assert.That(
             EnvelopeSchema.ArrayOrderOf(EnvelopeSchema.SourceRefs),
-            Is.EqualTo(ArrayOrder.IdSet),
-            "this invariant is the set treatment's; it does not hold, and must not be asserted, "
-                + "for an authored-order array");
+            Is.EqualTo(ArrayOrder.OrderedArray),
+            "this invariant is the authored-order treatment's: each ordering must survive as "
+                + "itself. The set treatment's invariant is the opposite one - every ordering "
+                + "collapsing to the same bytes - and asserting both of one field would be "
+                + "asserting a contradiction");
 
         IReadOnlyList<string[]> orderings = PermutationsOf(ThreeUnsortedRefs);
-        byte[] expected = CanonicalBytes(ThreeUnsortedRefs);
 
         Expect.Multiple(() =>
         {
@@ -136,14 +149,25 @@ internal sealed class EnvelopeArrayOrderEmissionTests
                 "three distinct elements have six orderings; a smaller family would leave an "
                     + "ordering unasserted");
 
+            HashSet<string> distinct = new(StringComparer.Ordinal);
             foreach (string[] ordering in orderings)
             {
+                byte[] bytes = CanonicalBytes(ordering);
+                distinct.Add(Encoding.UTF8.GetString(bytes));
+
                 Assert.That(
-                    CanonicalBytes(ordering),
-                    Is.EqualTo(expected),
+                    EmittedSourceRefs(ordering),
+                    Is.EqualTo(ordering),
                     () => "ordering [" + string.Join(", ", ordering)
-                        + "] must canonicalize to the same bytes as the authored one");
+                        + "] must be emitted in that order, unchanged");
             }
+
+            NumericAssert.AreExactlyEqual(
+                6,
+                distinct.Count,
+                "each of the six orderings must produce its own payload. If two collided, "
+                    + "something is sorting these elements after all, and the difference "
+                    + "between the two treatments would be invisible here");
         });
     }
 
@@ -151,11 +175,27 @@ internal sealed class EnvelopeArrayOrderEmissionTests
     /// <c>tags</c> is emitted, and the class it is emitted under is currently unobservable.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// The tag vocabulary is empty - <see cref="TagVocabulary"/> grants no term - so the only
     /// value <c>tags</c> can carry is the empty array, and the empty array is its own sole
     /// ordering. Both treatments produce <c>[]</c>. Recorded here rather than left out, because
     /// a reader of the census should know that this row is a declaration nothing yet exercises;
     /// the first authored tag makes it observable.
+    /// </para>
+    /// <para>
+    /// <b>What the flip at <c>f4f38a1</c> costs, stated because nothing else will say it.</b>
+    /// <c>tags</c> is now the envelope's <see cref="ArrayOrder.IdSet"/> row and it is
+    /// unobservable, while <c>source_refs</c> - the array that is on every definition of every
+    /// category and the only one the envelope carries at arity greater than one - is now
+    /// authored order. So the envelope no longer exercises the set treatment at arity two or
+    /// more <em>at all</em>, where before the flip it exercised it on every category through
+    /// <c>source_refs</c>. That reach is not recovered here and must not be claimed here: the
+    /// set treatment's collapse-to-one-payload invariant now lives only where a category field
+    /// declares <see cref="ArrayOrder.IdSet"/> over two or more authored elements, and the
+    /// per-category gate's own census is what states how far that reaches. A test cannot get
+    /// the coverage back by asserting the invariant over an empty array, which is the tempting
+    /// move and would be a vacuous pass wearing the name of the strongest check in the file.
+    /// </para>
     /// </remarks>
     [Test]
     public void TheTagsArrayIsEmittedAndItsClassIsNotYetObservable()

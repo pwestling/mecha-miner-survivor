@@ -107,6 +107,28 @@
       "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-006-005",
+      "summary": "Two commits on this branch described their own ref scope with a blob count, and a blob count over refs is not a property of the repository. This entry states the invariant those sentences were reaching for, in a form that can be re-measured, and records why the original figures are not simply replaced with corrected ones. THE TWO CLAIMS. 820832e ('Move doc 40's vocabulary census to twenty-seven, both figures re-measured') says doc 40 'exists as 14 distinct blobs across the 42 refs in this clone that carry the file, and 8 of those blobs contain the \\\"twenty-eight closed vocabularies\\\" text'. cfc6434 ('Land the document owner's ordering clause in doc 40, verbatim') says '...blobs across the 42 refs in this clone that carry the file, and none of the other 13 has this clause'. Both shas are named here so git log --grep connects the correction to the commits it corrects; neither message can be edited, and neither should be, because both already said 'in this clone' and were honest about it. WHY NO NUMBER IS SUBSTITUTED. Three measurements of that population now exist and all three are correct for their own clone at their own moment: 14 distinct blobs across 42 refs when those commits were written, 17 in a reviewer's clone, and 15 across 42 refs here. The population is remote-tracking refs, which exist only because a particular clone fetched them, so it moves on any fetch, push or branch deletion by anyone - a fetch of one base branch during the session that wrote this entry moved it mid-measurement. Replacing 14 with 15 would substitute one clone-scoped figure for another and buy nothing. The original figures were not so much wrong as unusable afterwards, because nothing beside them said which clone and which moment they were true of - the same defect as a gate exit recorded without the checkout it was taken in. THE INVARIANT THAT DOES HOLD, which is a statement about which refs carry a sentence rather than how many blobs exist. Route: for every ref under refs/heads, refs/remotes and refs/tags, read docs/technical/40-content-data-and-validation.md at that ref and test whether it contains the sentence. Measured at 2026-08-11T09:14:17Z, with 42 refs in this clone and all 42 carrying the file: the 'twenty-seven closed vocabularies' census wording is carried by claude/hearth-thread-hrufl9-dat-006 and by origin/claude/hearth-thread-hrufl9-dat-006 - the same commit, counted twice because a local branch and its remote-tracking ref are two refs - and by NO OTHER REF. The ordering clause landed by cfc6434 is carried by exactly the same two and no other. 24 refs carry the superseded 'twenty-eight' wording, including origin/master and claude/hearth-thread-hrufl9. So the claim both commits were making - that the change is ref-scoped and propagates only by merge - is true, and is checkable by ref NAME rather than by a count. WHAT EXPIRES AND WHAT DOES NOT. The ref names are stable evidence: a reader can re-run the walk and see whether any ref other than this branch has acquired the sentence, which is the question that matters and which a count cannot answer. Every FIGURE above - 42 refs, 24 carrying the old wording, and any blob total - expires at the next fetch and must be re-measured rather than cited. Recorded because the alternative is that the next reader takes 14, 15 or 17 as a fact about doc 40 when it is a fact about somebody's working copy.",
+      "task": "TASK-DAT-006-001",
+      "requirements": ["TR-DAT-002"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#minted-value-vocabularies"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "command",
+        "value": "git for-each-ref --format=%(refname) refs/heads refs/remotes refs/tags"
+      },
+      "fixtures": [
+        "docs/technical/40-content-data-and-validation.md"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["command-output"],
+      "platforms": ["linux-x64"],
+      "tier": "fast",
+      "status": "registered"
     }
   ]
 }

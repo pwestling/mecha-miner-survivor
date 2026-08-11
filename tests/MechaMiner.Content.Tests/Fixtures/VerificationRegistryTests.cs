@@ -850,7 +850,12 @@ internal sealed class VerificationRegistryTests
     /// <remarks>The 319 at <c>715ef53</c> plus the nine <c>DAT-006.json</c> names at
     /// <c>59a4986</c>: the divergence golden four times, two schemas, and three resource
     /// definitions.</remarks>
-    private const int RepositoryPathReferences = 328;
+    /// <remarks>
+    /// 329 now. VER-DAT-006-005 names docs/technical/40-content-data-and-validation.md as the one
+    /// file its ref walk reads, so the delta is +1 and the reference is the document the entry is
+    /// about.
+    /// </remarks>
+    private const int RepositoryPathReferences = 329;
 
     /// <summary>Fixture references of the form <c>path § heading</c>.</summary>
     private const int PathAndSectionReferences = 108;
@@ -870,7 +875,11 @@ internal sealed class VerificationRegistryTests
     /// <summary>Entries across every registry in <c>tests/verification/</c>.</summary>
     /// <remarks>The 294 at <c>715ef53</c> plus <c>DAT-006.json</c>'s four, at
     /// <c>59a4986</c>.</remarks>
-    private const int RegistryEntries = 298;
+    /// <remarks>
+    /// 299 now. VER-DAT-006-005, which records the ref-scope invariant that two commits on this
+    /// branch stated as a per-clone blob count, is the one entry added since this was last pinned.
+    /// </remarks>
+    private const int RegistryEntries = 299;
 
     /// <summary>Entries whose selector <c>kind</c> is <c>nunit</c>.</summary>
     /// <remarks>The 236 at <c>715ef53</c> plus <c>DAT-006.json</c>'s four, at
@@ -881,7 +890,13 @@ internal sealed class VerificationRegistryTests
     private const int ScriptSelectors = 39;
 
     /// <summary>Entries whose selector <c>kind</c> is <c>command</c>.</summary>
-    private const int CommandSelectors = 13;
+    /// <remarks>
+    /// 14 now. VER-DAT-006-005 carries a command selector rather than an nunit one because what it
+    /// records is a measurement over git refs, not a property a test asserts - so it moves this
+    /// count and leaves <see cref="NunitSelectors"/> alone, which is the distinction worth being
+    /// able to see in the census.
+    /// </remarks>
+    private const int CommandSelectors = 14;
 
     /// <summary>Entries whose selector <c>kind</c> is <c>engine-scene</c>.</summary>
     private const int EngineSceneSelectors = 6;

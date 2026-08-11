@@ -4880,8 +4880,13 @@ owners.
   real fields in backticks in the `## Common definition envelope` table at 40 `## Common definition envelope`. **So
   `canonical_letter` as a field name would be a choice, not a mandate.**
   - **Resolved since — the bullet above is preserved as the record of what was argued, not corrected.**
-    Its grep was accurate when the audit ran and is false today. `canonical_letter` is a field name in
-    the tree: exactly six files under `content/resources/` carry it, one apiece — `A.json`, `B.json`,
+    Its grep was accurate when the audit ran and was false when this resolution was recorded 2026-08-11
+    in `8101da0`, at `origin/master` = `e17b8b666476b118da86250e90eec062cabf0ede` as this clone resolved
+    it then — the ref had last moved 25 minutes earlier, at 2026-08-11 01:05:07 +0000, and has not moved
+    since — and the grep has not been re-run since either; noting as a fact about the commit rather than
+    a correction of it, `8101da0`'s subject undertakes to "date the canonical_letter grep" while the
+    block it added carried no date, which is the defect this stamp closes. `canonical_letter` is a field
+    name in the tree: exactly six files under `content/resources/` carry it, one apiece — `A.json`, `B.json`,
     `C.json`, `D.json`, `E.json` and `F.json` — added to `master` by commit `2691139`, and A32 in
     `verify_content.py` now asserts that set and no other. `common-ore.json` and `hyper-gold.json` carry
     no letter, so the count is six and not eight. What survives of the bullet is its narrower point,

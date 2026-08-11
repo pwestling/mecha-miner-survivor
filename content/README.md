@@ -972,14 +972,25 @@ owed either way because nothing will fail to remind them.
 
 ### A GitHub-side citation population no working-tree gate can reach
 
+**Recorded 2026-08-11 in `8c2e643` ("content: record the line-citation release and the surfaces this
+tree cannot gate"); the sweep has not been re-run since.** Every figure below — the 506, the 113-artifact
+corpus, and each of the four dispositions — is a measurement taken for that commit and of no later tree.
+This stamp was added by a later pass that re-measured nothing. **What the ref the sweep compared against
+can and cannot be established from the local ref set:** `origin/master` in this clone was
+`e17b8b666476b118da86250e90eec062cabf0ede` when the census was recorded — its ref last moved at
+2026-08-11 01:05:07 +0000, ten hours earlier, and `git rev-parse origin/master` still returns that sha —
+so `e17b8b6` is what `master` resolved to locally at that moment. No fetch happened between that update
+and the recording, so this record does **not** assert that the remote `master` was `e17b8b6` when the
+sweep ran; that is not checkable from here.
+
 A gate walks the working tree; it cannot see a pull-request body, a review, a review comment, an issue
 body, a commit message, or a cross-session message. A sweep of the GitHub artifacts found **506
 positional citations across 27 of 36 PRs**. Corpus: **113 text artifacts** — 36 PR bodies, 34 review
 bodies, 43 issue comments, and 0 inline review comments (a cross-checked empty set, not an unchecked
 one). Of the 506:
 
-- **79 are wrong against `master` today**, of which **26 were valid at their own PR head** — the
-  coordinates drifted after merge; the claim never changed;
+- **79 are wrong against `master` as of that 2026-08-11 recording**, of which **26 were valid at their
+  own PR head** — the coordinates drifted after merge; the claim never changed;
 - **166 are uncheckable by construction**, because they cite an ambiguous bare document number — **149
   of them `40`**, which names two documents (`docs/40-mining-and-extraction.md` and
   `docs/technical/40-content-data-and-validation.md`) differing by 207 lines;

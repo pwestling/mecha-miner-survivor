@@ -870,6 +870,20 @@ internal sealed class VerificationRegistryTests
     /// that another stream owns, and a fixture reference to a path that does not exist is exactly
     /// what <see cref="EveryNamedFixtureReferenceResolves"/> exists to catch.
     /// </remarks>
+    /// <remarks>
+    /// STILL 333, and it is the previous remark's reason that has changed under it rather than the
+    /// count. VER-DAT-006-007's instrument IS now committed, at
+    /// <c>tests/verification/instruments/dat-006-derive.md</c> - a markdown document whose header
+    /// records the instrument's 54,840 bytes and SHA-256 and whose one fenced code block holds the
+    /// program itself, byte for byte. It is a document rather than a script because nothing
+    /// executes it and <c>build/verify-gate-wiring.sh</c> has no kind for a program that decides
+    /// nothing and that no verb invokes; it is deliberately not a <c>.py</c> with its shebang
+    /// stripped, which that gate refuses by name. The delta is 0 because this census counts the
+    /// <c>fixtures</c> array and the entry names the document in its summary prose instead: the
+    /// document is the instrument that produced the entry's figures, not a fixture any test in this
+    /// suite reads. Naming it in <c>fixtures</c> would be a deliberate +1 here, and since that path
+    /// now exists it would be a choice rather than the blocker the previous remark records.
+    /// </remarks>
     private const int RepositoryPathReferences = 333;
 
     /// <summary>Fixture references of the form <c>path § heading</c>.</summary>

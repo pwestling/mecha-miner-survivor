@@ -379,11 +379,28 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       form reports exactly 1 hit, docs/technical/delivery-waves.md:598
       "than a yes or no. Its numbers are 300 trials", which is that word
       ending a sentence and not an abbreviation at all. So the abbreviation
-      sense is required to introduce a numeral ("No. 5"), which it always
-      does; with that suffix the bounded form reports 0. The narrowing is
-      specific to `no.` and does not generalise: none of the other
-      seventeen is a word, so a bounded match on them cannot land on a
-      sentence end.
+      sense is required to introduce a numeral ("No. 5"); with that suffix
+      the bounded form reports 0. The narrowing is specific to `no.` and
+      does not generalise: none of the other seventeen is a word, so a
+      bounded match on them cannot land on a sentence end.
+      THE SUFFIX IS NECESSARY BUT NOT SUFFICIENT. It is a TRADE, not a
+      repair, and both directions are still wrong on purpose:
+        - RESIDUAL FALSE POSITIVE. A sentence-final "no" whose NEXT
+          sentence opens with a numeral still matches, because a lookahead
+          cannot tell it from a genuine "No. 5". "The answer is no. 5
+          people agreed." matches today. The rule is narrowed from every
+          sentence-final use to those followed by a digit, not freed of
+          them.
+        - FALSE NEGATIVE INTRODUCED. An abbreviation with no numeral after
+          it - "see no. above" - is now missed entirely, where the
+          unsuffixed form caught it.
+      The trade is taken because sentence-final "no" is common in ordinary
+      prose while `no.` with no following numeral is rare, so the suffix
+      retires many more false alarms than the true positives it gives up.
+      It is recorded here rather than left to be discovered, because a
+      guard that swaps one error class for another is exactly the shape
+      that quietly stops being able to fail. Anyone tightening either
+      direction should re-measure both.
       THE FAILURE MESSAGE POINTS AT THE MATCHER, NOT AT A QUOTATION. The
       day someone writes "e.g." in a design document, nothing is wrong with
       any content string; what is wrong is that the quotation rule's
@@ -2579,6 +2596,18 @@ SENTENCE_INTERNAL_ABBREVIATIONS = (
 
 # A lookahead required AFTER a token, for the one token whose two senses the word
 # boundary cannot separate. Keyed by token so the other seventeen are untouched.
+#
+# `\s` HERE IS NEWLINE-SENSITIVE, AND THE PER-LINE SCAN IS WHAT CONTAINS IT. This
+# suffix is only well-behaved because check_no_abbreviation_periods matches one LINE
+# at a time: `\s*` would happily consume a newline, so on a whole-text scan the
+# lookahead would reach across a line break and "... is no.\n5 people agreed" would
+# match. Measured: whole-text finds 2 in that fixture, per-line finds 0. That
+# containment is INCIDENTAL rather than designed - nothing asserts it - so the cost
+# is stated in both directions. It means a `No.` separated from its numeral by a
+# line break is missed today; and it means anyone rewriting the loop to scan whole
+# text turns that miss into a false positive across the break, with no test naming
+# the behaviour they removed. Harmless now, invisible later, which is why it is
+# written down.
 ABBREVIATION_SUFFIX = {"no.": r"(?=\s*\d)"}
 
 ABBREVIATION_RX = tuple(
@@ -2600,6 +2629,9 @@ def check_no_abbreviation_periods(docs_root: Path = DOCS) -> list[tuple]:
     for path in sorted(docs_root.rglob("*.md")):
         scanned += 1
         text = path.read_text(encoding="utf-8")
+        # Per LINE, not per file, and that is load-bearing for ABBREVIATION_SUFFIX:
+        # its `\s*` would cross a newline on a whole-text scan. See the comment on
+        # ABBREVIATION_SUFFIX before changing this loop.
         for lineno, line in enumerate(text.splitlines(), 1):
             for abbr, rx in ABBREVIATION_RX:
                 for m in rx.finditer(line):

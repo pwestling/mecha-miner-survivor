@@ -108,7 +108,7 @@ what it changes is the tree, and §13 measures it there.
 
 > The enemy speed increase ends immediately when mining stops because the mech leaves, the point completes, or the simulation pauses.
 
-`docs/69-initial-relic-catalog.md:153` says:
+`docs/69-initial-relic-catalog.md` `## REL-09 — Claim-Jumper Core` says:
 
 > The increase begins with forward progress and ends immediately when mining stops because the mech leaves, the point completes, or the simulation pauses.
 
@@ -124,7 +124,7 @@ recomputation was caught not testing the frozen string at all.** This record rea
 re-derived `exact`, which is impossible if the frozen string is what gets tested. The
 frozen string is now **refreshed explicitly** for this record, with the reason recorded in
 the artifact itself: the live value is the corrected quotation and was verified
-character-for-character against `docs/69-initial-relic-catalog.md:153`, inside the
+character-for-character against `docs/69-initial-relic-catalog.md` `## REL-09 — Claim-Jumper Core`, inside the
 `GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core` section the record already cites. See
 §5 for why a refresh is two hand-written fields rather than a code path, and Ruling 41.
 
@@ -206,10 +206,10 @@ no motivating case is not a rule, it is a tolerance.
 
 | rule | what it does | cases | motivating case |
 | --- | --- | ---: | --- |
-| **R1-quotes** | curly `" " ' ' ′ ″` → straight | 1 | `content/maps/standard-map-generation-contract.json → destructible_rock_rules.destructible_rock.rules[3]` stores `"Non-solid"` straight; `docs/72:207` writes it curly |
-| **R3-markup** | strip inline Markdown: `[text](url)` → `text`, backticks, `*`/`_` emphasis | 2 | `content/unlocks/UNL-01.json → rules[3]` ends `… specified in the Utility Catalog.`; `docs/63:44` writes it as an inline link. **Mandatory, not cosmetic:** A24 forbids a `docs/*.md` path in any content string, so the author *cannot* transcribe the link |
+| **R1-quotes** | curly `" " ' ' ′ ″` → straight | 1 | `content/maps/standard-map-generation-contract.json → destructible_rock_rules.destructible_rock.rules[3]` stores `"Non-solid"` straight; `docs/72` `### Destructible rock` writes it curly |
+| **R3-markup** | strip inline Markdown: `[text](url)` → `text`, backticks, `*`/`_` emphasis | 2 | `content/unlocks/UNL-01.json → rules[3]` ends `… specified in the Utility Catalog.`; `docs/63` `## Shared purchase rules` writes it as an inline link. **Mandatory, not cosmetic:** A24 forbids a `docs/*.md` path in any content string, so the author *cannot* transcribe the link |
 | **R7a-initial-case** | the **first character only** may differ in case | 19 | `content/bosses/BOSS-01.json → ability.terrain_interaction` de-capitalises `Terrain ends…` so it reads as a field value. Deliberately *not* full case-folding: A7 treats case as meaningful, and folding would let `hyper gold` pass for `Hyper Gold`. Full case-insensitivity was implemented first and then tightened; nothing was lost |
-| **R8-period** | a trailing `.` on the stored string need not be in the source | 4 | `content/unlocks/UNL-01.json → rules[0]` ends `…per specialized resource.` where `docs/63:37` ends with a colon because a table follows |
+| **R8-period** | a trailing `.` on the stored string need not be in the source | 4 | `content/unlocks/UNL-01.json → rules[0]` ends `…per specialized resource.` where `docs/63` `## Shared purchase rules` ("Option unlocks are purchased only between runs with banked Hyper Gold") ends with a colon because a table follows |
 
 ### Built, tested, and DROPPED (6) — each for lack of a motivating case
 
@@ -353,7 +353,7 @@ something moved. There is no code path that re-baselines anything.
 
 | record | classification | what verifies the refresh |
 | --- | --- | --- |
-| `content/relics/REL-09.json → pause_behavior.rule` | the frozen string is the **pre-fix drifted text** of §3; the live string is the corrected quotation | **The cited section.** `docs/69-initial-relic-catalog.md:153`, inside `GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core`, character-for-character |
+| `content/relics/REL-09.json → pause_behavior.rule` | the frozen string is the **pre-fix drifted text** of §3; the live string is the corrected quotation | **The cited section.** `docs/69-initial-relic-catalog.md` `## REL-09 — Claim-Jumper Core`, inside `GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core`, character-for-character |
 | `content/encounters/standard-encounter-schedule.json → minute_rows[33].formation_events[0].reconstruction_basis` | **authored prose, not a quotation** — `no-match` before and after, and there is no cited section to verify it against | **`A27`'s sibling `A24`, plus Ruling 40.** The frozen string ends `See content/transcription-notes.md.`, embedding a repo path in a value, which `A24` forbids unconditionally — so the frozen string cannot legally exist in this tree. The live string is the A24-compliant replacement made by Rulings 25/26/31 |
 
 The second one is refreshed on **weaker and different** evidence than the first, and that is
@@ -478,12 +478,14 @@ is not evidence.
 
 **A third shape, found separately: a gap that looks filled.** `active_maximum: 16` and
 `initial_count: 16` in `content/maps/standard-map-generation-contract.json` were
-transcribed and asserted by nothing, while rock Hull 100 (`docs/72:194`) and the 0.80 M
-footprint (`docs/72:196`) — which *bracket* them in the same document section — were both
+transcribed and asserted by nothing, while rock Hull 100 and the 0.80 M
+footprint (both `docs/72` `### Destructible rock`) — which *bracket* them in the same document section — were both
 asserted. **A value whose neighbours are asserted reads as covered.** This is not a gate
 that cannot fail and not a gate that fires wrongly; it is a gate nobody thought to write,
 and its signature is being surrounded by coverage. Both values are now asserted as A13
-rows against `docs/51:146`, with the active cap corroborated at `docs/72:203`.
+rows against `docs/51` `## Destructible rocks`, with the active cap corroborated at `docs/72`
+`### Destructible rock` ("the existing one-attempt-per-second, 10% success chance, and 16-rock
+active cap remain unchanged").
 
 ## 8. Head-end cases: settled, and not worth building
 
@@ -664,7 +666,7 @@ already re-pointed, which is exactly the shape the blind spot predicts:
 
 | n | leaves | was cited | now also cited | sibling already fixed by this branch |
 | ---: | --- | --- | --- | --- |
-| **4** | `BOSS-01`…`BOSS-04 → persistence.reentry.trigger` | `TDD-ENCOUNTERS#boss-re-entry` | `GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward` | yes — `persistence.reentry.behavior`, **the same source sentence**, `docs/31-initial-alien-roster.md:172` |
+| **4** | `BOSS-01`…`BOSS-04 → persistence.reentry.trigger` | `TDD-ENCOUNTERS#boss-re-entry` | `GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward` | yes — `persistence.reentry.behavior`, **the same source sentence**, `docs/31-initial-alien-roster.md` `## Boss arrival, persistence, and reward` |
 | **6** | `UTL-B1 B2 C1 C2 E1 F1 → installed_to_rank_3` | the file's own `#utl-XX--<name>` section | `GDD-UTILITY-CATALOG#catalog-overview` | yes — `UTL-E2`, the same column of the same table |
 | **1** | `REL-09 → core_tradeoff` | `#rel-09--claim-jumper-core` | `GDD-INITIAL-RELIC-CATALOG#catalog-overview` | yes — `REL-01`, `REL-06`, `REL-08`, `REL-10`, **the same table** |
 | **1** | `MCH-02 → inherent_trait.effect_detail` | `#catalog-overview` | `GDD-INITIAL-MECH-CATALOG#signature-and-trait-1` | `trait_notes[]` already cites that section |
@@ -677,9 +679,10 @@ method — a document the file already cites, then the deepest heading, then the
 
 The one judgement call is the map contract's `health_pack.persistence`, `"persists until
 collected or run end"`. Its cited section *does* contain that clause, but inflected:
-`docs/72:186` writes "Packs **persist** until collected or run end". The stored string is a
-verbatim quotation of a *different* document — `docs/10-core-game-loop.md:129` and
-`docs/30-combat-weapons-movement-camera.md:102` both write "The pack **persists** until
+`docs/72` `### Health pack` writes "Packs **persist** until collected or run end". The stored string is a
+verbatim quotation of a *different* document — `docs/10-core-game-loop.md`
+`### Combat pressure` and
+`docs/30-combat-weapons-movement-camera.md` `## Combat progression` both write "The pack **persists** until
 collected or run end" — so this is the wrong-document shape of §4's finding, and the deepest
 heading of the two candidates wins. Both the alternative and the reason are recorded because
 a reader could reasonably prefer keeping only the survivability citation.

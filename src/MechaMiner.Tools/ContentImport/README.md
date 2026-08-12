@@ -38,7 +38,8 @@ checks:
   (`{target_minimum, target_maximum, hard_maximum}`). Where the name carries a unit suffix the unit stays
   terminal and the bound word moves to the front (`maximum_control_resistance_percent`). The exception
   list `BOUND_SPELLING_ESCALATED` is now **empty** — its two `W-BF-tethered-reaper` members were resolved
-  rather than suppressed, since `docs/71:346` shows 200 bounds the speed-bonus component and 400 the
+  rather than suppressed, since `docs/71` `### Tethered Reaper — Conversion — 2 Eidolon Coral` shows 200 bounds the
+  speed-bonus component and 400 the
   total — and it is still asserted for drift like `ID_NULL_EXPECTED`, because a resolved escalation left
   in an exception list is worse than no list;
 - that no stale extraction metadata key (`_provenance`, `_source`, `notes`, `note`, `refs`, `lines`,
@@ -47,7 +48,7 @@ checks:
 - that **no `null` appears anywhere under `content/`**, at any depth, in any of the 139 `*.json` files —
   `localization/en.json` included, which the definition loader skips — and with **no exception set at
   all**, because an exception set is a place for a null to hide. A `null` in a source definition is never
-  legal: `40:90` materializes an explicit default for every absent optional field, so an absent field gets
+  legal: 40 `## Common definition envelope` materializes an explicit default for every absent optional field, so an absent field gets
   its default while a present-and-`null` one asks runtime to guess. 275 nulls across 101 of 138 definition
   files were disposed of in one pass — 246 keys omitted, 24 fields removed as fields no schema will declare
   (20 relic rarity/weighting, 4 boss `armor`), 3 `external_numerics[n].value` keys removed as shape
@@ -70,9 +71,10 @@ checks:
   raise/reduce, gain/lose) sits beside prose stating the same fact, the two must agree in sign. Prose is
   read from the same object and from the enclosing one. It fires on strict contradiction only, so
   "20% faster without increasing movement speed" is not reported. This automates a check that had to be
-  done by hand: six geode resonance directions were verified against `docs/40:104-109` by eye, and
+  done by hand: six geode resonance directions were verified against
+  `docs/40-mining-and-extraction.md` `### Geode resonance fields` by eye, and
   nothing would have caught a seventh;
-- the **percentage-point policy** (`40:95`) on numbers and key names, not prose: every percent-named
+- the **percentage-point policy** (40 `## Unit and numeric policy`, the percentage bullet) on numbers and key names, not prose: every percent-named
   property resolves to at least one numeric leaf; no percent-named numeric value satisfies
   `0 < |v| < 1`, which would be the compiler's normalized factor stored where percentage points belong;
   and no name or object authors the normalized factor beside the points. A name "says `_percent`"
@@ -84,8 +86,8 @@ checks:
   advertised the rewrite as fixing exactly that. Rule 4 fails any **number** under a relative-magnitude
   name (`bonus`, `penalty`, `increase`, `decrease`, `reduction`, `boost`, `malus`, `discount`,
   `surcharge`, `uplift`) that says neither percent nor any unit-or-kind token: such a number is either
-  percentage points or a multiplicative scale and the name does not say which, which `40:95` forbids for
-  the first and `40:94` forbids for the second. A unit-or-kind token anywhere in the name excludes it, so
+  percentage points or a multiplicative scale and the name does not say which, which 40 `## Unit and numeric policy` forbids for
+  the first (percentage bullet) and for the second (ambiguous-numeric-name bullet). A unit-or-kind token anywhere in the name excludes it, so
   `single_target_ceiling_multiplier_at_full_bonus` — head noun `multiplier`, `bonus` a mid-name qualifier
   — is not flagged. Rule 4 flags **nothing** authored in this tree: it is a regression guard, and its
   evidence is its negative control, the two injections above, each run and reverted individually;
@@ -97,10 +99,11 @@ checks:
 - `content/localization/en.json`: parses, flat, lexically sorted, duplicate-free, every referenced
   localization key present, and no orphaned string;
 - per-catalog entry counts and aggregate row counts, from the `EXPECTATIONS` and `PROBES` tables where
-  every row cites its own source doc and line;
+  every row cites its own source doc and heading;
 - the four authored world-prop **values** folded into the map contract, each against its own citation:
-  destructible rock Hull 100 (`docs/72:194`), rock damage footprint diameter 0.80 M (`:196`), health
-  pack repair 25 Hull (`:182`), health pack pickup radius 0.25 M (`:185`). This replaced a row *count*
+  destructible rock Hull 100 and rock damage footprint diameter 0.80 M (both
+  `docs/72` `### Destructible rock`), health pack repair 25 Hull and pickup radius 0.25 M (both
+  `docs/72` `### Health pack`). This replaced a row *count*
   over key-name patterns, which counted patterns that matched at least once — so two names existing
   satisfied it and no value was ever compared. A missing field is now a failure, not a silent pass;
 - the two doc-stated grand totals recomputed from the JSON — PowerUp rank prices must sum to 9,450
@@ -117,18 +120,22 @@ checks:
   diameter is `scale × 0.80 M` — and no definition under `content/enemies/`, `content/bosses/` **or**
   `content/maps/` may carry the **centre distance that begins contact**, which is the object's radius
   plus the player's `0.50 M` collision radius in all three. `content/maps/` joined the rule because the
-  health pack stored `0.75` = its authored `0.25 M` pickup radius + `0.50 M` (`docs/72:185`), a third
+  health pack stored `0.75` = its authored `0.25 M` pickup radius + `0.50 M` (`docs/72`
+  `### Health pack`), a third
   writer for one player-baseline constant. The diameter rule stops at enemies on purpose: a boss
   diameter is authored, because the boss roster gives bosses no body scale to derive one from
-  (`docs/31:121-128` has no `Body` column, and `docs/72:86` scopes the derivation to "every **ordinary**
-  body scale") and the survivability baseline states the four boss diameters flat (`docs/72:105-110`).
+  (`docs/31` `## Interval boss overview` has no `Body` column, and `docs/72`
+  `## Collision and Contact Footprints` scopes the derivation to "every **ordinary**
+  body scale") and the survivability baseline states the four boss diameters flat in that same
+  section's `| Boss | Contact and weapon-hurt diameter |` table.
   `reference_diameter_m` is allowlisted, being the Ripper's authored rank-zero diameter rather than a
   per-enemy derived value — and A30 now **reads** it out of the ten enemy files instead of hardcoding
   `0.80`, because a hardcoded operand made that derivation agree with itself: setting the field to `1.0`
   in all ten left the suite green, 10 of 10 escaped, while the sibling operand `body_scale_multiplier`
   went red. The player's `0.50 M` collision radius stays a literal in the checker, and that asymmetry is
   deliberate: it has **no authored mirror anywhere in `content/`** — these very rules keep it out — so
-  there is nothing to read, and the constant is cited to `docs/72:86` where it is stated.
+  there is nothing to read, and the constant is cited to `docs/72`
+  `## Collision and Contact Footprints` where it is stated.
 
 **What the footprint guard does not do.** Both rules match specific key-name patterns in specific
 directories. A derived value reintroduced under a name neither pattern matches, or in a directory
@@ -313,7 +320,7 @@ Only `derive --check` caught those, and it caught them by regenerating and byte-
 file-integrity check rather than an assertion inside the rule.
 
 One reconciliation heuristic still reports as a warning rather than a failure, because no schema exists
-to settle it: formulas held as strings rather than a registered formula kind plus parameters (`40:99`).
+to settle it: formulas held as strings rather than a registered formula kind plus parameters (40 `## Unit and numeric policy`, the formula bullet).
 It is grouped by property name so the list stays actionable. The percentage heuristic that used to sit
 beside it is gone: it matched a `%` glyph in prose, so it emitted 21 warnings about English sentences
 while leaving the numeric rule it cited unchecked. A warning list a reader learns to ignore is worse
@@ -525,7 +532,7 @@ Six things reproduce exactly and are still retained, listed with their arithmeti
 no `docs/` line assigns them: the beacon threshold times, `sources[].depletion_seconds`,
 `resonant_damage`, `ordinary_contact_damage_replaced_during_charge`, the three
 `relative_to_standard_seam` multipliers, and the 45 weapon DPS estimates. The DPS family is the
-interesting one — `40:203` *does* assign "DPS estimates" to the compiler, so it passes the document test
+interesting one — 40 `### Analytical` *does* assign "DPS estimates" to the compiler, so it passes the document test
 and fails the arithmetic one: the burst and horde rules vary with each weapon's behaviour kind and no
 single rule reproduces all 45. It is out of scope, not cleared.
 

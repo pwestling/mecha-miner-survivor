@@ -146,26 +146,26 @@ NOT_ASSIGNED_BY_DOCS = [
         "content/mining-sites/hyper-gold-sites.json",
         "beacon_thresholds[].at_uninterrupted_seconds_from_zero",
         "11.25 / 22.5 / 33.75 = progress percent x the authored 45 s extraction duration",
-        "40:140 lists 'beacon thresholds' among the AUTHORED fields of a mining site and assigns "
-        "the compiler only 'their totals'. Threshold timing is not a total and no other line "
-        "claims it.",
+        "40 `### Mining sites` lists 'beacon thresholds' among the AUTHORED fields of a mining "
+        "site and assigns the compiler only 'their totals'. Threshold timing is not a total and "
+        "no other line claims it.",
     ),
     (
         "content/resources/common-ore.json",
         "sources[].depletion_seconds",
         "15 = installment_seconds x installment_count in both seam rows",
-        "40:203 gives the compiler 'resource totals'; a depletion duration is not a total, and "
-        "40:106's resource-field list does not mention it. The identically-derived "
-        "total_depletion_seconds in content/mining-sites/ IS removed, because 40:140 names the "
-        "site classes' totals explicitly.",
+        "40 `### Analytical` gives the compiler 'resource totals'; a depletion duration is not a "
+        "total, and 40 `### Resources`'s resource-field list does not mention it. The "
+        "identically-derived total_depletion_seconds in content/mining-sites/ IS removed, because "
+        "40 `### Mining sites` names the site classes' totals explicitly.",
     ),
     (
         "content/enemies|bosses/*",
         "resonant_damage_reference.resonant_damage",
         "17 / 44 / 33 / 22 / 42 = ceil(base_damage x 1.20)",
         "The 1.20 comes from the geode resonance field's 20%, but no doc line documents the "
-        "rounding, and 40:203 tolerates divergence only 'beyond documented rounding'. Also an "
-        "operand - see RETAINED_BECAUSE_OPERAND.",
+        "rounding, and 40 `### Analytical` tolerates divergence only 'beyond documented "
+        "rounding'. Also an operand - see RETAINED_BECAUSE_OPERAND.",
     ),
     (
         "content/bosses/BOSS-01.json",
@@ -180,7 +180,8 @@ NOT_ASSIGNED_BY_DOCS = [
         "damage_model.{burst_10_dps, sustained_30_dps, favorable_horde_dps}",
         "45 values; W-AB reproduces as 96/3.0 = 32.0, ceil(10/3.0) x 96/10 = 38.4, 32.0 x 4 pierce "
         "= 128",
-        "40:203 DOES assign 'DPS estimates' to the compiler, so the doc test passes - but the "
+        "40 `### Analytical` DOES assign 'DPS estimates' to the compiler, so the doc test "
+        "passes - but the "
         "burst/horde rule varies with each weapon's behaviour kind and this pass could not state "
         "ONE rule that reproduces all 45 exactly. Criterion 1 is therefore unmet and the family "
         "is deliberately out of scope, not cleared.",
@@ -933,8 +934,9 @@ FAMILIES = [
     dict(
         name="enemy and boss world speed",
         builder=fam_world_speed,
-        doc="docs/technical/40-content-data-and-validation.md:114 - 'Validation derives world "
-        "speeds/footprints and compares them with the survivability report'",
+        doc="docs/technical/40-content-data-and-validation.md `### Enemies and bosses` - "
+        "'Validation derives world speeds and contact footprints ... and compares them with the "
+        "survivability report'",
         scopes=["enemies", "bosses"],
         parent=None,
         segment=r"(?i)world_speed|velocity|traverse|movement_rate|travel_rate"
@@ -953,8 +955,9 @@ FAMILIES = [
     dict(
         name="PowerUp cumulative cost",
         builder=fam_powerup_cumulative,
-        doc="docs/technical/40-content-data-and-validation.md:136 - 'Validators recompute total "
-        "catalog costs and maximum-account envelope'; with 40:203 'price curves, total costs'",
+        doc="docs/technical/40-content-data-and-validation.md `### PowerUps and option "
+        "unlocks` - 'Validators recompute total catalog costs and maximum-account envelope'; with "
+        "40 `### Analytical` 'price curves, total costs'",
         scopes=["powerups"],
         parent=None,
         segment=r"(?i)" + AGGREGATE_WORDS_NO_TOTAL,
@@ -973,8 +976,8 @@ FAMILIES = [
     dict(
         name="utility total rank ore cost",
         builder=fam_utility_rank_total,
-        doc="docs/technical/40-content-data-and-validation.md:203 - 'Recalculate ... price curves, "
-        "total costs'",
+        doc="docs/technical/40-content-data-and-validation.md `### Analytical` - 'Recalculate "
+        "... price curves, total costs'",
         scopes=["utilities"],
         parent=None,
         segment=r"(?i)" + AGGREGATE_WORDS,
@@ -987,8 +990,8 @@ FAMILIES = [
     dict(
         name="resource aggregate total",
         builder=fam_resource_totals,
-        doc="docs/technical/40-content-data-and-validation.md:203 - 'Recalculate ... resource "
-        "totals'",
+        doc="docs/technical/40-content-data-and-validation.md `### Analytical` - 'Recalculate "
+        "... resource totals'",
         scopes=["resources"],
         parent=None,
         segment=r"(?i)" + AGGREGATE_WORDS + r"|ceiling|yield",
@@ -1002,8 +1005,8 @@ FAMILIES = [
     dict(
         name="mining-site aggregate total",
         builder=fam_mining_site_totals,
-        doc="docs/technical/40-content-data-and-validation.md:140 - 'Standard mode validates "
-        "exactly four accepted classes and their totals'; with 40:203",
+        doc="docs/technical/40-content-data-and-validation.md `### Mining sites` - 'Standard "
+        "mode validates exactly four accepted classes and their totals'; with 40 `### Analytical`",
         scopes=["mining-sites"],
         parent=None,
         segment=r"(?i)" + AGGREGATE_WORDS + r"|jackpot|geodes_per_standard_map",
@@ -1024,8 +1027,8 @@ FAMILIES = [
     dict(
         name="map-contract site-based Hyper Gold",
         builder=fam_map_site_hyper_gold,
-        doc="docs/technical/40-content-data-and-validation.md:203 - 'Recalculate ... resource "
-        "totals'",
+        doc="docs/technical/40-content-data-and-validation.md `### Analytical` - 'Recalculate "
+        "... resource totals'",
         scopes=["maps"],
         parent=None,
         segment=r"(?i)" + AGGREGATE_WORDS,

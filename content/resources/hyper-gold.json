@@ -3,7 +3,7 @@
   "schema_version": 1,
   "content_version": 1,
   "status": "enabled",
-  "name_key": "resource.hyper-gold.name",
+  "name_key": "resource.RSC-08.name",
   "tags": [],
   "source_refs": [
     "GDD-PROGRESSION#progression-layers",

@@ -14,20 +14,23 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
 
   A1  Every *.json under content/ parses as UTF-8 JSON with no duplicate
       object properties.
-      Mandate: docs/technical/40-content-data-and-validation.md:26
-      ("duplicate object properties ... are errors")                  FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## JSON codec and schema baseline` ("duplicate object
+      properties ... are errors")                                     FAILURE
 
   A2  Envelope: every definition file carries schema_version (int),
       content_version (int), status in {development, enabled, disabled,
       retired}, tags (array), and source_refs (non-empty array of strings).
-      Mandate: docs/technical/40-content-data-and-validation.md:76-88
-      (envelope table); status vocabulary at 40:83                    FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## Common definition envelope` (the field table); the status
+      vocabulary is that table's `status` row                         FAILURE
 
   A3  name_key and summary_key are both CONDITIONAL. summary_key is "where
-      relevant" (40:85); name_key is required only where a definition has a
-      genuinely player-facing name, with the compiler supplying the default
-      otherwise (40:90, "Optional fields have explicit defaults materialized
-      into the canonical bundle") - the same treatment presentation_id gets.
+      relevant" (40 `## Common definition envelope`); name_key is required
+      only where a definition has a genuinely player-facing name, with the
+      compiler supplying the default otherwise (same section, "Optional
+      fields have explicit defaults materialized into the canonical
+      bundle") - the same treatment presentation_id gets.
       When either is present it must be a non-empty string that resolves in
       en.json (see A11).                                              FAILURE
       Omission is warned about, and the set of omitting files is asserted
@@ -35,14 +38,17 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
 
   A4  presentation_id is ABSENT, not present-and-null. No presentation
       entry can exist until content/presentation/ is authored
-      (40:88 declares the field; 40:52 declares the directory).        FAILURE
+      (40 `## Common definition envelope` declares the field;
+      40 `## Accepted content repository layout` declares the
+      directory - the `presentation/` line of its layout block)       FAILURE
 
   A5  id must be present and a non-empty string, EXCEPT on the definitions
       listed in ID_NULL_EXPECTED below, where no design document assigns a
       stable ID and minting one would be inventing content. That list is now
       EMPTY - every definition in this tree carries a minted stable ID - so
       the exception has no members and A5 is unconditional.
-      Mandate: docs/technical/40-content-data-and-validation.md:80     FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## Common definition envelope`, the `id` row                   FAILURE
 
   A6  An absent or null id is a FAILURE, with its path, unless the definition
       is listed in ID_NULL_EXPECTED. With that list empty, a missing or null
@@ -59,47 +65,57 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
   A7  Naming: no property name anywhere in a definition contains [A-Z] or
       starts with "_". Checked on KEYS ONLY - stable ID/enum/kind tokens in
       VALUES keep their exact case by the same mandate.
-      Mandate: docs/technical/40-content-data-and-validation.md:26
-      ("Property names use snake_case; stable enum/kind/ID tokens remain
-      exact case-sensitive ASCII"), restated at 40:92-100              FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## JSON codec and schema baseline` ("Property names use
+      snake_case; stable enum/kind/ID tokens remain exact
+      case-sensitive ASCII"), restated by the naming rules under
+      40 `## Unit and numeric policy`                                 FAILURE
 
   A8  No stale extraction metadata: no key named _provenance, _source,
       notes, refs, lines, or line at any depth. Provenance now lives in
-      source_refs (40:87); unknown fields are errors (40:90).          FAILURE
+      source_refs (40 `## Common definition envelope`); unknown fields
+      are errors (same section)                                       FAILURE
 
   A9  source_refs resolution: for every element, the document-ID portion
       (after any "json.path: " prefix, before any "#anchor") is a doc_id
       declared in the front matter of a file under docs/, and any #anchor
       resolves to a real heading slug in that document.
-      Mandate: docs/technical/40-content-data-and-validation.md:87     FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## Common definition envelope`, the `source_refs` row          FAILURE
 
   A10 Localization: content/localization/en.json parses, is flat (all values
       are strings), is lexically sorted, and has no duplicate keys.
-      Mandate: 40:211 (dedicated string catalog), 40:28 (dictionaries
-      emitted as lexically sorted key entries)                         FAILURE
+      Mandate: 40 `### Source catalog format and key pattern` - "Each
+      file is a flat object of key to string. There is no nesting, no
+      metadata wrapper, and no array." for the flatness, and "Keys are
+      lexically sorted, so a diff shows only the strings that changed"
+      for the ordering                                                FAILURE
 
   A11 Every name_key / summary_key that IS present (and any other
       *_key / *_keys reference) resolves to a key present in en.json, and no
       key in en.json is orphaned.
-      Mandate: docs/technical/40-content-data-and-validation.md:216
-      ("Missing release strings are build errors") - so these are
-      failures, not warnings                                          FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## Localization contract` ("Missing release strings are build
+      errors") - so these are failures, not warnings                  FAILURE
 
   A12 Entry counts per catalog directory match the EXPECTATIONS table.
-      Every row cites its own source doc:line.                        FAILURE
+      Every row cites its own source document and heading.           FAILURE
 
   A13 Aggregate row counts match the PROBES table (35 minute rows,
       4 beacon responses, 7 formations, 1 map contract file), AND the six
       authored world-prop VALUES folded into the map contract match the
-      document: destructible rock Hull 100 (docs/72:194), rock damage
-      footprint diameter 0.80 M (:196), health pack repair 25 Hull (:182),
-      health pack pickup radius 0.25 M (:185), rock active population cap
-      16 and rock initial count 16 (both docs/51:146, the active cap
-      corroborated at docs/72:203). Every row cites its own source
-      doc:line.
+      document: destructible rock Hull 100 (docs/72 `### Destructible
+      rock`), rock damage footprint diameter 0.80 M (same table), health
+      pack repair 25 Hull and pickup radius 0.25 M (docs/72 `### Health
+      pack`), rock active population cap 16 and rock initial count 16
+      (both docs/51 `## Destructible rocks`, the active cap corroborated
+      at docs/72 `### Destructible rock`, "the existing
+      one-attempt-per-second, 10% success chance, and 16-rock active cap").
+      Every row cites its own source document and heading.
       The two 16-rock rows were ADDED as a coverage gap: both values were
       transcribed and NEITHER was asserted, and they sit between two values
-      that were - rock Hull at 72:194 and the footprint at 72:196 bracket
+      that were - rock Hull and the footprint diameter in docs/72
+      `### Destructible rock` bracket
       the population rules in the same section. A value whose neighbours
       are asserted reads as covered. That is a gap that LOOKS FILLED, which
       is a different failure from a gate that cannot fail.
@@ -115,17 +131,19 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
   A14 Doc-stated totals recompute from the JSON: PowerUp rank prices sum to
       9,450 Hyper Gold and the six option-unlock costs sum to 2,150.
       Actual vs expected is always printed.
-      Mandate: 40:136 ("Validators recompute total catalog costs");
-      sources docs/62-permanent-powerup-catalog.md:35 and
-      docs/63-permanent-option-unlock-catalog.md:48                   FAILURE
+      Mandate: 40 `### PowerUps and option unlocks` ("Validators
+      recompute total catalog costs");
+      sources docs/62-permanent-powerup-catalog.md `## Catalog overview`
+      and docs/63-permanent-option-unlock-catalog.md
+      `## Catalog overview`                                           FAILURE
 
   A15 Referential integrity: every branch's weapon reference resolves to a
       file in content/weapons/, every enemy ID referenced by the encounter
       schedule resolves in content/enemies/, and every mech's
       signature-weapon reference resolves. Reference key names are
       DISCOVERED from the data (snake_case), not hardcoded.
-      Mandate: docs/technical/40-content-data-and-validation.md:199
-      (relational layer: "References, uniqueness, graph coverage")     FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `### Relational` ("References, uniqueness, graph coverage")      FAILURE
 
   A16 Percentage-point policy, checked on NUMBERS and KEY NAMES:
         1. every percent-named property resolves to at least one numeric
@@ -146,12 +164,14 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
            surcharge or uplift - when that name says neither percent nor
            any unit-or-kind token. Such a number is either percentage
            points or a multiplicative scale and the name does not say
-           which; 40:95 permits percentage points only under a name that
-           says percent, and 40:94 requires an ambiguous numeric name to
-           carry a unit suffix.
+           which; 40 `## Unit and numeric policy` permits percentage
+           points only under a name that says percent, and the same
+           section requires an ambiguous numeric name to carry a unit
+           suffix.
       A name "says _percent" wherever the token appears, not only at the
-      end - 40:95 constrains what the name says and 40:96's terminal-unit
-      rule is about unit suffixes, so the mid-name spellings such as
+      end - the percentage bullet under 40 `## Unit and numeric policy`
+      constrains what the name SAYS, and the unit-suffix bullet beside it
+      is about unit tokens, so the mid-name spellings such as
       percent_of_mech_base_speed are correct and are not flagged. Measured
       with PERCENT_TOKEN_KEY, this tree holds 50 such occurrences across 33
       distinct property names; the figure here read 52 and matched neither
@@ -186,17 +206,22 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
   A17 Formula policy: a player-facing formula must be a registered formula
       kind plus parameters, never a script string. String-valued formula
       expressions are grouped by key name.
-      Mandate: docs/technical/40-content-data-and-validation.md:99
-      Reported as a warning for the same reason as A16.                WARNING
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## Unit and numeric policy` (registered formula kind plus
+      parameters, never a script string)
+      Reported as a warning for the same reason as A16.               WARNING
 
   A18 Derived-vs-authored regression guard, special-cased to the one known
       transcription bug: the Sentry Pod (W-BE) deployment interval is 6.0
-      seconds (docs/71-initial-weapon-numeric-catalog.md:83), and 12 must
+      seconds (docs/71-initial-weapon-numeric-catalog.md
+      `## Rank-Zero Values and Ore-Stat Increments`, the `W-BE` row: "One
+      pod every 6 s, 24 s life, maximum three"), and 12 must
       never appear as an authored deployment or ramp value anywhere in
       content/weapons/ - 12 s is the DERIVED time for three pods to exist at
       a 6 s cadence, not an authored number.
-      Mandate: docs/technical/40-content-data-and-validation.md:100
-      ("Derived values include source operands ... in reports")         FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## Unit and numeric policy` ("Derived values include source
+      operands ... in reports")                                       FAILURE
       A missing deployment field is only a warning, because the field name
       is unvalidated until content/schemas/ exists.                    WARNING
 
@@ -209,15 +234,18 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
           reference_diameter_m is allowlisted: 0.80 M is the Ripper's
           authored rank-zero diameter, not a per-enemy derived value. A BOSS
           diameter is AUTHORED and must stay - the boss roster gives bosses
-          no body-scale column (docs/31:121-128, unlike docs/31:37-48) and
-          docs/72:105-110 states the four diameters flat.
+          no body-scale column (docs/31 `## Interval boss overview`,
+          unlike docs/31 `## Ordinary roster overview`) and docs/72
+          `## Collision and Contact Footprints` states the four diameters
+          flat in its `| Boss | Contact and weapon-hurt diameter |` table.
         - the CENTRE DISTANCE rule covers content/enemies/,
           content/bosses/ AND content/maps/. It is the object's radius plus
           the player's 0.50 M collision radius in all three, so storing it
           hardcodes a player-baseline constant into a catalog that does not
           own it. content/maps/ joined the rule because the health pack
           stored 0.75 = its authored 0.25 M pickup radius + 0.50 M
-          (docs/72:185).
+          (docs/72 `### Health pack`, "The pack has a 0.25M pickup
+          radius ... collection occurs when centers come within 0.75M").
       Checked on KEY NAMES in the covered directories. That catches a
       rename ONLY INTO A NAME THE PATTERN STILL MATCHES, which is a narrow
       thing and was previously written as though it were a general one: an
@@ -228,9 +256,10 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       footprint value reintroduced under any name the pattern misses, or in
       an uncovered directory, passes - see the per-rule scopes above and
       README.md.
-      Mandate: docs/technical/40-content-data-and-validation.md:114
-      ("Validation derives world speeds/footprints and compares them with
-      the survivability report")                                      FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `### Enemies and bosses` ("Validation derives world
+      speeds/footprints and compares them with the survivability
+      report")                                                        FAILURE
 
   A21 content/ holds exactly as many DEFINITION *.json files as the A28
       manifest has pairs, so a definition in a directory no A12 row covers is
@@ -274,10 +303,11 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       heading (A9). The path grammar is dot-separated snake_case segments,
       each optionally suffixed with [] (every element), [N] (one element), or
       [N..M] (a range of elements).
-      Mandate: docs/technical/40-content-data-and-validation.md:87
-      (source_refs carries "gameplay document IDs/anchors ... implemented"),
-      with 40:90 ("Unknown fields are errors") for why a prefix may not name
-      a field the definition does not have                            FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## Common definition envelope`, where source_refs carries "gameplay
+      document IDs/anchors ... implemented" and the same section's
+      "Unknown fields are errors" is why a prefix may not name a field the
+      definition does not have                                        FAILURE
 
   A24 Two rules over every string value under content/, each matching the
       thing that is actually wrong rather than one spelling of a path:
@@ -285,8 +315,9 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
            spelling - either slash separator, any case, extension optional
            when a separator is present, and no `docs/` prefix required;
         b. no repository path (docs, src, content, tools, assets followed by
-           a separator) appears at all, line number or not, because 40:87
-           names doc_id#anchor as the citation form and a path is not one.
+           a separator) appears at all, line number or not, because
+           40 `## Common definition envelope` names doc_id#anchor as the
+           citation form and a path is not one.
       A bare `#anchor` is OUT OF SCOPE by design: it is half of the
       sanctioned citation form, A9 already resolves anchors against real
       heading slugs, and it carries neither a path nor a line number.
@@ -300,7 +331,8 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       reconstruction_basis, and a bare extensionless `docs/68` in a UTL-A1
       statement. Both are the class Ruling 25 removed 13 of, and both were
       rewritten in this pass.
-      Mandate: docs/technical/40-content-data-and-validation.md:87    FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## Common definition envelope`, the `source_refs` row          FAILURE
 
   A25 Polarity agreement. Where a structured polarity value (a "direction",
       or any field whose value is drawn from the closed polarity vocabulary
@@ -314,8 +346,10 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       contradiction and is not reported.
       This automates a check that had to be done by hand - Ruling 22 in
       content/transcription-notes.md verified six geode resonance
-      directions against docs/40:104-109 by eye, and nothing in the tree
-      would have caught a seventh. Its value does not depend on catching
+      directions against docs/40-mining-and-extraction.md
+      `### Geode resonance fields` by eye, and nothing in
+      the tree would have caught a seventh. Its value does not depend on
+      catching
       anything today.                                                 FAILURE
 
   A23 One spelling for a bound. No property name abbreviates a bound as the
@@ -323,8 +357,9 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       `minimum`, with the qualifier - not the noun - carrying the distinction
       between two bounds on one quantity (`target_minimum` vs `target_maximum`
       vs `hard_maximum`). A cap IS a maximum, so `_cap`, `_max` and `_maximum`
-      were three spellings of one concept, twice inside a single object. Where
-      a unit suffix must stay terminal (40:96) the bound word moves to the
+      were three spellings of one concept, twice inside a single object.
+      Where the name carries a unit suffix (40 `## Unit and numeric
+      policy`) the unit stays terminal and the bound word moves to the
       front instead: `maximum_control_resistance_percent`, not
       `control_resistance_maximum_percent`.
       Checked on KEY NAMES at any depth, so the abbreviation cannot return
@@ -332,16 +367,18 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       BOUND_SPELLING_ESCALATED, which is asserted for drift the way A19
       asserts its two sets: an undeclared member is a failure, and a member
       that no longer applies is a warning asking for the list to shrink.
-      Mandate: docs/technical/40-content-data-and-validation.md:26
-      (snake_case property names) with 40:96 (the unit-suffix rule that fixes
-      which end of the name the bound word may occupy)                FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## JSON codec and schema baseline` (snake_case property names)
+      with 40 `## Unit and numeric policy` (the unit-suffix list that
+      fixes which end of the name the bound word may occupy)          FAILURE
 
   A26 No `null` appears anywhere under content/, at any depth, in any file -
       including content/localization/en.json, which the definition loader
       skips. THERE IS NO EXCEPTION SET, and that is deliberate: an
       exception set is a place for a null to hide. A null in a source
-      definition is never legal, because 40:90 materializes an explicit
-      default for every absent optional field ("Optional fields have
+      definition is never legal, because 40 `## Common definition
+      envelope` materializes an explicit default for every absent optional
+      field ("Optional fields have
       explicit defaults materialized into the canonical bundle so runtime
       never guesses") - so an absent field gets its default and a
       present-and-null field asks runtime to guess. Absence is spelled by
@@ -360,7 +397,8 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       Negative control: `"probe_null": null` injected at the top level of
       content/enemies/EN-01.json -> FAIL, "1 null(s) under content/ ...
       ['content/enemies/EN-01.json.probe_null']".
-      Mandate: docs/technical/40-content-data-and-validation.md:90  FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## Common definition envelope`                                 FAILURE
 
   A27 No sentence-internal abbreviation period appears anywhere under
       docs/**/*.md. This asserts a property of the CORPUS on behalf of a
@@ -451,8 +489,9 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       third.
       SIX, not the nine an earlier draft asserted: the damage-pressure
       block (32 values) and the resonant hit counts (5) are the COMPARAND
-      40:114 has the compiler compare its derivation against, not derived
-      duplicates, and the stat price curve (14) would have moved fourteen
+      40 `### Enemies and bosses` has the compiler compare its derivation
+      against, not derived duplicates, and the stat price curve (14) would
+      have moved fourteen
       checkable numbers into an unchecked prose string. All 51 restored.
       See pulled_from_this_pass in the expectation file.
       TWO LAYERS, and neither is a complete guard on its own:
@@ -524,9 +563,11 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       expected_derived_value_removals.json rather than duplicated here, so
       the assertion and the prediction cannot drift apart.
       Mandate: per family, the docs/ line recorded in that file -
-      40:114 (world speeds; the survivability report), 40:136 ("Validators
-      recompute total catalog costs"), 40:140 ("their totals"), 40:203
-      ("Recalculate ... price curves, total costs ... resource totals")
+      40 `### Enemies and bosses` (world speeds; the survivability
+      report), 40 `### PowerUps and option unlocks` ("Validators recompute
+      total catalog costs"), 40 `### Mining sites` ("their totals"),
+      40 `### Analytical` ("Recalculate ... price curves, total costs ...
+      resource totals")
                                                                     FAILURE
 
   A29 The numeric multiset the tree LOST equals the committed expectation,
@@ -554,10 +595,11 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       while retuning EN-01 hull 20 -> 25 in place passes. So a future commit
       that legitimately deletes a field will false-fail A29 and the fix is
       to re-derive the expectation from a newer sweep ref, deliberately.
-      Mandate: docs/technical/40-content-data-and-validation.md:100
-      ("Derived values include source operands and calculation version in
-      reports"), which is what makes a stored operand-plus-result pair the
-      compiler's to emit and not content's to author         FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## Unit and numeric policy` ("Derived values include source
+      operands and calculation version in reports"), which is what makes a
+      stored operand-plus-result pair the compiler's to emit and not
+      content's to author                                             FAILURE
 
   A30 docs/data/contact-damage-pressure.csv and content/ agree on every
       value they share - 98 comparisons, seven columns x 14 actors, exact
@@ -579,10 +621,11 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       Not settled by this rule: which mirror is authoritative. When that
       lands the loser becomes derived and A30 becomes redundant in the good
       way rather than wrong.
-      Mandate: docs/technical/40-content-data-and-validation.md:114
-      ("Validation derives world speeds/footprints and compares them with
-      the survivability report") and :203 ("Reports compare with accepted
-      gameplay tables")                                     FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `### Enemies and bosses` ("Validation derives world
+      speeds/footprints and compares them with the survivability report")
+      and `### Analytical` ("Reports compare with accepted gameplay
+      tables")                                                        FAILURE
   LABEL MAP: A28 (this branch, before the merge with master) -> A31. Two
      streams independently claimed A28 - this branch's six derived-value
      families and the definition (path, id) manifest immediately below, which
@@ -665,8 +708,9 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       failure naming `BOSS-01 -> BOSS-99`); swapping BOSS-01 and BOSS-02's ids
       -> FAIL (1 failure naming both), all three having been PASS/exit 0
       before this check existed.
-      Mandate: docs/technical/40-content-data-and-validation.md:80 (`id` is an
-      envelope field, "stable category-valid ID") with :185, where the
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## Common definition envelope` (`id` is an envelope field, "stable
+      category-valid ID") with `## Compilation pipeline`, where the
       canonical bundle "is ordered by category and stable ID" and hashes
       identically "regardless of source file enumeration order". That last
       clause is why the pair is the thing to record: the ID carries the
@@ -682,17 +726,19 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
            when the key is deleted from D.json and added to common-ore.json
            in the same edit; the named set does not.
         2. Each file's (id, canonical_letter) pair is one row of an EXPLICIT
-           EIGHT-ROW TABLE transcribed from 40:111 - RSC-01 -> A through
-           RSC-06 -> F, with RSC-07 and RSC-08 carrying NO letter. Until the
-           RSC- migration this row read "canonical_letter == that file's own
-           id", which held only while the two were the same string; the ids
-           are now RSC-01..RSC-08 and that comparison is gone. The table is
-           literal on purpose: 40:109 states "The ID and the letter are two
-           fields; neither is derived from the other", so computing the
-           letter from the id (chr(ord("A") + int(id[-2:]) - 1)) would
-           re-derive the document's mapping instead of checking it - it
-           would agree with itself for any tree and would keep passing if
-           40:111 were reassigned, which is the edit this row exists to
+           EIGHT-ROW TABLE transcribed from 40 `### Minted content-ID
+           grammars` ("Which number goes to which resource is fixed here")
+           - RSC-01 -> A through RSC-06 -> F, with RSC-07 and RSC-08
+           carrying NO letter. Until the RSC- migration this row read
+           "canonical_letter == that file's own id", which held only while
+           the two were the same string; the ids are now RSC-01..RSC-08 and
+           that comparison is gone. The table is literal on purpose: the
+           same section states "The ID and the letter are two fields;
+           neither is derived from the other", so computing the letter from
+           the id (chr(ord("A") + int(id[-2:]) - 1)) would re-derive the
+           document's mapping instead of checking it - it would agree with
+           itself for any tree and would keep passing if that mapping
+           paragraph were reassigned, which is the edit this row exists to
            catch. The two no-letter rows are asserted with the same weight,
            because arithmetic over "07" and "08" would invent "G" and "H".
            The eight comparisons are NAMED on the passing run, not counted:
@@ -717,8 +763,9 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
            nevertheless asserted here because A26 cannot see the defect this
            row exists for: `"canonical_letter": ""` and
            `"canonical_letter": "common-ore"` are both non-null, both pass
-           A26, and both assert the thing 40:106 does not say - that a
-           currency has a canonical letter. The omission is load-bearing
+           A26, and both assert the thing 40 `### Resources` does not
+           say - that a currency has a canonical letter. The omission is
+           load-bearing
            content, so it is asserted as omission rather than inferred from
            the absence of a null.
         5. content/resources/ holds exactly 8 definition files, because
@@ -732,7 +779,8 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       commit that added canonical_letter, and it is why rows 1 and 2 are
       NAMED rather than counted. The RSC- migration is the opposite case: it
       DOES move the multiset (each letter loses its id copy, the two slugs
-      lose theirs, eight RSC-0n arrive), and 40:113 states that delta, so
+      lose theirs, eight RSC-0n arrive), and 40 `### Minted content-ID
+      grammars` ("the migration drops the `id` copy") states that delta, so
       the migration has a multiset proof and this table has the placement
       proof. Neither substitutes for the other.
       Negative controls, each injected alone, run, and reverted:
@@ -744,17 +792,228 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       and row 2 FAILs too, because RSC-07 takes no letter in the table;
       a ninth resources/*.json -> row 5 FAILs on the count. A.json's value
       set to null FAILs rows 2 and 3 here in addition to A26.
-      Mandate: docs/technical/40-content-data-and-validation.md:106, blob
-      4cded84 ("Resource definition fields include ID, canonical letter,
-      localization keys ...") for the field itself, PLUS 40:111 for row 2's
-      mapping table and 40:86 for the grammar A12's resources selector
-      transcribes. Row 2 DOES read the eight id values - it is the only row
-      here that reads one - and an earlier version of this line said no row
-      did, which was true only before the RSC- migration. FAILURE
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `### Resources` ("Resource definition fields include ID, canonical
+      letter, localization keys ...") for the field itself, PLUS
+      `### Minted content-ID grammars` for row 2's mapping table ("Which
+      number goes to which resource is fixed here") and for the `RSC-`
+      grammar row A12's resources selector transcribes. Row 2 DOES read
+      the eight id values - it is the only row here that reads one - and an
+      earlier version of this line said no row did, which was true only
+      before the RSC- migration.                                    FAILURE
+
+  A33 THE KEY/ID BINDING. Every name_key and every summary_key equals
+      `<category>.<that definition's OWN id>.<role>`, with name_key taking
+      the role `name` and summary_key taking `summary`. This is a RELATION
+      BETWEEN TWO FIELDS OF ONE FILE, deliberately not a pattern over the
+      key string. Label A33 is the next free number in this table; A32 is
+      the highest that shipped.
+      THE GAP IT CLOSES, MEASURED. Nothing in this tree constrained the
+      SHAPE of a name_key. Renaming a resource's name_key to
+      `resource.RSC-99.name` and adding the matching string to
+      content/localization/en.json left this script at exit 0, even though
+      no resource carries RSC-99: A10/A11 assert only that every key
+      RESOLVES and that no string is ORPHANED, and any consistent pair of
+      nonsense satisfies both.
+      WHY NOT A REGEX, twice over. (a) A regex spelling the ids - say
+      `^resource[.]RSC-0[1-8][.]name$`
+      (written `[.]` rather than an escape only because this docstring is
+      not a raw string) - would contradict a documented choice
+      recorded at A12 above, where the resources selector is deliberately
+      the grammar row `^RSC-[0-9]{2}$` and deliberately NOT the narrower
+      `^RSC-0[1-8]$`; it would also redden on a legitimate ninth resource,
+      which A12 catches on the COUNT instead. (b) More fundamentally, a
+      regex over the key ALONE cannot see a key that is perfectly
+      well-formed and belongs to a DIFFERENT definition. That is the defect
+      this row exists for, and only the relation catches it.
+      SCOPE: REPO-WIDE, because that is where it was MEASURED to hold. All
+      165 name_key/summary_key values under content/, across all 11
+      category directories that carry one - bosses, branches, enemies,
+      mechs, mining-sites, powerups, relics, resources, unlocks, utilities,
+      weapons - already satisfy the relation, with ZERO deviations, so no
+      category is carved out. Had a category deviated it would have been
+      reported with path:line and actual-vs-expected and left alone, and
+      this row scoped to the categories where the relation holds: a
+      deviation may be deliberate, and asserting past the measurement would
+      be inventing a mandate.
+      THE CATEGORY TOKEN IS DERIVED FROM THE DATA, not from a hardcoded
+      {directory: prefix} map. Per directory it is the leading dotted
+      segment of that directory's own keys, required to be UNANIMOUS across
+      the directory and to be snake_case (the document states "The category
+      is `snake_case`"). A hand map would assert by fiat what the corpus
+      already states - `mining_site` for `mining-sites/`, `utility` for
+      `utilities/` - and no rule turns those directory names into those
+      tokens (`bosses` -> `boss` but `branches` -> `branch`, not
+      `branche`). What the derivation cannot see is disclosed in the note
+      under the table on every passing run.
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `### Source catalog format and key pattern`, which DOES state the
+      pattern: "The key pattern is `<category>.<stable_id>.<role>`", the
+      category is snake_case, the stable ID appears "**verbatim**, in its
+      own case", and the roles begin with `name` and `summary` "matching
+      the `name_key` and `summary_key` envelope fields". WHAT THE DOCUMENT
+      DOES NOT SPELL OUT, and this row does not pretend it does, is that
+      the `<stable_id>` inside a definition's OWN name_key must be THAT
+      definition's id - a swap between two files satisfies the stated
+      grammar letter for letter. That binding is this tool's reading of
+      `## Localization contract`'s "Keys are stable semantic paths tied to
+      content IDs", measured across all 165 keys in this corpus, and the
+      failure message says exactly that rather than claiming a mandate.
+      NEGATIVE CONTROL - IT HAS TO BE A SWAP. Injecting one nonexistent
+      key proves nothing about this row: it also reddens A11's resolve row,
+      and adding the matching string to make it resolve also moves A10's
+      total-strings count. Neither isolates A33. The isolating injection
+      gives content/resources/A.json the name_key `resource.RSC-02.name`
+      and B.json `resource.RSC-01.name`. Both keys exist, the string count
+      is unchanged, nothing is orphaned and everything resolves, so A10's
+      flatness, sorting and total rows, A11's two resolve rows and the
+      orphan row ALL STAY GREEN. A SWAP PRESERVES EVERY SET AND EVERY
+      COUNT, so a set-based or count-based check is STRUCTURALLY BLIND to
+      it - the same shape as a multiset proof being blind to reordering.
+      Injected, run and reverted: A33 is the only row that reddens, and it
+      reddens EXACTLY TWICE, once naming A.json and once naming B.json,
+      each printing actual vs expected. The ARITY is the evidence of
+      attribution: a control firing once would mean this check stops at the
+      first mismatch, and one firing an unbounded number of times would
+      mean it counts something other than files. Two corrupted files, two
+      failures.                                                    FAILURE
+
+  A34 THE resource_class COUPLING. Every `resource_class` value in this tree
+      is a member of the closed vocabulary
+      docs/technical/40-content-data-and-validation.md
+      `## Minted value vocabularies` grants, and the expected token set is
+      READ OUT OF THAT SECTION rather than copied into this file or
+      collected from the files being checked. Label A34 is the next free
+      number in this table, re-measured across all 35 `origin` heads before
+      it was taken rather than read off this branch: the highest label
+      anywhere is A33, on this branch, and no other head is sitting on it.
+      That re-measurement is the procedure the minted-assertion-label-table
+      open item in content/transcription-notes.md prescribes, and the reason
+      it exists is the A28 -> A31 collision it records.
+      WHY THIS ROW DID NOT EXIST UNTIL NOW. `resource_class` appeared ZERO
+      times in this file. content/transcription-notes.md note 8, under
+      `##### hyper-gold - content/resources/hyper-gold.json`, declined to
+      assert the token vocabulary BECAUSE it was ungranted on `master`, and
+      closed "when the grant lands on `master`, the coupling is the row to
+      add". The grant has landed - that section is present at
+      `origin/master` and absent at `b482304` - so the stated reason for the
+      omission expired, and a granted closed vocabulary was left with no
+      checker in the gate that actually runs. The full path is spelled out
+      wherever the citation could be read either way, because two documents
+      in this repository are short-named 40 and the other one is
+      docs/40-mining-and-extraction.md.
+      THE EXPECTATION IS DERIVED FROM THE GRANT, NEVER FROM THE DATA. The
+      tokens are parsed out of the `resource_class` row of the vocabulary
+      table that closes that section, whose own closing paragraph says the
+      table is "the machine-readable form of what the prose above states in
+      sentences" and that "the row is what a check reads". The two
+      alternatives are both worse and both look identical on a green run.
+      (a) Collecting the distinct values present under content/resources/
+      and asserting membership in that is a TAUTOLOGY - every value is a
+      member of the set of values - so it would agree with any tree,
+      including one where a ninth resource introduced a fourth class.
+      (b) A literal tuple of the three tokens here would be a second,
+      independent statement of a set the document already states, which is
+      the drift the A21 comment above records this repository being burned
+      by. So the grant is the INPUT, and an expectation that cannot be
+      located is a FAILURE rather than an empty set that passes: a renamed
+      heading, a deleted table or a removed row reddens row 1.
+      THREE ROWS, each blind to a different edit:
+        1. The granted set is LOCATABLE and non-empty. The heading is found
+           by TEXT, the table's Tokens column by its HEADER CELL, and the
+           vocabulary by its row label - never by line number, which is the
+           citation form 8101da0 re-pointed 114 of across this file.
+        2. Every `resource_class` VALUE is a member, reported per file with
+           actual-vs-granted. This is the coupling itself.
+        3. The CARRIER SET is NAMED, not counted: exactly the eight
+           definitions under content/resources/ carry the field, one apiece.
+           Row 2 passes VACUOUSLY over an empty carrier set - deleting the
+           field from all eight leaves "0 values, 0 outside the granted
+           set" - so the population claim is asserted separately, on the
+           pattern A32 row 1 sets for canonical_letter.
+      SCOPE IS REPO-WIDE AT ANY DEPTH, and that is what row 3 makes
+      assertable. The field is collected by walking every parsed definition
+      rather than by globbing content/resources/, so `resource_class`
+      authored into another category, or nested inside one, is a member of
+      row 3's carrier set and reddens it by name. Measured before it was
+      asserted: repo-wide, at any depth, the field occurs exactly eight
+      times, all at the top level of the eight content/resources/ files.
+      NOT ASSERTED HERE: WHICH resource takes WHICH class. That is a
+      placement claim, and that section states the partition - "resource
+      material role", which that section's own provenance cell reports as
+      transcribed from the game-vision document - `docs/00-game-vision.md`
+      `## Player fantasy`, where the three roles are named in one sentence; the
+      cell spells that provenance as a line coordinate and this is a re-pointing
+      of doc 40's claim, not a fresh citation of our own - without assigning
+      tokens to files, so a per-file mapping table here would invent a
+      mandate the document does not carry. The same section rules that
+      "`resource_class` does not determine persistence or run-locality" and
+      that "any validator or consumer that infers either from
+      `resource_class` has a bug"; this row reads neither field, which is
+      how it complies.
+      NEGATIVE CONTROL, injected, run and reverted:
+      content/resources/hyper-gold.json's `resource_class` set to
+      "cross-run progression resource" - the prose the token replaced, so
+      the injection is the exact regression the grant retired rather than a
+      random string. Observed: `RESULT: FAIL (1 failure(s), 9 warning(s))`
+      at exit 1, with row 2 reading
+      `7 in set, 1 outside: content/resources/hyper-gold.json.resource_class
+      = 'cross-run progression resource'`. Rows 1 and 3 stay GREEN - the
+      grant is still readable and the carrier set is unchanged - the warning
+      count is the same 9 a clean tree prints, and A34's failure is the ONLY
+      failure, so no other assertion in this file moves.
+      ARITY, MEASURED BOTH WAYS. One corrupted value gives exactly ONE
+      failure, naming the file. A SECOND simultaneous injection -
+      content/resources/A.json set to the British spelling
+      "specialised-material", a one-letter change no other row can see -
+      gives exactly TWO, one per corrupted value. That pair is what
+      attributes the defect: a control that fired once either way would mean
+      the row stops at the first mismatch, and one that fired an unbounded
+      number of times would mean it counts something other than values. Both
+      injections were reverted and `git status --porcelain -- content/` is
+      empty; neither is committed.
+      Mandate: docs/technical/40-content-data-and-validation.md
+      `## Minted value vocabularies` - the `resource_class` row of its
+      vocabulary table, under that section's own rule that a vocabulary is
+      grounded "only when the document it cites states the set"      FAILURE
+
+  A35 NO POSITIONAL CITATION OF A DESIGN DOCUMENT in the files this tool owns:
+      everything under src/MechaMiner.Tools/ContentImport/ plus content/README.md,
+      content/transcription-notes.md and content/quote-verification-audit.md. A
+      line number breaks silently when the cited document gains a line above the
+      cited material, which is why 311 of them were re-pointed and why TWO
+      documents had been frozen at a fixed line count by their authors to work
+      around it. Every spelling that has actually occurred is matched: a docs/
+      path with the extension present OR ABSENT, a bare filename, a bare short
+      document name, ranges in any punctuation, a bare coordinate inheriting its
+      document from an antecedent named earlier in the string or on the line
+      above, the word line/lines, and the L / #L permalink forms. Labels A35 and
+      A36 are the next free numbers, re-measured across all 35 `origin` heads
+      before being taken: the highest anywhere is A34, on this branch.
+      RECALL IS MEASURED against the pre-sweep tree, because for an ABSENCE rule
+      "matches nothing" is the PASS condition and cannot be the test - at
+      e24a52a it catches 308 of the 351 genuine citations the sweep removed. The
+      43 it misses are one undecidable shape, recorded in the section docstring
+      rather than chased. EXEMPTIONS ARE AN EXACT DECLARED SET, one entry per
+      bucket, each with its own reason and a PINNED COUNT: adding a citation to
+      an already-exempt bucket FAILS, which is the designed difference between
+      an exact set and a pattern. Regrowth already happened once in this file
+      after the release; the section docstring records it.       FAILURE
+  A36 AN AMBIGUOUS SHORT-NAME DOCUMENT REFERENCE MUST CARRY ITS FULL PATH. The
+      citation convention is the document then its heading in backticks, and that
+      is not automatically unambiguous: 12 short names each name more than one
+      document, `40` among them. The collision set is COMPUTED from a RECURSIVE
+      walk of docs/**/*.md on every run and PRINTED in full - a non-recursive
+      walk finds exactly one document numbered 40, computes an empty set, and
+      passes forever while the ambiguity sits one directory down, and a computed
+      rule that prints only a verdict is a hardcoded list one layer down. A
+      reference resolves when its heading exists in exactly one of the documents
+      sharing its short name.                                     FAILURE
 
 Not asserted here: no structural JSON Schema validation happens, because
-content/schemas/ (40:36) does not exist yet. Domain field names outside the
-envelope are therefore unvalidated and will need one reconciliation pass when
+content/schemas/ (40 `## Accepted content repository layout`) does not exist
+yet. Domain field names outside the envelope are therefore unvalidated and
+will need one reconciliation pass when
 the schemas land. See content/transcription-notes.md.
 """
 
@@ -766,6 +1025,7 @@ import re
 import subprocess
 import sys
 import textwrap
+from collections import namedtuple
 from fractions import Fraction
 from pathlib import Path
 
@@ -860,12 +1120,37 @@ EXPECTED_CONTENT_NON_JSON = (
     "content/transcription-notes.md",
 )
 
+# The number of strings in content/localization/en.json.
+#
+# This is a COMMITTED GOLDEN, not a derived value, and that is deliberate. The
+# A21 definition count above is derived from the A28 manifest because a
+# committed record of WHICH definitions exist already exists to derive from. No
+# such record exists for en.json: no document states how many release strings
+# the catalog holds, so there is nothing to derive from that is not simply a
+# second copy of this number. The house rule stated at the A21 comment above
+# applies directly - "two independent literals that a comment claims agree is a
+# defect this repository has already been burned by" - so nothing is derived
+# from a second literal here. One literal, reviewed when it changes.
+#
+# The row that reads this used to be
+#     rows.append(("en.json total strings", "", len(keys), "ok"))
+# with a literal empty expectation, a literal "ok", no comparison and no fail()
+# call - it could not fail under any input. That mattered beyond tidiness: the
+# neighbouring orphan and unresolved-reference rows only catch a key that is
+# unreferenced or a reference that is unresolved, so a key added to en.json
+# TOGETHER WITH a definition referencing it was invisible to the whole gate.
+# This constant is what makes that case a finding.
+#
+# Renaming the eight resource name keys to spell RSC-01..RSC-08 did not change
+# it: the keys were edited in place, so the count stayed 165.
+EXPECTED_LOCALIZATION_STRINGS = 165
+
 # --------------------------------------------------------------------------
 # A2/A4/A5 - envelope
 # --------------------------------------------------------------------------
 
 STATUS_VOCABULARY = ("development", "enabled", "disabled", "retired")
-# docs/technical/40-content-data-and-validation.md:83
+# docs/technical/40-content-data-and-validation.md `## Common definition envelope`
 
 # A5/A6/A19 - definitions with no stable ID.
 #
@@ -874,8 +1159,9 @@ STATUS_VOCABULARY = ("development", "enabled", "disabled", "retired")
 # schedule is WAV-01, the standard map generation contract is MGC-01). Two files
 # that used to have no ID are gone entirely:
 #   - mechs/shared-baseline.json held player baseline values, not mech data. A
-#     mech definition carries OVERRIDES (40:110), and content/ has no player or
-#     run category yet; the schema stream owns that with PLY-001 as consumer.
+#     mech definition carries OVERRIDES (40 `### Mechs`), and content/ has no
+#     player or run category yet; the schema stream owns that with PLY-001 as
+#     consumer.
 #   - maps/world-props.json held the destructible-rock and health-pack values,
 #     now fields of the MGC-01 definition. A18 asserts both prop families still
 #     appear inside MGC-01.
@@ -884,16 +1170,22 @@ STATUS_VOCABULARY = ("development", "enabled", "disabled", "retired")
 # unconditional failure (A5/A6). The integration owner minted the last five
 # IDs, so nothing in this tree is waiting on one:
 #   - the four prose-only mining-site classes
-#     (docs/40-mining-and-extraction.md:58-132) are SITE-01..SITE-04, in
-#     document order: standard ore seams, rich ore seams, Hyper Gold sites,
-#     specialized-material geodes;
+#     (docs/40-mining-and-extraction.md `## Resource payout profiles` - its
+#     `### Standard ore seams`, `### Rich ore seams`,
+#     `### Specialized-material geodes` and `### Hyper Gold sites`
+#     subsections, closed by `### Other resource profiles`: "Standard ore
+#     seams, rich ore seams, specialized-material geodes, and Hyper Gold
+#     sites are the accepted initial mining-point classes") are
+#     SITE-01..SITE-04, in document order: standard ore seams, rich ore
+#     seams, Hyper Gold sites, specialized-material geodes;
 #   - content/enemies/shared-elite-modifiers.json is ELT-01. It was previously
 #     ID-less on the reading that a constants block "has nothing to be
 #     referenced BY". That is superseded: the canonical bundle is ordered by
 #     category and stable ID, so a file with no ID has no slot in that
 #     ordering. It is now an ordinary addressable definition. It keeps NO
-#     name_key - name_key is conditional on a player-facing name (40:84, 40:90)
-#     and this block has none - so it stays in NAME_KEY_OMITTED below. Its
+#     name_key - name_key is conditional on a player-facing name
+#     (40 `## Common definition envelope`) and this block has none - so it
+#     stays in NAME_KEY_OMITTED below. Its
 #     FILENAME is deliberately unchanged: the bundle orders by the id field,
 #     not by the file stem. It is still not an EXPECTATIONS item; it is the
 #     enemies directory's one aggregate file, and its id does not match the
@@ -909,10 +1201,11 @@ STATUS_VOCABULARY = ("development", "enabled", "disabled", "retired")
 #     elite_eligible field.
 #   - resources/geode-resonance-effects.json was DELETED: each resonance effect
 #     moved onto the resource that owns it and the field radius onto the geode
-#     site class, per the mining-site schema (40:140).
+#     site class, per the mining-site schema (40 `### Mining sites`).
 #   - utilities/radar-unassigned-id.json is now utilities/UTL-R1.json. The
 #     radar is the thirteenth utility
-#     (docs/50-maps-resources-and-navigation.md:106) and the rulings pass gave
+#     (docs/50-maps-resources-and-navigation.md `## Resource radar`
+#     `### Decided behavior`) and the rulings pass gave
 #     it the stable ID UTL-R1 and the player-facing name "Resource radar", so
 #     it is an ordinary item in the utilities count and belongs in neither list.
 ID_NULL_EXPECTED: frozenset[str] = frozenset()
@@ -924,7 +1217,7 @@ ID_NULL_EXPECTED: frozenset[str] = frozenset()
 # contracts, and shared-elite-modifiers (now ELT-01) is a constants block, not
 # an entity the UI ever names. Putting their titles in the localization catalog
 # would imply a UI surface that does not exist, so the compiler supplies the
-# default instead (40:90).
+# default instead (40 `## Common definition envelope`).
 #
 # Minting ELT-01 did not change this set. Having a stable ID and having a
 # player-facing name are independent: the ID makes the block addressable and
@@ -954,8 +1247,9 @@ NAME_KEY_OMITTED = frozenset(
 # on one quantity: `{target_minimum, target_maximum, hard_maximum}`, not
 # `{target_min, target_max, hard_max}`.
 #
-# Where the name carries a unit suffix, the unit stays terminal (40:96) and the
-# bound word moves to the front: `maximum_control_resistance_percent`,
+# Where the name carries a unit suffix (40 `## Unit and numeric policy`), the
+# unit stays terminal and the bound word moves to the front:
+# `maximum_control_resistance_percent`,
 # `maximum_pursuit_duration_seconds`, `minimum_percent`.
 BOUND_ABBREVIATIONS = frozenset({"cap", "max", "min"})
 
@@ -972,7 +1266,8 @@ BOUND_ABBREVIATIONS = frozenset({"cap", "max", "min"})
 # escalated to the document owner, and declared here so the exception is visible
 # rather than absorbed.
 # Now EMPTY. The two W-BF-tethered-reaper members are resolved, not suppressed:
-# docs/71:346 reads "Its contact Damage is `200% + up to 200%` of current Damage,
+# docs/71 `### Tethered Reaper - Conversion - 2 Eidolon Coral` reads "Its
+# contact Damage is `200% + up to 200%` of current Damage,
 # scaling linearly with blade world speed ... and capped at 400%", so 200 bounds
 # the speed-bonus COMPONENT (the "up to 200%" addend) and 400 bounds the TOTAL
 # (200% base + 200% maximum bonus). They are two different bounds on two different
@@ -991,8 +1286,10 @@ FORBIDDEN_KEYS = (
     "_source",
     "notes",
     # The singular "note" was missing while "notes" was blocked, so three keys
-    # survived - two on MCH-06 restating a movement speed docs/72:55,57 already
-    # state, which is the same category deleted from all ten enemies.
+    # survived - two on MCH-06 restating a movement speed docs/72
+    # `## Movement and Speed Modifiers` already states ("Razorback with its
+    # +10% trait moves at 3.30M/s"; "Razorback with both moves at
+    # 4.05M/s"), which is the same category deleted from all ten enemies.
     "note",
     "refs",
     "lines",
@@ -1016,31 +1313,37 @@ FORBIDDEN_KEYS = (
 EXPECTATIONS = [
     dict(
         dir="resources",
-        # The selector is the MINTED GRAMMAR ROW, transcribed verbatim from
-        # 40:86 ("| `RSC-` | `^RSC-[0-9]{2}$` | resource | `content/resources/`
-        # | this section |"), and deliberately NOT the narrower ^RSC-0[1-8]$
-        # that this population would also satisfy. The point of copying the row
-        # is that the selector and the grammar cannot drift: a reader comparing
-        # the two sees one string. Admitting RSC-09..RSC-99 on PATTERN is not a
+        # The selector is the MINTED GRAMMAR ROW, transcribed verbatim from the
+        # `RSC-` row of the grammar table under 40 `### Minted content-ID
+        # grammars` ("| `RSC-` | `^RSC-[0-9]{2}$` | resource |
+        # `content/resources/` | this section |"), and deliberately NOT the
+        # narrower ^RSC-0[1-8]$ that this population would also satisfy. The
+        # point of copying the row is that the selector and the grammar cannot
+        # drift: a reader comparing the two sees one string. Admitting
+        # RSC-09..RSC-99 on PATTERN is not a
         # hole, because `items` below is pinned at 8 - a ninth resource fails on
         # the COUNT rather than sliding in on a pattern widened to fit it.
         selector=("id_regex", r"^RSC-[0-9]{2}$"),
         items=8,
         aggregates=None,
         label="resources (6 specialized + common ore + Hyper Gold)",
-        source="docs/technical/40-content-data-and-validation.md:86 grammar row + :111 mapping; "
-               "docs/61-specialized-resource-identities.md:20 + docs/60-resources-crafting-progression.md:18",
+        source="docs/technical/40-content-data-and-validation.md "
+               "`### Minted content-ID grammars` (the `RSC-` grammar row + the "
+               "\"Which number goes to which resource is fixed here\" mapping); "
+               "docs/61-specialized-resource-identities.md `## Accepted identity map` + "
+               "docs/60-resources-crafting-progression.md `## Progression layers`",
     ),
     dict(
         dir="mechs",
         selector=("id_regex", r"^MCH-\d{2}$"),
         items=6,
         aggregates=0,
-        # No shared-baseline file: a mech definition carries overrides (40:110)
-        # and the player baseline belongs to a player/run category the schema
+        # No shared-baseline file: a mech definition carries overrides
+        # (40 `### Mechs`) and the player baseline belongs to a player/run
+        # category the schema
         # stream owns (consumer PLY-001).
         label="mechs (no baseline aggregate)",
-        source="docs/36-initial-mech-catalog.md:45",
+        source="docs/36-initial-mech-catalog.md `## Catalog overview`",
     ),
     dict(
         dir="enemies",
@@ -1060,7 +1363,8 @@ EXPECTATIONS = [
         # listed in NAME_KEY_OMITTED for that. The former
         # elite-modifier-profile.json definition it replaced is deleted.
         label="ordinary enemies (+ 1 shared elite modifier constants block)",
-        source="docs/31-initial-alien-roster.md:37 + docs/31-initial-alien-roster.md:104",
+        source="docs/31-initial-alien-roster.md `## Ordinary roster overview` + "
+               "docs/31-initial-alien-roster.md `## Elite treatment`",
     ),
     dict(
         dir="bosses",
@@ -1068,7 +1372,7 @@ EXPECTATIONS = [
         items=4,
         aggregates=None,
         label="interval bosses",
-        source="docs/31-initial-alien-roster.md:121",
+        source="docs/31-initial-alien-roster.md `## Interval boss overview`",
     ),
     dict(
         dir="weapons",
@@ -1076,7 +1380,8 @@ EXPECTATIONS = [
         items=15,
         aggregates=1,
         label="base weapons (+ 1 shared stat price formula aggregate)",
-        source="docs/66-weapon-catalog-and-resource-graph.md:39 + docs/65-weapon-stat-and-branch-upgrades.md:44",
+        source="docs/66-weapon-catalog-and-resource-graph.md `## Accepted base catalog assignment` + "
+               "docs/65-weapon-stat-and-branch-upgrades.md `## Individual stat upgrades`",
     ),
     dict(
         dir="branches",
@@ -1084,7 +1389,7 @@ EXPECTATIONS = [
         items=45,
         aggregates=0,
         label="weapon branches (15 weapons x 3)",
-        source="docs/71-initial-weapon-numeric-catalog.md:130",
+        source="docs/71-initial-weapon-numeric-catalog.md `### Unbounded Bore - Amplification - 2 Asterite`",
     ),
     dict(
         dir="utilities",
@@ -1096,7 +1401,8 @@ EXPECTATIONS = [
         items=13,
         aggregates=0,
         label="utilities (12 material UTL-* + the resource radar UTL-R1)",
-        source="docs/68-utility-catalog.md:35 + docs/50-maps-resources-and-navigation.md:106",
+        source="docs/68-utility-catalog.md `## Catalog overview` + "
+               "docs/50-maps-resources-and-navigation.md `## Resource radar` `### Decided behavior`",
     ),
     dict(
         dir="relics",
@@ -1104,7 +1410,7 @@ EXPECTATIONS = [
         items=10,
         aggregates=0,
         label="relics",
-        source="docs/69-initial-relic-catalog.md:26",
+        source="docs/69-initial-relic-catalog.md `## Catalog overview`",
     ),
     dict(
         dir="powerups",
@@ -1112,7 +1418,7 @@ EXPECTATIONS = [
         items=13,
         aggregates=0,
         label="permanent PowerUps",
-        source="docs/62-permanent-powerup-catalog.md:35",
+        source="docs/62-permanent-powerup-catalog.md `## Catalog overview`",
     ),
     dict(
         dir="unlocks",
@@ -1120,7 +1426,7 @@ EXPECTATIONS = [
         items=6,
         aggregates=0,
         label="permanent option unlocks",
-        source="docs/63-permanent-option-unlock-catalog.md:48",
+        source="docs/63-permanent-option-unlock-catalog.md `## Catalog overview`",
     ),
     dict(
         dir="mining-sites",
@@ -1128,7 +1434,7 @@ EXPECTATIONS = [
         items=4,
         aggregates=None,
         label="mining site classes (standard seam, rich seam, geode, Hyper Gold site)",
-        source="docs/40-mining-and-extraction.md:58",
+        source="docs/40-mining-and-extraction.md `## Resource payout profiles`",
     ),
     dict(
         dir="encounters",
@@ -1136,7 +1442,7 @@ EXPECTATIONS = [
         items=1,
         aggregates=None,
         label="standard encounter schedule (one cohesive aggregate)",
-        source="docs/32-standard-wave-and-beacon-schedule.md:54",
+        source="docs/32-standard-wave-and-beacon-schedule.md `## Complete 35-minute schedule`",
     ),
     dict(
         dir="maps",
@@ -1146,7 +1452,8 @@ EXPECTATIONS = [
         # One MGC-01 definition; the destructible-rock and health-pack values
         # are fields of it, not a separate world-props file.
         label="standard map generation contract (world props folded in as fields)",
-        source="docs/51-standard-map-generation-contract.md:1 + docs/72-player-survivability-and-damage-baseline.md:180",
+        source="docs/51-standard-map-generation-contract.md (whole contract) + "
+               "docs/72-player-survivability-and-damage-baseline.md `### Health pack`",
     ),
 ]
 
@@ -1164,7 +1471,7 @@ PROBES = [
         expected=35,
         kind="array_at_path",
         pattern=r"\.minute_rows$",
-        source="docs/32-standard-wave-and-beacon-schedule.md:54",
+        source="docs/32-standard-wave-and-beacon-schedule.md `## Complete 35-minute schedule`",
     ),
     dict(
         dir="encounters",
@@ -1172,7 +1479,7 @@ PROBES = [
         expected=4,
         kind="array_at_path",
         pattern=r"beacon[^.]*\.responses$",
-        source="docs/32-standard-wave-and-beacon-schedule.md:100",
+        source="docs/32-standard-wave-and-beacon-schedule.md `## Hyper Gold threat-beacon response`",
     ),
     dict(
         dir="encounters",
@@ -1180,7 +1487,7 @@ PROBES = [
         expected=7,
         kind="array_at_path",
         pattern=r"^\$\.(?:spawn_)?formations$",
-        source="docs/32-standard-wave-and-beacon-schedule.md:27",
+        source="docs/32-standard-wave-and-beacon-schedule.md `## Formation grammar`",
     ),
     dict(
         dir="maps",
@@ -1188,7 +1495,7 @@ PROBES = [
         expected=1,
         kind="files_matching",
         pattern=r"contract",
-        source="docs/51-standard-map-generation-contract.md:1",
+        source="docs/51-standard-map-generation-contract.md (whole contract)",
     ),
 ]
 
@@ -1214,33 +1521,34 @@ WORLD_PROP_VALUES = (
         re.compile(r"(?i)destructible_rock(?:_rules)?"),
         re.compile(r"(?i)^hull$"),
         100,
-        "docs/72-player-survivability-and-damage-baseline.md:194",
+        "docs/72-player-survivability-and-damage-baseline.md `### Destructible rock`",
     ),
     (
         "destructible rock damage footprint diameter (M)",
         re.compile(r"(?i)destructible_rock(?:_rules)?"),
         re.compile(r"(?i)damage_footprint_diameter"),
         0.80,
-        "docs/72-player-survivability-and-damage-baseline.md:196",
+        "docs/72-player-survivability-and-damage-baseline.md `### Destructible rock`",
     ),
     (
         "health pack repair (Hull)",
         re.compile(r"(?i)health_pack"),
         re.compile(r"(?i)repair.*hull|hull.*repair"),
         25,
-        "docs/72-player-survivability-and-damage-baseline.md:182",
+        "docs/72-player-survivability-and-damage-baseline.md `### Health pack`",
     ),
     (
         "health pack pickup radius (M)",
         re.compile(r"(?i)health_pack"),
         re.compile(r"(?i)pickup_radius"),
         0.25,
-        "docs/72-player-survivability-and-damage-baseline.md:185",
+        "docs/72-player-survivability-and-damage-baseline.md `### Health pack`",
     ),
     # ADDED as a coverage gap, not as a new policy. The rock population cap was
     # transcribed and never asserted, and the reason it was missed generalises:
-    # A VALUE WHOSE NEIGHBOURS ARE ASSERTED READS AS COVERED. rock Hull (72:194)
-    # and the footprint diameter (72:196) are both checked, and they bracket this
+    # A VALUE WHOSE NEIGHBOURS ARE ASSERTED READS AS COVERED. rock Hull and
+    # the footprint diameter (both docs/72 `### Destructible rock`) are
+    # checked, and they bracket this
     # value in the same document section, which is exactly the situation in which
     # nobody looks. That is a distinct failure shape from a gate that cannot fail
     # - it is a gap that looks filled.
@@ -1249,14 +1557,14 @@ WORLD_PROP_VALUES = (
         re.compile(r"(?i)destructible_rock(?:_rules)?"),
         re.compile(r"(?i)^active_maximum$"),
         16,
-        "docs/51-standard-map-generation-contract.md:146",
+        "docs/51-standard-map-generation-contract.md `## Destructible rocks`",
     ),
     (
         "destructible rock initial count",
         re.compile(r"(?i)destructible_rock(?:_rules)?"),
         re.compile(r"(?i)^initial_count$"),
         16,
-        "docs/51-standard-map-generation-contract.md:146",
+        "docs/51-standard-map-generation-contract.md `## Destructible rocks`",
     ),
 )
 
@@ -1297,15 +1605,15 @@ def check_world_prop_values(docs: dict[Path, object]) -> list[tuple]:
 # A14 - doc-stated grand totals the JSON must reproduce
 # --------------------------------------------------------------------------
 
-POWERUP_TOTAL_HYPER_GOLD = 9450  # docs/62-permanent-powerup-catalog.md:35
-UNLOCK_TOTAL_HYPER_GOLD = 2150  # docs/63-permanent-option-unlock-catalog.md:48
+POWERUP_TOTAL_HYPER_GOLD = 9450  # docs/62-permanent-powerup-catalog.md `## Catalog overview`
+UNLOCK_TOTAL_HYPER_GOLD = 2150  # docs/63-permanent-option-unlock-catalog.md `## Catalog overview`
 
 # --------------------------------------------------------------------------
 # A16 / A17 - reconciliation heuristics
 # --------------------------------------------------------------------------
 
 # A16 - the NUMERIC percentage-point policy of
-# docs/technical/40-content-data-and-validation.md:95:
+# docs/technical/40-content-data-and-validation.md `## Unit and numeric policy`:
 #
 #   "Percentages in authoring use human-readable percentage points only when the
 #    property name says `_percent`; the compiler writes normalized factors into
@@ -1320,8 +1628,8 @@ UNLOCK_TOTAL_HYPER_GOLD = 2150  # docs/63-permanent-option-unlock-catalog.md:48
 # them needs content/schemas/, so all four are failures rather than warnings.
 #
 # A NAME "SAYS _percent" WHEREVER THE TOKEN APPEARS, not only at the end.
-# 40:95 constrains what the name says; 40:96's terminal-unit rule is about unit
-# suffixes. 52 names in this tree put the token mid-name
+# 40 `## Unit and numeric policy` constrains what the name SAYS; its unit-suffix
+# bullet is about unit tokens. 52 names in this tree put the token mid-name
 # (percent_of_mech_base_speed, shockwave_damage_percent_of_current_damage, ...)
 # and every one of them is correct, so a rule demanding a TERMINAL _percent would
 # have forced 52 renames no document asks for.
@@ -1330,12 +1638,14 @@ PERCENT_TOKEN_KEY = re.compile(r"(?i)(?:^|_)percent(?:age)?(?:_points?)?(?:$|_)"
 # percent-ness of the nearest ancestor key that says percent, so {"percent": 20}
 # and {"minimum": 40, "maximum": 80} are checked as percentage points.
 PERCENT_CONTAINER_KEY = frozenset({"minimum", "maximum", "percent", "value", "points"})
-# A16 rule 4 - the OTHER half of 40:95, which the previous rewrite claimed to fix
+# A16 rule 4 - the OTHER half of the percentage rule under
+# 40 `## Unit and numeric policy`, which the previous rewrite claimed to fix
 # and did not.
 #
-# 40:95 reads "Percentages in authoring use human-readable percentage points ONLY
-# WHEN the property name says `_percent`". Rules 1-3 all begin by asking whether
-# the name says percent, so every one of them is gated behind that question and a
+# 40 `## Unit and numeric policy` reads "Percentages in authoring use
+# human-readable percentage points ONLY WHEN the property name says `_percent`".
+# Rules 1-3 all begin by asking whether the name says percent, so every one of
+# them is gated behind that question and a
 # bare number under a name that does NOT say percent was never examined at all.
 # `sneaky_bonus: 25` and `damage_bonus: 150` both passed with zero failures.
 #
@@ -1343,9 +1653,10 @@ PERCENT_CONTAINER_KEY = frozenset({"minimum", "maximum", "percent", "value", "po
 # decidable from the number. But a name whose head noun is a RELATIVE magnitude -
 # a bonus, a penalty, an increase, a reduction - names a quantity that is
 # necessarily proportional to something else, so it is either percentage points or
-# a multiplicative scale, and both 40:95 (percentage points say `_percent`) and
-# 40:94 (ambiguous numeric names carry a unit suffix) require the name to say
-# which. A relative-magnitude name carrying neither is a number whose unit the
+# a multiplicative scale, and two bullets of 40 `## Unit and numeric policy`
+# (percentage points say `_percent`; ambiguous numeric names carry a unit suffix)
+# require the name to say which. A relative-magnitude name carrying neither is a
+# number whose unit the
 # reader cannot recover: 25 could be 25 percentage points or a 25x scale.
 #
 # A name that already declares its quantity kind ANYWHERE in the name is excluded,
@@ -1370,15 +1681,16 @@ RELATIVE_MAGNITUDE_TOKEN = re.compile(
     r"|reduction|boost|malus|discount|surcharge|uplift)(?:$|_)"
 )
 # Tokens that declare what kind of quantity the number is, so the name is not
-# ambiguous and 40:94 is satisfied. Matched as whole underscore-delimited segments
-# anywhere in the name.
+# ambiguous and 40 `## Unit and numeric policy` is satisfied. Matched as whole
+# underscore-delimited segments anywhere in the name.
 UNIT_OR_KIND_TOKEN = re.compile(
     r"(?i)(?:^|_)(?:m|m_per_s|meters?|seconds?|milliseconds?|per_second|hull|armor"
     r"|degrees|fraction|count|multiplier|scale|ore|hyper_gold|units?|ranks?|hits?"
     r"|diameters?|tier|weight)(?:$|_)"
 )
 # The compiler-owned normalized factor. Authoring it puts a second writer on a
-# derived field, which is the second half of 40:95.
+# derived field, which is the second half of that percentage rule under
+# 40 `## Unit and numeric policy`.
 NORMALIZED_FACTOR_TOKEN = re.compile(
     r"(?i)(?:^|_)(?:factor|multiplier|fraction|normalized|normalised)(?:$|_)"
 )
@@ -1724,7 +2036,7 @@ def check_scope_prefixes(docs: dict[Path, object]) -> list[tuple]:
                     f"not resolve in this definition ({reason}). A citation must annotate a field "
                     f"that exists: re-point it at the surviving field it documents, or drop the "
                     f"prefix and keep it file-level - never delete a citation that is the only "
-                    f"support for a value still present (40:87, 40:90)"
+                    f"support for a value still present (40 `## Common definition envelope`)"
                 )
     return [
         (
@@ -1771,8 +2083,9 @@ def check_bound_spelling(docs: dict[Path, object]) -> list[tuple]:
     if offenders:
         fail(
             f"{len(offenders)} property name(s) abbreviate a bound as 'cap', 'max' or 'min'; a cap "
-            f"is a maximum and the word is spelled out, with the unit suffix kept terminal (40:26, "
-            f"40:96): {offenders[:15]}"
+            f"is a maximum and the word is spelled out, with the unit suffix kept terminal "
+            f"(40 `## JSON codec and schema baseline`, 40 `## Unit and numeric "
+            f"policy`): {offenders[:15]}"
         )
     if resolved:
         warn(
@@ -1808,43 +2121,44 @@ def check_definitions(docs: dict[Path, object], doc_index: dict[str, dict]) -> d
             stats["no_id"].add(name)
             state = "no top-level 'id'" if "id" not in doc else "top-level 'id' is null"
             if name in ID_NULL_EXPECTED:
-                warn(f"{name}: {state}; declared in ID_NULL_EXPECTED (40:80)")
+                warn(f"{name}: {state}; declared in ID_NULL_EXPECTED (40 `## Common definition envelope`)")
             else:
                 fail(
                     f"{name}: {state}; every definition must carry a stable category-valid ID "
-                    f"(40:80). Add the minted ID, or list the file in ID_NULL_EXPECTED with the "
+                    f"(40 `## Common definition envelope`). Add the minted ID, or list the file "
+                    f"in ID_NULL_EXPECTED with the "
                     f"reason no document assigns one"
                 )
         elif not isinstance(doc["id"], str) or not doc["id"].strip():
-            fail(f"{name}: 'id' is {doc['id']!r}, expected a non-empty string (40:80)")
+            fail(f"{name}: 'id' is {doc['id']!r}, expected a non-empty string (40 `## Common definition envelope`)")
 
         # ---- A2 envelope ----
         for field in ("schema_version", "content_version"):
             value = doc.get(field)
             if field not in doc:
-                fail(f"{name}: missing required '{field}' (40:81-82)")
+                fail(f"{name}: missing required '{field}' (40 `## Common definition envelope`)")
             elif isinstance(value, bool) or not isinstance(value, int):
-                fail(f"{name}: '{field}' is {value!r}, expected an integer (40:81-82)")
+                fail(f"{name}: '{field}' is {value!r}, expected an integer (40 `## Common definition envelope`)")
 
         if "status" not in doc:
-            fail(f"{name}: missing required 'status' (40:83)")
+            fail(f"{name}: missing required 'status' (40 `## Common definition envelope`)")
         elif doc["status"] not in STATUS_VOCABULARY:
             fail(
                 f"{name}: status {doc['status']!r} is not one of "
-                f"{list(STATUS_VOCABULARY)} (40:83)"
+                f"{list(STATUS_VOCABULARY)} (40 `## Common definition envelope`)"
             )
 
         if "tags" not in doc:
-            fail(f"{name}: missing required 'tags' array (40:86)")
+            fail(f"{name}: missing required 'tags' array (40 `## Common definition envelope`)")
         elif not isinstance(doc["tags"], list):
-            fail(f"{name}: 'tags' is {type(doc['tags']).__name__}, expected an array (40:86)")
+            fail(f"{name}: 'tags' is {type(doc['tags']).__name__}, expected an array (40 `## Common definition envelope`)")
 
         if "source_refs" not in doc:
-            fail(f"{name}: missing required 'source_refs' array (40:87)")
+            fail(f"{name}: missing required 'source_refs' array (40 `## Common definition envelope`)")
         elif not isinstance(doc["source_refs"], list) or not doc["source_refs"]:
-            fail(f"{name}: 'source_refs' must be a non-empty array (40:87)")
+            fail(f"{name}: 'source_refs' must be a non-empty array (40 `## Common definition envelope`)")
         elif not all(isinstance(r, str) and r.strip() for r in doc["source_refs"]):
-            fail(f"{name}: every 'source_refs' element must be a non-empty string (40:87)")
+            fail(f"{name}: every 'source_refs' element must be a non-empty string (40 `## Common definition envelope`)")
         else:
             # ---- A9 resolution ----
             for ref in doc["source_refs"]:
@@ -1854,13 +2168,13 @@ def check_definitions(docs: dict[Path, object], doc_index: dict[str, dict]) -> d
                 if entry is None:
                     fail(
                         f"{name}: source_refs {ref!r} names doc_id {doc_id!r}, which no file "
-                        f"under docs/ declares in its front matter (40:87)"
+                        f"under docs/ declares in its front matter (40 `## Common definition envelope`)"
                     )
                     continue
                 if anchor and anchor not in entry["anchors"]:
                     fail(
                         f"{name}: source_refs {ref!r} anchor '#{anchor}' is not a heading in "
-                        f"{rel(entry['path'])} (40:87)"
+                        f"{rel(entry['path'])} (40 `## Common definition envelope`)"
                     )
 
         # ---- A3 name_key is conditional on the definition being player-facing ----
@@ -1868,12 +2182,12 @@ def check_definitions(docs: dict[Path, object], doc_index: dict[str, dict]) -> d
             stats["no_name_key"].add(name)
             warn(
                 f"{name}: no 'name_key'; accepted only for a definition with no player-facing "
-                f"name, with the compiler supplying the default (40:84, 40:90)"
+                f"name, with the compiler supplying the default (40 `## Common definition envelope`)"
             )
         elif not isinstance(doc["name_key"], str) or not doc["name_key"].strip():
             fail(
                 f"{name}: 'name_key' is {doc['name_key']!r}; when present it must be a non-empty "
-                f"string (40:84)"
+                f"string (40 `## Common definition envelope`)"
             )
 
         # ---- A3 summary_key is conditional ----
@@ -1882,14 +2196,16 @@ def check_definitions(docs: dict[Path, object], doc_index: dict[str, dict]) -> d
         ):
             fail(
                 f"{name}: 'summary_key' is {doc['summary_key']!r}; when present it must be a "
-                f"non-empty string (40:85)"
+                f"non-empty string (40 `## Common definition envelope`)"
             )
 
         # ---- A4 presentation_id must be absent ----
         if "presentation_id" in doc:
             fail(
                 f"{name}: 'presentation_id' is present ({doc['presentation_id']!r}); it must be "
-                f"omitted entirely until content/presentation/ exists (40:52, 40:88)"
+                f"omitted entirely until content/presentation/ exists "
+                f"(40 `## Accepted content repository layout`, "
+                f"40 `## Common definition envelope`)"
             )
 
         # ---- A7/A8/A11/A16/A17 - one traversal ----
@@ -1897,13 +2213,16 @@ def check_definitions(docs: dict[Path, object], doc_index: dict[str, dict]) -> d
             if key is None:
                 continue
             if re.search(r"[A-Z]", key):
-                fail(f"{name}{jpath[1:]}: property name '{key}' contains uppercase (40:26)")
+                fail(f"{name}{jpath[1:]}: property name '{key}' contains uppercase "
+                     f"(40 `## JSON codec and schema baseline`)")
             if key.startswith("_"):
-                fail(f"{name}{jpath[1:]}: property name '{key}' starts with '_' (40:26, 40:90)")
+                fail(f"{name}{jpath[1:]}: property name '{key}' starts with '_' "
+                     f"(40 `## JSON codec and schema baseline`, "
+                     f"40 `## Common definition envelope`)")
             if key in FORBIDDEN_KEYS:
                 fail(
                     f"{name}{jpath[1:]}: stale extraction metadata key '{key}'; provenance "
-                    f"belongs in source_refs (40:87, 40:90)"
+                    f"belongs in source_refs (40 `## Common definition envelope`)"
                 )
             if key.endswith("_key") and isinstance(value, str) and value.strip():
                 stats["key_refs"].add(value)
@@ -1975,7 +2294,8 @@ def report_reconciliation(stats: dict) -> None:
     numbers and key names and reports failures, not a warning list."""
     for key, hits in sorted(stats["formula_hits"].items()):
         warn(
-            f"40:99 formula held as a string rather than a registered formula kind plus "
+            f"40 `## Unit and numeric policy` formula held as a string rather than a registered "
+            f"formula kind plus "
             f"parameters: '{key}' ({len(hits)} occurrence(s)) e.g. {', '.join(hits[:2])}"
         )
 
@@ -1990,7 +2310,7 @@ def check_localization(stats: dict) -> list[tuple]:
     if not LOCALIZATION.is_file():
         fail(
             f"{rel(LOCALIZATION)} does not exist; every name_key/summary_key is therefore "
-            f"unresolvable and missing release strings are build errors (40:216)"
+            f"unresolvable and missing release strings are build errors (40 `## Localization contract`)"
         )
         rows.append(("en.json present", "yes", "no", "FAIL"))
         return rows
@@ -2020,7 +2340,7 @@ def check_localization(stats: dict) -> list[tuple]:
     if nested:
         fail(
             f"{rel(LOCALIZATION)}: {len(nested)} key(s) hold non-string values; the catalog is "
-            f"flat key -> string (40:211): {nested[:10]}"
+            f"flat key -> string (40 `### Source catalog format and key pattern`): {nested[:10]}"
         )
 
     unsorted_at = [
@@ -2032,7 +2352,7 @@ def check_localization(stats: dict) -> list[tuple]:
     if unsorted_at:
         fail(
             f"{rel(LOCALIZATION)}: not lexically sorted, {len(unsorted_at)} inversion(s), "
-            f"first at {unsorted_at[0][0]!r} before {unsorted_at[0][1]!r} (40:28)"
+            f"first at {unsorted_at[0][0]!r} before {unsorted_at[0][1]!r} (40 `### Source catalog format and key pattern`)"
         )
 
     present = set(keys)
@@ -2051,7 +2371,7 @@ def check_localization(stats: dict) -> list[tuple]:
     if envelope_missing:
         fail(
             f"{len(envelope_missing)} name_key/summary_key value(s) have no string in "
-            f"{rel(LOCALIZATION)} (40:216): {envelope_missing[:15]}"
+            f"{rel(LOCALIZATION)} (40 `## Localization contract`): {envelope_missing[:15]}"
         )
 
     rows.append(
@@ -2065,7 +2385,7 @@ def check_localization(stats: dict) -> list[tuple]:
     if other_missing:
         fail(
             f"{len(other_missing)} other localization key reference(s) have no string in "
-            f"{rel(LOCALIZATION)} (40:216): {other_missing[:15]}"
+            f"{rel(LOCALIZATION)} (40 `## Localization contract`): {other_missing[:15]}"
         )
 
     rows.append(
@@ -2074,11 +2394,498 @@ def check_localization(stats: dict) -> list[tuple]:
     if orphans:
         fail(
             f"{len(orphans)} key(s) in {rel(LOCALIZATION)} are referenced by no definition "
-            f"(40:212 keys are tied to content IDs and UI roles): {orphans[:15]}"
+            f"(40 `## Localization contract`: keys are tied to content IDs and UI roles): {orphans[:15]}"
         )
 
-    rows.append(("en.json total strings", "", len(keys), "ok"))
+    total_ok = len(keys) == EXPECTED_LOCALIZATION_STRINGS
+    rows.append(
+        (
+            "en.json total strings",
+            EXPECTED_LOCALIZATION_STRINGS,
+            len(keys),
+            "ok" if total_ok else "FAIL",
+        )
+    )
+    if not total_ok:
+        fail(
+            f"{rel(LOCALIZATION)} holds {len(keys)} string(s), expected "
+            f"{EXPECTED_LOCALIZATION_STRINGS}. This row used to print the count beside a blank "
+            f"expectation and a hardcoded 'ok', so it could never fail - it reported the catalog's "
+            f"size and tolerated any size in the same breath. Adding or removing a release string "
+            f"is a deliberate act and updating the constant is the record of it."
+        )
     return rows
+
+
+# --------------------------------------------------------------------------
+# A33 - the key/id binding, a RELATION between two fields of one file.
+#
+# WHAT THIS CLOSES, MEASURED RATHER THAN SUSPECTED. Nothing in this tree
+# constrained the SHAPE of a name_key. Renaming a resource's name_key to
+# `resource.RSC-99.name` and adding the matching string to
+# content/localization/en.json left this script at exit 0, even though no
+# resource carries RSC-99. check_localization() above asserts that every key
+# RESOLVES and that no string is ORPHANED - and any consistent pair of nonsense
+# satisfies both.
+#
+# WHY THIS IS NOT A REGEX. A pattern over the key alone, however tight, cannot
+# distinguish a key that is well-formed and belongs to THIS definition from one
+# that is well-formed and belongs to a DIFFERENT one. Pinning the ids instead
+# (`^resource[.]RSC-0[1-8][.]name$`) would also contradict the EXPECTATIONS
+# comment above, which chose the grammar row `^RSC-[0-9]{2}$` over the narrower
+# `^RSC-0[1-8]$` on purpose and catches a ninth resource on the COUNT.
+#
+# THE CATEGORY TOKEN IS DERIVED, NOT MAPPED. Per directory it is the leading
+# dotted segment of that directory's own keys, required to be unanimous and
+# snake_case (40 `### Source catalog format and key pattern`: "The category is
+# `snake_case`"). A hand-written {directory: prefix} map would assert by fiat
+# what the corpus already states, and no rule turns `mining-sites` into
+# `mining_site` and `branches` into `branch` without being that map.
+# WHAT THE DERIVATION CANNOT SEE, disclosed under the table on every passing
+# run rather than only here: a directory whose keys were ALL renamed to one new
+# consistent prefix would redefine its own category and bind against it. That
+# edit is not invisible to the script as a whole - it orphans every old string
+# and A11 reddens - but it is invisible to THIS row, and a limitation stated
+# only in a docstring is not disclosed to the person reading a green run.
+# --------------------------------------------------------------------------
+
+# The two envelope key fields and the role each takes, from 40 `### Source
+# catalog format and key pattern`: "The role comes from a small set, beginning
+# with `name` and `summary`, matching the `name_key` and `summary_key` envelope
+# fields." Other *_key references are OUT OF SCOPE here - they name someone
+# else's definition by design, so the relation to the CARRIER's own id does not
+# hold for them and asserting it would be wrong, not strict.
+KEY_FIELD_ROLES = (("name_key", "name"), ("summary_key", "summary"))
+
+# "The category is `snake_case`" - the one property of the derived token the
+# document states outright, so it is checked rather than assumed.
+CATEGORY_TOKEN = re.compile(r"^[a-z][a-z0-9_]*$")
+
+# Said once, in the failure message and in the note, so the two cannot drift:
+# the document gives the GRAMMAR, this tool supplies the BINDING to the
+# carrier's own id.
+A33_MANDATE = (
+    "40 `### Source catalog format and key pattern` states the pattern "
+    "`<category>.<stable_id>.<role>`, with the stable ID verbatim and `name`/`summary` as the "
+    "roles matching the name_key/summary_key envelope fields. That the <stable_id> is THIS "
+    "definition's OWN id is NOT a sentence the document writes - a swap between two files "
+    "satisfies its grammar exactly - it is this tool's reading of 40 `## Localization contract` "
+    "(\"Keys are stable semantic paths tied to content IDs\"), measured across every such key "
+    "under content/"
+)
+
+
+def check_key_id_binding(docs: dict[Path, object]) -> tuple[list[tuple], tuple[str, ...]]:
+    """A33 - name_key/summary_key == <category>.<that file's own id>.<role>."""
+    by_dir: dict[Path, list[tuple[Path, str, str, str, object]]] = {}
+    for path, doc in sorted(docs.items()):
+        if not isinstance(doc, dict):
+            continue
+        own_id = doc.get("id")
+        for field, role in KEY_FIELD_ROLES:
+            value = doc.get(field)
+            if not isinstance(value, str) or not value.strip():
+                continue
+            by_dir.setdefault(path.parent, []).append((path, field, role, value, own_id))
+
+    rows: list[tuple] = []
+    examined = 0
+    bound = 0
+    for directory in sorted(by_dir):
+        entries = by_dir[directory]
+        examined += len(entries)
+        label = f"{rel(directory)}/"
+        segments = sorted({value.split(".", 1)[0] for _, _, _, value, _ in entries})
+
+        # The category is derived from this directory's own keys. Two ways that
+        # derivation can fail, both reported instead of being papered over with
+        # a majority vote - a vote would let one directory carry two categories
+        # and still bind most of its keys.
+        if len(segments) != 1:
+            fail(
+                f"{label}: its {len(entries)} name_key/summary_key value(s) do not agree on a "
+                f"leading `<category>` segment ({', '.join(segments)}), so no category can be "
+                f"derived for this directory and the key/id binding cannot be checked here. "
+                f"{A33_MANDATE}"
+            )
+            rows.append(
+                (
+                    f"{label} category derived from its own keys",
+                    "1 leading segment",
+                    f"{len(segments)}: {', '.join(segments)}",
+                    "FAIL",
+                )
+            )
+            continue
+        category = segments[0]
+        if not CATEGORY_TOKEN.match(category):
+            fail(
+                f"{label}: the `<category>` segment its keys agree on is {category!r}, which is "
+                f"not snake_case; 40 `### Source catalog format and key pattern` states the "
+                f"category is `snake_case`"
+            )
+            rows.append(
+                (
+                    f"{label} category derived from its own keys",
+                    "snake_case token",
+                    f"{category!r}",
+                    "FAIL",
+                )
+            )
+            continue
+
+        deviating: list[str] = []
+        for path, field, role, value, own_id in entries:
+            if not isinstance(own_id, str) or not own_id.strip():
+                # A5/A6 owns a missing or non-string id and has already failed on
+                # it. Recording it here as not-comparable rather than failing
+                # again keeps one defect to one failure, and keeps the row from
+                # reporting a binding it could not evaluate.
+                deviating.append(f"{rel(path)}: {field}={value!r} but id is {own_id!r} (A5 owns the id)")
+                continue
+            expected = f"{category}.{own_id}.{role}"
+            if value == expected:
+                bound += 1
+                continue
+            deviating.append(f"{rel(path)}: {field} actual={value!r} expected={expected!r}")
+            fail(
+                f"{rel(path)}: A33 - {field} is {value!r}, but this definition's own id is "
+                f"{own_id!r}, so its key must be {expected!r}. A10/A11 cannot see this: the key "
+                f"resolves in {rel(LOCALIZATION)} and orphans nothing, because it is a "
+                f"well-formed key belonging to a DIFFERENT definition. {A33_MANDATE}"
+            )
+        rows.append(
+            (
+                f"{label} {len(entries)} key(s) == {category}.<own id>.<role>",
+                f"{len(entries)} bind",
+                f"{len(entries) - len(deviating)} bind"
+                + (f", {len(deviating)} do not: " + "; ".join(deviating[:5]) if deviating else ""),
+                "ok" if not deviating else "FAIL",
+            )
+        )
+
+    rows.append(
+        (
+            "every name_key/summary_key under content/ binds to its own id",
+            f"{examined} bind",
+            f"{bound} bind",
+            "ok" if bound == examined else "FAIL",
+        )
+    )
+    notes = (
+        "SCOPE IS THE MEASUREMENT. This row is repo-wide because the relation was measured to "
+        "hold repo-wide before it was asserted: every name_key/summary_key in every category "
+        "directory already binds to its own id, with zero deviations, so no category is carved "
+        "out and none is forced to conform.",
+        "WHAT THIS ROW CANNOT SEE. The `<category>` token is derived from each directory's own "
+        "keys, so a directory whose keys were ALL renamed to one new consistent prefix would "
+        "redefine its own category and bind against it. That edit orphans every old string and "
+        "reddens A11, but it is invisible HERE. The alternative - a hand-written directory-to-"
+        "prefix map - would assert by fiat what the corpus already states.",
+        "WHY IT IS A RELATION AND NOT A PATTERN. A regex over the key alone accepts a key that is "
+        "well-formed and belongs to a different definition. Swapping two files' name_key values "
+        "preserves every set and every count this script takes - the resolve rows, the orphan "
+        "row and the total-strings row all stay green - so a set-based or count-based check is "
+        "structurally blind to a swap, the way a multiset proof is blind to reordering. Only the "
+        "two-field relation sees it, and it reddens once per corrupted file.",
+    )
+    return rows, notes
+
+
+# --------------------------------------------------------------------------
+# A34 - the resource_class COUPLING: authored values against the vocabulary
+# docs/technical/40-content-data-and-validation.md
+# `## Minted value vocabularies` grants.
+#
+# WHY THIS WAS MISSING, AND WHY IT IS NOT MISSING ANY MORE. `resource_class`
+# appeared ZERO times in this file. That was not an oversight when it was made:
+# content/transcription-notes.md note 8, under
+# `##### hyper-gold - content/resources/hyper-gold.json`, DECLINED to assert the
+# token vocabulary and gave the reason - the vocabulary was ungranted on
+# `master`, so asserting a set no accepted document stated would have been
+# minting one from a validator. That note closed with the discharge condition,
+# "when the grant lands on `master`, the coupling is the row to add". The grant
+# has landed: `## Minted value vocabularies` is present at `origin/master` and
+# absent at `b482304`. This is that row.
+#
+# THE GAP'S SHAPE IS WHY IT SURVIVED. A granted closed vocabulary with no
+# checker looks like coverage from both ends. The document says the set is
+# closed; the eight authored values happen to comply; and nothing between them
+# says so, so nothing reddens when the next value is authored outside the set.
+#
+# THE EXPECTED SET IS READ FROM THE GRANT. Not from content/resources/ - that
+# expectation is derived from the data it governs and cannot fail, because every
+# value is trivially a member of the set of values, so it would pass on a tree
+# with a fourth class in it. And not from a literal tuple here either - that is a
+# second independent statement of a set the document already states, which is the
+# drift the A21 comment above records this repository being burned by. The
+# granting section closes by saying the table is "the machine-readable form of
+# what the prose above states in sentences" and that "the row is what a check
+# reads", so reading the row is the use the document asks for.
+#
+# EVERY LOOKUP IS BY TEXT, NEVER BY LINE. The heading is matched by its text,
+# the Tokens column by its header cell, the vocabulary by its row label. A line
+# number would decay on the next edit to that document, which is the failure
+# 8101da0 re-pointed 114 citations across this file to undo.
+# --------------------------------------------------------------------------
+
+# The granting document, spelled as a full path rather than as `40`, because two
+# documents in this repository are short-named 40 and the other is
+# docs/40-mining-and-extraction.md.
+DOC_CONTENT_DATA = DOCS / "technical" / "40-content-data-and-validation.md"
+
+# The section that grants the four closed value vocabularies, and the header cell
+# naming the column whose contents are the token set. Both are TEXT.
+MINTED_VOCABULARY_HEADING = "## Minted value vocabularies"
+MINTED_VOCABULARY_ROW_LABEL_COLUMN = "Vocabulary"
+MINTED_VOCABULARY_TOKENS_COLUMN = "Tokens"
+
+# The one vocabulary of that section's four this row couples. The other three -
+# persistence_class, modifier_direction, timestamp_provenance - are granted field
+# NAMES the authored tree does not carry at all (that section says so outright:
+# "the authored tree carries neither of them", and timestamp_provenance belongs
+# to a schedule field that is not authored either). A membership row over a field
+# that appears zero times would report "0 values, 0 outside the set" forever, so
+# they are deliberately not coupled here; coupling them belongs to the commit
+# that authors them.
+COUPLED_VOCABULARY_FIELD = "resource_class"
+
+# Said once, so the failure messages and the notes cannot drift apart.
+A34_MANDATE = (
+    f"{rel(DOC_CONTENT_DATA)} `{MINTED_VOCABULARY_HEADING}` grants "
+    f"`{COUPLED_VOCABULARY_FIELD}` as a CLOSED vocabulary and states its members in the "
+    f"`{COUPLED_VOCABULARY_FIELD}` row of that section's vocabulary table, under its own rule "
+    f"that a vocabulary is grounded \"only when the document it cites states the set\". This row "
+    f"READS that row for its expectation - it holds no copy of the set, and it does not collect "
+    f"the set from content/, which would be an expectation read off the data it governs"
+)
+
+
+def granted_value_vocabulary(field: str) -> tuple[tuple[str, ...], str]:
+    """Read one vocabulary's tokens out of the granting section's table.
+
+    Returns `(tokens, problem)`. `problem` is a non-empty explanation whenever the
+    expectation could not be located, and the caller FAILS on it rather than
+    proceeding with an empty set: a membership check against nothing passes over
+    any tree at all, which is the one outcome this function must not produce
+    silently.
+    """
+    if not DOC_CONTENT_DATA.is_file():
+        return (), f"{rel(DOC_CONTENT_DATA)} does not exist on this ref"
+    lines = DOC_CONTENT_DATA.read_text(encoding="utf-8").splitlines()
+
+    start = next(
+        (i + 1 for i, line in enumerate(lines) if line.strip() == MINTED_VOCABULARY_HEADING),
+        None,
+    )
+    if start is None:
+        return (), (
+            f"{rel(DOC_CONTENT_DATA)} carries no `{MINTED_VOCABULARY_HEADING}` heading "
+            f"(matched by heading TEXT, so a rename shows up here rather than shifting a line "
+            f"number quietly)"
+        )
+    # The section ends at the next same-level heading; `### ` subsections belong
+    # to it. `## Common definition envelope` follows it today.
+    end = next((i for i in range(start, len(lines)) if lines[i].startswith("## ")), len(lines))
+    section = lines[start:end]
+
+    headers = [
+        line for line in section
+        if line.startswith(f"| {MINTED_VOCABULARY_ROW_LABEL_COLUMN} |")
+    ]
+    if len(headers) != 1:
+        return (), (
+            f"`{MINTED_VOCABULARY_HEADING}` holds {len(headers)} table(s) whose header row starts "
+            f"`| {MINTED_VOCABULARY_ROW_LABEL_COLUMN} |`, expected exactly 1"
+        )
+    header_cells = [cell.strip() for cell in headers[0].strip().strip("|").split("|")]
+    if MINTED_VOCABULARY_TOKENS_COLUMN not in header_cells:
+        return (), (
+            f"the vocabulary table under `{MINTED_VOCABULARY_HEADING}` has no "
+            f"`{MINTED_VOCABULARY_TOKENS_COLUMN}` column (its columns are "
+            f"{', '.join(header_cells)}), so the token set cannot be located; the column index is "
+            f"DERIVED from this header rather than assumed, so a reordered table reddens here "
+            f"instead of reading the wrong cell"
+        )
+    column = header_cells.index(MINTED_VOCABULARY_TOKENS_COLUMN)
+
+    matches = [line for line in section if line.startswith(f"| `{field}` |")]
+    if len(matches) != 1:
+        return (), (
+            f"the vocabulary table under `{MINTED_VOCABULARY_HEADING}` holds {len(matches)} row(s) "
+            f"for `{field}`, expected exactly 1"
+        )
+    cells = [cell.strip() for cell in matches[0].strip().strip("|").split("|")]
+    if column >= len(cells):
+        return (), (
+            f"the `{field}` row of the vocabulary table under `{MINTED_VOCABULARY_HEADING}` has "
+            f"{len(cells)} cell(s), so it has no "
+            f"`{MINTED_VOCABULARY_TOKENS_COLUMN}` cell at column {column}"
+        )
+    tokens = tuple(re.findall(r"`([^`]+)`", cells[column]))
+    if not tokens:
+        return (), (
+            f"the `{MINTED_VOCABULARY_TOKENS_COLUMN}` cell of the `{field}` row under "
+            f"`{MINTED_VOCABULARY_HEADING}` names no backticked token ({cells[column]!r})"
+        )
+    if len(set(tokens)) != len(tokens):
+        return (), (
+            f"the `{MINTED_VOCABULARY_TOKENS_COLUMN}` cell of the `{field}` row under "
+            f"`{MINTED_VOCABULARY_HEADING}` repeats a token ({', '.join(tokens)}), so the granted "
+            f"set is not the list the document states"
+        )
+    return tokens, ""
+
+
+def collect_field_occurrences(docs: dict[Path, object], field: str) -> list[tuple[Path, str, object]]:
+    """Every occurrence of `field` in every parsed definition, at ANY depth.
+
+    Repo-wide and depth-blind on purpose: globbing content/resources/ would make
+    the same field authored into another category invisible, and the carrier-set
+    row below exists precisely to name that.
+    """
+    found: list[tuple[Path, str, object]] = []
+
+    def walk(node: object, where: str, path: Path) -> None:
+        if isinstance(node, dict):
+            for key, value in node.items():
+                child = f"{where}.{key}" if where else key
+                if key == field:
+                    found.append((path, child, value))
+                walk(value, child, path)
+        elif isinstance(node, list):
+            for index, value in enumerate(node):
+                walk(value, f"{where}[{index}]", path)
+
+    for path, doc in sorted(docs.items()):
+        walk(doc, "", path)
+    return found
+
+
+def check_value_vocabulary_coupling(
+    docs: dict[Path, object],
+) -> tuple[list[tuple], tuple[str, ...]]:
+    """A34 - resource_class values are members of the set 40 grants, read from 40."""
+    field = COUPLED_VOCABULARY_FIELD
+    granted, problem = granted_value_vocabulary(field)
+    occurrences = collect_field_occurrences(docs, field)
+    rows: list[tuple] = []
+
+    notes = (
+        f"THE EXPECTATION IS THE GRANT, NOT THE DATA. The tokens are read out of the "
+        f"`{field}` row of the vocabulary table under "
+        f"{rel(DOC_CONTENT_DATA)} `{MINTED_VOCABULARY_HEADING}` on every run. Collecting the "
+        f"distinct values present under content/resources/ instead would be a tautology that "
+        f"passes on any tree, including one that authored a fourth class; a literal copy of those "
+        f"tokens here would be a second statement of a set the document already states. An "
+        f"expectation that cannot be located is a FAILURE here, never an empty set that passes.",
+        f"WHAT THIS ROW DOES NOT ASSERT: WHICH resource takes WHICH class. "
+        f"`{MINTED_VOCABULARY_HEADING}` states the partition - resource material role, "
+        f"which that section's own provenance cell reports as transcribed from "
+        f"`docs/00-game-vision.md` `## Player fantasy` (doc 40 spells that provenance as a line "
+        f"coordinate; this re-points doc 40's claim rather than asserting a fresh one) - without "
+        f"assigning tokens to files, so a per-file mapping "
+        f"here would invent a mandate. The same section rules that `{field}` determines neither "
+        f"persistence nor run-locality and that any consumer inferring either from it has a bug; "
+        f"this row reads neither field, which is how it complies.",
+        f"WHY THE CARRIER SET IS NAMED. The membership row is VACUOUS over an empty population: "
+        f"deleting `{field}` from all eight resources leaves it reporting 0 values and 0 "
+        f"deviations. The carrier row names its files for the same reason A32 row 1 does - a "
+        f"count of 8 survives a correlated delete-here/add-there edit and a named set does not.",
+    )
+
+    # ---- row 1: the granted set is LOCATABLE. Reddens on a renamed heading, a
+    # deleted table, a reordered column or a removed row - never on a moved line.
+    if problem:
+        fail(
+            f"A34 - the granted `{field}` token set cannot be read from its grant: {problem}. "
+            f"This row does NOT fall back to the distinct values authored under content/, and it "
+            f"carries no copy of the set, so an unreadable grant is a failure rather than a check "
+            f"that quietly asserts nothing. {A34_MANDATE}"
+        )
+        rows.append(
+            (
+                f"granted `{field}` set located in its grant",
+                "a non-empty token set",
+                problem,
+                "FAIL",
+            )
+        )
+        rows.append(
+            (
+                f"{len(occurrences)} `{field}` value(s) in the granted set",
+                "not evaluable",
+                "skipped - no expectation to compare against",
+                "FAIL",
+            )
+        )
+    else:
+        rows.append(
+            (
+                f"granted `{field}` set located in its grant",
+                "a non-empty token set",
+                f"{len(granted)}: " + ", ".join(granted),
+                "ok",
+            )
+        )
+
+        # ---- row 2: THE COUPLING. One failure per offending occurrence, naming
+        # it, so the arity of a negative control attributes the defect.
+        outside: list[str] = []
+        for path, where, value in occurrences:
+            if isinstance(value, str) and value in granted:
+                continue
+            outside.append(f"{rel(path)}.{where} = {value!r}")
+            fail(
+                f"{rel(path)}: A34 - {where} is {value!r}, which is not one of the "
+                f"{len(granted)} granted `{field}` token(s) "
+                f"({', '.join(repr(t) for t in granted)}). {A34_MANDATE}"
+            )
+        rows.append(
+            (
+                f"{len(occurrences)} `{field}` value(s) in the granted set",
+                f"{len(occurrences)} in set",
+                f"{len(occurrences) - len(outside)} in set"
+                + (f", {len(outside)} outside: " + "; ".join(outside[:5]) if outside else ""),
+                "ok" if not outside else "FAIL",
+            )
+        )
+
+    # ---- row 3: the CARRIER SET, NAMED rather than counted, repo-wide and at
+    # any depth, so the field authored anywhere else reddens by name.
+    #
+    # The expected set is EVERY parsed definition under content/resources/, at
+    # the top level, once each - because the granting section grants the field
+    # "on the resource definition". That population is not free-floating: A12
+    # pins content/resources/ at eight entries and A28 pins their paths, so this
+    # row inherits its population from assertions that already own it instead of
+    # restating a filename list a third time.
+    expected_carriers = sorted(
+        f"{rel(path)}.{field}"
+        for path in docs
+        if path.parent == RESOURCES_DIR and isinstance(docs[path], dict)
+    )
+    actual_carriers = sorted(f"{rel(path)}.{where}" for path, where, _ in occurrences)
+    if actual_carriers != expected_carriers:
+        missing = [c for c in expected_carriers if c not in actual_carriers]
+        extra = [c for c in actual_carriers if c not in expected_carriers]
+        fail(
+            f"A34 - `{field}` is carried by a different set of places than the resource "
+            f"definitions {rel(DOC_CONTENT_DATA)} `{MINTED_VOCABULARY_HEADING}` grants it on (it "
+            f"grants the field \"on the resource definition\"). "
+            f"missing={missing or 'none'}, unexpected={extra or 'none'}. The set is NAMED rather "
+            f"than counted because a count of {len(expected_carriers)} survives deleting the field "
+            f"from one resource and authoring it into some other category in the same edit"
+        )
+    rows.append(
+        (
+            f"`{field}` carriers, NAMED (repo-wide, any depth)",
+            f"{len(expected_carriers)}: every content/resources/ definition, top level, once",
+            f"{len(actual_carriers)}: " + ", ".join(actual_carriers),
+            "ok" if actual_carriers == expected_carriers else "FAIL",
+        )
+    )
+    return rows, notes
 
 
 # --------------------------------------------------------------------------
@@ -2209,7 +3016,8 @@ def check_totals(docs: dict[Path, object]) -> list[tuple]:
     if rank_sum != POWERUP_TOTAL_HYPER_GOLD:
         fail(
             f"PowerUp rank prices sum to {rank_sum} Hyper Gold across {len(rank_prices)} rank "
-            f"rows, expected {POWERUP_TOTAL_HYPER_GOLD} (docs/62-permanent-powerup-catalog.md:35)"
+            f"rows, expected {POWERUP_TOTAL_HYPER_GOLD} "
+            f"(docs/62-permanent-powerup-catalog.md `## Catalog overview`)"
         )
     rows.append(
         (
@@ -2222,7 +3030,8 @@ def check_totals(docs: dict[Path, object]) -> list[tuple]:
     if stated_sum != POWERUP_TOTAL_HYPER_GOLD:
         fail(
             f"PowerUp per-entry total costs sum to {stated_sum} Hyper Gold, expected "
-            f"{POWERUP_TOTAL_HYPER_GOLD} (docs/62-permanent-powerup-catalog.md:35)"
+            f"{POWERUP_TOTAL_HYPER_GOLD} "
+            f"(docs/62-permanent-powerup-catalog.md `## Catalog overview`)"
         )
 
     unlock_costs: list[float] = []
@@ -2257,7 +3066,7 @@ def check_totals(docs: dict[Path, object]) -> list[tuple]:
         fail(
             f"option unlock costs sum to {unlock_sum} Hyper Gold across {len(unlock_costs)} "
             f"unlocks, expected {UNLOCK_TOTAL_HYPER_GOLD} "
-            f"(docs/63-permanent-option-unlock-catalog.md:48)"
+            f"(docs/63-permanent-option-unlock-catalog.md `## Catalog overview`)"
         )
     return rows
 
@@ -2267,12 +3076,14 @@ def check_totals(docs: dict[Path, object]) -> list[tuple]:
 #
 # Only the one known transcription bug is special-cased. 12 s is the DERIVED
 # time for three Sentry Pods to exist at a 6 s cadence with the first pod
-# immediate; it is not an authored value, and docs/71:83 authors only "One pod
+# immediate; it is not an authored value, and docs/71
+# `## Rank-Zero Values and Ore-Stat Increments` authors only "One pod
 # every 6 s". A generic derived-value detector is not possible without schemas.
 # --------------------------------------------------------------------------
 
 # A20 - the compiler-derived footprint values, which no definition may carry.
-# Both are derived under docs/technical/40-content-data-and-validation.md:114
+# Both are derived under docs/technical/40-content-data-and-validation.md
+# `### Enemies and bosses`
 # ("Validation derives world speeds/footprints and compares them with the
 # survivability report"), so storing either puts a second writer on a
 # compiler-owned value - exactly the 0.004 M disagreement that started this.
@@ -2281,20 +3092,26 @@ def check_totals(docs: dict[Path, object]) -> list[tuple]:
 # different halves of their footprint.
 #
 # Enemies author body_scale_multiplier, and both of these are products of it:
-#   contact diameter  = body_scale_multiplier x 0.80 M   (docs/72:86)
-#   centre distance   = contact diameter / 2 + 0.50 M    (docs/72:86)
+#   contact diameter  = body_scale_multiplier x 0.80 M
+#   centre distance   = contact diameter / 2 + 0.50 M
+# both from docs/72 `## Collision and Contact Footprints` ("The Ripper's
+# rank-zero contact diameter is 0.80M. Every ordinary body scale in the alien
+# roster multiplies that diameter.")
 #
 # BOSS DIAMETERS ARE AUTHORED, so the diameter rule must NOT cover
-# content/bosses/. The boss roster at docs/31:121-128 has no body-scale column
-# at all - unlike the ordinary roster overview at docs/31:37-48, which is where
+# content/bosses/. The boss roster at docs/31 `## Interval boss overview` has
+# no body-scale column at all - unlike docs/31 `## Ordinary roster overview`,
+# which is where
 # the ten enemy scales come from - and the scales the four boss diameters would
-# imply (1.875, 2.5, 2.0, 2.375) appear nowhere in docs/. docs/72:105 states the
+# imply (1.875, 2.5, 2.0, 2.375) appear nowhere in docs/. docs/72
+# `## Collision and Contact Footprints` states the
 # four diameters flat: Riftjaw 1.50M, Brood Titan 2.00M, Prism Crown 1.60M,
 # Skybreaker Apex 1.90M. There is nothing to derive them from, so they are the
 # authored quantity, exactly as body_scale_multiplier is for an enemy.
 #
 # THE CENTRE DISTANCE IS DERIVED FOR BOSSES TOO, so that rule covers
-# content/bosses/ as well as content/enemies/. docs/72:86 gives one derivation
+# content/bosses/ as well as content/enemies/. docs/72
+# `## Collision and Contact Footprints` gives one derivation
 # for both: contact begins when the enemy circle and the mech's 0.50M-radius
 # collision circle overlap. It reproduces exactly for all four bosses -
 # 1.50/2+0.50=1.25, 2.00/2+0.50=1.50, 1.60/2+0.50=1.30, 1.90/2+0.50=1.45 - each
@@ -2304,14 +3121,16 @@ def check_totals(docs: dict[Path, object]) -> list[tuple]:
 # radius and those files are silently wrong, with no validator to notice.
 #
 # THE CENTRE DISTANCE IS DERIVED IN content/maps/ TOO. The health pack authors
-# pickup_radius_m = 0.25 M and docs/72:185 gives the sum as a consequence of it:
+# pickup_radius_m = 0.25 M and docs/72 `### Health pack` gives the sum as a
+# consequence of it:
 # "The pack has a 0.25M pickup radius. With the standard mech circle, collection
 # occurs when centers come within 0.75M." 0.25 + 0.50 = 0.75, and the 0.50 M is
 # again the PLAYER's collision radius - a third writer for one constant, after
 # the ten enemies and the four bosses.
 #
 # reference_diameter_m is allowlisted and must stay: 0.80 M is the Ripper's
-# authored rank-zero contact diameter (docs/72:86), the shared reference the
+# authored rank-zero contact diameter (docs/72
+# `## Collision and Contact Footprints`), the shared reference the
 # scale multiplies. It is an authored constant, not a per-enemy derived value.
 DERIVED_FOOTPRINT_FIELD_ALLOWED = frozenset({"reference_diameter_m"})
 DERIVED_FOOTPRINT_RULES = (
@@ -2330,7 +3149,9 @@ DERIVED_FOOTPRINT_RULES = (
 )
 
 SENTRY_POD_WEAPON_ID = "W-BE"
-SENTRY_POD_DEPLOYMENT_SECONDS = 6.0  # docs/71-initial-weapon-numeric-catalog.md:83
+# docs/71-initial-weapon-numeric-catalog.md
+# `## Rank-Zero Values and Ore-Stat Increments`, `W-BE` row
+SENTRY_POD_DEPLOYMENT_SECONDS = 6.0
 DERIVED_DEPLOYMENT_SECONDS = 12  # derived from 6 s x (3 pods - 1), never authored
 DEPLOYMENT_KEY = re.compile(r"(?i)deploy|ramp")
 DEPLOYMENT_INTERVAL_KEY = re.compile(r"(?i)deploy.*(?:interval|cadence|seconds|period)")
@@ -2764,7 +3585,7 @@ def check_file_inventory(manifest_size: int | None) -> list[tuple]:
 # --------------------------------------------------------------------------
 # A32 - canonical_letter on exactly the six letter resources.
 #
-# 40:106 (blob 4cded84) lists "canonical letter" among the resource definition
+# 40 `### Resources` lists "canonical letter" among the resource definition
 # fields. It says that about the six-material set; it does not say it about
 # common ore or Hyper Gold, which are the ordinary-crafting and cross-run
 # currencies and have no letter to carry. Their omission is therefore authored
@@ -2773,11 +3594,12 @@ def check_file_inventory(manifest_size: int | None) -> list[tuple]:
 # ROW 2 READS THE id VALUES, and since the RSC- migration it is the only row
 # that does. It used to compare each file's canonical_letter against its own id,
 # which worked only while the two were the same string. The ids are now
-# RSC-01..RSC-08 (40:86 grammar, 40:111 mapping), so that comparison is gone and
-# row 2 is the transcribed mapping table below instead. Rows 1/3/4/5 never read
-# an id and are unaffected. An earlier draft of this comment predicted the ids
-# would become "RSC-A..RSC-F"; 40:111 assigns RSC-01..RSC-08, and the prediction
-# was wrong about the form as well as needing re-statement.
+# RSC-01..RSC-08 - the grammar row and the mapping paragraph of 40 `### Minted
+# content-ID grammars` - so that comparison is gone and row 2 is the
+# transcribed mapping table below instead. Rows 1/3/4/5 never read an id and
+# are unaffected. An earlier draft of this comment predicted the ids would
+# become "RSC-A..RSC-F"; that section assigns RSC-01..RSC-08, and the
+# prediction was wrong about the form as well as needing re-statement.
 # --------------------------------------------------------------------------
 
 RESOURCES_DIR = CONTENT / "resources"
@@ -2788,28 +3610,30 @@ CANONICAL_LETTER_CARRIERS = tuple(f"{letter}.json" for letter in CANONICAL_LETTE
 CANONICAL_LETTER_OMITTERS = ("common-ore.json", "hyper-gold.json")
 RESOURCE_DEFINITION_COUNT = 8
 
-# Row 2's comparand: the eight-row mapping table, TRANSCRIBED from 40:111.
+# Row 2's comparand: the eight-row mapping table, TRANSCRIBED from the mapping
+# paragraph of 40 `### Minted content-ID grammars`.
 #
 # THE ORDERING SENTENCE THIS TRANSCRIBES, quoted so the table can be audited
 # without leaving this file: "Which number goes to which resource is fixed here:
 # `RSC-01` through `RSC-06` take `A` through `F` in letter order, `RSC-07` is
 # `common-ore`, and `RSC-08` is `hyper-gold`. Both halves are **assigned here**
-# and neither is transcribed." (40:111) The same paragraph records WHY the two
+# and neither is transcribed." (that paragraph) It also records WHY the two
 # currency rows are stated rather than inferred from the order the resources
 # appear in the catalog: "no assertion can catch a wrong choice of mapping - only
 # a wrong implementation of one - so the choice closes in this section or
 # nowhere."
 #
 # WHY EIGHT LITERAL ROWS AND NOT chr(ord("A") + int(id[-2:]) - 1). Arithmetic
-# was considered and is wrong here, not merely verbose. 40:109 states that "The
-# ID and the letter are two fields; neither is derived from the other", so a
-# computed letter would RE-DERIVE the document's mapping instead of CHECKING it:
+# was considered and is wrong here, not merely verbose. The same section states
+# that "The ID and the letter are two fields; neither is derived from the
+# other", so a computed letter would RE-DERIVE the document's mapping instead
+# of CHECKING it:
 # it would agree with itself for any tree, and it would keep passing unchanged if
-# 40:111 were ever edited to assign the numbers differently - which is the one
-# edit this row exists to catch. Eight literal rows disagree with the tree the
-# moment either side moves. The two None rows carry the same weight: they assert
-# that 40:111 gives RSC-07 and RSC-08 no letter, which arithmetic over "07" and
-# "08" would silently invent as "G" and "H".
+# the mapping paragraph were ever edited to assign the numbers differently -
+# which is the one edit this row exists to catch. Eight literal rows disagree
+# with the tree the moment either side moves. The two None rows carry the same
+# weight: they assert that that paragraph gives RSC-07 and RSC-08 no letter,
+# which arithmetic over "07" and "08" would silently invent as "G" and "H".
 RESOURCE_ID_TO_CANONICAL_LETTER = {
     "RSC-01": "A",
     "RSC-02": "B",
@@ -2817,13 +3641,14 @@ RESOURCE_ID_TO_CANONICAL_LETTER = {
     "RSC-04": "D",
     "RSC-05": "E",
     "RSC-06": "F",
-    "RSC-07": None,   # common ore - no canonical letter (40:111)
-    "RSC-08": None,   # Hyper Gold - no canonical letter (40:111)
+    "RSC-07": None,   # common ore - no canonical letter (the mapping paragraph)
+    "RSC-08": None,   # Hyper Gold - no canonical letter (the mapping paragraph)
 }
 
 
 def check_canonical_letters(docs: dict[Path, object]) -> list[tuple]:
-    """A32 - canonical_letter is on exactly A-F and pairs with the id per 40:111."""
+    """A32 - canonical_letter is on exactly A-F and pairs with the id per the
+    mapping paragraph of 40 `### Minted content-ID grammars`."""
     paths = sorted(RESOURCES_DIR.glob("*.json")) if RESOURCES_DIR.is_dir() else []
     carried: dict[str, object] = {}
     ids: dict[str, object] = {}
@@ -2841,8 +3666,9 @@ def check_canonical_letters(docs: dict[Path, object]) -> list[tuple]:
     row1_ok = carriers == expected_carriers
 
     # ---- row 2: each file's (id, canonical_letter) pair is one row of the
-    # transcribed 40:111 table. Keyed by the id, so a file whose id and letter
-    # were BOTH edited in step still has to land on a table row. `agreed` is
+    # table transcribed above from 40 `### Minted content-ID grammars`. Keyed
+    # by the id, so a file whose id and letter were BOTH edited in step still
+    # has to land on a table row. `agreed` is
     # collected for the PASSING display only: a green run used to print a count
     # and name the files solely on failure, so the reader auditing a passing run
     # had to take the comparand set on trust. `mismatches` alone decides status.
@@ -2864,15 +3690,17 @@ def check_canonical_letters(docs: dict[Path, object]) -> list[tuple]:
         seen_ids[rid] = name
         if not isinstance(rid, str) or rid not in RESOURCE_ID_TO_CANONICAL_LETTER:
             mismatches.append(
-                f"{name}: id is {rid!r}, which is not one of the eight ids the 40:111 "
-                f"table assigns ({', '.join(RESOURCE_ID_TO_CANONICAL_LETTER)})"
+                f"{name}: id is {rid!r}, which is not one of the eight ids the "
+                f"40 `### Minted content-ID grammars` mapping table assigns "
+                f"({', '.join(RESOURCE_ID_TO_CANONICAL_LETTER)})"
             )
             continue
         expected_letter = RESOURCE_ID_TO_CANONICAL_LETTER[rid]
         if actual != expected_letter:
             mismatches.append(
                 f"{name}: id {rid!r} takes {CANONICAL_LETTER_KEY}="
-                f"{expected_letter!r} in the 40:111 table, but this file has "
+                f"{expected_letter!r} in the 40 `### Minted content-ID grammars` "
+                f"mapping table, but this file has "
                 f"{actual!r}" + ("" if name in carried else " (key absent)")
             )
         else:
@@ -2885,7 +3713,8 @@ def check_canonical_letters(docs: dict[Path, object]) -> list[tuple]:
     unclaimed = [rid for rid in RESOURCE_ID_TO_CANONICAL_LETTER if rid not in seen_ids]
     if unclaimed:
         mismatches.append(
-            f"no definition carries {', '.join(unclaimed)}, which the 40:111 table assigns"
+            f"no definition carries {', '.join(unclaimed)}, which the "
+            f"40 `### Minted content-ID grammars` mapping table assigns"
         )
 
     # ---- row 3: six distinct letters covering exactly {A..F}. repr() so a
@@ -2915,8 +3744,8 @@ def check_canonical_letters(docs: dict[Path, object]) -> list[tuple]:
             "ok" if row1_ok else "FAIL",
         ),
         (
-            "row 2: (id, canonical_letter) matches the transcribed 40:111 table, "
-            "all eight rows",
+            "row 2: (id, canonical_letter) matches the table transcribed from "
+            "40 `### Minted content-ID grammars`, all eight rows",
             f"{len(RESOURCE_ID_TO_CANONICAL_LETTER)} agree, named",
             (
                 f"{len(agreed)} agree: " + ", ".join(agreed)
@@ -2950,7 +3779,7 @@ def check_canonical_letters(docs: dict[Path, object]) -> list[tuple]:
         fail(
             f"A32 row 1: the files under content/resources/ carrying "
             f"{CANONICAL_LETTER_KEY!r} are {carriers}, expected exactly {expected_carriers}. "
-            f"40:106 (blob 4cded84) gives the canonical letter to the six-material set and to "
+            f"40 `### Resources` gives the canonical letter to the six-material set and to "
             f"nothing else. This row NAMES the carriers rather than counting them because a "
             f"count of 6 also passes when the key is deleted from one letter file and added to "
             f"a currency in the same edit."
@@ -2958,15 +3787,17 @@ def check_canonical_letters(docs: dict[Path, object]) -> list[tuple]:
     if mismatches:
         fail(
             f"A32 row 2: {len(mismatches)} resource(s) whose (id, {CANONICAL_LETTER_KEY}) pair "
-            f"is not the pair 40:111 assigns: {mismatches}. The table in this file is a verbatim "
-            f"transcription of that paragraph - `RSC-01` through `RSC-06` take `A` through `F` in "
+            f"is not the pair 40 `### Minted content-ID grammars` assigns: {mismatches}. The "
+            f"table in this file is a verbatim transcription of that section's mapping "
+            f"paragraph - `RSC-01` through `RSC-06` take `A` through `F` in "
             f"letter order, `RSC-07` is common ore and `RSC-08` is Hyper Gold, and the last two "
             f"take no letter. Fix the tree to match the document, or - if the DOCUMENT changed - "
             f"re-transcribe the table deliberately in the same commit. Do not replace the table "
-            f"with arithmetic over the id: 40:109 states the ID and the letter are two fields "
-            f"with neither derived from the other, so a computed letter would agree with itself "
-            f"for any tree and would not notice 40:111 being reassigned. This row is also the "
-            f"only one that catches two letter files SWAPPING values: a swap leaves the value "
+            f"with arithmetic over the id: the same section states the ID and the letter are "
+            f"two fields with neither derived from the other, so a computed letter would agree "
+            f"with itself for any tree and would not notice that mapping being reassigned. "
+            f"This row is also the only one that catches two letter files SWAPPING values: "
+            f"a swap leaves the value "
             f"SET unchanged, so rows 1 and 3 both still pass."
         )
     if not row3_ok:
@@ -2974,14 +3805,16 @@ def check_canonical_letters(docs: dict[Path, object]) -> list[tuple]:
             f"A32 row 3: the {len(values)} {CANONICAL_LETTER_KEY} value(s) present are "
             f"{sorted(distinct)}, expected 6 distinct letters covering exactly "
             f"{list(CANONICAL_LETTERS)}. Two materials cannot share a letter and no letter of "
-            f"the accepted set may go unassigned (40:106, blob 4cded84)."
+            f"the accepted set may go unassigned (40 `### Resources`)."
         )
     if offenders:
         fail(
             f"A32 row 4: {offenders} carry the key {CANONICAL_LETTER_KEY!r}. common ore and "
-            f"Hyper Gold are the ordinary-crafting and cross-run currencies; 40:106 gives the "
+            f"Hyper Gold are the ordinary-crafting and cross-run currencies; "
+            f"40 `### Resources` gives the "
             f"canonical letter to the six-material set only, so the right way to spell 'has no "
-            f"letter' is to OMIT the key (40:90 materializes the default for an absent optional "
+            f"letter' is to OMIT the key (40 `## Common definition envelope` materializes the "
+            f"default for an absent optional "
             f"field). A26 already rejects the null spelling repo-wide, but a non-null wrong "
             f"value - \"\" or \"common-ore\" - passes A26 and still asserts that a currency has a "
             f"canonical letter, which is what this row exists to catch."
@@ -3027,7 +3860,8 @@ def check_derived_footprint_fields(docs: dict[Path, object]) -> list[tuple]:
         if hits:
             fail(
                 f"{len(hits)} field(s) under {scope} hold a {label}, which the compiler derives "
-                f"as {derivation} (40:114, 40:100): {hits[:10]}"
+                f"as {derivation} (40 `### Enemies and bosses`, "
+                f"40 `## Unit and numeric policy`): {hits[:10]}"
             )
     return rows
 
@@ -3713,7 +4547,8 @@ CSV_MIRROR_EXPECTED_COMPARISONS = 98
 
 # How many definitions must author contact_footprint.reference_diameter_m, the
 # operand A30's diameter column multiplies. Ten - the ordinary enemy roster. The
-# four bosses author their diameters flat (docs/72:105-110) and have no reference,
+# four bosses author their diameters flat (docs/72
+# `## Collision and Contact Footprints`) and have no reference,
 # which is why this is 10 and not 14.
 CSV_MIRROR_REFERENCE_DIAMETER_AUTHORS = 10
 
@@ -3749,7 +4584,8 @@ def check_csv_mirror_agreement(docs: dict[Path, object]) -> list[tuple]:
 
     # THE PLAYER'S COLLISION RADIUS IS THE ONE OPERAND WITH NO AUTHORED MIRROR, and
     # the asymmetry with reference_diameter_m below is deliberate rather than an
-    # oversight. docs/72:86 states it: "Contact begins when the enemy contact circle
+    # oversight. docs/72 `## Collision and Contact Footprints` states it:
+    # "Contact begins when the enemy contact circle
     # and the mech's 0.50M-radius collision circle overlap." It is a PLAYER-baseline
     # constant, and A20's centre-distance rule exists precisely to keep it OUT of
     # content/enemies/, content/bosses/ and content/maps/ - storing the sum there put
@@ -3764,7 +4600,8 @@ def check_csv_mirror_agreement(docs: dict[Path, object]) -> list[tuple]:
     # prose in content/README.md and content/transcription-notes.md, which are
     # documentation of this derivation, not values it may read. If the mech baseline
     # ever becomes authored content, read it here the way ref_diameter is read.
-    player_radius = Fraction("0.50")  # docs/72:86 - no authored mirror; see above
+    # docs/72 `## Collision and Contact Footprints` - no authored mirror; see above
+    player_radius = Fraction("0.50")
 
     by_id = {}
     for path, doc in docs.items():
@@ -3955,7 +4792,8 @@ def check_csv_mirror_agreement(docs: dict[Path, object]) -> list[tuple]:
     if len(distinct_ref_diameters) != 1:
         fail(
             f"A30 the authored reference diameter is not one shared value: "
-            f"{[str(d) for d in distinct_ref_diameters]}. docs/72:86 gives ONE reference (the "
+            f"{[str(d) for d in distinct_ref_diameters]}. docs/72 "
+            f"`## Collision and Contact Footprints` gives ONE reference (the "
             f"Ripper's 0.80 M rank-zero contact diameter) that every ordinary body scale "
             f"multiplies, so a per-file reference is a second owner for one quantity."
         )
@@ -3983,7 +4821,7 @@ def check_csv_mirror_agreement(docs: dict[Path, object]) -> list[tuple]:
         f"distinct value: {', '.join(str(float(d)) for d in distinct_ref_diameters) or 'none'}); "
         f"body_scale_multiplier and the authored boss diameters READ per actor. The player's "
         f"{float(player_radius):.2f} M collision radius is the ONLY hardcoded operand, from "
-        f"docs/72:86, and it "
+        f"docs/72 `## Collision and Contact Footprints`, and it "
         f"is hardcoded because A20 keeps it out of content/ deliberately - it is a player-baseline "
         f"constant and storing it in an enemy, boss or map file put a second writer on it.",
         f"DECLARED EXCEPTIONS ARE EXACT PAIRS, NOT BANDS: {len(CSV_MIRROR_ROUNDED)} declared, each "
@@ -4190,7 +5028,10 @@ def check_derived_values(docs: dict[Path, object]) -> list[tuple]:
         fail(
             f"{len(banned_hits)} deployment/ramp field(s) in content/weapons/ hold "
             f"{float(derived_total):g}, which is DERIVED from W-BE's authored operands "
-            f"({basis}), not authored (docs/71-initial-weapon-numeric-catalog.md:83, 40:100): "
+            f"({basis}), not authored "
+            f"(docs/71-initial-weapon-numeric-catalog.md "
+            f"`## Rank-Zero Values and Ore-Stat Increments`, "
+            f"40 `## Unit and numeric policy`): "
             f"{banned_hits}"
         )
 
@@ -4210,7 +5051,8 @@ def check_derived_values(docs: dict[Path, object]) -> list[tuple]:
         warn(
             f"{SENTRY_POD_WEAPON_ID}: no numeric deployment-interval property found, so the "
             f"{SENTRY_POD_DEPLOYMENT_SECONDS} s cadence at "
-            f"docs/71-initial-weapon-numeric-catalog.md:83 could not be checked "
+            f"docs/71-initial-weapon-numeric-catalog.md "
+            f"`## Rank-Zero Values and Ore-Stat Increments` could not be checked "
             f"(field names are unvalidated until content/schemas/ exists)"
         )
         rows.append(("W-BE deployment interval == 6.0 s", SENTRY_POD_DEPLOYMENT_SECONDS, "no field found", "WARN"))
@@ -4227,7 +5069,9 @@ def check_derived_values(docs: dict[Path, object]) -> list[tuple]:
     if wrong:
         fail(
             f"{SENTRY_POD_WEAPON_ID} Sentry Pod deployment interval must be "
-            f"{SENTRY_POD_DEPLOYMENT_SECONDS} s (docs/71-initial-weapon-numeric-catalog.md:83): "
+            f"{SENTRY_POD_DEPLOYMENT_SECONDS} s "
+            f"(docs/71-initial-weapon-numeric-catalog.md "
+            f"`## Rank-Zero Values and Ore-Stat Increments`): "
             f"{wrong}"
         )
     return rows
@@ -4276,7 +5120,8 @@ def check_references(docs: dict[Path, object]) -> list[tuple]:
     if dangling:
         fail(f"{len(dangling)} branch weapon reference(s) do not resolve: {dangling[:10]}")
     if not refs:
-        fail("no branch -> weapon reference property found in content/branches/ (40:199)")
+        fail("no branch -> weapon reference property found in content/branches/ "
+             "(40 `### Relational`)")
 
     # encounters -> enemies: structured *enemy_id(s) properties plus any EN-nn token
     dangling = []
@@ -4310,7 +5155,7 @@ def check_references(docs: dict[Path, object]) -> list[tuple]:
     if dangling:
         fail(f"encounter schedule references enemy IDs with no enemy file: {dangling[:15]}")
     if not refs:
-        fail("no enemy reference found in content/encounters/ (40:199)")
+        fail("no enemy reference found in content/encounters/ (40 `### Relational`)")
 
     # mechs -> signature weapon
     dangling = []
@@ -4334,12 +5179,14 @@ def check_references(docs: dict[Path, object]) -> list[tuple]:
     if dangling:
         fail(f"{len(dangling)} mech signature-weapon reference(s) do not resolve: {dangling}")
     if not refs:
-        fail("no mech signature-weapon reference property found in content/mechs/ (40:199)")
+        fail("no mech signature-weapon reference property found in content/mechs/ "
+             "(40 `### Relational`)")
     return rows
 
 
 # --------------------------------------------------------------------------
-# A16 - the numeric percentage-point policy (40:95). Four rules, all decidable
+# A16 - the numeric percentage-point policy (40 `## Unit and numeric policy`).
+# Four rules, all decidable
 # from key names and numbers, so all four are failures. See the constants above
 # for what this replaced and why.
 # --------------------------------------------------------------------------
@@ -4385,7 +5232,8 @@ def check_percentage_point_policy(docs: dict[Path, object]) -> list[tuple]:
 
             says_percent = bool(PERCENT_TOKEN_KEY.search(key))
 
-            # Rule 3 - the compiler owns the normalized factor (40:95, 40:100).
+            # Rule 3 - the compiler owns the normalized factor
+            # (40 `## Unit and numeric policy`).
             if says_percent and NORMALIZED_FACTOR_TOKEN.search(key):
                 hybrid_names.append(f"{name}{jpath[1:]}")
             if isinstance(value, dict):
@@ -4403,7 +5251,8 @@ def check_percentage_point_policy(docs: dict[Path, object]) -> list[tuple]:
                 # the case rules 1-3 never reach, because all three ask "does the
                 # name say percent?" first. A relative-magnitude name that declares
                 # no unit and no kind cannot state whether its number is percentage
-                # points or a scale, and 40:95 permits percentage points only under
+                # points or a scale, and 40 `## Unit and numeric policy` permits
+                # percentage points only under
                 # a name that says percent.
                 elif (
                     is_number
@@ -4454,32 +5303,35 @@ def check_percentage_point_policy(docs: dict[Path, object]) -> list[tuple]:
     if no_number:
         fail(
             f"{len(no_number)} property name(s) say percent but hold no numeric value, so the "
-            f"percentage exists only as prose (40:95): {no_number[:10]}"
+            f"percentage exists only as prose (40 `## Unit and numeric policy`): {no_number[:10]}"
         )
     if factor_valued:
         fail(
             f"{len(factor_valued)} percent-named numeric value(s) satisfy 0 < |v| < 1, which is a "
-            f"normalized factor rather than human-readable percentage points (40:95): "
+            f"normalized factor rather than human-readable percentage points "
+            f"(40 `## Unit and numeric policy`): "
             f"{factor_valued[:10]}"
         )
     if hybrid_names:
         fail(
             f"{len(hybrid_names)} property name(s) combine a percent token with a normalized-factor "
-            f"token; the compiler writes the normalized factor as a separate derived field (40:95): "
+            f"token; the compiler writes the normalized factor as a separate derived field "
+            f"(40 `## Unit and numeric policy`): "
             f"{hybrid_names[:10]}"
         )
     if twins:
         fail(
             f"{len(twins)} object(s) author both percentage points and a same-stem normalized factor; "
-            f"the factor is compiler-derived (40:95, 40:100): {twins[:10]}"
+            f"the factor is compiler-derived (40 `## Unit and numeric policy`): {twins[:10]}"
         )
     if unnamed_magnitude:
         fail(
             f"{len(unnamed_magnitude)} numeric value(s) sit under a relative-magnitude name (bonus, "
             f"penalty, increase, reduction, ...) that says neither percent nor a unit, so the number "
             f"could be percentage points or a multiplicative scale and the name does not say which. "
-            f"40:95 allows human-readable percentage points only under a name that says percent, and "
-            f"40:94 requires an ambiguous numeric name to carry a unit suffix: rename to "
+            f"40 `## Unit and numeric policy` allows human-readable percentage points only under "
+            f"a name that says percent, and requires an ambiguous numeric name to carry a unit "
+            f"suffix: rename to "
             f"<stem>_percent, or to <stem>_multiplier if it is a scale, or add the unit suffix: "
             f"{unnamed_magnitude[:10]}"
         )
@@ -4493,9 +5345,14 @@ def check_percentage_point_policy(docs: dict[Path, object]) -> list[tuple]:
 # door: eleven effect.stacking_classification strings carried a parenthetical
 # "(docs/68-utility-catalog.md:253)", a weapons note carried one, and
 # hyper-gold-sites.json held a repo path in a field named beacon_response_source.
+# That quoted string keeps its line number on purpose: it is the exhibit this
+# assertion exists to forbid, not a citation a reader is meant to resolve. The
+# sentence it stood in is `## Modifier and timing rules` (dated note,
+# 2026-08-11; blob 21c555f, the sole revision of that document in this
+# history).
 # A line number is unstable wherever it hides, and the doc_id#anchor form
-# (40:87) is the only citation form the envelope names, so the rule is scoped to
-# the value, not to one field.
+# (40 `## Common definition envelope`) is the only citation form the envelope
+# names, so the rule is scoped to the value, not to one field.
 #
 # WHAT THIS USED TO BE, AND WHY IT WAS REPLACED. The pattern was `docs/.*\.md`,
 # which pins three incidental spellings of one path - the literal directory name,
@@ -4520,11 +5377,13 @@ def check_percentage_point_policy(docs: dict[Path, object]) -> list[tuple]:
 #   A24b THE REPO PATH. A repository directory (docs, src, content, tools, assets)
 #        followed by a separator and a path character, in any case and with either
 #        separator. A repo path is a defect even with no line number on it, because
-#        40:87 names doc_id#anchor as the citation form and a path is not one.
+#        40 `## Common definition envelope` names doc_id#anchor as the citation
+#        form and a path is not one.
 #
 # A BARE `#anchor` IS DELIBERATELY OUT OF SCOPE, and the test below records it as
 # not matching. `#hyper-gold-sites` is not a defective citation form: it is HALF OF
-# THE SANCTIONED ONE. 40:87 names doc_id#anchor, A9 already resolves every anchor
+# THE SANCTIONED ONE. 40 `## Common definition envelope` names doc_id#anchor, A9
+# already resolves every anchor
 # that appears in source_refs against the real heading slugs of the cited document,
 # and a bare `#slug` carries neither a path nor a line number, so nothing about it
 # is unstable in the way this assertion is about. Flagging it would fire on the
@@ -4557,7 +5416,8 @@ A24_RULES = (
     (
         "no repository path in any string value",
         REPO_PATH_IN_VALUE,
-        "a repo path is not a citation form - 40:87 names doc_id#anchor - and it is a defect with "
+        "a repo path is not a citation form - 40 `## Common definition envelope` names "
+        "doc_id#anchor - and it is a defect with "
         "or without a line number attached",
     ),
 )
@@ -4581,7 +5441,7 @@ def check_no_doc_paths_in_values(docs: dict[Path, object]) -> list[tuple]:
         if hits:
             fail(
                 f"{len(hits)} string value(s) under content/ violate A24 ({label}): {why} "
-                f"(40:87): {hits[:10]}"
+                f"(40 `## Common definition envelope`): {hits[:10]}"
             )
     return rows
 
@@ -4591,8 +5451,8 @@ def check_no_doc_paths_in_values(docs: dict[Path, object]) -> list[tuple]:
 #
 # THE RULING. A null in a source definition is never legal. content/README.md
 # used to define a null as "the document states no value", which made absence
-# expressible two ways - an omitted key and a nulled key - for one meaning. 40:90
-# settles it: "Optional fields have explicit defaults materialized into the
+# expressible two ways - an omitted key and a nulled key - for one meaning.
+# 40 `## Common definition envelope` settles it: "Optional fields have explicit defaults materialized into the
 # canonical bundle so runtime never guesses." An absent optional field gets its
 # default; a present-and-null one asks runtime to guess, which is what that line
 # forbids. So absence is spelled by omitting the key.
@@ -4647,7 +5507,8 @@ def check_no_nulls() -> list[tuple]:
     "default": null or null inside an enum will fail this assertion. Measured, not
     predicted - a probe file with {"properties":{"presentation_id":{"default":null}}}
     fails as `...probe.schema.json.properties.presentation_id.default`. The mandate
-    behind A26 (40:90) is about absent optional fields in DEFINITIONS, so the
+    behind A26 (40 `## Common definition envelope`) is about absent optional fields
+    in DEFINITIONS, so the
     resolution is a scope decision that belongs to whoever lands the schemas; it is
     not this assertion silently acquiring an exception set, which is the one thing
     A26's docstring rules out.
@@ -4671,7 +5532,8 @@ def check_no_nulls() -> list[tuple]:
     if hits:
         fail(
             f"{len(hits)} null(s) under content/. A null in a source definition is never legal: "
-            f"40:90 materializes an explicit default for every absent optional field, so absence is "
+            f"40 `## Common definition envelope` materializes an explicit default for every "
+            f"absent optional field, so absence is "
             f"spelled by OMITTING the key and a present-and-null field asks runtime to guess. Omit "
             f"the key; if the field should not exist at all, remove it and record the removal. There "
             f"is no exception set to add it to: {sorted(hits)[:15]}"
@@ -4772,8 +5634,12 @@ def check_no_abbreviation_periods(docs_root: Path = DOCS) -> list[tuple]:
 #
 # This automates a check that had to be done by hand. Ruling 22 in
 # content/transcription-notes.md verified all six
-# resonance_behavior.modifier.direction values against docs/40:104-109 by eye
+# resonance_behavior.modifier.direction values against
+# docs/40-mining-and-extraction.md `### Geode resonance fields` by eye
 # after one was reported wrong; nothing in the tree would have caught a seventh.
+# (c05aee9/8101da0 re-pointed this pair to `### Resources`, a heading of
+# docs/technical/40-content-data-and-validation.md; the six resonance rows are
+# in the MINING document, and the short `docs/40` prefix is that document.)
 #
 # The vocabulary is a CLOSED set of opposed pairs and +1 means "more of the
 # quantity": higher/lower, increase/decrease, more/less, faster/slower,
@@ -4882,6 +5748,834 @@ def check_polarity_agreement(docs: dict[Path, object]) -> list[tuple]:
 
 
 # --------------------------------------------------------------------------
+# A35 / A36 - no positional citation of a design document, and no ambiguous
+# short-name reference, anywhere in the files this tool owns.
+#
+# WHY THESE TWO ROWS EXIST. Three commits (8101da0, c05aee9, e24a52a, then
+# 85d0ced) re-pointed every line-number citation of a design document out of
+# these files - the last of them 311 occurrences across 36 documents - because a
+# citation of the form <doc> plus a line number silently breaks when the cited
+# document gains a line above the cited material. Nothing in the tree stopped it
+# coming back. TWO documents had been FROZEN AT A FIXED LINE COUNT by their
+# authors to work around exactly that (doc 66 by 0648186 in its own words, and
+# the technical content-data document held at a fixed length), which is the cost
+# of the hazard: a citation in this tool was constraining what a document owner
+# was allowed to edit. Both freezes are now lifted.
+#
+# THE HAZARD IS INVISIBLE AT THE MOMENT OF WRITING, which is the whole reason a
+# gate is the answer and a convention is not. Nobody decided to accumulate 2,368
+# raw positional hits; each one looked locally correct the day it was typed, and
+# the decay happened later, in someone else's commit, to a document this tool
+# does not own.
+#
+# REGROWTH ALREADY HAPPENED ONCE, IN THIS FILE, AFTER THE RELEASE - which is the
+# single most concrete piece of evidence in this repository that a sweep without a
+# gate is a snapshot rather than a fix. Commit 29a9b8d, writing A34's own
+# docstring one commit after the sweep declared the population zero, introduced
+# TWO positional citations of the game-vision document in the extensionless bare
+# form; there were zero at origin/master and two at HEAD. It went unnoticed until
+# a separate pass measured the file, because nothing in the tree could see it: a
+# convention is only ever as strong as the attention of the next person writing a
+# docstring, and that attention had already lapsed inside the very file that
+# enforces the rules. This pair of rows is what would have caught it on the run
+# that introduced it - and did catch it, reddening twice, once per occurrence,
+# before this pass re-pointed both to the heading form.
+#
+# WHAT A35 MATCHES, and every spelling here is one that HAS occurred in this
+# repository rather than one imagined for completeness:
+#
+#   - <doc> plus a line number, where <doc> is a path under docs/ with the
+#     extension present OR ABSENT. The extensionless spelling is the DOMINANT
+#     one and a sweep keyed on the extension is why an earlier census undercounted:
+#     of the technical content-data document's citations, a scan requiring
+#     ".md" before the colon found one.
+#   - a bare document filename plus a line number, extension present, no
+#     directory - the spelling that walks past any pattern anchored on "docs/".
+#   - a bare short document name plus a line number, no directory and no
+#     extension, which is the compact form this repository's prose actually used.
+#   - a range in any punctuation: hyphen, any of the Unicode dashes, or a comma
+#     list.
+#   - a BARE line number inheriting its document from a full path named earlier
+#     in the same string or on the line above - the "factored" form, where the
+#     document is written once and several coordinates follow it. c05aee9 found
+#     this shape and named it; it is matched here across a line break as well as
+#     within one string, because a wrapped docstring splits one citation over two
+#     source lines.
+#   - the word line or lines followed by a number or range.
+#   - the L and #L forms, which occur nowhere in this tree today and are matched
+#     because they are the spelling a GitHub permalink pastes in.
+#
+# RECALL, MEASURED AGAINST THE PRE-SWEEP TREE RATHER THAN ASSERTED. Run against
+# the file contents at e24a52a - the commit before the 311-citation sweep - this
+# pattern catches 308 of the 351 genuine design-document citations that sweep
+# removed. That is the acceptance test for an ABSENCE assertion: asking whether
+# the pattern matches anything at HEAD is the wrong question, because for an
+# absence rule "matches nothing" is the PASS condition and would read as a pass
+# forever. The question that can fail is whether it would match a real case, so
+# it is measured on the tree where the real cases still existed.
+#
+# THE 43 IT MISSES, RECORDED RATHER THAN CHASED. All 43 are one shape: a bare
+# short document name followed by a TWO-DIGIT line number in the range a clock
+# reading occupies. That string is IDENTICAL to a schedule timecode, and this
+# repository's notes are full of real timecodes transcribed from the wave
+# schedule. The two cannot be told apart without resolving the coordinate against
+# the document, which a text scan does not do. Dropping the clock guard to catch
+# those 43 would flag every real timecode as a violation and redden a clean HEAD,
+# so the guard stays and the gap is stated here instead. A three-digit line
+# number in the same spelling IS caught; only the two-digit case is undecidable.
+#
+# AND 351 IS ITSELF A FINDING ABOUT THE SWEEP. The re-point pass reported 311
+# live citations; measured at its own base ref with this pattern the genuine
+# population is 351. Both figures are recorded with the population each counted:
+# 311 counted occurrences with a range collapsed to one and was produced by an
+# instrument blind to the extensionless and bare-short spellings; 351 counts each
+# coordinate. The earlier figure was an undercount by a blind instrument, not a
+# different opinion - which is evidence for gating the rule rather than against
+# it.
+#
+# WHAT NEITHER ROW CAN SEE, printed on every run beside the count. A gate walks a
+# working tree. Six citation surfaces are outside it, and a positional citation
+# is known to exist in a pull-request body today, so the disclosure is not
+# hypothetical. The zero these rows report is A COUNT OVER FILES, NOT OVER
+# CITATIONS - an unlabelled true zero is the strongest false claim available
+# here, because it is arithmetically true and reads as "there are none anywhere".
+#
+# THE EXEMPTIONS ARE AN EXACT DECLARED SET WITH A PER-ENTRY REASON AND A PINNED
+# COUNT. Never a pattern: a pattern-shaped exemption ("skip this file", "skip
+# anything matching span") is a hole the next real citation hides in. Each entry
+# below names one bucket of one file, states how many citations that bucket is
+# allowed to contain, and says why. A citation that lands outside every declared
+# bucket is a FAILURE, and so is a bucket whose count moves in either direction.
+# The consequence is deliberate and worth knowing before you meet it: ADDING A
+# NEW CITATION TO AN ALREADY-EXEMPT BUCKET FAILS THIS GATE. That is the coupling
+# that makes an exact set different from a pattern - the exemption covers the
+# citations that were audited, not the location they happen to live in.
+#
+# The counts are not copied from a brief; each was derived by running this
+# scanner over the tree and reading the bucket totals off it.
+# --------------------------------------------------------------------------
+
+# The files this tool owns: everything beside this script, plus the three
+# content/ documents this tool is the author of. Nothing else is in scope, because
+# a rule this tool cannot repair is a rule it should not assert.
+OWNED_TOOL_DIR = Path(__file__).resolve().parent
+OWNED_CONTENT_FILES = (
+    "content/README.md",
+    "content/transcription-notes.md",
+    "content/quote-verification-audit.md",
+)
+# Extensions worth reading as text. __pycache__ and any binary are skipped.
+OWNED_SUFFIXES = (".py", ".md", ".json", ".txt", ".csv")
+
+# The freeze rule this file's own preamble states, and the section it protects.
+# Both are matched by TEXT, never by line number - the rule this pair asserts
+# applies to itself first.
+TRANSCRIPTION_NOTES = "content/transcription-notes.md"
+PER_DEFINITION_HEADING = "### Per-definition notes, by catalog"
+BUCKET_FROZEN_NOTES = "per-definition notes section (frozen verbatim note text)"
+BUCKET_OUTSIDE_FROZEN = "outside the per-definition notes section"
+
+# Document extensions a citation's document half may carry.
+DOC_EXTENSIONS = "md|markdown|mdown|csv|rst|txt"
+
+
+def design_document_index() -> tuple[dict[str, list[Path]], dict[str, list[Path]]]:
+    """Walk docs/ RECURSIVELY and group every document by its short name.
+
+    Returns (by_short_name, collisions).
+
+    THE WALK IS RECURSIVE AND THAT IS LOAD-BEARING. A non-recursive walk over
+    docs/*.md finds exactly ONE document numbered 40, computes an EMPTY collision
+    set, and passes forever while the ambiguity sits one directory down in
+    docs/technical/. The collision set is computed from the tree on every run and
+    printed, never hardcoded: a computed rule that emits only a verdict is a
+    hardcoded list one layer down, and printing the intermediate is what stops it
+    going stale invisibly.
+
+    A document's SHORT NAME is the leading numeric run of its filename, or a
+    leading alpha-plus-number code, or - when it has neither - the whole stem.
+    That is the form this repository's prose actually uses to name a document.
+    """
+    by_short: dict[str, list[Path]] = {}
+    if not DOCS.is_dir():
+        return {}, {}
+    for path in sorted(DOCS.rglob("*.md")):
+        stem = path.stem
+        match = (
+            re.match(r"^(\d+)-", stem)
+            or re.match(r"^([A-Za-z]+-\d+)-", stem)
+            or re.match(r"^([A-Za-z]+-\d+)$", stem)
+        )
+        short = match.group(1) if match else stem
+        by_short.setdefault(short, []).append(path)
+    collisions = {k: v for k, v in by_short.items() if len(v) > 1}
+    return by_short, collisions
+
+
+def _normalize_whitespace(text: str) -> str:
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def document_headings(path: Path) -> set[str]:
+    """Every heading of one document, normalized, fenced blocks skipped."""
+    headings: set[str] = set()
+    in_fence = False
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if FENCE.match(line):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        match = HEADING.match(line)
+        if match:
+            headings.add(_normalize_whitespace(f"{match.group(1)} {match.group(2)}"))
+    return headings
+
+
+def _normalize_cited_heading(raw: str) -> str:
+    """Undo SOURCE-LINE WRAPPING so a citation split across two lines resolves.
+
+    A heading cited inside a wrapped docstring, a `#` comment block or an
+    f-string concatenation arrives with the wrap artifacts embedded in it. Those
+    are properties of the Python source, not of the citation, so they are removed
+    before the heading is compared. Without this, 8 perfectly good references in
+    this file alone read as unresolvable and the row would fail on its own
+    formatting.
+    """
+    text = re.sub(r'"\s*\n\s*f?"', " ", raw)
+    text = re.sub(r"\n\s*#\s*", " ", text)
+    text = re.sub(r"\n\s*", " ", text)
+    return _normalize_whitespace(text)
+
+
+def citation_matchers(by_short: dict[str, list[Path]]) -> dict[str, re.Pattern]:
+    """Build the A35 patterns, with the short-name alternation READ FROM THE TREE.
+
+    The short names are not listed here. They come from the same walk that
+    computes the collision set, so a document added to docs/ is in scope for this
+    rule on the next run without anyone editing this file.
+    """
+    short_alt = "|".join(sorted((re.escape(s) for s in by_short), key=len, reverse=True))
+    dash = r"[-‐‑‒–—―]"
+    rng = rf"\d+(?:\s*(?:{dash}|,)\s*\d+)*"
+    return {
+        # a path under docs/, EXTENSION OPTIONAL, then a line number or range
+        "docs_path": re.compile(
+            rf"docs[/\\][\w./\\\-]*?[\w\-]+(?:\.(?:{DOC_EXTENSIONS}))?:{rng}", re.I
+        ),
+        # a bare document filename, extension present, no directory
+        "doc_file": re.compile(rf"(?<![\w./\\\-])[\w\-]+\.(?:{DOC_EXTENSIONS}):{rng}", re.I),
+        # a bare short document name, no directory and no extension
+        "short_name": re.compile(rf"(?<![\w./\\\-])(?:{short_alt}):{rng}", re.I),
+        # the word line/lines, and the GitHub L / #L permalink forms
+        "line_word": re.compile(rf"\blines?\s+{rng}", re.I),
+        "l_form": re.compile(rf"(?:#L\d+(?:{dash}L?\d+)?|(?<![\w])L\d+(?:{dash}L?\d+)?(?![\w]))"),
+        # a BARE coordinate, inheriting its document from an antecedent
+        "bare": re.compile(rf"(?<=[\s(\[{{,;+]):\s*{rng}"),
+        # what counts as an antecedent: a docs/ path or a document filename ONLY.
+        # A bare short name is deliberately NOT an antecedent - "65 groups and 59
+        # elements" would otherwise license every colon-number in the paragraph.
+        "antecedent": re.compile(
+            rf"docs[/\\][\w./\\\-]+|(?<![\w./\\\-])[\w\-]+\.(?:{DOC_EXTENSIONS})", re.I
+        ),
+        # prose that names a coordinate without naming its document on the line.
+        # FLAGGED, never failed - see the note this row prints.
+        "prose_line_of": re.compile(r"\bline\s+\d+\s+of\b", re.I),
+    }
+
+
+# A bare short name plus a TWO-DIGIT number in clock range is indistinguishable
+# from a transcribed schedule timecode. See the docstring above: this guard is why
+# 43 of the pre-sweep citations are missed, and removing it would flag real
+# timecodes and redden a clean tree.
+CLOCK_READING = re.compile(r"^\d{1,2}:[0-5]\d$")
+
+
+def _is_antecedent(text: str, matchers: dict[str, re.Pattern], doc_files: set[str]) -> bool:
+    for match in matchers["antecedent"].finditer(text):
+        token = match.group(0).lower()
+        if token.startswith("docs"):
+            return True
+        if token in doc_files:
+            return True
+    return False
+
+
+def scan_for_citations(
+    text: str, matchers: dict[str, re.Pattern], doc_files: set[str], inherited: bool = False
+) -> tuple[list[tuple[str, str, str]], list[str]]:
+    """Find every positional citation in one unit of text.
+
+    Returns (citations, flags). A citation is (kind, matched text, cited document),
+    where the cited document is the token's own document half, or - for a bare or
+    line-word or L form - the antecedent it inherits from.
+    """
+    found: list[tuple[str, str, str]] = []
+    spans: list[tuple[int, int]] = []
+    for kind in ("docs_path", "doc_file", "short_name"):
+        for match in matchers[kind].finditer(text):
+            token = match.group(0)
+            if kind == "doc_file":
+                stem = re.match(
+                    rf"[\w\-]+\.(?:{DOC_EXTENSIONS})", token, re.I
+                ).group(0).lower()
+                if stem not in doc_files:
+                    continue
+            if kind == "short_name" and CLOCK_READING.match(token.replace(" ", "")):
+                continue
+            found.append((kind, token, token.split(":", 1)[0].strip().lower()))
+            spans.append(match.span())
+
+    antecedents = [m.group(0).lower() for m in matchers["antecedent"].finditer(text)]
+    governed = _is_antecedent(text, matchers, doc_files)
+    for kind in ("line_word", "l_form", "bare"):
+        for match in matchers[kind].finditer(text):
+            if any(a <= match.start() < b for a, b in spans):
+                continue
+            if governed:
+                found.append((kind, match.group(0).strip(), antecedents[-1] if antecedents else ""))
+                spans.append(match.span())
+            elif kind == "bare" and inherited:
+                # the factored form, wrapped across a line break: the document was
+                # named on the line above and the coordinates follow underneath.
+                found.append((kind, match.group(0).strip(), "<previous line>"))
+                spans.append(match.span())
+
+    flags = [m.group(0) for m in matchers["prose_line_of"].finditer(text)] if governed else []
+    return found, flags
+
+
+# --------------------------------------------------------------------------
+# A35's EXEMPTIONS: an exact declared set, one entry per bucket, each with its
+# own reason and its own pinned count. Adding a citation to any bucket below
+# FAILS this gate - see the docstring above on why that coupling is the point.
+#
+# Every count was measured by running this scanner over the tree, not copied
+# from a description of it.
+# --------------------------------------------------------------------------
+
+CitationExemption = namedtuple("CitationExemption", "path bucket count reason")
+
+CITATION_EXEMPTIONS = (
+    # ---- generated / frozen measurement artifacts. Not hand-editable: the
+    # coordinate is a MEASUREMENT of a section's extent, not a pointer a reader
+    # is meant to resolve, and the checker that consumes the file rebuilds every
+    # one of them from the live documents by anchor slug.
+    CitationExemption(
+        "src/MechaMiner.Tools/ContentImport/quote_mismatch_evidence.json",
+        "$.records[].cited[].span",
+        655,
+        "the span of a cited anchor as MEASURED at the sweep ref, emitted by "
+        "check_quote_mismatch_evidence.py beside a doc_id#anchor pointer that carries the "
+        "claim. No code path reads the stored numbers - the checker rebuilds every span from "
+        "the live documents by anchor slug - so rewriting them would destroy a frozen "
+        "measurement and change no behaviour",
+    ),
+    CitationExemption(
+        "src/MechaMiner.Tools/ContentImport/quote_mismatch_evidence.json",
+        "$.records[].refreshed_reason",
+        1,
+        "the one re-baselined record's prose reason, which names the coordinate it verified "
+        "the corrected quotation against character-for-character. It is the evidence for a "
+        "hand refresh of a frozen string; removing the coordinate would remove the audit trail "
+        "for the only record in the artifact that was edited by hand",
+    ),
+    CitationExemption(
+        "src/MechaMiner.Tools/ContentImport/expected_citation_deltas.json",
+        "$.sweep_16[].sections_containing_the_value[].where",
+        29,
+        "emitted by derive_citation_pass_expectations.py from live document geometry. Its "
+        "regeneration route is that script's own --write; it did not need one, and a committed "
+        "expectation is never hand-edited",
+    ),
+    # ---- verbatim-preserved note text, under this file's OWN freeze rule, which
+    # its preamble states as "Note text stays verbatim even where a ruling has
+    # since superseded it". Both buckets are already covered in the file by dated
+    # 2026-08-11 block notes naming the heading each coordinate means, per
+    # document, with the count resolving to each.
+    CitationExemption(
+        TRANSCRIPTION_NOTES,
+        BUCKET_FROZEN_NOTES,
+        599,
+        "verbatim note text reproduced from the deleted per-definition `notes` arrays, kept "
+        "under this file's own freeze rule. Two dated 2026-08-11 block notes at the head of "
+        "the section name the heading every coordinate means and how many resolve to each, and "
+        "record that nothing in this tool resolves any of them at runtime",
+    ),
+    CitationExemption(
+        TRANSCRIPTION_NOTES,
+        BUCKET_OUTSIDE_FROZEN,
+        19,
+        "quoted blockquotes, FLAG text and the `Before` columns of deleted JSON values outside "
+        "the per-definition section, each already carrying a dated 2026-08-11 resolution note "
+        "beside it, plus the two Ruling 25 / Ruling 40 exhibit tables whose coordinate IS the "
+        "exhibit those rulings exist to forbid",
+    ),
+    # ---- exhibits in this file: the coordinate is the thing under discussion, so
+    # removing it would delete the evidence rather than fix a pointer.
+    CitationExemption(
+        "src/MechaMiner.Tools/ContentImport/verify_content.py",
+        "docs/68-utility-catalog.md",
+        1,
+        "the literal string eleven content values carried, quoted in A24's commentary as the "
+        "exhibit A24a exists to forbid. Its line number IS the exhibit; the sentence it stood "
+        "in is named by heading in a dated note beside it",
+    ),
+    CitationExemption(
+        "src/MechaMiner.Tools/ContentImport/verify_content.py",
+        "40-mining-and-extraction.md",
+        1,
+        "an A24a spelling exemplar - the no-directory form - documenting what that rule's "
+        "pattern matches. Removing it would remove the record of a spelling that walked past "
+        "the pattern A24a replaced",
+    ),
+    CitationExemption(
+        "src/MechaMiner.Tools/ContentImport/verify_content.py",
+        "docs/...md",
+        1,
+        "the second A24a spelling exemplar - the uppercase, elided-path form - for the same "
+        "reason as the exemplar above",
+    ),
+    # ---- content/README.md's line-citation release record. Five entries for six
+    # citations; each is a different class of exhibit and gets its own reason. That
+    # file is owned by a peer pass and is NOT edited here.
+    CitationExemption(
+        "content/README.md",
+        "docs/66",
+        2,
+        "the two coordinates quoted verbatim from commit 0648186's own freeze message, which "
+        "is the evidence that a document was being held at a fixed line count on this tool's "
+        "account. Paraphrasing the freeze message would destroy the proof that the freeze "
+        "existed",
+    ),
+    CitationExemption(
+        "content/README.md",
+        "docs/72",
+        1,
+        "the INVERTED pull-request citation: the coordinate resolves to a plausible but wrong "
+        "sentence, so a reader who checks it believes the claim verified. Stating the wrong "
+        "coordinate is the only way to record that specific failure mode",
+    ),
+    CitationExemption(
+        "content/README.md",
+        "docs/technical/40-content-data-and-validation.md",
+        1,
+        "the DRIFTED pull-request citation, correct against the blob its surrounding prose "
+        "pins it to and re-flowed later. It is recorded as coordinates that moved rather than "
+        "a claim that changed, which requires naming them",
+    ),
+    CitationExemption(
+        "content/README.md",
+        "docs/51",
+        1,
+        "the STRUCTURALLY UNREPAIRABLE pull-request citation: it sits in a submitted review "
+        "body, which GitHub exposes no edit for. It is recorded precisely because it cannot be "
+        "fixed",
+    ),
+    CitationExemption(
+        "content/README.md",
+        "docs/weapons/readme.md",
+        1,
+        "the released-document exhibit: this coordinate is named as the one whose re-pointing "
+        "released a document an earlier count had wrongly omitted from the released set",
+    ),
+)
+
+
+def _exemption_lookup() -> dict[tuple[str, str], CitationExemption]:
+    return {(e.path, e.bucket): e for e in CITATION_EXEMPTIONS}
+
+
+# The six citation surfaces no working-tree gate reaches. Printed on every run,
+# beside the count, because the count is a count over FILES.
+UNREACHABLE_SURFACES = (
+    "pull-request bodies",
+    "pull-request reviews",
+    "pull-request review comments",
+    "issue bodies",
+    "commit messages",
+    "messages between sessions",
+)
+
+
+def owned_files() -> list[tuple[str, Path]]:
+    """The exact population A35 and A36 cover, as (relative path, path)."""
+    found: list[tuple[str, Path]] = []
+    for path in sorted(OWNED_TOOL_DIR.rglob("*")):
+        if not path.is_file() or "__pycache__" in path.parts:
+            continue
+        if path.suffix.lower() in OWNED_SUFFIXES:
+            found.append((rel(path), path))
+    for name in OWNED_CONTENT_FILES:
+        path = REPO_ROOT / name
+        if path.is_file():
+            found.append((name, path))
+    return sorted(found)
+
+
+def _json_bucket(pointer: str) -> str:
+    return re.sub(r"\[\d+\]", "[]", pointer)
+
+
+def _frozen_region(lines: list[str]) -> tuple[int, int]:
+    """The per-definition notes section, located by HEADING TEXT, never by line.
+
+    Returns a half-open [start, end) over zero-based line indices; an empty range
+    when the heading is absent, which makes every citation in the file land in the
+    outside bucket and reddens the row rather than passing silently.
+    """
+    try:
+        start = next(
+            i for i, line in enumerate(lines) if line.strip() == PER_DEFINITION_HEADING
+        )
+    except StopIteration:
+        return 0, 0
+    end = next(
+        (i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")), len(lines)
+    )
+    return start, end
+
+
+def collect_owned_citations(
+    matchers: dict[str, re.Pattern], doc_files: set[str]
+) -> tuple[dict[tuple[str, str], list[str]], list[str], int]:
+    """Every positional citation in the owned population, grouped into buckets."""
+    buckets: dict[tuple[str, str], list[str]] = {}
+    flags: list[str] = []
+    scanned = 0
+
+    for relative, path in owned_files():
+        scanned += 1
+        text = path.read_text(encoding="utf-8", errors="replace")
+
+        if path.suffix.lower() == ".json":
+            try:
+                parsed = json.loads(text)
+            except json.JSONDecodeError:
+                parsed = None
+            if parsed is not None:
+                for pointer, value in _json_strings(parsed):
+                    hits, found_flags = scan_for_citations(value, matchers, doc_files)
+                    for _, token, _cited in hits:
+                        buckets.setdefault((relative, _json_bucket(pointer)), []).append(token)
+                    flags.extend(f"{relative} {pointer}: {f}" for f in found_flags)
+                continue
+
+        lines = text.splitlines()
+        frozen_start, frozen_end = _frozen_region(lines)
+        inherited = False
+        for index, line in enumerate(lines):
+            hits, found_flags = scan_for_citations(line, matchers, doc_files, inherited=inherited)
+            for _, token, cited in hits:
+                if relative == TRANSCRIPTION_NOTES:
+                    bucket = (
+                        BUCKET_FROZEN_NOTES
+                        if frozen_start <= index < frozen_end
+                        else BUCKET_OUTSIDE_FROZEN
+                    )
+                else:
+                    bucket = cited
+                buckets.setdefault((relative, bucket), []).append(token)
+            flags.extend(f"{relative}:{index + 1}: {f}" for f in found_flags)
+            inherited = _is_antecedent(line, matchers, doc_files)
+
+    return buckets, flags, scanned
+
+
+def _json_strings(obj, pointer: str = "$"):
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            yield from _json_strings(value, f"{pointer}.{key}")
+    elif isinstance(obj, list):
+        for index, value in enumerate(obj):
+            yield from _json_strings(value, f"{pointer}[{index}]")
+    elif isinstance(obj, str):
+        yield pointer, obj
+
+
+def check_no_positional_citations() -> tuple[list[tuple], tuple[str, ...]]:
+    """A35 - no positional citation of a design document in the files this tool owns."""
+    by_short, _ = design_document_index()
+    matchers = citation_matchers(by_short)
+    doc_files = {p.name.lower() for paths in by_short.values() for p in paths}
+    buckets, flags, scanned = collect_owned_citations(matchers, doc_files)
+    declared = _exemption_lookup()
+
+    undeclared: list[str] = []
+    undeclared_each: list[tuple[str, str, str]] = []
+    drifted: list[str] = []
+    for (path, bucket), tokens in sorted(buckets.items()):
+        entry = declared.get((path, bucket))
+        if entry is None:
+            undeclared.append(f"{path} [{bucket}] {len(tokens)}: {sorted(set(tokens))[:4]}")
+            undeclared_each.extend((path, bucket, token) for token in tokens)
+        elif len(tokens) != entry.count:
+            drifted.append(
+                f"{path} [{bucket}] declared {entry.count}, found {len(tokens)}"
+            )
+    missing = [
+        f"{e.path} [{e.bucket}] declared {e.count}, found 0"
+        for e in CITATION_EXEMPTIONS
+        if (e.path, e.bucket) not in buckets
+    ]
+
+    exempt_total = sum(e.count for e in CITATION_EXEMPTIONS)
+    live_total = sum(
+        len(tokens)
+        for (path, bucket), tokens in buckets.items()
+        if (path, bucket) not in declared
+    )
+
+    rows = [
+        (
+            f"files carrying a NON-EXEMPT positional citation ({scanned} owned file(s) scanned)",
+            0,
+            len({u.split(" [")[0] for u in undeclared}),
+            "ok" if not undeclared else "FAIL",
+        ),
+        (
+            "declared exemption buckets, each at its pinned count",
+            f"{len(CITATION_EXEMPTIONS)} bucket(s), {exempt_total} citation(s)",
+            (
+                f"{len(CITATION_EXEMPTIONS) - len(drifted) - len(missing)} at count"
+                + (f", {len(drifted) + len(missing)} MOVED" if drifted or missing else "")
+            ),
+            "ok" if not drifted and not missing else "FAIL",
+        ),
+        (
+            "prose coordinates FLAGGED, not failed (a line number whose document is "
+            "named in an earlier sentence)",
+            "flag only",
+            f"{len(flags)} flagged",
+            "not asserted",
+        ),
+    ]
+
+    # ONE FAILURE PER OCCURRENCE, naming it. The arity is the attribution: a rule
+    # that aggregated N citations into one failure could not tell a reader whether
+    # it stopped at the first, and a negative control could not distinguish "it
+    # fired" from "it fired once per defect". One injected citation reddens this
+    # row exactly once; two redden it exactly twice.
+    for path, bucket, token in undeclared_each:
+        fail(
+            f"{path}: A35 - {token!r} is a positional citation of a design document that no "
+            f"declared exemption covers (bucket {bucket!r}). A line number breaks silently when "
+            f"the cited document gains a line above the cited material - cite the section heading "
+            f"instead, in the form this repository uses: the document, then its heading in "
+            f"backticks. If it genuinely cannot be re-pointed, it needs its OWN entry in "
+            f"CITATION_EXEMPTIONS with its own reason and pinned count, never a pattern"
+        )
+    for message in drifted + missing:
+        fail(
+            f"A35 - a declared exemption bucket moved: {message}. An exemption pins a COUNT so "
+            f"that a new citation added to an already-exempt bucket reddens this row rather than "
+            f"hiding inside it. If the new citation is legitimate, raise the declared count and "
+            f"say why in that entry's reason; if a citation was removed, lower it"
+        )
+
+    notes = (
+        "WHAT THIS ROW CANNOT SEE, and the zero above is A COUNT OVER FILES, NOT OVER "
+        "CITATIONS. A gate walks a working tree, so it reaches none of these six surfaces: "
+        + ", ".join(UNREACHABLE_SURFACES)
+        + ". A positional citation is known to exist in at least one pull-request body today, "
+        "and content/README.md records a sweep of that surface finding 506 positional citations "
+        "across 27 of 36 pull requests - 149 of them citing the ambiguous bare number 40. A "
+        "merged pull-request body has no routine edit path, so for that population the record is "
+        "the delivery and not a fix. Reading the zero above as 'there are none anywhere' is the "
+        "strongest false claim available here, because it is arithmetically true of the files.",
+        "RECALL IS MEASURED, NOT ASSUMED. Against the file contents at e24a52a - the commit "
+        "before the 311-citation sweep - this pattern catches 308 of the 351 genuine "
+        "design-document citations that sweep removed. For an ABSENCE assertion 'the pattern "
+        "matches nothing' is the PASS condition, so asking whether it matches anything here "
+        "would read as a pass forever; the question that can fail is whether it would match a "
+        "real case, and that is only answerable on a tree where the real cases still exist.",
+        "THE 43 IT MISSES ARE ONE UNDECIDABLE SHAPE. All 43 are a bare short document name "
+        "followed by a TWO-DIGIT number in clock range - a string identical to the schedule "
+        "timecodes this repository's notes transcribe verbatim. Telling them apart needs the "
+        "coordinate resolved against the document, which a text scan does not do. Dropping the "
+        "guard would flag real timecodes and redden a clean tree, so the gap is recorded here "
+        "instead of chased. The same spelling with a THREE-digit line number is caught.",
+        "THE SWEEP'S OWN FIGURE WAS AN UNDERCOUNT, recorded because the discrepancy is "
+        "evidence for this row. The re-point pass reported 311 live citations; this pattern "
+        "measures 351 genuine ones at that pass's own base ref. 311 collapsed a range to one "
+        "occurrence and came from an instrument that could not see the extensionless or "
+        "bare-short spellings; 351 counts each coordinate. Both figures are stated with the "
+        "population each counted rather than reconciled away.",
+        "AN EXEMPTION IS AN EXACT SET, WHICH HAS A CONSEQUENCE WORTH KNOWING BEFORE YOU MEET "
+        "IT: adding a new citation to an already-exempt bucket FAILS this gate, because each "
+        "entry pins a count. That is the designed difference between an exact set and a "
+        "pattern - the exemption covers the citations that were audited, not the location they "
+        "happen to sit in. A pattern-shaped exemption is a hole the next real citation hides in.",
+    )
+    return rows, notes
+
+
+# --------------------------------------------------------------------------
+# A36 - an ambiguous short-name document reference must carry its full path.
+#
+# THE CITATION CONVENTION this repository settled on is the document, then its
+# section heading in backticks. That form is stable under editing, which is the
+# whole point of A35. It is NOT automatically unambiguous: the short name 40 names
+# TWO documents - the mining-and-extraction design document and the technical
+# content-data-and-validation document - and they differ by more than 200 lines.
+# A reader who resolves the wrong one gets a confidently wrong answer.
+#
+# THE COLLISION SET IS COMPUTED FROM THE TREE ON EVERY RUN AND PRINTED. Not
+# hardcoded, because a hardcoded pair goes stale the moment a document is added;
+# and printed rather than reduced to a verdict, because a computed rule that emits
+# only pass/fail is a hardcoded list one layer down. Printing the intermediate is
+# what stops it going stale invisibly.
+#
+# THE WALK IS RECURSIVE, and that is the difference between a real rule and one
+# that passes forever. docs/*.md non-recursively contains exactly ONE document
+# numbered 40; the collision set computed that way is EMPTY, the row is green, and
+# the ambiguity sits one directory down in docs/technical/ untouched. The
+# recursive walk over docs/**/*.md finds 201 documents and 12 colliding short
+# names.
+#
+# TWO COUNTS OF ONE POPULATION, RECONCILED HERE RATHER THAN LEFT TO DISAGREE. An
+# earlier pass measured 9 ambiguous numbers over the same 201 documents. Both
+# figures are right and they count different predicates: 9 counts documents whose
+# filename BEGINS WITH DIGITS (38 distinct leading numbers, 9 of them shared by
+# two documents each); 12 counts every short name a citation can spell, which adds
+# the three NON-NUMERIC collisions - README, shared by 7 documents, and
+# conventions and open-questions, each shared by 2. This row uses the wider
+# predicate because a bare README reference is exactly as unresolvable as a bare
+# 40, and neither figure is adjusted to match the other.
+#
+# A REFERENCE RESOLVES when its heading exists in exactly ONE of the documents
+# sharing that short name. That is measurable and it is what a reader does. A
+# reference whose heading matches two of them, or none, is the failure - and a
+# short name carrying a LINE NUMBER instead of a heading cannot resolve at all,
+# which is the population this row flags today and A35 forbids independently.
+# --------------------------------------------------------------------------
+
+
+def check_short_name_ambiguity() -> tuple[list[tuple], list[tuple], tuple[str, ...]]:
+    """A36 - an ambiguous short-name reference must carry a full path or resolve uniquely.
+
+    Returns (rows, collision_rows, notes). `collision_rows` is the computed
+    collision set, printed on every run.
+    """
+    by_short, collisions = design_document_index()
+    total_docs = sum(len(paths) for paths in by_short.values())
+
+    collision_rows = [
+        (
+            short,
+            len(paths),
+            ", ".join(rel(p) for p in paths),
+        )
+        for short, paths in sorted(collisions.items())
+    ]
+    numeric_collisions = sum(1 for s in collisions if s.isdigit())
+
+    headings_by_doc = {
+        short: {rel(p): document_headings(p) for p in paths}
+        for short, paths in collisions.items()
+    }
+
+    short_alt = "|".join(sorted((re.escape(s) for s in collisions), key=len, reverse=True))
+    heading_ref = re.compile(rf"(?<![/\w.\-])({short_alt}) `([^`]+)`")
+    dash = r"[-‐‑‒–—―]"
+    coordinate_ref = re.compile(
+        rf"(?<![\w./\\\-])({short_alt}):\d+(?:\s*(?:{dash}|,)\s*\d+)*"
+    )
+
+    unresolved: list[str] = []
+    resolved = 0
+    positional = list()
+    for relative, path in owned_files():
+        if path.suffix.lower() == ".json":
+            continue
+        text = path.read_text(encoding="utf-8", errors="replace")
+        for match in heading_ref.finditer(text):
+            short, raw = match.group(1), match.group(2)
+            if not raw.lstrip().startswith("#"):
+                continue
+            heading = _normalize_cited_heading(raw)
+            owners = [d for d, hs in headings_by_doc[short].items() if heading in hs]
+            if len(owners) == 1:
+                resolved += 1
+            else:
+                unresolved.append(
+                    f"{relative}: `{short}` `{heading}` -> "
+                    + (f"{len(owners)} documents: {owners}" if owners else "no document")
+                )
+        for match in coordinate_ref.finditer(text):
+            token = match.group(0)
+            if CLOCK_READING.match(token.replace(" ", "")):
+                continue
+            positional.append(f"{relative}: {token}")
+
+    rows = [
+        (
+            f"colliding short names computed from docs/**/*.md ({total_docs} document(s))",
+            "a non-empty, PRINTED collision set",
+            f"{len(collisions)} ({numeric_collisions} numeric + "
+            f"{len(collisions) - numeric_collisions} non-numeric)",
+            "ok" if collisions else "FAIL",
+        ),
+        (
+            f"ambiguous short-name references resolving to exactly one document ({resolved} ref(s))",
+            0,
+            len(unresolved),
+            "ok" if not unresolved else "FAIL",
+        ),
+        (
+            "ambiguous short name carrying a LINE NUMBER instead of a heading (cannot resolve)",
+            0,
+            len(positional),
+            "ok" if not positional else "FAIL",
+        ),
+    ]
+
+    if not collisions:
+        fail(
+            "A36 - the computed collision set is EMPTY, which on this tree means the walk broke "
+            "rather than that the ambiguity is gone. A non-recursive walk over docs/ produces "
+            "exactly this result while two documents numbered 40 sit one directory apart, so an "
+            "empty set is a failure here and never a pass"
+        )
+    if unresolved:
+        fail(
+            f"A36 - {len(unresolved)} ambiguous short-name reference(s) do not resolve to one "
+            f"document. A short name shared by two documents needs its FULL PATH, because the "
+            f"reader cannot tell which document is meant: {unresolved[:10]}"
+        )
+    if positional:
+        fail(
+            f"A36 - {len(positional)} reference(s) spell an ambiguous short name with a line "
+            f"number. That form is doubly unresolvable - the document is ambiguous AND the "
+            f"coordinate decays - so it needs the full path and the section heading: "
+            f"{positional[:10]}"
+        )
+
+    notes = (
+        "THE COLLISION SET ABOVE IS COMPUTED ON EVERY RUN AND PRINTED IN FULL, never "
+        "hardcoded and never reduced to a verdict. A computed rule that prints only pass/fail "
+        "is a hardcoded list one layer down; printing the intermediate is what stops it going "
+        "stale invisibly. The walk is RECURSIVE over docs/**/*.md - non-recursively there is "
+        "exactly one document numbered 40, the collision set computes EMPTY, and this row would "
+        "pass forever while the ambiguity sat one directory below.",
+        "TWO COUNTS OF ONE POPULATION, both correct, kept with their predicates. An earlier "
+        "pass measured 9 ambiguous NUMBERS over these same documents - documents whose filename "
+        "begins with digits, 38 distinct leading numbers. This row counts 12 ambiguous SHORT "
+        "NAMES, which adds the three non-numeric collisions: README shared by 7 documents, and "
+        "conventions and open-questions each shared by 2. The wider predicate is used because a "
+        "bare README reference is exactly as unresolvable as a bare 40; neither figure was "
+        "adjusted to match the other.",
+        "A REFERENCE COUNTS AS RESOLVED when its cited heading exists in exactly one of the "
+        "documents sharing its short name, which is what a reader actually does to disambiguate. "
+        "Source-line wrapping is undone before the comparison - a heading split across two lines "
+        "of a docstring, a comment block or an f-string is one citation, not an unresolvable "
+        "one - and without that 8 sound references in this file alone would redden the row on "
+        "their own formatting.",
+    )
+    return rows, collision_rows, notes
+
+
+# --------------------------------------------------------------------------
 # reporting
 # --------------------------------------------------------------------------
 
@@ -4947,6 +6641,10 @@ def main() -> int:
     null_rows = check_no_nulls()
     abbreviation_rows = check_no_abbreviation_periods()
     loc_rows = check_localization(stats)
+    key_binding_rows, key_binding_notes = check_key_id_binding(docs)
+    value_vocabulary_rows, value_vocabulary_notes = check_value_vocabulary_coupling(docs)
+    citation_rows, citation_notes = check_no_positional_citations()
+    ambiguity_rows, collision_rows, ambiguity_notes = check_short_name_ambiguity()
 
     table(
         "A12 Per-directory entry counts",
@@ -4960,7 +6658,7 @@ def main() -> int:
         world_prop_rows,
     )
     table(
-        "A16 Percentage-point policy (numbers and key names, 40:95)",
+        "A16 Percentage-point policy (numbers and key names, 40 `## Unit and numeric policy`)",
         ("check", "expected", "actual", "status"),
         percent_rows,
     )
@@ -5043,6 +6741,44 @@ def main() -> int:
         bound_rows,
     )
     table("A10/A11 Localization", ("check", "expected", "actual", "status"), loc_rows)
+    table(
+        "A33 Key/id binding: name_key and summary_key equal "
+        "<category>.<that definition's own id>.<role> "
+        "(40 `### Source catalog format and key pattern` for the pattern; the binding to the "
+        "carrier's OWN id is this tool's convention, measured, not a documented mandate)",
+        ("check", "expected", "actual", "status"),
+        key_binding_rows,
+        key_binding_notes,
+    )
+    table(
+        f"A34 `{COUPLED_VOCABULARY_FIELD}` coupled to the closed vocabulary "
+        f"{rel(DOC_CONTENT_DATA)} `{MINTED_VOCABULARY_HEADING}` grants "
+        "[expected set READ from that section's table on every run, never copied here and never "
+        "collected from the files being checked]",
+        ("check", "expected", "actual", "status"),
+        value_vocabulary_rows,
+        value_vocabulary_notes,
+    )
+    table(
+        "A35 No positional citation of a design document in the files this tool owns "
+        "[exemptions are an EXACT declared set with a per-entry reason and a pinned count; "
+        "adding a citation to an exempt bucket FAILS]",
+        ("check", "expected", "actual", "status"),
+        citation_rows,
+        citation_notes,
+    )
+    table(
+        "A36 An ambiguous short-name document reference must carry its full path "
+        "[collision set COMPUTED from docs/**/*.md recursively on every run, and printed below]",
+        ("check", "expected", "actual", "status"),
+        ambiguity_rows,
+        ambiguity_notes,
+    )
+    table(
+        "A36 the computed collision set (printed every run, never hardcoded)",
+        ("short name", "documents", "paths"),
+        collision_rows,
+    )
     table("A19 Expected exception sets", ("set", "expected", "actual", "status"), set_rows)
     table(
         "A28 Definition (path, id) manifest "
@@ -5053,9 +6789,10 @@ def main() -> int:
     )
     table("A21 File inventory", ("check", "expected", "actual", "status"), inventory_rows)
     table(
-        "A32 canonical_letter on exactly the six letter resources (40:106, blob 4cded84), "
-        "paired with the id per the transcribed 40:111 table; five rows, each blind to a "
-        "different edit",
+        "A32 canonical_letter on exactly the six letter resources "
+        "(40 `### Resources`), paired with the id per the eight-row table "
+        "transcribed from 40 `### Minted content-ID grammars`; five rows, each "
+        "blind to a different edit",
         ("check", "expected", "actual", "status"),
         canonical_letter_rows,
         (
@@ -5063,10 +6800,11 @@ def main() -> int:
             "values were the six ids, so they were already leaves of this tree and a leaf-value "
             "comparison reported 'nothing gained or lost' having checked nothing that changed. "
             "That is why rows 1 and 2 NAME their files instead of counting them. Row 2 binds each "
-            "file's letter to its id through the eight-row 40:111 table - never by arithmetic on "
-            "the id, which 40:109 forbids in substance by stating the two fields derive from each "
-            "other in neither direction; row 1 binds the carrier population by NAME, which is the "
-            "only row that survives a correlated delete-here/add-there edit keeping the count "
+            "file's letter to its id through that eight-row table - never by arithmetic on "
+            "the id, which the same section forbids in substance by stating the two fields "
+            "derive from each other in neither direction; row 1 binds the carrier population "
+            "by NAME, which is the only row that survives a correlated delete-here/add-there "
+            "edit keeping the count "
             "at 6.",
         ),
     )

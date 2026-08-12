@@ -10,7 +10,7 @@
   "families": [
     {
       "name": "enemy and boss world speed",
-      "doc_assignment": "docs/technical/40-content-data-and-validation.md:114 - 'Validation derives world speeds/footprints and compares them with the survivability report'",
+      "doc_assignment": "docs/technical/40-content-data-and-validation.md `### Enemies and bosses` - 'Validation derives world speeds and contact footprints ... and compares them with the survivability report'",
       "scopes": [
         "content/enemies/",
         "content/bosses/"
@@ -281,7 +281,7 @@
     },
     {
       "name": "PowerUp cumulative cost",
-      "doc_assignment": "docs/technical/40-content-data-and-validation.md:136 - 'Validators recompute total catalog costs and maximum-account envelope'; with 40:203 'price curves, total costs'",
+      "doc_assignment": "docs/technical/40-content-data-and-validation.md `### PowerUps and option unlocks` - 'Validators recompute total catalog costs and maximum-account envelope'; with 40 `### Analytical` 'price curves, total costs'",
       "scopes": [
         "content/powerups/"
       ],
@@ -1159,7 +1159,7 @@
     },
     {
       "name": "utility total rank ore cost",
-      "doc_assignment": "docs/technical/40-content-data-and-validation.md:203 - 'Recalculate ... price curves, total costs'",
+      "doc_assignment": "docs/technical/40-content-data-and-validation.md `### Analytical` - 'Recalculate ... price curves, total costs'",
       "scopes": [
         "content/utilities/"
       ],
@@ -1343,7 +1343,7 @@
     },
     {
       "name": "resource aggregate total",
-      "doc_assignment": "docs/technical/40-content-data-and-validation.md:203 - 'Recalculate ... resource totals'",
+      "doc_assignment": "docs/technical/40-content-data-and-validation.md `### Analytical` - 'Recalculate ... resource totals'",
       "scopes": [
         "content/resources/"
       ],
@@ -1575,7 +1575,7 @@
     },
     {
       "name": "mining-site aggregate total",
-      "doc_assignment": "docs/technical/40-content-data-and-validation.md:140 - 'Standard mode validates exactly four accepted classes and their totals'; with 40:203",
+      "doc_assignment": "docs/technical/40-content-data-and-validation.md `### Mining sites` - 'Standard mode validates exactly four accepted classes and their totals'; with 40 `### Analytical`",
       "scopes": [
         "content/mining-sites/"
       ],
@@ -1799,7 +1799,7 @@
     },
     {
       "name": "map-contract site-based Hyper Gold",
-      "doc_assignment": "docs/technical/40-content-data-and-validation.md:203 - 'Recalculate ... resource totals'",
+      "doc_assignment": "docs/technical/40-content-data-and-validation.md `### Analytical` - 'Recalculate ... resource totals'",
       "scopes": [
         "content/maps/"
       ],
@@ -2462,19 +2462,19 @@
       "file": "content/mining-sites/hyper-gold-sites.json",
       "pointer": "beacon_thresholds[].at_uninterrupted_seconds_from_zero",
       "arithmetic": "11.25 / 22.5 / 33.75 = progress percent x the authored 45 s extraction duration",
-      "why_retained": "40:140 lists 'beacon thresholds' among the AUTHORED fields of a mining site and assigns the compiler only 'their totals'. Threshold timing is not a total and no other line claims it."
+      "why_retained": "40 `### Mining sites` lists 'beacon thresholds' among the AUTHORED fields of a mining site and assigns the compiler only 'their totals'. Threshold timing is not a total and no other line claims it."
     },
     {
       "file": "content/resources/common-ore.json",
       "pointer": "sources[].depletion_seconds",
       "arithmetic": "15 = installment_seconds x installment_count in both seam rows",
-      "why_retained": "40:203 gives the compiler 'resource totals'; a depletion duration is not a total, and 40:106's resource-field list does not mention it. The identically-derived total_depletion_seconds in content/mining-sites/ IS removed, because 40:140 names the site classes' totals explicitly."
+      "why_retained": "40 `### Analytical` gives the compiler 'resource totals'; a depletion duration is not a total, and 40 `### Resources`'s resource-field list does not mention it. The identically-derived total_depletion_seconds in content/mining-sites/ IS removed, because 40 `### Mining sites` names the site classes' totals explicitly."
     },
     {
       "file": "content/enemies|bosses/*",
       "pointer": "resonant_damage_reference.resonant_damage",
       "arithmetic": "17 / 44 / 33 / 22 / 42 = ceil(base_damage x 1.20)",
-      "why_retained": "The 1.20 comes from the geode resonance field's 20%, but no doc line documents the rounding, and 40:203 tolerates divergence only 'beyond documented rounding'. Also an operand - see RETAINED_BECAUSE_OPERAND."
+      "why_retained": "The 1.20 comes from the geode resonance field's 20%, but no doc line documents the rounding, and 40 `### Analytical` tolerates divergence only 'beyond documented rounding'. Also an operand - see RETAINED_BECAUSE_OPERAND."
     },
     {
       "file": "content/bosses/BOSS-01.json",
@@ -2486,7 +2486,7 @@
       "file": "content/weapons/*",
       "pointer": "damage_model.{burst_10_dps, sustained_30_dps, favorable_horde_dps}",
       "arithmetic": "45 values; W-AB reproduces as 96/3.0 = 32.0, ceil(10/3.0) x 96/10 = 38.4, 32.0 x 4 pierce = 128",
-      "why_retained": "40:203 DOES assign 'DPS estimates' to the compiler, so the doc test passes - but the burst/horde rule varies with each weapon's behaviour kind and this pass could not state ONE rule that reproduces all 45 exactly. Criterion 1 is therefore unmet and the family is deliberately out of scope, not cleared."
+      "why_retained": "40 `### Analytical` DOES assign 'DPS estimates' to the compiler, so the doc test passes - but the burst/horde rule varies with each weapon's behaviour kind and this pass could not state ONE rule that reproduces all 45 exactly. Criterion 1 is therefore unmet and the family is deliberately out of scope, not cleared."
     },
     {
       "file": "content/mining-sites/rich-ore-seams.json",

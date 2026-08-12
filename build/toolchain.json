@@ -82,6 +82,10 @@
     {
       "name": "curl",
       "reason": "bootstrap downloads the pinned Godot archive and the .NET install script"
+    },
+    {
+      "name": "python3",
+      "reason": "verify-run-slice.sh derives the transcript's expected section roster from tests/verification/*.json; without it the gate's third anchor cannot be computed and its census degrades to a two-sided comparison that a correlated deletion passes (docs/technical/91-verification-strategy.md:199)"
     }
   ]
 }

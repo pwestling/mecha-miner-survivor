@@ -331,25 +331,124 @@ internal sealed class ToolchainInspector
 
     private ToolProbe ProbeRequiredCommand(RequiredCommandPin pin)
     {
+        bool wantsVersion = pin.MinimumMajorVersion > 0;
+        bool wantsCapability = pin.CapabilityArguments.Count > 0;
+        string expected = wantsVersion
+            ? pin.Name + " " + pin.MinimumMajorVersion.ToString(CultureInfo.InvariantCulture) + " or newer"
+            : wantsCapability
+                ? pin.CapabilityDescription
+                : "present on PATH";
+
         string? located = FindOnPath(pin.Name);
         if (located is null)
         {
             return new ToolProbe(
                 pin.Name,
                 ToolStatus.Mismatched,
-                "present on PATH",
+                expected,
                 "absent",
-                pin.Reason + "; install it, then re-run ./build.sh doctor",
+                Remedy(pin, pin.Reason + "; nothing named " + pin.Name + " is on PATH"),
                 "FND-002");
+        }
+
+        string versionLine = DescribeVersion(pin.Name, located);
+
+        // The capability, established by running the command rather than by asking what
+        // platform this is. Presence proves nothing on its own: macOS ships a sed and a
+        // bash that are present and still cannot do what the gate scripts need.
+        if (wantsCapability)
+        {
+            CommandResult capable = _runner.Run(
+                "probe-" + pin.Name + "-capability",
+                located,
+                pin.CapabilityArguments,
+                quiet: true);
+            if (!capable.Succeeded)
+            {
+                return new ToolProbe(
+                    pin.Name,
+                    ToolStatus.Mismatched,
+                    expected,
+                    located + " rejected " + string.Join(' ', pin.CapabilityArguments),
+                    Remedy(pin, pin.Reason + "; " + located + " is present but lacks " + pin.CapabilityDescription),
+                    "FND-002");
+            }
+        }
+
+        if (wantsVersion)
+        {
+            int? major = FirstInteger(versionLine);
+            if (major is null)
+            {
+                return new ToolProbe(
+                    pin.Name,
+                    ToolStatus.Mismatched,
+                    expected,
+                    "version not readable from: " + versionLine,
+                    Remedy(pin, pin.Reason + "; the version of " + located + " could not be read"),
+                    "FND-002");
+            }
+
+            if (major.Value < pin.MinimumMajorVersion)
+            {
+                return new ToolProbe(
+                    pin.Name,
+                    ToolStatus.Mismatched,
+                    expected,
+                    major.Value.ToString(CultureInfo.InvariantCulture) + " at " + located,
+                    Remedy(pin, pin.Reason + "; " + located + " is major version "
+                        + major.Value.ToString(CultureInfo.InvariantCulture)
+                        + ", below the required " + pin.MinimumMajorVersion.ToString(CultureInfo.InvariantCulture)),
+                    "FND-002");
+            }
         }
 
         return new ToolProbe(
             pin.Name,
             ToolStatus.Ok,
-            "present on PATH",
-            DescribeVersion(pin.Name, located),
+            expected,
+            versionLine,
             pin.Reason,
             "FND-002");
+    }
+
+    /// <summary>
+    /// Appends the pin's remedy so a failing row names the action that repairs it. A
+    /// message that only states the symptom sends a reader looking for the cause, which
+    /// is the failure mode this whole probe set exists to stop.
+    /// </summary>
+    private static string Remedy(RequiredCommandPin pin, string symptom)
+    {
+        return pin.Remedy.Length > 0
+            ? symptom + ". Fix: " + pin.Remedy
+            : symptom + "; install it, then re-run ./build.sh doctor";
+    }
+
+    /// <summary>Returns the first run of digits in a version line, or null when there is none.</summary>
+    private static int? FirstInteger(string text)
+    {
+        for (int start = 0; start < text.Length; start++)
+        {
+            if (!char.IsAsciiDigit(text[start]))
+            {
+                continue;
+            }
+
+            int end = start;
+            while (end < text.Length && char.IsAsciiDigit(text[end]))
+            {
+                end++;
+            }
+
+            if (int.TryParse(text.AsSpan(start, end - start), out int value))
+            {
+                return value;
+            }
+
+            return null;
+        }
+
+        return null;
     }
 
     private ToolProbe ProbeOptionalTool(OptionalToolPin pin)

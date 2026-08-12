@@ -36,6 +36,21 @@ readonly LAUNCH_FRAMES=60
 readonly EXIT_VALIDATION=4
 readonly EXIT_BUILD=5
 
+# The documented discovery order, which build/toolchain.json states as "MECHAMINER_GODOT
+# environment variable" then "godot on PATH". ToolchainInspector.ResolveGodotCommand
+# implements it for doctor and build/verify-godot-runner.sh already spells it exactly this
+# way; this script used to call bare `godot` twice and so honoured only the second half.
+#
+# That gap is platform-specific in the worst way. On macOS `godot` MUST NOT be on PATH:
+# Godot resolves its GodotSharp assemblies relative to the path it was invoked by, so
+# reaching it through a symlink such as /usr/local/bin/godot makes it search
+# /usr/local/bin/GodotSharp/Api/Debug and die with "Unable to find .NET assemblies
+# directories". The documented macOS setup therefore gives the full path inside the app
+# bundle and deliberately leaves PATH alone - which left this script with nothing to find,
+# and MECHAMINER_GODOT, the variable that exists precisely to say where the engine is,
+# was the one thing it did not read.
+readonly GODOT="${MECHAMINER_GODOT:-godot}"
+
 # The shared emitters: pass/fail for findings about the subject under test,
 # control_pass/control_fail for anything produced while a negative control's fixture is in
 # place, section/gate_summary so a red run names the failing section. See build/gate-output.sh
@@ -50,6 +65,72 @@ engine_problem_lines() {
   grep -E '(^|[[:space:]])(ERROR|WARNING|SCRIPT ERROR|USER ERROR):' || true
 }
 
+# Resolves the discovery order to something runnable, or fails naming discovery. Printing
+# "headless import exited 127" instead sends a reader into the engine log for a defect that
+# is really "this machine never told the gate where Godot is" - the same shape as the
+# swallowed `readlink -f` in build/verify-verbs.sh, one layer further out.
+godot_discovery_problem() {
+  local candidate="$1"
+  if [[ -z "${candidate}" ]]; then
+    printf '%s\n' "neither MECHAMINER_GODOT nor a godot on PATH names an engine"
+    return 0
+  fi
+  if [[ "${candidate}" == */* ]]; then
+    # An explicit path, from MECHAMINER_GODOT or a relative spelling.
+    [[ -e "${candidate}" ]] || { printf '%s\n' "${candidate} does not exist"; return 0; }
+    [[ -x "${candidate}" ]] || { printf '%s\n' "${candidate} is not executable"; return 0; }
+    return 1
+  fi
+  command -v -- "${candidate}" >/dev/null 2>&1 \
+    || { printf '%s\n' "no '${candidate}' on PATH"; return 0; }
+  return 1
+}
+
+section "0. the documented Godot discovery order resolves to a runnable engine"
+discovery_problem="$(godot_discovery_problem "${GODOT}" || true)"
+if [[ -n "${discovery_problem}" ]]; then
+  fail "Godot discovery failed: ${discovery_problem}"
+  printf '%s\n' \
+    "      Discovery order (build/toolchain.json): MECHAMINER_GODOT, then godot on PATH." \
+    "      MECHAMINER_GODOT is currently ${MECHAMINER_GODOT:-unset}." \
+    "      On macOS do NOT put godot on PATH - invoked through a symlink the engine looks" \
+    "      for GodotSharp beside the symlink and fails with 'Unable to find .NET assemblies" \
+    "      directories'. Point MECHAMINER_GODOT at the binary inside the app bundle:" \
+    "        export MECHAMINER_GODOT=\"/Applications/Godot_mono.app/Contents/MacOS/Godot\"" \
+    "      Then './build.sh doctor' confirms the engine before any gate runs." >&2
+  gate_summary "verify-godot" "${EXIT_VALIDATION}"
+  exit "${EXIT_VALIDATION}"
+fi
+pass "Godot discovery resolved '${GODOT}' before any engine command ran"
+
+# Negative control for § 0. Without it the check above could never fail and would be
+# decoration: a discovery probe that accepts everything reports success on the very machine
+# it exists to diagnose. Each arm asserts the reported problem NAMES its cause, because a
+# discovery failure that does not say which half of the order came up empty is the defect
+# this section was added to remove.
+control_absent="$(godot_discovery_problem "" || true)"
+if [[ "${control_absent}" == *"neither MECHAMINER_GODOT nor a godot on PATH"* ]]; then
+  control_pass "negative control: an empty discovery result is reported as a discovery failure naming both halves of the order"
+else
+  control_fail "negative control: an empty discovery result produced '${control_absent}', which does not name the discovery order; § 0 cannot be trusted to fire"
+fi
+
+control_missing_path="$(godot_discovery_problem "${REPO_ROOT}/build/verify-godot-no-such-engine" || true)"
+if [[ "${control_missing_path}" == *"does not exist"* ]]; then
+  control_pass "negative control: an explicit MECHAMINER_GODOT path that does not exist is reported as such, not as an engine crash"
+else
+  control_fail "negative control: a nonexistent explicit engine path produced '${control_missing_path}'; § 0 would let it through to the import step"
+fi
+
+control_not_executable="$(mktemp)"
+control_not_executable_report="$(godot_discovery_problem "${control_not_executable}" || true)"
+if [[ "${control_not_executable_report}" == *"is not executable"* ]]; then
+  control_pass "negative control: an explicit engine path that is not executable is reported as such"
+else
+  control_fail "negative control: a non-executable engine path produced '${control_not_executable_report}'; § 0 would let it through to the import step"
+fi
+rm -f -- "${control_not_executable}"
+
 section "cold cache: removing game/.godot"
 rm -rf "${GAME_DIR}/.godot"
 
@@ -61,7 +142,7 @@ fi
 pass "MechaMiner.Game built"
 
 section "VER-FND-001-012: godot headless import"
-import_log="$(godot --headless --path "${GAME_DIR}" --import 2>&1 | strip_ansi)"
+import_log="$("${GODOT}" --headless --path "${GAME_DIR}" --import 2>&1 | strip_ansi)"
 import_status="${PIPESTATUS[0]}"
 if [[ "${import_status}" -ne 0 ]]; then
   fail "headless import exited ${import_status}, expected 0"
@@ -77,7 +158,7 @@ else
 fi
 
 section "VER-FND-001-013: godot headless launch"
-launch_log="$(godot --headless --path "${GAME_DIR}" --quit-after "${LAUNCH_FRAMES}" 2>&1 | strip_ansi)"
+launch_log="$("${GODOT}" --headless --path "${GAME_DIR}" --quit-after "${LAUNCH_FRAMES}" 2>&1 | strip_ansi)"
 launch_status="${PIPESTATUS[0]}"
 if [[ "${launch_status}" -ne 0 ]]; then
   fail "headless launch exited ${launch_status}, expected 0"

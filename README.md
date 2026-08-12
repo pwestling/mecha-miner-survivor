@@ -16,7 +16,7 @@ The slice has merged — but into another branch, not into `master`. See [Try it
 | --- | --- | --- |
 | ✅ | Design + technical specification | Complete, on `master` (`docs/`) |
 | ✅ | Content catalog | 138 JSON definitions on `master` — 15 weapons, 45 branches, 6 mechs, 10 enemies, 4 bosses, 10 relics, 13 utilities, 13 power-ups (116), and 22 more: 8 resources, 6 unlocks, 4 mining sites, 1 map contract, 1 encounter schedule, and the shared weapon-price and elite-modifier rule files. This is the number the content gate asserts — `python3 src/MechaMiner.Tools/ContentImport/verify_content.py` reports 138 definition `*.json` files under `content/`, excluding `localization/` and `schemas/`, which is why the tree also holds a 139th JSON file (`content/localization/en.json`) that is not a definition. |
-| 🚧 | Build + toolchain | Works on a branch. `master` carries the provisioning scripts — `bootstrap-linux.sh` plus the macOS `bootstrap-macos.sh` and its `verify-bootstrap-macos.sh` gate — but **no `./build.sh`** and no CI. |
+| 🚧 | Build + toolchain | Works on a branch. `master` carries the provisioning script but **no `./build.sh`** and no CI. |
 | 🚧 | Simulation core | Written, 252 tests passing in `MechaMiner.Simulation.Tests`, not on `master` — [#11](https://github.com/pwestling/mecha-miner-survivor/pull/11) was open and marked ready for review when this block was last checked on 6 Aug 2026, with head `claude/hearth-thread-3aamx2` and base `claude/hearth-thread-2vmaro-fnd-002` |
 | 🚧 | Playable slice | Movement only. [#19](https://github.com/pwestling/mecha-miner-survivor/pull/19) **merged** on 6 Aug 2026 — into `claude/hearth-thread-3aamx2` (merge commit `5f9e28c`), **not** into `master`. It now rides that branch instead of one of its own, and three merges still separate it from `master`: [#11](https://github.com/pwestling/mecha-miner-survivor/pull/11), [#3](https://github.com/pwestling/mecha-miner-survivor/pull/3), and a pull request nobody has opened yet. |
 | ⬜ | Everything else | Not started |
@@ -95,7 +95,7 @@ What you give up is `doctor`, so check the two pins by hand: `dotnet --version` 
 
 ### macOS — not run on hardware
 
-`build/bootstrap-macos.sh` is the macOS provisioning script, and the primary route. It installs the same pinned tools this page lists, checking each download against a digest pinned in the script — SHA-512 for the two .NET SDK packages, SHA-256 for the Godot archive and its extracted binary. It has never been run on macOS hardware: it is merged, hash-pinned, and statically gated by `build/verify-bootstrap-macos.sh`, but never executed, so the first person to run it is its first execution. `build/bootstrap-linux.sh` is Linux-only by construction and does not cover the Mac. If you would rather not run the script, the numbered steps below reproduce it by hand and follow the same pins; every one of them is unrun on a Mac.
+There is no macOS provisioning script in this repository. `build/bootstrap-linux.sh` is Linux-only by construction, and the `bootstrap` verb reports "there is no platform installer for osx-arm64 yet". The steps below follow the same pins the Linux script uses; every one of them is unverified on a Mac.
 
 **1. Replace the BSD userland tools the gate scripts assume.** This is required, not optional: the gate scripts use `mapfile` (bash 4+) in 32 places and GNU `sha256sum` and `timeout`, and stock macOS ships bash 3.2.57 and neither command.
 
@@ -125,7 +125,7 @@ sudo ln -s /Applications/Godot_mono.app/Contents/MacOS/Godot /usr/local/bin/godo
 godot --version   # expect 4.7.1.stable.mono.official.a13da4feb
 ```
 
-The bundle is named `Godot_mono.app`, not `Godot.app`. To check this download by hand, use the digests `build/bootstrap-macos.sh` pins for macOS: `GODOT_ARCHIVE_SHA256` for the zip and `GODOT_EXECUTABLE_SHA256` for the extracted binary (the same script pins the two .NET SDK packages against `DOTNET_SHA512_ARM64` and `DOTNET_SHA512_X64`). `build/toolchain.json`, by contrast, records SHA256 only for `linux-x64`, which is why `doctor` treats the Mac Godot pin as a warning rather than a mismatch.
+The bundle is named `Godot_mono.app`, not `Godot.app`. There is nothing to check this download against: the sums published with the 4.7.1-stable release, read over the network on 6 Aug 2026, were SHA512, while `build/toolchain.json` records SHA256 and only for `linux-x64`. Whether the release server offers a SHA256 elsewhere was not established, and no macOS hash is pinned in this repository at all.
 
 **4. Clone the playable branch and run the verbs.** There is no bootstrap step here; steps 2 and 3 already installed both pinned tools.
 

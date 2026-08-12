@@ -7,6 +7,8 @@ authoritative: false
 
 # DEC-031 — Use Visible Circular Mining Zones with Fast Exit Decay
 
+> **Completion note:** [DEC-128](./DEC-128-set-extraction-zone-and-resonance-field-radii.md) fixes the 3.0M extraction-zone radius left open here. Resource-specific exceptions, fractional ore behavior, and forced-displacement treatment remain open in OQ-004.
+
 ## Decision
 
 Every mining point has a clearly visible circular extraction zone. Mining is active while the mech is inside the zone.

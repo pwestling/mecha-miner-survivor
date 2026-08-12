@@ -151,7 +151,7 @@ The unfinished progress toward a mining installment or completion. It advances a
 
 ## Mining point
 
-A resource-bearing location on the map with a clearly visible circular extraction zone. Mining activates automatically while the player remains inside it. The accepted initial classes are 15-second standard and rich ore seams, 20-second material geodes, and 45-second Hyper Gold sites. A standard map contains 20 standard seams, 8 rich seams, 8–10 geodes of each of its four present specialized materials, and 3 Hyper Gold sites. The [Standard Map Generation Contract](./51-standard-map-generation-contract.md) fixes initial spatial distribution and clearance; exact zone radii and remaining interaction edge cases remain open in [OQ-004](./open-questions.md#oq-004--how-does-a-mining-point-behave).
+A resource-bearing location on the map with a clearly visible circular extraction zone. Mining activates automatically while the player remains inside it. The accepted initial classes are 15-second standard and rich ore seams, 20-second material geodes, and 45-second Hyper Gold sites. A standard map contains 20 standard seams, 8 rich seams, 8–10 geodes of each of its four present specialized materials, and 3 Hyper Gold sites. The [Standard Map Generation Contract](./51-standard-map-generation-contract.md) fixes initial spatial distribution and clearance, and [DEC-128](./decisions/DEC-128-set-extraction-zone-and-resonance-field-radii.md) fixes the 3.0M zone radius; remaining interaction edge cases and depleted-point presentation remain open in [OQ-004](./open-questions.md#oq-004--how-does-a-mining-point-behave).
 
 ## Hyper Gold
 
@@ -227,7 +227,7 @@ The mandatory post-run summary shown after extraction, death, or confirmed aband
 
 ## Resonance field
 
-The visible circular danger area projected by an unopened material geode, larger than its extraction zone. Enemies inside receive that material's thematic 20% modifier. The effect ends when an enemy leaves or the geode opens. Standard map generation prevents resonance fields from overlapping.
+The visible circular danger area projected by an unopened material geode, larger than its extraction zone. Its radius is 6.0M under [DEC-128](./decisions/DEC-128-set-extraction-zone-and-resonance-field-radii.md), twice the extraction zone's. Enemies inside receive that material's thematic 20% modifier. The effect ends when an enemy leaves or the geode opens. Standard map generation prevents resonance fields from overlapping.
 
 ## Rich ore seam
 

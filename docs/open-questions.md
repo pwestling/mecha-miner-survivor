@@ -21,6 +21,8 @@ Each question records:
 - **Status** — `open`, `researching`, `awaiting decision`, `deferred`, or `resolved`
 - **Resolution** — the answer and link to a decision or canonical section
 
+A question whose `Status` is still `open` carries a `Resolution` when a decision has closed part of it. The field opens with "Partially resolved," states what is now settled and where it was decided, and names what remains. `Status` becomes `resolved` only when nothing is left open. A partial answer belongs here rather than in Candidate answers, because Candidate answers are non-canonical by definition and a decided value must not be recorded as a suggestion.
+
 ## Active questions
 
 ### OQ-004 — How does a mining point behave?
@@ -28,16 +30,18 @@ Each question records:
 - **Why it matters:** The mining rules determine how much commitment, mobility, interruption, and defense the feature creates.
 - **Blocks:** Mining, controls, HUD, map design, encounter design, and balance.
 - **Known constraints:** Mining starts automatically inside a clearly visible circular zone and continues while the player remains there. Leaving grants a 0.5-second no-loss grace period, then unfinished progress decays linearly at four times that point's forward extraction rate; re-entry before zero resumes the remaining progress. Both finite ore-seam classes take 15 seconds to exhaust. A standard seam pays 10 ore every 1.5 seconds for ten installments and 100 total; each map has 20. A rich seam pays 40 ore every 3 seconds for five installments and 200 total; each map has 8. Completed installments remain secured. A 20-second material geode awards one specialized unit plus 50 common ore only at full completion. Each map's three 45-second Hyper Gold sites award 100 Hyper Gold apiece only at completion. The zone and decay values are initial playtest rules. See [Mining and Extraction](./40-mining-and-extraction.md).
-- **Candidate answers:** Still to define: zone and resonance-field radii; exact depleted-point presentation; and interactions with explicitly authored forced movement or exact-boundary events. The initial spatial distribution, clearance, and anti-overlap rules are fixed by [DEC-115](./decisions/DEC-115-adopt-standard-map-generation-contract.md). Ordinary damage does not interrupt extraction, modal pauses freeze progress and decay, and future multiplayer mining requires its own mode rules.
+- **Candidate answers:** Still to define: exact depleted-point presentation; interactions with explicitly authored forced movement or exact-boundary events; and whether any resource class should use a different zone size. The initial spatial distribution, clearance, and anti-overlap rules are fixed by [DEC-115](./decisions/DEC-115-adopt-standard-map-generation-contract.md). Ordinary damage does not interrupt extraction, modal pauses freeze progress and decay, and future multiplayer mining requires its own mode rules.
 - **Status:** open
+- **Resolution:** Partially resolved. The extraction zone has a 3.0M radius, a 6.0M diameter, for every mining-point class, and a geode resonance field has a 6.0M radius, under [DEC-128](./decisions/DEC-128-set-extraction-zone-and-resonance-field-radii.md). Depleted-point presentation, the forced-movement and exact-boundary interactions, and per-resource zone-size variation remain open.
 
 ### OQ-005 — What makes mining a push-your-luck system?
 
 - **Why it matters:** A proximity constraint alone creates positional pressure, but push-your-luck normally requires a meaningful choice to continue accepting increasing or uncertain risk for additional reward.
 - **Blocks:** Mining reward curve, threat response, exit rules, encounter design, and difficulty tuning.
 - **Known constraints:** Remaining inside a mining area makes dodging harder, while leaving invokes the 0.5-second grace and four-times progress decay. Ore-seam installments secure partial value, but 20-second material geodes and 45-second Hyper Gold sites pay only at completion. Every unopened geode projects a larger resonance field that gives nearby enemies a material-specific 20% modifier; fields do not overlap or summon reinforcements. A Hyper Gold site separately activates its threat beacon with the first mining progress and escalates once each at 25%, 50%, and 75%. Each threshold has an accepted phase-scaled current-roster response, formation, two-second warning, and elite rule. Leaving stops further escalation while absent but does not remove summoned enemies; completion stops new beacon responses but also leaves survivors active. See the [Standard Wave and Beacon Schedule](./32-standard-wave-and-beacon-schedule.md#hyper-gold-threat-beacon-response).
-- **Candidate answers:** Still to define for geodes: exact field radius and whether the six nominally equal modifiers need independent tuning. For Hyper Gold sites, playtesting may tune response percentages, floors, formation geometry, warning presentation, and the 150-enemy persistent-response ceiling without reopening the four-stage structure. See [RES-002](./research/RES-002-holdout-extraction-pressure-patterns.md).
+- **Candidate answers:** Still to define for geodes: whether the six nominally equal modifiers need independent tuning. For Hyper Gold sites, playtesting may tune response percentages, floors, formation geometry, warning presentation, and the 150-enemy persistent-response ceiling without reopening the four-stage structure. See [RES-002](./research/RES-002-holdout-extraction-pressure-patterns.md).
 - **Status:** open
+- **Resolution:** Partially resolved. A geode resonance field has a 6.0M radius under [DEC-128](./decisions/DEC-128-set-extraction-zone-and-resonance-field-radii.md), twice the 3.0M extraction zone and larger than the 4.2M maximum expanded zone. Whether the six nominally equal modifiers need independent tuning, and the listed Hyper Gold response tuning, remain open.
 
 ### OQ-008 — How does exploration work?
 

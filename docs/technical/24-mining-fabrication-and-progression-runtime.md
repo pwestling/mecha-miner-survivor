@@ -27,6 +27,8 @@ Every site owns:
 
 A site is immutable after completion except for discovery presentation. Completed sites never reactivate.
 
+The baseline extraction radius is 3.0M for every site class and the geode resonance-field radius is 6.0M, accepted by [DEC-128](../decisions/DEC-128-set-extraction-zone-and-resonance-field-radii.md). Both are ordinary accepted content values: implement them exactly, with no proof gate owed. The occupancy test uses the baseline radius scaled by the run's current additive extraction-zone modifiers, which change when an Extraction Tether rank is installed mid-run. The resonance-field radius is never scaled, because no utility or PowerUp changes resonance-field size.
+
 ## Occupancy and progress
 
 The mining phase samples the player's committed post-movement center against the inclusive extraction circle. Valid standard generation prevents extraction zones from overlapping, so at most one site can advance. A map with overlapping zones fails validation rather than relying on runtime arbitration.

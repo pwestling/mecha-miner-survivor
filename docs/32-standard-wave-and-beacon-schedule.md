@@ -86,7 +86,7 @@ Boss-arrival minutes deliberately reduce the baseline minimum by roughly 10–20
 | 30 | Dreadwing 40%, Razorling 35%, Needler 25% | 300 | 22 / 0.23s | 30:30 Needler-backed loose encirclement |
 | 31 | Iron Ripper 40%, Gloomwing 35%, Siegeback 25% | 325 | 24 / 0.21s | 31:30 four-sector convergence |
 | 32 | Dreadwing 40%, Siegeback 30%, Needler 30% | 350 | 26 / 0.19s | 32:30 one elite Siegeback plus encirclement |
-| 33 | Razorling 35%, Iron Ripper 35%, Dreadwing 30% | 380 | 28 / 0.18s | Streams rotate through four sectors at 33:15 intervals |
+| 33 | Razorling 35%, Iron Ripper 35%, Dreadwing 30% | 380 | 28 / 0.18s | Streams rotate through four sectors at 33:00, 33:15, 33:30, and 33:45 |
 | 34 | Dreadwing 40%, Siegeback 30%, Razorling 30% | 420 | 30 / 0.16s | Rolling rings at 34:10 and 34:40; extraction warning begins |
 
 At 35:00 the living player extracts immediately. No fifth boss, invincible pursuer, final damage pulse, or post-timer survival check appears. Enemies and unresolved attacks cease with the run state.

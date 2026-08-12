@@ -7,6 +7,8 @@ authoritative: false
 
 # DEC-078 — Give Material Geodes Thematic Enemy Resonance Fields
 
+> **Completion note:** [DEC-128](./DEC-128-set-extraction-zone-and-resonance-field-radii.md) fixes the 6.0M resonance-field radius left as tuning work here, twice the 3.0M extraction zone. The shared 20% value, effect communication, and practical equivalence remain tuning work.
+
 ## Decision
 
 Every unopened material geode projects a visible resonance field larger than its extraction zone. Enemies within it receive a 20% material-specific modifier:

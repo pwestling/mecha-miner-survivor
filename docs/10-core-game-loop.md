@@ -72,7 +72,7 @@ The fabrication menu is available on demand anywhere during the run, with no acc
 - A collected cross-run resource is secured only if the player survives until the level's time limit and completes mission extraction; death beforehand forfeits it.
 - Mining is designed to produce push-your-luck decisions because remaining inside the area limits dodging options, while leaving sacrifices rapidly decaying progress—especially when a completion-only geode or Hyper Gold site has not finished.
 
-Taking damage does not interrupt mining or move the mech out of the extraction zone. Standard enemies and bosses do not physically block the mech. The [Standard Wave and Beacon Schedule](./32-standard-wave-and-beacon-schedule.md) defines the four escalating Hyper Gold response packages. Zone radius, explicitly authored displacement edge cases, and playtest tuning of the 0.5-second grace and four-times decay remain open; deposit placement constraints are fixed by the standard map contract.
+Taking damage does not interrupt mining or move the mech out of the extraction zone. Standard enemies and bosses do not physically block the mech. The [Standard Wave and Beacon Schedule](./32-standard-wave-and-beacon-schedule.md) defines the four escalating Hyper Gold response packages. The extraction zone has a 3.0M radius, and a geode's resonance field a 6.0M radius, under [DEC-128](./decisions/DEC-128-set-extraction-zone-and-resonance-field-radii.md). Explicitly authored displacement edge cases and playtest tuning of the 0.5-second grace and four-times decay remain open; deposit placement constraints are fixed by the standard map contract.
 
 ### Crafting and upgrades
 
@@ -243,3 +243,4 @@ The pause and results surfaces expose the summaries defined above through the ac
 - [DEC-111 — Make bosses explode into collectible resources](./decisions/DEC-111-make-bosses-explode-into-resources.md)
 - [DEC-112 — Bound permanent power below run-build power](./decisions/DEC-112-bound-permanent-power-below-run-build-power.md)
 - [DEC-113 — Target Windows PC and Steam Deck first](./decisions/DEC-113-target-windows-pc-and-steam-deck-first.md)
+- [DEC-128 — Set the extraction-zone and resonance-field radii](./decisions/DEC-128-set-extraction-zone-and-resonance-field-radii.md)

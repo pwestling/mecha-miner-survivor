@@ -67,7 +67,7 @@ The starting scale is intended to make crossing the world a meaningful commitmen
 The deployment point changes every run and obeys all of the following:
 
 - It is not inside a spur pocket, against the world boundary, or inside a narrow connector.
-- It has obstacle-free space at least one mining-zone diameter around the mech.
+- It has an obstacle-free circle at least one mining-zone diameter **across**, centered on the mech. That width is one times the 6.0M zone diameter [DEC-128](./decisions/DEC-128-set-extraction-zone-and-resonance-field-radii.md) accepts, so the circle is 6.0M across and its cleared radius is 3.0M. It is derived from the zone diameter and never authored as an independent figure, so it changes only when the zone size changes.
 - It offers at least two visibly distinct broad departure routes.
 - Ordinary enemies can enter from valid offscreen ground in at least three general directions without appearing inside the camera or overlapping the mech.
 - No Hyper Gold site, material geode, relic cache, damaging hazard, or automatic-contact choice appears inside the initial camera view.
@@ -75,6 +75,10 @@ The deployment point changes every run and obeys all of the following:
 - The complete Near band contains at least two standard seams, one rich seam, and at least one geode of each of the four present materials.
 
 The player is not told the directions of these opportunities. The guarantee prevents a resource-starved opening while preserving search and route choice.
+
+Deployment clearance states its dimension outright because "one mining-zone diameter around the mech" does not distinguish a radius from a total width — a factor of two in the space the player starts with. It is the width, because that is what a mining-zone diameter measures everywhere else this document uses the unit: primary connectors are never narrower than one mining-zone diameter and target one and a half, and the [procedural map generation](../technical/50-procedural-map-generation.md#deployment-selection) document restates this same deployment rule as "complete player and one-mining-zone clearance". So the cleared circle is 6.0M across, its radius is 3.0M, and 2.5M of open ground lies beyond the mech's own 0.5M footprint radius, a little over three quarters of a second of movement at 3.0M/s. That is less than the 4.0M an ordinary mining point gets from the [placement contract below](#placement-contract-shared-by-important-sites), which states no figure of its own: 4.0M is derived from the 3.0M extraction circle plus a one-mech-width band at the 1.0M mech collision diameter. The two numbers are sized for different jobs. A mining point's clearance has to hold an extraction circle the player stands inside, so 3.0M of its 4.0M is spent before the mech has anywhere to go, and the free band outside the circle is 1.0M; deployment clearance only has to hold the mech, and gives 2.5M in every direction. An earlier revision of this paragraph read the sentence as a radius and asserted the opposite comparison; the width reading replaces it.
+
+This is a reading of an ambiguous sentence resolved by the settled meaning of the unit elsewhere in this document and its technical counterpart, made under [Documentation Conventions § Change discipline](./conventions.md#change-discipline), which requires that contradictions are not left for readers to reconcile. It selects one of two behaviors rather than preserving either, so [doc 114's editorial-clarification allowance](../technical/114-autonomous-agent-execution-protocol.md#specification-maintenance-autonomy) does not cover it. This is not a design decision handed down, it has no decision record, and an explicit ruling may override it. Until one does, the reading is the document's answer to the factor of two that `content/transcription-notes.md` § *Ruling 18* escalated here.
 
 ## Placement contract shared by important sites
 
@@ -239,3 +243,4 @@ Changing one of these values does not reopen the large finite world, randomized 
 - [DEC-122 — Use destructible rocks as the health-pack source](./decisions/DEC-122-use-destructible-rocks-for-health-packs.md)
 - [DEC-123 — Replenish destructible rocks around the player](./decisions/DEC-123-replenish-destructible-rocks-around-the-player.md)
 - [DEC-126 — Adopt the initial player survivability baseline](./decisions/DEC-126-adopt-the-initial-player-survivability-baseline.md)
+- [DEC-128 — Set the extraction-zone and resonance-field radii](./decisions/DEC-128-set-extraction-zone-and-resonance-field-radii.md)

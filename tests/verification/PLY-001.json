@@ -11,7 +11,9 @@
     "This slice implements the movement and facing half of PLY-001 plus the Hull baseline value, and none of the damage half. Armor layers, passive Recovery accrual, same-enemy contact repeat interval, global contact grace, and damage ordering are the remainder; they have no entry here yet and will be appended from VER-PLY-001-011 onward rather than inserted among these.",
     "PLY-001 also carries the first production implementation of ISimulationWorld in this repository. doc 115 registers that as CMP-SIM-001 and the interface's own remarks say 'the implementation belongs to the later SIM packages that own entity state'; in this slice the only state the world owns is player state, so the world's entries are registered here. Each later gameplay package registers its own entries for the phases it fills. This assignment is a judgement rather than a citation - no delivery document names an owner for the world's composition - and it is recorded here so a later owner can move it deliberately instead of discovering it.",
     "Every number this package hardcodes carries a comment in the production source naming the content file and document line it came from, because the typed content layer does not exist on this ref. src/MechaMiner.Simulation/Player/PlayerBaseline.cs is the single place they live, so the later data-driven pass has a checklist rather than a search.",
-    "The two provisional members of ISimulationWorld - EvaluateTerminalBoundary and BeginScheduledEvent - are implemented as narrowly as honesty allows and deliberately decide nothing. The interface's own remarks say the second 'is expected to be replaced by the schedule owner's contract, not to become one', so building a scheduling decision behind it would be building something the encounter packages own. VER-PLY-001-010 asserts the narrowness rather than a behaviour."
+    "The two provisional members of ISimulationWorld - EvaluateTerminalBoundary and BeginScheduledEvent - are implemented as narrowly as honesty allows and deliberately decide nothing. The interface's own remarks say the second 'is expected to be replaced by the schedule owner's contract, not to become one', so building a scheduling decision behind it would be building something the encounter packages own. VER-PLY-001-010 asserts the narrowness rather than a behaviour.",
+    "VER-PLY-001-010 is retired rather than reworded, with VER-PRG-006-001 as its successor, because half of what it asserted became false when EvaluateTerminalBoundary was given the contract doc 20 § Boundary and tie ordering states for it. Entries 011 through 013 are appended rather than inserted, per doc 91 § Verification registry's never-renumbered rule.",
+    "Negative controls for entries 011 through 013 are recorded in tests/verification/M3-negative-controls.md. No automated gate asserts that document's coverage; see that file's own statement of why."
   ],
   "entries": [
     {
@@ -284,7 +286,95 @@
     },
     {
       "id": "VER-PLY-001-010",
-      "summary": "The two provisional members of ISimulationWorld decide nothing: EvaluateTerminalBoundary records that the host reached the boundary without proposing a terminal result, and BeginScheduledEvent records the admitted event without selecting, ordering, or acting on one.",
+      "summary": "RETIRED. Claimed that both provisional members of ISimulationWorld decide nothing. The BeginScheduledEvent half is still true and is now VER-PLY-001-013. The EvaluateTerminalBoundary half is no longer true: doc 20 § Boundary and tie ordering states that member's contract outright - successful extraction is evaluated when the clock reaches 35:00 - and VER-PRG-006-001 asserts it. An entry that asserted narrowness where a document states behaviour was a claim about scope rather than about the system, so it is retired rather than reworded.",
+      "task": "TASK-PLY-001-002",
+      "requirements": [
+        "TR-RUN-005"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#system-phase-ordering"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "none",
+        "value": "retired; see the successor"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "retired",
+      "successor": "VER-PRG-006-001"
+    },
+    {
+      "id": "VER-PLY-001-011",
+      "summary": "Contact damage reduces Hull by the damaging identity's listed contact damage, floors it at zero rather than going negative, and changes nothing else: the mech does not flinch, move, turn, or lose extraction progress on the tick it is damaged.",
+      "task": "TASK-PLY-001-003",
+      "requirements": [
+        "TR-COM-004"
+      ],
+      "technicalSources": [],
+      "gameplaySources": [
+        "docs/31-initial-alien-roster.md#shared-ordinary-enemy-rules",
+        "docs/40-mining-and-extraction.md#progress-decay",
+        "docs/72-player-survivability-and-damage-baseline.md#shared-player-baseline"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Player.PlayerDamageTests"
+      },
+      "fixtures": [
+        "tests/verification/M3-negative-controls.md § Hull damage application"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-PLY-001-012",
+      "summary": "Hull is the only durability the mech has in this slice and it does not recover: repeated damage accumulates monotonically across ticks with no passive Recovery, no post-hit invulnerability, and no Armor subtraction, matching the baseline's zeroes for all three.",
+      "task": "TASK-PLY-001-003",
+      "requirements": [
+        "TR-COM-004"
+      ],
+      "technicalSources": [],
+      "gameplaySources": [
+        "docs/72-player-survivability-and-damage-baseline.md#shared-player-baseline"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Player.PlayerDamageTests"
+      },
+      "fixtures": [
+        "tests/verification/M3-negative-controls.md § no passive recovery"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-PLY-001-013",
+      "summary": "BeginScheduledEvent decides nothing: it records the admitted row's identity, changes no authoritative state, publishes no snapshot, and assigns no terminal result. Successor to the BeginScheduledEvent half of the retired VER-PLY-001-010.",
       "task": "TASK-PLY-001-002",
       "requirements": [
         "TR-RUN-005"
@@ -295,9 +385,11 @@
       "gameplaySources": [],
       "selector": {
         "kind": "nunit",
-        "value": "MechaMiner.Simulation.Tests.World.GameplayWorldTests.TheProvisionalSeamsDecideNothing"
+        "value": "MechaMiner.Simulation.Tests.World.GameplayWorldTests.TheScheduledEventSeamDecidesNothing"
       },
-      "fixtures": [],
+      "fixtures": [
+        "tests/verification/M3-negative-controls.md § the scheduled-event seam"
+      ],
       "scenarios": [],
       "evidenceKinds": [
         "test-counts",

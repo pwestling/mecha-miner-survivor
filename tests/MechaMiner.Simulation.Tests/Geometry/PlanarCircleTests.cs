@@ -194,4 +194,134 @@ internal sealed class PlanarCircleTests
 
         Assert.That(compared, Is.EqualTo(41 * 41), "every pair in the grid was compared");
     }
+
+    /// <summary>
+    /// <c>VER-GEO-001-005</c>: circle-segment overlap is inclusive, clamped to the segment, and squared.
+    /// </summary>
+    [Test]
+    public void SegmentOverlapIsInclusiveAtExactTangency()
+    {
+        PlanarCircle circle = At(0.0, 0.0, 1.0);
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                circle.OverlapsSegment(
+                    PlanarVector.FromComponents(-5.0, 1.0),
+                    PlanarVector.FromComponents(5.0, 1.0)),
+                Is.True,
+                "a segment grazing the circle at exactly one radius touches it. doc 21:103 makes this "
+                    + "repository's containment and overlap tests inclusive");
+            Assert.That(
+                circle.OverlapsSegment(
+                    PlanarVector.FromComponents(-5.0, 1.0000000001),
+                    PlanarVector.FromComponents(5.0, 1.0000000001)),
+                Is.False,
+                "and a hair further out does not");
+        });
+    }
+
+    [Test]
+    public void SegmentOverlapIsMeasuredToTheSegmentAndNotToTheInfiniteLine()
+    {
+        // The line through these two points passes through the origin, so a test against the infinite
+        // line would report an overlap. The segment itself stops well short.
+        PlanarCircle circle = At(0.0, 0.0, 1.0);
+        PlanarVector from = PlanarVector.FromComponents(5.0, 5.0);
+        PlanarVector to = PlanarVector.FromComponents(10.0, 10.0);
+
+        Assert.That(
+            circle.OverlapsSegment(from, to),
+            Is.False,
+            "the nearest point of the SEGMENT is its own endpoint at (5,5), which is 7.07 m away. A "
+                + "projection that was not clamped to [0,1] would have measured to the origin and "
+                + "reported a hit for a projectile that never got near");
+    }
+
+    [Test]
+    public void SegmentOverlapDetectsABodyEntirelyBetweenTheEndpoints()
+    {
+        // The tunnelling case. Neither endpoint is inside the circle; the segment passes straight through.
+        PlanarCircle circle = At(0.0, 0.0, 0.22);
+        PlanarVector from = PlanarVector.FromComponents(-1.0, 0.0);
+        PlanarVector to = PlanarVector.FromComponents(1.0, 0.0);
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(circle.Contains(from), Is.False);
+            Assert.That(circle.Contains(to), Is.False);
+            Assert.That(
+                circle.OverlapsSegment(from, to),
+                Is.True,
+                "a point test at either endpoint misses a body the step passed straight through");
+        });
+    }
+
+    [Test]
+    public void ADegenerateSegmentReducesToPointContainment()
+    {
+        PlanarCircle circle = At(2.0, 2.0, 1.0);
+        PlanarVector inside = PlanarVector.FromComponents(2.5, 2.0);
+        PlanarVector outside = PlanarVector.FromComponents(9.0, 9.0);
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                circle.OverlapsSegment(inside, inside),
+                Is.EqualTo(circle.Contains(inside)),
+                "a zero-length segment has no direction to project along, so it must not divide by its own "
+                    + "length; it answers the containment question instead");
+            Assert.That(circle.OverlapsSegment(outside, outside), Is.EqualTo(circle.Contains(outside)));
+        });
+    }
+
+    [Test]
+    public void SegmentOverlapAgreesWithASlowSampledReferenceAcrossAGrid()
+    {
+        // The reference samples the segment densely and asks Contains at each sample. It is far too slow
+        // for production and cannot be exactly right at tangency, so the comparison excludes a thin band
+        // around the boundary where sampling resolution, not the implementation, decides the answer.
+        PlanarCircle circle = At(0.0, 0.0, 1.0);
+        const int samples = 4000;
+        int compared = 0;
+
+        for (int xStep = -8; xStep <= 8; xStep++)
+        {
+            for (int yStep = -8; yStep <= 8; yStep++)
+            {
+                PlanarVector from = PlanarVector.FromComponents(xStep * 0.5, yStep * 0.5);
+                PlanarVector to = PlanarVector.FromComponents(-yStep * 0.4, xStep * 0.4);
+
+                bool sampledHit = false;
+                double nearest = double.PositiveInfinity;
+                for (int sample = 0; sample <= samples; sample++)
+                {
+                    PlanarVector point = from + ((to - from) * (sample / (double)samples));
+                    double distance = point.Magnitude;
+                    nearest = Math.Min(nearest, distance);
+                    sampledHit |= circle.Contains(point);
+                }
+
+                if (Math.Abs(nearest - circle.Radius) < 1e-3)
+                {
+                    // Within the band the dense sampling cannot resolve. Skipped rather than asserted, and
+                    // the count below proves the skip did not swallow the whole grid.
+                    continue;
+                }
+
+                Assert.That(
+                    circle.OverlapsSegment(from, to),
+                    Is.EqualTo(sampledHit),
+                    "swept overlap disagreed with the sampled reference for the segment from "
+                        + from.ToString() + " to " + to.ToString());
+                compared++;
+            }
+        }
+
+        Assert.That(
+            compared,
+            Is.GreaterThan(200),
+            "the tangency band excluded some pairs; more than two hundred were still compared, so this is "
+                + "an assertion over a population rather than an empty loop");
+    }
 }

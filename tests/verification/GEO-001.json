@@ -9,7 +9,8 @@
     "The structural validator for this file is owned by TASK-FND-009-002. Until it lands, the shape here matches tests/verification/SIM-007.json exactly.",
     "This file is deliberately NOT named SIM-0*.json. tests/MechaMiner.Simulation.Tests/Support/NegativeControlCoverageTests.cs globs 'SIM-0*.json' and asserts a totals line accounting for every entry across those seven files, so adding an entry to one of them from another work package would break an unrelated package's gate.",
     "This slice implements the planar primitives that player movement needs and nothing else. Swept circle-against-polygon queries, the uniform spatial hash, and terrain collision are the rest of GEO-001's payload; they have no entry here yet because doc 91 forbids renumbering, so they will be appended as VER-GEO-001-005 onward by the task that lands them rather than inserted among these.",
-    "Angles are radians measured counterclockwise from simulation east, which is the ordinary atan2(y, x) convention. doc 20 § Numeric and unit conventions puts degrees clockwise from north 'only at display/content boundaries', so the internal representation is deliberately not the player-facing bearing and the conversion is presentation's."
+    "Angles are radians measured counterclockwise from simulation east, which is the ordinary atan2(y, x) convention. doc 20 § Numeric and unit conventions puts degrees clockwise from north 'only at display/content boundaries', so the internal representation is deliberately not the player-facing bearing and the conversion is presentation's.",
+    "The swept-segment primitive was added by the threat-and-extraction slice, which needed it: a point test on a Pulse Repeater projectile both tunnels at 0.267 m per tick against a 0.44 m body and leaves the muzzle unreachable, so a pursuer standing on the mech - which docs/31:26 permits, since enemies are non-solid - would have been permanently invulnerable to the mech's own weapon. doc 10 § Entity and scene boundary already names swept-area tests as part of this component's job."
   ],
   "entries": [
     {
@@ -114,6 +115,36 @@
         "value": "MechaMiner.Simulation.Tests.Geometry.PlanarVectorTests.BearingRoundTripsThroughDirection"
       },
       "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-GEO-001-005",
+      "summary": "Circle-segment overlap is inclusive and computed from squared distances: a segment that only touches the circle overlaps it, a segment whose nearest point is beyond either endpoint is measured to that endpoint rather than to the infinite line, and a degenerate zero-length segment reduces to point containment.",
+      "task": "TASK-GEO-001-002",
+      "requirements": [
+        "TR-GEO-002"
+      ],
+      "technicalSources": [
+        "docs/technical/21-world-geometry-navigation-and-spatial-queries.md#collision-primitives",
+        "docs/technical/10-runtime-architecture.md#entity-and-scene-boundary"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Geometry.PlanarCircleTests"
+      },
+      "fixtures": [
+        "tests/verification/M3-negative-controls.md § swept-segment overlap"
+      ],
       "scenarios": [],
       "evidenceKinds": [
         "test-counts",

@@ -1,0 +1,82 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "PRG-006",
+  "workPackageTitle": "Run result manifest and success/failure/abandon settlement model",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91-verification-strategy.md § Verification registry). Every entry below was authored before the production code it names.",
+    "'status' takes exactly one of 'registered', 'implemented', 'retired' (doc 91 § Entry status). 'evidenceKinds' is read against 'status' (doc 91 § What evidenceKinds means): for a 'registered' entry the list is evidence the verification will produce once built, and nothing may treat it as produced.",
+    "The structural validator for this file is owned by TASK-FND-009-002. Until it lands, the shape here matches tests/verification/PLY-001.json exactly.",
+    "This file is deliberately NOT named SIM-0*.json. tests/MechaMiner.Simulation.Tests/Support/NegativeControlCoverageTests.cs globs 'SIM-0*.json' and asserts a totals line accounting for every entry across those seven files, so adding an entry to one of them from another work package would break an unrelated package's gate.",
+    "Negative controls for these entries are recorded in tests/verification/M3-negative-controls.md. No automated gate asserts that document's coverage: the existing coverage gate (NegativeControlCoverageTests) is scoped to the seven SIM registries and its partition arithmetic is over those files only. That is stated here so a reader does not assume an enforcement that does not exist.",
+    "This slice implements the two outcomes a run can reach without a new command: Survived at the 35:00 boundary and Destroyed when Hull reaches zero. The abandon outcome docs/110:289 also assigns to this package needs a voluntary-abandonment command that no package has built, so RunOutcome has no Abandoned member: a member nothing can produce would be a claim that something can.",
+    "The settlement itself - what a profile keeps - is not implemented. This slice mines only common ore, which docs/40:90 makes run-local and lost when the run ends regardless of outcome, so both outcomes discard the same thing and no banking decision is observable yet. Hyper Gold banking (docs/40:127, TR-PRG-005) is PST-004's and MIN-002's and has no entry here.",
+    "VER-PRG-006-001 is the successor to the retired VER-PLY-001-010, whose claim was that EvaluateTerminalBoundary decides nothing."
+  ],
+  "entries": [
+    {
+      "id": "VER-PRG-006-001",
+      "summary": "The run ends, once, and the two outcomes are distinguishable: phase 13 assigns Destroyed on the tick Hull reaches zero, EvaluateTerminalBoundary assigns Survived when the 35:00 boundary is reached with no result yet assigned, a result already assigned is never replaced, and the published snapshot's terminal flag follows the assignment.",
+      "task": "TASK-PRG-006-001",
+      "requirements": [
+        "TR-RUN-008",
+        "TR-RUN-005"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#boundary-and-tie-ordering",
+        "docs/technical/10-runtime-architecture.md#system-phase-ordering"
+      ],
+      "gameplaySources": [
+        "docs/20-run-structure-and-timing.md"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Runtime.RunOutcomeTests"
+      },
+      "fixtures": [
+        "tests/verification/M3-negative-controls.md § terminal outcome"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-PRG-006-002",
+      "summary": "Settling the run stops it without a technical failure: a run destroyed inside a tick still commits that tick, the driver's terminal-transition bridge raises the one-way pause reason between steps, later steps report blocked rather than running a tick, and the host records no technical failure.",
+      "task": "TASK-PRG-006-001",
+      "requirements": [
+        "TR-RUN-003",
+        "TR-RUN-007"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#pause-contract",
+        "docs/technical/20-simulation-core.md#mid-commit-invalidation"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Runtime.RunOutcomeTests"
+      },
+      "fixtures": [
+        "tests/verification/M3-negative-controls.md § settlement does not crash the run"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    }
+  ]
+}

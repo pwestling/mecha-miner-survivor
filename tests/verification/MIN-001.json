@@ -1,0 +1,145 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "MIN-001",
+  "workPackageTitle": "Mining site store, occupancy, grace/decay/work/installments",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91-verification-strategy.md § Verification registry). Every entry below was authored before the production code it names.",
+    "'status' takes exactly one of 'registered', 'implemented', 'retired' (doc 91 § Entry status). 'evidenceKinds' is read against 'status' (doc 91 § What evidenceKinds means): for a 'registered' entry the list is evidence the verification will produce once built, and nothing may treat it as produced.",
+    "The structural validator for this file is owned by TASK-FND-009-002. Until it lands, the shape here matches tests/verification/PLY-001.json exactly.",
+    "This file is deliberately NOT named SIM-0*.json. tests/MechaMiner.Simulation.Tests/Support/NegativeControlCoverageTests.cs globs 'SIM-0*.json' and asserts a totals line accounting for every entry across those seven files, so adding an entry to one of them from another work package would break an unrelated package's gate.",
+    "Negative controls for these entries are recorded in tests/verification/M3-negative-controls.md. No automated gate asserts that document's coverage: the existing coverage gate (NegativeControlCoverageTests) is scoped to the seven SIM registries and its partition arithmetic is over those files only. That is stated here so a reader does not assume an enforcement that does not exist.",
+    "This slice implements one of the four accepted mining-point classes: the standard ore seam of docs/40 § Standard ore seams. Rich seams differ only in two numbers and add no behaviour; material geodes and Hyper Gold sites both withhold their reward until completion and both carry a second mechanic (resonance fields, progress-threshold threat beacons) that docs/110:283 assigns to MIN-002. Entries for those are MIN-002's.",
+    "The extraction-zone radius is graybox with no source claimed. docs/40:48, docs/decisions/DEC-031:51, and docs/10:75 each say the exact radius remains open in OQ-004, and no document in this branch's ancestry states one. src/MechaMiner.Simulation/Mining/GrayboxExtraction.cs isolates the value and says so. No entry below asserts the radius; VER-MIN-001-002 asserts the occupancy RULE against whatever the radius is."
+  ],
+  "entries": [
+    {
+      "id": "VER-MIN-001-001",
+      "summary": "The standard-ore-seam profile equals the authored payout profile: 10 common ore per completed 1.5-second installment, ten installments, and therefore 100 ore over 15 seconds of uninterrupted forward extraction, with the installment landing on a whole number of 60 Hz ticks.",
+      "task": "TASK-MIN-001-001",
+      "requirements": [
+        "TR-MIN-003"
+      ],
+      "technicalSources": [
+        "docs/technical/24-mining-fabrication-and-progression-runtime.md#payout-profiles"
+      ],
+      "gameplaySources": [
+        "docs/40-mining-and-extraction.md#standard-ore-seams"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Mining.StandardOreSeamProfileTests"
+      },
+      "fixtures": [
+        "tests/verification/M3-negative-controls.md § seam payout profile"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-MIN-001-002",
+      "summary": "Extraction is automatic and proximity-driven with no command: entering the circular zone advances progress on the tick occupancy begins, remaining inside advances it every tick, the boundary test is inclusive at exact tangency, and a depleted seam advances nothing and cannot be reactivated.",
+      "task": "TASK-MIN-001-001",
+      "requirements": [
+        "TR-MIN-001"
+      ],
+      "technicalSources": [
+        "docs/technical/24-mining-fabrication-and-progression-runtime.md#occupancy-and-progress"
+      ],
+      "gameplaySources": [
+        "docs/40-mining-and-extraction.md#automatic-proximity-activation",
+        "docs/40-mining-and-extraction.md#specialized-material-geodes"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Mining.MiningAdvanceTests"
+      },
+      "fixtures": [
+        "tests/verification/M3-negative-controls.md § automatic occupancy"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-MIN-001-003",
+      "summary": "Leaving the zone holds unfinished progress unchanged for exactly 0.5 seconds and then removes it at four times the forward rate until it reaches zero; re-entering during either resumes from the progress that remains; and an already-paid installment is never reduced by any amount of decay.",
+      "task": "TASK-MIN-001-002",
+      "requirements": [
+        "TR-MIN-002"
+      ],
+      "technicalSources": [
+        "docs/technical/24-mining-fabrication-and-progression-runtime.md#outside"
+      ],
+      "gameplaySources": [
+        "docs/40-mining-and-extraction.md#progress-decay",
+        "docs/40-mining-and-extraction.md#standard-ore-seams"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Mining.MiningDecayTests"
+      },
+      "fixtures": [
+        "tests/verification/M3-negative-controls.md § grace and four-times decay"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-MIN-001-004",
+      "summary": "Each completed installment pays its ore into the run-local total in phase 11 and nowhere else, one installment at most per tick, and the total after ten installments is the 100 ore the seam's profile states.",
+      "task": "TASK-MIN-001-002",
+      "requirements": [
+        "TR-MIN-003",
+        "TR-PRG-001"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#system-phase-ordering",
+        "docs/technical/24-mining-fabrication-and-progression-runtime.md#run-resource-ledger"
+      ],
+      "gameplaySources": [
+        "docs/40-mining-and-extraction.md#standard-ore-seams"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.World.GameplayLoopTests"
+      },
+      "fixtures": [
+        "tests/verification/M3-negative-controls.md § installment payout in phase 11"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    }
+  ]
+}

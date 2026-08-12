@@ -1,7 +1,11 @@
 using System;
+using System.Collections.Generic;
 using Godot;
 using MechaMiner.Simulation.Commands;
+using MechaMiner.Simulation.Encounters;
+using MechaMiner.Simulation.Entities;
 using MechaMiner.Simulation.Geometry;
+using MechaMiner.Simulation.Mining;
 using MechaMiner.Simulation.Snapshots;
 using MechaMiner.Simulation.Time;
 using MechaMiner.Simulation.World;
@@ -48,6 +52,16 @@ public partial class RunSceneRoot : Node3D
     internal const string StartupLine = "MechaMiner: run scene ready";
 
     /// <summary>
+    /// The prefix of the line naming the replenishment row this run composed under.
+    /// </summary>
+    /// <remarks>
+    /// Printed on every launch, including a plain one. A row's provenance travels in its own label, so a
+    /// reader of any log can see whether the pressure came from doc 32:56 or from a harness row nothing
+    /// authored, without having to know which argument was passed.
+    /// </remarks>
+    internal const string ReplenishmentRowLine = "MechaMiner: replenishment row ";
+
+    /// <summary>
     /// The camera's vertical extent in gameplay meters: <c>24</c>.
     /// </summary>
     /// <remarks>
@@ -70,10 +84,66 @@ public partial class RunSceneRoot : Node3D
     /// <remarks>Nonzero, per doc 10 § Commands and mutations. Stable for the process.</remarks>
     internal const ulong DevelopmentRunSession = 0x4D45_4348_4100_0001UL;
 
+    /// <summary>
+    /// Launch argument selecting a graybox pressure preset instead of the authored minute-0 row.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>A graybox development launch option, and the reason it exists is measured.</b> At the pressure
+    /// <c>docs/32-standard-wave-and-beacon-schedule.md</c>:56 authors for minute 0, a run is very nearly
+    /// unlosable: 35 minutes of kiting ends with 95 of 100 Hull, because eight Skitterlings are 160 Hull
+    /// between them and <c>W-BC</c> clears 32 Hull per second. That is doc 32 § Phase-level pressure
+    /// curve:43's intent for minute 0, not a defect. It does mean that a person launching this scene
+    /// cannot see the mech destroyed, and neither can a screen capture, so the failure half of the run
+    /// loop would be unobservable in the shipping scene.
+    /// </para>
+    /// <para>
+    /// The absent argument is the authored row, so a plain launch is unaffected and no default changes.
+    /// The only accepted value is <c>lethal</c>, which selects <c>HarnessStressRows.LethalSwarm</c> - a
+    /// row whose own label says no document states it, and which the transcript and every capture print.
+    /// Anything else is refused loudly rather than silently ignored, because an option that quietly does
+    /// nothing when misspelled is an option a reader will believe took effect.
+    /// </para>
+    /// <para>
+    /// This is deliberately a launch argument and not a test seam: <c>game/tests/</c> is removed from
+    /// compilation under <c>ExportRelease</c>, but a member added to this class for a harness's benefit
+    /// would ship. An argument is read the same way by a person, by <c>FND-006</c>'s eventual <c>run</c>
+    /// verb, and by the capture harness, and it needs no mutable static and no per-instance state.
+    /// </para>
+    /// </remarks>
+    internal const string PressureArgument = "--mechaminer-graybox-pressure=";
+
+    /// <summary>The only accepted value of <see cref="PressureArgument"/>.</summary>
+    internal const string LethalPressure = "lethal";
+
     private readonly MovementInputAdapter _input = new();
+
+    /// <summary>
+    /// The visible node for each snapshot identity currently drawn, keyed by that identity.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Pooled by identity rather than by index. A snapshot's entity list is in the simulation's stable
+    /// order, and that order changes when a record is removed - <c>PackedEntityStore</c> swaps the last
+    /// dense slot into the vacated one - so a node bound to list position 3 would jump to whichever body
+    /// happened to be moved there. Binding to <c>EntityId</c> instead means a node follows one body for
+    /// that body's whole life and is freed when it ends.
+    /// </para>
+    /// <para>
+    /// doc 30 § Snapshot consumption and interpolation and doc 10 § Entity and scene boundary both note
+    /// that "presentation mappings tolerate simulation entities disappearing before their final visual
+    /// event completes". This map is that tolerance: an identity absent from the newest snapshot has its
+    /// node freed, and nothing here asks the simulation why.
+    /// </para>
+    /// </remarks>
+    private readonly Dictionary<EntityId, Node3D> _visibleNodes = new();
+
+    private readonly List<EntityId> _vanished = new();
+    private readonly HashSet<EntityId> _stillPresent = new();
 
     private RunComposition? _run;
     private Node3D? _playerPivot;
+    private Node3D? _entityRoot;
     private Camera3D? _camera;
     private long _nextCommandSequence = CommandEnvelope.FirstSequence;
     private long _renderedTick = -1;
@@ -103,11 +173,13 @@ public partial class RunSceneRoot : Node3D
     public override void _Ready()
     {
         _playerPivot = GetNode<Node3D>("PlayerBody");
+        _entityRoot = GetNode<Node3D>("SimulationEntities");
         _camera = GetNode<Camera3D>("GameplayCamera");
 
         ConfigureCamera(_camera);
 
-        _run = RunComposition.CreateGraybox(DevelopmentRunSession);
+        _run = RunComposition.CreateGraybox(DevelopmentRunSession, ReadReplenishmentRow());
+        GD.Print(ReplenishmentRowLine + _run.World.BaselineRow.ToString());
 
         // Place the body at its authoritative position before the first frame, so the first thing
         // drawn is the deployment position rather than the scene file's placeholder transform.
@@ -141,7 +213,52 @@ public partial class RunSceneRoot : Node3D
 
         SubmitSampledInput(_run);
         _run.Host.Step(delta);
+
+        // The run may have ended inside that step. Raising the terminal transition is the driver's, one
+        // step out: RunClock refuses to commit a tick while a blocking reason is present, so raising it
+        // from inside phase 13 would make the settling tick uncommittable and the host would file a
+        // technical failure for a run that ended correctly. RunComposition.SettleTerminalTransition
+        // records the whole reason.
+        _ = _run.SettleTerminalTransition();
+
         Render(_run, _playerPivot, _camera, delta);
+    }
+
+    /// <summary>
+    /// Reads the replenishment row this launch selects.
+    /// </summary>
+    /// <exception cref="ArgumentException">
+    /// The pressure argument is present with a value that is not <see cref="LethalPressure"/>.
+    /// </exception>
+    /// <remarks>
+    /// Refusing an unrecognized value rather than falling back is the point. A misspelled preset that
+    /// silently produced the authored row would leave a capture labelled as one thing and rendered from
+    /// another, which is the exact failure the label on <c>HarnessStressRows</c> exists to prevent.
+    /// </remarks>
+    private static BaselineReplenishmentRow ReadReplenishmentRow()
+    {
+        foreach (string argument in OS.GetCmdlineUserArgs())
+        {
+            if (!argument.StartsWith(PressureArgument, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            string value = argument[PressureArgument.Length..];
+            if (string.Equals(value, LethalPressure, StringComparison.Ordinal))
+            {
+                return HarnessStressRows.LethalSwarm;
+            }
+
+            throw new ArgumentException(
+                PressureArgument
+                    + value
+                    + " is not a graybox pressure preset. The only accepted value is '"
+                    + LethalPressure
+                    + "'; omit the argument for the authored minute-0 row of docs/32:56");
+        }
+
+        return MinuteZeroBaseline.Row;
     }
 
     /// <summary>
@@ -273,6 +390,150 @@ public partial class RunSceneRoot : Node3D
 
         ApplyGroundTransform(playerPivot, rendered, renderedFacing);
         FollowWithCamera(rendered);
+        RenderVisibleEntities(latest);
+    }
+
+    /// <summary>
+    /// Places, creates, and frees one node per visible simulation entity in the newest snapshot.
+    /// </summary>
+    /// <param name="latest">The newest published snapshot.</param>
+    /// <remarks>
+    /// <para>
+    /// <b>Positions are the snapshot's, uninterpolated.</b> The player body interpolates between the two
+    /// latest snapshots because the camera follows it and its motion is the one a person watches closely.
+    /// These do not, and that is a deliberate limit rather than an omission: interpolating a body that
+    /// might have been removed between the two snapshots needs a rule for what to show when only one of
+    /// the pair holds it, and doc 30 § Snapshot consumption and interpolation gives that rule to the
+    /// snap policy, whose spawn and death cases <c>PRE-003</c> owns. Showing the authoritative position
+    /// exactly is the honest degenerate case; it cannot be wrong, only stepped.
+    /// </para>
+    /// <para>
+    /// <b>Every visual property here is graybox.</b> The three meshes are boxes and a flat disc, sized
+    /// from the authoritative radii they represent, and <c>AST-006</c> replaces them along with the rest
+    /// of the representative asset set. What is not graybox is the mapping: every node's position comes
+    /// from <c>PresentationGroundMapping</c>, the same term of TDR-005's coordinate contract the player
+    /// body uses.
+    /// </para>
+    /// </remarks>
+    private void RenderVisibleEntities(PresentationSnapshot latest)
+    {
+        if (_entityRoot is null)
+        {
+            return;
+        }
+
+        _stillPresent.Clear();
+        ReadOnlySpan<SnapshotEntity> entities = latest.VisibleEntities.Span;
+        for (int index = 0; index < entities.Length; index++)
+        {
+            SnapshotEntity entity = entities[index];
+            _stillPresent.Add(entity.Id);
+
+            if (!_visibleNodes.TryGetValue(entity.Id, out Node3D? node))
+            {
+                node = CreateVisual(entity.Category);
+                _entityRoot.AddChild(node);
+                _visibleNodes.Add(entity.Id, node);
+            }
+
+            ApplyGroundTransform(
+                node,
+                PlanarVector.FromComponents(entity.PositionX, entity.PositionY),
+                entity.FacingRadians);
+        }
+
+        _vanished.Clear();
+        foreach (KeyValuePair<EntityId, Node3D> drawn in _visibleNodes)
+        {
+            if (!_stillPresent.Contains(drawn.Key))
+            {
+                _vanished.Add(drawn.Key);
+            }
+        }
+
+        // Collected first, then removed. Freeing a node while enumerating the dictionary that holds it
+        // would invalidate the enumerator - the presentation-side version of the deferral rule doc 10
+        // § System phase ordering applies to the simulation's own stores.
+        for (int index = 0; index < _vanished.Count; index++)
+        {
+            EntityId gone = _vanished[index];
+            _visibleNodes[gone].QueueFree();
+            _visibleNodes.Remove(gone);
+        }
+    }
+
+    /// <summary>
+    /// Builds the graybox visual for one population category.
+    /// </summary>
+    /// <param name="category">The category the snapshot entity carries.</param>
+    /// <remarks>
+    /// The sizes are the authoritative radii, doubled into diameters, so a person looking at a frame is
+    /// looking at the real footprint rather than at an artist's guess about it: a Skitterling's box is
+    /// its 0.44 m contact diameter (docs/31:39 against docs/31:35's 0.80M Ripper reference), a seam's
+    /// disc is twice the extraction-zone radius, and a projectile is a small marker because doc 71:81
+    /// gives Pulse Repeater no width at all.
+    /// </remarks>
+    private static Node3D CreateVisual(PopulationCategory category)
+    {
+        MeshInstance3D node = new();
+        switch (category)
+        {
+            case PopulationCategory.OrdinaryEnemy:
+                {
+                    float diameter = (float)(EnemyRoster.Skitterling.ContactRadiusMeters * 2.0);
+                    node.Mesh = new BoxMesh
+                    {
+                        Size = new Vector3(diameter, diameter * 0.6f, diameter),
+                        Material = new StandardMaterial3D
+                        {
+                            AlbedoColor = new Color(0.72f, 0.24f, 0.30f),
+                            Roughness = 0.65f,
+                        },
+                    };
+                    node.Position = new Vector3(0.0f, diameter * 0.3f, 0.0f);
+                    break;
+                }
+
+            case PopulationCategory.MiningSite:
+                {
+                    float diameter = (float)(GrayboxExtraction.ZoneRadiusMeters * 2.0);
+                    node.Mesh = new CylinderMesh
+                    {
+                        TopRadius = diameter / 2.0f,
+                        BottomRadius = diameter / 2.0f,
+                        Height = 0.04f,
+                        Material = new StandardMaterial3D
+                        {
+                            AlbedoColor = new Color(0.24f, 0.58f, 0.42f),
+                            Roughness = 0.8f,
+                        },
+                    };
+                    node.Position = new Vector3(0.0f, 0.02f, 0.0f);
+                    break;
+                }
+
+            default:
+                {
+                    node.Mesh = new BoxMesh
+                    {
+                        Size = new Vector3(0.16f, 0.08f, 0.16f),
+                        Material = new StandardMaterial3D
+                        {
+                            AlbedoColor = new Color(0.95f, 0.88f, 0.45f),
+                            Roughness = 0.3f,
+                        },
+                    };
+                    node.Position = new Vector3(0.0f, 0.35f, 0.0f);
+                    break;
+                }
+        }
+
+        // The mesh hangs at its own height on a pivot whose own position is the authoritative
+        // ground-plane centre, exactly as PlayerBody does, so a model's resting elevation is never part
+        // of a position (TDR-005 § Coordinate contract).
+        Node3D pivot = new();
+        pivot.AddChild(node);
+        return pivot;
     }
 
     /// <summary>

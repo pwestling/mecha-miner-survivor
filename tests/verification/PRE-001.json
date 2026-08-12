@@ -23,7 +23,7 @@
         "TR-RUN-001"
       ],
       "technicalSources": [
-        "docs/technical/30-presentation-and-rendering.md#snapshot-consumption-and-interpolation",
+        "docs/technical/30-presentation-and-rendering.md#snapshot-synchronization",
         "docs/technical/10-runtime-architecture.md#architectural-style"
       ],
       "gameplaySources": [],

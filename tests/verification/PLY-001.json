@@ -52,7 +52,7 @@
       ],
       "technicalSources": [
         "docs/technical/20-simulation-core.md#active-commands",
-        "docs/technical/60-ui-input-and-accessibility.md#movement"
+        "docs/technical/60-ui-input-and-accessibility.md#movement-processing"
       ],
       "gameplaySources": [
         "docs/30-combat-weapons-movement-camera.md#direct-controls",

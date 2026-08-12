@@ -248,6 +248,25 @@ public static class CatalogChecks
     /// <c>CategorySemanticRuleTests</c> is the wall: it asserts this diagnostic fires on a
     /// reversed pair, and it goes red the moment a sort is introduced.
     /// </para>
+    /// <para>
+    /// <b>Two faults, two codes.</b> A recipe naming a resource that carries no canonical
+    /// letter reports
+    /// <see cref="ContentDiagnosticCodes.RecipeResourceLetterUnresolved"/> and stops there;
+    /// only a recipe every resource of which resolved can reach
+    /// <see cref="ContentDiagnosticCodes.RecipeLettersMismatch"/>. They were one code, which
+    /// left no test able to say which branch had run and left the unresolved branch with no
+    /// negative control of its own - a state in which that branch could stop firing, or
+    /// start firing everywhere, without a single assertion changing colour.
+    /// </para>
+    /// <para>
+    /// <b>Both messages state the observation first and the rule second</b>, which is the
+    /// convention here and worth naming because the two emits are a reader's only sample of it.
+    /// The mismatch says what the letters spelled and what the suffix was, then why they must
+    /// agree; the unresolved emit says which resource carries no letter, then why that is
+    /// uncheckable rather than wrong. Leading with the rule as though it were the observation is
+    /// what the unresolved message used to do - "every recipe resource resolves to a canonical
+    /// letter, and X does not" - which reads as a contradiction of itself.
+    /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException">Any argument is null.</exception>
     public static void RecipeLettersSpellTheWeaponId(
@@ -290,14 +309,16 @@ public static class CatalogChecks
             if (unresolved.Count > 0)
             {
                 bag.Add(ContentDiagnostic.CreateError(
-                    ContentDiagnosticCodes.RecipeLettersMismatch,
+                    ContentDiagnosticCodes.RecipeResourceLetterUnresolved,
                     sourcePath,
                     pointer,
                     weapon.Id,
-                    "every recipe resource resolves to a canonical letter, and "
-                        + string.Join(", ", unresolved) + " does not. A recipe naming a resource "
-                        + "with no letter cannot be checked against the weapon ID at all, which "
-                        + "is the whole of what this check exists for",
+                    "the recipe names " + string.Join(", ", unresolved)
+                        + ", which no definition in the catalog gives a canonical letter, so the "
+                        + "recipe's letters cannot be resolved at all. A weapon ID is its material "
+                        + "pair, and resolving the IDs to their letters is what keeps that "
+                        + "checkable; a resource with no letter leaves nothing to compare the ID "
+                        + "against, which is why this is its own code and not a spelling mismatch",
                     unresolved));
                 continue;
             }

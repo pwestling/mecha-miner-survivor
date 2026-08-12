@@ -4,17 +4,48 @@
 # enforced, by compiling a deliberately invalid fixture per policy and asserting the
 # exact diagnostic.
 #
-# NOT every repository build policy. Doc 100 § C# project standards lists eight bullets
-# and two of them have no fixture here at all: "Release binaries do not include
-# development cheats or arbitrary command execution" and "Reflection-based gameplay
-# registration and runtime assembly scanning are avoided". Neither has a subject yet -
-# there are no release binaries and no gameplay registration - and they belong to
-# FND-006 and DAT-006. Several Directory.Build.props properties are likewise declared
-# and unfixtured: ImplicitUsings, RollForward, IsPackable, DebugType,
-# RestorePackagesWithLockFile, and the deliberately empty WarningsNotAsErrors and
-# NoWarn. Formatting (IDE0055/IDE0005) is build/verify-format.sh's, not this script's.
-# A reader who takes this script as the repository's whole policy gate will believe
-# eight bullets are covered when six are.
+# NOT every repository build policy. Doc 100 § C# project standards lists eight bullets and
+# two of them have no fixture here at all. Re-counted rather than carried across: the section
+# holds 8 bullets, this script fixtures 6 policies (VER-FND-001-006 through VER-FND-001-011),
+# and 2 bullets are unfixtured. A reader who takes this script as the repository's whole
+# policy gate will believe eight bullets are covered when six are.
+#
+# The two unfixtured bullets are quoted WHOLE, because one of them has a second half and
+# quoting it only as far as "are avoided" is what let that half go unaccounted for:
+#
+#   - "Release binaries do not include development cheats or arbitrary command execution"
+#   - "Reflection-based gameplay registration and runtime assembly scanning are avoided;
+#      generated/explicit registries make missing behavior a build error"
+#
+# Those are not one situation but two, and the accounting splits accordingly.
+#
+# NO SUBJECT YET, so there is nothing a fixture could compile. There are no release
+# binaries, and there is no gameplay registration. These belong to FND-006 and DAT-006.
+# The reflection prohibition in particular is registration-scoped - doc 40 § Behavior
+# registries forbids "runtime assembly scanning, reflection discovery, source-generator
+# magic, and a separately hand-edited manifest" in a paragraph about registration tables and
+# the registry manifest - and whether a calibration test enumerating types to check a parser
+# is a subject of it is OPEN, not settled. That reading is an agent's scoping decision, argued
+# by the DAT stream in RegistrySelectorTypesTests's own remarks; a reviewer of this branch then
+# declined to rule on it explicitly, saying the question wants the owner's ruling. Nobody with
+# authority over the scope has ruled, so read it as an open question and not as a decision.
+# Cited by section and not by line deliberately: that sentence sits at a different line
+# number on different refs of this repository, so a line citation here would be wrong somewhere.
+#
+# A SUBJECT, AND UNENFORCED BY THIS SCRIPT. The second half - "generated/explicit registries
+# make missing behavior a build error" - does have one today. VerbRegistry is an explicit
+# table of doc 100's eighteen verbs, and build/verify-verbs.sh § 1 asserts the registered set
+# is exactly those eighteen. So the property is checked; it is simply not checked HERE, and
+# not in the form the bullet states. Two differences worth being precise about, because
+# "covered elsewhere" would paper over both: it is a shell gate rather than a build error, so
+# a missing verb fails a gate run and not the compile; and verify-verbs.sh cites doc 100
+# § Standard command surface, a different section from this one. Nothing anywhere makes a
+# missing registration a build error, which is what the bullet actually asks for.
+#
+# Several Directory.Build.props properties are likewise declared and unfixtured:
+# ImplicitUsings, RollForward, IsPackable, DebugType, RestorePackagesWithLockFile, and the
+# deliberately empty WarningsNotAsErrors and NoWarn. Formatting (IDE0055/IDE0005) is
+# build/verify-format.sh's, not this script's.
 #
 # Authority: docs/technical/110-implementation-plan-for-ai-agents.md
 #              § Concrete M0 bootstrap queue - TASK-FND-001-002 close evidence is

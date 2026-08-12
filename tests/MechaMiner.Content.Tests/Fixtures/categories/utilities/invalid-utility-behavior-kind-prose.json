@@ -1,19 +1,19 @@
 {
-  "id": "UTL-D1",
+  "id": "UTL-D2",
   "schema_version": 1,
   "content_version": 1,
   "status": "enabled",
-  "name_key": "utility.UTL-D1.name",
-  "summary_key": "utility.UTL-D1.summary",
+  "name_key": "utility.UTL-D2.name",
+  "summary_key": "utility.UTL-D2.summary",
   "tags": [],
   "source_refs": [
     "TR-DAT-003"
   ],
   "material_id": "RSC-04",
   "ore_only_exception": false,
-  "primary_role": "Mobility",
+  "primary_role": "Extraction reach",
   "coverage_role": "Mining speed",
-  "behavior_kind": "movement-speed-booster",
+  "behavior_kind": "expands the extraction zone",
   "effect_kind": "additive-percent",
   "affected_stat_names": [
     "extraction-zone-radius"
@@ -58,7 +58,8 @@
     "rank_values_are_totals_not_cumulative_additions": true
   },
   "availability": {
-    "pool_availability": "fresh-profile"
+    "pool_availability": "hyper-gold-unlock",
+    "unlock_id": "UNL-01"
   },
   "effect_rules": [
     "The expanded zone is drawn at its modified radius."

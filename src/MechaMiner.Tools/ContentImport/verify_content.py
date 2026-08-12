@@ -368,21 +368,74 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       sentence ("first.", "specialist.", "cost.", ... 21 forms) and "ver."
       inside 5 ("forever.", "solver.", "hover."). None of those 98 is an
       abbreviation. Those figures were measured at an earlier tree and the
-      corpus has grown since; re-measured at b71371e (tree c4422a2a, 201
-      files) the same two searches find 104 and 7. The conclusion is
-      unchanged and stronger: the word boundary is load-bearing.
+      corpus has grown since; re-measured over 201 docs/**/*.md files at
+      2026-08-11T01:16Z the same two searches find 104 hits across 23
+      distinct inside-word forms for "st." and 7 across 4 for "ver.". Each
+      count is kept WITH its form total on purpose: an earlier revision
+      carried the totals without the form counts, and a figure with no
+      shape to check it against is how a wrong number circulates.
       The bounded form is NOT free of false positives, and the claim that
       it "finds zero today" was true only while `no.` had no occurrence.
-      `no.` is the only one of these eighteen tokens that is also an
-      ordinary English word, so it is the only one whose period can BE the
-      sentence end this list is defined to exclude. At b71371e the bounded
-      form reports exactly 1 hit, docs/technical/delivery-waves.md:598
-      "than a yes or no. Its numbers are 300 trials", which is that word
-      ending a sentence and not an abbreviation at all. So the abbreviation
-      sense is required to introduce a numeral ("No. 5"); with that suffix
-      the bounded form reports 0. The narrowing is specific to `no.` and
-      does not generalise: none of the other seventeen is a word, so a
-      bounded match on them cannot land on a sentence end.
+      WORDHOOD IS THE WRONG TEST, and counting by it understated this.
+      An earlier revision said THREE of these eighteen tokens are also
+      ordinary English words - `no.`, `fig.` and `sec.` - and offered that
+      as the bound. The operative property is neither wordhood nor that
+      count: it is whether the token, spelled as this list spells it, can
+      END A SENTENCE without being an abbreviation. Those three can
+      because they are words. AT LEAST FIVE MORE can without being words
+      at all, because `re.IGNORECASE` is on the compiled pattern - never
+      mentioned in the text this replaces - so a capitalised or upper-case
+      form of a token matches it. Measured against this module's own
+      compiled ABBREVIATION_RX at 2026-08-11T04:09Z, each of these
+      matches at a plain sentence end with no abbreviation present:
+      `ca.` on "The tour ended in CA." (a US state code), `al.` on "His
+      brother is called Al." (a given name), `p.` on "The verdict was a
+      flat P.", `eq.` on "The band played the whole of EQ.", and `pp.` on
+      "Dynamics fell to pp." (a dynamic marking). So EIGHT of the
+      eighteen are known latent misfires rather than three - the three
+      words plus those five - and "at least" is meant literally: the five
+      were found by inspecting the list, not by exhausting it, and
+      `re.IGNORECASE` means every token has to be considered in every
+      capitalisation.
+      EIGHT AND NOT SEVEN, and the arithmetic is worth spelling out
+      because this paragraph carried the wrong total from the commit that
+      restructured it: three words plus five non-words is eight, and the
+      inline comment at ABBREVIATION_SUFFIX says seven for a different and
+      correct reason - it counts only the tokens that take NO suffix, so
+      it excludes `no.`. Fold `no.` back in, as this paragraph does when
+      it says "those three can", and the count is eight. Re-derived at
+      ecf733c against the compiled ABBREVIATION_RX, one innocent
+      sentence-final candidate per token, all eight matching: `no.`,
+      `fig.`, `sec.`, `ca.`, `al.`, `p.`, `eq.`, `pp.`. The other ten
+      match only where the token really is the abbreviation, which is the
+      gate working.
+      `no.` is only the one with an occurrence in the corpus TODAY, and
+      the other SEVEN are LATENT MISFIRES, not impossibilities: measured
+      the same way, "The dessert was a dried fig." matches `fig.` and
+      "Hold on a sec." matches `sec.`, each at a plain sentence end. Seven
+      is what the list that follows has always named - `fig.`, `sec.` and
+      the five above - so the "six" this sentence used to say was
+      contradicted by its own enumeration.
+      `no.` STAYS IN THE EIGHT DESPITE ITS SUFFIX, which is the part the
+      narrowing makes easy to miss. The suffix requires a following
+      numeral, so it clears the one real occurrence in docs/ - "than a yes
+      or no. Its numbers are 300 trials" no longer matches - but a sentence
+      ending in the word "no" whose NEXT sentence opens with a numeral
+      still matches on the same line: "The answer is no. 5 people agreed."
+      does. Narrowed is not the same as closed.
+      None of those sentences is in docs/ yet, which is the only reason
+      they are not failures today; the day one is written the gate reddens
+      on innocent prose. Do not read the `no.` narrowing as evidence the
+      other tokens are safe.
+      At b71371e the bounded form reports exactly 1 hit,
+      docs/technical/delivery-waves.md:598 "than a yes or no. Its numbers
+      are 300 trials", which is that word ending a sentence and not an
+      abbreviation at all. So `no.` ALONE is narrowed to require a
+      following numeral ("No. 5"); with that suffix the bounded form
+      reports 0. `fig.` and `sec.` are deliberately NOT suffixed here:
+      each suffix buys its own false negatives, and widening the narrowing
+      is a separate decision that must be proposed on its own with each
+      token's false-negative cost stated.
       THE SUFFIX IS NECESSARY BUT NOT SUFFICIENT. It is a TRADE, not a
       repair, and both directions are still wrong on purpose:
         - RESIDUAL FALSE POSITIVE. A sentence-final "no" whose NEXT
@@ -391,12 +444,20 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
           people agreed." matches today. The rule is narrowed from every
           sentence-final use to those followed by a digit, not freed of
           them.
-        - FALSE NEGATIVE INTRODUCED. An abbreviation with no numeral after
-          it - "see no. above" - is now missed entirely, where the
-          unsuffixed form caught it.
+        - FALSE NEGATIVES INTRODUCED. The number sense does NOT always
+          introduce a digit, so every number-sense form whose next
+          non-space character is not one is now missed entirely, where the
+          unsuffixed form caught it. Measured against the compiled
+          ABBREVIATION_RX, each of these is the number sense and none of
+          them matches: "See No. IV for details." (a roman numeral),
+          "Part No. A-12 shipped." and "Ticket No. ABC-123 was closed."
+          (alphanumeric part numbers), "Item No. (5) is missing." (a
+          bracketed numeral), and the bare cross-reference "see no.
+          above". That is the coverage this suffix gives up, and it is a
+          class, not the single example previously admitted.
       The trade is taken because sentence-final "no" is common in ordinary
-      prose while `no.` with no following numeral is rare, so the suffix
-      retires many more false alarms than the true positives it gives up.
+      prose while the digitless number-sense forms above are rare here, so
+      the suffix retires many more false alarms than true positives.
       It is recorded here rather than left to be discovered, because a
       guard that swaps one error class for another is exactly the shape
       that quietly stops being able to fail. Anyone tightening either
@@ -2569,19 +2630,93 @@ def check_no_nulls() -> list[tuple]:
 # "hover.". Every one of them is a sentence end, not an abbreviation, and the word
 # boundary below removes all 98. A check that fires on those would be turned off
 # within a day, which would leave no check. (Those counts are from an earlier tree;
-# at b71371e the same two searches find 104 and 7. The argument is unaffected.)
+# re-measured over 201 docs/**/*.md files at 2026-08-11T01:16Z the same two searches
+# find 104 hits across 23 distinct inside-word forms and 7 across 4. The argument is
+# unaffected.)
 #
 # THE WORD BOUNDARY IS NECESSARY BUT NOT SUFFICIENT, which is the correction this
 # block owed. It removes every word that merely ENDS with a listed token; it cannot
-# remove a word that IS one. `no.` is the only token here that is also an ordinary
-# English word, so it is the only one whose period can be the sentence end the
-# selection criterion above excludes by definition - and at b71371e the bounded form
-# fired on exactly that, docs/technical/delivery-waves.md:598 "than a yes or no. Its
-# numbers are 300 trials", where the sentence does not continue past the period and
-# no quotation is at risk. The abbreviation sense of "no." always introduces a
-# numeral, so ABBREVIATION_SUFFIX below requires one. That distinguishes the two
-# senses instead of dropping the token, which would have left the "No. 5" form
-# unchecked. The other seventeen take no suffix because none of them is a word.
+# remove a word that IS one. THREE tokens here are also ordinary English words -
+# `no.`, `fig.` and `sec.` - so all three have a period that can be the sentence end
+# the selection criterion above excludes by definition. At b71371e the bounded form
+# fired on exactly that for `no.`, docs/technical/delivery-waves.md:598 "than a yes
+# or no. Its numbers are 300 trials", where the sentence does not continue past the
+# period and no quotation is at risk.
+#
+# ABBREVIATION_SUFFIX below therefore narrows `no.` ALONE, and the other seventeen
+# take no suffix. The reason is NOT "none of them can be a sentence end" - and it is
+# not "none of them is a word" either, which is a wrong bound this block carried in
+# place of an earlier wrong bound. The property that matters is whether a token can
+# END A SENTENCE without being an abbreviation, and wordhood is only one way to have
+# it. AT LEAST FIVE tokens have it without being words, because the pattern is
+# compiled with re.IGNORECASE and so matches any capitalisation. Measured against the
+# compiled ABBREVIATION_RX at 2026-08-11T04:09Z, each of these matches at a plain
+# sentence end with no abbreviation present: `ca.` on "The tour ended in CA.", `al.`
+# on "His brother is called Al.", `p.` on "The verdict was a flat P.", `eq.` on "The
+# band played the whole of EQ.", and `pp.` on "Dynamics fell to pp.". Two more do it
+# as words: "The dessert was a dried fig." matches `fig.` and "Hold on a sec."
+# matches `sec.`. That is seven of the eighteen, and "at least" is literal - the list
+# was assembled by inspection, and re.IGNORECASE means each token has to be
+# considered in every capitalisation before any of them can be called safe.
+# They take no suffix because none of those sentences occurs in docs/ TODAY, so none
+# is a failure yet - they are latent misfires waiting on prose, not impossibilities.
+# Anyone who reads this block as licence to assume the unsuffixed tokens cannot land
+# on a sentence end is being misled; that assumption is what this paragraph exists to
+# remove. Extending the suffix map is a separate decision, to be proposed with each
+# token's false-negative cost stated, and is not made here.
+#
+# NOR does the number sense always introduce a numeral, which is the other thing
+# this block used to assert. "See No. IV", "Part No. A-12", "Ticket No. ABC-123" and
+# "Item No. (5)" are all the number sense and none of them matches under the suffix -
+# see the false-negative list in the module docstring. The suffix distinguishes the
+# two senses well enough to be worth taking, instead of dropping the token and
+# leaving the "No. 5" form unchecked. It does not separate them cleanly.
+#
+# FLEET EXPOSURE IS TWO INDEPENDENT FACTS, AND A TRANSCRIBED COUNT OF IT ROTS. A
+# ref's exposure is the product of (a) whether it carries this gate unnarrowed and
+# (b) whether its own docs/ carries prose the unnarrowed form reddens. Those move
+# separately, so a ref flips green to red with NEITHER the gate nor the prose edited
+# on it - one merge bringing the other half across is enough, which is exactly how
+# this branch's base acquired the failure. Transcribed tallies of that have already
+# gone stale twice; one ref acquired the gate eight seconds after the commit that
+# wrote the numbers down. So the census is recorded as the command that regenerates
+# it, with the figures stamped rather than presented as standing fact:
+#
+#   f=src/MechaMiner.Tools/ContentImport/verify_content.py
+#   git for-each-ref --format='%(refname)' refs/remotes/origin | grep -v '/HEAD$' |
+#   while read -r r; do
+#     if git cat-file -e "$r:$f" 2>/dev/null; then
+#       git show "$r:$f" | grep -q ABBREVIATION_SUFFIX && g=narrowed || g=unnarrowed
+#     else g=none; fi
+#     git grep -q -P -i '(?<![A-Za-z0-9])no\.' "$r" -- 'docs/*.md' 'docs/**/*.md' \
+#       && p=prose || p=clean
+#     printf '%s\t%s\t%s\n' "$g" "$p" "$r"
+#   done | cut -f1,2 | sort | uniq -c
+#
+# If that has to travel through a writing path, swap `-P` for `-E` and the lookbehind
+# for '(^|[^A-Za-z0-9])no\.'. Measured identical cell-for-cell at 2026-08-11T01:21Z,
+# and it survives transcription: the lookbehind's less-than-then-exclamation pair is
+# eaten as an HTML comment opener by at least one publishing path in this project,
+# which silently turns the negative lookbehind into a positive one.
+#
+# At 2026-08-11T01:21Z, over 34 remote refs, that reports: unnarrowed+prose 4 (red
+# now), narrowed+prose 3 (green because FIXED), unnarrowed+clean 13, none+prose 8,
+# none+clean 6. Three minutes earlier, at 01:18Z, the first two cells read 5 and 2:
+# the ref that moved is this branch's own, flipped by the push of this very commit's
+# parent. THAT IS THE HALF-LIFE OF THESE NUMBERS, demonstrated rather than asserted.
+# Re-run the command; do not believe the five figures above.
+#
+# THE DIRECTION THAT MATTERS MOST, AND THAT NO EARLIER TALLY RECORDED: the 13
+# unnarrowed+clean refs - `master` AMONG THEM - are green TODAY ONLY BECAUSE THEIR
+# CORPUS HAPPENS TO BE CLEAN, and every one of them goes red on any merge that brings
+# the offending prose across. From outside, green-by-corpus and green-by-fix are
+# INDISTINGUISHABLE: both report RESULT: PASS, exit 0. Only green-by-fix survives a
+# merge. Reading a ref's passing gate as evidence the narrowing has reached it is
+# therefore wrong 13 times out of the 16 gate-carrying refs that pass at the stamp
+# above (13 unnarrowed+clean, plus the 3 narrowed+prose that pass because they are
+# fixed), and `master` is the costly instance - it is the ref everything else
+# eventually merges into. Anyone consolidating this file should
+# treat "the gate is green there" as no information at all and re-derive the cell.
 #
 # THE MESSAGE IS THE POINT. When this fails, no content string is wrong. What is
 # wrong is that the quotation rule's premise has lapsed. The message must send the
@@ -2601,7 +2736,9 @@ SENTENCE_INTERNAL_ABBREVIATIONS = (
 # suffix is only well-behaved because check_no_abbreviation_periods matches one LINE
 # at a time: `\s*` would happily consume a newline, so on a whole-text scan the
 # lookahead would reach across a line break and "... is no.\n5 people agreed" would
-# match. Measured: whole-text finds 2 in that fixture, per-line finds 0. That
+# match. Measured on that fixture ("The answer is no.\n5 people agreed.\n") at
+# 2026-08-11T01:14Z: whole-text finds 1, per-line finds 0. One is all it takes - the
+# point is containment, that the per-line loop is the only thing suppressing it. That
 # containment is INCIDENTAL rather than designed - nothing asserts it - so the cost
 # is stated in both directions. It means a `No.` separated from its numeral by a
 # line break is missed today; and it means anyone rewriting the loop to scan whole

@@ -14,7 +14,7 @@
   "affected_scope": [
     "all-equipped-weapons"
   ],
-  "behavior_kind": "activation-rate-transform-and-opposite-geometry",
+  "behavior_kind": "delayed-transform-history-and-attack-duplication",
   "trigger_condition": "always active while installed",
   "effects": {
     "activation_rate_multiplier": 3,

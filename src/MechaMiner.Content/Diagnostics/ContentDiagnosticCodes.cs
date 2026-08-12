@@ -238,8 +238,8 @@ public static class ContentDiagnosticCodes
     public const string CatalogTotalMismatch = "MMC-7004";
 
     /// <summary>
-    /// A weapon's recipe resources, resolved to their canonical letters, do not
-    /// concatenate to the weapon ID's own two-letter suffix.
+    /// Every one of a weapon's recipe resources resolved to a canonical letter, and the
+    /// concatenation does not equal the weapon ID's own two-letter suffix.
     /// </summary>
     public const string RecipeLettersMismatch = "MMC-7005";
 
@@ -254,6 +254,12 @@ public static class ContentDiagnosticCodes
     /// definitions was loaded.
     /// </summary>
     public const string RelationOperandMissing = "MMC-7008";
+
+    /// <summary>
+    /// A weapon's recipe names a resource that no definition in the catalog gives a
+    /// canonical letter, so the recipe's letters cannot be resolved at all.
+    /// </summary>
+    public const string RecipeResourceLetterUnresolved = "MMC-7009";
 
     private static readonly ContentDiagnosticDescriptor[] Declared =
     {
@@ -387,7 +393,10 @@ public static class ContentDiagnosticCodes
         Describe(RecipeLettersMismatch, nameof(RecipeLettersMismatch), ContentValidationStage.Relational,
             "a weapon's recipe resources, resolved in authored order to their canonical letters, do not concatenate "
                 + "to the weapon ID's own two-letter suffix; this is what keeps a recipe of opaque resource IDs "
-                + "checkable after it stopped being human-legible"),
+                + "checkable after it stopped being human-legible. Every resource resolved and the spelling is what "
+                + "disagrees, so this never means a recipe named a resource with no letter - that is the "
+                + "unresolved-letter code, and the two have different fixes: one edits the recipe or the ID to agree, "
+                + "the other adds the letter the resolution needs"),
         Describe(BranchClassDistributionWrong, nameof(BranchClassDistributionWrong), ContentValidationStage.Relational,
             "a weapon's branches are not exactly one amplification, one functional, and one conversion; a weapon "
                 + "with three branches of two classes fails even though its branch count is right"),
@@ -398,6 +407,13 @@ public static class ContentDiagnosticCodes
             "a relational constraint was evaluated before one of its operand definitions was loaded; the constraint "
                 + "reports the gap rather than skipping silently, because a skipped relational check is "
                 + "indistinguishable from a passing one"),
+        Describe(RecipeResourceLetterUnresolved, nameof(RecipeResourceLetterUnresolved), ContentValidationStage.Relational,
+            "a weapon's recipe names a resource that no definition in the catalog gives a canonical letter, so the "
+                + "letters cannot be resolved and the comparison against the weapon ID cannot be attempted at all; "
+                + "the diagnostic names every unresolved resource ID. This never means the resolved letters disagree "
+                + "with the weapon ID, which is the recipe-letters mismatch code: an unresolvable recipe has no "
+                + "spelling to disagree, and reporting the two under one code would let a catalog satisfy a test for "
+                + "either fault while carrying the other"),
     };
 
     private static readonly Dictionary<string, ContentDiagnosticDescriptor> ByCode = BuildIndex();

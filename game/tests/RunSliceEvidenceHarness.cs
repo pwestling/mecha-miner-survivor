@@ -494,6 +494,18 @@ public partial class RunSliceEvidenceHarness : Node
         Node3D pivot = new();
         bool everyRenderedPositionIsBetweenTheAnchors = true;
 
+        // The two anchors expressed as presentation world bounds, derived here by restating
+        // TDR-005 § Coordinate contract by hand rather than by calling the mapping this section
+        // is checking: simulation east is world +X and simulation north is world -Z, so the
+        // northward pair negates. Math.Min/Math.Max rather than from/to in their given order,
+        // because which anchor is the lower one is a property of the leg and not of the contract:
+        // the westward leg this file drives at :390 has to.X < from.X, and a bound written as
+        // "x >= from.X && x <= to.X" would go red there with no defect present.
+        double lowerWorldX = Math.Min(from.X, to.X);
+        double upperWorldX = Math.Max(from.X, to.X);
+        double lowerWorldZ = Math.Min(-from.Y, -to.Y);
+        double upperWorldZ = Math.Max(-from.Y, -to.Y);
+
         foreach (double fraction in new[] { 0.0, 0.25, 0.5, 0.75, 1.0 })
         {
             PlanarVector rendered = from + ((to - from) * fraction);
@@ -502,15 +514,37 @@ public partial class RunSliceEvidenceHarness : Node
                 Invariant(fraction) + "\t" + Invariant(pivot.Position.X) + "\t"
                 + Invariant(pivot.Position.Z));
 
+            // The value under test is pivot.Position - what ApplyGroundTransform actually wrote -
+            // and never `rendered`, which this harness computed itself two lines above. The
+            // superseded form asserted "rendered.X >= from.X - Tolerance && rendered.X <= to.X +
+            // Tolerance", comparing a convex combination of two endpoints against those same
+            // endpoints: true for every fraction in [0,1] on every axis by arithmetic, whatever
+            // the production path does, so it passed with the mapping arbitrarily wrong and never
+            // read the production value at all. A Y term would have been exactly as vacuous, for
+            // the same reason. So: the mapping first, in the shape the movement section uses at
+            // :415-418, and then the containment this Check is named for, both on all three axes
+            // of the value the production code produced.
             everyRenderedPositionIsBetweenTheAnchors &=
-                rendered.X >= from.X - Tolerance && rendered.X <= to.X + Tolerance;
+                Math.Abs(pivot.Position.X - rendered.X) < 1e-5
+                && Math.Abs(pivot.Position.Y) < 1e-6
+                && Math.Abs(pivot.Position.Z - (-rendered.Y)) < 1e-5
+                && pivot.Position.X >= lowerWorldX - 1e-5
+                && pivot.Position.X <= upperWorldX + 1e-5
+                && pivot.Position.Z >= lowerWorldZ - 1e-5
+                && pivot.Position.Z <= upperWorldZ + 1e-5;
         }
 
         Check(
             "interpolation-stays-between-the-two-committed-anchors",
             everyRenderedPositionIsBetweenTheAnchors,
             "doc 30 § Snapshot consumption: presentation \"consumes the two most recent committed "
-                + "simulation snapshots\" and does not extrapolate beyond them");
+                + "simulation snapshots\" and does not extrapolate beyond them. Asserted on "
+                + "pivot.Position, the transform RunSceneRoot.ApplyGroundTransform wrote, against "
+                + "the two anchors mapped by hand through TDR-005 § Coordinate contract - not on "
+                + "this harness's own interpolant, which is a convex combination of the anchors "
+                + "and therefore lies between them by arithmetic however the production path "
+                + "behaves. The bound is non-directional because which anchor is the lower one "
+                + "belongs to the leg and not to the contract");
         Check(
             "interpolating-does-not-move-the-authoritative-body",
             run.World.Player.Position == authoritativeBefore,

@@ -117,6 +117,8 @@ The implementation uses purpose-built packed stores by population category, not 
 
 ## Authoritative population categories
 
+There are exactly twelve authoritative population categories.
+
 | Category | Required state | Typical lifecycle |
 | --- | --- | --- |
 | Player | transform, facing, movement, Hull, modifiers, loadout, run inventory, contact grace | run lifetime |
@@ -132,7 +134,7 @@ The implementation uses purpose-built packed stores by population category, not 
 | Relic cache | position, assigned relic, discovery/open state | map lifetime |
 | Static world object | stable map ID, geometry and presentation references | map lifetime |
 
-Weapon actors cover projectiles, beams, mines, pods, drones, orbiters, trails, delayed echoes, and other attack state. They use specialized packed stores when their update pattern differs materially; they are not forced into one sparse universal component table.
+Projectiles, beams, mines, pods, drones, orbiters, trails, delayed echoes, and other attack state are sub-kinds of the single weapon actor category above, not additional categories. They use specialized packed stores when their update pattern differs materially; they are not forced into one sparse universal component table.
 
 ## Tick transaction
 

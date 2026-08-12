@@ -585,7 +585,16 @@ internal sealed class VerificationRegistryTests
                             .Select(pair => pair.Key + "=" + pair.Value.ToString(
                                 CultureInfo.InvariantCulture)))
                     + ". Summing the measured counts against each other would pass on any input; "
-                    + "this is the form that notices a fifth kind");
+                    + "this is the form that notices a fifth kind. The partition being asserted "
+                    + "is the four named selector kinds - nunit, script, command, engine-scene - "
+                    + "against the measured entry total, both sides derived from the same walk of "
+                    + "tests/verification/. docs/technical/91-verification-strategy.md:199 is why "
+                    + "that is not sufficient on its own: an invariant asserting that two sets "
+                    + "match is blind to a correlated deletion from both sides, so dropping an "
+                    + "entry would lower namedKinds and entries together and this equality would "
+                    + "still hold. The third anchor that names the expected count independently "
+                    + "of either side is RegistryEntries, and the per-kind literals above are the "
+                    + "same anchor taken kind by kind");
             Assert.That(
                 Answered(RegistrySelectorTypes.Route.Reflection),
                 Is.EqualTo(NunitSelectorsReflected),
@@ -868,13 +877,26 @@ internal sealed class VerificationRegistryTests
     private const int RegistriesNamingNoFixture = 6;
 
     /// <summary>Entries naming no fixture evidence at all.</summary>
-    private const int EntriesNamingNoFixture = 73;
+    /// <remarks>
+    /// 73 entries naming no fixture evidence, measured at <c>46366ea</c>; 82 measured at
+    /// <c>0af6962</c>. The nine that moved it are the nine harness-wiring claims
+    /// <c>3e8d620</c> added to PRE-001 and UI-002, none of which names a fixture, so this
+    /// figure moves by exactly the same nine that move <see cref="RegistryEntries"/> and
+    /// <see cref="ScriptSelectors"/>. The superseded figure is kept because a future failure
+    /// against 73 would be this const left behind by a growing tree, not a regression in what
+    /// the tree cites.
+    /// </remarks>
+    private const int EntriesNamingNoFixture = 82;
 
     /// <summary>Entries across every registry in <c>tests/verification/</c>.</summary>
     /// <remarks>
-    /// 294 at <c>46366ea</c>, 295 now. VER-DAT-002-037, which records the behavior-token call-site coverage, is the one entry this branch adds after the census was last pinned.
+    /// 294 at <c>46366ea</c>, then 295: VER-DAT-002-037, which records the behavior-token call-site coverage, is the one entry this branch added after the census was last pinned.
+    /// 304 entries across every registry, measured at <c>0af6962</c>. <c>3e8d620</c> registered
+    /// nine harness-wiring claims against the run-slice harnesses - five in PRE-001, four in
+    /// UI-002 - and 295 is the figure it superseded. A failure against 294 or 295 dates the
+    /// const, not the registries.
     /// </remarks>
-    private const int RegistryEntries = 295;
+    private const int RegistryEntries = 304;
 
     /// <summary>Entries whose selector <c>kind</c> is <c>nunit</c>.</summary>
     /// <remarks>
@@ -886,7 +908,15 @@ internal sealed class VerificationRegistryTests
     private const int NunitSelectors = 237;
 
     /// <summary>Entries whose selector <c>kind</c> is <c>script</c>.</summary>
-    private const int ScriptSelectors = 39;
+    /// <remarks>
+    /// 39 entries with a script selector, measured at <c>46366ea</c>; 48 measured at
+    /// <c>0af6962</c>. All nine of <c>3e8d620</c>'s harness-wiring claims carry a script
+    /// selector, which is why this kind absorbs the whole of that commit's +9 while
+    /// <see cref="NunitSelectors"/>, <see cref="CommandSelectors"/> and
+    /// <see cref="EngineSceneSelectors"/> stand still. A move here without the same move in
+    /// <see cref="RegistryEntries"/> would mean entries changed kind rather than arrived.
+    /// </remarks>
+    private const int ScriptSelectors = 48;
 
     /// <summary>Entries whose selector <c>kind</c> is <c>command</c>.</summary>
     private const int CommandSelectors = 13;

@@ -23,8 +23,10 @@ namespace MechaMiner.Content.Tests.Fixtures;
 /// <para>
 /// It used to read DAT-001 and nothing else, while
 /// <see cref="Categories.CategoryVerificationRegistryTests"/> read DAT-002 and DAT-003 and
-/// nothing else, so nineteen of the twenty-two registries on disk were validated by nobody
-/// and no test said so. The set now comes from
+/// nothing else, so every registry on disk other than those three was validated by nobody
+/// and no test said so - all but three of <see cref="VerificationRegistry.RegistriesOnDisk"/>,
+/// the count <see cref="EveryRegistryOnDiskIsDiscoveredAndWalked"/> asserts, which is where
+/// that arithmetic belongs rather than in a sentence nothing can redden. The set now comes from
 /// <see cref="VerificationRegistry.Packages"/>, which is the directory listing - a
 /// hand-maintained list of registries fails the same way the hand-maintained pair did.
 /// </para>

@@ -23,7 +23,11 @@ namespace MechaMiner.Content.Tests.Fixtures;
 /// hand-maintained list of registries has the same defect as a hand-maintained list of
 /// checks: the registry added next is walked by nobody, and nothing says so. That was the
 /// actual state of this suite - two walks between them named DAT-001, DAT-002 and DAT-003,
-/// and the other nineteen registries on disk were validated by nothing.
+/// and every other registry on disk was validated by nothing. How many that is follows from
+/// <see cref="RegistriesOnDisk"/>, which
+/// <see cref="VerificationRegistryTests.EveryRegistryOnDiskIsDiscoveredAndWalked"/> asserts,
+/// and is deliberately not transcribed here: a count written into prose is gated by nothing
+/// and goes stale the next time a registry is added.
 /// </para>
 /// </remarks>
 internal static class VerificationRegistry

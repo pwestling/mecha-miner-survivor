@@ -14,9 +14,14 @@ namespace MechaMiner.Content.Tests.Fixtures;
 /// <b>The field carries four conventions, and only one of them used to be checked.</b> The
 /// walk over <c>fixtures</c> treated every string as a repository-relative path and called
 /// <c>File.Exists</c> on it, which is true of DAT-001, DAT-002 and DAT-003 - the three
-/// registries the walk read - and false of the other eighteen. Extending the walk to the whole
-/// directory reported 135 strings as missing files. Not one of them was a missing file. They
-/// were three other conventions the check had never been taught:
+/// registries the walk read - and false of every other registry on disk. How many that is
+/// follows from <see cref="VerificationRegistry.RegistriesOnDisk"/>, which
+/// <see cref="VerificationRegistryTests.EveryRegistryOnDiskIsDiscoveredAndWalked"/> asserts;
+/// this sentence used to do the subtraction itself and was wrong by the time the next registry
+/// landed. Extending the walk to the whole directory reported a batch of strings as missing
+/// files - how large a batch does not reproduce, because the population has grown since, and
+/// the finding does not need it: not one of them was a missing file. They were three other
+/// conventions the check had never been taught:
 /// </para>
 /// <list type="bullet">
 /// <item><description>

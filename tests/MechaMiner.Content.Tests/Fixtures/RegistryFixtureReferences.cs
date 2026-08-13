@@ -42,8 +42,12 @@ namespace MechaMiner.Content.Tests.Fixtures;
 /// and one is checked is a field that verifies nothing while looking verified, so the count of
 /// each form is asserted against committed literals by
 /// <see cref="VerificationRegistryTests.TheFixtureReferenceCensusIsWhatIsDeclared"/> and
-/// written to the run's output. The 22 prose references are reported as what they are -
-/// unverifiable - rather than passing quietly among the 432 that are checked.
+/// written to the run's output. The prose references are reported as what they are -
+/// unverifiable - rather than passing quietly among the ones that are checked. How many
+/// there are of each is what that test's <c>ProseReferences</c>,
+/// <c>RepositoryPathReferences</c>, <c>PathAndSectionReferences</c> and
+/// <c>PathAndCaseReferences</c> literals say, and this paragraph deliberately restates
+/// none of them: a figure repeated here is asserted by nothing and goes stale silently.
 /// </para>
 /// <para>
 /// <b>Classification is by shape, never by existence.</b> A tempting reading of "is this a

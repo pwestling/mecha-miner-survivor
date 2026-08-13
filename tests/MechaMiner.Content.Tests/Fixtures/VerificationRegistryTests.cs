@@ -684,8 +684,12 @@ internal sealed class VerificationRegistryTests
     /// <see cref="RegistryFixtureReferences.Form.Prose"/> reference because there is nothing in
     /// it to resolve, and that is a fail-open unless something states how many references got
     /// that answer. This does: each form's count is compared against a committed literal and
-    /// the census is written to the run's output, so 22 references that no test can verify are
-    /// visible as 22 rather than invisible among 454.
+    /// the census is written to the run's output, so the references that no test can verify are
+    /// visible as their own asserted <see cref="ProseReferences"/> count rather than invisible
+    /// in a total. Neither number is restated here on purpose - the total is that literal plus
+    /// <see cref="RepositoryPathReferences"/>, <see cref="PathAndSectionReferences"/> and
+    /// <see cref="PathAndCaseReferences"/>, each of which this test asserts, and a figure
+    /// transcribed into this sentence would be asserted by nothing.
     /// </para>
     /// <para>
     /// The literals are literals for the usual reason - a census derived from the registries

@@ -702,6 +702,32 @@ internal sealed class VerificationRegistryTests
     /// quietly reworded into prose. Raising <see cref="ProseReferences"/> is a deliberate
     /// statement that one more piece of evidence is now unverifiable.
     /// </para>
+    /// <para>
+    /// <b>The partition, and why a fifth form used to be invisible.</b> The four per-form counts
+    /// are asserted to sum to the measured reference total. That is not
+    /// <c>census.Values.Sum() == references</c> - which holds by construction whatever forms are
+    /// found - but the claim that the four <em>named</em> forms account for every reference
+    /// measured, so a reference classified into a fifth form fails it while all four of the others
+    /// are still right. Before this assertion existed the walk counted <c>entries</c> and never
+    /// asserted it, and nothing related the per-form counts to any measured total, so a fifth form
+    /// would have been counted by nothing and reported by nothing. That is the same shape as the
+    /// fifth selector kind <see cref="TheSelectorCensusIsWhatIsDeclared"/> exists to notice, one
+    /// census over.
+    /// </para>
+    /// <para>
+    /// <b>Why the partition is not enough on its own.</b> A partition is an invariant asserting
+    /// that two sets match, and <c>docs/technical/91-verification-strategy.md:199</c> says of
+    /// those: "An invariant asserting that two sets match is blind to a correlated deletion from
+    /// both sides. Removing a member from each side keeps them equal and the assertion passes.
+    /// Such an invariant needs a third anchor that names the expected members or their count
+    /// independently of either side." Deleting one entry together with its one reference lowers
+    /// the sum of the forms and the reference total together, and the partition still holds. So
+    /// the pinned counts stand beside the derivation rather than being replaced by it:
+    /// <see cref="RegistryEntries"/> is the third anchor on the entry side, asserted here and not
+    /// only by the selector census, and the four per-form literals are the same anchor on the
+    /// reference side taken form by form - their committed sum is the reference total, so no
+    /// separate total literal is added that would only restate them.
+    /// </para>
     /// </remarks>
     [Test]
     public void TheFixtureReferenceCensusIsWhatIsDeclared()
@@ -710,6 +736,7 @@ internal sealed class VerificationRegistryTests
         int registriesWithNoFixtureReference = 0;
         int entriesWithNoFixtureReference = 0;
         int entries = 0;
+        int references = 0;
 
         foreach (string package in VerificationRegistry.Packages)
         {
@@ -724,6 +751,7 @@ internal sealed class VerificationRegistryTests
                 {
                     referencesInEntry++;
                     referencesInPackage++;
+                    references++;
                     RegistryFixtureReferences.Form form =
                         RegistryFixtureReferences.FormOf(fixture.GetString()!);
                     census[form] = census.TryGetValue(form, out int count) ? count + 1 : 1;
@@ -746,10 +774,16 @@ internal sealed class VerificationRegistryTests
             return census.TryGetValue(form, out int count) ? count : 0;
         }
 
+        int namedForms = Count(RegistryFixtureReferences.Form.RepositoryPath)
+            + Count(RegistryFixtureReferences.Form.PathAndSection)
+            + Count(RegistryFixtureReferences.Form.PathAndCase)
+            + Count(RegistryFixtureReferences.Form.Prose);
+
         TestContext.Out.WriteLine(
             "fixture-reference census over " + VerificationRegistry.Packages.Count.ToString(
                 CultureInfo.InvariantCulture)
-            + " registries and " + entries.ToString(CultureInfo.InvariantCulture) + " entries: "
+            + " registries, " + entries.ToString(CultureInfo.InvariantCulture) + " entries and "
+            + references.ToString(CultureInfo.InvariantCulture) + " references: "
             + Count(RegistryFixtureReferences.Form.RepositoryPath).ToString(
                 CultureInfo.InvariantCulture) + " repository-path, "
             + Count(RegistryFixtureReferences.Form.PathAndSection).ToString(
@@ -768,6 +802,16 @@ internal sealed class VerificationRegistryTests
         Expect.Multiple(() =>
         {
             Assert.That(
+                entries,
+                Is.EqualTo(RegistryEntries),
+                "entries across every registry, counted by this walk and pinned independently of "
+                    + "it. This walk had always counted entries and never asserted the count, so "
+                    + "the figure went to the run's output and nowhere else. It is here as the "
+                    + "third anchor the partition below needs, per "
+                    + "docs/technical/91-verification-strategy.md:199: the partition is a match "
+                    + "between two measured sides and survives a deletion from both of them, and "
+                    + "this literal does not");
+            Assert.That(
                 Count(RegistryFixtureReferences.Form.RepositoryPath),
                 Is.EqualTo(RepositoryPathReferences),
                 "repository-path fixture references");
@@ -785,6 +829,31 @@ internal sealed class VerificationRegistryTests
                 "prose fixture references - references no test in this suite can verify. If this "
                     + "rose, a piece of evidence that was checkable is now a description, and "
                     + "raising the literal says so deliberately");
+            Assert.That(
+                namedForms,
+                Is.EqualTo(references),
+                () => "the four named reference forms must account for every reference on disk, "
+                    + "and they accounted for "
+                    + namedForms.ToString(CultureInfo.InvariantCulture) + " of "
+                    + references.ToString(CultureInfo.InvariantCulture)
+                    + ". The forms found were " + string.Join(
+                        ", ",
+                        census.OrderBy(pair => pair.Key)
+                            .Select(pair => pair.Key + "=" + pair.Value.ToString(
+                                CultureInfo.InvariantCulture)))
+                    + ". Summing the measured counts against each other would pass on any input; "
+                    + "this is the form that notices a fifth form. The partition being asserted is "
+                    + "the four named reference forms - repository-path, path-and-section, "
+                    + "path-and-case, prose - against the measured reference total, both sides "
+                    + "derived from the same walk of tests/verification/. "
+                    + "docs/technical/91-verification-strategy.md:199 is why that is not "
+                    + "sufficient on its own: an invariant asserting that two sets match is blind "
+                    + "to a correlated deletion from both sides, so dropping an entry together "
+                    + "with its one reference would lower namedForms and references together and "
+                    + "this equality would still hold. The third anchor that names the expected "
+                    + "count independently of either side is RegistryEntries on the entry side, "
+                    + "and the per-form literals above are the same anchor on the reference side "
+                    + "taken form by form");
             Assert.That(
                 registriesWithNoFixtureReference,
                 Is.EqualTo(RegistriesNamingNoFixture),
@@ -860,17 +929,28 @@ internal sealed class VerificationRegistryTests
     /// 319 at <c>46366ea</c>. 326 from <c>VER-DAT-002-037</c>, which names the seven new
     /// behavior-token fixtures as its evidence - one per previously unreached call site. The
     /// delta is +7 and the seven are enumerated in that entry's own <c>fixtures</c> array, so a
-    /// reader can check the arithmetic against the thing that moved it.
+    /// reader can check the arithmetic against the thing that moved it. Still 326 when the four
+    /// form literals were re-measured over <c>tests/verification/</c> at <c>c294d22</c>, the
+    /// measurement that added the partition to
+    /// <see cref="TheFixtureReferenceCensusIsWhatIsDeclared"/>. 319 at <c>46366ea</c> is the
+    /// superseded figure and is kept above it.
     /// </remarks>
     private const int RepositoryPathReferences = 326;
 
     /// <summary>Fixture references of the form <c>path § heading</c>.</summary>
+    /// <remarks>
+    /// 108, measured over <c>tests/verification/</c> at <c>c294d22</c>. Unchanged by that
+    /// re-measurement, so no figure is superseded here; the stamp is what makes the pin a
+    /// measurement rather than an inherited number.
+    /// </remarks>
     private const int PathAndSectionReferences = 108;
 
     /// <summary>Fixture references of the form <c>path case=variant</c>.</summary>
+    /// <remarks>5, measured over <c>tests/verification/</c> at <c>c294d22</c>.</remarks>
     private const int PathAndCaseReferences = 5;
 
     /// <summary>Fixture references that are prose, and so verified by nothing.</summary>
+    /// <remarks>22, measured over <c>tests/verification/</c> at <c>c294d22</c>.</remarks>
     private const int ProseReferences = 22;
 
     /// <summary>Registries whose entries name no fixture evidence at all.</summary>
@@ -894,7 +974,11 @@ internal sealed class VerificationRegistryTests
     /// 304 entries across every registry, measured at <c>0af6962</c>. <c>3e8d620</c> registered
     /// nine harness-wiring claims against the run-slice harnesses - five in PRE-001, four in
     /// UI-002 - and 295 is the figure it superseded. A failure against 294 or 295 dates the
-    /// const, not the registries.
+    /// const, not the registries. Still 304 when re-measured at <c>c294d22</c>, where
+    /// <see cref="TheFixtureReferenceCensusIsWhatIsDeclared"/> began asserting it as well: that
+    /// census had counted entries and never asserted the count, and its new form partition needs
+    /// a third anchor that is not either of the two sides it compares. Both censuses now read
+    /// this one literal, so a re-measurement moves it once rather than twice.
     /// </remarks>
     private const int RegistryEntries = 304;
 

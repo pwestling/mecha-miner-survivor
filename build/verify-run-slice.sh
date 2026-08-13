@@ -156,6 +156,15 @@ readonly EXPECTED_VERSION_PREFIX="4.7.1.stable.mono.official"
 readonly EVIDENCE_DIR="${REPO_ROOT}/artifacts/engine-tier/verify-run-slice"
 readonly LAUNCH_TIMEOUT_SECONDS=180
 
+# The pathspec the no-mutation measurement covers, and the words every verdict about it
+# uses. game/, tests/ and build/ are what this gate reads, so they are what it must not
+# change. artifacts/ and the controls' own mktemp -d are deliberately OUTSIDE this
+# pathspec, which is why a control writing under either is not a mutation of the tree this
+# gate checks - and also why the controls alone could never turn the measurement red, which
+# is what § 6g exists to fix.
+readonly MUTATION_PATHSPEC=(game tests build)
+readonly MUTATION_SCOPE="game/, tests/ and build/"
+
 # ANCHOR 2 of VER-PRE-001-006's three. A committed integer, here so that adding or
 # removing a harness assertion is a two-line change that forces someone to state the new
 # total by hand.
@@ -195,15 +204,49 @@ readonly ROSTER_SIZE_AT_42A5C83=6
 # UNMARKED on purpose: that assertion is about the control set, not about anything a
 # control's fixture produced.
 #
-#   The pin counts the in-band negative controls this script emits, and it was counted at
-#   42a5c83. Nothing derives it: it is restated by hand whenever a control is added or
-#   removed, in the same commit that adds or removes one. A mismatch therefore means one of
-#   two things - a control was added and the total was not restated, which is bookkeeping,
-#   or a control that used to run has stopped running, which is the failure this pin exists
-#   to catch and which nothing else here would notice. Read a bare 36 with no ref stamp as
-#   a rumour rather than a measurement; the stamp is what makes the next reader able to
-#   tell a stale count from a regression.
-readonly EXPECTED_CONTROLS=36
+#   The pin counts the in-band negative controls this script emits. It was 36 as counted at
+#   42a5c83 and is 45 as counted at THIS commit, which added nine (§ 6g's three, § 6h's
+#   three, § 6c's empty-roster case at both log sizes, and the metadata leg of the
+#   no-mutation measurement, which used to be one finding and is now two). Nothing derives
+#   it: it is restated by hand whenever a control is added or removed, in the same commit
+#   that adds or removes one. A mismatch therefore means one of two things - a control was
+#   added and the total was not restated, which is bookkeeping, or a control that used to
+#   run has stopped running, which is the failure this pin exists to catch and which nothing
+#   else here would notice. Read a bare 45 with no ref stamp as a rumour rather than a
+#   measurement; the stamp is what makes the next reader able to tell a stale count from a
+#   regression.
+#
+#   HOW 45 IS REACHED AT RUNTIME, AND WHY NO GREP FINDS IT. There are 13 literal
+#   control_pass/control_fail call sites and 7 literal `controls_run` increment sites in
+#   this file, and they multiply out to 45 emissions because most of them sit inside a
+#   table-driven loop and most of those loops run each row twice, once at fixture size and
+#   once at ~300 KB. One of the 13 sites - § 6h's unavailability branch, which reports three
+#   unproved controls if the throwaway repository cannot be created - does not run on a
+#   healthy machine at all, so a green run reaches 12 of them. Per section, as counted at
+#   this commit:
+#
+#     6a launch evidence       4 rows x 2 log sizes  =  8
+#     6b assertions_run        4 rows x 2 sizes      =  8
+#     6c registry roster       5 rows x 2 sizes      = 10
+#     6d engine pin            3 rows               =  3
+#     6e exit-code conduit     3 rows x 2 attempts   =  6
+#     6f coherent scene        1                    =  1
+#     6f absent scene          1                    =  1
+#     6g mutation predicate    3 injected rows      =  3
+#     6h mutation predicate    3 real-repo cases    =  3
+#     6i the real-tree probe   2 legs               =  2
+#                                                     --
+#                                                     45
+#
+#   SO DO NOT "FIX" THIS CONSTANT FROM A GREP. `grep -c control_pass` over this file returns
+#   9 - six emitter call sites plus three prose mentions, two of them inside this very
+#   comment - and a reader who takes 9, or 13, or 7 for the runtime total will conclude the
+#   pin is wrong and either edit it or file a bug against a gate that is working. The runtime
+#   number and the static number differ BY DESIGN, because the loops are what make the
+#   control set cheap to extend. If this pin goes red, count the emissions in a real run's
+#   log - `grep -c '\[control-fixture\] control:'` returns exactly this number on a healthy
+#   run - before touching the constant.
+readonly EXPECTED_CONTROLS=45
 
 # The classes this script can return, named from src/MechaMiner.Tools/Cli/ExitClass.cs so
 # the shell side and the C# side cannot drift apart silently: InvalidInvocation = 2,
@@ -423,6 +466,98 @@ classify_engine() {
   return 0
 }
 
+# --- the no-mutation measurement's two legs, and its predicate -----------------
+#
+# TWO LEGS BECAUSE THEY ANSWER DIFFERENT QUESTIONS. "The tracked content did not change"
+# and "nothing was written" are not the same claim, and only the second is about writing. A
+# clean diff is not evidence of no write, so the gate emits the two as SEPARATE FINDINGS
+# rather than folding them into one verdict a reader would over-read.
+#
+# Both take $1 a repository root and $2.. a pathspec, parameterised rather than closed over
+# REPO_ROOT and MUTATION_PATHSPEC on purpose: § 6h drives these same two captures over a
+# throwaway git repository under CONTROL_ROOT, so the predicate below can be shown going
+# red on a REAL repository difference without this gate writing into the tree it checks.
+# VER-PRE-001-007(ii) forbids the latter outright, and a control that broke the rule its own
+# gate asserts would be worth less than no control.
+
+# LEG 1, CONTENT. git's own summary of which tracked paths in scope are modified, staged or
+# untracked. It is CONTENT-DERIVED BY CONSTRUCTION and therefore blind to writing twice
+# over: a deterministic byte-identical rewrite leaves every porcelain line exactly where it
+# was, and so does a write followed by a cleanup. It is also a summary of STATUS rather than
+# of bytes - a path already modified before the window and modified differently inside it
+# prints the same ' M path' at both ends - so this leg's pass message below claims status
+# identity and never byte identity. § 6h measures both blindnesses rather than asserting
+# them here as prose.
+capture_tree_content() {
+  local root="$1"
+  shift
+  (cd -- "${root}" && git status --porcelain -- "$@") 2>&1
+}
+
+# LEG 2, METADATA. mtime, inode and size of every TRACKED file in scope, in git's own sorted
+# order. This is the leg whose subject is WRITING rather than content: a byte-identical
+# rewrite in place moves %Y, and a rewrite through a temp file and a rename moves %i, and
+# neither moves anything leg 1 can see. § 6h drives both legs over a real byte-identical
+# rewrite and requires exactly that split - leg 1 silent, leg 2 red - so the claim that
+# these legs differ is measured on every run instead of being asserted in this comment.
+#
+# WHAT IT DOES NOT COVER, said rather than implied: untracked files. A file created and
+# deleted inside the window appears in neither leg, because git ls-files never named it.
+# The pass message says so; widening the leg to the untracked set would make it report every
+# build output the launch legitimately produces.
+capture_tree_metadata() {
+  local root="$1"
+  shift
+  (
+    cd -- "${root}" || exit 3
+    # NUL-delimited, so a path containing a space or a newline cannot merge two entries into
+    # one and hide a change inside the join. `-r` so an empty file set yields an empty
+    # capture rather than a stat over the current directory. No `| head`, no `| sort`: the
+    # order is git's and is already deterministic, and a downstream command exiting first is
+    # the pipefail-141 shape this gate refuses everywhere else.
+    git ls-files -z -- "$@" | xargs -0 -r stat -c "%n"$'\t'"%Y %i %s" --
+  ) 2>&1
+}
+
+# THE NO-MUTATION PREDICATE, EXTRACTED SO A CONTROL CAN ACTUALLY DRIVE IT.
+#
+# This used to be an inline `[[ "${before}" == "${after}" ]]` at the end of § 6, which made
+# it the one predicate in this gate no fixture could reach: every control writes under
+# mktemp -d or artifacts/, both outside MUTATION_PATHSPEC, so the control set was
+# STRUCTURALLY INCAPABLE of turning it red, and its unreadable-git branch had never been
+# taken at all. Extracting it is the same move evaluate_launch_evidence,
+# classify_assertion_count, compare_section_roster and classify_engine already are, and for
+# the same reason: § 6 must drive THE SAME FUNCTION the real measurement drives, or the
+# control proves something about a copy of the logic instead of about the logic.
+#
+# $1 a phrase naming what was measured AND of what - it is printed verbatim into the
+# verdict, so the subject travels with the finding and a control over a throwaway repository
+# cannot claim to have measured game/. $2 the BEFORE capture, $3 the AFTER capture, $4 the
+# BEFORE capture's exit status, $5 the AFTER capture's exit status.
+#
+# Prints one problem per line and returns the count.
+classify_tree_mutation() {
+  local subject="$1" before="$2" after="$3" before_status="$4" after_status="$5"
+
+  # STATUS BEFORE OUTPUT, and this ordering is the whole reason the statuses are parameters.
+  # The empty output of a FAILED capture is indistinguishable from the empty output of a
+  # clean one, so two failed captures compare EQUAL and would report a green built entirely
+  # out of the failure. Same trap build/verify-godot.sh's own mutation probe had to learn.
+  if [[ "${before_status}" -ne 0 || "${after_status}" -ne 0 ]]; then
+    printf 'the %s could not be captured (exit %s before, %s after), so "nothing changed" is unproved rather than true: two failed captures compare equal, and a pass built on that comparison would be an artefact of the failure rather than a measurement. Capture text: %s\n' \
+      "${subject}" "${before_status}" "${after_status}" "${after//$'\n'/ | }"
+    return 1
+  fi
+
+  if [[ "${before}" != "${after}" ]]; then
+    printf 'the %s changed across the window. Before: %s After: %s\n' \
+      "${subject}" "${before//$'\n'/ | }" "${after//$'\n'/ | }"
+    return 1
+  fi
+
+  return 0
+}
+
 # The launch, and the whole of VER-PRE-001-004's conduit.
 #
 # THE HARNESS'S EXIT CODE IS CAPTURED DIRECTLY AND NOTHING ELSE CAN BECOME IT. There is
@@ -492,6 +627,40 @@ pass "python3 is present, so the registry-derived roster anchor can be computed"
 
 mkdir -p -- "${EVIDENCE_DIR}"
 
+# --- the no-mutation window OPENS HERE, before § 1's launch --------------------
+#
+# THE PLACEMENT IS THE POINT, and getting it wrong is the largest defect this commit
+# repairs. The BEFORE capture used to be taken at the top of § 6, AFTER § 1's real launch of
+# the harness. The window therefore spanned § 6's controls AND NOTHING ELSE, so the gate
+# made no claim whatever about the question that actually matters: whether launching the
+# harness mutated the tree this gate checks. It asserted that its own fixtures were tidy
+# while saying nothing about the subject under test.
+#
+# Taken here, the window spans § 1'S REAL LAUNCH OF THE HARNESS AND EVERY CONTROL IN § 6,
+# and the verdicts at the end of § 6 say so in those words rather than describing the
+# controls alone.
+#
+# MEASURED AS BEFORE-AGAINST-AFTER AND NOT AGAINST THE COMMITTED TREE, which is a correction
+# rather than a preference: a status compared against HEAD reports whatever the person
+# running the gate has in their working tree - this file, while it was being written, was
+# itself enough to turn that comparison red - and a check that fails for a reason
+# unconnected to the window is worse than no check. What is asserted is that the launch and
+# the controls changed nothing, so the comparison has to be against what the tree looked
+# like before the launch started. A DIRTY-BUT-UNCHANGED TREE IS NOT A FAILURE HERE, and
+# § 6g's second case is the control that proves it.
+#
+# If the launch ever does dirty something in scope, that is a TRUE FINDING about the harness
+# and this gate should go red for it. Do not widen MUTATION_PATHSPEC and do not add an
+# exclusion to quiet it: the exclusion would be permanent and the finding is the point.
+control_tree_content_before=""
+control_tree_content_before_status=0
+control_tree_content_before="$(capture_tree_content "${REPO_ROOT}" "${MUTATION_PATHSPEC[@]}")" \
+  || control_tree_content_before_status=$?
+control_tree_metadata_before=""
+control_tree_metadata_before_status=0
+control_tree_metadata_before="$(capture_tree_metadata "${REPO_ROOT}" "${MUTATION_PATHSPEC[@]}")" \
+  || control_tree_metadata_before_status=$?
+
 # --- § 1: the launch -----------------------------------------------------------
 
 section "1. the gate launches the run-slice evidence scene by name, the harness reaches managed code, and the transcript is this run's (VER-PRE-001-003)"
@@ -504,15 +673,34 @@ else
 fi
 
 readonly PRIMARY_OUTPUT_DIR="${EVIDENCE_DIR}/run"
-transcript_absent_before="no"
+
+# THE DELETION IS THE GUARANTEE, AND THERE IS DELIBERATELY NO ASSERTION HERE.
+#
+# What used to sit on these lines was a pass/fail pair asserting that transcript.tsv was
+# ABSENT - two lines after this script had itself deleted and recreated the directory. NO
+# INJECTION COULD HAVE FAILED IT: it re-read a state it had just established, so the `fail`
+# branch was unreachable and the `pass` was free. That is the same shape as the
+# interpolation assertion removed from RunSliceEvidenceHarness.cs, which compared a convex
+# interpolant against its own two endpoints and held by arithmetic whatever the production
+# code did. AN UNFAILABLE ASSERTION SITTING IN A LIST OF ASSERTIONS IS WORSE THAN NO
+# ASSERTION, because it inflates the count and reads as coverage. So the pair is gone and
+# the rm -rf carries the claim by itself.
+#
+# THE CLAIM IS UNDIMINISHED BY THAT REMOVAL, and it remains the strongest test in this file.
+# Because the directory is emptied HERE and the transcript is required to be PRESENT after
+# the launch (evaluate_launch_evidence, reported by § 1's finding below), "present
+# afterwards" can only mean THIS INVOCATION WROTE IT. That is an EVENT claim rather than a
+# state claim, and it is the thing that stops a developer's retained hand-run transcript
+# from answering every question this gate asks - trap 2 in the header. Deleting the
+# unfailable check removes a miscounted guarantee, not a real one.
+#
+# If the rm -rf or the mkdir were to fail, the launch would find no directory to write into,
+# no transcript would appear, and § 1's transcript finding below goes red. The failure is
+# still reported; it is simply reported by the check that can actually observe it.
 rm -rf -- "${PRIMARY_OUTPUT_DIR}"
 mkdir -p -- "${PRIMARY_OUTPUT_DIR}"
-[[ -f "${PRIMARY_OUTPUT_DIR}/${TRANSCRIPT_NAME}" ]] || transcript_absent_before="yes"
-if [[ "${transcript_absent_before}" == "yes" ]]; then
-  pass "${TRANSCRIPT_NAME} is absent from the per-invocation output directory BEFORE the launch, so anything found after it was caused by this run"
-else
-  fail "${TRANSCRIPT_NAME} already exists in an output directory this gate just created empty; every assertion below would be reading an artifact it did not cause"
-fi
+printf '      note: %s was emptied and recreated immediately before the launch, so "%s present afterwards" means this invocation wrote it. That guarantee comes from the deletion, not from a comparison, and is deliberately not emitted as an assertion.\n' \
+  "${PRIMARY_OUTPUT_DIR#"${REPO_ROOT}/"}" "${TRANSCRIPT_NAME}"
 
 launch_harness "${GODOT}" "${GAME_DIR}" "${HARNESS_SCENE}" "${PRIMARY_OUTPUT_DIR}"
 readonly PRIMARY_TRANSCRIPT="${PRIMARY_OUTPUT_DIR}/${TRANSCRIPT_NAME}"
@@ -653,6 +841,14 @@ if [[ "${roster_status}" -ne 0 ]]; then
   fail "the registry-derived roster could not be computed (exit ${roster_status}), so anchor 3 is unproved rather than satisfied: ${roster_text}"
   not_reached "4. anchor 3, set equality between the registry roster and the transcript's headings"
 elif [[ "${roster_count}" -eq 0 ]]; then
+  # WHAT THIS GUARD IS AND IS NOT. It is a belt: it refuses to proceed on an empty
+  # expectation rather than reporting whatever an empty expectation happens to produce. It
+  # is NOT the only thing standing between an empty roster and a vacuous green - § 6c's last
+  # control drives compare_section_roster with an empty roster and requires it to red, so the
+  # predicate's own behaviour on the empty case is now measured rather than assumed. The
+  # guard stays because an empty DERIVATION is a distinct finding from an empty comparison:
+  # it means the registry stopped naming this harness at all, and that deserves its own
+  # sentence rather than three per-heading complaints.
   fail "the registry-derived roster is EMPTY: no entry under ${REGISTRY_DIR#"${REPO_ROOT}/"} has an engine-scene selector naming '${HARNESS_SCENE_FILE#"${REPO_ROOT}/"} § <section>'. An empty expectation would make the set equality below hold vacuously, which is the blindness anchor 3 exists to remove"
   not_reached "4. anchor 3, set equality between the registry roster and the transcript's headings"
 elif [[ "${transcript_read_status}" -ne 0 ]]; then
@@ -702,21 +898,12 @@ section "6. negative controls: every predicate above can actually fail (Decision
 # NO CONTROL MUTATES THE TREE THIS GATE CHECKS. VER-PRE-001-007(ii) forbids it outright
 # and build/verify-gate-wiring.sh's renamed-call-site control (:1532-1552 as measured at
 # 42a5c83) is the pattern: copy the roots into a temp dir, mutate the copy, point the same
-# analyser at the copy.
-# The BEFORE half of the no-mutation measurement, taken before the first control runs.
+# analyser at the copy. § 6h extends that pattern to the no-mutation predicate itself, with a
+# throwaway git repository standing in for the tree.
 #
-# Measured as before-against-after and NOT against the committed tree, which is a
-# correction rather than a preference: a status compared against HEAD reports whatever the
-# person running the gate has in their working tree - this file, while it was being
-# written, was itself enough to turn that control red - and a control that fails for a
-# reason unconnected to the injection is worse than no control. What is being asserted is
-# that the controls changed nothing, so the comparison has to be against what the tree
-# looked like when they started.
-control_tree_before=""
-control_tree_before_status=0
-control_tree_before="$(cd "${REPO_ROOT}" && git status --porcelain -- game tests build 2>&1)" \
-  || control_tree_before_status=$?
-
+# THE BEFORE HALF OF THE NO-MUTATION MEASUREMENT IS NOT TAKEN HERE. It is taken before § 1's
+# launch, so the window covers the launch as well as these controls; see the block above
+# § 1. Taking it here is the defect this commit repairs, not the design.
 readonly CONTROL_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/verify-run-slice-controls.XXXXXX")"
 cleanup_controls() {
   rm -rf -- "${CONTROL_ROOT}"
@@ -809,18 +996,32 @@ done
 # --- 6c. the registry roster comparison (VER-PRE-001-006 anchor 3) ------------
 # The controls VER-PRE-001-006 names: a silent shrink shows up as a heading with no
 # assertion line, and a roster drift shows up as a rename in both directions at once.
-# "<label>|<mutation>|<expected problems>"
+#
+# THE EMPTY ROSTER IS NOW ONE OF THEM, and it was not before. § 4's guard reds an empty
+# registry-derived roster because "an empty expectation would make the set equality below
+# hold vacuously", and every roster fixture here was a hardcoded non-empty literal - so the
+# empty case was the one input the predicate was never handed. The last row drives
+# compare_section_roster with an EMPTY roster and requires 3 problems, one per transcript
+# heading no registry entry now names. Note what that measures and what it does not: it
+# proves the PREDICATE does not go vacuously quiet on an empty expectation, which is the
+# substance of § 4's concern. § 4's own `roster_count -eq 0` branch is still an inline guard
+# in the main body and is still not driven by a fixture; it is a cheap belt to the predicate's
+# braces, and this control is why the braces are now known to hold.
+# "<label>|<mutation>|<roster: standard|empty>|<expected problems>"
 readonly ROSTER_CONTROLS=(
-  "the roster and the headings agree, every heading carrying an assertion|none|0"
-  "control (iii), roster drift: a heading renamed without touching the registry|rename|2"
-  "control (i), silent shrink: a section entered whose checks all returned early|empty-section|1"
-  "a transcript section no registry entry names, which must also be red|extra-section|1"
+  "the roster and the headings agree, every heading carrying an assertion|none|standard|0"
+  "control (iii), roster drift: a heading renamed without touching the registry|rename|standard|2"
+  "control (i), silent shrink: a section entered whose checks all returned early|empty-section|standard|1"
+  "a transcript section no registry entry names, which must also be red|extra-section|standard|1"
+  "an EMPTY roster, which must NOT hold vacuously: every heading becomes one no registry entry names|none|empty|3"
 )
 
 readonly CONTROL_ROSTER=$'camera-shows-24-metres-vertically\ndeadzone-remaps-radially\ninterpolation-is-presentation-only'
 
 for control in "${ROSTER_CONTROLS[@]}"; do
-  IFS='|' read -r label mutation want <<<"${control}"
+  IFS='|' read -r label mutation roster_kind want <<<"${control}"
+  control_roster="${CONTROL_ROSTER}"
+  [[ "${roster_kind}" == "empty" ]] && control_roster=""
   for target_bytes in 0 300000; do
     synthetic="$(pad_to "${target_bytes}" "# MechaMiner run slice evidence")"
     first_heading='## camera-shows-24-metres-vertically'
@@ -837,7 +1038,7 @@ for control in "${ROSTER_CONTROLS[@]}"; do
       && synthetic+=$'\n## a-section-no-registry-entry-names\nPASS\tsomething\tobserved'
     report=""
     got=0
-    report="$(compare_section_roster "${CONTROL_ROSTER}" "${synthetic}")" || got=$?
+    report="$(compare_section_roster "${control_roster}" "${synthetic}")" || got=$?
     expect_control_red "${label} (${#synthetic} bytes of transcript)" "${want}" "${got}" "${report}"
   done
 done
@@ -944,8 +1145,19 @@ done
 # EXISTS, loads, runs and exits 0, so nothing about the environment is broken and the
 # subprocess succeeds. The gate must still go red, naming the absent startup line and the
 # absent transcript. THE GUARDED EFFECT IS ASSERTED AND NOT ONLY THE GUARD: the output
-# directory must contain no transcript afterwards, because a gate that goes red while a
-# stale transcript sits in the directory has proved only that a guard fired.
+# directory must be EMPTY afterwards, because a gate that goes red while a stale transcript
+# sits in the directory has proved only that a guard fired.
+#
+# EMPTINESS, NOT ONE FILENAME. This used to test `! -f .../transcript.tsv` while the sentence
+# above it claimed the directory contained no transcript - a state claim narrower than its
+# own comment, and one that cannot distinguish WROTE-THEN-CLEANED from NEVER-WROTE for any
+# name but that one. A scene that wrote transcript.tsv.tmp, or a partial file under any other
+# name, was invisible to it. Both checks now run: the directory must hold no entry at all,
+# and the transcript name is still called out separately because its presence specifically
+# would mean § 1's read had been answered by an artifact a control left behind. Note that
+# launch_harness puts the stdout log at "${output_dir}.stdout.log" - a SIBLING of the
+# directory rather than a child - so the gate's own bookkeeping cannot make this emptiness
+# check fail.
 readonly COHERENT_SCENE="res://tests/GodotTestRunner.tscn"
 launch_harness "${GODOT}" "${GAME_DIR}" "${COHERENT_SCENE}" "${CONTROL_ROOT}/coherent"
 coherent_problems=()
@@ -957,9 +1169,22 @@ coherent_report="$(evaluate_launch_evidence "${LAUNCH_STDOUT}" "${LAUNCH_TRANSCR
   || coherent_problems+=("the launch-evidence read reported ${coherent_count} problem(s) where 2 were designed")
 [[ ! -f "${CONTROL_ROOT}/coherent/${TRANSCRIPT_NAME}" ]] \
   || coherent_problems+=("a ${TRANSCRIPT_NAME} is sitting in the output directory, so a red here would prove only that a guard fired")
+# -A rather than a glob, because a glob skips dotfiles and a partial write named
+# .transcript.swp is exactly the case this widening exists to catch. The status is read
+# before the output is interpreted: an unlistable directory is not an empty one, and the
+# empty output of a failed ls is indistinguishable from the empty output of a clean one.
+coherent_entries=""
+coherent_entries_status=0
+coherent_entries="$(ls -A -- "${CONTROL_ROOT}/coherent" 2>/dev/null)" \
+  || coherent_entries_status=$?
+if [[ "${coherent_entries_status}" -ne 0 ]]; then
+  coherent_problems+=("the output directory could not be listed (exit ${coherent_entries_status}), so 'the scene wrote nothing' is unproved rather than true")
+elif [[ -n "${coherent_entries}" ]]; then
+  coherent_problems+=("the output directory is NOT EMPTY - it holds ${coherent_entries//$'\n'/, } - so this control cannot tell a scene that wrote nothing from one that wrote under a name this check does not happen to know")
+fi
 controls_run=$((controls_run + 1))
 if [[ "${#coherent_problems[@]}" -eq 0 ]]; then
-  control_pass "control: launching ${COHERENT_SCENE} - a scene that exists and exits ${LAUNCH_STATUS} - is red on the startup line and the transcript, with nothing in the output directory"
+  control_pass "control: launching ${COHERENT_SCENE} - a scene that exists and exits ${LAUNCH_STATUS} - is red on the startup line and the transcript, and the output directory holds no entry of any name afterwards"
   control_detail <<<"${coherent_report}"
 else
   control_fail "control: the coherent VER-PRE-001-007(i) case: $(printf '%s; ' "${coherent_problems[@]}")"
@@ -1003,24 +1228,220 @@ else
   control_fail "control: the absent-scene case: ${scene_control_note}"
 fi
 
-# The tree the controls checked must be exactly as they found it. Asserted rather than
-# intended: the copy-and-mutate discipline is only a discipline until something measures
-# it, and § 6d/6f both create files.
-control_tree_after=""
-control_tree_after_status=0
-control_tree_after="$(cd "${REPO_ROOT}" && git status --porcelain -- game tests build 2>&1)" \
-  || control_tree_after_status=$?
-controls_run=$((controls_run + 1))
-if [[ "${control_tree_before_status}" -ne 0 || "${control_tree_after_status}" -ne 0 ]]; then
-  # The empty output of a FAILED git status is indistinguishable from the empty output of
-  # a clean one, so the status is checked before the output is interpreted - the trap
-  # build/verify-godot.sh's own mutation probe had to learn.
-  control_fail "control: git status could not be read (exit ${control_tree_before_status} before, ${control_tree_after_status} after), so 'the controls mutated nothing' is unproved rather than true: ${control_tree_after}"
-elif [[ "${control_tree_before}" == "${control_tree_after}" ]]; then
-  control_pass "control: game/, tests/ and build/ are exactly as the controls found them, so no control mutated the tree this gate checks"
+# --- 6g. the no-mutation predicate, over INJECTED STRINGS ---------------------
+# THE PRIMARY CONTROL FOR classify_tree_mutation, and the reason it is a function at all.
+# Before this existed the comparison was inline, and no fixture could reach it: every control
+# in §§ 6a-6f writes under mktemp -d or artifacts/, both outside MUTATION_PATHSPEC, so the
+# control set could not move the captured strings even in principle. The predicate was the
+# one thing in this gate that had never been observed going red.
+#
+# STRINGS, NOT A MUTATED TREE. VER-PRE-001-007(ii) forbids a gate editing the tree it checks,
+# so the inputs are injected exactly as 6a-6e inject theirs. Driving the same function with
+# differing inputs is what makes this a control OF the predicate rather than one adjacent to
+# it; § 6h then corroborates it against a real repository difference.
+#
+# The three cases are the three answers the predicate can give:
+#   (a) two captures that DIFFER must be red - the mutation it exists to catch;
+#   (b) two EQUAL NON-EMPTY captures must PASS - a dirty working tree that the window did not
+#       change is not a failure, and a predicate that reddened on any non-empty status would
+#       be unusable for everyone who runs this gate with work in progress;
+#   (c) a nonzero status at EITHER end must be red as UNPROVED RATHER THAN TRUE, because two
+#       failed captures compare equal and would otherwise manufacture the green.
+# "<label>|<before>|<after>|<before status>|<after status>|<expected problems>|<required phrase>"
+readonly MUTATION_CONTROLS=(
+  "two captures that differ, which must be red| M game/tests/X.tscn| M game/tests/X.tscn?? game/tests/Y.tscn|0|0|1|changed across the window"
+  "two equal NON-EMPTY captures, which must PASS: a dirty-but-unchanged tree is not a failure| M game/tests/X.tscn| M game/tests/X.tscn|0|0|0|"
+  "a nonzero status at both ends, which must be red as unproved rather than true|||3|3|1|unproved rather than true"
+)
+
+for control in "${MUTATION_CONTROLS[@]}"; do
+  IFS='|' read -r label before after before_status after_status want phrase <<<"${control}"
+  report=""
+  got=0
+  report="$(classify_tree_mutation "injected capture under control" \
+    "${before}" "${after}" "${before_status}" "${after_status}")" || got=$?
+  mutation_problems=()
+  [[ "${got}" -eq "${want}" ]] \
+    || mutation_problems+=("the predicate reported ${got} problem(s) where ${want} was designed")
+  # The VERDICT is asserted and not only the count, for case (c) especially: an unreadable
+  # capture and a genuine mutation are different findings, and a reader handed the wrong one
+  # goes looking for a mutation that never happened.
+  if [[ -n "${phrase}" ]] && ! grep -qF -- "${phrase}" <<<"${report}"; then
+    mutation_problems+=("the verdict does not say '${phrase}', so the reader cannot tell which of the predicate's findings this is")
+  fi
+  controls_run=$((controls_run + 1))
+  if [[ "${#mutation_problems[@]}" -eq 0 ]]; then
+    control_pass "control: ${label} -> ${got} problem(s), as designed"
+    [[ -n "${report}" ]] && control_detail <<<"${report}"
+  else
+    control_fail "control: ${label}: $(printf '%s; ' "${mutation_problems[@]}")"
+    [[ -n "${report}" ]] && control_detail <<<"${report}"
+  fi
+done
+
+# --- 6h. the same predicate over a REAL repository difference ------------------
+# 6g proves the predicate reads the strings it is handed. What it cannot prove is that the
+# CAPTURES move when a repository really changes - an injected string is a claim about the
+# comparison, not about capture_tree_content and capture_tree_metadata. So the same two
+# captures and the same predicate run over a THROWAWAY GIT REPOSITORY under CONTROL_ROOT,
+# created for this control and deleted with it.
+#
+# THIS IS WHY THE CAPTURES TAKE A ROOT. VER-PRE-001-007(ii) forbids this gate writing into
+# the tree it checks, and build/verify-gate-wiring.sh's habit of writing fixtures into the
+# real tree under a trap is that gate's licence and not this one's. A throwaway repo gets a
+# genuine `git status` difference and a genuine inode change with nothing in
+# ${REPO_ROOT} touched, so the rule the gate asserts and the evidence the gate offers do not
+# have to trade off.
+#
+# The three cases are chosen to MEASURE THE TWO LEGS' DIFFERENT REACH rather than to assert it
+# in a comment - which is the substance of the content-only defect this commit repairs:
+#   (a) a new file appears           -> the content leg is red, as any diff-based check would be;
+#   (b) a byte-identical rewrite     -> the content leg is SILENT, and that is not a bug in it;
+#   (c) the same byte-identical rewrite -> the metadata leg is RED, which is the whole reason
+#                                          the second leg exists.
+mutation_repo="${CONTROL_ROOT}/mutation-repo"
+mutation_repo_ready="yes"
+mkdir -p -- "${mutation_repo}/game" 2>/dev/null || mutation_repo_ready="no"
+# -q and a scoped config: no committer identity is needed because nothing is committed. The
+# index alone is enough for `git status --porcelain` to have an opinion and for
+# `git ls-files` to name the file, and not committing keeps the control fast and hermetic.
+git init -q -- "${mutation_repo}" >/dev/null 2>&1 || mutation_repo_ready="no"
+readonly MUTATION_FIXTURE_BYTES='a tracked file created by a negative control in a throwaway repository'
+printf '%s\n' "${MUTATION_FIXTURE_BYTES}" >"${mutation_repo}/game/tracked.txt" 2>/dev/null \
+  || mutation_repo_ready="no"
+(cd -- "${mutation_repo}" && git add -- game/tracked.txt) >/dev/null 2>&1 \
+  || mutation_repo_ready="no"
+
+if [[ "${mutation_repo_ready}" != "yes" ]]; then
+  # Not silently skipped: three controls did not run, and the summary must say so rather
+  # than a green implying they passed.
+  for missing in "a new file is visible to the content leg" \
+    "a byte-identical rewrite is invisible to the content leg" \
+    "a byte-identical rewrite IS visible to the metadata leg"; do
+    controls_run=$((controls_run + 1))
+    control_fail "control: ${missing}: the throwaway git repository under CONTROL_ROOT could not be created, so the predicate was never driven over a real repository difference and this control is unproved rather than passing"
+  done
 else
-  control_fail "control: a control changed the tree this gate checks. Before: ${control_tree_before//$'\n'/ | } After: ${control_tree_after//$'\n'/ | }"
+  # (a) a real new file: the content leg must see it.
+  real_content_before=""
+  real_content_before_status=0
+  real_content_before="$(capture_tree_content "${mutation_repo}" game)" \
+    || real_content_before_status=$?
+  printf 'written by a negative control\n' >"${mutation_repo}/game/written-by-a-control.txt"
+  real_content_after=""
+  real_content_after_status=0
+  real_content_after="$(capture_tree_content "${mutation_repo}" game)" \
+    || real_content_after_status=$?
+  report=""
+  got=0
+  report="$(classify_tree_mutation "tracked-content status of the throwaway repository" \
+    "${real_content_before}" "${real_content_after}" \
+    "${real_content_before_status}" "${real_content_after_status}")" || got=$?
+  expect_control_red "a REAL new file in a throwaway repo turns the content leg red" 1 "${got}" "${report}"
+  rm -f -- "${mutation_repo}/game/written-by-a-control.txt"
+
+  # (b) and (c) the byte-identical rewrite, through a temp file and a rename so the change is
+  # guaranteed rather than clock-dependent: %Y has one-second granularity and a fast rewrite
+  # could land in the same second, but the rename always yields a different %i. The temp file
+  # is created inside the window and removed by the rename, so this fixture is a
+  # write-then-cleanup as well as a byte-identical rewrite - both of the writes the content
+  # leg cannot see, in one control.
+  rewrite_content_before=""
+  rewrite_content_before_status=0
+  rewrite_content_before="$(capture_tree_content "${mutation_repo}" game)" \
+    || rewrite_content_before_status=$?
+  rewrite_metadata_before=""
+  rewrite_metadata_before_status=0
+  rewrite_metadata_before="$(capture_tree_metadata "${mutation_repo}" game)" \
+    || rewrite_metadata_before_status=$?
+
+  printf '%s\n' "${MUTATION_FIXTURE_BYTES}" >"${mutation_repo}/game/.rewrite.tmp"
+  mv -f -- "${mutation_repo}/game/.rewrite.tmp" "${mutation_repo}/game/tracked.txt"
+
+  rewrite_content_after=""
+  rewrite_content_after_status=0
+  rewrite_content_after="$(capture_tree_content "${mutation_repo}" game)" \
+    || rewrite_content_after_status=$?
+  rewrite_metadata_after=""
+  rewrite_metadata_after_status=0
+  rewrite_metadata_after="$(capture_tree_metadata "${mutation_repo}" game)" \
+    || rewrite_metadata_after_status=$?
+
+  # (b) EXPECTED TO PASS WITH ZERO PROBLEMS, and that zero is the finding. It is the measured
+  # form of "git status --porcelain is a content-derived summary": the file was rewritten and
+  # a temp file came and went, and the content leg reports nothing. A gate carrying only this
+  # leg would call that tree unwritten.
+  report=""
+  got=0
+  report="$(classify_tree_mutation "tracked-content status of the throwaway repository" \
+    "${rewrite_content_before}" "${rewrite_content_after}" \
+    "${rewrite_content_before_status}" "${rewrite_content_after_status}")" || got=$?
+  expect_control_red "a REAL byte-identical rewrite is INVISIBLE to the content leg, which is why a second leg exists" \
+    0 "${got}" "${report}"
+
+  # (c) the same rewrite, read by the metadata leg, which must be red.
+  report=""
+  got=0
+  report="$(classify_tree_mutation "tracked-file metadata of the throwaway repository" \
+    "${rewrite_metadata_before}" "${rewrite_metadata_after}" \
+    "${rewrite_metadata_before_status}" "${rewrite_metadata_after_status}")" || got=$?
+  expect_control_red "the SAME byte-identical rewrite IS visible to the metadata leg (mtime, inode, size)" \
+    1 "${got}" "${report}"
 fi
+
+# --- 6i. the real measurement: did the launch or the controls change the tree? --
+#
+# TWO LEGS, TWO FINDINGS, because "the tracked content did not change" and "nothing was
+# written" are different claims and a single verdict would let a reader take the weaker
+# measurement for the stronger claim. The window spans § 1's REAL LAUNCH and every control
+# above; see the block before § 1 for why it is opened there rather than here.
+#
+# Emitted through one helper so there is one pass site and one fail site rather than four,
+# and so both legs are worded to the same discipline: each says what its own leg measured and
+# nothing about the other's subject.
+report_mutation_leg() {
+  # $1 subject phrase for the predicate, $2 before, $3 after, $4 before status,
+  # $5 after status, $6 the pass message - which must claim ONLY what this leg measured.
+  local subject="$1" before="$2" after="$3" before_status="$4" after_status="$5"
+  local pass_message="$6"
+  local leg_report=""
+  local leg_count=0
+  leg_report="$(classify_tree_mutation "${subject}" "${before}" "${after}" \
+    "${before_status}" "${after_status}")" || leg_count=$?
+  controls_run=$((controls_run + 1))
+  if [[ "${leg_count}" -eq 0 ]]; then
+    control_pass "control: ${pass_message}"
+  else
+    control_fail "control: ${leg_report}"
+  fi
+}
+
+control_tree_content_after=""
+control_tree_content_after_status=0
+control_tree_content_after="$(capture_tree_content "${REPO_ROOT}" "${MUTATION_PATHSPEC[@]}")" \
+  || control_tree_content_after_status=$?
+control_tree_metadata_after=""
+control_tree_metadata_after_status=0
+control_tree_metadata_after="$(capture_tree_metadata "${REPO_ROOT}" "${MUTATION_PATHSPEC[@]}")" \
+  || control_tree_metadata_after_status=$?
+
+# LEG 1's pass message claims STATUS identity, not byte identity and not absence of writes.
+# The previous wording said the tree was "exactly as the controls found them", which asserted
+# byte-and-metadata identity off the back of a content-derived summary and over a window that
+# excluded the launch. Both halves of that overclaim are corrected here.
+report_mutation_leg \
+  "tracked-content status of ${MUTATION_SCOPE}" \
+  "${control_tree_content_before}" "${control_tree_content_after}" \
+  "${control_tree_content_before_status}" "${control_tree_content_after_status}" \
+  "content leg: git reports the same modified/staged/untracked set for ${MUTATION_SCOPE} after § 1's launch and every control above as it did before the launch. This is a STATUS summary and not byte identity, and it is NOT evidence that nothing was written - see the metadata leg for that claim"
+
+# LEG 2's pass message is the one about writing, and it names its own blind spot rather than
+# leaving a reader to assume there is none.
+report_mutation_leg \
+  "tracked-file metadata (mtime, inode, size) of ${MUTATION_SCOPE}" \
+  "${control_tree_metadata_before}" "${control_tree_metadata_after}" \
+  "${control_tree_metadata_before_status}" "${control_tree_metadata_after_status}" \
+  "metadata leg: the mtime, inode and size of every TRACKED file in ${MUTATION_SCOPE} are unchanged across § 1's launch and every control above, so no tracked file in scope was written - including the byte-identical rewrite and the write-then-cleanup the content leg cannot see. Covers tracked files only: an untracked file created and deleted inside the window is outside both legs' reach"
 
 cleanup_controls
 trap - EXIT

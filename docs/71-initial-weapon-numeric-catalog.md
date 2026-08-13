@@ -56,7 +56,7 @@ The wide single-target range is intentional. A weapon's balance includes deliver
 | W-AF | Tracking Laser | 18/s, focusing to 36/s | 31.5 | 36.0 | 36 | Requires uninterrupted focus on one target |
 | W-BC | Pulse Repeater | 12 every 0.375 s | 32.4 | 32.0 | 32 | One automatically selected target per projectile |
 | W-BD | Mine Layer | 27 per mine, at most one mine per base-travel second | 24.3 | 27.0 | 135 | Requires movement, arming, and enemies crossing the trail |
-| W-BE | Sentry Pod | Up to 3 × 8 every 0.714 s | 15.7 | 33.6 | 33.6 | Six-second deployment ramp and stationary coverage |
+| W-BE | Sentry Pod | Up to 3 × 8 every 0.714 s | 15.7 | 33.6 | 33.6 | Reaches full coverage only after its twelve-second ramp to three pods, and each pod is stationary |
 | W-BF | Orbital Cutters | 4 × 8 per 1.0 s contact cycle | 32.0 | 32.0 | 128 | Requires close orbit contact |
 | W-CD | Arc Emitter | 16 every 0.5 s, up to five targets | 32.0 | 32.0 | 160 | Needs chainable targets within link range |
 | W-CE | Reactor Pulse | 27 every 1.5 s | 18.9 | 18.0 | 180 | Low boss output in exchange for unconditional radial coverage |
@@ -514,7 +514,7 @@ Reference conditions:
 - Mech: Kestrel, whose signature Pulse Repeater receives the locked +15% weapon attack-rate trait.
 - Resource profile: Asterite, Barysteel, Cinderglass, and Eidolon Coral. It satisfies the signature guarantee and makes six weapons available.
 - Chosen weapons: Pulse Repeater, Rail Lance, Sentry Pod, and Attack Drones.
-- Utilities by minute 14: Harmonic Amplifier and Cycle Capacitor, at their installed +8% values. Both reach Rank 2 (+16%) by minute 21 and Rank 3 (+20%) by minute 28.
+- Utilities by minute 14: Harmonic Calibrator and Cycle Capacitor, at their installed +8% values. Both reach Rank 2 (+16%) by minute 21 and Rank 3 (+20%) by minute 28.
 - Third utility: Resource Radar. Its 300-Ore purchase is included at minute 28 but contributes no combat output.
 - Branches: Battery Overclock on Sentry Pod and Wolfpack Protocol on Attack Drones. Zero-Lag Emitter is included by minute 21 for reliability and contributes no ideal stationary-target DPS multiplier.
 - No relic, no permanent PowerUps, no boss-drop combat pickup, and no favorable claim about rare random support.

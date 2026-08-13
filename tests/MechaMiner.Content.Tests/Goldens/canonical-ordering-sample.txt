@@ -1,0 +1,9 @@
+# Canonical ordering sample, owned by tests/shared/GoldenText.cs.
+# Keys are lexically sorted by ordinal comparison; integers carry no padding.
+# entries=6
+BOSS-01	1
+EN-01	10
+MCH-01	2
+REL-01	1
+W-AB	4
+W-BD	3

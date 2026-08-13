@@ -139,6 +139,8 @@ All authoritative external intent crosses into the run through typed commands or
 
 Every tick uses a fixed phase order. Detailed systems may be subdivided, but observable ordering changes require regression tests and an update here.
 
+The numbers in the list below are the stable phase identifiers, not a rendering of list position: command admission is phase 1 and publication is phase 14, and every stored, serialized, logged, or asserted phase value uses exactly these numbers. Phases are never renumbered — not to close a gap, not to make room, and not as a side effect of an editorial rewrite. A new phase takes the next unused number and states where in the order it runs; a subdivision keeps its parent phase's number. Renumbering an unchanged order is invisible to any test that asserts only relative order while it silently invalidates every fixture that stores a literal phase value, so the numbers are part of this contract rather than a presentation of it.
+
 1. Admit and normalize commands for the tick.
 2. Evaluate authored schedule boundaries for the current tick; the 35:00 terminal boundary is handled before another tick can begin.
 3. Materialize queued spawns that have capacity and valid positions.

@@ -1,0 +1,67 @@
+{
+  "id": "UTL-D2",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "utility.UTL-D2.name",
+  "summary_key": "utility.UTL-D2.summary",
+  "tags": [],
+  "source_refs": [
+    "TR-DAT-003"
+  ],
+  "material_id": "RSC-04",
+  "ore_only_exception": false,
+  "primary_role": "Extraction reach",
+  "coverage_role": "Mining speed",
+  "behavior_kind": "extraction-zone-expander",
+  "effect_kind": "additive-percent",
+  "affected_stat_names": [
+    "extraction-zone-radius"
+  ],
+  "stacking_classification": "additive-percent-same-statistic",
+  "ranks": [
+    {
+      "rank": 0,
+      "value": 10
+    },
+    {
+      "rank": 1,
+      "value": 15
+    },
+    {
+      "rank": 2,
+      "value": 20
+    },
+    {
+      "rank": 3,
+      "value": 25
+    }
+  ],
+  "acquisition": {
+    "rank_count": 4,
+    "rank_ore_costs": [
+      50,
+      100,
+      150
+    ],
+    "material_unit_cost": 1,
+    "utility_slots_filled": 1,
+    "unique_in_loadout": true,
+    "dismantlable": false,
+    "replaceable": false,
+    "sellable": false,
+    "refundable_during_run": false,
+    "requires_manual_activation": false,
+    "has_alternative_recipes": false,
+    "has_branches": false,
+    "previews_all_four_effect_tiers": true,
+    "rank_values_are_totals_not_cumulative_additions": true
+  },
+  "availability": {
+    "pool_availability": "hyper-gold-unlock",
+    "unlock_id": "UNL-01"
+  },
+  "effect_rules": [
+    "The expanded zone is drawn at its modified radius."
+  ]
+}

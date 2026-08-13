@@ -1,0 +1,903 @@
+{
+  "id": "WAV-01",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "tags": [],
+  "source_refs": [
+    "TR-DAT-002"
+  ],
+  "mode": "standard",
+  "duration_minutes": 35,
+  "extraction_at": "35:00",
+  "extraction_rule": "Extraction opens at the run's final minute.",
+  "boss_arrival_warning_seconds": 15,
+  "population_ceilings": {
+    "baseline_ordinary_count": 450,
+    "persistent_beacon_tagged_count": 150,
+    "scheduled_event_overflow_count": 100,
+    "bosses_count_toward_ceilings": false,
+    "overflow_rule": "Scheduled events may exceed the baseline ceiling by their own budget."
+  },
+  "boss_arrival_minute_rule": {
+    "additional_scheduled_formation": false,
+    "minimum_reduction_from_preceding_minute_percent": {
+      "min": 10,
+      "max": 20
+    },
+    "statement": "A boss minute reduces the ordinary minimum rather than adding to it."
+  },
+  "spawn_formations": [
+    {
+      "formation": "stream",
+      "definition": "The stream formation."
+    },
+    {
+      "formation": "wall",
+      "definition": "The wall formation."
+    },
+    {
+      "formation": "swarm",
+      "definition": "The swarm formation."
+    },
+    {
+      "formation": "twin-flanks",
+      "definition": "The twin-flanks formation."
+    },
+    {
+      "formation": "encirclement",
+      "definition": "The encirclement formation."
+    },
+    {
+      "formation": "convergence",
+      "definition": "The convergence formation."
+    },
+    {
+      "formation": "rolling-ring",
+      "definition": "The rolling-ring formation."
+    }
+  ],
+  "formation_constraints": [
+    "A formation never places an enemy inside the mech's collision circle."
+  ],
+  "phase_pressure_curve": [
+    {
+      "start_at": "0:00",
+      "end_at": "1:00",
+      "purpose": "Survey orientation",
+      "reference_style_pressure_translation": "Almost no pressure."
+    },
+    {
+      "start_at": "1:00",
+      "end_at": "35:00",
+      "purpose": "Establish and escalate",
+      "reference_style_pressure_translation": "Pressure rises with the build."
+    }
+  ],
+  "minute_rows": [
+    {
+      "minute": 0,
+      "authored_event_or_boundary": "Minute 0",
+      "minimum_count": 8,
+      "pulse": {
+        "batch_count": 2,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 1,
+      "authored_event_or_boundary": "Minute 1",
+      "minimum_count": 12,
+      "pulse": {
+        "batch_count": 3,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 2,
+      "authored_event_or_boundary": "Minute 2",
+      "minimum_count": 16,
+      "pulse": {
+        "batch_count": 4,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 3,
+      "authored_event_or_boundary": "Minute 3",
+      "minimum_count": 20,
+      "pulse": {
+        "batch_count": 5,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 4,
+      "authored_event_or_boundary": "Minute 4",
+      "minimum_count": 24,
+      "pulse": {
+        "batch_count": 6,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 5,
+      "authored_event_or_boundary": "Minute 5",
+      "minimum_count": 28,
+      "pulse": {
+        "batch_count": 7,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 6,
+      "authored_event_or_boundary": "Minute 6",
+      "minimum_count": 32,
+      "pulse": {
+        "batch_count": 8,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 7,
+      "authored_event_or_boundary": "Minute 7",
+      "minimum_count": 36,
+      "pulse": {
+        "batch_count": 9,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [
+        {
+          "authored_cell_text": "7:00 Riftjaw arrives",
+          "at": [
+            "7:00"
+          ],
+          "enemy_ids": [
+            "EN-01"
+          ],
+          "formations": [
+            "Stream"
+          ],
+          "timestamp_provenance": "authored"
+        }
+      ],
+      "scheduled_elites": [],
+      "boss_arrival_boss_id": "BOSS-01"
+    },
+    {
+      "minute": 8,
+      "authored_event_or_boundary": "Minute 8",
+      "minimum_count": 40,
+      "pulse": {
+        "batch_count": 10,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 9,
+      "authored_event_or_boundary": "Minute 9",
+      "minimum_count": 44,
+      "pulse": {
+        "batch_count": 11,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 10,
+      "authored_event_or_boundary": "Minute 10",
+      "minimum_count": 48,
+      "pulse": {
+        "batch_count": 12,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 11,
+      "authored_event_or_boundary": "Minute 11",
+      "minimum_count": 52,
+      "pulse": {
+        "batch_count": 13,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 12,
+      "authored_event_or_boundary": "Minute 12",
+      "minimum_count": 56,
+      "pulse": {
+        "batch_count": 14,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 13,
+      "authored_event_or_boundary": "Minute 13",
+      "minimum_count": 60,
+      "pulse": {
+        "batch_count": 15,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 14,
+      "authored_event_or_boundary": "Minute 14",
+      "minimum_count": 64,
+      "pulse": {
+        "batch_count": 16,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 15,
+      "authored_event_or_boundary": "Minute 15",
+      "minimum_count": 68,
+      "pulse": {
+        "batch_count": 17,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 16,
+      "authored_event_or_boundary": "Minute 16",
+      "minimum_count": 72,
+      "pulse": {
+        "batch_count": 18,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 17,
+      "authored_event_or_boundary": "Minute 17",
+      "minimum_count": 76,
+      "pulse": {
+        "batch_count": 19,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 18,
+      "authored_event_or_boundary": "Minute 18",
+      "minimum_count": 80,
+      "pulse": {
+        "batch_count": 20,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 19,
+      "authored_event_or_boundary": "Minute 19",
+      "minimum_count": 84,
+      "pulse": {
+        "batch_count": 21,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 20,
+      "authored_event_or_boundary": "Minute 20",
+      "minimum_count": 88,
+      "pulse": {
+        "batch_count": 22,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 21,
+      "authored_event_or_boundary": "Minute 21",
+      "minimum_count": 92,
+      "pulse": {
+        "batch_count": 23,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 22,
+      "authored_event_or_boundary": "Minute 22",
+      "minimum_count": 96,
+      "pulse": {
+        "batch_count": 24,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 23,
+      "authored_event_or_boundary": "Minute 23",
+      "minimum_count": 100,
+      "pulse": {
+        "batch_count": 25,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 24,
+      "authored_event_or_boundary": "Minute 24",
+      "minimum_count": 104,
+      "pulse": {
+        "batch_count": 26,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 25,
+      "authored_event_or_boundary": "Minute 25",
+      "minimum_count": 108,
+      "pulse": {
+        "batch_count": 27,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 26,
+      "authored_event_or_boundary": "Minute 26",
+      "minimum_count": 112,
+      "pulse": {
+        "batch_count": 28,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 27,
+      "authored_event_or_boundary": "Minute 27",
+      "minimum_count": 116,
+      "pulse": {
+        "batch_count": 29,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 28,
+      "authored_event_or_boundary": "Minute 28",
+      "minimum_count": 120,
+      "pulse": {
+        "batch_count": 30,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 29,
+      "authored_event_or_boundary": "Minute 29",
+      "minimum_count": 124,
+      "pulse": {
+        "batch_count": 31,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 30,
+      "authored_event_or_boundary": "Minute 30",
+      "minimum_count": 128,
+      "pulse": {
+        "batch_count": 32,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 31,
+      "authored_event_or_boundary": "Minute 31",
+      "minimum_count": 132,
+      "pulse": {
+        "batch_count": 33,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 32,
+      "authored_event_or_boundary": "Minute 32",
+      "minimum_count": 136,
+      "pulse": {
+        "batch_count": 34,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 33,
+      "authored_event_or_boundary": "Minute 33",
+      "minimum_count": 140,
+      "pulse": {
+        "batch_count": 35,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    },
+    {
+      "minute": 34,
+      "authored_event_or_boundary": "Minute 34",
+      "minimum_count": 144,
+      "pulse": {
+        "batch_count": 36,
+        "interval_seconds": 1.5
+      },
+      "composition": [
+        {
+          "enemy_id": "EN-01",
+          "share_percent": 60
+        },
+        {
+          "enemy_id": "EN-02",
+          "share_percent": 40
+        }
+      ],
+      "debut_enemy_ids": [],
+      "formation_events": [],
+      "scheduled_elites": []
+    }
+  ],
+  "hyper_gold_beacon_response": {
+    "trigger_rule": "A Hyper Gold site triggers four persistent response packages at activation and at the first crossing of each progress threshold.",
+    "warning_seconds": 2,
+    "population_symbol": "P is the current minute's desired minimum ordinary population.",
+    "elite_exclusion_enemy_id": "EN-06",
+    "responses": [
+      {
+        "trigger_kind": "activation",
+        "formation": "encirclement",
+        "floor_count": 12,
+        "share_percent": 15
+      },
+      {
+        "trigger_kind": "progress-threshold",
+        "trigger_progress_percent": 25,
+        "formation": "wall",
+        "floor_count": 16,
+        "share_percent": 20
+      },
+      {
+        "trigger_kind": "progress-threshold",
+        "trigger_progress_percent": 50,
+        "formation": "convergence",
+        "floor_count": 20,
+        "share_percent": 25,
+        "elite_addition": "One elite of the most common eligible pure pursuer"
+      },
+      {
+        "trigger_kind": "progress-threshold",
+        "trigger_progress_percent": 75,
+        "formation": "rolling-ring",
+        "floor_count": 28,
+        "share_percent": 35
+      }
+    ],
+    "rules": [
+      "A response package persists until killed or the run ends."
+    ]
+  }
+}

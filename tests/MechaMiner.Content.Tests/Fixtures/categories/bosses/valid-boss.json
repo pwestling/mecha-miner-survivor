@@ -1,0 +1,71 @@
+{
+  "id": "BOSS-01",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "boss.BOSS-01.name",
+  "summary_key": "boss.BOSS-01.summary",
+  "tags": [],
+  "source_refs": [
+    "TR-DAT-002"
+  ],
+  "arrival": {
+    "timecode": "7:00"
+  },
+  "initial_hull": 6000,
+  "contact_damage": 18,
+  "control_resistance_percent": 85,
+  "post_hard_control_immunity_seconds": 1.5,
+  "movement_speed_percent_of_mech_base": 42,
+  "contact_shape": "circle",
+  "contact_and_weapon_hurt_diameter_m": 1.5,
+  "behavior_kind": "persistent-giant-pursuer",
+  "ability": {
+    "kind": "straight-charge",
+    "cadence_seconds": 8,
+    "defines_own_damage_event": true,
+    "charge_contact_damage": 27,
+    "charge_duration_seconds": 1.5,
+    "stop_and_telegraph_duration_seconds": 1,
+    "ordinary_contact_damage_replaced_during_charge": 18,
+    "charge_speed_percent_of_mech_base": 180,
+    "turns_during_charge": false,
+    "rules": [
+      "Terrain stops the charge without stunning or damaging the boss.",
+      "Missing carries the boss past the player and creates a brief damage opportunity."
+    ]
+  },
+  "ability_timeline_cancellable_by_player_control": false,
+  "persistence": {
+    "persists_until_killed": true,
+    "never_despawns": true,
+    "required_for_extraction": false,
+    "counts_toward_ordinary_population": false,
+    "later_bosses_may_overlap": true,
+    "maximum_simultaneous_bosses": 4,
+    "disposed_without_reward_if_run_extracts_while_alive": true,
+    "spawn_rule": "Enters from valid navigable ground outside the camera.",
+    "reentry": {
+      "trigger": "remains far outside the combat area",
+      "behavior": "re-enters from a telegraphed valid off-screen approach",
+      "non_damaging_while_pending": true,
+      "ability_cooldown_restarts_after_reentry": true
+    }
+  },
+  "resonance": {
+    "receives_same_geode_resonance_modifiers_as_ordinary_enemies": true,
+    "control_resistance_combines_with_driftmetal": "without reaching complete immunity unless a later rule says so"
+  },
+  "defeat_reward": {
+    "common_ore": 300,
+    "specialized_material_units": 1,
+    "unsecured_hyper_gold": 25,
+    "material_selection": "each unit independently selects one of the materials present in the profile",
+    "delivery": "dropped at the defeat position",
+    "pauses_timer_or_opens_ui": false
+  },
+  "description": "The first interval boss.",
+  "rules": [
+    "Appendages outside the contact circle pass over the mech harmlessly."
+  ]
+}

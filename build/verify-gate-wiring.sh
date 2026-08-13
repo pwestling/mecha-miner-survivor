@@ -1,0 +1,1616 @@
+#!/usr/bin/env bash
+#
+# Asserts that every script in this repository is classified, and that every script
+# classified as a gate is either reached automatically from a workflow or explicitly
+# exempted with a reason. A script nothing classifies, and a gate that is neither
+# reached nor exempt, both fail this gate.
+#
+# Authority: docs/technical/100-build-dependencies-and-release-operations.md
+#              § Standard command surface ("CI calls these same wrappers instead of
+#              recreating workflows")
+#            docs/technical/91-verification-strategy.md § Fast pull-request suite
+#            AGENTS.md § Standard workflow surface
+# Requirements: TR-BLD-005, TR-QUA-001
+# Verification: VER-FND-005-010, VER-FND-005-011
+#
+# Why this exists. Before it, this repository had nine build/verify-*.sh gate
+# scripts and exactly three of them - verify-architecture.sh (from `build`),
+# verify-godot.sh (from `godot-import`), and verify-policies.sh (from `test-fast`) -
+# were invoked by anything. The other six ran only when a person remembered to type
+# them. That is a different defect from a gate that cannot fail: these gates can
+# fail, and they were never asked. Every "all gates green" report was therefore true
+# about a subset nobody had stated, and the number of gates that existed was a
+# question no artifact answered.
+#
+# The rule this file makes checkable is a partition, not a count:
+#
+#   every gate script is REACHED (a real call site inside a verb some workflow runs,
+#   or inside a root wrapper or a workflow itself) or EXEMPT (listed below with the
+#   failure that was observed when it was wired), and never both, and never neither.
+#
+# Four properties keep the rule from decaying into a formality, each stated because
+# dropping it is how such a rule usually dies:
+#
+#  1. Which files the rule is about is decided by a committed inventory that
+#     classifies EVERY script in the repository, and the inventory is checked to
+#     partition the filesystem exactly - see § THE INVENTORY, AND WHY IT REPLACED A
+#     NAME GLOB below. An empty enumeration fails.
+#  2. Every exemption must name a file that exists, and must not name a script
+#     that is in fact reached. A stale exemption for a deleted script, or for one
+#     that has since been wired, turns the list into decoration.
+#  3. "Reached" means a real call site, not a mention. Prose in a doc comment, a
+#     diagnostic that names a script, an unused constant, an `echo` message and
+#     here-doc text are all mentions. Otherwise documenting a script would be
+#     indistinguishable from running it, which is the substitution this whole
+#     repository keeps finding.
+#  4. "Reached" also means reached from a workflow. A call site inside a verb that no
+#     workflow invokes is not automation: verify-godot-runner.sh was called by
+#     `test-main`, .github holds one workflow, and its steps do not include
+#     `test-main`, so the gate ran exactly as often as it had before it was "wired" -
+#     never. The partition now follows the edge from a workflow to a verb to a call
+#     site, and rejects a chain that does not start at a workflow.
+#
+# THE INVENTORY, AND WHY IT REPLACED A NAME GLOB.
+#
+# Until this revision the candidate set came from `find -name 'verify-*' -o -name
+# 'verify_*'`. That was defended as being read from the filesystem rather than from a
+# list, and it is - but it answered the wrong question. It asked which files are named
+# like a gate. A gate script named anything else was not accepted too broadly; it was
+# not enumerated at all, so no strengthening of the rule could reach it. Three live
+# instances, none hypothetical:
+#
+#   * src/MechaMiner.Tools/ContentImport/check_quote_mismatch_evidence.py (on master) is
+#     a gate and has no other mode. Its name begins with "check".
+#   * derive_citation_pass_expectations.py (on master) is a generator when invoked bare
+#     and a gate when invoked with --verify. Its name begins with "derive".
+#   * derive_derived_value_expectations.py (on master) has the same two modes one flag
+#     apart: a generator bare, a gate with --check. The flag was read at its main(),
+#     which registers exactly --sweep-ref and --check, rather than assumed from its
+#     sibling's spelling - the two derive scripts do not agree on one, which is why
+#     field 3 holds tokens instead of a convention. It was missing from this list and
+#     from the FOLLOW-UP below, both of which counted three ContentImport .py scripts by
+#     reading this prose instead of the directory. THERE ARE FOUR.
+#   * build/bootstrap-linux.sh is in this repository right now. The glob does not see it,
+#     so it is outside the partition's extent entirely, and it happens to be reached only
+#     because the workflow's provisioning step calls it. Nothing checked that.
+#
+# So the enumeration is inverted. The filesystem set is now every script in the
+# repository, and INVENTORY below classifies each one. The check is set equality in both
+# directions: a script no entry classifies fails, and an entry naming a file no
+# enumerator found fails. "Is every script classified" becomes completely machine
+# checkable, which the glob never asked at all.
+#
+# Two independent enumerators, and their disagreement is a failure. One reads extensions
+# (SCRIPT_EXTENSIONS), one reads the first two bytes for `#!`. At this revision they
+# coincide exactly on 17 files, which is why both are kept rather than one: a script with
+# a shebang and no known extension is invisible to the first, and a script with a known
+# extension and no shebang - a .ps1, say, since PowerShell needs none - is invisible to
+# the second. Requiring them to agree catches either before it becomes a hole. The union
+# is what gets classified, so a disagreement fails closed.
+#
+# DUAL-MODE SCRIPTS ARE CLASSIFIED BY INVOCATION, NOT BY FILE. An entry may name the
+# arguments that make the script a gate (field 3). If an entry named only the path, a
+# reachable bare invocation would satisfy the wiring rule while the gate mode ran
+# nowhere - which is derive_citation_pass_expectations.py exactly. Where field 3 is set,
+# a call site counts only if the arguments appear in the same C# member, or on the same
+# shell command line, as the path.
+#
+#   Its limit, stated because the check is real and is not proof: "in the same member"
+#   is not "at this call site". A member holding both `Run(script, "--verify")` and a
+#   bare `Run(script)` satisfies it, and so does a member that passes --verify on a
+#   branch it never takes. It is a genuine check on a real signal and it does not
+#   establish that --verify is what runs. Narrowing it to argument-position adjacency is
+#   possible and is not done here. This limit is now load-bearing rather than latent:
+#   derive_citation_pass_expectations.py arrived with the merge below and is the first
+#   and only entry to set field 3. The one other file that would set one -
+#   derive_derived_value_expectations.py, whose gate flag is spelled --check and not
+#   --verify - is not on this ref, so field 3 has one live user and not two.
+#
+# NOTHING NOT ON THIS REF IS PRE-LISTED, AND THREE OF MASTER'S FOUR ARE NOW ON THIS REF.
+# master carries FOUR ContentImport .py scripts (see the FOLLOW-UP below). When this
+# paragraph was first written none of them were here: they were named in this comment as
+# evidence and were deliberately absent from INVENTORY, because classifying a file that
+# is not here would be a stale inventory - the same defect as a stale exemption, which
+# § 3 exists to catch. Whoever merges master into this chain classifies what arrives; the
+# enumerators fail the gate until they do, which is the rule meeting them rather than
+# them having to derive it.
+#
+# THAT HAPPENED, FOR THREE OF THE FOUR. check_quote_mismatch_evidence.py,
+# derive_citation_pass_expectations.py and verify_content.py arrived on
+# claude/hearth-thread-hrufl9, which had already merged master, and the enumerators found
+# all three immediately, exactly as predicted: the gate went red with three
+# unclassified-script findings and nothing else. Those three are classified in INVENTORY
+# below, each as a gate, each with its own reason, and - since classifying them as gates
+# makes §§ 3 and 4 apply - each with its own EXEMPT entry stating the failure observed
+# when wiring was attempted.
+#
+# THE FOURTH IS DEFERRED, NOT OVERLOOKED. derive_derived_value_expectations.py is on
+# master and on no ref in this chain, so it is still not pre-listed, for exactly the
+# reason all four once were not. Re-enumerated rather than carried as prose - which is
+# the mistake this paragraph twice made before - `git ls-tree -r <ref> --name-only --
+# src/MechaMiner.Tools/ContentImport/` returns four .py files at master 3b4703b, THREE on
+# this ref, and ZERO on claude/hearth-thread-2vmaro-fnd-002 and at the merge base
+# 1c2f106. Its verified INVENTORY and EXEMPT pair is held as a comment in the block under
+# ON MERGE FROM master below, to go live in the commit that brings the file.
+#
+#   Measured on fnd-002, so that nobody has to rediscover it: an entry for a file the
+#   tree does not hold costs TWO findings, not one. § 2 direction 1 reports "stale
+#   classification" and § 3 reports "stale exemption" for the same path, because
+#   check_exemptions tests -f on every exempt path too. On fnd-002, which held none of
+#   the four, all four pairs pasted in cost eight findings and exit class 4, failing
+#   sections 2 and 3. The cost is proportional to how many are missing, so on this ref,
+#   missing one, pasting all four costs two. Either way the classification cannot be
+#   pushed ahead of the file as a courtesy to a future merge: it belongs IN the merge
+#   commit that brings it, which is why three of these are entries and the fourth is
+#   still a comment.
+#
+# THE RESIDUAL LIMIT. The inventory makes "is every script classified" machine checkable.
+# It does not make "is this classification correct" checkable. A gate deliberately filed
+# as `launcher` or `provisioning` still escapes §§ 3 and 4, and this file cannot tell the
+# difference. What changed is where that judgement lives: it was a filename convention
+# nobody signed, and it is now a line in a committed file with a note on it, which shows
+# up in a diff and has an author. That is better and it is not a proof.
+#
+# Property 4 is why the analysis below is a program rather than a grep. Attributing a
+# call site to a verb needs member granularity, not file granularity: TestVerb.cs
+# holds both RunFastTier, which `test-fast` runs, and RunMainTier, which only
+# `test-main` runs, and the whole point of the finding is that those two are not the
+# same answer. The program is embedded rather than committed as build/*.py because .py
+# is not in OwnedTextHygiene.OwnedExtensions (src/MechaMiner.Tools/Text/), so a
+# committed one is inspected by no formatter and no policy gate;
+# build/verify-verbs.sh and build/verify-architecture.sh embed python3 the same way.
+#
+# That is not a hypothetical about a file this commit might have added.
+# src/MechaMiner.Tools/ContentImport/verify_content.py is on master right now, 243 KB
+# of it (249,165 bytes at 76ef7a1 - the "132 KB" this line used to claim was measured
+# against an older master and had drifted), in exactly that position - along with
+# check_quote_mismatch_evidence.py, derive_citation_pass_expectations.py and
+# derive_derived_value_expectations.py.
+#
+# FOLLOW-UP (owner: FND-002, which owns format and OwnedTextHygiene): add ".py" to
+# OwnedExtensions. This paragraph used to say the change was not free and priced it at 74
+# trailing-whitespace lines across three files - 44 in verify_content.py, 22 in
+# check_quote_mismatch_evidence.py, 8 in derive_citation_pass_expectations.py. THAT NO
+# LONGER REPRODUCES. Re-measured at master 76ef7a1 by two independent methods (grep -P
+# '[ \t]+$' and a python3 re.search over the decoded text, which agree): all FOUR files
+# have ZERO lines with trailing whitespace, no CR anywhere, and every one ends in \n. So
+# all four already satisfy trim_trailing_whitespace, end_of_line and
+# insert_final_newline, and adding the extension rewrites nothing and turns format-check
+# red on nothing. The follow-up got cheaper, not larger, and the number that made it look
+# expensive was measured against an older master.
+#
+#   Worth stating how the stale number survived, because the mistake is easy to repeat
+#   and was repeated while checking this: `grep -c '[ \t]$'` does NOT count trailing
+#   whitespace. In a POSIX bracket expression \t is a backslash and a 't', so that
+#   pattern also matches every line ending in 't' or in a backslash, and on these files it
+#   reports 98/22/13/28 where the truth is 0/0/0/0. Use grep -P '[ \t]+$' or
+#   '[[:space:]]$'. Whether 44/22/8 was ever right or was that same artefact is not
+#   established here; what is established is what the files are today.
+#
+# What the extension change unblocks is splitting the program below out of this file,
+# which is the only reason it is inline.
+# Note also that all four are enumerated by BOTH enumerators below - .py is in
+# SCRIPT_EXTENSIONS and all four carry `#!/usr/bin/env python3` - so when master merges
+# here the gate is red until someone classifies them, and classifying any of them as a
+# gate then makes §§ 3 and 4 apply. Measured on the merged tree, that is exactly what
+# happens: four § 2 direction-2 findings before classification, and four § 4 findings
+# after it if the exemptions are omitted. That is the inverted enumeration working, not
+# a problem with it, and it is the whole reason the glob had to go:
+# check_quote_mismatch_evidence.py, derive_citation_pass_expectations.py and
+# derive_derived_value_expectations.py match no glob spelled "verify".
+#
+# WHAT THIS GATE DOES NOT ESTABLISH. Three of these fail closed and two fail open, and
+# they are separated on that line because only the latter can let something through.
+#
+#   Fails closed, so the worst case is a red gate someone has to look at:
+#     * An inventory entry that classifies a file the enumerators do not see, and a
+#       script no entry classifies, are both red. The extent of the rule is therefore
+#       the whole repository and no longer the set of files named verify-*, which is the
+#       inversion this revision made; the enumerators' own disagreement is red too.
+#     * The C# member closure over-approximates. An unqualified identifier that names
+#       members of several types adds an edge to all of them, so a member can be
+#       attributed to more verbs than really reach it. That widens "reached", so it can
+#       make this gate weaker in a way section 3's output shows by naming the verbs.
+#     * A script path reached through a constant is not recognised. Only a literal in
+#       argument position counts, so refactoring a call site to
+#       `const string Script = "build/verify-x.sh";` makes this gate red rather than
+#       quietly satisfied. Extending the matcher is the fix if that is ever wanted.
+#
+#   FAIL OPEN, and are the ones that can hide an unrun gate:
+#     * A call site in build.sh or build.ps1 is counted as reached without proving that
+#       the shell function containing it is ever called. The wrappers are launchers with
+#       no functions today, so there is nothing to get wrong yet; the day one of them
+#       grows a function, a gate invoked only from inside a function nothing calls would
+#       pass this partition. Closing it needs shell reachability, which this gate does
+#       not do. The C# side has no equivalent hole: there the member must be reachable
+#       from a workflow verb's entry point.
+#     * A HERE-DOC BODY LINE THAT LOOKS LIKE A COMMAND IS COUNTED AS A CALL SITE. The
+#       shell matcher requires command position and does not track here-doc bodies, so an
+#       indented bare path inside <<'WORD' or PowerShell's @'...'@ reads exactly like a
+#       command. Two live instances, observed rather than imagined: build.sh:59 and
+#       build.ps1:64 are `sudo build/bootstrap-linux.sh` inside the help text a wrapper
+#       prints when the SDK is missing, and the analyzer reports both as
+#       "(root wrapper ...) yes". VER-FND-005-011's twelve-form control set does include
+#       here-doc prose, but the form it used is a sentence - "see build/verify-zzz.sh for
+#       details" - which is not in command position; a line that a human is being told to
+#       type is. Checked rather than assumed: no gate script's reached status depends on
+#       this today - all seven reached gates are reached from C# call sites in
+#       src/MechaMiner.Tools/Verbs/ - so the hole is live for provisioning and latent for
+#       gates. It is also why § 4 is not extended to require that provisioning scripts be
+#       reached from a workflow step: that check would be satisfied by help text, and a
+#       check satisfied by help text is the substitution this file exists to catch.
+#       FOLLOW-UP (FND-005, which owns the matcher through VER-FND-005-011): track
+#       here-doc and PowerShell here-string bodies in strip_shell_comment's neighbourhood
+#       and add the thirteenth control form - a bare indented path inside <<'WORD' - in
+#       both directions. Then § 4 can cover provisioning.
+#     * A GATE MISFILED AS `launcher` OR `provisioning` ESCAPES §§ 3 AND 4 ENTIRELY, and
+#       so does a dual-mode gate whose entry names no arguments. The inventory makes
+#       every script's classification visible and diffable; it cannot make the
+#       classification true. See THE RESIDUAL LIMIT above, and the note on field 3's
+#       "same member is not same call site" granularity.
+#
+# Exit classes follow doc 100 § Standard command surface: 0 success,
+# 4 validation failure.
+
+set -uo pipefail
+
+readonly REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+readonly EXIT_VALIDATION=4
+
+# --- The script inventory ------------------------------------------------------
+# "<repo-relative path>|<kind>|<arguments that make it a gate>|<why this kind>"
+#
+# Every script the enumerators find must appear here exactly once, and every entry must
+# name a script an enumerator found. § 2 checks both directions. The rationale for
+# inverting the enumeration, the invocation field and the limits of all of it are in the
+# header under THE INVENTORY, AND WHY IT REPLACED A NAME GLOB.
+#
+# THREE KINDS, NOT TWO. A taxonomy with fewer kinds than the population forces a
+# misfiling and then blames the filer:
+#
+#   gate         Decides something about the repository and can fail on its own account.
+#                §§ 3 and 4 apply: it must be reached from a workflow or exempted.
+#   launcher     The standard command surface itself. It decides nothing; it dispatches
+#                to the verb host, and it is what workflows and gates invoke in order to
+#                reach anything else. Asking whether it is "wired" is backwards.
+#   provisioning Changes the machine, decides nothing about the repository, and cannot be
+#                invoked from a verb. build/bootstrap-linux.sh installs the .NET SDK,
+#                and a .NET process cannot install .NET, so no verb can hold it. It is
+#                neither a gate nor a launcher and filing it as either would be a lie
+#                told to satisfy a two-valued taxonomy.
+#
+# Field 3 is set on exactly one entry: derive_citation_pass_expectations.py, whose gate
+# mode is --verify and whose bare mode is a generator that writes a file. That is the
+# case the mechanism was built for, and it is no longer hypothetical - the entry below
+# is the first real use. Every other entry leaves field 3 empty because no other script
+# here has a mode that only some arguments select. § 5 still exercises the mechanism
+# with its own control, because a mechanism with one live user is still a mechanism that
+# needs a control: if the field stopped being read, the one entry that depends on it
+# would silently degrade to path-only matching and nothing would say so.
+#
+#   Read from the resolved array rather than carried over from either side of the merge:
+#   of the 17 entries below exactly one has a non-empty third field, and it is that one.
+#   The sentence this replaced said field 3 was empty for every entry, which was true of
+#   claude/hearth-thread-2vmaro-fnd-002, where none of these files existed, and is false
+#   here. It is deleted rather than qualified, because two sentences disagreeing about
+#   the same column is worse than either of them.
+#
+# ON MERGE FROM master INTO THIS CHAIN, AND ONLY THAT DIRECTION: ADD THE LINES BELOW
+# THAT THE MERGED TREE ACTUALLY CONTAINS AND THAT ARE NOT ALREADY LIVE ABOVE, VERIFIED
+# RATHER THAN PROPOSED.
+#
+# THREE OF THE FOUR PAIRS BELOW ARE ALREADY LIVE ABOVE, so this is a partly discharged
+# instruction and not a fresh one, and a resolver who followed it literally today would
+# add three duplicates. check_quote_mismatch_evidence.py,
+# derive_citation_pass_expectations.py and verify_content.py are classified in INVENTORY
+# and exempted in EXEMPT above - in their own wording, measured on the tree they landed
+# in, rather than in the wording preserved below - because their files arrived on
+# claude/hearth-thread-hrufl9. Only derive_derived_value_expectations.py's pair is still
+# outstanding, and it is the pair whose field 3 is spelled --check rather than --verify.
+# A duplicate is not a harmless paste: § 2 direction 2 reports "is classified N times in
+# the inventory", so it reddens the same section that an entry for an absent file
+# reddens, and it is caught rather than tolerated.
+#
+# All eight lines are nonetheless left below exactly as they were verified, all four
+# pairs, because they are the measured record and deleting three of them would discard
+# the measurement rather than the instruction. What changed is only the framing above
+# them. Take from them a pair only where BOTH tests pass: the file is present on the ref
+# being merged in, AND no live entry above already names it. The first test is the
+# RE-ENUMERATE requirement below, kept because it is what turns "three are already live"
+# from a claim in this comment into a measurement on your own tree; the second is a grep
+# of the two arrays above for the path.
+#
+# READ THE DIRECTION BEFORE READING THE LINES. This block is an instruction for exactly
+# one merge: master merged INTO this fnd-002 chain, which is the fnd-002 -> master
+# reconcile this file's header describes. It is NOT an instruction for any other merge
+# direction, and in particular it is NOT one for merging fnd-002, or any branch of this
+# chain, INTO somewhere else. It is not a checklist that travels with this file, and
+# nothing about it fires just because this file appeared in a merge.
+#
+#   That is not a hypothetical either. A sibling stream merged fnd-002 into its own
+#   branch, read this heading as unconditional, and following it would have added lines
+#   naming TWO files that branch's enumerators cannot find - its ContentImport/ holds
+#   THREE .py scripts where master holds four, derive_derived_value_expectations.py being
+#   on master and not there. The result would have been the red gate two paragraphs down,
+#   in place of the one the resolver was trying to clear.
+#
+# AND THE FILE SET IS WHATEVER THE REF BEING MERGED IN CARRIES AT MERGE TIME, NOT THE
+# COUNT WRITTEN HERE. Four .py files under src/MechaMiner.Tools/ContentImport/ is what
+# master carried when these lines were verified, at master 76ef7a1; it was still four at
+# 3b4703b, re-measured rather than assumed. That is a per-ref measurement of a directory
+# that grows, not a constant, and this comment cannot be re-measured on your behalf. So
+# RE-ENUMERATE THAT DIRECTORY ON THE REF BEING MERGED IN - `git ls-tree -r <ref>
+# --name-only -- src/MechaMiner.Tools/ContentImport/` - and take from below only the
+# lines whose file that enumeration returns. If it returns a .py file no line below
+# covers, classify that one too, by reading its main() the way these four were read; § 2
+# direction 2 on the merged tree names exactly which files are outstanding.
+#
+# CLASSIFYING A FILE THE MERGED TREE DOES NOT CONTAIN IS A SECOND FAILURE, NOT A PARTIAL
+# FIX. An entry naming a file no enumerator found is red by § 2 direction 1 ("stale
+# classification"), and the same path's EXEMPT line is red again by § 3 ("stale
+# exemption"), because check_exemptions tests -f on every exempt path too. So pasting
+# these lines onto a tree holding fewer of these four files does not half-fix anything:
+# it trades unclassified-script findings for up to eight stale ones, in two sections
+# instead of one. The last row of the table below is that failure measured.
+#
+# These are not a suggestion for the merge resolver to compose. They were written, run
+# and measured before being written down here, on a throwaway worktree holding
+# fnd-002 + master at 76ef7a1 (union-resolved conflicts, never pushed):
+#
+#   with all eight lines live on the merged tree   bash build/verify-gate-wiring.sh -> 0,
+#                                                 18 scripts, both enumerators agreeing,
+#                                                 14 gates, all 8 in-band controls run
+#   with the four EXEMPT lines omitted             -> exit 4, FAILING SECTION 4, four
+#                                                 "is never invoked and is not on the
+#                                                 deliberately-unwired list". This is the
+#                                                 second reddening, and it is why the
+#                                                 exemptions are half of the change and
+#                                                 not an afterthought to it.
+#   with a fifth entry naming a missing file       -> exit 4, FAILING SECTIONS 2 and 4
+#   with one of the four INVENTORY lines removed   -> exit 4, FAILING SECTION 2, naming
+#                                                 exactly the file that was dropped
+#   all eight live on THIS ref, without the files  -> exit 4, FAILING SECTIONS 2 and 3,
+#                                                 eight findings. Not a peculiarity of
+#                                                 this ref: ANY tree missing those four
+#                                                 files fails this way, in proportion to
+#                                                 how many of them it is missing. Hence a
+#                                                 comment here rather than entries.
+#
+# All four are `gate`, and deliberately so. Filing any of them as `provisioning` or
+# `launcher` would make §§ 3 and 4 skip them and would turn a measured "nothing dispatches
+# these yet" into a silent claim that they are not gates - which is precisely the fail-open
+# this file names in capitals under WHAT THIS GATE DOES NOT ESTABLISH. They are gates; the
+# honest instrument for "a gate nothing runs yet" is EXEMPT with a measured reason, and
+# that is the form used. The reason measured, in all four cases, is that the § 4 analyzer
+# finds ZERO call sites - the report reads "is never invoked", not "has a call site but no
+# workflow reaches it" - and that wiring them means writing a content-tier verb, which is
+# DAT-006's work package and not this gate's decision to make.
+#
+# Strip the leading "#   " from each line. The first four are INVENTORY entries; the last
+# four are their matching EXEMPT entries, one per path, in the same order. They come in
+# pairs and go in pairs: an INVENTORY line added without its EXEMPT line is the § 4
+# failure in the table's second row, and either one added for a file the merged tree does
+# not hold is the § 2 / § 3 failure in its last row. Add a pair only for a path the
+# re-enumeration above actually returned - which, on a merge from master, has so far been
+# all four, and on any other ref is a question this comment does not answer.
+#
+#     "src/MechaMiner.Tools/ContentImport/check_quote_mismatch_evidence.py|gate||re-runs the anti-golden measurement behind content/quote-verification-audit.md § 5 - all 378 quote mismatches re-tested under maximal normalisation - and exits non-zero if any record moves or any frozen normalised form fails to reproduce from its stored value. A gate with no other mode: the file registers no arguments at all, so field 3 is empty. It is the first of the two files the header names as the reason the name glob had to go - 'check' matches no glob spelled 'verify'"
+#     "src/MechaMiner.Tools/ContentImport/derive_citation_pass_expectations.py|gate|--verify|a generator when invoked bare and a gate when invoked with --verify, which is the case field 3 was built for and says so. Bare it WRITES expected_citation_deltas.json; with --verify it measures the pass's own pinned range against that committed expectation and returns 1 on any disagreement. Read at main(): --ref, --previous-ref, --verify, --after-ref. Without field 3 a reachable bare call site would satisfy § 4 while running the generator and not the gate"
+#     "src/MechaMiner.Tools/ContentImport/derive_derived_value_expectations.py|gate|--check|the same dual shape one flag apart, and the flag is spelled differently: --check, not --verify. Bare it WRITES expected_derived_value_removals.json; with --check it re-derives from the pinned SWEEP_REF and returns 1 on MISSING or STALE. Read rather than assumed - main() registers exactly --sweep-ref and --check, and nothing else. This file appears in NEITHER of the header's two notes about master, both of which counted three ContentImport .py scripts; there are four"
+#     "src/MechaMiner.Tools/ContentImport/verify_content.py|gate||asserts the authored JSON content catalog under content/ against the assertion table in its own header, exiting non-zero on any FAILURE row while warnings never change the exit code. One mode, no arguments, so field 3 is empty. 249 KB of it, in exactly the position the header describes: a gate the old name glob did see, and the largest thing this inventory now has to account for"
+#
+#   -- and in EXEMPT:
+#
+#     "src/MechaMiner.Tools/ContentImport/verify_content.py|never invoked: the § 4 analyzer reports ZERO call sites for it in src/**.cs, build.sh, build.ps1 and .github - measured on the merged tree, not inferred from its name. The only occurrences in the search roots are prose in ContentImport/README.md, which the analyzer never opens (it reads .cs, .sh, .ps1, .yml, .yaml, .bash), and prose inside sibling .py files. Passes standalone. Not wired here because no verb dispatches the content tier at all: inventing one to satisfy this section would let a gate about wiring make a design decision it has no standing to make. DAT-006 owns content import and owns that verb"
+#     "src/MechaMiner.Tools/ContentImport/check_quote_mismatch_evidence.py|never invoked, same measurement: zero call sites in the four search roots. Its one occurrence outside README prose is `import check_quote_mismatch_evidence as Q` inside derive_citation_pass_expectations.py - a Python module import, not a shell or C# invocation, and in a file the analyzer does not read - so even the sibling that uses it does not make it reached. Passes standalone. Unblocked by the same content-tier verb as verify_content.py"
+#     "src/MechaMiner.Tools/ContentImport/derive_citation_pass_expectations.py|never invoked: zero call sites. Field 3 requires --verify, so a bare wiring would not satisfy § 4 either - and bare is the mode that OVERWRITES expected_citation_deltas.json, so a careless wiring gives a verb that rewrites its own expectation and then reports green. That is a reason to wire it deliberately in the work package that owns it, and not a reason to file it as anything other than a gate"
+#     "src/MechaMiner.Tools/ContentImport/derive_derived_value_expectations.py|never invoked: zero call sites. Same hazard as its sibling one flag over - bare it OVERWRITES expected_derived_value_removals.json - and field 3 requires --check. Note the coupling that makes wiring it a decision rather than a line: verify_content.py's A31/A29 already assert set equality against that same committed expectation, so the two gates must agree on which of them owns the check before either is wired. Unblocked by DAT-006"
+#
+readonly INVENTORY=(
+  "build.sh|launcher||the POSIX entry point of the standard command surface (doc 100 § Standard command surface). Parses no policy and decides nothing: it locates the verb host, builds it if needed, and forwards the verb. Every gate below is reached through it"
+  "build.ps1|launcher||the PowerShell entry point of the same surface, held at parity with build.sh by build/verify-wrapper-parity.sh. Note that it carries a shebang (#!/usr/bin/env pwsh) and so is seen by both enumerators; a .ps1 without one would be seen by only the extension enumerator, which is why § 1 requires them to agree"
+  "build/gate-output.sh|library||the shared output vocabulary every gate script sources: pass/fail for findings about the subject under test, control_pass/control_fail/control_detail for anything a negative control's fixture manufactured, section and gate_summary so a red run names the failing section. Sourced, never executed, and mode 644 so it cannot be a workflow step. Not a gate: it asserts nothing about the repository. Its own self-check, gate_assert_marking, runs inside each gate that sources it rather than here"
+  "build/bootstrap-linux.sh|provisioning||installs and pins the .NET SDK, Godot and the Vulkan ICD, and verifies the pinned versions. Not a gate: the only thing it decides is whether the machine it is running on has the toolchain, and its failure means repair this machine, not repair this repository. Not reachable from a verb either - the verb host is a .NET process and this is what installs .NET - so the workflow's provisioning step is the only place it can be called from, and doc 100 § Standard command surface puts it there"
+  "build/bootstrap-macos.sh|provisioning||installs and pins the same two tools the Linux entry above does - the .NET SDK and Godot - for macOS on arm64 and x86_64, re-hashing every downloaded artifact against a constant in the file before it is used. Not a gate, on exactly the ground stated above: the only thing it decides is whether the machine it is running on has the toolchain, and its failure means repair this machine, not repair this repository. Not reachable from a verb either, for the same reason - the verb host is a .NET process and this is what installs .NET. What separates it from its Linux sibling is stated rather than glossed: the Linux script has the workflow provisioning step doc 100 § Standard command surface puts it in, and this one has no call site at all, because .github holds one workflow and it runs on Linux, so there is no macOS job for a step to live in. Measured, not inferred from the name: 'grep -rn bootstrap-macos src build.sh build.ps1 .github' returns nothing, under either script's name. As provisioning it is outside §§ 3 and 4, so no EXEMPT row belongs beside it and nothing here re-checks that; the properties of this file that ARE a repository question are asserted by the gate entry below, which is why this pair is two files and two kinds and not one"
+  "build/verify-architecture.sh|gate||asserts the project-reference graph, the Godot boundary and the no-GDScript rule"
+  "build/verify-bootstrap-macos.sh|gate||the static gate for the provisioning entry above: it asserts, on any platform including CI Linux, those properties of build/bootstrap-macos.sh that can be checked without a Mac - that its pinned SDK version agrees with global.json, that its hash constants are present and well-formed and that the two .NET tarball hashes differ, that it demands no root, that it uses no GNU-only or Linux-only idiom in executable code, that its uname -m dispatch covers arm64 and x86_64, and that it does not claim to have verified what it has not. It decides about committed files in this repository and exits 4 on disagreement, which is what makes it a gate rather than a report, and it is the reason the entry above can be filed as provisioning without that being the end of the matter. Single-mode, checked rather than assumed: it registers no arguments and has one entry path, so field 3 has nothing to name. It is a gate that is both unreached and currently RED, and both of those are measured and stated in its EXEMPT entry below rather than here"
+  "build/verify-configurations.sh|gate||asserts the Godot project builds in all three configurations"
+  "build/verify-format.sh|gate||asserts owned text files satisfy the .editorconfig rules"
+  "build/verify-gate-wiring.sh|gate||this file: asserts the partition below. It is a gate about gates and is subject to its own rule, which is why it appears in its own inventory rather than being special-cased out of it"
+  "build/verify-godot-runner.sh|gate||asserts the Godot integration-test runner emits the report the engine tier asserts"
+  "build/verify-godot.sh|gate||asserts the Godot import step produced the expected artifacts"
+  "build/verify-run-slice.sh|gate||asserts the run slice evidence harness RAN during the invocation that reads it: it launches game/tests/RunSliceEvidenceHarness.tscn by name - a scene no other gate can reach, since verify-godot.sh launches bare into run/main_scene and verify-godot-runner.sh names only the runner and its broken fixture - requires RunSliceEvidenceHarness.StartupLine on stdout, requires a transcript.tsv absent from a per-invocation empty output directory before the launch and present after, and asserts the transcript's assertions_run against a committed pin AND against the section roster derived from tests/verification/*.json. Reached from GodotImportVerb, which .github/workflows/fast.yml runs as its last verb-running step - so it is reached-and-not-exempt, and no EXEMPT row belongs beside it. Field 3 is empty: the script registers no arguments and has one mode. Unlike every other gate here it passes the harness's own exit class through unchanged (0, 2 or 4) rather than collapsing failures into 4, which is VER-PRE-001-003's claim and the reason its own header warns against tidying that back into a single gate_summary funnel"
+  "build/verify-policies.sh|gate||asserts the compiler and analyzer policy fixtures fail as designed"
+  "build/verify-test-harness.sh|gate||asserts the test tiers discover tests, separate pure from engine, and fail on violation"
+  "build/verify-verbs.sh|gate||asserts the verb table matches doc 100's standard command surface"
+  "build/verify-wrapper-parity.sh|gate||asserts build.sh and build.ps1 expose the same verbs and classes"
+  "src/MechaMiner.Tools/ContentImport/check_quote_mismatch_evidence.py|gate||re-runs the anti-golden measurement behind content/quote-verification-audit.md § 5: it re-derives each of the 378 stored mismatch records from docs/, re-tests every one under maximal normalization, and exits non-zero if any record moves or if any frozen normalized form fails to reproduce from its stored value. That is a decision about a committed artifact of this repository, which is what makes it a gate rather than a report - a report would print the drift and exit 0. Single-mode, checked rather than assumed: the file imports no argparse and defines no add_argument (0 occurrences of either), and main() takes no parameters, so every invocation is the gate invocation and field 3 has nothing to name. Contrast the entry below, which is the same shape of tool and is not single-mode"
+  "src/MechaMiner.Tools/ContentImport/derive_citation_pass_expectations.py|gate|--verify|dual-mode, and the only entry in this inventory that sets field 3. Bare it is a generator and decides nothing: it derives the expected citation delta and WRITES src/MechaMiner.Tools/ContentImport/expected_citation_deltas.json, observed on this tree to exit 0 and leave that file modified in the working tree. With --verify it decides: it re-derives the previous pass's 59 file-and-scope pairs from --previous-ref alone and asserts set equality, element by element, against what the tree at --ref measures, failing on anything derived-but-not-measured or measured-but-not-derived. Naming only the path would let a reachable bare invocation satisfy § 4 while the deciding mode ran nowhere, and a generator that has been wired is not a gate that has been wired. Note --previous-ref defaults to origin/master, a MOVING ref rather than a pinned sha, which is a separate weakness recorded in the exemption below"
+  "src/MechaMiner.Tools/ContentImport/derive_derived_value_expectations.py|gate|--check|the same dual shape one flag apart, and the flag is spelled differently: --check, not --verify. Bare it WRITES expected_derived_value_removals.json; with --check it re-derives from the pinned SWEEP_REF and returns 1 on MISSING or STALE. Read rather than assumed - main() registers exactly --sweep-ref and --check, and nothing else. This file appears in NEITHER of the header's two notes about master, both of which counted three ContentImport .py scripts; there are four"
+  "src/MechaMiner.Tools/ContentImport/verify_content.py|gate||reads every *.json under content/ and asserts the A1 through A27 table its own header states - JSON parse and duplicate-property rejection, the definition envelope and its status vocabulary, stable IDs, the conditionality of name_key and summary_key, cross-references, per-directory populations, derived totals, polarity agreement, and localization resolution - recording each row as FAILURE or WARNING and exiting non-zero if any FAILURE is recorded. Warnings never change the exit code, so a red exit is always a finding about content and never about the machine the run happened on. That distinction is what separates this from the provisioning entry above, which is the other script here whose failure is not a repository defect. Measured on the tree this entry landed in: 138 definition files parsed and 1375 source_refs resolved against docs/"
+)
+
+# "library" is new: build/gate-output.sh is sourced by every gate script and is not an
+# entry point, so it is neither a gate (it decides nothing) nor a launcher (nothing
+# invokes it). Only the "gate" kind is required to be reached-or-exempt by § 4, so a
+# library classifies without claiming a call site it does not have.
+readonly KNOWN_KINDS=("gate" "launcher" "provisioning" "library")
+
+# The extension enumerator's alphabet. Deliberately wider than what is present: an
+# extension nobody has used yet costs nothing here and closes the hole where the first
+# .py or .rb gate arrives unenumerated. It is not the authority on what a script is -
+# the shebang enumerator is the independent second opinion, and § 1 requires both.
+readonly SCRIPT_EXTENSIONS=("sh" "bash" "ps1" "psm1" "py" "zsh" "ksh" "pl" "rb")
+
+# Outputs and vendored trees, not authored sources.
+readonly PRUNED_DIRS=(".git" "artifacts" "generated" ".godot" "obj" "bin" "node_modules")
+
+# --- Deliberately unwired gate scripts ---------------------------------------
+# "<repo-relative path>|<the failure observed when it was wired, and what would
+#  unblock it>"
+#
+# One reason per script, and each one is what a wiring attempt actually printed - or,
+# for the three ContentImport entries added when master's content-import work met this
+# gate, what a wiring attempt was blocked BY, stated with the file and line that blocks
+# it. Those three could not be wired-and-measured the way the .sh entries below were,
+# because RunRepositoryScript execs bash and there is no verb host path that reaches a
+# .py at all; a reason of the form 'it was wired and it printed X' is unavailable for
+# them and inventing one would be exactly the unreproducible reason this list has
+# already had to strike once. Each of the three instead states what it does on its own
+# (exit code and verdict line, run), what specifically blocks a call site, and who owns
+# unblocking it - and the two that are red say so rather than claiming a clean pass.
+#
+# The previous version of this list carried a single shared reason for five scripts:
+# that ./build.sh rebuilds the verb host on every invocation, so a gate reached from
+# inside a running verb makes MSBuild rewrite the assembly the calling verb is
+# executing from, "observed" as verify-verbs.sh reading an empty verb table when wired
+# into test-fast. That reason does not reproduce and is withdrawn. Each of the five was
+# wired and its owning verb run end to end, and all five passed:
+#
+#   verify-wrapper-parity.sh  -> build       exit 0, verb 30 s  (baseline 20 s)
+#   verify-verbs.sh           -> test-fast   exit 0, verb 122 s (baseline 28 s)
+#   verify-configurations.sh  -> test-fast   exit 0, verb 109 s (baseline 28 s)
+#   verify-test-harness.sh    -> build       exit 0, verb 142 s (baseline 20 s)
+#   verify-format.sh          -> build       exit 0, verb 248 s (baseline 20 s)
+#
+# Three of them are now wired and are not on this list. What the wiring trials did find
+# is a different constraint the old reason had obscured: several of these scripts invoke
+# ./build.sh with a verb, so the verb that owns a script's subject usually cannot hold
+# it. verify-format.sh in format-check, and verify-test-harness.sh in test-fast, each
+# recursed until killed at 200 s. That is why verify-verbs.sh and verify-configurations.sh
+# live in test-fast rather than in build, whose subject they are: both invoke
+# ./build.sh build.
+#
+# This list is not a place to park a script that could simply be wired. Each entry
+# below states what was measured or observed, and for verify-format.sh that is a
+# runtime cost rather than a failure - said plainly, because "slow" is an honest reason
+# and "re-entrancy" was not.
+#
+# EXEMPT MUST NOT COME TO MEAN NEVER RUNS. Every script on this list runs today only
+# when a person types it, which is the defect this whole file exists to name. The
+# follow-up is a second, slower CI tier that runs the two expensive ones -
+# FOLLOW-UP (OPS-001): a main-branch or nightly job that invokes build/verify-format.sh
+# and build/verify-test-harness.sh, where 230 s and 142 s are affordable and where
+# test-main already lives. OPS-001 owns the main and nightly suites (delivery-waves
+# § Step 4), so it owns this. It is deliberately not built here: this work package's
+# subject is the pull-request tier. Until that tier exists, these two and
+# verify-godot-runner.sh are gates nothing asks for, and the pull request says so.
+#
+# The three ContentImport entries are a DIFFERENT kind of never-runs and are not
+# OPS-001's to fix. A slower tier would not help them: no tier can invoke them, because
+# no verb can, because the verb host execs bash. Their follow-up is DAT-006 implementing
+# the 'content' verb - and, so that the .py bar is recorded once in the place that
+# imposes it rather than three times here, FOLLOW-UP (FND-003, which owns VerbContext):
+# give RunRepositoryScript a sibling that selects the interpreter from the extension, or
+# state in that file that .py scripts are deliberately unreachable from a verb. Today it
+# is neither - it is a hard-coded string with no comment saying that it is a policy.
+
+readonly EXEMPT=(
+  "build/verify-bootstrap-macos.sh|never invoked, and RED on this merged tree. Both are stated because only the first exempts it, and omitting the second would make this the kind of unreproducible claim this list has already had to strike once. WIRING, which is the exempting reason, MEASURED on the merged tree rather than inferred from the name: § 4's analyzer reports ZERO call sites, its finding reading 'is never invoked' and not 'has a call site but no workflow reaches it', and 'grep -rn verify-bootstrap-macos src build.sh build.ps1 .github' returns nothing; the string occurs twice in the whole tree, both times in prose - inside this gate itself and in build/bootstrap-macos.sh's header - and neither is a call site. SCRIPT, MEASURED ON THIS MERGE rather than quoted from an earlier sha, and NOT re-measured by this gate: 'bash build/verify-bootstrap-macos.sh' at 3f1103e exits 4 with exactly one failing assertion and 0 skipped, in its section 10, reading 'build/toolchain.json exists but records no godot.platforms.osx-* entry'. That red is this merge's own doing and is precisely what the script's header predicted: section 10 is its forward-compatible half, reporting SKIP while build/toolchain.json is absent and becoming a hard assertion 'the moment this branch meets the FND-002 chain'. This merge is that moment, and neither parent is red because neither holds both files - build/toolchain.json is absent at eac70f9, which carries this gate and bootstrap-macos.sh, and present at 21208c1, which carries neither. Measured on the merged pin file: godot.platforms holds linux-x64 alone, so the osx-arm64 and osx-x64 entries the assertion wants are genuinely absent and the gate is right. So the objection to wiring is not that the gate is wrong but that the gap it names is real and unrepaired, and wiring it would make the fast workflow red on a defect in the pin file rather than in this gate. Repairing it is not this merge's to do: the macOS hashes exist only as constants in build/bootstrap-macos.sh, transcribing them into the pin file is a toolchain-pinning decision, and build/toolchain.json is FND-002's. Unblocked by adding the two osx-* godot entries from those constants - FOLLOW-UP (FND-002, which owns build/toolchain.json and this chain's toolchain pinning) - and wiring belongs in the same commit that closes the gap, not ahead of it. FND-002 owns removing this entry"
+  "build/verify-format.sh|OBSERVED AT a4eb81d, NOT re-measured by this gate: wired into build, ./build.sh build exited 0 in 248 s, of which verify-format was 230 s. Not wired because of that number and nothing else: 230 s is more than twice the whole fast job's current duration, and format-check, the verb whose subject it is, recurses (wired there, ./build.sh format-check did not terminate and was killed at 200 s). Runtime is the objection; whether to pay it on every pull request is a budget decision this file does not get to make"
+  "build/verify-test-harness.sh|OBSERVED AT a4eb81d, NOT re-measured by this gate: wired into build on its own it exited 0 in 142 s. Not wired because it invokes ./build.sh test-fast, so test-fast cannot hold it (wired there, killed at 200 s, exit 124, still nesting), and build cannot hold it either now that test-fast reaches verify-verbs.sh and verify-configurations.sh, which invoke ./build.sh build. Observed on this tree with it added to build's stages: ./build.sh build ran 452 s without terminating and was killed (exit 137), having recorded 13 nested build and 14 nested test-fast invocations under artifacts/verbs/ by then. Unblocked by a wrapper dispatch that does not re-enter the verb it was called from"
+  "build/verify-godot-runner.sh|reached only from test-main, and no workflow invokes test-main: .github holds one workflow and its six steps are provisioning, bootstrap, format-check, build, test-fast, godot-import. It was called 'wired' on the strength of that call site while running exactly as often as before - never. Passes standalone. Unblocked by OPS-001's main-branch suite, which is the workflow that would run test-main"
+  "src/MechaMiner.Tools/ContentImport/check_quote_mismatch_evidence.py|OBSERVED AT 019c5e3, NOT re-measured by this gate: standalone exit 0, RESULT ok - zero cases move as § 5 claims, with 394 of 394 normalized forms reproduced, 0 live source_refs anchors unresolved in docs/, and 0 cases moving under maximal normalization. RE-OBSERVED AT 6f09da1: still exit 0, so this is the one § 3 reason whose figure has not gone stale - which is a fact about this script, not evidence that § 3 checked it. So the objection is not the script. It cannot be exec'd from a verb at all: VerbContext.RunRepositoryScript hard-codes bash as the program (src/MechaMiner.Tools/Cli/VerbContext.cs:97) and passes the script path as its first argument, so handing it a .py runs the Python source through bash. That is a mechanical bar every entry from this directory shares, and on its own it would argue for a python3 sibling to RunRepositoryScript rather than for an exemption. What makes THIS script's exemption separate from the other two is its subject: it verifies content/quote-verification-audit.md and the frozen evidence artifact beside it, both authored and owned by DAT-006's content-import work, so the verb that would hold it is the same 'content' verb that has no owner yet. Wiring it into any verb that does exist would put a DAT-006 subject inside an FND-002 or FND-003 verb. Unblocked by DAT-006 implementing the content verb; DAT-006 owns removing this entry"
+  "src/MechaMiner.Tools/ContentImport/derive_citation_pass_expectations.py|its gate mode is RED, and the entry says so rather than claiming a clean standalone pass. OBSERVED AT 019c5e3, NOT re-measured by this gate: bare exited 0 and rewrote expected_citation_deltas.json; --verify exited 1 with 7 findings, one derived-but-not-measured (content/enemies/EN-06.json :: specialist_attack.hard_control_interaction) and six citation-deleted (content/resources/A.json through F.json :: canonical_letter: TDD-CONTENT-DATA#resources). THAT FIGURE NO LONGER REPRODUCES, and the entry states this because a stale number in a green line is worse than none. RE-MEASURED AT 6f09da1 on a clean tree: --verify exits 1 with 1372 FAIL lines - 1371 string-measured-but-not-derived plus one moved numeric multiset - not 7. The cause is the weakness the entry above already names: --previous-ref defaults to origin/master, which is now e17b8b6, so the assertion's baseline is a different tree than the one the 7 was measured against. Regenerating the artifact first (bare, then --verify) gives 15 FAIL lines at 6f09da1, still not 7. Bare mode does NOT crash at 6f09da1: it exits 0 and leaves expected_citation_deltas.json modified in the working tree. All seven are explained and none is a defect in this script: doc 40 § Minted content-ID grammars relocates the six canonical letters into a canonical_letter field under the RSC- migration, so this branch legitimately deleted the six citations that --previous-ref's frozen artifact still expects. The deeper reason it cannot be wired as-is is in the entry above: --previous-ref defaults to origin/master, which moved from d88c621 to 76ef7a1 during this task alone, so the assertion's baseline changes underneath it without any commit here. A gate whose expected value is read from a moving ref reports the movement of that ref, not the state of this tree. Unblocked by pinning --previous-ref to a sha and re-deriving the artifact against it - which is DAT-006's call, since DAT-006 owns both the artifact and the content verb"
+  "src/MechaMiner.Tools/ContentImport/derive_derived_value_expectations.py|never invoked: zero call sites. Same hazard as its sibling one flag over - bare it OVERWRITES expected_derived_value_removals.json - and field 3 requires --check. Note the coupling that makes wiring it a decision rather than a line: verify_content.py's A31/A29 already assert set equality against that same committed expectation, so the two gates must agree on which of them owns the check before either is wired. Unblocked by DAT-006"
+  "src/MechaMiner.Tools/ContentImport/verify_content.py|the objection is wiring, and the script is ALSO red on the tree this entry landed in; both are stated because only the first is what exempts it and omitting the second would make this entry the kind of unreproducible claim the list above had to strike. WIRING, which is the exempting reason: VerbContext.RunRepositoryScript hard-codes bash (src/MechaMiner.Tools/Cli/VerbContext.cs:97) and cannot exec a .py, and the verb that would own it is 'content', declared VerbDescriptor.AwaitingOwner with owner DAT-006 at src/MechaMiner.Tools/Cli/VerbRegistry.cs:71-74 and carrying no handler member - so there is no member for a call site to live in, and § 4 could not attribute one to a workflow even if a call site were written. SCRIPT, OBSERVED AT 019c5e3 and NOT re-measured by this gate: standalone it exited 1 with exactly one FAILURE, and that failure was this merge's own doing rather than a pre-existing condition. THAT IS NO LONGER TRUE. RE-MEASURED AT 6f09da1: exit 0, zero FAILURE rows, with 138 definitions parsed and 1375 source_refs resolved. The corpus did not change - docs/technical/delivery-waves.md:598 still reads 'than a yes or no. Its numbers are 300 trials' - the RULE narrowed: 19f31ef added ABBREVIATION_SUFFIX requiring a numeral after 'no.', which that sentence does not have. So the exempting reason below is unaffected and this figure is simply superseded. docs/technical/delivery-waves.md:598 arrives from claude/hearth-thread-2vmaro-fnd-002 reading 'than a yes or no. Its numbers are 300 trials'; it is the first abbreviation-shaped period in docs/, and content/quote-verification-audit.md's rule treating '.' as an unambiguous sentence terminator was measured safe only against a corpus that contained none. Checked rather than assumed: that string is absent at 9ded240 and at 327a3db and present at 1c2f106. The script's own instruction is to re-measure the rule against the corpus and explicitly NOT to edit the flagged quotation, and the rule and the audit document are DAT-006's, so this merge records the regression rather than repairing it. Unblocked by DAT-006 implementing the content verb, which owns removing this entry"
+)
+
+# --- Where an invocation may live ---------------------------------------------
+# The verb host (a verb reaching the script through RunRepositoryScript), the root
+# wrappers, and the CI workflow. Anything else - a test's doc comment, a design
+# document, another gate script's prose - is a mention, not a call site.
+
+readonly -a SEARCH_ROOTS=(
+  "src"
+  "build.sh"
+  "build.ps1"
+  ".github"
+)
+
+# The shared emitters. This file used to carry its own pass/fail pair, which was the
+# fourth copy in build/; see build/gate-output.sh for why there is now one.
+source "${REPO_ROOT}/build/gate-output.sh"
+
+# The check functions below print their own ok/FAIL lines and RETURN their failure
+# count, rather than adding to the global. That is what makes § 5's controls in band:
+# a control runs the same function against an injected input and asserts the count is
+# nonzero, so what the controls exercise is the code the gate itself just ran, not a
+# re-implementation of it that could drift from it.
+cfail() {
+  printf 'FAIL  %s\n' "$*"
+  check_failures=$((check_failures + 1))
+}
+
+# --- The two enumerators -------------------------------------------------------
+# Independent on purpose; § 1 requires them to agree. Both prune the same output
+# directories, so a disagreement is about the file, never about where it lives.
+
+prune_expression() {
+  local -a expression=()
+  local name
+  for name in "${PRUNED_DIRS[@]}"; do
+    expression+=(-o -name "${name}")
+  done
+  printf '%s\n' "${expression[@]:1}"
+}
+
+# Every regular file under REPO_ROOT that is not in a pruned directory.
+all_files() {
+  local -a prune=()
+  mapfile -t prune < <(prune_expression)
+  (cd "${REPO_ROOT}" && find . -type d \( "${prune[@]}" \) -prune -o -type f -print) \
+    | sed 's|^\./||' | LC_ALL=C sort
+}
+
+# Enumerator A: a known script extension.
+enumerate_by_extension() {
+  local -a suffixes=()
+  local extension
+  for extension in "${SCRIPT_EXTENSIONS[@]}"; do
+    suffixes+=(-o -name "*.${extension}")
+  done
+  local -a prune=()
+  mapfile -t prune < <(prune_expression)
+  (cd "${REPO_ROOT}" && find . -type d \( "${prune[@]}" \) -prune -o \
+    -type f \( "${suffixes[@]:1}" \) -print) | sed 's|^\./||' | LC_ALL=C sort
+}
+
+# Enumerator B: the first two bytes are `#!`. Reads the file rather than its name, so
+# it sees an extensionless script and misses a .ps1 that (legitimately) has no shebang.
+#
+# One process reads every candidate rather than one `head` per file. That is not a
+# micro-optimisation to note in passing: this gate is reached from `build`, and
+# build/verify-configurations.sh makes a nested ./build.sh build per configuration, so
+# whatever this costs is paid several times inside one test-fast.
+enumerate_by_shebang() {
+  all_files | python3 -c '
+import sys, os
+root = sys.argv[1]
+for line in sys.stdin:
+    path = line.rstrip("\n")
+    if not path:
+        continue
+    try:
+        with open(os.path.join(root, path), "rb") as handle:
+            if handle.read(2) == b"#!":
+                sys.stdout.write(path + "\n")
+    except OSError:
+        # A file that cannot be opened is not claimed to be a script by this
+        # enumerator. If the extension enumerator claims it, § 1 reports the
+        # disagreement, which is the fail-closed outcome.
+        pass
+' "${REPO_ROOT}" | LC_ALL=C sort
+}
+
+section "1. enumerate every script two independent ways, and require them to agree"
+
+mapfile -t by_extension < <(enumerate_by_extension)
+mapfile -t by_shebang < <(enumerate_by_shebang)
+
+# The union is the candidate set. A file either enumerator claims is a script is
+# treated as one, so a disagreement fails closed: the extra file still has to be
+# classified, and § 1 still reports the disagreement as a failure of its own.
+mapfile -t scripts < <(
+  printf '%s\n' "${by_extension[@]}" "${by_shebang[@]}" | grep -v '^$' | LC_ALL=C sort -u
+)
+
+# An empty candidate set never satisfies a gate: "no scripts found" is a broken
+# enumerator, not a clean repository.
+if [[ "${#scripts[@]}" -eq 0 ]]; then
+  fail "found no scripts at all; the enumerators are broken, not the repository clean"
+  gate_summary "verify-gate-wiring" "${EXIT_VALIDATION}"
+  exit "${EXIT_VALIDATION}"
+fi
+
+# Given two sorted lists by name, reports every file only one of them found.
+# Returns its failure count.
+check_enumerators() {
+  local -n left="$1"
+  local -n right="$2"
+  local check_failures=0
+  local path
+
+  local only_extension only_shebang
+  only_extension="$(LC_ALL=C comm -23 \
+    <(printf '%s\n' "${left[@]}" | grep -v '^$' | LC_ALL=C sort -u) \
+    <(printf '%s\n' "${right[@]}" | grep -v '^$' | LC_ALL=C sort -u))"
+  only_shebang="$(LC_ALL=C comm -13 \
+    <(printf '%s\n' "${left[@]}" | grep -v '^$' | LC_ALL=C sort -u) \
+    <(printf '%s\n' "${right[@]}" | grep -v '^$' | LC_ALL=C sort -u))"
+
+  while IFS= read -r path; do
+    [[ -z "${path}" ]] && continue
+    cfail "${path} has a known script extension but no '#!' first line, so only one of the two enumerators sees it. Add a shebang, or add its extension case to the header's account of why the two are kept."
+  done <<<"${only_extension}"
+
+  while IFS= read -r path; do
+    [[ -z "${path}" ]] && continue
+    cfail "${path} starts with '#!' but has no extension in SCRIPT_EXTENSIONS, so only one of the two enumerators sees it. Give it a known extension, or add the extension to SCRIPT_EXTENSIONS. If it is not a script at all and merely begins with those two bytes, this gate has no escape for that and adding one is a deliberate change to what 'script' means here, not a workaround to reach for in passing."
+  done <<<"${only_shebang}"
+
+  if [[ "${check_failures}" -eq 0 ]]; then
+    pass "the extension enumerator and the shebang enumerator agree exactly, on $(printf '%s\n' "${left[@]}" | grep -c -v '^$') file(s)"
+  fi
+  return "${check_failures}"
+}
+
+check_failures=0
+enumerator_report="$(check_enumerators by_extension by_shebang)"
+enumerator_failures=$?
+printf '%s\n' "${enumerator_report}"
+gate_add_failures "${enumerator_failures}"
+
+section "2. the inventory classifies every enumerated script, and nothing else (VER-FND-005-010)"
+
+# Set equality in both directions between INVENTORY's paths and the enumerated set,
+# plus a known kind on every entry. This is the check the name glob never made: under
+# the glob, a script named anything other than verify-* was not accepted too broadly,
+# it was not looked at.
+check_inventory() {
+  local -n inventory="$1"
+  local -n enumerated="$2"
+  local check_failures=0
+  local entry path kind invocation note found seen_kinds candidate hits
+
+  local -a inventory_paths=()
+  for entry in "${inventory[@]}"; do
+    inventory_paths+=("${entry%%|*}")
+  done
+
+  # Direction 1: every entry names a file an enumerator found.
+  for entry in "${inventory[@]}"; do
+    path="${entry%%|*}"
+    kind="$(printf '%s' "${entry}" | cut -d'|' -f2)"
+    invocation="$(printf '%s' "${entry}" | cut -d'|' -f3)"
+    note="$(printf '%s' "${entry}" | cut -d'|' -f4-)"
+
+    found=no
+    for candidate in "${enumerated[@]}"; do
+      [[ "${candidate}" == "${path}" ]] && found=yes && break
+    done
+    if [[ "${found}" == "no" ]]; then
+      if [[ -e "${REPO_ROOT}/${path}" ]]; then
+        cfail "the inventory classifies ${path}, which exists but which neither enumerator recognises as a script. Either it is not a script and does not belong here, or the enumerators cannot see it - which is the hole this section exists to catch."
+      else
+        cfail "stale classification: the inventory classifies ${path}, which does not exist. An inventory entry for a deleted file is the same defect as a stale exemption."
+      fi
+      continue
+    fi
+
+    seen_kinds=no
+    for candidate in "${KNOWN_KINDS[@]}"; do
+      [[ "${candidate}" == "${kind}" ]] && seen_kinds=yes && break
+    done
+    if [[ "${seen_kinds}" == "no" ]]; then
+      cfail "the inventory gives ${path} the kind '${kind}', which is not one of: ${KNOWN_KINDS[*]}. A kind this file does not know is a classification nothing acts on."
+      continue
+    fi
+
+    if [[ -z "${note}" ]]; then
+      cfail "the inventory classifies ${path} as '${kind}' and states no reason. The classification is the judgement this file cannot check, so it has to be written down."
+      continue
+    fi
+
+    if [[ -n "${invocation}" ]]; then
+      pass "classified: ${path} -> ${kind} (only as '${path} ${invocation}')"
+    else
+      pass "classified: ${path} -> ${kind}"
+    fi
+  done
+
+  # Direction 2: every enumerated script is classified, exactly once.
+  for path in "${enumerated[@]}"; do
+    hits=0
+    for candidate in "${inventory_paths[@]}"; do
+      [[ "${candidate}" == "${path}" ]] && hits=$((hits + 1))
+    done
+    if [[ "${hits}" -eq 0 ]]; then
+      cfail "${path} is a script that the inventory does not classify. Add it to INVENTORY in build/verify-gate-wiring.sh as gate, launcher or provisioning, with the reason. If it is a gate, §§ 3 and 4 then apply to it; if it is not, saying so in a committed file is the point."
+    elif [[ "${hits}" -gt 1 ]]; then
+      cfail "${path} is classified ${hits} times in the inventory. Two classifications of one file is not a partition, and which one §§ 3 and 4 would use is undefined."
+    fi
+  done
+
+  return "${check_failures}"
+}
+
+check_failures=0
+inventory_report="$(check_inventory INVENTORY scripts)"
+inventory_failures=$?
+printf '%s\n' "${inventory_report}"
+gate_add_failures "${inventory_failures}"
+
+# The gate subset, and the arguments each gate needs, taken from the inventory. §§ 3
+# and 4 are about these and not about launchers or provisioning.
+#
+# gates_of and invocations_of read an inventory array by name so that § 5 can derive
+# them from an injected inventory the same way this run derives them from the real one.
+gates_of() {
+  local -n source_inventory="$1"
+  local entry
+  for entry in "${source_inventory[@]}"; do
+    if [[ "$(printf '%s' "${entry}" | cut -d'|' -f2)" == "gate" ]]; then
+      printf '%s\n' "${entry%%|*}"
+    fi
+  done
+}
+
+# "<path>|<arguments>" for every gate whose gate mode needs arguments. Empty output
+# when no entry sets field 3, which is the case at this revision.
+invocations_of() {
+  local -n source_inventory="$1"
+  local entry invocation
+  for entry in "${source_inventory[@]}"; do
+    [[ "$(printf '%s' "${entry}" | cut -d'|' -f2)" == "gate" ]] || continue
+    invocation="$(printf '%s' "${entry}" | cut -d'|' -f3)"
+    [[ -n "${invocation}" ]] && printf '%s|%s\n' "${entry%%|*}" "${invocation}"
+  done
+}
+
+mapfile -t gates < <(gates_of INVENTORY)
+mapfile -t invocations < <(invocations_of INVENTORY)
+
+echo
+printf '      %s of %s classified script(s) are gates:\n' "${#gates[@]}" "${#scripts[@]}"
+for path in "${gates[@]}"; do
+  printf '      %s\n' "${path}"
+done
+
+# --- The call sites, resolved once --------------------------------------------
+# Rows are
+#   "<script>\t<file>:<line>\t<verbs>\t<yes|no from a workflow>\t<bare|args-ok|args-missing>".
+#
+# The program is written to a file rather than piped, because § 5 runs it a second time
+# against a copy of the search roots with a call site renamed. That control cannot
+# mutate a tracked file - a gate that edits the repository it is checking is not a gate -
+# so it copies, mutates the copy, and points the same analyzer at it.
+
+program="$(mktemp)"
+sites_table="$(mktemp)"
+control_root="$(mktemp -d)"
+CONTROL_FIXTURES=()
+
+cleanup() {
+  rm -f "${program}" "${sites_table}" "${sites_table}.err"
+  rm -rf "${control_root}"
+  local fixture
+  for fixture in "${CONTROL_FIXTURES[@]-}"; do
+    [[ -n "${fixture}" ]] && rm -f "${REPO_ROOT}/${fixture}"
+  done
+}
+trap cleanup EXIT
+
+cat >"${program}" <<'CALL_SITES'
+"""Prints every real call site of every named gate script, with its reachability.
+
+    <repo-root> --roots <root>... --scripts <path>... [--invocations <path>|<args>...]
+
+One tab-separated row per accepted call site:
+
+    <script>  <file>:<line>  <verbs that reach it>  <yes|no reachable from a workflow>
+    <bare|args-ok|args-missing>
+
+and nothing for a script with no call site. A mention - prose, a comment, a
+diagnostic message, an unused constant - is not a call site and produces no row.
+
+--invocations names the arguments that make a dual-mode script a gate. The fifth
+column is 'bare' when no arguments are required, 'args-ok' when every required token
+appears in the same C# member or on the same shell command line as the path, and
+'args-missing' otherwise. See the header's note on that check's limit: same member is
+not same call site.
+"""
+from __future__ import annotations
+
+import os
+import re
+import sys
+from collections import defaultdict
+
+# --- comment stripping -------------------------------------------------------
+# A comment filter anchored at line start only is why "// see build/x.sh" was
+# rejected while "code(); // build/x.sh" was accepted. Both are comments.
+
+_URL_SCHEME = re.compile(r"([A-Za-z][A-Za-z0-9+.-]*)://")
+_SCHEME_MARK = "\x00SCHEME\x00"
+_SHELL_COMMENT = re.compile(r"(?:^|(?<=\s))#.*$")
+
+
+def strip_cs_comment(line):
+    """Removes a // comment anywhere on a C# line, protecting a URL scheme."""
+    protected = _URL_SCHEME.sub(lambda m: m.group(1) + _SCHEME_MARK, line)
+    return protected.split("//", 1)[0].replace(_SCHEME_MARK, "://")
+
+
+def strip_shell_comment(line):
+    """Removes a # comment from a shell/YAML line, keeping ${#x}, $# and $((...)).
+
+    The # must start a word, which is the rule the shell itself applies.
+    """
+    return _SHELL_COMMENT.sub("", line)
+
+
+# --- what counts as a call site ----------------------------------------------
+
+
+def cs_pattern(script):
+    """A C# call site: the complete string literal in argument position.
+
+    The closing quote rejects a diagnostic that merely names the script inside a
+    longer message. The following ',' or ')' rejects the two forms that survived the
+    closing quote alone and were counted as invocations: a concatenation
+    ("path" + " was never run") and a declaration (const string X = "path";).
+    """
+    return re.compile('"' + re.escape(script) + r'"\s*[,)]')
+
+
+def shell_pattern(script):
+    """A shell/YAML call site: the path in *command* position.
+
+    Command position, not "surrounded by delimiters": the previous character class
+    admitted a preceding '"', so echo "build/x.sh ..." and HINT="build/x.sh" both
+    read as invocations, and so did here-doc prose, whose words are separated by the
+    same spaces a command line uses. A command starts at the beginning of a line,
+    after ';', '&&', '||', '|', '(' or a backtick, or after a YAML step's run: key,
+    optionally behind an interpreter.
+    """
+    return re.compile(
+        r"(?:^|[;&|(`]|&&|\|\|)\s*"
+        r"(?:-\s+)?(?:run:\s*)?"
+        r"(?:(?:sudo|bash|sh|pwsh|exec|source|\.)\s+)*"
+        r"[\"']?(?:\./)?" + re.escape(script) + r"[\"']?"
+        r"(?=$|[\s;&|)\"'])"
+    )
+
+
+# --- C# members --------------------------------------------------------------
+# Attribution needs member granularity: TestVerb.cs holds RunFastTier, which
+# test-fast runs, and RunMainTier, which only test-main runs, and those are not the
+# same answer to "does a workflow reach this".
+
+_TYPE = re.compile(
+    r"^\s*(?:\[[^\]]*\]\s*)*"
+    r"(?:(?:public|internal|private|protected|static|sealed|abstract|partial|file"
+    r"|readonly|ref|unsafe)\s+)*"
+    r"(?:class|struct|interface|record|enum)\s+(\w+)"
+)
+_MEMBER = re.compile(
+    r"^\s*(?:\[[^\]]*\]\s*)*"
+    r"(?:(?:public|internal|private|protected|static|sealed|abstract|virtual|override"
+    r"|partial|readonly|const|extern|async|new|volatile|unsafe|required|event"
+    r"|implicit|explicit)\s+)*"
+    r"[\w<>,\[\]\.\?\(\)\s]*?(\w+)\s*(?:<[^>()]*>)?\s*(?:\(|=>|=|\{|;)"
+)
+_IDENTIFIER = re.compile(r"\b([A-Za-z_]\w*)\b")
+_QUALIFIED = re.compile(r"\b([A-Z]\w*)\.(\w+)\b")
+
+
+class Member:
+    def __init__(self, type_name, name):
+        self.type_name = type_name
+        self.name = name
+        self.lines = []
+
+    @property
+    def key(self):
+        return (self.type_name, self.name)
+
+    @property
+    def text(self):
+        return "\n".join(self.lines)
+
+
+def parse_cs(text):
+    """Returns line number -> member key, and member key -> member, for one file."""
+    owner = {}
+    members = {}
+    type_stack = []          # (type name, brace depth of its body)
+    pending_type = None
+    current = None
+    depth = 0
+    parens = 0
+
+    for number, raw in enumerate(text.splitlines(), start=1):
+        line = strip_cs_comment(raw)
+        stripped = line.strip()
+        inside = type_stack[-1] if type_stack else None
+        at_rest = (
+            inside is not None
+            and current is None
+            and depth == inside[1]
+            and parens == 0
+            and bool(stripped)
+            and stripped[0] not in "{}"
+        )
+
+        type_here = _TYPE.match(line) if stripped else None
+        if type_here is not None:
+            pending_type = type_here.group(1)
+            current = None
+        elif at_rest:
+            # A declaration may only begin where the previous one ended. A
+            # continuation line of a multi-line initializer looks exactly like a
+            # declaration on its own, which is how the verb registry's whole table
+            # was once read as one member per row.
+            member_here = _MEMBER.match(line)
+            if member_here is not None:
+                current = members.setdefault(
+                    (inside[0], member_here.group(1)),
+                    Member(inside[0], member_here.group(1)),
+                )
+
+        if current is not None:
+            current.lines.append(line)
+            owner[number] = current.key
+
+        for character in line:
+            if character == "(":
+                parens += 1
+            elif character == ")":
+                parens = max(0, parens - 1)
+            elif character == "{":
+                depth += 1
+                if pending_type is not None:
+                    type_stack.append((pending_type, depth))
+                    pending_type = None
+            elif character == "}":
+                if type_stack and type_stack[-1][1] == depth:
+                    type_stack.pop()
+                    current = None
+                depth -= 1
+
+        inside = type_stack[-1] if type_stack else None
+        if (
+            current is not None
+            and inside is not None
+            and depth == inside[1]
+            and parens == 0
+            and (stripped.endswith(";") or stripped.endswith("}"))
+        ):
+            current = None
+
+    return owner, members
+
+
+# --- the analysis ------------------------------------------------------------
+
+_WORKFLOW_VERB = re.compile(
+    r"(?:^|[;&|(`]|&&|\|\|)\s*(?:-\s+)?(?:run:\s*)?"
+    r"(?:bash\s+|sh\s+|pwsh\s+(?:-\w+\s+)*)?"
+    r"(?:\./)?build\.(?:sh|ps1)\s+([a-z][a-z0-9-]*)"
+)
+_ENTRY = re.compile(r"VerbDescriptor\.Implemented\(")
+
+
+def read(path):
+    with open(path, "r", encoding="utf-8", errors="replace") as handle:
+        return handle.read()
+
+
+def files_under(root_dir, roots, suffixes):
+    found = []
+    for root in roots:
+        absolute = os.path.join(root_dir, root)
+        if os.path.isfile(absolute):
+            if absolute.endswith(suffixes):
+                found.append(os.path.relpath(absolute, root_dir))
+            continue
+        for directory, subdirectories, names in os.walk(absolute):
+            subdirectories[:] = [
+                name for name in subdirectories
+                if name not in ("obj", "bin", ".git", "artifacts", ".godot", "generated")
+            ]
+            for name in names:
+                if name.endswith(suffixes):
+                    found.append(os.path.relpath(os.path.join(directory, name), root_dir))
+    return sorted(set(found))
+
+
+def workflow_verbs(root_dir):
+    """The verbs some workflow actually invokes through a root wrapper."""
+    verbs = set()
+    workflows = os.path.join(root_dir, ".github", "workflows")
+    if not os.path.isdir(workflows):
+        return verbs
+    for name in sorted(os.listdir(workflows)):
+        if name.endswith((".yml", ".yaml")):
+            for raw in read(os.path.join(workflows, name)).splitlines():
+                match = _WORKFLOW_VERB.search(strip_shell_comment(raw))
+                if match is not None:
+                    verbs.add(match.group(1))
+    return verbs
+
+
+def entry_points(registry_text, members):
+    """verb name -> the registered member that implements it.
+
+    The registration order is (name, effect, owner, handler, arguments...), so the
+    first qualified reference that resolves to a member is the handler and a
+    VerbArgument factory after it is not an entry point.
+    """
+    entries = defaultdict(set)
+    text = "\n".join(strip_cs_comment(line) for line in registry_text.splitlines())
+    for match in _ENTRY.finditer(text):
+        window = text[match.end():].split("VerbDescriptor.")[0]
+        verb = re.search(r'"([a-z][a-z0-9-]*)"', window)
+        if verb is None:
+            continue
+        for type_name, member_name in _QUALIFIED.findall(window):
+            if (type_name, member_name) in members:
+                entries[verb.group(1)].add((type_name, member_name))
+                break
+    return entries
+
+
+def closure(seeds, members, by_name):
+    """Members reachable from seeds. A qualified T.N is an edge to T.N; a bare N is
+    an edge to this type's N when it has one, and otherwise to every N there is.
+    Over-approximating widens what counts as reached, which can only make this gate
+    weaker in a way a reader can see, never redder than the truth."""
+    reached = set()
+    queue = [seed for seed in seeds if seed in members]
+    while queue:
+        key = queue.pop()
+        if key in reached:
+            continue
+        reached.add(key)
+        member = members[key]
+        for type_name, member_name in _QUALIFIED.findall(member.text):
+            candidate = (type_name, member_name)
+            if candidate in members and candidate not in reached:
+                queue.append(candidate)
+        for name in set(_IDENTIFIER.findall(member.text)):
+            same_type = (member.type_name, name)
+            if same_type in members:
+                if same_type not in reached:
+                    queue.append(same_type)
+                continue
+            for candidate in by_name.get(name, ()):
+                if candidate not in reached:
+                    queue.append(candidate)
+    return reached
+
+
+def main():
+    argv = sys.argv[1:]
+    root_dir = argv[0]
+    roots, scripts, invocations, bucket = [], [], [], None
+    for token in argv[1:]:
+        if token == "--roots":
+            bucket = roots
+        elif token == "--scripts":
+            bucket = scripts
+        elif token == "--invocations":
+            bucket = invocations
+        elif bucket is not None:
+            bucket.append(token)
+    roots = [root for root in roots if os.path.exists(os.path.join(root_dir, root))]
+
+    # path -> the argument tokens that select the gate mode.
+    required = {}
+    for entry in invocations:
+        path, _, arguments = entry.partition("|")
+        tokens = arguments.split()
+        if tokens:
+            required[path] = tokens
+
+    owners, stripped_cs, members = {}, {}, {}
+    for relative in files_under(root_dir, roots, (".cs",)):
+        text = read(os.path.join(root_dir, relative))
+        owner, file_members = parse_cs(text)
+        owners[relative] = owner
+        stripped_cs[relative] = [strip_cs_comment(line) for line in text.splitlines()]
+        for key, member in file_members.items():
+            members.setdefault(key, Member(*key)).lines.extend(member.lines)
+
+    by_name = defaultdict(set)
+    for key in members:
+        by_name[key[1]].add(key)
+
+    registry = os.path.join(root_dir, "src", "MechaMiner.Tools", "Cli", "VerbRegistry.cs")
+    entries = entry_points(read(registry), members) if os.path.isfile(registry) else {}
+
+    from_workflow = workflow_verbs(root_dir)
+    verbs_of = defaultdict(set)
+    for verb, seeds in entries.items():
+        for key in closure(seeds, members, by_name):
+            verbs_of[key].add(verb)
+
+    # A member "runs scripts" when it calls RunRepositoryScript, or when a member
+    # that references it does. The second half is what lets a table of gates live in
+    # a field the running method iterates over; without it a real call site in a
+    # static array would be rejected. Nothing further away is accepted: a string
+    # literal in a list nothing runs is a mention, not a call.
+    referrers = defaultdict(set)
+    for key, member in members.items():
+        for name in set(_IDENTIFIER.findall(member.text)):
+            for candidate in by_name.get(name, ()):
+                if candidate != key:
+                    referrers[candidate].add(key)
+
+    def runs_scripts(key):
+        if "RunRepositoryScript" in members[key].text:
+            return True
+        return any("RunRepositoryScript" in members[other].text for other in referrers[key])
+
+    def invocation_verdict(script, haystack):
+        """'bare', 'args-ok' or 'args-missing' for one call site.
+
+        The haystack is the enclosing C# member's text, or the one shell line. That is
+        the honest granularity available here and it is not proof that the arguments are
+        what this call site passes; the header says so where a reader will meet it.
+        """
+        tokens = required.get(script)
+        if not tokens:
+            return "bare"
+        return "args-ok" if all(token in haystack for token in tokens) else "args-missing"
+
+    shell_files = files_under(root_dir, roots, (".sh", ".ps1", ".yml", ".yaml", ".bash"))
+    rows = set()
+    for script in scripts:
+        cs_regex = cs_pattern(script)
+        shell_regex = shell_pattern(script)
+
+        for relative, lines in stripped_cs.items():
+            for number, line in enumerate(lines, start=1):
+                if cs_regex.search(line) is None:
+                    continue
+                key = owners[relative].get(number)
+                if key is None or not runs_scripts(key):
+                    continue
+                verbs = sorted(verbs_of.get(key, ()))
+                reached = any(verb in from_workflow for verb in verbs)
+                rows.add((
+                    script,
+                    relative + ":" + str(number),
+                    ",".join(verbs) if verbs else "(no verb)",
+                    "yes" if reached else "no",
+                    invocation_verdict(script, members[key].text),
+                ))
+
+        for relative in shell_files:
+            in_workflow = relative.startswith(".github/workflows/")
+            is_wrapper = relative in ("build.sh", "build.ps1")
+            for number, raw in enumerate(read(os.path.join(root_dir, relative)).splitlines(), 1):
+                stripped = strip_shell_comment(raw)
+                if shell_regex.search(stripped) is None:
+                    continue
+                if in_workflow:
+                    where, reached = "(workflow " + os.path.basename(relative) + ")", "yes"
+                elif is_wrapper:
+                    where, reached = "(root wrapper " + relative + ")", "yes"
+                else:
+                    where, reached = "(" + relative + ", neither a workflow nor a wrapper)", "no"
+                rows.add((
+                    script,
+                    relative + ":" + str(number),
+                    where,
+                    reached,
+                    invocation_verdict(script, stripped),
+                ))
+
+    for row in sorted(rows):
+        sys.stdout.write("\t".join(row) + "\n")
+    return 0
+
+
+raise SystemExit(main())
+CALL_SITES
+
+# resolve_sites <root-dir> <output-file> <invocations-array-name> <script>...
+# Runs the analyzer above. § 5 calls it a second time with a different root.
+resolve_sites() {
+  local root="$1" out="$2" invocation_array="$3"
+  shift 3
+  local -n requirements="${invocation_array}"
+  local -a arguments=("${root}" --roots "${SEARCH_ROOTS[@]}" --scripts "$@")
+  if [[ "${#requirements[@]}" -gt 0 ]]; then
+    arguments+=(--invocations "${requirements[@]}")
+  fi
+  python3 "${program}" "${arguments[@]}" >"${out}" 2>"${out}.err"
+}
+
+if ! resolve_sites "${REPO_ROOT}" "${sites_table}" invocations "${gates[@]}"; then
+  fail "the call-site analysis did not run; this gate cannot report a partition it did not compute"
+  sed 's/^/      /' "${sites_table}.err"
+  gate_summary "verify-gate-wiring" "${EXIT_VALIDATION}"
+  exit "${EXIT_VALIDATION}"
+fi
+
+# Every call site of one script, reachable from a workflow or not.
+all_sites() {
+  awk -F'\t' -v want="$1" '$1 == want { print }' "$2"
+}
+
+# Only the call sites a workflow reaches AND whose required arguments are present.
+# This is what "invoked" means. A call site with args-missing is a reachable bare
+# invocation of a dual-mode script, which is precisely the case the invocation field
+# exists to reject: it runs the script and it does not run the gate.
+reached_sites() {
+  awk -F'\t' -v want="$1" '$1 == want && $4 == "yes" && $5 != "args-missing" { print }' "$2"
+}
+
+is_exempt() {
+  local path="$1" array_name="$2" entry
+  local -n exemptions="${array_name}"
+  for entry in "${exemptions[@]}"; do
+    [[ "${entry%%|*}" == "${path}" ]] && return 0
+  done
+  return 1
+}
+
+# check_exemptions <exempt-array> <sites-table>
+check_exemptions() {
+  local -n exemptions="$1"
+  local table="$2"
+  local check_failures=0
+  local entry exempt_path reason
+
+  if [[ "${#exemptions[@]}" -eq 0 ]]; then
+    pass "the exemption list is empty, so every gate script must be reached"
+    return 0
+  fi
+
+  for entry in "${exemptions[@]}"; do
+    exempt_path="${entry%%|*}"
+    reason="${entry#*|}"
+
+    if [[ ! -f "${REPO_ROOT}/${exempt_path}" ]]; then
+      cfail "stale exemption: ${exempt_path} does not exist"
+      continue
+    fi
+
+    if [[ -z "${reason}" || "${reason}" == "${entry}" ]]; then
+      cfail "exemption for ${exempt_path} states no reason"
+      continue
+    fi
+
+    if [[ -n "$(reached_sites "${exempt_path}" "${table}")" ]]; then
+      cfail "${exempt_path} is exempted but is in fact reached from a workflow; remove the exemption"
+      continue
+    fi
+
+    # The reason is QUOTED, not verified. Three things were checked - the file exists, the
+    # entry states a reason, and no workflow reaches it - and every other assertion inside
+    # the reason text, including any exit code or duration, is unverified by this gate.
+    # Saying so on the line itself is the point: a green line that prints "exit 0 in 142 s"
+    # reads as a measurement this run just took.
+    pass "exempt: ${exempt_path} - exists, states a reason, not reached. REASON QUOTED, NOT VERIFIED: ${reason}"
+  done
+  return "${check_failures}"
+}
+
+# check_partition <gates-array> <exempt-array> <sites-table>
+check_partition() {
+  local -n gate_paths="$1"
+  local exempt_array="$2"
+  local table="$3"
+  local check_failures=0
+  local path reached first unreached
+
+  for path in "${gate_paths[@]}"; do
+    reached="$(reached_sites "${path}" "${table}")"
+
+    if [[ -n "${reached}" ]]; then
+      if is_exempt "${path}" "${exempt_array}"; then
+        # Reported by the exemption section as well; repeated here so the partition's
+        # own statement is complete in one place.
+        cfail "${path} is both reached and exempt"
+        continue
+      fi
+      first="$(printf '%s\n' "${reached}" | head -n 1)"
+      pass "reached: ${path}  <-  $(printf '%s' "${first}" | cut -f2) (verb $(printf '%s' "${first}" | cut -f3), $(printf '%s' "${first}" | cut -f5))"
+      continue
+    fi
+
+    if is_exempt "${path}" "${exempt_array}"; then
+      continue
+    fi
+
+    unreached="$(all_sites "${path}" "${table}")"
+    if [[ -n "${unreached}" ]]; then
+      cfail "${path} has a call site, but no workflow reaches it with the invocation the inventory requires."
+      printf '%s\n' "${unreached}" | while IFS=$'\t' read -r _ where verbs from_workflow arguments; do
+        printf '      %s: verbs %s, from a workflow %s, arguments %s\n' \
+          "${where}" "${verbs}" "${from_workflow}" "${arguments}"
+      done
+      printf '      A gate invoked by a verb no workflow runs is a gate nobody runs, and a\n'
+      printf '      dual-mode gate invoked without the arguments that select its gate mode is\n'
+      printf '      a script that runs and a gate that does not. Either move the call site into\n'
+      printf '      a verb the workflow invokes, pass the arguments the inventory names, add the\n'
+      printf '      verb to a workflow, or exempt it in build/verify-gate-wiring.sh with the reason.\n'
+      continue
+    fi
+
+    cfail "${path} is never invoked and is not on the deliberately-unwired list."
+    printf '      It runs only when a person remembers to type it, so any report of\n'
+    printf '      "all gates green" silently excludes it. Wire it into a verb some\n'
+    printf '      workflow runs, or add it to EXEMPT in build/verify-gate-wiring.sh\n'
+    printf '      with the reason.\n'
+  done
+  return "${check_failures}"
+}
+
+section "3. every exemption names a script that exists and is not reached (reason text is quoted, never re-measured)"
+
+# WHAT § 3 VERIFIES, AND WHAT IT DOES NOT. Three properties per entry: the path exists, the
+# reason field is non-empty, and no workflow reaches the script. Nothing else. In particular no
+# number inside a reason is re-measured - not an exit code, not a duration, not a finding count -
+# so every such figure is an observation stamped with the sha it was taken at and is read as
+# history rather than as a result of this run.
+#
+# Re-measuring them was considered and rejected on measured grounds, recorded here because the
+# alternative looks obviously better until the numbers are in. Running an exempted script from
+# this section would, for the five entries whose reasons state an exit code:
+#   - RECURSE. This gate runs inside ./build.sh build. verify-test-harness.sh invokes
+#     ./build.sh test-fast, which reaches verify-verbs.sh and verify-configurations.sh, which
+#     invoke ./build.sh build, which runs this file again. Its own reason records the observed
+#     result of wiring it: 452 s without terminating, killed, 13 nested build and 14 nested
+#     test-fast invocations. verify-format.sh recurses into format-check the same way and was
+#     killed at 200 s.
+#   - COST >= 390 s. 248 s for verify-format.sh plus 142 s for verify-test-harness.sh, against a
+#     gate that presently finishes in seconds. That runtime is the very thing their exemptions
+#     exist to record, so a § 3 that re-measured them would be doing what the entries say cannot
+#     be done here.
+#   - BREAK HERMETICITY. derive_citation_pass_expectations.py reads --previous-ref, defaulting to
+#     origin/master, a moving remote ref. Measured at 6f09da1: 1372 FAIL lines against e17b8b6
+#     where the entry records 7 against an earlier master. This gate's exit would then depend on
+#     where somebody else's push left a branch, and on when this clone last fetched.
+#   - DIRTY THE TREE. That script's bare mode rewrites
+#     src/MechaMiner.Tools/ContentImport/expected_citation_deltas.json, and several reasons state
+#     facts about both modes, so re-measuring them means running the mutating one.
+# What is NOT a ground, stated so the argument is not padded: they are not slow individually and
+# need no built artifact - the three ContentImport scripts run in 0.2 s, 1.1 s and 1.6 s at
+# 6f09da1 and are pure Python. The objections above are recursion, aggregate cost, hermeticity
+# and tree mutation, in that order.
+check_failures=0
+exemption_report="$(check_exemptions EXEMPT "${sites_table}")"
+exemption_failures=$?
+printf '%s\n' "${exemption_report}"
+gate_add_failures "${exemption_failures}"
+
+section "4. every gate script is reached from a workflow or exempt, and never both"
+
+check_failures=0
+partition_report="$(check_partition gates EXEMPT "${sites_table}")"
+partition_failures=$?
+printf '%s\n' "${partition_report}"
+gate_add_failures "${partition_failures}"
+
+# --- § 5: the negative controls ------------------------------------------------
+# In band, in this script, on every run, for the same reason FND-004 carries its
+# seventeen here rather than in a note: a control that lives in a registry summary is a
+# claim about a control, and the only thing that makes a red observation a fact is
+# running it. VER-FND-005-010 claimed three of these and committed none; two of the
+# three had never been run at all.
+#
+# Each control states the injected violation and the class it expects. They inject
+# inputs into the very functions §§ 1-4 just ran - not copies of them - so a control
+# cannot pass against logic the gate does not use.
+
+section "5. negative controls: each check above can actually fail (VER-FND-005-010)"
+
+controls_run=0
+readonly EXPECTED_CONTROLS=8
+
+# expect_red <name> <expected-failure-count-at-least> <report> <count>
+# Every line this prints is manufactured by a control's fixture, INCLUDING the FAIL lines
+# it quotes out of the report, so all of it goes through the marked emitters.
+#
+# That quoting is the confirmation trap this marking exists for. § 5 runs eight controls
+# whose fixtures produce real-looking failure text - a synthetic
+# verify-zzz-unclassified-control.sh being unclassified, a deliberately broken
+# verify-godot.sh call site - and every one of those lines is printed on a GREEN run. A
+# reader who predicted a cause, grepped this log for the string that cause would produce,
+# and found it here would stop looking. That happened: a session found its expected string
+# twice inside these fixtures and nearly shipped a fix for the wrong section, when the real
+# failure was § 2's classification check covering three scripts rather than § 4's wiring
+# check covering one. `grep -v '[control-fixture]'` now leaves only genuine findings, and
+# the summary names the failing section so the log does not have to be grepped at all.
+expect_red() {
+  local name="$1" want="$2" report="$3" count="$4"
+  controls_run=$((controls_run + 1))
+  if [[ "${count}" -ge "${want}" ]]; then
+    control_pass "control: ${name} -> ${count} failure(s), as designed"
+    control_detail < <(grep '^FAIL' <<<"${report}")
+  else
+    control_fail "control: ${name} produced ${count} failure(s); the check it exercises cannot fail, so its green means nothing"
+    control_detail <<<"${report}"
+  fi
+}
+
+# --- 5a. a new script that nothing classifies ---------------------------------
+# The injected violation is a real file, so both enumerators have to see it and § 2 has
+# to notice it is unclassified. This is the control VER-FND-005-010 described as
+# "a new build/verify-zzz-probe.sh that is neither wired nor listed".
+readonly UNCLASSIFIED_FIXTURE="build/verify-zzz-unclassified-control.sh"
+CONTROL_FIXTURES+=("${UNCLASSIFIED_FIXTURE}")
+cat >"${REPO_ROOT}/${UNCLASSIFIED_FIXTURE}" <<'FIXTURE'
+#!/usr/bin/env bash
+# Deliberately unclassified script, written and removed by build/verify-gate-wiring.sh.
+exit 0
+FIXTURE
+
+mapfile -t control_extension < <(enumerate_by_extension)
+mapfile -t control_shebang < <(enumerate_by_shebang)
+mapfile -t control_scripts < <(
+  printf '%s\n' "${control_extension[@]}" "${control_shebang[@]}" \
+    | grep -v '^$' | LC_ALL=C sort -u
+)
+
+check_failures=0
+report="$(check_inventory INVENTORY control_scripts)"
+count=$?
+expect_red "an unclassified script in the tree" 1 "${report}" "${count}"
+
+# The same fixture, now classified as a gate that nothing calls. Two distinct defects
+# hide behind one file: not being classified, and being classified and never run.
+control_inventory=("${INVENTORY[@]}" "${UNCLASSIFIED_FIXTURE}|gate||a control fixture, classified so that the partition rather than the inventory is what has to reject it")
+mapfile -t control_gates < <(gates_of control_inventory)
+
+check_failures=0
+report="$(check_partition control_gates EXEMPT "${sites_table}")"
+count=$?
+expect_red "a gate that is classified, unwired and unexempted" 1 "${report}" "${count}"
+
+rm -f "${REPO_ROOT}/${UNCLASSIFIED_FIXTURE}"
+
+# --- 5b. the two enumerators disagreeing --------------------------------------
+# Two real files, one each way. A shebang with no known extension is the hole the
+# extension enumerator has; a known extension with no shebang is the hole the shebang
+# enumerator has. Neither is hypothetical - .ps1 needs no shebang.
+readonly SHEBANG_ONLY_FIXTURE="build/zzz-shebang-only-control"
+readonly EXTENSION_ONLY_FIXTURE="build/zzz-extension-only-control.sh"
+CONTROL_FIXTURES+=("${SHEBANG_ONLY_FIXTURE}" "${EXTENSION_ONLY_FIXTURE}")
+
+printf '#!/usr/bin/env bash\n# control fixture, removed by build/verify-gate-wiring.sh\nexit 0\n' \
+  >"${REPO_ROOT}/${SHEBANG_ONLY_FIXTURE}"
+printf '# control fixture with no shebang, removed by build/verify-gate-wiring.sh\nexit 0\n' \
+  >"${REPO_ROOT}/${EXTENSION_ONLY_FIXTURE}"
+
+mapfile -t control_extension < <(enumerate_by_extension)
+mapfile -t control_shebang < <(enumerate_by_shebang)
+
+check_failures=0
+report="$(check_enumerators control_extension control_shebang)"
+count=$?
+expect_red "a shebang with no known extension, and a known extension with no shebang" 2 \
+  "${report}" "${count}"
+
+rm -f "${REPO_ROOT}/${SHEBANG_ONLY_FIXTURE}" "${REPO_ROOT}/${EXTENSION_ONLY_FIXTURE}"
+
+# The fixtures must be gone, or the gate has littered the tree it is checking. Compared
+# against § 1's own verdict rather than against zero, so a pre-existing disagreement -
+# which § 1 already failed on - is not reported a second time here.
+mapfile -t control_extension < <(enumerate_by_extension)
+mapfile -t control_shebang < <(enumerate_by_shebang)
+check_failures=0
+report="$(check_enumerators control_extension control_shebang)"
+count=$?
+if [[ "${count}" -eq "${enumerator_failures}" ]]; then
+  control_pass "control fixtures removed: the enumerators report what they reported in § 1"
+else
+  control_fail "control fixtures were not cleaned up: the enumerators now report ${count} failure(s), § 1 saw ${enumerator_failures}"
+fi
+
+# --- 5c. a classification that names a file that is not there -----------------
+control_inventory=("${INVENTORY[@]}" "build/verify-does-not-exist.sh|gate||a control entry for a file that was never here")
+check_failures=0
+report="$(check_inventory control_inventory scripts)"
+count=$?
+expect_red "an inventory entry naming a nonexistent file" 1 "${report}" "${count}"
+
+# An unknown kind, which is the other way an entry can be wrong without being stale.
+control_inventory=("${INVENTORY[@]/build\/verify-godot.sh|gate|/build\/verify-godot.sh|probably-a-gate|}")
+check_failures=0
+report="$(check_inventory control_inventory scripts)"
+count=$?
+expect_red "an inventory entry with a kind this file does not know" 1 "${report}" "${count}"
+
+# --- 5d. a stale exemption ----------------------------------------------------
+# VER-FND-005-010's second claimed control. It had never been run.
+control_exempt=("${EXEMPT[@]}" "build/verify-was-deleted.sh|a control exemption for a script that does not exist")
+check_failures=0
+report="$(check_exemptions control_exempt "${sites_table}")"
+count=$?
+expect_red "an exemption naming a script that does not exist" 1 "${report}" "${count}"
+
+# --- 5e. a renamed call site --------------------------------------------------
+# VER-FND-005-010's third claimed control, and the only one that needs the analyzer
+# rather than the shell logic: "renaming the godot-import verb's call site away from
+# build/verify-godot.sh fails the check by name". It cannot mutate a tracked file -
+# a gate that edits the repository it is checking is not a gate - so it copies the
+# search roots, renames the call site in the COPY, and points the same analyzer at it.
+readonly RENAME_TARGET="build/verify-godot.sh"
+readonly RENAME_REPLACEMENT="build/verify-godot-renamed-by-a-control.sh"
+
+for root in "${SEARCH_ROOTS[@]}"; do
+  [[ -e "${REPO_ROOT}/${root}" ]] || continue
+  mkdir -p "${control_root}/$(dirname -- "${root}")"
+  cp -R "${REPO_ROOT}/${root}" "${control_root}/${root}"
+done
+
+# Only the call sites move. The script itself is not copied and not renamed: the
+# defect being injected is "the verb now calls something else", which is exactly what a
+# rename that forgets a call site produces.
+while IFS= read -r file; do
+  LC_ALL=C sed -i "s|${RENAME_TARGET}|${RENAME_REPLACEMENT}|g" "${file}"
+done < <(grep -rl --binary-files=without-match -F "${RENAME_TARGET}" "${control_root}" 2>/dev/null)
+
+control_sites="$(mktemp "${control_root}/sites.XXXXXX")"
+if ! resolve_sites "${control_root}" "${control_sites}" invocations "${gates[@]}"; then
+  control_fail "control: the renamed-call-site control could not run the analyzer at all"
+  control_detail < <(sed 's/^/        /' "${control_sites}.err")
+  controls_run=$((controls_run + 1))
+else
+  check_failures=0
+  report="$(check_partition gates EXEMPT "${control_sites}")"
+  count=$?
+  expect_red "the godot-import call site renamed away from ${RENAME_TARGET}" 1 "${report}" "${count}"
+  # Here-string, not a pipe: `grep -q` exits on its first match, printf takes SIGPIPE, and
+  # `set -o pipefail` reports 141 - which on this negated test reads as "the report does not
+  # name it" and would fabricate a control failure. See delivery-waves § Decision 13.
+  if ! grep -q "${RENAME_TARGET}" <<<"${report}"; then
+    control_fail "control: the renamed-call-site control went red without naming ${RENAME_TARGET}; a failure that does not say which gate is unrun is not the one this control is for"
+  fi
+fi
+
+# --- 5f. a dual-mode gate reached only bare -----------------------------------
+# The invocation field's own control. No entry sets field 3 at this revision, so the
+# control supplies one: verify-godot.sh is really reached from godot-import, and no call
+# site passes --verify, so an entry requiring --verify must turn that reach into a
+# failure. Without this the mechanism would be committed and unobserved, which is the
+# defect this section exists to stop repeating.
+control_inventory=("${INVENTORY[@]/build\/verify-godot.sh|gate||/build\/verify-godot.sh|gate|--verify|}")
+mapfile -t control_invocations < <(invocations_of control_inventory)
+control_dual_sites="$(mktemp "${control_root}/dual.XXXXXX")"
+if ! resolve_sites "${REPO_ROOT}" "${control_dual_sites}" control_invocations "${gates[@]}"; then
+  control_fail "control: the dual-mode control could not run the analyzer at all"
+  control_detail < <(sed 's/^/        /' "${control_dual_sites}.err")
+  controls_run=$((controls_run + 1))
+else
+  check_failures=0
+  report="$(check_partition gates EXEMPT "${control_dual_sites}")"
+  count=$?
+  expect_red "a gate whose inventory entry requires --verify, reached only bare" 1 \
+    "${report}" "${count}"
+fi
+
+# A control set that quietly shrinks proves less than it claims, so the count is
+# asserted rather than assumed - FND-004's reason for doing the same.
+echo
+# Deliberately unmarked, unlike everything else in § 5: this is an assertion about the
+# control SET rather than output manufactured by a control, it quotes no fixture text, and
+# "the control set shrank" is precisely a finding a reader excluding control output still
+# needs to see.
+if [[ "${controls_run}" -eq "${EXPECTED_CONTROLS}" ]]; then
+  pass "all ${EXPECTED_CONTROLS} negative controls ran"
+else
+  fail "${controls_run} of ${EXPECTED_CONTROLS} negative controls ran; a control set that shrank proves less than it claims"
+fi
+
+# This gate's own § 5 is eight in-band controls, so it is the strongest instance of the
+# problem gate_assert_marking guards. Prove the separation still holds before summarising.
+gate_assert_marking
+
+gate_summary "verify-gate-wiring" "${EXIT_VALIDATION}"

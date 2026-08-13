@@ -1,0 +1,444 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "SIM-004",
+  "workPackageTitle": "Command admission, sequence/idempotency, paused transaction shell",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91 \u00a7 Verification registry). This file is the first commit of the W1-SIM stream: no SIM production type or test class named by a selector below exists yet.",
+    "The structural validator for this file is owned by TASK-FND-009-002. Until it lands, the shape here matches tests/verification/FND-002.json and tests/verification/FND-003.json exactly.",
+    "Status is current status: every entry is 'registered' because no implementing task has landed. A later commit flips an entry to 'implemented' only when its selector actually runs and passes, as tests/verification/FND-002.json and tests/verification/FND-003.json do.",
+    "Every nunit selector is a fully qualified 'Namespace.Class.Method' so one entry names exactly one test method. Test namespaces mirror production namespaces per doc 114 \u00a7 Naming and file-placement defaults; the full type and method layout the implementation must produce is fixed in the W1-SIM design contract handed to the implementation tasks.",
+    "doc 110 registers the SIM work packages but not their task IDs. SIM-004 splits into TASK-SIM-004-001, the active command path (command envelope of CTR-RUN-002, movement intent normalization, admission gate of CMP-SIM-002, typed rejection), and TASK-SIM-004-002, the paused transaction shell (request and result of CTR-RUN-003, expected state version, idempotency key). doc 110 lists both in one package because they share the admission gate, but they are separately landable.",
+    "The paused transaction entries assert the shell only: expected-state-version checking, atomicity between ticks, typed rejection, and idempotent replay. The domain validations doc 20 \u00a7 Paused transactions lists - ownership, availability, slot capacity, duplication, cost, prerequisites, branch exclusivity, integer overflow - belong to the packages that own fabrication, relics, and PowerUps, and will register their own entries.",
+    "One guard in the command path is structurally unreachable from any public entry point, so nothing in this file verifies it, and its reason is stated as something someone could try to falsify, naming the grep that would do it, because a label is the one claim in this file no negative control can test. CommandAdmissionGate.CommitApplied's applied-history Dictionary.Add. CommitApplied is private with exactly one call site, which Apply places after a duplicate-key precondition on the same dictionary, so no statement in the commit is ahead of that check. Between the check and the Add, the only outward call is the staging callback, and a re-entrant Apply from it fails at SnapshotPublisher.BeginTick before reaching the history. To falsify: add a second call site for CommitApplied, move a mutation ahead of the precondition, or find a path from the staging callback to _appliedByClientCommandSequence. Grep: 'CommitApplied(', '_appliedByClientCommandSequence'. It is kept, and visibility is not widened to reach it, because it is a last-resort invariant against a future in-assembly caller that reaches CommitApplied by another route. Reaching it with the key already present would be the double-apply rather than a defence against one, so the throw is a report and not a refusal: VER-SIM-004-001's 'applied at most once' rests on the idempotency check and the monotonic state-version check, and never on this write.",
+    "The 'platforms' list records the platforms an entry has actually been executed on, not the platforms its subject is intended to support, following tests/verification/FND-001.json and FND-002.json, which state the same convention and were corrected to it. On that reading windows-x64 and osx-arm64 are declared applicable and unexercised for every entry in this file: the subjects are portable .NET with no platform-conditional code, so they are expected to hold there, and that expectation is not coverage. linux-x64 is the only platform any run has covered. The linux-x64 result is now a runner's record and not only a local invocation: workflow 'fast suite' run 31097680603, job 'fast (bootstrap, format-check, build, test-fast, godot-import)', completed successfully on head 5a3f3ac at 2026-08-06T11:38:04Z on a pinned ubuntu-24.04 runner, reporting test-fast total 147, passed 147, failed 0, skipped 0. Read that record as covering the merged tree rather than this branch's tree: when it was taken .github/workflows/fast.yml was not in this branch at all, it was on the base branch, and a pull_request event resolves workflows from the merge of head into base, so what ran green was the tree that would land. The rest of what this note used to say here has been falsified by the base and is corrected rather than left to rot. It said this branch's own commit had never been run alone by a runner and that a push to it starts no workflow because its tree contains none; the base merge brought that workflow into this branch's tree, so the second clause is now false. Its triggers are pull_request, push, unfiltered on purpose, and workflow_dispatch, so a push to this branch does start a run, of this branch's own tree, and a pull request also gets pull_request runs of the merged tree whenever the branch it merges into carries the workflow too. Which runs exist for a given commit is a fact about the remote at the moment of reading and not about this file, so the run named above is recorded as the past measurement it is, with its head and its timestamp, and no claim is made here about what has run since. The retained artifact under artifacts/verbs/ still names the local invocation and its source_revision. Adding a platform back to any entry here requires a real run on it, which needs a runner FND-005 owns. No entry field holds 'applicable but unexercised': doc 91 \u00a7 Verification registry lists the accepted fields and there is no 'pendingPlatforms', so this note is where the applicability claim lives rather than a field invented for it.",
+    "tests/verification/SIM-negative-controls.md, a sibling of this file, is the whole negative-control record for the seven SIM packages: for each control the perturbation, the exact command, the exact failure text, and the forced-rebuild method that makes a transcript a claim about a build rather than about a source file. It is committed rather than cited from a reviewer's scratch directory, because a path only one person can open is not evidence; the transcripts that used to live in five session evidence files outside the repository are now in it. It is not scoped by an evidenceKinds value: the entries whose control it records name it in their own fixtures, qualified by section. Its \"Which entry each section controls\" table is the index over all seven files and is authoritative for what follows. In this file all 13 entries name it: VER-SIM-004-001, VER-SIM-004-002, VER-SIM-004-003, VER-SIM-004-004, VER-SIM-004-005, VER-SIM-004-006, VER-SIM-004-007, VER-SIM-004-008, VER-SIM-004-009, VER-SIM-004-010, VER-SIM-004-011, VER-SIM-004-012, VER-SIM-004-013. Every entry in this file has a behavioural gate and every one got a transient perturbation, which is why this is the only one of the seven files with no uncovered entry. VER-SIM-004-012 does now name the document: weakening the shared assertion it rests on is recorded, which is the control this file previously said was not in the tree. VER-SIM-004-009 names four sections, because the one-control-per-guard pass replaced a single control over a behaviour with one control per mechanism and found that one of the three mechanisms was not a guard at all. The third review pass adds a section to four of these entries and does not change the count, since every entry here already named the document. Three of the four are marked 'second test of the claim', the third kind of credit that document's index defines. The exception is worth reading: \u00a7 A rejection reason is given a value the counter array cannot index reddens VER-SIM-004-013's own selector, so it is credited unqualified, and it was not written for that entry. It gives a rejection enum member a value one past the end of the counter arrays the gate sizes from the member count, which throws IndexOutOfRangeException from inside a refusal path and so replaces the typed rejection CTR-RUN-003 requires. That dependency on the enum values running contiguously from zero was recorded nowhere before this pass, and the member the defect branch added satisfied it by arithmetic rather than by a check.",
+    "On 'negative-control' in evidenceKinds. doc 91 \u00a7 What a kind may name rules that a technique is not a kind, and excludes the value from the minted inventory a kind must be added to before it may appear in a registry file, so it is a defect to correct in this file rather than a value grandfathered into it. Correcting it is a removal and not a substitution, because a negative control's evidence is not a different form of thing from an ordinary test's: a control run as an NUnit test produces exactly the artifact form a positive NUnit test produces. So an affected entry takes the kind its artifact form already gives it, which is the kind it already carries: 'test-counts' with 'test-output' for an nunit selector, the pair 53 positive nunit entries of that shape across these registries carry, and 'golden-text' with 'test-counts' and 'text-diff' for a golden comparison, the shape 11 positive entries carry. Nothing is minted, no kind is added, and no entry loses a kind its evidence needs. What the label carried is that the gate has a negative control, which is a fact about the gate and not about the form of its evidence, so it is required here to appear in prose that can say what a label could not: the entry summary names the perturbation injected and what was observed, and where tests/verification/SIM-negative-controls.md records that control the entry's fixtures name it, qualified by section, so the entry's own pointer reaches the transcript rather than only the artifact that cannot demonstrate a control. Summary text in these files is otherwise not reworded; the integration owner authorized 'summary or notes' for this correction specifically, and summary is the only per-entry prose field available, because doc 91 \u00a7 Verification registry lists the accepted entry fields and no per-entry 'notes' is among them, while doc 115 \u00a7 Schema registry has SCH-QUA-001 reject unknown fields. A field invented to hold it would repeat exactly the coining that produced this defect."
+  ],
+  "entries": [
+    {
+      "id": "VER-SIM-004-001",
+      "summary": "A command is applied at most once: resubmitting an envelope with the same run identity, target tick, and sequence is rejected as a duplicate and mutates nothing, including when the resubmission arrives in a later tick.",
+      "task": "TASK-SIM-004-001",
+      "requirements": [
+        "TR-RUN-004",
+        "TR-CTR-002"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#commands-and-mutations",
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Commands.CommandAdmissionGateTests.ACommandIsAppliedAtMostOnce"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 A command is applied more than once"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-004-002",
+      "summary": "A stale, duplicate, or invalid envelope returns a typed rejection reason and leaves the admitted command set and the committed state byte-identical, so a rejection is never a partial mutation.",
+      "task": "TASK-SIM-004-001",
+      "requirements": [
+        "TR-RUN-004",
+        "TR-CTR-002"
+      ],
+      "technicalSources": [
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry",
+        "docs/technical/10-runtime-architecture.md#commands-and-mutations"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Commands.CommandAdmissionGateTests.StaleDuplicateAndInvalidEnvelopesRejectWithoutMutation"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 A refusal touches authoritative state",
+        "tests/verification/SIM-negative-controls.md \u00a7 The gate's authoritative rendering loses its highest-sequence field",
+        "tests/verification/SIM-negative-controls.md \u00a7 The gate's diagnostic rendering loses its rejection total",
+        "tests/verification/SIM-negative-controls.md \u00a7 The admitted set's rendering loses its count",
+        "tests/verification/SIM-negative-controls.md \u00a7 A rejection reason is given a value the counter array cannot index"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-004-003",
+      "summary": "The command sequence is monotonic per run: a sequence at or below the highest already-admitted sequence is rejected, a gap is admitted without being backfilled, and no admitted envelope is ever reordered relative to another.",
+      "task": "TASK-SIM-004-001",
+      "requirements": [
+        "TR-RUN-004"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#commands-and-mutations",
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Commands.CommandAdmissionGateTests.SequenceIsMonotonicAndNeverReordered"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 A sequence regression is admitted"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-004-004",
+      "summary": "Run-session identity fences admission: an envelope carrying another run's identity is rejected on identity alone, without its payload being normalized or inspected.",
+      "task": "TASK-SIM-004-001",
+      "requirements": [
+        "TR-RUN-004",
+        "TR-CTR-004"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#commands-and-mutations",
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Commands.CommandEnvelopeTests.AForeignRunIdentityIsRejectedBeforePayloadInspection"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 The foreign-run fence is checked second"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-004-005",
+      "summary": "Movement intent is normalized to a planar vector with magnitude in [0,1]: an over-unit analog magnitude clamps, each of the eight digital directions - including the four diagonals - normalizes to exactly unit length within a named tolerance, and zero input is an explicit stop rather than a tiny direction.",
+      "task": "TASK-SIM-004-001",
+      "requirements": [
+        "TR-RUN-004"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#active-commands",
+        "docs/technical/91-verification-strategy.md#numeric-tolerance"
+      ],
+      "gameplaySources": [
+        "docs/30-combat-weapons-movement-camera.md#direct-controls",
+        "docs/72-player-survivability-and-damage-baseline.md#movement-and-speed-modifiers"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Commands.MovementIntentTests.MagnitudeClampsAndDigitalDiagonalsNormalizeToUnitLength"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 Movement normalizes by the wrong divisor"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-004-006",
+      "summary": "Commands are admitted and normalized in the first phase of the tick and are immutable thereafter: a command admitted for tick N is visible to tick N, is not visible to tick N-1, and no later phase can alter or append to that tick's admitted set.",
+      "task": "TASK-SIM-004-001",
+      "requirements": [
+        "TR-RUN-004",
+        "TR-RUN-005",
+        "TR-CTR-004"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#system-phase-ordering",
+        "docs/technical/20-simulation-core.md#tick-transaction"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Commands.CommandAdmissionGateTests.AdmittedCommandsAreFrozenForTheTickTheyTarget"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 The tick's admitted set is not frozen",
+        "tests/verification/SIM-negative-controls.md \u00a7 The frozen-tick refusal is neutralised",
+        "tests/verification/SIM-negative-controls.md \u00a7 The admitted set's rendering loses its count"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-004-007",
+      "summary": "A paused transaction is all-or-nothing between ticks: an accepted request publishes exactly one new state version with its domain events, a rejected one leaves the state version and every field unchanged, and no tick executes while the transaction is in flight.",
+      "task": "TASK-SIM-004-002",
+      "requirements": [
+        "TR-RUN-004",
+        "TR-RUN-003"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#paused-transactions",
+        "docs/technical/10-runtime-architecture.md#pause-contract"
+      ],
+      "gameplaySources": [
+        "docs/20-run-structure-and-timing.md#on-demand-crafting-pauses",
+        "docs/20-run-structure-and-timing.md#relic-resolution-pauses"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Commands.PausedTransactionTests.CommitIsAllOrNothingBetweenTicks"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 Commit mutates before its last validation"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-004-008",
+      "summary": "A stale expected state version changes nothing and returns a typed rejection: the immutable view captured when the pause opened is refused once the authoritative version has moved on, and the caller learns why.",
+      "task": "TASK-SIM-004-002",
+      "requirements": [
+        "TR-RUN-004",
+        "TR-CTR-004"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#paused-transactions",
+        "docs/technical/10-runtime-architecture.md#pause-contract",
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Commands.PausedTransactionTests.AStaleExpectedStateVersionChangesNothing"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 A stale expected state version is accepted"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-004-009",
+      "summary": "An idempotency key makes a replayed transaction observe the already-applied result rather than applying twice: the second submission returns the first result, the state version advances once, and the domain events are emitted once.",
+      "task": "TASK-SIM-004-002",
+      "requirements": [
+        "TR-RUN-004",
+        "TR-CTR-004"
+      ],
+      "technicalSources": [
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry",
+        "docs/technical/20-simulation-core.md#paused-transactions"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Commands.PausedTransactionTests.ReplayWithTheSameIdempotencyKeyObservesTheAppliedResult"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 A replay is refused without observing the applied result",
+        "tests/verification/SIM-negative-controls.md \u00a7 One control per replay guard",
+        "tests/verification/SIM-negative-controls.md \u00a7 The commit precondition, and the contrast that proves it is the guard",
+        "tests/verification/SIM-negative-controls.md \u00a7 A spent idempotency key is replayed under a different action"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-004-010",
+      "summary": "An accepted paused transaction publishes a replacement snapshot before resumption, so no tick ever runs against a state the presentation has not been given.",
+      "task": "TASK-SIM-004-002",
+      "requirements": [
+        "TR-RUN-003",
+        "TR-SIM-005"
+      ],
+      "technicalSources": [
+        "docs/technical/10-runtime-architecture.md#pause-contract",
+        "docs/technical/20-simulation-core.md#presentation-snapshot"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Commands.PausedTransactionTests.ReplacementSnapshotIsPublishedBeforeResumption"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 A refused transaction publishes"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-004-011",
+      "summary": "Over randomized envelope streams containing out-of-order, duplicated, stale, and foreign-run entries, the admitted sequence equals a deliberately simple reference model's and no rejected envelope ever mutated state, with the seed logged before the body runs.",
+      "task": "TASK-SIM-004-001",
+      "requirements": [
+        "TR-RUN-004",
+        "TR-QUA-002"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#reference-models",
+        "docs/technical/10-runtime-architecture.md#commands-and-mutations"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Commands.CommandAdmissionPropertyTests.AdmittedSequenceMatchesTheReferenceModel"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 The reference model disagrees about a rejection reason"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "seed-identity",
+        "minimized-input-artifact"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-004-012",
+      "summary": "A negative control proves the command gates can fail: a stub gate that keeps no deduplication history makes VER-SIM-004-001 fail, and a stub transaction that mutates before validating makes VER-SIM-004-007 and VER-SIM-004-008 fail.",
+      "task": "TASK-SIM-004-002",
+      "requirements": [
+        "TR-QUA-001",
+        "TR-RUN-004"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#acceptance-evidence",
+        "docs/technical/10-runtime-architecture.md#commands-and-mutations"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Commands.CommandAdmissionNegativeControlTests.IdempotenceAndAtomicityAssertionsFailAgainstDeliberatelyBrokenStubs"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 SIM-004's permanent negative control, with its shared assertion weakened"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-SIM-004-013",
+      "summary": "A paused-transaction commit that throws part way through invalidates the tick rather than wedging the run: for a throw from the staging callback and for a domain buffer handed in already open for another tick, nothing is published, the state version and the whole authoritative rendering are unchanged, the publisher's tick is invalidated and counted, and a subsequent BeginTick and a retry of the same transaction both succeed. TR-RUN-007 states the no-partial-state requirement unqualified and cites doc 20 \u00a7 Mid-commit invalidation, which rules on exactly this case: the tick is invalidated, only the buffers the commit itself opened and left with nothing unconsumed are released, and the exception is rethrown unchanged. Two negative controls, one per half of that ruling, are recorded with their commands and their exact failure text in tests/verification/SIM-negative-controls.md. Putting Apply's call to AbandonPartialCommit behind the runtime-impossible condition _runSession == 0UL leaves the commit rethrowing while recovering nothing, and the gate goes red on IsTickOpen (expected False, was True) and on InvalidatedTickCount (expected 1, was 0), while the assertions that nothing was published and no version advanced still pass, which is why a test asserting only those would not have caught the defect. Neutralising the !domainBufferWasOpen condition inside AbandonPartialCommit makes the recovery release a domain buffer belonging to another tick, and reddens the same gate.",
+      "task": "TASK-SIM-004-002",
+      "requirements": [
+        "TR-RUN-007",
+        "TR-RUN-003",
+        "TR-RUN-004"
+      ],
+      "technicalSources": [
+        "docs/technical/112-normative-requirement-index.md#foundation-and-runtime",
+        "docs/technical/20-simulation-core.md#mid-commit-invalidation",
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Commands.PausedTransactionTests.AFailedCommitInvalidatesTheTickInsteadOfWedgingTheRun"
+      },
+      "fixtures": [
+        "tests/verification/SIM-negative-controls.md \u00a7 Commands: the two mid-commit recovery controls",
+        "tests/verification/SIM-negative-controls.md \u00a7 The mid-commit invalidation path is disabled",
+        "tests/verification/SIM-negative-controls.md \u00a7 The failed commit keeps the presentation buffer it opened",
+        "tests/verification/SIM-negative-controls.md \u00a7 A rejection reason is given a value the counter array cannot index"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    }
+  ]
+}

@@ -101,6 +101,18 @@ An entity ID contains a reusable storage index and a generation. Reusing a slot 
 - Invalid, expired, or generation-mismatched references fail closed and produce a diagnostic counter.
 - Stable ordering uses the full entity ID after a system's authored priority keys.
 
+The identity carries the run session as well as the reusable storage index and the generation. The two components named at the head of this section are the ones a session reuses, not the whole identity; the run session is the third, and carrying it inside the identity is how the uniqueness scope stated above is enforced rather than merely asserted. Two runs legitimately allocate the same storage index at the same generation, so an identity that leaked across a run boundary is indistinguishable from a live one unless the run session travels inside the identity itself. The run session is also what makes the type fail closed: a default or unset run session leaves the identity structurally invalid, so a default-constructed identity is rejected instead of becoming an accidentally valid reference to whatever currently occupies the first slot.
+
+The full entity ID compares by run session, then storage index, then generation. Storage index must precede generation because it is the only component that discriminates among simultaneously live entities: two live records in one run session never share a storage index, so a comparison over a live entity set resolves on storage index and never reaches the generation. Generation exists to order records that share a recycled slot, which arises only where records from different lifetimes of one slot coexist: recovery snapshots, persisted history, and retained diagnostic or statistics records, never a live entity set. Run session leads because it is the outermost component of the identity, so the comparison order follows the same nesting the identity has.
+
+Generation is therefore not exercised by any fixture whose records all carry distinct storage indices; such a fixture pins the storage-index comparison and nothing more. A fixture that intends to cover generation ordering must reuse one storage index across two generations.
+
+Comparing identities from two different run sessions is a defect rather than an ordering question, and it is rejected where an identity is resolved or freed rather than where one is admitted: nothing in the entity path accepts an externally supplied identity, because a store mints the identity it admits from the allocator. A store resolving an identity that carries a foreign or unset run session fails closed. It resolves nothing and records one diagnostic counter, per the failing-reference rule above. An allocator asked about such an identity returns false and records nothing, deliberately: its predicates are side-effect free, and that same one-diagnostic-per-failed-resolution rule is the store's to satisfy. Neither throws, and neither returns a typed rejection reason, unlike the command path, where a foreign run session on an inbound envelope or transaction is a typed rejection, because that boundary does accept externally supplied identity. A reader who knows the command path should not expect the symmetry here.
+
+The comparator is therefore not the place to detect it. A redundant session check there would only make the boundary check look unnecessary, and the leading run-session comparison exists to keep the order aligned with the identity's structure, not to police session provenance.
+
+Three ordered collections sort on the full entity ID, and each enforces this property at a different place: a packed store by construction, since every identity it holds was minted by its own allocator; a tick's event batch at the boundary that assembles it, since a batch belongs to exactly one tick and therefore to exactly one run; and presentation staging at the point an entity is staged. A fourth ordered collection appearing without an enforcement point named here is an omission rather than an exemption. The convention is not confined to ordered collections: any normative rule in this document that names no enforcement point is likewise an omission rather than an exemption, because a rule no test can fail decays silently while its prose still reads as true.
+
 The implementation uses purpose-built packed stores by population category, not a general reflection-driven ECS framework. A new generic abstraction is justified only when at least three concrete systems require the same lifecycle and query semantics.
 
 ## Authoritative population categories
@@ -134,6 +146,35 @@ Each active tick is a transaction over one prior world state.
 6. Publish the committed state, snapshot, events, and diagnostics as one tick result.
 
 An exception or invariant failure before commit invalidates the tick and ends the run through the safe technical-failure path; it never publishes a partial state.
+
+### Mid-commit invalidation
+
+The rule above governs the region before commit. This one governs the region from commit to published snapshot. The two partition the tick at commit, and there is nothing between them.
+
+Any exception raised between the moment a commit opens the publisher's tick and the moment publication completes invalidates that tick, releases only the buffers that commit itself opened and left with nothing unconsumed, and is then rethrown unchanged, so the run leaves through the safe technical-failure path with no snapshot published, no state version advanced, and no tick left open. A buffer the commit did not open, or that holds an unconsumed record, is left exactly as it is, because its records are the failure's evidence and an authoritative event may not be dropped; and the guarantee ends where invalidation does, since once publication has completed the snapshot is observable and the tick is closed, so that region must be throw-free by construction rather than recoverable.
+
+Four things the rule does not promise, stated here rather than in a footnote because a reader who does not know a guarantee's edges assumes it is total:
+
+- Nothing after publication completes. Invalidation throws there rather than retracting, so there is no recovery to promise; see the enforcement point below for how that region is held throw-free instead.
+- It cannot release a domain buffer holding an unconsumed record. `CTR-SIM-001` in the [Component, Contract, and Schema Registry](./115-component-contract-and-schema-registry.md#cross-boundary-contract-registry) forbids dropping an authoritative event, so the host owns the residue.
+- It cannot clear a buffer the commit did not open. Such a buffer belongs to another tick or another writer, and releasing it would drop records the commit never accounted for.
+- Runtime-level failures such as stack overflow or out-of-memory are outside any arrangement of statements, so no ordering of the commit can promise anything about them.
+
+Enforcement point, under the convention in [Entity identity](#entity-identity): `PostPublicationRegionTests` in `tests/MechaMiner.Simulation.Tests/Support/`. Its four cases walk the compiled bodies of the two publishing methods and assert that the region after each publication neither throws nor constructs and calls only a committed list of members: `NothingAfterThePageFlipInAPublicationCanThrow` for the snapshot page flip, `NothingAfterThePublicationInATransactionCommitCanThrow` for the paused-transaction commit, `TheScanDetectsAThrowAConstructionAndAnExtraCallAfterTheAnchor` to show the walk can fail, and `TheScanIsHonestAboutWhatItCannotSee` to record what the walk cannot reach. Registered as `VER-SIM-004-013`.
+
+The committed lists of permitted post-publication calls are an edit tax rather than evidence: adding a call to the region and to the list passes. That makes an accidental addition loud, and it does not establish that the region is throw-free.
+
+### Where the end of a technically failed run is recorded
+
+Both clauses above end the run and neither says what holds the fact that it ended. Three fields look like the place and two of them are wrong, so the argument is recorded here rather than rediscovered each time. The wrong two are the nearer to hand, which is the whole reason for writing this down.
+
+It is not a blocking reason. [Runtime Architecture](./10-runtime-architecture.md#pause-contract) enumerates the reasons a run can be paused for, and that enumeration is closed: an eighth member would be an unregistered reason. The stronger objection is what the set means rather than how long it is. A blocking reason is a state a run resumes from, and while one is present run time and every gameplay system remain unchanged, so the run is intact and waiting. A technically failed run is neither: it stopped with the world and the clock disagreeing about whether one tick happened, and no later step can reconcile them. Recording it as a pause would say the run can be resumed, which is the one thing that is no longer true.
+
+It is not the run's terminal state either, and this is the substantive half. The run session owns that state, and [Scope and invariants](#scope-and-invariants) makes a run terminal result assigned once and immutable. A technical failure has no terminal result to assign, because the clauses above forbid publishing a partial state, so nothing was evaluated and nothing may be published. Writing a failure into the field a successful extraction or a death is later written to would fill an assigned-once field with something that is not an outcome, and would leave a real outcome afterwards either a second assignment or unrepresentable. For the same reason the terminal boundary is not evaluated on the way out: doing so would produce exactly the published result the failure is defined as not having.
+
+What is left is the fixed-step host, and it is the right owner rather than the remaining one. The host owns step ordering across ticks, and what the failure changes is precisely that no later tick runs. So the host records the failure and the tick that was in flight, exposes both, and refuses every later step by naming that failure. Recording rather than only throwing is required: [Runtime Architecture](./10-runtime-architecture.md#failure-and-shutdown) has an unhandled simulation invariant violation terminate the run safely, preserve the existing profile, and emit a diagnostic package, and a diagnostic package cannot report a failure the run did not retain. The exception is rethrown unchanged, on the same reasoning the mid-commit clause gives and because [Performance Diagnostics and Observability](./90-performance-diagnostics-and-observability.md#crash-handling) registers reporting "without attempting to continue corrupted simulation": a host that swallowed the exception and returned a zero-tick result would be continuing, and one that wrapped it would obscure the defect it is reporting.
+
+The one thing the host must not do is retry. The tick target has already returned or thrown, so the world has moved and the clock has not; running that tick index again would apply it twice, which [Runtime Architecture](./10-runtime-architecture.md#clock-domains) rules out by having each whole tick execute once. This is why ending the run is the remedy and not an escalation of one: there is no smaller correct response available.
 
 ## Boundary and tie ordering
 
@@ -196,6 +237,10 @@ Domain events are immutable facts used by other authoritative or application sys
 - Presentation events may be coalesced by an explicit visual policy; domain events may not be dropped.
 - Statistics consume domain/damage records before their buffers are released.
 - Event schemas are versioned when written to diagnostic artifacts.
+
+The sequence is global to one tick. It begins at the tick's first emitted event and increments monotonically across the entire tick regardless of which system phase or which emitter produced the event, so `(tick, sequence)` is by itself a total order over every event the tick publishes and no further tiebreak key exists. Per-phase and per-emitter numbering are both rejected: either scheme lets two events of one tick share a counter value and so reintroduces the ties this ordering exists to remove, and presentation's detection of missed event sequence numbers requires one contiguous run of numbers per tick.
+
+Two events published by one tick that carry the same sequence are a defect, not a tie. An implementation must fail loudly on a duplicate rather than falling through to a further sort key, because silently ordering an impossible state hides the emission bug that produced it. This rule governs event ordering only; damage instances retain the separate resolution order defined under [Boundary and tie ordering](#boundary-and-tie-ordering).
 
 ## Presentation snapshot
 

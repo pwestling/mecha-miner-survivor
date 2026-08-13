@@ -85,6 +85,8 @@ Riftjaw's charge is a numerical exception to its ordinary pursuit: after its one
 
 The Ripper's rank-zero contact diameter is 0.80M. Every ordinary body scale in the alien roster multiplies that diameter. Contact begins when the enemy contact circle and the mech's 0.50M-radius collision circle overlap.
 
+Both columns are exact derived values, not rounded presentations, and carry a third decimal only where the derivation requires one. Razorling's `0.62×` body scale is the only ordinary scale that is not a multiple of `0.05`, so it is the only row whose products need three decimals.
+
 | Enemy | Contact diameter | Center distance that begins contact |
 |---|---:|---:|
 | Skitterling | 0.44M | 0.72M |
@@ -93,7 +95,7 @@ The Ripper's rank-zero contact diameter is 0.80M. Every ordinary body scale in t
 | Lurker | 0.84M | 0.92M |
 | Gloomwing | 0.96M | 0.98M |
 | Needler | 0.80M | 0.90M |
-| Razorling | 0.50M | 0.75M |
+| Razorling | 0.496M | 0.748M |
 | Iron Ripper | 0.88M | 0.94M |
 | Siegeback | 1.32M | 1.16M |
 | Dreadwing | 1.08M | 1.04M |

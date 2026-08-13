@@ -1,0 +1,26 @@
+{
+  "id": "RSC-01",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "resource.RSC-01.name",
+  "summary_key": "resource.RSC-01.summary",
+  "tags": [],
+  "source_refs": [
+    "TR-DAT-002"
+  ],
+  "resource_class": "specialized-material",
+  "canonical_letter": "A",
+  "inventory_scope": "run-local",
+  "persistence_class": "run-local-consumable",
+  "material_character": "Crystalline shards with a hard inner facet.",
+  "primary_color": "Saturated cyan",
+  "shared_economy_tier": true,
+  "resonance_behavior": {
+    "effect_name": "Focused Assault",
+    "modifier_percent": 20,
+    "modifier_direction": "increase",
+    "edge_case_rule": "The field does not stack with itself."
+  },
+  "resonance_effect_name": "Focused Assault"
+}

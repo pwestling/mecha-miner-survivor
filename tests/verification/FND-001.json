@@ -8,14 +8,16 @@
     "The structural validator for this file is owned by TASK-FND-009-002; until it lands, the shape here is the FND-001 integration owner's declaration of the required fields listed in doc 91.",
     "Selectors are repository scripts and commands because the pure NUnit harness does not exist until TASK-FND-003-001. TASK-FND-009-001 replaces the architecture selector with an architecture test.",
     "VER-FND-001-012 and VER-FND-001-013 use build/verify-godot.sh rather than the bare godot commands: a headless Godot launch exits 0 even when the boot script fails to load, so the exit code alone is not a gate. The script also asserts the stable startup line and the absence of engine ERROR lines.",
-    "platforms lists only the platforms on which an entry has actually been exercised. Every entry here has been run on linux-x64 only. pendingPlatforms records platforms that the requirement covers but on which nothing has been executed yet; an entry must not claim one until it has been run there.",
+    "The 'platforms' list records the platforms an entry has actually been executed on, not the platforms its subject is intended to support. Every entry in this file is linux-x64 only. VER-FND-001-001 and VER-FND-001-002 previously also listed windows-x64 and osx-arm64; that was wrong and is corrected here. Nothing in this repository has ever run either of them on Windows or macOS: build/bootstrap-linux.sh is the only provisioner, it provisions linux-x64, and build/toolchain.json's godot.unpinned_platform_policy records the same gap for the Godot pins. Restoring windows-x64 or osx-arm64 to any entry requires an actual run on that platform, which needs a CI runner for it - FND-005 owns the CI suite. Cross-platform restore and warning-free compilation are still intended properties of the pinned toolchain; they are simply unverified, and an unverified intention does not belong in a coverage field.",
+    "That platform narrowing did not land in commit a494f0912415d3e06cc7911a0af5a59edac1d526, whose message lists it as 'item 8' of an enumerated list and calls the whole list unverified. a494f09's only change to this file is the VER-FND-001-005 strengthening below; VER-FND-001-001 and VER-FND-001-002 still carried three platforms at that commit. The narrowing landed thirteen minutes later in a494f09's immediate child, bc28ae2e1647273c5cea8fde14aa5ec33564a07b, so anyone reading a494f09's message for the state of this file is reading a claim about a change that was not in it. Nothing gates the platforms field either: no script under build/ reads it, build/verify-registry.sh does not exist on this branch, and the copy TASK-FND-009-002 introduced elsewhere makes no reference to platforms. This field's correctness therefore rests on a reader comparing it against what has actually been executed, and on no check. It answers the 'VER-FND-001-001 and -002 are marked implemented for windows-x64 and osx-arm64' bullet under 'Corrections to the PR body and registry' in pull/1#pullrequestreview-4870772506, which is not one of that review's nine numbered findings.",
+    "Red-then-green record for VER-FND-001-005, whose strengthening arrived in a494f09 as 'item 6' of that same list. Its message's word 'unverified' is now stale, and this note is where the verification lives. Both injections were run at the parent commit 2e6d717 and again at a494f09 and at the three heads that carry a494f09 by base merge (a319afb, ea88ea8, c5f1378), with the same exit class at all four of the later points. Observed exit classes, parent -> carrying commits: an untracked .gd file under src/, build/verify-architecture.sh 0 -> 4; and the same probe under a stale GIT_DIR, build/verify-architecture.sh 0 -> 4. It answers PR #3 finding 6 and PR #1 finding 6 together (pull/3#pullrequestreview-4870741930 and pull/1#pullrequestreview-4870772506). The record for the FND-002 gates that arrived in the same commit is a note in tests/verification/FND-002.json, which also records that the numbered list a494f09's message indexes into exists in no artifact; docs/technical/delivery-waves.md § Decision 12 carries the full account.",
     "VER-FND-001-008 is PARTIAL, and this note is the durable record of what it does not cover; the entry's status stays 'implemented' because the gate does run and does fail on the violation it names. The naming fixture proves two things at once: EnforceCodeStyleInBuild, and the root .editorconfig's dotnet_diagnostic.IDE1006.severity = error. Only the first is an MSBuild property, so only the first is asserted from evaluated state (build/verify-policies.sh guard 3). The second is applied by Roslyn, which walks the .editorconfig chain itself and stops at the first file declaring root = true, and the EditorConfigFiles item holds only the SDK-generated file, so there is no evaluated item to read either. What IS asserted structurally is that no non-root .editorconfig exists in the working tree (guard 1, empty allowlist): a committed copy of the root file placed beside the naming fixture used to let the root severity be flipped to none while a real IDE1006 violation compiled clean and the whole gate printed PASS. Two cases remain uncovered: an untracked .editorconfig, and a change to the root file itself, whether removing root = true or lowering a severity in it. Closing those needs a reading of the severity Roslyn actually applied, which nothing in this work package provides.",
     "VER-FND-001-006, -007 and -008 depend on the repository-root policy reaching the fixtures. That is asserted by the five inheritance guards in build/verify-policies.sh, not by the fixtures, because a fixture only measures the directory it sits in. Guard 3's evaluated-property list is a list of known switches and is NOT complete: per-category AnalysisMode<Category> properties, per-rule severities and future SDK switches are outside it. Guard 1b does one narrow thing: it rejects a suppressive declaration in the two kinds of file it reads, the permitted build/policy-fixtures/Directory.Build.props and each fixture .csproj. It is NOT a completeness argument for that family, and an earlier version of this note said it was - that a root-level suppression switch has 'nowhere local to be switched back on'. It does not need switching back on: a single Condition on a root PropertyGroup, or a sibling build/policy-fixtures/Directory.Packages.props, Directory.Build.rsp or fixture .csproj.user, leaves the switch simply never applied to the fixtures, and each compiled a real CA2200 in src/ at 0 warnings with the gate at exit 0. Completeness for the family rests on guard 4, which compares each fixture's whole evaluated MSBuild property set against src/MechaMiner.Content's and requires equality outside a measured allowlist of structural differences (project name, project paths, NuGet restore state, where the upward search for Directory.Build.props landed, and RestorePackagesWithLockFile). Any mechanism that decouples a fixture shows up there as a value difference without the gate having to know which mechanism it was."
   ],
   "entries": [
     {
       "id": "VER-FND-001-001",
-      "summary": "A clean checkout restores the exact locked NuGet graph and fails if any lock file would change.",
+      "summary": "A clean checkout restores the exact locked NuGet graph and fails if any lock file would change. Executed on linux-x64 only; windows-x64 and osx-arm64 are PENDING and have never been run, so they are not listed under platforms. No gate reads the platforms field, so that narrowing rests on a reader comparing the field against what has been executed rather than on a check; it landed in bc28ae2, not in a494f09, whose message lists it as 'item 8'.",
       "task": "TASK-FND-001-001",
       "requirements": ["TR-BLD-001", "TR-BLD-002"],
       "technicalSources": [
@@ -31,13 +33,12 @@
       "scenarios": [],
       "evidenceKinds": ["command-exit-code", "command-output"],
       "platforms": ["linux-x64"],
-      "pendingPlatforms": ["windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
     },
     {
       "id": "VER-FND-001-002",
-      "summary": "The whole solution compiles from a clean checkout with zero warnings and zero errors under the pinned SDK, target framework, and language version.",
+      "summary": "The whole solution compiles from a clean checkout with zero warnings and zero errors under the pinned SDK, target framework, and language version. Executed on linux-x64 only; windows-x64 and osx-arm64 are PENDING and have never been run, so they are not listed under platforms. No gate reads the platforms field, so that narrowing rests on a reader comparing the field against what has been executed rather than on a check; it landed in bc28ae2, not in a494f09, whose message lists it as 'item 8'.",
       "task": "TASK-FND-001-001",
       "requirements": ["TR-BLD-001", "TR-BLD-006", "TR-FND-001"],
       "technicalSources": [
@@ -53,7 +54,6 @@
       "scenarios": [],
       "evidenceKinds": ["command-exit-code", "command-output", "warning-count"],
       "platforms": ["linux-x64"],
-      "pendingPlatforms": ["windows-x64", "osx-arm64"],
       "tier": "fast",
       "status": "implemented"
     },
@@ -101,7 +101,7 @@
     },
     {
       "id": "VER-FND-001-005",
-      "summary": "No GDScript source file exists outside documentation, so no runtime logic can use a second language.",
+      "summary": "No GDScript source file exists outside documentation, tracked or untracked, so no runtime logic can use a second language. The candidate set is tracked plus untracked-but-not-ignored, and a failed enumeration fails the gate rather than emptying it. Both halves are stated because neither used to hold: the check consulted only tracked paths, so an untracked .gd file passed, and it discarded git's exit status with a trailing '|| true', so under a broken or absent git an empty result took the pass branch and this hard prohibition was silently unenforceable. Two negative controls run in the same invocation: an untracked .gd fixture must be reported as a violation, and the same probe under a broken GIT_DIR must report that it could not tell rather than reporting a clean tree. Measured red-then-green against the parent commit 2e6d717: an untracked .gd file under src/ took build/verify-architecture.sh from exit 0 to exit 4, and the same probe under a stale GIT_DIR took it from exit 0 to exit 4, at a494f09 and at every head that carries it.",
       "task": "TASK-FND-001-001",
       "requirements": ["TR-FND-002"],
       "technicalSources": [
@@ -112,7 +112,10 @@
         "kind": "script",
         "value": "build/verify-architecture.sh"
       },
-      "fixtures": [],
+      "fixtures": [
+        "build/verify-architecture.sh untracked-gdscript fixture",
+        "build/verify-architecture.sh broken-GIT_DIR negative control"
+      ],
       "scenarios": [],
       "evidenceKinds": ["command-exit-code", "command-output"],
       "platforms": ["linux-x64"],

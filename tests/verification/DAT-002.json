@@ -1,0 +1,1230 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "DAT-002",
+  "workPackageTitle": "Per-category schemas and typed models: resources, mechs, enemies, bosses, mining sites, encounters, maps, and the player baseline",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91 § Verification registry).",
+    "Every summary states the route the check takes to its subject, not only the property it forbids. A description broader than the thing it describes is the same defect as a count reported without its method: it reads as a stronger guarantee than it is. Where a route has a real gap - a rule matched on key names rather than structurally, or a reference checked for grammar but not existence - the summary names the gap and, where another entry closes it, names that entry.",
+    "This repository has no CI. Every gate below is a local ./build.sh run, so the written description of what a gate covers is doing work an automated re-run would otherwise do.",
+    "Fixture IDs are paths beneath tests/MechaMiner.Content.Tests/Fixtures/categories/. Every invalid fixture asserts the one diagnostic code it is named for; a fixture that fails with a different code fails the suite, because a gate that passes on the wrong error is not a gate.",
+    "VER-DAT-002-027 is the over-strict control for this package: the valid fixtures must produce zero diagnostics.",
+    "VER-DAT-002-023 through VER-DAT-002-025 declare the two relational constraints and the stage they run in. Evaluation over a compiled catalog belongs to DAT-005; what lands here is the constraint shape, its operands, and the proof that the relation rejects an inverted pair.",
+    "Behavior tokens are validated for grammar only. Resolving a token to exactly one registered descriptor is DAT-004's registry check and is deliberately absent from every entry here."
+  ],
+  "entries": [
+    {
+      "id": "VER-DAT-002-001",
+      "summary": "The resource schema and the typed ResourceReader reach the same accept verdict on a specialized-material definition, and the same reject verdict on a field neither declares. The route is additionalProperties:false at every object level of content/schemas/resource.schema.json mirrored by ResourceSchema's declared field table, so a misspelled field name is an error at any depth rather than silently ignored. It does not cover a field that is declared but semantically wrong for its resource_class; VER-DAT-002-002 covers that.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002",
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#resources",
+        "docs/technical/40-content-data-and-validation.md#common-definition-envelope"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySchemaAgreementTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/resources/valid-specialized-material.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/resources/invalid-unknown-field.json",
+        "content/schemas/resource.schema.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-002",
+      "summary": "canonical_letter is declared on exactly the six specialized materials and rejected on common ore and Hyper Gold. The route is the value of resource_class within one file, so the check is per-file and cannot see a letter used twice across the catalog; VER-DAT-002-003 covers that separately.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#resources"
+      ],
+      "gameplaySources": [
+        "docs/61-specialized-resource-identities.md#accepted-identity-map"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/resources/valid-specialized-material.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/resources/invalid-canonical-letter-on-currency.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/resources/invalid-canonical-letter-missing.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-003",
+      "summary": "Across every definition in the resources catalog the canonical_letter values form exactly the set A through F, one file each. The route is the parsed field value, not the file name or the stable ID, so renaming RSC-03.json or reassigning its ID cannot change the verdict; a duplicated or absent letter fails.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#resources"
+      ],
+      "gameplaySources": [
+        "docs/61-specialized-resource-identities.md#accepted-identity-map"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/resources/valid-specialized-material.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/resources/catalog-duplicate-canonical-letter.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-004",
+      "summary": "resource_class is a closed three-token enum matched by exact case-sensitive ASCII comparison against the declared vocabulary, so a near-miss such as 'specialized_material' is rejected rather than treated as an unknown future class. The token also selects which subtype block is legal, so the enum and the conditional field set are one gate.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#resources",
+        "docs/technical/40-content-data-and-validation.md#stable-id-policy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/resources/valid-currency-hyper-gold.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/resources/invalid-resource-class-token.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-005",
+      "summary": "A mech's signature_weapon_id is a weapon ID matched against the W-[A-F]{2} grammar in ContentCategories, not against a display name. The route is grammar-only inside DAT-002: whether the referenced weapon definition exists is a relational check owned by DAT-005, so a syntactically valid ID naming no weapon passes here.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-002",
+        "TR-DAT-004"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#mechs",
+        "docs/technical/40-content-data-and-validation.md#stable-id-policy"
+      ],
+      "gameplaySources": [
+        "docs/36-initial-mech-catalog.md#catalog-overview"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/mechs/valid-mech.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/mechs/invalid-signature-weapon-display-name.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-006",
+      "summary": "selection_order is a positive integer and is unique across the mech catalog. The route is a set insertion over the parsed integers of every file in the catalog, so two mechs claiming order 3 fail with the duplicate code and not with a range error.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#mechs"
+      ],
+      "gameplaySources": [
+        "docs/36-initial-mech-catalog.md#selection-behavior"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/mechs/valid-mech.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/mechs/catalog-duplicate-selection-order.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-007",
+      "summary": "A mech's inherent trait carries one modifier_kind token and one modifier_value, never a prose rendering of the pair. The route is a two-arm union keyed on modifier_kind: additive-percent and additive-flat-hull, each with the unit implied by the token, so a percent value under the flat-hull arm is rejected as a kind mismatch.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#mechs",
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy"
+      ],
+      "gameplaySources": [
+        "docs/36-initial-mech-catalog.md#trait-comparison-and-stacking"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/mechs/valid-mech.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/mechs/invalid-trait-modifier-kind.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-008",
+      "summary": "An enemy definition does not declare armor. Doc 40's enemy-and-boss field list omits Armor while the mech list includes it, so Armor is a mech statistic. The route is the enemy schema's declared field table: a fixture carrying armor: 0 is rejected with the unknown-field code, which is the same route that would catch a typo, so the gate proves the field is undeclared rather than merely unused.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002",
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#enemies-and-bosses",
+        "docs/technical/40-content-data-and-validation.md#mechs"
+      ],
+      "gameplaySources": [
+        "docs/31-initial-alien-roster.md#shared-ordinary-enemy-rules"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategoryFixtureCorpusTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/enemies/valid-enemy.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/enemies/invalid-armor-declared.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-009",
+      "summary": "An enemy authors body_scale_multiplier only; re-authoring the contact diameter or the contact-begin centre distance is a build error. The route is an explicit derived-field register keyed by JSON pointer, checked before the unknown-field pass so the diagnostic names the derivation rather than reporting a misspelling. It matches on the pointer, so a derived value smuggled in under a different field name is not caught here.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#enemies-and-bosses",
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategoryFixtureCorpusTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/enemies/valid-enemy.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/enemies/invalid-derived-contact-diameter.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/enemies/invalid-derived-center-distance.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-010",
+      "summary": "An enemy authors movement_speed_percent_of_mech_base; re-authoring the world speed in M per second is a build error through the same derived-field register, matched on the field's JSON pointer. Verified in both directions: the valid fixture carries the percentage and no world speed and produces zero diagnostics. What the route misses is a derived value smuggled in under a different field name, which nothing short of recomputing the number would catch.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#enemies-and-bosses",
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy"
+      ],
+      "gameplaySources": [
+        "docs/72-player-survivability-and-damage-baseline.md#movement-and-speed-modifiers"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategoryFixtureCorpusTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/enemies/valid-enemy.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/enemies/invalid-derived-world-speed.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-011",
+      "summary": "behavior_kind is a token matched against the lower-kebab-case grammar ^[a-z][a-z0-9]*(-[a-z0-9]+)*$, so a prose sentence such as 'pure contact pursuer' is rejected. The route is grammar only: whether the token has exactly one registered descriptor is DAT-004's registry check and is deliberately not asserted here, so an unregistered but well-formed token passes this gate.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#enemies-and-bosses",
+        "docs/technical/40-content-data-and-validation.md#behavior-registries"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/enemies/valid-enemy.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/enemies/invalid-behavior-kind-prose.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-012",
+      "summary": "ELT-01 validates against its own shared-elite-modifier schema and not against the enemy schema. The route is the authoring directory plus the ELT- ID grammar selecting the schema, so an enemy field such as hull on ELT-01 and an elite field such as maximum_hull_multiplier on an EN- definition are both unknown-field errors.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002",
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#enemies-and-bosses"
+      ],
+      "gameplaySources": [
+        "docs/31-initial-alien-roster.md#elite-treatment"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategoryFixtureCorpusTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/enemies/valid-elite-modifiers.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/enemies/invalid-elite-field-on-enemy.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/enemies/invalid-enemy-field-on-elite.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-013",
+      "summary": "A boss definition does not declare armor, on the same reading of doc 40's field list as VER-DAT-002-008: the enemy-and-boss list omits Armor while the mech list includes it. The route is the same unknown-field one, and it is the route a typo would take too, so the gate proves the field is undeclared rather than merely unused. Four boss files carried armor as a null, which is a field with nothing to hold rather than a statement that a boss has no armour.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002",
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#enemies-and-bosses"
+      ],
+      "gameplaySources": [
+        "docs/31-initial-alien-roster.md#interval-boss-overview"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategoryFixtureCorpusTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/bosses/valid-boss.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/bosses/invalid-armor-declared.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-014",
+      "summary": "A boss authors its contact and weapon-hurt diameter directly, because no accepted document gives a boss a body scale multiplier; the compiler derives only the centre distance. The route is the derived-field register carrying different pointers for bosses than for enemies, so the asymmetry is declared in one place and the boss fixture carrying a centre distance fails while the same fixture carrying only the diameter passes.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#enemies-and-bosses",
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategoryFixtureCorpusTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/bosses/valid-boss.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/bosses/invalid-derived-center-distance.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-015",
+      "summary": "A boss ability is a four-arm discriminated union on ability.kind. The route is per-arm field sets held in one place: the schema expresses them as a oneOf over four arms each pinning kind with const, and the typed validator selects the arm from the parsed kind and reports a parameter belonging to another arm as an arm mismatch. The two reach the same accept/reject verdict on a document; they report it with different codes, which is why the schema-agreement comparison is on the verdict and not on the diagnostic. It does not check that an arm's parameters are numerically sensible against each other, only that they belong to the arm the discriminator selects.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#enemies-and-bosses"
+      ],
+      "gameplaySources": [
+        "docs/31-initial-alien-roster.md#boss-01--riftjaw"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/bosses/valid-boss.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/bosses/invalid-ability-arm-mismatch.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-016",
+      "summary": "Standard mode accepts exactly four mining-site classes. The route is the set of parsed site_class tokens over every definition in content/mining-sites/, compared against the closed four-token vocabulary and required to cover it exactly once each, so a fifth class, a duplicate class, and a missing class all fail with distinct codes.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#mining-sites"
+      ],
+      "gameplaySources": [
+        "docs/40-mining-and-extraction.md#resource-payout-profiles"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/mining-sites/valid-standard-ore-seam.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/mining-sites/valid-geode.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/mining-sites/invalid-site-class-token.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/mining-sites/catalog-duplicate-site-class.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-017",
+      "summary": "A specialized-material geode carries extraction_zone_radius_m and resonance_field.radius_m as required authored numerics, not as an omitted key standing in for an unknown value. The route is conditional requirement keyed on site_class, so the same two fields are not required on an ore seam and their absence there is not an error.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#mining-sites",
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy"
+      ],
+      "gameplaySources": [
+        "docs/40-mining-and-extraction.md#geode-resonance-fields"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/mining-sites/valid-geode.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/mining-sites/invalid-geode-missing-resonance-radius.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-018",
+      "summary": "WAV-01 holds one minute row per minute of the run and their minute values are the contiguous integers from zero. The route compares the row count against the schedule's own duration_minutes rather than against the constant 35, so raising one without the other fails from both directions; and it compares each row's parsed minute against its array index, so a row out of order, a duplicated minute, and a gap are all caught. A correct row count with the rows in the wrong array order fails, because the canonical writer emits semantically ordered arrays in authored order.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#encounter-schedule"
+      ],
+      "gameplaySources": [
+        "docs/32-standard-wave-and-beacon-schedule.md#complete-35-minute-schedule"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/encounters/valid-schedule.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/encounters/invalid-minute-rows-gap.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/encounters/invalid-minute-rows-count.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-019",
+      "summary": "Each minute row's composition shares sum to 100 percentage points. The route is an integer sum over the parsed share_percent values of that row only, so a row summing to 99 fails while the schedule as a whole is not required to sum to anything. Integer arithmetic is used deliberately: shares are authored as whole percentage points, so no tolerance is involved and none is offered.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#encounter-schedule"
+      ],
+      "gameplaySources": [
+        "docs/32-standard-wave-and-beacon-schedule.md#director-vocabulary"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/encounters/valid-schedule.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/encounters/invalid-composition-share-sum.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-020",
+      "summary": "Every formation token in WAV-01 is drawn from the declared formation vocabulary and every enemy ID it names matches the EN-[0-9]{2} grammar. The route is token-and-grammar matching inside the schedule file; whether the named enemy definition exists is a relational check owned by DAT-005 and is not asserted here.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#encounter-schedule"
+      ],
+      "gameplaySources": [
+        "docs/32-standard-wave-and-beacon-schedule.md#formation-grammar"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/encounters/valid-schedule.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/encounters/invalid-formation-token.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/encounters/invalid-enemy-id-grammar.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-021",
+      "summary": "MGC-01's internal feasibility is checked before any map is sampled. The route walks the range fields the typed model reads by name - the world scale's region count and its two traversable-diameter target ranges, the three distance bands in both units, the nearest-seam travel band, and the visible-opportunity target band - and requires each lower bound to be no greater than its upper, each three-valued range's target to lie between its bounds, and the target ceiling on visible opportunities to be no greater than the hard ceiling. What the route does not cover is a range the typed model does not read: the optional-pocket count, the obstacle-coverage target band, and the rock spawn-distance band are structurally validated but their bounds are not compared to each other, and closing that gap means surfacing them on the model.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#map-generation"
+      ],
+      "gameplaySources": [
+        "docs/51-standard-map-generation-contract.md#world-scale-and-major-regions"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySemanticRuleTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/maps/valid-map-contract.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/maps/invalid-range-inverted.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/maps/invalid-target-outside-range.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-022",
+      "summary": "PLAYER-01 is a definition in its own category at content/player/PLAYER-01.json, carrying the baseline constants that fourteen enemy and boss files were previously copying. The route is the PLAYER- ID grammar plus its own schema; the gate here is structural only and does not assert that no other definition copies a baseline value, which is DAT-005's relational work.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002",
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#common-definition-envelope"
+      ],
+      "gameplaySources": [
+        "docs/72-player-survivability-and-damage-baseline.md#shared-player-baseline"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategoryFixtureCorpusTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/player/valid-player-baseline.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/player/invalid-unknown-field.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-023",
+      "summary": "RC-01 is declared as a relation, not as two range checks: the geode resonance field radius must exceed the maximum expanded extraction zone, which is the base zone scaled by the additive sum of every modifier naming the extraction-zone-radius statistic. The route names all three operands and their pointers in the diagnostic, because the fix could be to any of them. Evaluation over a real catalog is DAT-005's; this package declares the constraint, its operands, and its stage, and proves the relation rejects an inverted pair.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#relational",
+        "docs/technical/40-content-data-and-validation.md#validation-layers"
+      ],
+      "gameplaySources": [
+        "docs/40-mining-and-extraction.md#geode-resonance-fields"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.RelationalConstraintTests"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-024",
+      "summary": "RC-02 is declared as a relation: the deployment obstacle-free radius must be at least the largest mining-point cleared radius over every site class. Greater-than-or-equal, not strictly greater, because the constraint is that deployment is not tighter than an ordinary mining point and equality satisfies that. The route resolves the authored clearance from mining-zone diameters into mech collision diameters and is compared against the maximum over all site classes rather than against one named site, so a future class with a larger extraction zone is caught.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-002"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#relational",
+        "docs/technical/40-content-data-and-validation.md#validation-layers"
+      ],
+      "gameplaySources": [
+        "docs/51-standard-map-generation-contract.md#deployment-and-opening-fairness"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.RelationalConstraintTests"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-025",
+      "summary": "Relational constraints declare the definitions they need and are evaluated only after every definition is loaded, never during the per-file pass. The route is a stage marker on the constraint plus an evaluator that refuses to run with an incomplete catalog, so an operand that has not been loaded produces a missing-operand diagnostic rather than a silently skipped check. Lazy operand evaluation inside the per-file pass is what this rules out, because its ordering would depend on source enumeration order.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-002",
+        "TR-DAT-003"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#relational",
+        "docs/technical/40-content-data-and-validation.md#compilation-pipeline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.RelationalConstraintTests"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-026",
+      "summary": "For every DAT-002 category the draft 2020-12 schema and the authoritative typed validator reach the same accept/reject verdict on every structural fixture. Each fixture is compared twice - once through the typed reader and once through the schema evaluator - and the two verdicts are matched against each other and against the corpus's declaration. The comparison is on the verdict and not the diagnostic, because the two legitimately report one rejection differently. Rules the JSON Schema data model cannot express are excluded by diagnostic code with a written reason a reviewer can act on; each exclusion is separately proven still to be rejected by the typed validator, and an exclusion no fixture exercises fails the suite so the list cannot rot into stale strings.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002",
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySchemaAgreementTests"
+      },
+      "fixtures": [
+        "content/schemas"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-027",
+      "summary": "Every valid DAT-002 fixture produces zero diagnostics. The route is the same reader the invalid corpus uses, so cleanliness is matched on the identical code path rather than on a laxer one. This is the over-strictness control: without it the invalid corpus would be satisfied by a validator that rejects everything, and a per-category field table could quietly require a field no document asks for. Two further checks close the corpus - every fixture on disk is named by a test, and every definition kind has at least one valid fixture.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002",
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategoryFixtureCorpusTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-028",
+      "summary": "Every numeric bound in the DAT-002 schemas records its provenance in an adjacent x-authority, and every sourced or derived bound states the derivation by which the number follows from its source. The route is a walk over content/schemas/**/*.schema.json performed by the DAT-001 gate, which globs the directory, so a schema added by this package is covered the moment the file exists rather than when someone remembers to register it. The control is a DAT-002 schema bound stripped of its x-authority, and a sourced bound whose authority states no derivation; each must fail the walk.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-005",
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#unit-and-numeric-policy",
+        "docs/technical/40-content-data-and-validation.md#agent-content-change-workflow"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySchemaAuthorityCoverageTests"
+      },
+      "fixtures": [
+        "content/schemas"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-029",
+      "summary": "The order in which each category schema declares its properties equals the order of the typed field table the validator walks. The route compares the two sequences element by element, so a field added to one and not the other fails; the canonical writer emits schema-declared order, so a disagreement here would produce a bundle whose field order depends on which of the two was consulted.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-003",
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategoryFieldOrderTests"
+      },
+      "fixtures": [
+        "content/schemas"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-030",
+      "summary": "A JSON null anywhere in a category document is rejected, including inside a nested object and inside an array element, and the diagnostic points at the null rather than at its parent. Absence is an omitted key; the route is the DAT-001 codec scan, which sees every value in the document, so no per-category field table has to remember to forbid it.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-001",
+        "TR-DAT-002",
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#declared-optional-envelope-fields",
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategoryFixtureCorpusTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/bosses/invalid-null-nested.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output",
+        "expected-diagnostic-id"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-031",
+      "summary": "The clean-catalog assertion for the relational constraints is anchored to the number of constraints it ran. Route: the accepted catalog is evaluated through RelationalConstraints.Evaluate and the resulting diagnostic bag compared against empty, and RelationalConstraints.All is separately counted against two, with the failure message naming the constraint IDs that remain. Why: an empty bag is what a catalog satisfying both relations produces and equally what evaluating one relation, or none, produces, so the word 'both' in the test name was a label the body never checked - two is stated by this registry file's own section note and by RelationalConstraints' remarks. Technique: deleting DeploymentClearanceCoversMiningPoint from the declared array left the emptiness assertion green and failed the count at 1 versus 2, reporting 'Declared: RC-01'.",
+      "task": "TASK-DAT-002-001",
+      "requirements": [
+        "TR-DAT-004",
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#mining-sites",
+        "docs/technical/91-verification-strategy.md#negative-control-adequacy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.RelationalConstraintTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/mining-sites/valid-geode.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-032",
+      "summary": "The declared definition-kind table has a cardinality anchored to two things outside itself. Route: the kinds CategorySchemas.All declares are compared as a set against the DefinitionKind enum less its zero sentinel, and the schema file names it declares are compared as a set against every *.schema.json under content/schemas/ less the envelope. Why: four checks range over that table - the schema load, the field-order comparison, and both provenance-gate coverage walks - and every one of them is a foreach, so the table decides how much they all prove and nothing derived from it can see it shrink. A count literal written next to the table would be a second copy of a fact the table already states and one edit would take both. Neither anchor is a literal: the enum lives in another file and is what every caller passes to CategorySchemas.Read, and the schema directory is the number content/schemas/README.md advertises to readers who will never run this suite - 'the other sixteen *.schema.json' and 'one schema per definition kind - sixteen of them'. Measured: adding a member to DefinitionKind with no descriptor passed 1249 of 1249 before this entry and fails it after. Deleting an existing kind was already caught loudly by the fixture corpus, 57 failures, so that direction is a strengthening rather than a fail-open closed. The two provenance-gate walks additionally count what they visited so that an emptied table reports as an empty walk rather than as success. Route not covered: whether a declared schema says the right thing, which the field-order and agreement suites own.",
+      "task": "TASK-DAT-002-001",
+      "requirements": ["TR-DAT-002", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategorySchemaAgreementTests"
+      },
+      "fixtures": ["content/schemas"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-033",
+      "summary": "Every walk over DAT-002.json's entries counts what it visited and fails when the count is zero. Route: each of the six per-package checks - citation resolution, ID sequencing, required fields, summary routes, nunit selector resolution and fixture-path existence - increments a counter per entry, and the citation, selector and fixture walks additionally count the citations, selectors and paths they actually resolved, because a registry whose entries named none of those would still be a walk that decided nothing. Why: all six were foreach loops with no non-empty assertion, so an emptied entries array satisfied every one of them. Measured directly, with the entries array of all three registries emptied, the nineteen tests across the two registry fixtures were 19 passed, 0 failed before this change and 2 passed, 17 failed after; the two survivors read no entries. That measurement is what makes each counter a count rather than a constant.",
+      "task": "TASK-DAT-002-001",
+      "requirements": ["TR-DAT-002", "TR-DAT-006"],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#what-evidencekinds-means"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.CategoryVerificationRegistryTests"
+      },
+      "fixtures": ["tests/verification/DAT-002.json"],
+      "scenarios": [],
+      "evidenceKinds": ["test-output"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-034",
+      "summary": "enemy.specialist_attack.kind is matched against the lower-kebab-case grammar at its own call site rather than at the root behavior_kind's. Route: the typed enemy reader appends specialist_attack then kind to the root pointer and hands that value to the same grammar check the root field uses, so the diagnostic is compared against the pointer /specialist_attack/kind and not merely against the code; a malformed token reported anywhere else fails the assertion. The fixture carries EN-06's own authored prose, 'telegraphed straight non-homing projectile', with the document's root behavior_kind left well formed, so exactly one grammar failure may be reported and it must be the nested one. Why this needed an entry of its own: the field is required and grammar-checked and no fixture reached it, so the call site could be deleted with the whole suite still green. Route not covered: whether the token resolves to a registered descriptor, which is DAT-004's registry check. OBSERVED, negative control run rather than cited. Environment, stated so a reader can re-enter it: ref b71371e68f54ac2c75688d8be63ba7bb301e4bc5, dotnet SDK 10.0.302 targeting net8.0, MSBUILDDISABLENODEREUSE=1 on every build and test invocation. Every figure in this entry is a property of the tree at that ref and reproduces from a fresh clone: clone, check out the ref, run the command below. WHAT IS NOT REPRODUCIBLE, NAMED RATHER THAN RECORDED AS A PRECONDITION: the checkout these controls were first run in carried two git worktrees nested at .claude/worktrees/hrufl9-gates and .claude/worktrees/hrufl9-hardening. That directory is empty on a fresh clone and no registered worktree lives beneath it, so that state cannot be re-entered and must not be read as something a reproducer has to arrange. It affects nothing in this entry. What it does affect is the two gate exits this branch reported in its pull request - ./build.sh build and ./build.sh test-fast, which exited 4 there because build/verify-gate-wiring.sh enumerates the scripts inside nested worktrees and classifies none of them - and both exit 0 in a checkout with nothing nested beneath it. A gate exit rooted in one container's clone is not a property of the repository, so no gate exit is recorded here. Command: dotnet test tests/MechaMiner.Content.Tests/MechaMiner.Content.Tests.csproj --no-build --filter FullyQualifiedName~NestedBehaviorTokenTests, with MSBUILDDISABLENODEREUSE=1 on the preceding build. Intact: 7 passed, 0 failed of 7. Deleting the SemanticCheck.BehaviorToken call at src/MechaMiner.Content/Categories/EnemyDefinition.cs:353 and rebuilding: 1 failed, 6 passed of 7, the failure being EnemySpecialistAttackKind with all three assertions of AProseValueInANestedTokenPositionIsReportedAtThatPosition reporting at once - Assert.That(diagnostics, Is.Not.Empty) 'Expected: not <empty> But was: <empty>', Assert.That(atPointer, Does.Contain(ContentDiagnosticCodes.BehaviorTokenMalformed)) 'Expected: some item equal to \"MMC-6002\" But was: <empty>', and Assert.That(Codes(diagnostics), Has.Exactly(1).EqualTo(ContentDiagnosticCodes.BehaviorTokenMalformed)) 'Expected: exactly one item equal to \"MMC-6002\" But was: no matching items'. So the deletion takes the fixture's diagnostics to empty rather than merely moving the pointer, which is what shows this call site is the only thing reaching the field. The call was then restored, the assembly rebuilt (confirmed by MechaMiner.Content -> ...MechaMiner.Content.dll reappearing in the build output rather than being skipped, the restore being a copy that bumps mtime), and the tier returned to 7 passed, 0 failed of 7.",
+      "task": "TASK-DAT-002-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-002"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#enemies-and-bosses",
+        "docs/technical/40-content-data-and-validation.md#behavior-registries"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.NestedBehaviorTokenTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/enemies/valid-enemy.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/enemies/invalid-specialist-attack-kind-prose.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-035",
+      "summary": "mech.inherent_trait.behavior_kind is matched against the lower-kebab-case grammar, and the field stays optional. Route: the typed mech reader reaches the nested field only when it is present, appends inherent_trait then behavior_kind to the root pointer, and the diagnostic is compared against /inherent_trait/behavior_kind; the paired control is valid-mech.json, which omits the field entirely and must produce zero diagnostics, so the check cannot be satisfied by a call site that reports every value including no value. MechSchema declares it OptionalText and this entry does not make it required. The malformed value is MCH-01's own authored inherent_trait.effect prose, '+15% weapon attack rate', which is what an author carries across into a field whose vocabulary is not yet minted. Why it needed an entry: four mech fixtures existed and not one of them carried this field, so the call site was unexercised. OBSERVED, negative control run rather than cited. Environment, stated so a reader can re-enter it: ref b71371e68f54ac2c75688d8be63ba7bb301e4bc5, dotnet SDK 10.0.302 targeting net8.0, MSBUILDDISABLENODEREUSE=1 on every build and test invocation. Every figure in this entry is a property of the tree at that ref and reproduces from a fresh clone: clone, check out the ref, run the command below. WHAT IS NOT REPRODUCIBLE, NAMED RATHER THAN RECORDED AS A PRECONDITION: the checkout these controls were first run in carried two git worktrees nested at .claude/worktrees/hrufl9-gates and .claude/worktrees/hrufl9-hardening. That directory is empty on a fresh clone and no registered worktree lives beneath it, so that state cannot be re-entered and must not be read as something a reproducer has to arrange. It affects nothing in this entry. What it does affect is the two gate exits this branch reported in its pull request - ./build.sh build and ./build.sh test-fast, which exited 4 there because build/verify-gate-wiring.sh enumerates the scripts inside nested worktrees and classifies none of them - and both exit 0 in a checkout with nothing nested beneath it. A gate exit rooted in one container's clone is not a property of the repository, so no gate exit is recorded here. Command: dotnet test tests/MechaMiner.Content.Tests/MechaMiner.Content.Tests.csproj --no-build --filter FullyQualifiedName~NestedBehaviorTokenTests, with MSBUILDDISABLENODEREUSE=1 on the preceding build. Intact: 7 passed, 0 failed of 7. Deleting the SemanticCheck.BehaviorToken call at src/MechaMiner.Content/Categories/MechDefinition.cs:226 - leaving the enclosing 'if (trait.BehaviorKind is not null)' in place with an empty body, so the mutation is the check and not the reachability - and rebuilding: 1 failed, 6 passed of 7, the failure being MechInherentTraitBehaviorKind with all three assertions reporting at once - Assert.That(diagnostics, Is.Not.Empty) 'Expected: not <empty> But was: <empty>', Assert.That(atPointer, Does.Contain(ContentDiagnosticCodes.BehaviorTokenMalformed)) 'Expected: some item equal to \"MMC-6002\" But was: <empty>', and Assert.That(Codes(diagnostics), Has.Exactly(1).EqualTo(ContentDiagnosticCodes.BehaviorTokenMalformed)) 'Expected: exactly one item equal to \"MMC-6002\" But was: no matching items'. Note which control this is and is not: it proves the malformed-token half fails when the check goes, and the clean-when-absent half (MechWithNoTraitBehaviorKind) passes in both states, because deleting a check cannot make an absent field report. The call was then restored, the assembly rebuilt, and the tier returned to 7 passed, 0 failed of 7.",
+      "task": "TASK-DAT-002-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-002"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#mechs",
+        "docs/technical/40-content-data-and-validation.md#behavior-registries"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.NestedBehaviorTokenTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/mechs/valid-mech.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/mechs/invalid-trait-behavior-kind-prose.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-036",
+      "summary": "resource.resonance_behavior.behavior_kind is matched against the lower-kebab-case grammar, and the field stays optional. Route: the typed resource reader reaches the nested field only on a specialized material and only when the field is present, appends resonance_behavior then behavior_kind to the root pointer, and the diagnostic is compared against /resonance_behavior/behavior_kind; the paired control is valid-specialized-material.json, which omits the field and must produce zero diagnostics. content/schemas/resource.schema.json says of this field that it 'becomes required in the change that mints the vocabulary', so requiring it is deliberately out of scope here and what is covered is the malformed-token case only. Why it needed an entry: seven resource fixtures existed and not one carried the field, so the call site was unexercised. OBSERVED, negative control run rather than cited. Environment, stated so a reader can re-enter it: ref b71371e68f54ac2c75688d8be63ba7bb301e4bc5, dotnet SDK 10.0.302 targeting net8.0, MSBUILDDISABLENODEREUSE=1 on every build and test invocation. Every figure in this entry is a property of the tree at that ref and reproduces from a fresh clone: clone, check out the ref, run the command below. WHAT IS NOT REPRODUCIBLE, NAMED RATHER THAN RECORDED AS A PRECONDITION: the checkout these controls were first run in carried two git worktrees nested at .claude/worktrees/hrufl9-gates and .claude/worktrees/hrufl9-hardening. That directory is empty on a fresh clone and no registered worktree lives beneath it, so that state cannot be re-entered and must not be read as something a reproducer has to arrange. It affects nothing in this entry. What it does affect is the two gate exits this branch reported in its pull request - ./build.sh build and ./build.sh test-fast, which exited 4 there because build/verify-gate-wiring.sh enumerates the scripts inside nested worktrees and classifies none of them - and both exit 0 in a checkout with nothing nested beneath it. A gate exit rooted in one container's clone is not a property of the repository, so no gate exit is recorded here. Command: dotnet test tests/MechaMiner.Content.Tests/MechaMiner.Content.Tests.csproj --no-build --filter FullyQualifiedName~NestedBehaviorTokenTests, with MSBUILDDISABLENODEREUSE=1 on the preceding build. Intact: 7 passed, 0 failed of 7. Deleting the SemanticCheck.BehaviorToken call at src/MechaMiner.Content/Categories/ResourceDefinition.cs:330 - leaving the enclosing 'if (resonance.BehaviorKind is not null)' in place with an empty body - and rebuilding: 1 failed, 6 passed of 7, the failure being ResourceResonanceBehaviorBehaviorKind with all three assertions reporting at once - Assert.That(diagnostics, Is.Not.Empty) 'Expected: not <empty> But was: <empty>', Assert.That(atPointer, Does.Contain(ContentDiagnosticCodes.BehaviorTokenMalformed)) 'Expected: some item equal to \"MMC-6002\" But was: <empty>', and Assert.That(Codes(diagnostics), Has.Exactly(1).EqualTo(ContentDiagnosticCodes.BehaviorTokenMalformed)) 'Expected: exactly one item equal to \"MMC-6002\" But was: no matching items'. As with VER-DAT-002-035, the clean-when-absent half (ResourceWithNoResonanceBehaviorKind) passes in both states by construction and is an over-strictness control rather than a deletion control. The call was then restored, the assembly rebuilt, and the tier returned to 7 passed, 0 failed of 7. All three call sites were confirmed present and unmutated after the last revert, by git diff over the three files reporting no change against HEAD and by reading each line back. THE PURE NUNIT TIER, EVERY FIGURE STAMPED WITH THE REF IT WAS MEASURED AT, because this entry previously carried one measurement with no ref on it and it went stale inside its own branch. Run directly, dotnet test over the three projects TestVerb.PureTestProjects names, each with --nologo -v minimal. At b71371e68f54ac2c75688d8be63ba7bb301e4bc5, which is where the controls above were run: Simulation 19 of 19, Content 1263 of 1263, Persistence 3 of 3; 1285 tests, 0 failed. At 1b83ebd1276183c0334c11463c1068aa86464e3b, this branch's head when it was reviewed: Simulation 252 of 252, Content 1471 of 1471, Persistence 3 of 3; 1726 tests, 0 failed. At 9b787fe, after the seven uncovered behavior-token call sites were reached: Simulation 252 of 252, Content 1498 of 1498, Persistence 3 of 3; 1753 tests, 0 failed. WHY THE FIRST FIGURE MOVED SO FAR AND WAS STILL RIGHT WHEN TAKEN: b71371e is the parent of the first of this branch's commits, and 40 commits touching tests/MechaMiner.Simulation.Tests arrived between it and the branch head by way of a merge, taking that project from 19 tests to 252. The Content figure moved by this branch's own work. Neither number was wrong when it was written; both were unusable afterwards because nothing beside them said what they were true of, which is the whole reason each is stamped now.",
+      "task": "TASK-DAT-002-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-002"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#resources",
+        "docs/technical/40-content-data-and-validation.md#behavior-registries"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.NestedBehaviorTokenTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/resources/valid-specialized-material.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/resources/invalid-resonance-behavior-kind-prose.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-DAT-002-037",
+      "summary": "Every call site of SemanticCheck.BehaviorToken is reached by a fixture that malforms only that site's field, and how many call sites there are is counted from the source rather than asserted from memory. Route: BehaviorTokenCallSiteTests carries one row per call site - the category source file holding it, the fixture, and the pointer built with JsonPointer the same way the validator under test builds the one it reports - reads each fixture through CategorySchemas.Read, and compares MMC-6002's reported pointer against that row's. Three assertions per row: the document is rejected, the code appears AT that pointer, and exactly one grammar failure is reported, so a fixture that stops isolating its own field fails rather than passing on a sibling's diagnostic. Separately, TheCallSitesOnDiskAreExactlyTheOnesThisTableCovers walks src/MechaMiner.Content/Categories/*.cs, counts the occurrences of the call per file, and that map is compared to the per-file row count, behind two non-vacuity guards - files read greater than zero, and the on-disk map not empty - so a thirteenth call site added with no fixture is red and names its file. Why it exists: the population was never bounded anywhere, and a table of call sites cannot check its own completeness because every walk over it agrees with it by construction. MEASURED, not asserted from the previous description. At 1b83ebd1276183c0334c11463c1068aa86464e3b each call site was neutralised individually - the value argument replaced by the well-formed literal 'neutralised-token', so the check still runs and cannot fire - and the whole Content tier was run per site, twelve runs. Result: 12 call sites, of which 5 were reached by some fixture and 7 were deletable with all 1471 tests green. The seven: WeaponPriceFormulaDefinition.cs:146 /formula_kind, BossDefinition.cs:218 /behavior_kind, WeaponDefinition.cs:212 /behavior_kind and :214 /targeting_policy and :216 /rock_targeting_behavior, UtilityDefinition.cs:401 /behavior_kind, BranchDefinition.cs:258 /behavior_kind. Two of the five, not one, were reached before NestedBehaviorTokenTests existed - EnemyDefinition.cs:251 through enemies/invalid-behavior-kind-prose.json and RelicDefinition.cs:279 through relics/invalid-relic-behavior-kind-prose.json, whose line 17 authors 'activation-rate transformation and opposite geometry' - and the tests that fail when either is neutralised, AnInvalidFixtureFailsWithTheCodeItIsNamedFor and BothRejectAnInvalidFixture, both predate this branch. Three call sites sit in WeaponDefinition within five lines of each other, which is why there is one fixture per site rather than one per file: a single fixture malforming all three would satisfy a contains-the-code assertion while leaving any two of the three deletable. OBSERVED, the same sweep re-run over the seven after the fixtures landed. Each goes red naming its own file, pointer and diagnostic, at 3 failed of 1498 per site, and in every case the fixture's diagnostics go to EMPTY rather than to a different pointer, which is what shows each call site is the only thing reaching its field. Verbatim for WeaponDefinition.cs:214, the shape shared by all seven: 'weapons/invalid-targeting-policy-prose.json must report MMC-6002 at /targeting_policy specifically; a malformed token reported at some other pointer would leave the call site in WeaponDefinition.cs unproven, and deleting that call site would stay green' with 'Expected: some item equal to \"MMC-6002\" But was: <empty>'. Route not covered: whether any token resolves to a registered behavior descriptor, which is DAT-004's registry check and deliberately not asserted by the grammar. Environment, stated so a reader can re-enter it: ref 9b787fe for the fixture measurements and 1b83ebd for the twelve-site sweep, dotnet SDK 10.0.302 targeting net8.0, MSBUILDDISABLENODEREUSE=1 on every build and test invocation, the whole Content tier per site rather than a filter so that a site reached only by some other fixture is still counted as reached. Both refs reproduce from a fresh clone; no gate exit is recorded here, for the reason given in VER-DAT-002-036.",
+      "task": "TASK-DAT-002-001",
+      "requirements": ["TR-DAT-001", "TR-DAT-002"],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#behavior-registries"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Content.Tests.Categories.BehaviorTokenCallSiteTests"
+      },
+      "fixtures": [
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/invalid-weapon-behavior-kind-prose.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/invalid-targeting-policy-prose.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/invalid-rock-targeting-behavior-prose.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/weapons/invalid-price-formula-kind-prose.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/bosses/invalid-boss-behavior-kind-prose.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/utilities/invalid-utility-behavior-kind-prose.json",
+        "tests/MechaMiner.Content.Tests/Fixtures/categories/branches/invalid-branch-behavior-kind-prose.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": ["test-output", "expected-diagnostic-id"],
+      "platforms": ["linux-x64", "windows-x64", "osx-arm64"],
+      "tier": "fast",
+      "status": "implemented"
+    }
+  ]
+}

@@ -9,10 +9,28 @@
       Godot types allowed:          No; it may launch the pinned Godot
                                     executable as an external process
 
-    This is a library at FND-001, not an executable. The typed verb dispatcher
-    and process entry point behind ./build.sh and ./build.ps1 are owned by
-    TASK-FND-002-001; FND-001 does not invent a command host.
+    TASK-FND-002-001 turns this library into the process entry point behind
+    ./build.sh and ./build.ps1. The verb table, exit classes, and structured
+    result artifacts live here so that no workflow logic is duplicated between
+    shell languages (doc 100 § Standard command surface).
   -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>MechaMiner.Tools</AssemblyName>
+    <RootNamespace>MechaMiner.Tools</RootNamespace>
+    <!--
+      The wrapper invokes the assembly through `dotnet <dll>`, so the native
+      apphost is dead weight in every build and in every artifact listing.
+    -->
+    <UseAppHost>false</UseAppHost>
+    <!--
+      Doc 40 § JSON codec and schema baseline mandates source-generated
+      System.Text.Json metadata and forbids runtime contract reflection. The
+      generator needs this switch to refuse to fall back to reflection.
+    -->
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="../MechaMiner.Content/MechaMiner.Content.csproj" />

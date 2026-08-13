@@ -9,10 +9,21 @@
 #            silently.")
 # Requirements: TR-BLD-001, TR-BLD-002, TR-FND-001
 #
-# This script is the reproducible record of the pinned environment. It is wired
-# into the `bootstrap` verb of ./build.sh by TASK-FND-002-001; until then it is
-# invoked directly. It is idempotent: re-running it revalidates and skips
-# already-correct installations.
+# This script is the reproducible record of the pinned environment and the platform
+# installer behind the `bootstrap` verb. Since TASK-FND-002-001 the supported entry
+# point is:
+#
+#     ./build.sh bootstrap
+#
+# which probes the pinned toolchain, invokes this installer only for what is
+# actually missing, restores repository-local packages in locked mode, and ends by
+# running `doctor`. AGENTS.md forbids competing workflow entrypoints, so invoke this
+# script directly in exactly one situation: .NET itself is absent, and a .NET
+# process therefore cannot install .NET. `./build.sh` prints that instruction and
+# exits 3 in that case.
+#
+# It is idempotent: re-running it revalidates and skips already-correct
+# installations.
 #
 # It installs to shared system locations on purpose:
 #   * .NET must live at /usr/share/dotnet because that is hostfxr's default probe

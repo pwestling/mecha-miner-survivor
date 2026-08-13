@@ -1,0 +1,129 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "GEO-001",
+  "workPackageTitle": "Planar math, primitives, inclusive overlap, swept queries, terrain collision",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91-verification-strategy.md § Verification registry). This file was created in the same commit that first implements against it, and every entry below was authored before the production code it names.",
+    "'status' takes exactly one of 'registered', 'implemented', 'retired' (doc 91 § Entry status). 'evidenceKinds' is read against 'status' (doc 91 § What evidenceKinds means): for a 'registered' entry the list is evidence the verification will produce once built, and nothing may treat it as produced.",
+    "The structural validator for this file is owned by TASK-FND-009-002. Until it lands, the shape here matches tests/verification/SIM-007.json exactly.",
+    "This file is deliberately NOT named SIM-0*.json. tests/MechaMiner.Simulation.Tests/Support/NegativeControlCoverageTests.cs globs 'SIM-0*.json' and asserts a totals line accounting for every entry across those seven files, so adding an entry to one of them from another work package would break an unrelated package's gate.",
+    "This slice implements the planar primitives that player movement needs and nothing else. Swept circle-against-polygon queries, the uniform spatial hash, and terrain collision are the rest of GEO-001's payload; they have no entry here yet because doc 91 forbids renumbering, so they will be appended as VER-GEO-001-005 onward by the task that lands them rather than inserted among these.",
+    "Angles are radians measured counterclockwise from simulation east, which is the ordinary atan2(y, x) convention. doc 20 § Numeric and unit conventions puts degrees clockwise from north 'only at display/content boundaries', so the internal representation is deliberately not the player-facing bearing and the conversion is presentation's."
+  ],
+  "entries": [
+    {
+      "id": "VER-GEO-001-001",
+      "summary": "The planar vector is a value in gameplay meters with exact arithmetic, magnitude, and squared magnitude, and it refuses a non-finite component at construction rather than propagating NaN into authoritative state.",
+      "task": "TASK-GEO-001-001",
+      "requirements": [
+        "TR-GEO-001"
+      ],
+      "technicalSources": [
+        "docs/technical/21-world-geometry-navigation-and-spatial-queries.md#coordinate-spaces",
+        "docs/technical/20-simulation-core.md#numeric-and-unit-conventions"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Geometry.PlanarVectorTests"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-GEO-001-002",
+      "summary": "Normalizing a nonzero vector yields unit magnitude and preserves direction; normalizing the zero vector is an explicit zero direction rather than an arbitrary axis.",
+      "task": "TASK-GEO-001-001",
+      "requirements": [
+        "TR-GEO-001"
+      ],
+      "technicalSources": [
+        "docs/technical/20-simulation-core.md#numeric-and-unit-conventions"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Geometry.PlanarVectorTests.NormalizingZeroYieldsAnExplicitZeroDirection"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-GEO-001-003",
+      "summary": "Circle-point containment and circle-circle overlap are inclusive and computed from squared distance: a point exactly on the boundary is contained, and two circles at exactly their summed radii overlap.",
+      "task": "TASK-GEO-001-001",
+      "requirements": [
+        "TR-GEO-001",
+        "TR-GEO-002"
+      ],
+      "technicalSources": [
+        "docs/technical/21-world-geometry-navigation-and-spatial-queries.md#contact-and-overlap",
+        "docs/technical/21-world-geometry-navigation-and-spatial-queries.md#collision-primitives"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Geometry.PlanarCircleTests"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-GEO-001-004",
+      "summary": "A direction's bearing round-trips: the bearing of a unit vector reconstructs that vector, and simulation east is exactly zero radians.",
+      "task": "TASK-GEO-001-001",
+      "requirements": [
+        "TR-GEO-001"
+      ],
+      "technicalSources": [
+        "docs/technical/decisions/TDR-005-simulate-gameplay-on-a-two-dimensional-plane.md#coordinate-contract"
+      ],
+      "gameplaySources": [
+        "docs/30-combat-weapons-movement-camera.md#direct-controls"
+      ],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Simulation.Tests.Geometry.PlanarVectorTests.BearingRoundTripsThroughDirection"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    }
+  ]
+}

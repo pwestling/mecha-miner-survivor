@@ -1,0 +1,49 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "PRE-002",
+  "workPackageTitle": "Orthographic camera, world conversion, clamp, footprint publication",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91-verification-strategy.md § Verification registry). This file was created in the same commit that first implements against it, and every entry below was authored before the production code it names.",
+    "'status' takes exactly one of 'registered', 'implemented', 'retired' (doc 91 § Entry status). 'evidenceKinds' is read against 'status' (doc 91 § What evidenceKinds means): for a 'registered' entry the list is evidence the verification will produce once built, and nothing may treat it as produced.",
+    "The structural validator for this file is owned by TASK-FND-009-002. Until it lands, this file is checked against tests/verification/SIM-007.json by hand, and the claim is about SHAPE only: every entry here carries the same field names with the same types - 'status' a bare string, 'scenarios', 'evidenceKinds', and 'fixtures' arrays - and the optional 'deferredTo' is absent. An earlier revision of this file rotated four of those fields against each other, so 'status' held a scenario ID in an array and 'evidenceKinds' held an artifact path, which doc 91:63 names as its own example of a value that is not a kind. It is corrected above. What is NOT yet matched is the kind vocabulary: 'engine-report', 'canonical-transcript', and 'reference-capture' are absent from doc 91 § What a kind may name's inventory, doc 91:78 requires a kind to be minted there before it may appear in a registry file, and minting those three is a correction this file still owes.",
+    "This file is deliberately NOT named SIM-0*.json. tests/MechaMiner.Simulation.Tests/Support/NegativeControlCoverageTests.cs globs 'SIM-0*.json' and asserts a totals line accounting for every entry across those seven files, so adding an entry to one of them from another work package would break an unrelated package's gate.",
+    "See PRE-001.json's notes for why every entry here is 'registered': no test project may reference MechaMiner.Game under the accepted project boundary, so presentation verification is an engine-tier scene procedure.",
+    "The 24-metre vertical extent is retained rather than chosen. doc 30 § Camera: 'Agents retain this value through M4 without preference review', and adopting perspective 'requires a superseding gameplay and technical decision'. An entry that asserted a tuned value would misrepresent it, so VER-PRE-002-001 asserts the retained one.",
+    "Boundary clamping and the published rendered/next-tick ground footprint are the rest of PRE-002's payload and have no entry here yet. Clamping needs a finite authored boundary, and footprint publication exists to validate offscreen spawning, which is GEO-007 and ENC work this slice does not reach."
+  ],
+  "entries": [
+    {
+      "id": "VER-PRE-002-001",
+      "summary": "The gameplay camera is orthographic, north-up, and non-rotating, and shows exactly 24 gameplay metres vertically, so a body at the vertical edge of the viewport is 12 metres from the camera's ground centre.",
+      "task": "TASK-PRE-002-001",
+      "requirements": [
+        "TR-PRE-002"
+      ],
+      "technicalSources": [
+        "docs/technical/30-presentation-and-rendering.md#camera"
+      ],
+      "gameplaySources": [
+        "docs/30-combat-weapons-movement-camera.md#camera-and-visual-format"
+      ],
+      "selector": {
+        "kind": "engine-scene",
+        "value": "game/tests/RunSliceEvidenceHarness.tscn § camera-shows-24-metres-vertically"
+      },
+      "fixtures": [],
+      "scenarios": [
+        "run-slice-drive"
+      ],
+      "evidenceKinds": [
+        "engine-report",
+        "canonical-transcript",
+        "reference-capture"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "main",
+      "status": "registered"
+    }
+  ]
+}

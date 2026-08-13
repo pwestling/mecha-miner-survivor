@@ -33,15 +33,23 @@
 #     releases.json, and Godot in a per-release SHA512-SUMS.txt. Those are
 #     measured, not asserted. See build/verify-bootstrap-macos.sh for the
 #     provenance table.
-#   * The Godot/.NET hosting gate in verify() was exercised against a real Godot
-#     4.7.1 mono build - the version this script pins - on Linux, in both states:
-#     with its GodotSharp directory unreachable the import run exits 134 and prints
-#     "Unable to find the .NET assemblies directory." and "ERROR: .NET: Assemblies
-#     not found" at gd_mono.cpp:650, and the gate reports it; on a healthy build
-#     with a cold cache and the game assembly not yet built it exits 0 with no
-#     complaint line, so the gate does not fail a fresh clone. The engine code path
-#     is shared with macOS. What is macOS-specific, and still unexecuted, is a
-#     Godot_mono.app bundle reached through a ~/.local/bin symlink.
+#   * The Godot/.NET hosting gate in verify() is exercised by
+#     build/verify-bootstrap-macos-hosting.sh, which drives this script's own
+#     functions against a real Godot 4.7.1 mono build - the version this script
+#     pins - on Linux. With the subject binary's GodotSharp directory unreachable
+#     the import run exits 134, prints "Unable to find the .NET assemblies
+#     directory." and "ERROR: .NET: Assemblies not found" at gd_mono.cpp:650, and
+#     the gate fails with exit 3; on a healthy build with a cold cache and the game
+#     assembly not yet built it exits 0 with no complaint line, so the gate does not
+#     fail a fresh clone. The engine code path is shared with macOS.
+#   * What is macOS-specific and still unexecuted: a Godot_mono.app bundle reached
+#     through a ~/.local/bin symlink. Do not read the symlink warning in
+#     warn_if_symlink_worse() as evidence about that. On the Linux Godot available
+#     here, a HEALTHY binary invoked through a bare symlink imports cleanly and
+#     exits 0 - measured - so this container cannot produce the macOS failure
+#     README § macOS describes, and the harness reaches that warning only by
+#     pointing the link at a second, genuinely broken install. That exercises the
+#     branch; it does not corroborate the mechanism.
 #
 # The first developer to run this on a Mac is its first execution. Treat an
 # unexpected failure as a defect in this script, not in their machine.
@@ -601,6 +609,18 @@ link_godot() {
 # Verification
 # ---------------------------------------------------------------------------
 
+# OVERLAP, NAMED RATHER THAN LEFT TO BE FOUND: build/verify-godot.sh:71-83 already
+# runs this same import against bare `godot` and, on top of the exit status, fails
+# on any line matching (ERROR|WARNING|SCRIPT ERROR|USER ERROR):. That is the
+# stronger assertion of the two and it stays the project's import gate. This one is
+# deliberately narrower for one reason: verify-godot.sh:63 builds
+# game/MechaMiner.Game.csproj first, so a clean log is a reasonable demand there.
+# Bootstrap runs before any build - on a fresh clone the game assembly does not
+# exist - and an unbuilt project imports with engine WARNING lines that say nothing
+# about whether Godot can host .NET. So this narrows the log arm to the .NET
+# assembly-resolution shape below. If the two ever need to agree, verify-godot.sh
+# is the one to move toward, not this one.
+
 # What a .NET assembly-resolution complaint LOOKS LIKE, matched case-insensitively
 # and by shape rather than by one literal. Both word orders are real and both come
 # out of the same failure: Godot prints "Unable to find the .NET assemblies
@@ -616,6 +636,31 @@ readonly GODOT_DOTNET_COMPLAINT_RE='(unable to find|could not find|cannot find|n
 # no namerefs to return them with.
 GODOT_IMPORT_LOG=""
 GODOT_IMPORT_STATUS=0
+
+# Which executable the authoritative check adjudicates, and whether the ~/.local/bin
+# symlink was found to be worse than it. Set by verify(), read by main() so the
+# closing line cannot claim a clean run when it was not one.
+GODOT_UNDER_TEST=""
+GODOT_SYMLINK_DEGRADED=0
+
+# MECHAMINER_GODOT is the repository's documented way to name the Godot executable
+# (README § macOS). This script printed that name in two pieces of advice and never
+# read the variable, so the escape hatch it offered a developer did not exist. It
+# does now, and it wins over both the bundle binary and the symlink: a developer who
+# has set it has told us which Godot they intend to use, and checking a different
+# one answers a question they did not ask.
+#
+# Otherwise the subject is ${GODOT_BIN}, the binary inside the bundle this script
+# installs and hashes - NOT ${GODOT_SYMLINK}. Everything downstream of provisioning
+# is entitled to assume the pinned toolchain works when invoked directly; a
+# convenience alias on PATH is a separate question, handled separately below.
+godot_under_test() {
+  if [[ -n "${MECHAMINER_GODOT:-}" ]]; then
+    printf '%s\n' "${MECHAMINER_GODOT}"
+  else
+    printf '%s\n' "${GODOT_BIN}"
+  fi
+}
 
 # Runs the import once through the executable it is given and reports whether that
 # run was clean. Both signals are consulted, because neither alone is enough: the
@@ -646,35 +691,128 @@ godot_import_probe() {
 # Failure path only, and it must never call fail(): a diagnostic that can itself
 # abort would replace the real failure message with its own.
 #
-# The same command is re-run against the bundle binary rather than the symlink,
-# because the two point at different fixes and the developer cannot tell them apart
-# from the engine's message. A mono Godot resolves GodotSharp relative to the path
-# it was invoked through, so a symlink into a directory with no GodotSharp beside it
-# breaks an install that is otherwise perfectly good.
+# The subject here was invoked by its own path with no symlink in the way, so a
+# symlink cannot be the cause and this must not offer relinking as a cure. The one
+# split still worth making is override-versus-install, and only when a
+# MECHAMINER_GODOT override is what failed.
 diagnose_godot_import() {
-  if [[ ! -x "${GODOT_BIN}" ]]; then
+  local subject="$1"
+
+  if [[ ! -x "${subject}" ]]; then
     printf '%s\n' \
-      "  ${GODOT_BIN} is missing or not executable, so the installed app itself is" \
-      "  incomplete - this is not just a bad symlink."
+      "  ${subject} is missing or not executable, so there was nothing here that" \
+      "  could have hosted .NET."
+    if [[ "${subject}" != "${GODOT_BIN}" ]]; then
+      printf '%s\n' \
+        "  It came from MECHAMINER_GODOT. Unset that to check ${GODOT_BIN}," \
+        "  the Godot this script installs, instead."
+    fi
     return 0
   fi
 
-  if godot_import_probe "${GODOT_BIN}"; then
-    printf '%s\n' \
-      "  The SAME command run directly as ${GODOT_BIN} succeeds, so the installed" \
-      "  Godot is fine and ${GODOT_SYMLINK} is the fault: a mono Godot resolves its" \
-      "  GodotSharp assemblies relative to the path it is invoked through. Re-run" \
-      "  this script to relink it, or export MECHAMINER_GODOT=${GODOT_BIN} and use" \
-      "  the bundle path directly."
-  else
-    printf '%s\n' \
-      "  The same command fails through ${GODOT_BIN} too (exit ${GODOT_IMPORT_STATUS}; an exit" \
-      "  of 0 there means the .NET complaint turned up in its output instead)," \
-      "  so the installed app is what is broken, not the symlink. Remove" \
-      "  ${GODOT_APP} and re-run this script to lay it down again from the pinned" \
-      "  archive."
+  if [[ "${subject}" != "${GODOT_BIN}" ]]; then
+    # A MECHAMINER_GODOT override failed. Whether the override or the install is at
+    # fault is answerable by running the same command against the install, so
+    # answer it rather than making the developer guess.
+    if [[ -x "${GODOT_BIN}" ]] && godot_import_probe "${GODOT_BIN}"; then
+      printf '%s\n' \
+        "  MECHAMINER_GODOT pointed this check at ${subject}." \
+        "  The SAME command run against ${GODOT_BIN}," \
+        "  the Godot this script installs, succeeds. The install is fine and the" \
+        "  override is what fails: unset MECHAMINER_GODOT, or point it at" \
+        "  ${GODOT_BIN}."
+    else
+      printf '%s\n' \
+        "  MECHAMINER_GODOT pointed this check at ${subject}." \
+        "  ${GODOT_BIN} is absent or fails the same way, so unsetting the override" \
+        "  is not the fix. Remove ${GODOT_APP} and re-run this script to lay the" \
+        "  pinned Godot down again from its archive."
+    fi
+    return 0
   fi
+
+  printf '%s\n' \
+    "  This is the binary inside the app bundle this script installed, invoked by" \
+    "  its own path with no symlink involved, so no symlink can be the cause and" \
+    "  relinking cannot be the cure. Its SHA-256 matched the pin earlier in this" \
+    "  run, so the executable is the expected bytes; what is missing is something" \
+    "  the bundle needs beside it at runtime - most often the GodotSharp directory" \
+    "  that has to sit next to the executable. Remove ${GODOT_APP} and re-run this" \
+    "  script to lay it down again from the pinned archive."
   return 0
+}
+
+# The symlink check, kept but demoted, and the demotion is the point.
+#
+# Once the bundle binary has been shown to host .NET, a symlink to it that does NOT
+# is a real problem for every developer who types `godot` - build/verify-godot.sh
+# calls bare `godot`, so it would fail for them. It is not, however, a reason to
+# fail provisioning: both pinned tools are installed, hashed and shown to work by
+# the invocation this script documents. Exit class 3 means "missing or mismatched
+# pinned environment", and that is not this.
+#
+# It is also deliberately NOT a judgement about mechanism. README § macOS records
+# the invoked-path assembly-resolution story as the coherent reading of a failure,
+# not as something measured, and this script cannot measure it either: from here a
+# symlink whose target is a second, broken Godot is indistinguishable from a good
+# target reached by a bad path. So this reports the difference it observed and the
+# invocation that works, and does not claim to know why.
+warn_if_symlink_worse() {
+  local subject="$1"
+
+  # Nothing to compare when the symlink IS the subject, or when it is absent
+  # because link_godot moved a developer's own file aside.
+  [[ "${subject}" != "${GODOT_SYMLINK}" ]] || return 0
+  if [[ ! -e "${GODOT_SYMLINK}" ]]; then
+    warn "${GODOT_SYMLINK} is not present, so 'godot' will not resolve on PATH."
+    return 0
+  fi
+
+  log "re-running the same import through ${GODOT_SYMLINK} - the PATH alias"
+  if godot_import_probe "${GODOT_SYMLINK}"; then
+    log "godot hosts .NET through ${GODOT_SYMLINK} too"
+    return 0
+  fi
+
+  GODOT_SYMLINK_DEGRADED=1
+
+  local complaints
+  complaints="$(grep -Ei "${GODOT_DOTNET_COMPLAINT_RE}" <<<"${GODOT_IMPORT_LOG}" || true)"
+  if [[ -z "${complaints}" ]]; then
+    complaints="$(tail -n 5 <<<"${GODOT_IMPORT_LOG}")"
+  fi
+
+  local target="not a symlink"
+  if [[ -L "${GODOT_SYMLINK}" ]]; then
+    target="$(readlink "${GODOT_SYMLINK}")"
+  fi
+
+  warn ""
+  warn "Provisioning succeeded, but 'godot' on PATH does not host .NET."
+  warn ""
+  warn "  works:  ${subject} --headless --path ${GODOT_PROJECT_DIR} --import"
+  warn "  fails:  ${GODOT_SYMLINK} --headless --path ${GODOT_PROJECT_DIR} --import"
+  warn "          exit ${GODOT_IMPORT_STATUS}"
+  indent_block "${complaints}" >&2
+  warn ""
+  warn "What that establishes: this Godot hosts .NET when invoked as ${subject}"
+  warn "and does not when invoked as ${GODOT_SYMLINK}."
+  warn "What it does NOT establish: why. Two causes look identical from here - a mono"
+  warn "Godot resolving its assemblies relative to the path it was invoked through"
+  warn "(README § macOS, recorded there as the coherent reading of a failure rather"
+  warn "than as a measurement), and the link simply pointing somewhere else. For that"
+  warn "second one: ${GODOT_SYMLINK} -> ${target}"
+  warn ""
+  warn "Re-running this script will NOT fix it. This script created that symlink and"
+  warn "would recreate the identical one pointing at the identical target."
+  warn ""
+  warn "Use the invocation this run showed working, either directly or by naming it:"
+  warn "    export MECHAMINER_GODOT=\"${subject}\""
+  warn "    ${subject} --headless --path ${GODOT_PROJECT_DIR} --import"
+  warn ""
+  warn "Anything that calls bare 'godot' - build/verify-godot.sh does - will fail"
+  warn "until this is resolved."
+  warn ""
 }
 
 # The part of verification that can actually fail on the way a real install breaks.
@@ -691,15 +829,36 @@ diagnose_godot_import() {
 # some Godot failures present as a modal dialog and the process then sits there
 # rather than exiting (README § macOS); this check inherits that, exactly as
 # build/verify-godot.sh does, and the .NET failure it targets aborts instead.
+#
+# WHICH EXECUTABLE ADJUDICATES, and why it is not the symlink. An earlier revision
+# of this function probed ${GODOT_SYMLINK}. If README § macOS is right that a mono
+# Godot reached through such a link cannot find its assemblies, then that gate could
+# never pass on the platform this script exists to provision - a correctly
+# provisioned Mac would hard-fail every run, and the advice it printed was to re-run
+# the script, which recreates the same link. Nobody here has a Mac, so that reading
+# is unmeasured and must not be settled by asserting it. Probing ${GODOT_BIN}
+# instead makes this gate answer a question with only one right answer: a pinned
+# toolchain that cannot host .NET when invoked directly is broken on any platform,
+# and still hard-fails with exit class 3.
 assert_godot_hosts_dotnet() {
+  local subject="$1"
+
   [[ -f "${GODOT_PROJECT_DIR}/project.godot" ]] \
     || fail "no Godot project at ${GODOT_PROJECT_DIR}. This check imports the repository's
 own project, so it must be run from a checkout, not from a copy of this script alone." \
       "$EXIT_ENVIRONMENT"
 
-  log "importing ${GODOT_PROJECT_DIR} through ${GODOT_SYMLINK} - the run that initialises .NET"
-  if godot_import_probe "${GODOT_SYMLINK}"; then
-    log "godot imported the project through the symlink with no .NET complaint"
+  # Announced here rather than in verify(), so that anything which runs this check
+  # says which Godot it is about. A gate that silently adjudicates an executable
+  # other than the one the script installed is a gate whose result is misread.
+  if [[ "${subject}" != "${GODOT_BIN}" ]]; then
+    log "MECHAMINER_GODOT is set, so this adjudicates ${subject}"
+    log "and NOT ${GODOT_BIN}, which this script installs."
+  fi
+
+  log "importing ${GODOT_PROJECT_DIR} through ${subject} - the run that initialises .NET"
+  if godot_import_probe "${subject}"; then
+    log "godot imported the project with no .NET complaint"
     return
   fi
 
@@ -715,10 +874,10 @@ own project, so it must be run from a checkout, not from a copy of this script a
     evidence="$(indent_block "$(tail -n 10 <<<"${GODOT_IMPORT_LOG}")")"
   fi
   local diagnosis
-  diagnosis="$(diagnose_godot_import)"
+  diagnosis="$(diagnose_godot_import "${subject}")"
 
   fail "Godot cannot host .NET, so this toolchain cannot run the game.
-  command  ${GODOT_SYMLINK} --headless --path ${GODOT_PROJECT_DIR} --import
+  command  ${subject} --headless --path ${GODOT_PROJECT_DIR} --import
   exit     ${failed_status}
 ${evidence}
 ${diagnosis}
@@ -741,22 +900,27 @@ verify() {
   grep -q "^${DOTNET_SDK_VERSION} " <<<"${sdks}" \
     || fail "SDK ${DOTNET_SDK_VERSION} not reported by ${dotnet_bin} --list-sdks" "$EXIT_ENVIRONMENT"
 
+  GODOT_UNDER_TEST="$(godot_under_test)"
+  [[ -x "${GODOT_UNDER_TEST}" ]] \
+    || fail "no executable Godot at ${GODOT_UNDER_TEST}" "$EXIT_ENVIRONMENT"
+
   local godot_version
-  godot_version="$("${GODOT_SYMLINK}" --headless --version)"
+  godot_version="$("${GODOT_UNDER_TEST}" --headless --version)"
   # Match the full pinned prefix, including flavor and channel. Checking only
   # "4.7.1" would accept a non-mono build, which cannot host GodotPlugins at all.
   #
-  # This says the symlink resolves to the right ENGINE. It says nothing about
-  # whether that engine can reach its .NET assemblies, and it cannot: the version
-  # is printed before .NET is initialised. assert_godot_hosts_dotnet() below is the
+  # This says the executable is the right ENGINE. It says nothing about whether
+  # that engine can reach its .NET assemblies, and it cannot: the version is
+  # printed before .NET is initialised. assert_godot_hosts_dotnet() below is the
   # check that answers the question this one only looks like it answers.
   [[ "${godot_version}" == "${GODOT_EXPECTED_VERSION_PREFIX}"* ]] \
     || fail "godot reported '${godot_version}', expected ${GODOT_EXPECTED_VERSION_PREFIX}*" "$EXIT_ENVIRONMENT"
 
-  assert_godot_hosts_dotnet
+  assert_godot_hosts_dotnet "${GODOT_UNDER_TEST}"
+  warn_if_symlink_worse "${GODOT_UNDER_TEST}"
 
   log "dotnet sdk: ${DOTNET_SDK_VERSION} (${DOTNET_INSTALL_DIR})"
-  log "godot:      ${godot_version}"
+  log "godot:      ${godot_version} (${GODOT_UNDER_TEST})"
   log "godot hosts .NET: import of ${GODOT_PROJECT_DIR} ran clean"
 }
 
@@ -764,7 +928,13 @@ report_path_guidance() {
   # Doc 100 forbids silently mutating developer configuration, so this prints
   # instead of editing a shell profile. The repository's documented Godot
   # discovery order is MECHAMINER_GODOT first, then `godot` on PATH, so either
-  # line below is sufficient and neither requires privilege.
+  # line below is sufficient and neither requires privilege. This script now reads
+  # MECHAMINER_GODOT itself - see godot_under_test() - so the second line is advice
+  # this script honours, not just advice it repeats.
+  if [[ "${GODOT_SYMLINK_DEGRADED}" -eq 1 ]]; then
+    log "Because of the warning above, prefer MECHAMINER_GODOT here; PATH alone will"
+    log "give you a 'godot' that cannot host .NET."
+  fi
   case ":${PATH}:" in
     *":${USER_BIN_DIR}:"*)
       log "${USER_BIN_DIR} is already on PATH; 'godot' resolves"
@@ -800,7 +970,24 @@ main() {
   install_godot
   verify
   report_path_guidance
-  log "OK"
+  # A warning forty lines up is a warning nobody reads. The closing line does not
+  # get to say the run was clean when one half of it was not.
+  if [[ "${GODOT_SYMLINK_DEGRADED}" -eq 1 ]]; then
+    log "OK, with one WARNING above: the pinned toolchain works as"
+    log "${GODOT_UNDER_TEST}, but not as ${GODOT_SYMLINK}."
+  else
+    log "OK"
+  fi
 }
 
-main "$@"
+# Executed: provision. SOURCED: define and stop.
+#
+# build/verify-bootstrap-macos-hosting.sh sources this file to drive
+# godot_under_test(), assert_godot_hosts_dotnet() and warn_if_symlink_worse()
+# against Godot installs whose health it controls, which is the only way anything
+# in here can be made to go red on a Linux CI host. Without this guard that harness
+# would provision the machine it runs on instead. `${BASH_SOURCE[0]}` equals `${0}`
+# only when this file is the program being run.
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  main "$@"
+fi

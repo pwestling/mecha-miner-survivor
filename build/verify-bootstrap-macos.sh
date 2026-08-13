@@ -22,6 +22,19 @@
 #   makes no such claim, and check 11 exists to stop the script from making it
 #   either.
 #
+#   IT ALSO CANNOT TELL A CHECK THAT FAILS FROM A CHECK THAT CANNOT
+#
+#   A text scan cannot distinguish verify()'s Godot/.NET hosting assertion from a
+#   line that always passes; both read the same. That half is covered by
+#   build/verify-bootstrap-macos-hosting.sh, a separate DYNAMIC harness which
+#   executes build/bootstrap-macos.sh's own functions against Godot installs it
+#   builds broken and healthy on purpose. It is deliberately not merged into this
+#   file, because this file's contract is that it runs anywhere and touches
+#   nothing; the harness needs a real mono Godot (it reports SKIP and exits 0
+#   without one). Neither runs automatically - there is no CI workflow invoking
+#   either - so both are run by hand, or alongside build/verify-godot.sh, which
+#   already requires the same Godot.
+#
 # FORWARD-COMPATIBLE HALF
 #
 #   build/toolchain.json is NOT present on master; it belongs to the FND-002
@@ -477,6 +490,9 @@ if [[ "${failures}" -eq 0 ]]; then
   echo "NOTE: every check above is static. None of them executed build/bootstrap-macos.sh,"
   echo "      which cannot run on this host. This gate passing is not evidence that the"
   echo "      script provisions a Mac."
+  echo "      For the runtime half - does the Godot/.NET hosting check in verify() actually"
+  echo "      fail on a broken install - run build/verify-bootstrap-macos-hosting.sh, which"
+  echo "      executes it. That harness needs a mono Godot and SKIPs without one."
   exit 0
 fi
 echo "verify-bootstrap-macos: FAIL (${failures} assertion(s), ${skipped} skipped)"

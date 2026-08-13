@@ -693,8 +693,12 @@ internal sealed class VerificationRegistryTests
     /// <see cref="RegistryFixtureReferences.Form.Prose"/> reference because there is nothing in
     /// it to resolve, and that is a fail-open unless something states how many references got
     /// that answer. This does: each form's count is compared against a committed literal and
-    /// the census is written to the run's output, so 22 references that no test can verify are
-    /// visible as 22 rather than invisible among 454.
+    /// the census is written to the run's output, so the references that no test can verify are
+    /// visible as their own asserted <see cref="ProseReferences"/> count rather than invisible
+    /// in a total. Neither number is restated here on purpose - the total is that literal plus
+    /// <see cref="RepositoryPathReferences"/>, <see cref="PathAndSectionReferences"/> and
+    /// <see cref="PathAndCaseReferences"/>, each of which this test asserts, and a figure
+    /// transcribed into this sentence would be asserted by nothing.
     /// </para>
     /// <para>
     /// The literals are literals for the usual reason - a census derived from the registries
@@ -952,6 +956,7 @@ internal sealed class VerificationRegistryTests
 
     /// <summary>Fixture references that are a bare repository-relative path.</summary>
     /// <remarks>
+    /// <para>
     /// 319 at <c>46366ea</c>. 326 from <c>VER-DAT-002-037</c>, which names the seven new
     /// behavior-token fixtures as its evidence - one per previously unreached call site. The
     /// delta is +7 and the seven are enumerated in that entry's own <c>fixtures</c> array, so a
@@ -960,8 +965,20 @@ internal sealed class VerificationRegistryTests
     /// measurement that added the partition to
     /// <see cref="TheFixtureReferenceCensusIsWhatIsDeclared"/>. 319 at <c>46366ea</c> is the
     /// superseded figure and is kept above it.
+    /// </para>
+    /// <para>
+    /// 350, re-measured over <c>tests/verification/</c> on the successor of <c>4a773e70</c> that
+    /// completed <c>VER-DAT-001-039</c>'s <c>fixtures</c> array. 347 is the superseded figure and
+    /// is kept above it. The delta is +3 and it is the three category schemas that entry's gate
+    /// had begun opening when the FND-004 merge grew <c>TheEightImplementedGrammars</c> -
+    /// <c>mining-site.schema.json</c>, <c>elite-modifiers.schema.json</c> and
+    /// <c>player-baseline.schema.json</c> - so a reader can check the arithmetic against the array
+    /// that moved it. Measured by running
+    /// <see cref="TheFixtureReferenceCensusIsWhatIsDeclared"/> and reading the value it reported
+    /// against this literal, not by adding three to the figure above.
+    /// </para>
     /// </remarks>
-    private const int RepositoryPathReferences = 347;
+    private const int RepositoryPathReferences = 350;
 
     /// <summary>Fixture references of the form <c>path § heading</c>.</summary>
     /// <remarks>

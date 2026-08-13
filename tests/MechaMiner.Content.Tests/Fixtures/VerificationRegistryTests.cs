@@ -316,13 +316,17 @@ internal sealed class VerificationRegistryTests
             }
         }
 
-        // No "at least one nunit selector" assertion here, deliberately. Seven of the twenty-two
-        // registries declare none: DAT-007, FND-001, FND-002 and FND-005, which are script and
-        // command gates, and PRE-001, PRE-002 and UI-002, which are engine-scene gates. Not "the
-        // FND registries" - FND-003 is one and declares six - and the seven are pinned as
+        // No "at least one nunit selector" assertion here, deliberately. Seven registries declare
+        // none: DAT-007, FND-001, FND-002 and FND-005, which are script and command gates, and
+        // PRE-001, PRE-002 and UI-002, which are engine-scene gates. Not "the FND registries" -
+        // FND-003 is one and declares six - and the seven are pinned as
         // RegistriesWithNoNunitSelector rather than restated here, because an enumeration in a
-        // comment is what went stale. The non-vacuity guarantee this walk needs is held one level
-        // up, over the whole set, by EverySelectorKindIsOneSomeWalkResolves.
+        // comment is what went stale. Out of how many follows from
+        // <see cref="VerificationRegistry.RegistriesOnDisk"/>, the count
+        // <see cref="EveryRegistryOnDiskIsDiscoveredAndWalked"/> asserts, and is not transcribed
+        // here for the same reason: that literal is gated and a copy of it in prose is not. The
+        // non-vacuity guarantee this walk needs is held one level up, over the whole set, by
+        // EverySelectorKindIsOneSomeWalkResolves.
         Expect.Multiple(() =>
         {
             Assert.That(entriesSeen, Is.GreaterThan(0), NoEntries(package));
@@ -342,9 +346,12 @@ internal sealed class VerificationRegistryTests
     /// <para>
     /// The per-registry selector walk skips any entry whose kind is not <c>nunit</c>, so a
     /// registry declaring no <c>nunit</c> selector passes it while having no selector checked at
-    /// all. Seven of the twenty-two are in that state: DAT-007, FND-001, FND-002 and FND-005,
+    /// all. Seven registries are in that state: DAT-007, FND-001, FND-002 and FND-005,
     /// which are script and command gates, and PRE-001, PRE-002 and UI-002, which are engine-scene
-    /// gates. FND-003 is an FND registry and is <em>not</em> among them - it declares six nunit
+    /// gates. Out of how many follows from <see cref="VerificationRegistry.RegistriesOnDisk"/>, the
+    /// count <see cref="EveryRegistryOnDiskIsDiscoveredAndWalked"/> asserts, and is deliberately
+    /// not transcribed here: that literal is gated and a sentence restating it is not.
+    /// FND-003 is an FND registry and is <em>not</em> among them - it declares six nunit
     /// selectors - which is why the exposure is stated as a list of registries rather than as a
     /// family. That is a real gap and this assertion is deliberately <em>not</em> a fix for it: it
     /// records which kinds exist and which are resolvable, so the gap is stated by a test instead

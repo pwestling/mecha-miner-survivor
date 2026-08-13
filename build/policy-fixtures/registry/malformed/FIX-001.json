@@ -1,0 +1,27 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "FIX-001",
+  "workPackageTitle": "Fixture work package",
+  "notes": [
+    "Deliberate defect: doc 91 \u00a7 Verification registry - this note escapes the section sign instead of writing it as literal UTF-8.",
+    "Deliberate defect: the first entry has an unaccepted tier and no summary."
+  ],
+  "entries": [
+    {
+      "id": "VER-FIX-001-001",
+      "summary": "",
+      "task": "TASK-FIX-001-001",
+      "requirements": ["TR-FIX-001"],
+      "technicalSources": ["docs/technical/112-normative-requirement-index.md#fixture-requirements"],
+      "gameplaySources": [],
+      "selector": { "kind": "nunit", "value": "MechaMiner.Tools.Tests.Audit.RegistryValidatorTests" },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": ["test-counts"],
+      "platforms": ["linux-x64"],
+      "tier": "instant",
+      "status": "implemented"
+    }
+  ]
+}

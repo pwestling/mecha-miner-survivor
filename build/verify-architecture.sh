@@ -35,8 +35,13 @@
 # must not fail this gate for lacking a restore, and "I could not measure this" is
 # not the same finding as "this is violated".
 #
-# TASK-FND-009-001 replaces the reference-graph portion with an architecture test
-# inside the pure test projects. This script remains the FND-001 gate until then.
+# TASK-FND-009-001 added real architecture tests in tests/MechaMiner.Tools.Tests, with
+# one negative control per forbidden edge. This script deliberately stays: the build
+# verb calls it (stage 3), and .github/workflows/fast.yml reaches it through that verb
+# rather than directly, and it reads MSBuild's own evaluation of every project, which
+# catches an SDK-injected package reference that no project file mentions. The two
+# gates are independent on purpose - neither consumes the other's output - so one
+# reader's defect cannot hide from both.
 #
 # Exit classes follow doc 100 § Standard command surface: 0 success,
 # 4 validation failure. There is deliberately no exit 1: a wrapper that returns
@@ -110,14 +115,25 @@ readonly EXPECTED_PATHS=(
   "game/presentation"
   "src/MechaMiner.Simulation"
   "src/MechaMiner.Content"
+  "src/MechaMiner.Diagnostics"
   "src/MechaMiner.Persistence"
   "src/MechaMiner.Tools"
   "tests/MechaMiner.Simulation.Tests"
   "tests/MechaMiner.Content.Tests"
+  "tests/MechaMiner.Diagnostics.Tests"
   "tests/MechaMiner.Persistence.Tests"
+  "tests/MechaMiner.Tools.Tests"
   "tests/MechaMiner.Game.Tests"
   "tests/verification"
   "content"
+  # doc 40 § Accepted content repository layout. content/schemas was in that layout and
+  # simply missing from this gate; content/player was added by the same doc change that
+  # gave the shared player baseline somewhere to live, because a mech definition carries
+  # Hull/Armor/Recovery/movement/footprint *overrides* and the overridden values are not
+  # mech data. Both carry a .gitkeep, the way FND-001 seeded every other empty accepted
+  # directory, so adding the path does not add a failure.
+  "content/schemas"
+  "content/player"
   "assets-source"
   "assets-runtime"
   "assets-manifest"
@@ -132,14 +148,17 @@ readonly EXPECTED_PATHS=(
 
 readonly EXPECTED_PROJECTS=(
   "src/MechaMiner.Content/MechaMiner.Content.csproj||no"
+  "src/MechaMiner.Diagnostics/MechaMiner.Diagnostics.csproj||no"
   "src/MechaMiner.Simulation/MechaMiner.Simulation.csproj|MechaMiner.Content|no"
   "src/MechaMiner.Persistence/MechaMiner.Persistence.csproj|MechaMiner.Content|no"
-  "src/MechaMiner.Tools/MechaMiner.Tools.csproj|MechaMiner.Content,MechaMiner.Persistence,MechaMiner.Simulation|no"
+  "src/MechaMiner.Tools/MechaMiner.Tools.csproj|MechaMiner.Content,MechaMiner.Diagnostics,MechaMiner.Persistence,MechaMiner.Simulation|no"
   "tests/MechaMiner.Content.Tests/MechaMiner.Content.Tests.csproj|MechaMiner.Content|no"
+  "tests/MechaMiner.Diagnostics.Tests/MechaMiner.Diagnostics.Tests.csproj|MechaMiner.Diagnostics|no"
   "tests/MechaMiner.Simulation.Tests/MechaMiner.Simulation.Tests.csproj|MechaMiner.Simulation|no"
   "tests/MechaMiner.Persistence.Tests/MechaMiner.Persistence.Tests.csproj|MechaMiner.Persistence|no"
-  "tests/MechaMiner.Game.Tests/MechaMiner.Game.Tests.csproj|MechaMiner.Content,MechaMiner.Persistence,MechaMiner.Simulation|no"
-  "game/MechaMiner.Game.csproj|MechaMiner.Content,MechaMiner.Persistence,MechaMiner.Simulation|yes"
+  "tests/MechaMiner.Tools.Tests/MechaMiner.Tools.Tests.csproj|MechaMiner.Tools|no"
+  "tests/MechaMiner.Game.Tests/MechaMiner.Game.Tests.csproj|MechaMiner.Content,MechaMiner.Diagnostics,MechaMiner.Persistence,MechaMiner.Simulation|no"
+  "game/MechaMiner.Game.csproj|MechaMiner.Content,MechaMiner.Diagnostics,MechaMiner.Persistence,MechaMiner.Simulation|yes"
 )
 
 msbuild_items() {
@@ -183,69 +202,6 @@ for name in sys.argv[1].split(","):
         if identity.strip():
             sys.stdout.write(identity + "\n")
 ' "${item}"
-}
-
-msbuild_property() {
-  # $1 project, $2 property name. Prints the evaluated value.
-  # Returns nonzero when MSBuild cannot evaluate the project or the value is
-  # empty, so a caller never compares against a silently empty string.
-  local output
-  output="$(dotnet msbuild "${REPO_ROOT}/$1" -nologo "-getProperty:$2" 2>/dev/null)" || return 1
-  output="${output//[$'\r\n']/}"
-  [[ -n "${output}" ]] || return 1
-  printf '%s' "${output}"
-}
-
-godot_assembly_names() {
-  # Filters a list of reference identities, assembly identities or paths on stdin
-  # down to the Godot assemblies among them, as a comma-separated list. Matches
-  # the last path segment so a bare assembly name and a full HintPath are treated
-  # alike. Tabs are treated as separators, so a caller may feed it more than one
-  # column per reference.
-  tr '\t' '\n' \
-    | sed -E 's|.*[/\\]||; s|\.dll$||' \
-    | grep -iE '^Godot([A-Za-z0-9.]*)?$' \
-    | sort -u | paste -sd, - || true
-}
-
-resolved_assembly_identities() {
-  # $1 project. Prints "<assembly identity>\t<file name>" for every resolved
-  # compile-time reference. Returns nonzero on the same conditions as
-  # msbuild_items.
-  #
-  # The identity is the simple name out of FusionName, which
-  # ResolveAssemblyReferences reads from the assembly's own metadata. It therefore
-  # does not change when the FILE is renamed, which is the whole point: copying
-  # GodotSharp.dll to build/probe/Engine.dll and referencing it as
-  # <Reference Include="Engine"> defeated every name-based check while putting the
-  # real Godot assembly on a pure project's compile line.
-  #
-  # The file name is printed ALONGSIDE the identity, not instead of it, so a
-  # reference whose identity metadata cannot be read is still matched by name
-  # rather than reported as clean.
-  local project="$1"
-  local output
-  output="$(dotnet msbuild "${REPO_ROOT}/${project}" -nologo \
-    -getItem:ReferencePath -t:ResolveAssemblyReferences \
-    -p:BuildProjectReferences=false 2>/dev/null)" || return 1
-  printf '%s' "${output}" | python3 -c '
-import json, sys
-try:
-    document = json.load(sys.stdin)
-except ValueError:
-    sys.exit(1)
-items = document.get("Items")
-if not isinstance(items, dict) or "ReferencePath" not in items:
-    sys.exit(1)
-for entry in items["ReferencePath"]:
-    path = (entry.get("Identity") or "").replace("\\", "/")
-    name = path.rsplit("/", 1)[-1]
-    if name.lower().endswith(".dll"):
-        name = name[:-4]
-    fusion = (entry.get("FusionName") or "").strip()
-    identity = fusion.split(",")[0].strip() if fusion else ""
-    sys.stdout.write("%s\t%s\n" % (identity, name))
-'
 }
 
 compiled_source_files() {
@@ -353,6 +309,112 @@ project_name() {
   printf '%s' "${base%.*proj}"
 }
 
+# --- The two comparisons, as functions -------------------------------------------------
+#
+# Extracted so the negative controls in section 8 run the SAME comparison the real
+# projects run, rather than a second implementation of it. A control that reimplemented
+# the comparison would only prove the control works.
+
+# $1 project path, $2 accepted comma-separated reference set.
+# Sets EDGES_ACTUAL. Returns 0 when the evaluated set equals the accepted set.
+EDGES_ACTUAL=""
+# $1 project path, $2 the accepted comma-separated reference set.
+# Sets EDGES_ACTUAL and EDGES_UNPROVED. Returns 0 when the evaluated edge set equals the
+# accepted one, and 2 without a verdict when MSBuild could not evaluate the project.
+#
+# The evaluation is captured and its STATUS CHECKED before it is filtered, because a
+# pipeline discards the producer's exit status. That matters more here than anywhere else
+# in this script: MechaMiner.Content and MechaMiner.Diagnostics both accept the EMPTY
+# reference set, so a failed evaluation - which yields nothing - would compare equal to
+# their accepted rows and be reported as compliant. "Could not be asked" and "declares
+# nothing" are different answers and only one of them is a pass.
+EDGES_ACTUAL=""
+EDGES_UNPROVED="no"
+edges_match() {
+  local project_references
+  EDGES_ACTUAL=""
+  EDGES_UNPROVED="no"
+  if ! project_references="$(msbuild_items "$1" ProjectReference)"; then
+    EDGES_UNPROVED="yes"
+    return 2
+  fi
+  EDGES_ACTUAL="$(printf '%s\n' "${project_references}" \
+    | sed -E 's|.*[/\\]||; s|\.[A-Za-z]+proj$||' | sort | paste -sd, -)"
+  [[ "${EDGES_ACTUAL}" == "$2" ]]
+}
+
+# $1 project path, $2 "yes" when doc 115 allows the engine dependency.
+# Sets GODOT_EVALUATED, GODOT_LOCKED, and GODOT_UNPROVED. Returns 0 when the project's
+# engine dependency matches what doc 115 allows for it.
+#
+# GODOT_UNPROVED is the third outcome, and it is deliberately not folded into the
+# mismatch return. The declared item list is obtained first and its STATUS CHECKED on its
+# own before it is filtered, because a failed MSBuild evaluation yields an empty list and
+# an empty list is exactly what a project with no Godot dependency looks like - every
+# "must not reference Godot" row would otherwise pass without anything having been
+# evaluated. A pipeline discards the producer's exit status, so the capture and the check
+# are separate statements here rather than one pipeline.
+#
+# The DECLARED signal reads Reference AND PackageReference, not PackageReference alone. A
+# raw <Reference> with a HintPath is not a PackageReference and contributes nothing to
+# packages.lock.json, so reading packages alone let a project declare the engine and still
+# be reported as having no Godot dependency. § 4a's own rationale states that the case § 4
+# catches and § 4a cannot is "a declared dependency whose RESOLUTION FAILS ... a
+# <Reference> with a broken HintPath", which is only true of a § 4 that reads Reference
+# items - so this is the query that makes that documented division of labour hold.
+#
+# Only after the list is known good is it filtered for Godot, by assembly name rather than
+# by a leading-anchor grep, so a HintPath's directory prefix cannot hide the name.
+GODOT_EVALUATED=""
+GODOT_LOCKED=""
+GODOT_UNPROVED="no"
+godot_matches() {
+  local project="$1" allowed="$2"
+  local directory="${REPO_ROOT}/$(dirname "${project}")"
+  local lock_file="${directory}/packages.lock.json"
+  local declared_references
+
+  GODOT_UNPROVED="no"
+  GODOT_EVALUATED=""
+
+  if ! declared_references="$(msbuild_items "${project}" Reference,PackageReference)"; then
+    GODOT_UNPROVED="yes"
+    GODOT_EVALUATED="Reference,PackageReference could not be evaluated"
+    return 2
+  fi
+
+  GODOT_EVALUATED="$(printf '%s\n' "${declared_references}" | godot_assembly_names)"
+
+  GODOT_LOCKED=""
+  if [[ -f "${lock_file}" ]]; then
+    GODOT_LOCKED="$(grep -oE '"Godot[A-Za-z.]*"' "${lock_file}" | sort -u | tr -d '"' | paste -sd, - || true)"
+  fi
+
+  if [[ "${allowed}" == "yes" ]]; then
+    [[ -n "${GODOT_EVALUATED}" && "${GODOT_LOCKED}" == *GodotSharp* ]]
+  else
+    [[ -z "${GODOT_EVALUATED}" && -z "${GODOT_LOCKED}" ]]
+  fi
+}
+
+# Reads one field of an EXPECTED_PROJECTS row, and fails loudly when the row is absent.
+# A control that silently tested nothing because a path was renamed would be worse than
+# no control, so the lookup is required to succeed.
+accepted_field() {
+  local wanted="$1" field="$2" entry project refs godot
+  for entry in "${EXPECTED_PROJECTS[@]}"; do
+    IFS='|' read -r project refs godot <<<"${entry}"
+    if [[ "${project}" == "${wanted}" ]]; then
+      case "${field}" in
+        refs) printf '%s' "${refs}" ;;
+        godot) printf '%s' "${godot}" ;;
+      esac
+      return 0
+    fi
+  done
+  return 1
+}
+
 section "1. accepted repository layout (VER-FND-001-003)"
 for path in "${EXPECTED_PATHS[@]}"; do
   if [[ -e "${REPO_ROOT}/${path}" ]]; then
@@ -376,7 +438,7 @@ expected_solution="$(printf '%s\n' "${EXPECTED_PROJECTS[@]}" | cut -d'|' -f1 | s
 if [[ -z "${actual_solution}" ]]; then
   fail "could not read any project from MechaMiner.sln"
 elif [[ "${actual_solution}" == "${expected_solution}" ]]; then
-  pass "MechaMiner.sln references exactly the 9 accepted projects"
+  pass "MechaMiner.sln references exactly the ${#EXPECTED_PROJECTS[@]} accepted projects"
 else
   fail "MechaMiner.sln project set differs from the accepted decomposition"
   diff <(printf '%s\n' "${expected_solution}") <(printf '%s\n' "${actual_solution}") || true
@@ -468,16 +530,16 @@ done <<<"${build_flag_report}"
 section "3. project reference edges match the accepted boundary (VER-FND-001-004)"
 for entry in "${EXPECTED_PROJECTS[@]}"; do
   IFS='|' read -r project expected_refs _godot <<<"${entry}"
-  if ! project_references="$(msbuild_items "${project}" ProjectReference)"; then
-    fail "$(project_name "${project}") could not be evaluated by MSBuild (missing, malformed, or unrestored project)"
-    continue
-  fi
-  actual_refs="$(printf '%s' "${project_references}" \
-    | sed -E 's|.*[/\\]||; s|\.[A-Za-z]+proj$||' | sort | paste -sd, -)"
-  if [[ "${actual_refs}" == "${expected_refs}" ]]; then
+  if edges_match "${project}" "${expected_refs}"; then
     pass "$(project_name "${project}") -> [${expected_refs}]"
+  elif [[ "${EDGES_UNPROVED}" == "yes" ]]; then
+    # Reported before the mismatch branch so that a project whose items could not be read
+    # is never described as "references []" - "[]" would read as an answer, and there was
+    # none. Content and Diagnostics accept the empty set, so this distinction is the only
+    # thing standing between a failed evaluation and a false pass on those two rows.
+    fail "$(project_name "${project}") could not be evaluated by MSBuild (missing, malformed, or unrestored project), so its reference boundary is unproved, which is not the same as satisfied"
   else
-    fail "$(project_name "${project}") references [${actual_refs}], accepted set is [${expected_refs}]"
+    fail "$(project_name "${project}") references [${EDGES_ACTUAL}], accepted set is [${expected_refs}]"
   fi
 done
 
@@ -538,72 +600,41 @@ section "4. only game/ may reference Godot (VER-FND-001-004)"
 # PublicKeyToken=null", regardless of what the file was called.
 for entry in "${EXPECTED_PROJECTS[@]}"; do
   IFS='|' read -r project _expected_refs godot_allowed <<<"${entry}"
-  directory="${REPO_ROOT}/$(dirname "${project}")"
-  name="$(project_name "${project}")"
-
-  if ! resolved_references="$(resolved_assembly_identities "${project}")"; then
-    fail "${name}: the resolved compile-time reference set could not be evaluated, so its Godot boundary is unverified"
-    continue
-  fi
-  godot_resolved="$(printf '%s\n' "${resolved_references}" | godot_assembly_names)"
-
-  if ! declared_references="$(msbuild_items "${project}" Reference,PackageReference)"; then
-    fail "${name}: declared Reference/PackageReference items could not be evaluated"
-    continue
-  fi
-  godot_declared="$(printf '%s\n' "${declared_references}" | godot_assembly_names)"
-
-  # `msbuild_items ... | grep -i '^Godot' || true` used to cover the whole pipeline, so a
-  # failed MSBuild evaluation produced an empty package list, and an empty package list
-  # is exactly what a project with no Godot dependency looks like. Every "must not
-  # reference Godot" row below would then pass without anything having been evaluated.
-  # The evaluation is now checked on its own before its output is filtered.
-  evaluated_packages=""
-  package_probe_status=0
-  evaluated_packages="$(msbuild_items "${project}" PackageReference)" || package_probe_status=$?
-  if [[ "${package_probe_status}" -ne 0 ]]; then
-    fail "$(project_name "${project}"): PackageReference evaluation failed (exit ${package_probe_status}); the Godot boundary is unproved for this project, which is not the same as satisfied"
-    continue
-  fi
-
-  # Filtering an already-validated in-memory list: here grep's exit 1 genuinely means
-  # "no Godot package", which is the outcome this row is testing for.
-  godot_packages="$(printf '%s\n' "${evaluated_packages}" | grep -i '^Godot' || true)"
-  # Deliberately unread: the decision below is the three-signal form (resolved, declared,
-  # locked), so this filtered list has no consumer. The evaluation guard above it is a real
-  # assertion - do not delete the probe along with this variable.
-
-  # The lock file is half of this row's evidence, and an absent one used to be skipped:
+  # From the base branch, kept verbatim in substance because this branch did not have it:
+  # the lock file is half of this row's evidence, and an absent one used to be skipped.
   # `godot_locked` stayed empty, the row was decided on the MSBuild half alone, and the
   # "must not reference Godot" branch still printed `ok`. Deleting a project's
   # packages.lock.json therefore removed an assertion without failing anything, which is
-  # Decision 11 rule 2 - an empty candidate set never satisfies a gate - in the mild
-  # form. Every one of the nine accepted projects has a committed lock file today, so
-  # this holds in fact; asserting it makes it hold by construction.
+  # Decision 11 rule 2 - an empty candidate set never satisfies a gate - in the mild form.
+  # Every one of the accepted projects has a committed lock file today, so this holds in
+  # fact; asserting it makes it hold by construction. verify-configurations.sh § 4 carries
+  # the sharper set-level form; this row is the per-project half.
   #
-  # verify-configurations.sh § 4 carries the sharper form of the same defect and the
-  # set-level assertion that goes with it: that the lock-file set is non-empty and is
-  # exactly the project set. This row is the per-project half.
-  lock_file="${directory}/packages.lock.json"
-  godot_locked=""
-  if [[ ! -f "${lock_file}" ]]; then
-    fail "$(project_name "${project}"): ${lock_file#"${REPO_ROOT}/"} is absent, so the locked half of the Godot boundary was not read; an unread half is not a satisfied one"
+  # It is here in the loop and NOT inside godot_matches() on purpose: § 8's fixture
+  # projects under build/policy-fixtures/architecture/ carry no lock file, and they must
+  # still be able to drive the same comparison the real projects drive.
+  if [[ ! -f "${REPO_ROOT}/$(dirname "${project}")/packages.lock.json" ]]; then
+    fail "$(project_name "${project}"): $(dirname "${project}")/packages.lock.json is absent, so the locked half of the Godot boundary was not read; an unread half is not a satisfied one"
     continue
   fi
-  godot_locked="$(grep -oE '"Godot[A-Za-z.]*"' "${lock_file}" | sort -u | tr -d '"' | paste -sd, - || true)"
 
-  if [[ "${godot_allowed}" == "yes" ]]; then
-    if [[ "${godot_resolved}" == *GodotSharp* && "${godot_locked}" == *GodotSharp* ]]; then
-      pass "${name} references Godot as accepted (resolved: ${godot_resolved}, locked: ${godot_locked})"
+  if godot_matches "${project}" "${godot_allowed}"; then
+    if [[ "${godot_allowed}" == "yes" ]]; then
+      pass "$(project_name "${project}") references Godot as accepted (locked: ${GODOT_LOCKED})"
     else
-      fail "${name} must reference Godot but it is not on the resolved compile line and/or not locked (resolved: ${godot_resolved:-none}, locked: ${godot_locked:-none})"
+      pass "$(project_name "${project}") has no Godot dependency"
     fi
+  elif [[ "${GODOT_UNPROVED}" == "yes" ]]; then
+    # The evaluation itself did not happen, which is a third outcome and not a verdict on
+    # this row either way. Reported before the accepted/forbidden branches below so that a
+    # project whose items could not be read is never described as "must not reference
+    # Godot ... (evaluated: none)" - "none" would read as an answer, and there was none.
+    fail "$(project_name "${project}"): PackageReference evaluation failed (${GODOT_EVALUATED}); the Godot boundary is unproved for this project, which is not the same as satisfied"
+    continue
+  elif [[ "${godot_allowed}" == "yes" ]]; then
+    fail "$(project_name "${project}") must reference Godot but no Godot package is evaluated or locked"
   else
-    if [[ -z "${godot_resolved}" && -z "${godot_declared}" && -z "${godot_locked}" ]]; then
-      pass "${name} has no Godot dependency (assembly identity of every resolved compile-time reference checked)"
-    else
-      fail "${name} must not reference Godot (resolved: ${godot_resolved:-none}, declared: ${godot_declared:-none}, locked: ${godot_locked:-none})"
-    fi
+    fail "$(project_name "${project}") must not reference Godot (evaluated: ${GODOT_EVALUATED:-none}, locked: ${GODOT_LOCKED:-none})"
   fi
 done
 
@@ -1449,7 +1480,116 @@ GDFIXTURE
   fi
 fi
 
-section "8. the CI workflow still gates the repository (VER-FND-005-009)"
+section "8. the boundary comparisons above can actually fail (VER-FND-009-013)"
+#
+# Sections 3 and 4 only ever ran against compliant input, so nothing showed they were
+# capable of reporting a violation. MechaMiner.Diagnostics made that gap matter: it is a
+# sixth src/ project whose accepted row is the strictest in the repository - ".NET base
+# libraries only", Godot "No", zero references, a dependency leaf every other project may
+# reference without a cycle - and that row is the only thing keeping the leaf a leaf.
+#
+# Each fixture under build/policy-fixtures/architecture/ is a project file named
+# MechaMiner.Diagnostics.csproj carrying exactly one violation of that row. They are fed
+# through edges_match and godot_matches, the same functions sections 3 and 4 call, and each
+# must report a difference. The accepted row is read out of EXPECTED_PROJECTS rather than
+# hardcoded here, so a future task that legitimately gives Diagnostics an edge updates one
+# place and these controls keep testing the row that is actually accepted.
+
+readonly DIAGNOSTICS_PROJECT="src/MechaMiner.Diagnostics/MechaMiner.Diagnostics.csproj"
+readonly CONTROL_ROOT="build/policy-fixtures/architecture"
+
+# "<fixture directory>|<the project the fixture references>|<what it injects>"
+#
+# The middle field is the evaluated reference set the fixture must produce. Asserting it
+# closes a both-sides-absent comparison: the compliant control below compares "" against
+# an accepted set that is also "" today, so it would pass against an msbuild_items that
+# had broken into returning nothing for every input. Requiring each edge fixture to come
+# back naming the project it references proves the evaluation actually happened.
+readonly EDGE_CONTROLS=(
+  "edge-content|MechaMiner.Content|a reference to MechaMiner.Content"
+  "edge-simulation|MechaMiner.Simulation|a reference to MechaMiner.Simulation"
+  "edge-game|MechaMiner.Game|a reference to MechaMiner.Game (the reverse Godot edge)"
+)
+# Guards against an empty control set silently proving nothing, the way an unquoted or
+# mistyped array expansion would. The loop must run this many times.
+readonly EXPECTED_EDGE_CONTROLS=3
+
+if ! diagnostics_accepted_refs="$(accepted_field "${DIAGNOSTICS_PROJECT}" refs)"; then
+  fail "negative control cannot run: ${DIAGNOSTICS_PROJECT} has no EXPECTED_PROJECTS row"
+elif ! diagnostics_accepted_godot="$(accepted_field "${DIAGNOSTICS_PROJECT}" godot)"; then
+  fail "negative control cannot run: ${DIAGNOSTICS_PROJECT} has no EXPECTED_PROJECTS row"
+else
+  # Positive control first. Every control below passes by producing a DIFFERENCE, so a
+  # comparison that had broken into reporting a difference for every input would pass all
+  # of them. This is the one input that must come back equal.
+  control="${CONTROL_ROOT}/compliant/MechaMiner.Diagnostics.csproj"
+  if [[ ! -f "${REPO_ROOT}/${control}" ]]; then
+    fail "negative-control fixture missing: ${control}"
+  elif edges_match "${control}" "${diagnostics_accepted_refs}"; then
+    pass "control: a compliant Diagnostics project compares equal to [${diagnostics_accepted_refs}]"
+  elif [[ "${EDGES_UNPROVED}" == "yes" ]]; then
+    fail "control: the compliant Diagnostics fixture could not be evaluated by MSBuild, so the comparison was never exercised on compliant input and every negative control below is meaningless"
+  else
+    fail "control: a compliant Diagnostics project reported [${EDGES_ACTUAL}]; the comparison reports a difference for compliant input, so every negative control below is meaningless"
+  fi
+
+  edge_controls_run=0
+  for entry in "${EDGE_CONTROLS[@]}"; do
+    IFS='|' read -r fixture referenced injected <<<"${entry}"
+    control="${CONTROL_ROOT}/${fixture}/MechaMiner.Diagnostics.csproj"
+    if [[ ! -f "${REPO_ROOT}/${control}" ]]; then
+      fail "negative-control fixture missing: ${control}"
+      continue
+    fi
+    edge_controls_run=$((edge_controls_run + 1))
+    if edges_match "${control}" "${diagnostics_accepted_refs}"; then
+      fail "control: Diagnostics with ${injected} was NOT rejected; § 3 accepted [${EDGES_ACTUAL}] against [${diagnostics_accepted_refs}]"
+    elif [[ "${EDGES_UNPROVED}" == "yes" ]]; then
+      # Rejected, but as "could not be evaluated" rather than as "has the forbidden edge".
+      # An unevaluable fixture is also "not accepted", and would prove only that MSBuild
+      # could not read it - the same distinction the Godot control below draws.
+      fail "control: Diagnostics with ${injected} was rejected because MSBuild could not evaluate the fixture, so § 3's edge comparison was never exercised"
+    elif [[ "${EDGES_ACTUAL}" != "${referenced}" ]]; then
+      # It was rejected, but not for the reason the control exists to prove. An empty
+      # evaluated set would also be "rejected", and would mean MSBuild evaluated nothing.
+      fail "control: Diagnostics with ${injected} was rejected, but § 3 evaluated [${EDGES_ACTUAL}] instead of [${referenced}]; the rejection does not prove the injected edge was seen"
+    else
+      pass "control: Diagnostics with ${injected} is rejected (§ 3 saw [${EDGES_ACTUAL}])"
+    fi
+  done
+
+  if [[ "${edge_controls_run}" -eq "${EXPECTED_EDGE_CONTROLS}" ]]; then
+    pass "control: all ${EXPECTED_EDGE_CONTROLS} forbidden-edge controls ran"
+  else
+    fail "control: ${edge_controls_run} of ${EXPECTED_EDGE_CONTROLS} forbidden-edge controls ran; a control set that shrank proves less than it claims"
+  fi
+
+  control="${CONTROL_ROOT}/godot/MechaMiner.Diagnostics.csproj"
+  if [[ ! -f "${REPO_ROOT}/${control}" ]]; then
+    fail "negative-control fixture missing: ${control}"
+  elif godot_matches "${control}" "${diagnostics_accepted_godot}"; then
+    fail "control: Diagnostics with a GodotSharp PackageReference was NOT rejected by § 4"
+  elif [[ "${GODOT_UNPROVED}" == "yes" ]]; then
+    # Rejected, but as "unproved" rather than as "has Godot". An unevaluable fixture would
+    # also be "not accepted", and would prove only that MSBuild could not read it.
+    fail "control: Diagnostics with a GodotSharp PackageReference was rejected as unproved (${GODOT_EVALUATED}), so § 4's Godot detection was never exercised"
+  elif [[ "${GODOT_EVALUATED}" != *[Gg]odot* ]]; then
+    # Rejected, but not for the reason the control exists to prove, mirroring the
+    # edge-control check above: § 4 must have actually seen the injected Godot package.
+    fail "control: Diagnostics with a GodotSharp PackageReference was rejected, but § 4 evaluated [${GODOT_EVALUATED}] and saw no Godot package; the rejection does not prove the injected dependency was seen"
+  else
+    pass "control: Diagnostics with a GodotSharp PackageReference is rejected (§ 4 saw [${GODOT_EVALUATED}])"
+  fi
+fi
+
+section "9. the CI workflow still gates the repository (VER-FND-005-009)"
+#
+# NUMBERED 9, NOT 8, AND ONLY FOR THAT REASON. FND-005 wrote this section as § 8 on
+# claude/hearth-thread-2vmaro-fnd-002 while FND-009 wrote a different § 8 above on
+# claude/hearth-thread-2vmaro-fnd-004, and the two arrived in one file at merge. BOTH ARE
+# KEPT: they assert unrelated things and dropping either loses a control. § 8 keeps its
+# number because VER-FND-009-013 and PR #7's description cite it by it; this section keeps
+# VER-FND-005-009 and every assertion FND-005 wrote for it, unchanged.
 #
 # Section 1 lists the workflow among EXPECTED_PATHS, which is a test of the path and
 # nothing more. `[[ -e ]]` accepts a zero-byte fast.yml, and it accepts a workflow with

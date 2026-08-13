@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    NEGATIVE control. Deliberately violates doc 115 § Accepted project boundary twice
+    over: the MechaMiner.Diagnostics row allows ".NET base libraries only", and
+    "Content, Diagnostics, Simulation, and Persistence never reference MechaMiner.Game
+    or engine assemblies". This is the reverse Godot edge. See ../README.md.
+
+    Never restored or built - build/verify-architecture.sh only asks MSBuild to evaluate
+    this project's items - so it pulls no Godot assembly into the restore graph. Not in
+    MechaMiner.sln.
+  -->
+
+  <ItemGroup>
+    <ProjectReference Include="../../../../game/MechaMiner.Game.csproj" />
+  </ItemGroup>
+
+</Project>

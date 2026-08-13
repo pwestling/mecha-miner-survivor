@@ -113,6 +113,10 @@ internal static class Program
             OwningWorkPackage = descriptor.OwningWorkPackage,
             InvocationId = invocationId,
             StartedUtc = started.ToString("O", CultureInfo.InvariantCulture),
+            // doc 115 § Initialization order step 1: verify build/tool identity first.
+            // Reading it here means every verb result carries it, including a crash
+            // record (FND-004).
+            BuildIdentity = MechaMiner.Diagnostics.Identity.BuildIdentity.IdentityLine,
         };
         record.Arguments.AddRange(verbArguments);
 
@@ -175,6 +179,7 @@ internal static class Program
             + "   exit class " + outcome.ExitClass.ToString(CultureInfo.InvariantCulture)
             + " (" + record.ExitClassName + ")"
             + "   owner " + record.OwningWorkPackage);
+        destination.WriteLine("identity: " + record.BuildIdentity);
         destination.WriteLine("result:  " + resultPath);
         foreach (string artifact in outcome.Artifacts)
         {

@@ -40,7 +40,7 @@ internal static class VerificationRegistry
     /// on that input, so the expected number is the one part of this that must not be
     /// computed. Changing it is a deliberate change to what this suite covers.
     /// </remarks>
-    internal const int RegistriesOnDisk = 21;
+    internal const int RegistriesOnDisk = 25;
 
     /// <summary>The directory holding every verification registry.</summary>
     internal static string DirectoryPath { get; } = Path.Combine(

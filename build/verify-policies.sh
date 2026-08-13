@@ -470,6 +470,37 @@ for entry in "${NEGATIVE_FIXTURES[@]}"; do
 done
 fixture_projects+=("build/policy-fixtures/deterministic/deterministic.csproj")
 
+# Projects under build/policy-fixtures/ that are NOT compile-policy fixtures. Enumerated
+# separately because the guards below do not apply to them and must not be pointed at them.
+#
+# build/policy-fixtures/architecture/ holds verify-architecture.sh § 8's negative controls.
+# They are never restored and never built: § 8 only asks MSBuild to EVALUATE each one's
+# reference items, so no diagnostic is ever produced from them and there is no compile whose
+# policy could be asserted. Guard 1b requires a fixture project to declare no properties at
+# all (FIXTURE_PROJECT_ALLOWED_PROPERTIES is empty), and guard 4 compares a fixture's
+# evaluated configuration against the product's; the godot control deliberately declares
+# ManagePackageVersionsCentrally=false, precisely so a fixture cannot add an entry to the
+# versions the product may restore. Adding these to fixture_projects would therefore fail
+# both guards for doing the very thing that makes them safe.
+#
+# They are still enumerated, in both directions, because the partition below is what stops
+# an unasserted project appearing under build/policy-fixtures/. Omitting them is what turned
+# this section red when FND-004's § 8 fixtures met this gate: this gate arrives from one
+# branch and those fixtures from another, each side was green alone, and only the merge of
+# the two saw both.
+readonly ARCHITECTURE_FIXTURE_PROJECTS=(
+  "build/policy-fixtures/architecture/compliant/MechaMiner.Diagnostics.csproj"
+  "build/policy-fixtures/architecture/edge-content/MechaMiner.Diagnostics.csproj"
+  "build/policy-fixtures/architecture/edge-game/MechaMiner.Diagnostics.csproj"
+  "build/policy-fixtures/architecture/edge-simulation/MechaMiner.Diagnostics.csproj"
+  "build/policy-fixtures/architecture/godot/MechaMiner.Diagnostics.csproj"
+)
+
+# Every project found under build/policy-fixtures/ must appear in exactly one of the two
+# enumerations, so the partition assertion runs over their union rather than over the
+# compile-policy fixtures alone.
+enumerated_fixture_projects=("${fixture_projects[@]}" "${ARCHITECTURE_FIXTURE_PROJECTS[@]}")
+
 policy_projects=("${product_projects[@]}" "${fixture_projects[@]}")
 
 # The fixture enumeration must be a PARTITION of build/policy-fixtures/, in both
@@ -497,17 +528,17 @@ if [[ "${#found_fixture_projects[@]}" -eq 0 ]]; then
   fail "the fixture scan found no project under build/policy-fixtures/; it cannot see even the enumerated fixtures, so it proves nothing"
 else
   unenumerated_fixtures="$(comm -13 \
-    <(printf '%s\n' "${fixture_projects[@]}" | sort) \
+    <(printf '%s\n' "${enumerated_fixture_projects[@]}" | sort) \
     <(printf '%s\n' "${found_fixture_projects[@]}" | sort))"
   if [[ -z "${unenumerated_fixtures}" ]]; then
-    pass "every one of the ${#found_fixture_projects[@]} project(s) under build/policy-fixtures/ is an enumerated fixture"
+    pass "every one of the ${#found_fixture_projects[@]} project(s) under build/policy-fixtures/ is an enumerated fixture (${#fixture_projects[@]} compile-policy, ${#ARCHITECTURE_FIXTURE_PROJECTS[@]} architecture negative-control)"
   else
     fail "unenumerated project under build/policy-fixtures/: $(printf '%s' "${unenumerated_fixtures}" | paste -sd' ' -); it is not a fixture this gate proves anything about, it is code building under a policy nothing here asserts"
   fi
 fi
 
 absent_fixtures=()
-for project in "${fixture_projects[@]}"; do
+for project in "${enumerated_fixture_projects[@]}"; do
   [[ -f "${REPO_ROOT}/${project}" ]] || absent_fixtures+=("${project}")
 done
 if [[ "${#absent_fixtures[@]}" -eq 0 ]]; then

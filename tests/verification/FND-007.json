@@ -1,0 +1,375 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "FND-007",
+  "workPackageTitle": "Structured logging, stable diagnostic codes, redaction, rotating local files",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91-verification-strategy.md § Verification registry).",
+    "Doc 115 § Component registry gives CMP-OBS-001 the frame affinity 'never blocks authoritative tick on I/O'. No authoritative tick exists yet, so the guarantee is structural rather than observed: Write renders, redacts, rate-limits, and appends to a bounded in-memory ring and returns, and Drain performs every sink write off the tick. VER-FND-007-005 asserts that directly with a sink that records whether it was touched during Write, which is the only way to make the claim falsifiable before SIM-001 lands.",
+    "Severity is fixed by the code in DiagnosticCatalog rather than chosen at the call site. Doc 90 states that 'Player-facing expected failures such as unaffordable purchase are not error logs; unexpected rejection/invariant divergence is', and a per-call-site severity would let the same event be an error in one caller and information in another.",
+    "Redaction runs in every configuration, not only Release. A rule exercised only in the configuration nobody develops against is a rule discovered to be broken at release time, and a development log is shared in a bug report just as readily.",
+    "The redaction fixture uses this machine's own home directory and account name, so the assertion is that values which genuinely identify the running machine are absent from the output. A fixture with invented secrets would prove only that the redactor can replace a string it was told about.",
+    "Rotation and retention are tested at a small byte bound rather than doc 90's literal 4 MiB, because writing tens of megabytes per assertion would slow the fast tier without exercising anything the small bound does not. VER-FND-007-006 separately asserts the production constants against the document's numbers, so both the policy and the mechanism are covered.",
+    "The rate-limit window and the timestamp are injected clocks. Doc 91 § Flake policy forbids wall-clock sleeps, and a limiter that read the clock itself could only be tested by sleeping.",
+    "Not in scope here, and named so nothing looks forgotten: the sanitized export action in Settings is UI-009's, the diagnostic package and crash breadcrumb export is QUA-004's, and the local balance-run record retention caps in doc 90 § Structured logging belong with the records QUA-002 produces. FND-007 lands the log, its codes, its redaction, and its rotation."
+  ],
+  "entries": [
+    {
+      "id": "VER-FND-007-001",
+      "summary": "Every log record carries every field doc 90 § Structured logging requires: timestamp, monotonic sequence, severity, category, stable event code, build identity, content identity, run and profile diagnostic IDs, tick, message, and structured fields. One record is one line of canonical JSON, it round-trips byte-exactly, and an unknown field is rejected rather than ignored.",
+      "task": "TASK-FND-007-001",
+      "requirements": [
+        "TR-OBS-001",
+        "TR-DAT-006",
+        "TR-RUN-009"
+      ],
+      "technicalSources": [
+        "docs/technical/90-performance-diagnostics-and-observability.md#structured-logging",
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Diagnostics.Tests.Logging.DiagnosticLogTests.EveryRecordCarriesEveryRequiredFieldAndRoundTrips"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "log-line",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-007-002",
+      "summary": "The stable diagnostic code registry is explicit, has no duplicate code, covers every one of the ten categories doc 90 lists, and every code has a stable shape and a stated meaning. An unregistered code throws rather than producing a log line, because the registry is explicit precisely so a missing entry is a build-time surprise rather than a run-time one.",
+      "task": "TASK-FND-007-001",
+      "requirements": [
+        "TR-OBS-001",
+        "TR-BLD-001"
+      ],
+      "technicalSources": [
+        "docs/technical/90-performance-diagnostics-and-observability.md#structured-logging",
+        "docs/technical/100-build-dependencies-and-release-operations.md#c-project-standards"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Diagnostics.Tests.Logging.DiagnosticLogTests.TheCodeRegistryCoversEveryCategoryAndHasNoDuplicates"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "negative-control"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-007-003",
+      "summary": "Redaction removes real machine-private values from every part of a record, including the message, the run and profile IDs, and every structured field. The fixture supplies this machine's own home directory and account name plus a raw Steam identifier, another user's POSIX path, a Windows profile path, and oversized uncontrolled text carrying a newline; each is asserted absent from the output and its replacement token asserted present, and the newline cannot forge a second record.",
+      "task": "TASK-FND-007-001",
+      "requirements": [
+        "TR-OBS-002",
+        "TR-BLD-003"
+      ],
+      "technicalSources": [
+        "docs/technical/90-performance-diagnostics-and-observability.md#structured-logging",
+        "docs/technical/90-performance-diagnostics-and-observability.md#diagnostic-package-export",
+        "docs/technical/100-build-dependencies-and-release-operations.md#secrets-and-signing"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Diagnostics.Tests.Logging.DiagnosticLogTests.RedactionRemovesMachinePrivateValuesFromEveryPartOfARecord"
+      },
+      "fixtures": [
+        "the running machine's home directory and account name",
+        "raw Steam ID64 76561198000000001",
+        "/home/someone-else/notes.txt",
+        "C:\\Users\\someone-else\\AppData\\game.log"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "log-line",
+        "test-output",
+        "absent-value-assertion"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-007-004",
+      "summary": "A code that declares a burst emits exactly that burst inside one rate-limit window and then one summary count naming the suppressed code and count when the window closes; a code that declares no burst is never suppressed however often it repeats; and a flush closes an open window so a shutdown cannot lose a suppression count whose window had not yet elapsed.",
+      "task": "TASK-FND-007-001",
+      "requirements": [
+        "TR-OBS-001",
+        "TR-CTR-004"
+      ],
+      "technicalSources": [
+        "docs/technical/90-performance-diagnostics-and-observability.md#structured-logging",
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Diagnostics.Tests.Logging.DiagnosticLogTests"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "log-line",
+        "negative-control"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-007-005",
+      "summary": "Writing a record performs no I/O at all: a sink that counts every write is untouched after fifty writes and is written to only by the drain step. This is the falsifiable form of doc 115's statement that CMP-OBS-001 never blocks the authoritative tick on I/O, asserted before any tick exists.",
+      "task": "TASK-FND-007-001",
+      "requirements": [
+        "TR-OBS-001",
+        "TR-RUN-002",
+        "TR-CTR-002"
+      ],
+      "technicalSources": [
+        "docs/technical/115-component-contract-and-schema-registry.md#component-registry",
+        "docs/technical/90-performance-diagnostics-and-observability.md#performance-philosophy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Diagnostics.Tests.Logging.DiagnosticLogTests.WritingTouchesNoSinkSoDiagnosticsCannotBlockTheAuthoritativeTick"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "sink-touch-count"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-007-006",
+      "summary": "The rotation threshold is 4 MiB and retention keeps the five newest files, asserted against doc 90's literal numbers so the constants cannot drift from the document that fixes them.",
+      "task": "TASK-FND-007-001",
+      "requirements": [
+        "TR-OBS-002",
+        "TR-PST-006"
+      ],
+      "technicalSources": [
+        "docs/technical/90-performance-diagnostics-and-observability.md#structured-logging"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Diagnostics.Tests.Logging.RotatingLogFileTests.TheRotationAndRetentionConstantsAreTheOnesTheDocumentFixes"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-007-007",
+      "summary": "Crossing the size bound rotates by renaming rather than truncating, so no line written before the rotation is lost, and retention leaves exactly the declared number of files rather than the declared number plus history.",
+      "task": "TASK-FND-007-001",
+      "requirements": [
+        "TR-OBS-002",
+        "TR-PST-006"
+      ],
+      "technicalSources": [
+        "docs/technical/90-performance-diagnostics-and-observability.md#structured-logging",
+        "docs/technical/70-persistence-and-platform-services.md#local-file-layout-and-encoding"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Diagnostics.Tests.Logging.RotatingLogFileTests"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "rotated-file-set"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-007-008",
+      "summary": "Cleanup never follows a link and never deletes a user-exported destination: a symbolic link is planted at the exact generation path retention deletes next, pointing at a file outside the owned directory, and that file must survive unchanged with the refusal recorded. An entry inside the owned directory that does not match the owned name pattern is also refused.",
+      "task": "TASK-FND-007-001",
+      "requirements": [
+        "TR-PST-006",
+        "TR-OBS-002"
+      ],
+      "technicalSources": [
+        "docs/technical/90-performance-diagnostics-and-observability.md#structured-logging",
+        "docs/technical/70-persistence-and-platform-services.md#local-file-layout-and-encoding"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Diagnostics.Tests.Logging.RotatingLogFileTests.CleanupRefusesToDeleteALinkRatherThanFollowingIt"
+      },
+      "fixtures": [
+        "a symbolic link at the next-deleted generation path, targeting a file outside the owned directory"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "negative-control",
+        "surviving-file-assertion"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-007-009",
+      "summary": "Every failure path degrades instead of propagating: a sink that always fails counts every dropped record and never throws, a write into a removed directory is reported as a failed write rather than raised, and a full bounded ring discards the oldest record, counts the loss, and keeps the records nearest the failure.",
+      "task": "TASK-FND-007-001",
+      "requirements": [
+        "TR-OBS-001",
+        "TR-AGT-006",
+        "TR-CTR-004"
+      ],
+      "technicalSources": [
+        "docs/technical/115-component-contract-and-schema-registry.md#cross-boundary-contract-registry",
+        "docs/technical/114-autonomous-agent-execution-protocol.md#c-and-domain-defaults",
+        "docs/technical/90-performance-diagnostics-and-observability.md#crash-handling"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Diagnostics.Tests.Logging.DiagnosticLogTests.ASinkFailureIsCountedAndNeverPropagated"
+      },
+      "fixtures": [
+        "FailingLogSink",
+        "a removed owned directory"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "negative-control",
+        "drop-counters"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-007-010",
+      "summary": "The SCH-OBS-001 diagnostic run record carries build identity, content identity, and the schema/map/random/save versions in a canonical document whose field order is declaration order and which round-trips byte-exactly. Run-scoped fields are present with explicit empty values so the schema's shape does not change when CMP-RUN-001 fills them.",
+      "task": "TASK-FND-007-001",
+      "requirements": [
+        "TR-RUN-009",
+        "TR-OBS-001",
+        "TR-DAT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/90-performance-diagnostics-and-observability.md#diagnostic-run-record",
+        "docs/technical/115-component-contract-and-schema-registry.md#schema-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Diagnostics.Tests.Logging.DiagnosticLogTests.TheDiagnosticRunRecordCarriesIdentityAndRoundTrips"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "diagnostic-run-record-json",
+        "canonical-ordering"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-007-011",
+      "summary": "A player-facing expected rejection is registered as information and an unexpected invariant divergence as error, so doc 90's distinction is a property of the code registry rather than a convention each call site is trusted to follow.",
+      "task": "TASK-FND-007-001",
+      "requirements": [
+        "TR-OBS-001"
+      ],
+      "technicalSources": [
+        "docs/technical/90-performance-diagnostics-and-observability.md#structured-logging"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Diagnostics.Tests.Logging.DiagnosticLogTests.ExpectedPlayerFacingRejectionIsNotAnErrorButInvariantDivergenceIs"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    }
+  ]
+}

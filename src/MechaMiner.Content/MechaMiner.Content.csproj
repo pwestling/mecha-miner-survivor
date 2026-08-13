@@ -13,4 +13,19 @@
     land in TASK-DAT-001-001.
   -->
 
+  <ItemGroup Label="Test-only access to internals (doc 91 § Test project separation)">
+    <!--
+      Exactly one grant, to this project's own mirror test project. Every type here is
+      internal, so without it no behaviour of this project is testable at all. doc 91:
+      "Test-only access occurs through explicit diagnostic APIs/assemblies, not reflection
+      into private state", and the assembly route is the sanctioned one.
+
+      It is for behaviour that genuinely cannot be observed through the public contract. A
+      repeated need for it is a missing diagnostic API - QUA-003 needs one anyway for the
+      debug overlay and command palette - not a reason to widen test coupling to
+      implementation detail. No other project appears here: MechaMiner.Game.Tests
+      deliberately consumes the public contract, which is the point of that project.
+    -->
+    <InternalsVisibleTo Include="MechaMiner.Content.Tests" />
+  </ItemGroup>
 </Project>

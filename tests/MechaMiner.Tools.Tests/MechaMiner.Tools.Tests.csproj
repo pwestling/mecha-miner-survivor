@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Tests for the audits and validators MechaMiner.Tools owns: the accepted project
+    boundary (TASK-FND-009-001) and the ID/document registry validator
+    (TASK-FND-009-002).
+
+    Never launches Godot (docs/technical/91 § Test project separation).
+
+    doc 115 § Accepted project boundary lists "audits, generators, reports" as
+    MechaMiner.Tools' responsibility, so the validators live there and their tests
+    mirror that project. Referencing the tool host from a test project is the allowed
+    direction; doc 115 forbids only the reverse, "Production projects never depend on
+    test projects or generated test fixtures".
+  -->
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/MechaMiner.Tools/MechaMiner.Tools.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit3TestAdapter" />
+    <PackageReference Include="NUnit.Analyzers" />
+  </ItemGroup>
+
+  <ItemGroup Label="Shared deterministic fixture utilities (TASK-FND-003-001)">
+    <!--
+      Linked, not referenced, exactly as the other test projects do it. See
+      tests/shared/README.md.
+    -->
+    <Compile Include="../shared/**/*.cs" LinkBase="Support/Shared" />
+  </ItemGroup>
+
+</Project>

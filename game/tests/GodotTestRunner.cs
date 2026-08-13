@@ -62,6 +62,18 @@ internal sealed class RunnerReport
     /// <summary>The engine identity observed at run time.</summary>
     public RunnerEngineIdentity Engine { get; set; } = new();
 
+    /// <summary>
+    /// The canonical <c>SCH-BLD-001</c> build identity line the engine process reports.
+    /// </summary>
+    /// <remarks>
+    /// doc 100 § Version and build identity requires every executable and diagnostic
+    /// header to carry build identity, and doc 115 § Initialization order makes verifying
+    /// it step 1. This is the game surface of the equality gate FND-004 owns
+    /// (<c>VER-FND-004-004</c>): the host compares this line, produced inside the Godot
+    /// process, with the line the tool process and the diagnostics manifest report.
+    /// </remarks>
+    public string BuildIdentity { get; set; } = string.Empty;
+
     /// <summary>UTC start time in round-trip format.</summary>
     public string StartedUtc { get; set; } = string.Empty;
 
@@ -185,6 +197,7 @@ public partial class GodotTestRunner : Node
             Case = caseName,
             StartedUtc = started.ToString("O", CultureInfo.InvariantCulture),
             Engine = ReadEngineIdentity(),
+            BuildIdentity = MechaMiner.Diagnostics.Identity.BuildIdentity.IdentityLine,
         };
 
         switch (caseName)
@@ -300,6 +313,18 @@ public partial class GodotTestRunner : Node
             Name = "headless-display-server",
             Passed = report.Engine.Headless,
             Detail = "expected the headless display server, observed " + DisplayServer.GetName(),
+        });
+
+        // FND-004. The engine process must be able to read build identity from the one
+        // diagnostics owner before anything else loads, which is doc 115 § Initialization
+        // order step 1. The host compares the value; the runner only proves it exists.
+        report.Assertions.Add(new RunnerAssertion
+        {
+            Name = "build-identity-embedded",
+            Passed = report.BuildIdentity.Length > 0
+                && report.BuildIdentity.Contains("commit=", StringComparison.Ordinal),
+            Detail = "the engine process read SCH-BLD-001 build identity from MechaMiner.Diagnostics: "
+                + report.BuildIdentity,
         });
     }
 

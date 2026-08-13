@@ -62,6 +62,9 @@ internal sealed class EngineRunnerReport
     /// <summary>The engine identity observed at run time.</summary>
     public EngineRunnerIdentity Engine { get; set; } = new();
 
+    /// <summary>The canonical <c>SCH-BLD-001</c> build identity line the engine process reported.</summary>
+    public string BuildIdentity { get; set; } = string.Empty;
+
     /// <summary>UTC start time in round-trip format.</summary>
     public string StartedUtc { get; set; } = string.Empty;
 

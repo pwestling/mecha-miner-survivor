@@ -62,13 +62,26 @@
 #    distinct CI tiers, not one." The second tier is OPS-001's; the screenshot and focus
 #    matrices themselves belong to UI-001 through UI-010. Also absent rather than
 #    declared.
-#  * Three gate scripts are on build/verify-gate-wiring.sh's deliberately-unwired list -
+#  * Gate scripts on build/verify-gate-wiring.sh's deliberately-unwired list are not run
+#    by this job. That list is data rather than prose - it is that file's EXEMPT array,
+#    its § 3 prints one line per entry, and its § 4 fails if the reached-or-exempt
+#    partition breaks - so read the roster there instead of from a count here. Three of
+#    its entries are the ones this job could plausibly have run and does not:
 #    verify-format.sh (230 s, measured), verify-test-harness.sh (a recursion cycle,
 #    observed), verify-godot-runner.sh (only test-main reaches it, and this job does not
-#    run test-main). Nothing runs them, so they run only when a person types them, which
-#    is a gap and not a resolution. FOLLOW-UP (OPS-001): a main-branch or nightly job
-#    that runs test-main and the two expensive gates, where their cost is affordable.
-#    It is not built here because this job's subject is the pull-request tier.
+#    run test-main). The rest are exempt on grounds no pull-request tier can clear - a
+#    platform this workflow has no job for, and gates the verb host cannot exec at all -
+#    and each states its own ground in that array. Nothing runs any of them, so they run
+#    only when a person types them, which is a gap and not a resolution.
+#    FOLLOW-UP (OPS-001): a main-branch or nightly job that runs test-main and the two
+#    expensive gates, where their cost is affordable. It is not built here because this
+#    job's subject is the pull-request tier.
+#
+#    This bullet opened "Three gate scripts are on build/verify-gate-wiring.sh's
+#    deliberately-unwired list". That was TRUE WHEN WRITTEN, at ed33b11, where the list
+#    held exactly those three, and it went stale as the list grew. It is replaced by a
+#    pointer to the array rather than by a larger number, so the next entry added there
+#    does not falsify this file again.
 
 name: fast suite
 

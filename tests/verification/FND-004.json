@@ -1,0 +1,284 @@
+{
+  "schema": "SCH-QUA-001",
+  "schemaVersion": 1,
+  "workPackage": "FND-004",
+  "workPackageTitle": "Build identity/version service and generated build manifest",
+  "notes": [
+    "Entries are added before implementation and are never renumbered (docs/technical/91-verification-strategy.md § Verification registry).",
+    "The structural validator for this file is owned by TASK-FND-009-002, which lands in the same PR as this package. Until that commit, the shape here matches tests/verification/FND-003.json exactly.",
+    "CMP-OBS-001 has no home in the project boundary doc 115 accepted before this package. Its consumers are MechaMiner.Game (doc 115 § Initialization order makes build identity step 1 and bounded local logging step 2, both before content loads) and MechaMiner.Tools (reports and benchmark orchestration), and no game or pure project may depend on the tool host, so the component cannot live in MechaMiner.Tools. TASK-FND-004-001 therefore adds src/MechaMiner.Diagnostics as a fourth pure project, a dependency leaf that references nothing, and corrects doc 115 § Accepted project boundary, doc 100 § Repository structure, and doc 10 § Accepted project decomposition in the same task under doc 114 § Specification maintenance autonomy.",
+    "Build identity is baked into the MechaMiner.Diagnostics assembly at compile time rather than probed at run time. That is what makes VER-FND-004-004 a real gate: three separate processes read one assembly's baked values, so a disagreement means a stale assembly, a re-derivation, or a stale manifest, rather than two processes legitimately observing two environments.",
+    "generated/build-manifest.json is a build output and is deliberately not committed. It records the source commit of the build that produced it, so a committed copy could never be current at the commit containing it. The relation a reviewer needs is 'does the manifest match the assembly just built', which VER-FND-004-005 asserts by writing it and reading it back.",
+    "Per-artifact release manifests, one per packaged platform/configuration pair with checksums, are doc 100 § Artifacts material owned by OPS-002. SCH-BLD-001 already carries the artifacts array so its shape does not change when that package lands, and it is empty here rather than absent.",
+    "Every field of build identity is stable across two clean builds of the same source, so VER-FND-001-011 (byte-identical deterministic rebuild) still holds. Nothing in identity is a timestamp."
+  ],
+  "entries": [
+    {
+      "id": "VER-FND-004-001",
+      "summary": "The SCH-BLD-001 manifest carries every value doc 100 § Version and build identity requires: product version, build number, source commit, dirty flag, Godot and .NET versions, content bundle hash, schema/map/random/save versions, and build configuration and platform. The content hash is the only field allowed to be empty, and only while its status says unavailable and names the owning work package.",
+      "task": "TASK-FND-004-001",
+      "requirements": [
+        "TR-BLD-001",
+        "TR-BLD-004",
+        "TR-RUN-009"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#version-and-build-identity",
+        "docs/technical/115-component-contract-and-schema-registry.md#schema-registry"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Diagnostics.Tests.Identity.BuildIdentityTests.EveryRequiredIdentityFieldIsPopulated"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "test-output",
+        "build-manifest-json"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-004-002",
+      "summary": "The MechaMiner.Diagnostics assembly really carries the whole required identity metadata set, asserted key by key rather than inferred from composition succeeding, so an optional-looking field cannot be quietly absent.",
+      "task": "TASK-FND-004-001",
+      "requirements": [
+        "TR-BLD-001",
+        "TR-BLD-004"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#version-and-build-identity"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Diagnostics.Tests.Identity.BuildIdentityTests.TheAssemblyCarriesEveryRequiredIdentityMetadataKey"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "assembly-metadata"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-004-003",
+      "summary": "An assembly compiled without its identity metadata fails loudly rather than reporting a partial identity, proved once per required key by removing that key and asserting the failure names it.",
+      "task": "TASK-FND-004-001",
+      "requirements": [
+        "TR-BLD-001",
+        "TR-AGT-006"
+      ],
+      "technicalSources": [
+        "docs/technical/114-autonomous-agent-execution-protocol.md#c-and-domain-defaults",
+        "docs/technical/100-build-dependencies-and-release-operations.md#version-and-build-identity"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Diagnostics.Tests.Identity.BuildIdentityTests.MissingIdentityMetadataThrowsPerRequiredKey"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "negative-control",
+        "test-output"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-004-004",
+      "summary": "Build identity is equal across the tool, the game, and diagnostics. Three separate processes report it - the workflow host writes build_identity into its structured verb result, the Godot process writes build_identity into the engine runner report, and CMP-OBS-001 reports it in the host test process alongside the SCH-BLD-001 manifest it emitted - and the fixture asserts the four lines are one identical line rather than asserting each exists.",
+      "task": "TASK-FND-004-001",
+      "requirements": [
+        "TR-BLD-001",
+        "TR-BLD-004",
+        "TR-RUN-009",
+        "TR-CTR-002"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#version-and-build-identity",
+        "docs/technical/115-component-contract-and-schema-registry.md#initialization-order",
+        "docs/technical/115-component-contract-and-schema-registry.md#mutable-state-ownership-matrix"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Game.Tests.BuildIdentityEqualityTests.IdentityIsEqualAcrossToolGameAndDiagnostics"
+      },
+      "fixtures": [
+        "game/tests/GodotTestRunner.tscn case=pass",
+        "artifacts/verbs/doctor/latest-result.json",
+        "generated/build-manifest.json"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "runner-report-json",
+        "verb-result-json",
+        "build-manifest-json",
+        "identity-equality"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "main",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-004-005",
+      "summary": "The build verb writes generated/build-manifest.json from the one identity owner and reads it back, and the comparison classifies missing, unreadable, stale, and current separately so a staleness gate reports a cause instead of a bare failure.",
+      "task": "TASK-FND-004-001",
+      "requirements": [
+        "TR-BLD-001",
+        "TR-BLD-005",
+        "TR-DAT-005"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface",
+        "docs/technical/100-build-dependencies-and-release-operations.md#continuous-integration",
+        "docs/technical/70-persistence-and-platform-services.md#local-file-layout-and-encoding"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Diagnostics.Tests.Identity.BuildIdentityTests.ManifestComparisonClassifiesMissingUnreadableStaleAndCurrent"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "build-manifest-json",
+        "negative-control"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-004-006",
+      "summary": "The pinned Godot version carried in build identity equals the Godot version build/toolchain.json pins, so the compile-time pin and the machine-readable toolchain pin cannot drift apart silently.",
+      "task": "TASK-FND-004-001",
+      "requirements": [
+        "TR-BLD-001",
+        "TR-FND-001"
+      ],
+      "technicalSources": [
+        "docs/technical/100-build-dependencies-and-release-operations.md#toolchain-pinning"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Diagnostics.Tests.Identity.BuildIdentityTests.TheGodotVersionInIdentityEqualsTheToolchainPin"
+      },
+      "fixtures": [
+        "build/toolchain.json",
+        "build/version-identity.props"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "pin-comparison"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-004-007",
+      "summary": "The serialized manifest is canonical: two serializations of one identity are byte-identical, field order is the declaration order doc 91 requires of a reviewable artifact, a round trip preserves every value, an unknown field is rejected, and the identity line is derivable from the manifest's own fields.",
+      "task": "TASK-FND-004-001",
+      "requirements": [
+        "TR-DAT-006",
+        "TR-QUA-001"
+      ],
+      "technicalSources": [
+        "docs/technical/40-content-data-and-validation.md#json-codec-and-schema-baseline",
+        "docs/technical/91-verification-strategy.md#determinism-and-fixture-policy"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "nunit",
+        "value": "MechaMiner.Diagnostics.Tests.Identity.BuildIdentityTests"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "test-counts",
+        "build-manifest-json",
+        "canonical-ordering"
+      ],
+      "platforms": [
+        "linux-x64",
+        "windows-x64",
+        "osx-arm64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    },
+    {
+      "id": "VER-FND-004-008",
+      "summary": "Every workflow verb result carries build identity in its structured output, the Godot boot composition root prints it as its first line before anything else loads, and the identity the boot scene prints equals the emitted manifest. This is the doc 115 § Initialization order step 1 surface, separate from the engine test runner surface VER-FND-004-004 compares.",
+      "task": "TASK-FND-004-001",
+      "requirements": [
+        "TR-BLD-004",
+        "TR-BLD-005",
+        "TR-RUN-009"
+      ],
+      "technicalSources": [
+        "docs/technical/115-component-contract-and-schema-registry.md#initialization-order",
+        "docs/technical/100-build-dependencies-and-release-operations.md#version-and-build-identity"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-build-identity.sh"
+      },
+      "fixtures": [
+        "game/scenes/Boot.tscn"
+      ],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "stdout-line",
+        "verb-result-json",
+        "build-manifest-json",
+        "identity-equality"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "implemented"
+    }
+  ]
+}

@@ -693,8 +693,12 @@ internal sealed class VerificationRegistryTests
     /// <see cref="RegistryFixtureReferences.Form.Prose"/> reference because there is nothing in
     /// it to resolve, and that is a fail-open unless something states how many references got
     /// that answer. This does: each form's count is compared against a committed literal and
-    /// the census is written to the run's output, so 22 references that no test can verify are
-    /// visible as 22 rather than invisible among 454.
+    /// the census is written to the run's output, so the references that no test can verify are
+    /// visible as their own asserted <see cref="ProseReferences"/> count rather than invisible
+    /// in a total. Neither number is restated here on purpose - the total is that literal plus
+    /// <see cref="RepositoryPathReferences"/>, <see cref="PathAndSectionReferences"/> and
+    /// <see cref="PathAndCaseReferences"/>, each of which this test asserts, and a figure
+    /// transcribed into this sentence would be asserted by nothing.
     /// </para>
     /// <para>
     /// The literals are literals for the usual reason - a census derived from the registries
@@ -774,9 +778,15 @@ internal sealed class VerificationRegistryTests
             return census.TryGetValue(form, out int count) ? count : 0;
         }
 
+        // Every form, so the partition stays TOTAL. Adding a form without adding it here would
+        // leave the sum short and the shortfall would look like a miscount rather than an
+        // unaccounted bucket - the same defect shape as an entry whose kind nothing counts.
         int namedForms = Count(RegistryFixtureReferences.Form.RepositoryPath)
             + Count(RegistryFixtureReferences.Form.PathAndSection)
             + Count(RegistryFixtureReferences.Form.PathAndCase)
+            + Count(RegistryFixtureReferences.Form.TypeName)
+            + Count(RegistryFixtureReferences.Form.ExpectedOutput)
+            + Count(RegistryFixtureReferences.Form.RedactionSample)
             + Count(RegistryFixtureReferences.Form.Prose);
 
         TestContext.Out.WriteLine(
@@ -790,6 +800,12 @@ internal sealed class VerificationRegistryTests
                 CultureInfo.InvariantCulture) + " path-and-section, "
             + Count(RegistryFixtureReferences.Form.PathAndCase).ToString(
                 CultureInfo.InvariantCulture) + " path-and-case, "
+            + Count(RegistryFixtureReferences.Form.TypeName).ToString(
+                CultureInfo.InvariantCulture) + " type-name, "
+            + Count(RegistryFixtureReferences.Form.ExpectedOutput).ToString(
+                CultureInfo.InvariantCulture) + " expected-output, "
+            + Count(RegistryFixtureReferences.Form.RedactionSample).ToString(
+                CultureInfo.InvariantCulture) + " redaction-sample, "
             + Count(RegistryFixtureReferences.Form.Prose).ToString(CultureInfo.InvariantCulture)
             + " prose. THE PROSE REFERENCES ARE NOT VERIFIED BY ANYTHING: they describe manual "
             + "perturbations, and no assertion in this suite can tell a performed one from an "
@@ -823,6 +839,20 @@ internal sealed class VerificationRegistryTests
                 Count(RegistryFixtureReferences.Form.PathAndCase),
                 Is.EqualTo(PathAndCaseReferences),
                 "path-and-case fixture references");
+            Assert.That(
+                Count(RegistryFixtureReferences.Form.TypeName),
+                Is.EqualTo(TypeNameReferences),
+                "type-name fixture references - a test double named by its bare type name");
+            Assert.That(
+                Count(RegistryFixtureReferences.Form.ExpectedOutput),
+                Is.EqualTo(ExpectedOutputReferences),
+                "expected-output fixture references - build outputs the verification produces, "
+                    + "whose assertion is inverted: they must be gitignored and NOT committed");
+            Assert.That(
+                Count(RegistryFixtureReferences.Form.RedactionSample),
+                Is.EqualTo(RedactionSampleReferences),
+                "redaction-sample fixture references - machine-private values that must appear "
+                    + "in no committed file outside tests/");
             Assert.That(
                 Count(RegistryFixtureReferences.Form.Prose),
                 Is.EqualTo(ProseReferences),
@@ -926,6 +956,7 @@ internal sealed class VerificationRegistryTests
 
     /// <summary>Fixture references that are a bare repository-relative path.</summary>
     /// <remarks>
+    /// <para>
     /// 319 at <c>46366ea</c>. 326 from <c>VER-DAT-002-037</c>, which names the seven new
     /// behavior-token fixtures as its evidence - one per previously unreached call site. The
     /// delta is +7 and the seven are enumerated in that entry's own <c>fixtures</c> array, so a
@@ -934,8 +965,20 @@ internal sealed class VerificationRegistryTests
     /// measurement that added the partition to
     /// <see cref="TheFixtureReferenceCensusIsWhatIsDeclared"/>. 319 at <c>46366ea</c> is the
     /// superseded figure and is kept above it.
+    /// </para>
+    /// <para>
+    /// 350, re-measured over <c>tests/verification/</c> on the successor of <c>4a773e70</c> that
+    /// completed <c>VER-DAT-001-039</c>'s <c>fixtures</c> array. 347 is the superseded figure and
+    /// is kept above it. The delta is +3 and it is the three category schemas that entry's gate
+    /// had begun opening when the FND-004 merge grew <c>TheEightImplementedGrammars</c> -
+    /// <c>mining-site.schema.json</c>, <c>elite-modifiers.schema.json</c> and
+    /// <c>player-baseline.schema.json</c> - so a reader can check the arithmetic against the array
+    /// that moved it. Measured by running
+    /// <see cref="TheFixtureReferenceCensusIsWhatIsDeclared"/> and reading the value it reported
+    /// against this literal, not by adding three to the figure above.
+    /// </para>
     /// </remarks>
-    private const int RepositoryPathReferences = 326;
+    private const int RepositoryPathReferences = 350;
 
     /// <summary>Fixture references of the form <c>path § heading</c>.</summary>
     /// <remarks>
@@ -947,11 +990,57 @@ internal sealed class VerificationRegistryTests
 
     /// <summary>Fixture references of the form <c>path case=variant</c>.</summary>
     /// <remarks>5, measured over <c>tests/verification/</c> at <c>c294d22</c>.</remarks>
-    private const int PathAndCaseReferences = 5;
+    private const int PathAndCaseReferences = 6;
 
     /// <summary>Fixture references that are prose, and so verified by nothing.</summary>
     /// <remarks>22, measured over <c>tests/verification/</c> at <c>c294d22</c>.</remarks>
-    private const int ProseReferences = 22;
+    private const int ProseReferences = 28;
+
+    /// <summary>Fixture references naming a test double by its bare type name.</summary>
+    /// <remarks>
+    /// <para>
+    /// 1, measured over <c>tests/verification/</c> on the merge of <c>18b847b9</c> with
+    /// <c>aecd36aa</c>: <c>FailingLogSink</c> on <c>VER-FND-007-009</c>.
+    /// </para>
+    /// <para>
+    /// A FIRST MEASUREMENT, NOT A RE-PIN. This form did not exist before, so there is no
+    /// superseded figure. The reference was previously classified <c>RepositoryPath</c> and
+    /// reported as a missing file, which it never was - the type is declared at
+    /// <c>tests/MechaMiner.Diagnostics.Tests/Logging/FailingLogSink.cs</c>.
+    /// </para>
+    /// </remarks>
+    private const int TypeNameReferences = 1;
+
+    /// <summary>
+    /// Fixture references naming a build output the verification produces, whose assertion is
+    /// inverted: gitignored and absent from the committed tree.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// 4, measured on the same merge: three on <c>VER-FND-008-005</c>
+    /// (<c>artifacts/benchmark/sample-report.json</c>, <c>-second-run.json</c>,
+    /// <c>frame-budget.txt</c>) and one on <c>VER-FND-004-004</c>
+    /// (<c>artifacts/verbs/doctor/latest-result.json</c>).
+    /// </para>
+    /// <para>
+    /// THE FOURTH ONE IS WHY THIS FORM EARNS ITS KEEP. <c>VER-FND-004-004</c> was PASSING as a
+    /// <c>RepositoryPath</c>, because a local <c>./build.sh doctor</c> run had left that file on
+    /// disk. It is gitignored and has never been committed, so on a clean checkout the old
+    /// classification would have failed - a green that depended on the order somebody ran two
+    /// commands in. Reclassifying it turns an accidental pass into a stable one.
+    /// </para>
+    /// </remarks>
+    private const int ExpectedOutputReferences = 4;
+
+    /// <summary>
+    /// Fixture references naming a machine-private value fed to redaction, which must appear in
+    /// no committed file outside <c>tests/</c>.
+    /// </summary>
+    /// <remarks>
+    /// 2, measured on the same merge, both on <c>VER-FND-007-003</c>: one POSIX and one Windows
+    /// absolute path. A first measurement, not a re-pin.
+    /// </remarks>
+    private const int RedactionSampleReferences = 2;
 
     /// <summary>Registries whose entries name no fixture evidence at all.</summary>
     private const int RegistriesNamingNoFixture = 6;
@@ -966,7 +1055,7 @@ internal sealed class VerificationRegistryTests
     /// against 73 would be this const left behind by a growing tree, not a regression in what
     /// the tree cites.
     /// </remarks>
-    private const int EntriesNamingNoFixture = 82;
+    private const int EntriesNamingNoFixture = 106;
 
     /// <summary>Entries across every registry in <c>tests/verification/</c>.</summary>
     /// <remarks>
@@ -980,7 +1069,7 @@ internal sealed class VerificationRegistryTests
     /// a third anchor that is not either of the two sides it compares. Both censuses now read
     /// this one literal, so a re-measurement moves it once rather than twice.
     /// </remarks>
-    private const int RegistryEntries = 304;
+    private const int RegistryEntries = 344;
 
     /// <summary>Entries whose selector <c>kind</c> is <c>nunit</c>.</summary>
     /// <remarks>
@@ -989,7 +1078,7 @@ internal sealed class VerificationRegistryTests
     /// together. A move in one without the other would mean an entry arrived with a selector of
     /// some other kind, which is a different fact.
     /// </remarks>
-    private const int NunitSelectors = 237;
+    private const int NunitSelectors = 274;
 
     /// <summary>Entries whose selector <c>kind</c> is <c>script</c>.</summary>
     /// <remarks>
@@ -1000,7 +1089,7 @@ internal sealed class VerificationRegistryTests
     /// <see cref="EngineSceneSelectors"/> stand still. A move here without the same move in
     /// <see cref="RegistryEntries"/> would mean entries changed kind rather than arrived.
     /// </remarks>
-    private const int ScriptSelectors = 48;
+    private const int ScriptSelectors = 51;
 
     /// <summary>Entries whose selector <c>kind</c> is <c>command</c>.</summary>
     private const int CommandSelectors = 13;
@@ -1025,7 +1114,7 @@ internal sealed class VerificationRegistryTests
     /// Nunit selectors only the source index answers, because they name a type in a sibling test
     /// project this one cannot reference. The weaker answer.
     /// </summary>
-    private const int NunitSelectorsSourceDeclared = 110;
+    private const int NunitSelectorsSourceDeclared = 147;
 
     /// <summary>
     /// Distinct nunit selector values, which is fewer than
@@ -1036,7 +1125,7 @@ internal sealed class VerificationRegistryTests
     /// this moves with <see cref="NunitSelectors"/> rather than lagging it - an entry reusing an
     /// existing selector would move that count and not this one.
     /// </remarks>
-    private const int DistinctNunitSelectors = 151;
+    private const int DistinctNunitSelectors = 186;
 
     /// <summary>
     /// Registries declaring no <c>nunit</c> selector at all, and so having no selector checked by

@@ -283,7 +283,15 @@ internal static class EngineRunner
         }
     }
 
-    private sealed class CommandOutcome
+    /// <summary>
+    /// The result of one external process run.
+    /// </summary>
+    /// <remarks>
+    /// Internal rather than private because FND-004's build-identity equality fixture
+    /// launches the workflow host as a second external process and must not reimplement
+    /// bounded, output-capturing process plumbing to do it.
+    /// </remarks>
+    internal sealed class CommandOutcome
     {
         internal CommandOutcome(int exitCode, string output, long durationMs, bool timedOut)
         {
@@ -293,16 +301,21 @@ internal static class EngineRunner
             TimedOut = timedOut;
         }
 
+        /// <summary>The process exit code, or <c>-1</c> after a timeout kill.</summary>
         internal int ExitCode { get; }
 
+        /// <summary>Interleaved standard output and standard error.</summary>
         internal string Output { get; }
 
+        /// <summary>Wall-clock duration in milliseconds.</summary>
         internal long DurationMs { get; }
 
+        /// <summary>Whether the bounded timeout elapsed.</summary>
         internal bool TimedOut { get; }
     }
 
-    private static CommandOutcome RunProcess(
+    /// <summary>Runs one external process with a bounded timeout and captured output.</summary>
+    internal static CommandOutcome RunProcess(
         string fileName,
         IReadOnlyList<string> arguments,
         string workingDirectory,

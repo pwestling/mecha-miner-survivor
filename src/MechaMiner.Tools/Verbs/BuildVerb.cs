@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using MechaMiner.Diagnostics.Identity;
 using MechaMiner.Tools.Cli;
 
 namespace MechaMiner.Tools.Verbs;
@@ -29,7 +30,8 @@ internal static class BuildVerb
             "compile with analyzers and warnings as errors",
             "assert the accepted project boundary",
             "assert every gate script is wired or explicitly exempt",
-            "assert both root wrappers expose the same verb table");
+            "assert both root wrappers expose the same verb table",
+            "emit the SCH-BLD-001 build manifest");
 
         ledger.Enter(0, "locked restore (" + configuration.WorkflowName + " -> MSBuild "
             + configuration.MsbuildName + ")");
@@ -177,9 +179,76 @@ internal static class BuildVerb
                 + "or a wrapper has started branching on the verb; see the step log"));
         }
 
+        // Stage 6, not 4. FND-004 wrote this as stage 4 and FND-005 wrote a different stage 4
+        // on the base branch; both arrived here at merge and both are kept, because they do
+        // unrelated work. FND-005 keeps 4 and 5 because tests/verification/FND-005.json says
+        // in so many words that "build reaches it at stage 4", which makes that number a
+        // registry claim; this stage's number is cited nowhere, so it is the one that moves.
+        //
+        // It goes through the ledger like the other five, and that is not tidiness. Declared
+        // outside it, the verb printed "stage 5 of 5" and then a "stage 6" - so the ledger's
+        // count was a claim about a run that had one more stage than it said, and a failure
+        // in an earlier stage could not name this one among the stages that did not run,
+        // which is the whole point of the ledger.
+        ledger.Enter(5);
+        VerbOutcome? manifestFailure = EmitBuildManifest(context, out string manifestPath);
+        if (manifestFailure is not null)
+        {
+            return ledger.Abandon(manifestFailure);
+        }
+
         return VerbOutcome.Success(
             "build " + configuration.WorkflowName + " (MSBuild " + configuration.MsbuildName
-            + ") succeeded with 0 warnings, 0 errors, and an intact project boundary");
+            + ") succeeded with 0 warnings, 0 errors, an intact project boundary, and a current "
+            + "SCH-BLD-001 manifest")
+            .WithArtifact(manifestPath);
+    }
+
+    /// <summary>
+    /// Writes <c>generated/build-manifest.json</c> from the one build-identity owner and
+    /// then reads it back to prove the file on disk is current.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The manifest describes the assembly that carries the identity — the workflow host
+    /// this process is — not the configuration named by <c>--configuration</c>. That is
+    /// deliberate and is why the <c>target</c> block records the host's own configuration
+    /// and platform. Per-artifact release manifests, one for each packaged
+    /// platform/configuration pair with its checksums, are doc 100 § Artifacts material
+    /// and belong to <c>OPS-002</c>; inventing them here would mean writing a manifest
+    /// whose <c>target</c> block was copied from an argument rather than read from the
+    /// binary it describes.
+    /// </para>
+    /// <para>
+    /// The file is not committed. It names the source commit of the build that produced
+    /// it, so a committed copy could never be current at the commit that contains it.
+    /// The relation a reviewer needs is "does the manifest match the assembly that was
+    /// just built", and that is what the read-back asserts.
+    /// </para>
+    /// </remarks>
+    private static VerbOutcome? EmitBuildManifest(VerbContext context, out string manifestPath)
+    {
+        manifestPath = BuildManifestFile.RepositoryRelativePath;
+        string absolute = context.Layout.Absolute(manifestPath);
+        BuildManifestFile.Write(absolute);
+
+        BuildManifestComparison comparison = BuildManifestFile.Compare(absolute, manifestPath);
+        context.Runner.RecordAssertion(
+            "build-manifest-current",
+            comparison.IsCurrent,
+            comparison.Detail
+                + (comparison.Differences.Count > 0 ? " [" + string.Join("; ", comparison.Differences) + "]" : string.Empty));
+
+        context.Console.WriteLine("      " + manifestPath + ": " + comparison.Status);
+        context.Console.WriteLine("      identity: " + Diagnostics.Identity.BuildIdentity.IdentityLine);
+
+        if (!comparison.IsCurrent)
+        {
+            return VerbOutcome.Validation(
+                "the SCH-BLD-001 manifest just written does not read back as current: " + comparison.Detail);
+        }
+
+        return null;
     }
 
     /// <summary>

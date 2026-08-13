@@ -39,6 +39,19 @@ internal static class DiagnosticCodes
     /// <summary>A validation or test gate reported a failure.</summary>
     internal const string ValidationFailed = "MMT-4001";
 
+    /// <summary>
+    /// A specification-content defect: a citation to an identifier or a document anchor
+    /// that does not exist.
+    /// </summary>
+    /// <remarks>
+    /// Distinct from <see cref="ValidationFailed"/> under the same exit class, because the
+    /// document that contains the prose owns the defect and an unrelated task must not
+    /// inherit it. Doc 100 § Standard command surface closes the exit-class set at eight
+    /// members and assigns finer distinctions to diagnostic codes, so this is a code rather
+    /// than a ninth class. Used by <c>build/verify-registry.sh</c> (<c>FND-009</c>).
+    /// </remarks>
+    internal const string SpecificationDefect = "MMT-4002";
+
     /// <summary>A build, import, export, or package step reported a failure.</summary>
     internal const string BuildFailed = "MMT-5001";
 

@@ -1,0 +1,90 @@
+<Project>
+
+  <!--
+    The version-controlled pins that make up build identity.
+
+    Authority: docs/technical/100-build-dependencies-and-release-operations.md
+                 § Version and build identity - every executable, about screen,
+                 diagnostic header, and result manifest must carry "product version
+                 and build number; source commit and dirty flag for local builds;
+                 Godot and .NET versions; content bundle hash; schema/map/random/save
+                 versions; and build configuration/platform".
+               § Toolchain pinning - "content/schema/map/random/save generator
+                 versions" are pinned "in version-controlled files".
+    Requirements: TR-BLD-001, TR-BLD-004, TR-RUN-009
+    Verification: tests/verification/FND-004.json
+
+    Owned by FND-004 (TASK-FND-004-001). This file is MSBuild rather than JSON so
+    that the values can be baked into assembly metadata at compile time without a
+    build-time JSON parser and without a project reference cycle: MechaMiner.Tools
+    would otherwise have to exist before MechaMiner.Diagnostics could be compiled.
+
+    Every value here is stable across two clean builds of the same source, so
+    VER-FND-001-011 (byte-identical deterministic rebuild) still holds. Nothing
+    here is a timestamp.
+  -->
+
+  <PropertyGroup Label="Product version and build number">
+    <!--
+      Semantic product version. doc 100: "Use semantic product version plus
+      monotonically increasing CI build number and source commit."
+      Pre-1.0 until M7; the release-candidate package owns the 1.0.0 bump.
+    -->
+    <MechaMinerProductVersion>0.1.0</MechaMinerProductVersion>
+    <!--
+      The monotonically increasing CI build number. CI passes it in; a developer
+      machine has none, and 0 is the reserved local value rather than a fake
+      increment. FND-005 wires the CI variable to this property.
+    -->
+    <MechaMinerBuildNumber Condition=" '$(MechaMinerBuildNumber)' == '' ">0</MechaMinerBuildNumber>
+    <MechaMinerBuildNumberSource Condition=" '$(MechaMinerBuildNumber)' == '0' ">local</MechaMinerBuildNumberSource>
+    <MechaMinerBuildNumberSource Condition=" '$(MechaMinerBuildNumberSource)' == '' ">ci</MechaMinerBuildNumberSource>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Pinned tool versions carried in build identity">
+    <!--
+      The pinned Godot editor version. build/toolchain.json is the machine-readable
+      pin doctor and bootstrap read; this property is the same number in the form
+      the compiler can bake into an assembly. A test asserts the two agree, so the
+      duplication cannot drift silently (VER-FND-004-006).
+    -->
+    <MechaMinerGodotVersion>4.7.1</MechaMinerGodotVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Generator and data schema versions (doc 100 § Version and build identity)">
+    <!--
+      The content/definition schema version. doc 40 § Definition envelope: "The
+      initial schema_version is 1". DAT-001 and DAT-006 increment it.
+    -->
+    <MechaMinerSchemaVersion>1</MechaMinerSchemaVersion>
+    <!--
+      The map generator version. MAP-007 owns the generated manifest and increments
+      this when a generated layout stops being reproducible from the same seed.
+    -->
+    <MechaMinerMapVersion>1</MechaMinerMapVersion>
+    <!--
+      The authoritative random schema version. doc 20 § Authoritative random number
+      contract: "The current random schema version is 1." SIM-005 owns it, and
+      "Changing any operation increments the random schema version".
+    -->
+    <MechaMinerRandomVersion>1</MechaMinerRandomVersion>
+    <!--
+      The save schema version. PST-001 owns the save envelope and PST-006 owns the
+      sequential migrations that increment this.
+    -->
+    <MechaMinerSaveVersion>1</MechaMinerSaveVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Content bundle hash">
+    <!--
+      The canonical compiled content bundle hash (CTR-CNT-001, SCH-CNT-004). No
+      bundle exists until DAT-006, and doc 100 requires the field, so identity
+      carries an explicit unavailable status naming the owning work package rather
+      than an empty string that reads like a real value or a fabricated hash.
+    -->
+    <MechaMinerContentBundleSha256></MechaMinerContentBundleSha256>
+    <MechaMinerContentBundleStatus>unavailable</MechaMinerContentBundleStatus>
+    <MechaMinerContentBundleOwner>DAT-006</MechaMinerContentBundleOwner>
+  </PropertyGroup>
+
+</Project>

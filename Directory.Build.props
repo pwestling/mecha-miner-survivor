@@ -1,6 +1,13 @@
 <Project>
 
   <!--
+    The version-controlled build-identity pins (FND-004). Imported first so every
+    project can read the product version, and so MechaMiner.Diagnostics can bake
+    the whole set into assembly metadata. See build/version-identity.props.
+  -->
+  <Import Project="$(MSBuildThisFileDirectory)build/version-identity.props" />
+
+  <!--
     Repository-wide pins for every C# project in MechaMiner.sln.
 
     Authority: docs/technical/100-build-dependencies-and-release-operations.md
@@ -96,6 +103,19 @@
   <PropertyGroup Label="Locked dependency restore">
     <!-- Lock files are committed so CI can restore in locked mode. -->
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Product version (FND-004)">
+    <!--
+      The semantic product version reaches every assembly, so an artifact listing
+      and a crash header agree without a second source. The source commit and dirty
+      flag are baked into MechaMiner.Diagnostics only, because resolving them costs
+      a git invocation and one owner is enough: every consumer reads build identity
+      from that one assembly (doc 115 § Mutable-state ownership matrix).
+    -->
+    <Version>$(MechaMinerProductVersion)</Version>
+    <AssemblyVersion>$(MechaMinerProductVersion).0</AssemblyVersion>
+    <FileVersion>$(MechaMinerProductVersion).0</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Label="Repository conventions">

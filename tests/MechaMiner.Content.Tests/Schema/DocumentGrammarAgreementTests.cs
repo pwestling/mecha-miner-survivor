@@ -317,7 +317,7 @@ internal sealed class DocumentGrammarAgreementTests
     /// or on the recorded list of grammars no document mints.
     /// </summary>
     /// <remarks>
-    /// The reverse direction of the per-prefix cases. Without it, a fourteenth category
+    /// The reverse direction of the per-prefix cases. Without it, a fifteenth category
     /// could be declared with an invented grammar and no assertion would range over it.
     /// </remarks>
     [Test]

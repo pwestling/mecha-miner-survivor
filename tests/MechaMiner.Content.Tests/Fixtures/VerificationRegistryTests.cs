@@ -897,7 +897,19 @@ internal sealed class VerificationRegistryTests
     /// suite reads. Naming it in <c>fixtures</c> would be a deliberate +1 here, and since that path
     /// now exists it would be a choice rather than the blocker the previous remark records.
     /// </remarks>
-    private const int RepositoryPathReferences = 333;
+    /// <remarks>
+    /// 339 now, and this delta is the first one that is not a new entry. VER-DAT-001-043 named one
+    /// of the seven files the fixture its selector names opens - the envelope schema - and now
+    /// names all seven: doc 40, the envelope schema, and one category schema per row of
+    /// <c>DocumentGrammarAgreementTests</c>' implemented-grammar roster. The six added strings are
+    /// bare paths with no whitespace, no <c> § </c> and no <c> case=</c>, so all six land in this
+    /// form and the other three census literals do not move. The entry count does not move either:
+    /// no entry was added. Worth knowing for the next time this literal is re-pinned: five of the
+    /// seven are roster-derived rather than fixed, so the same selector's correct array differs
+    /// between lineages whose implemented-grammar rosters differ, and this figure moves with that
+    /// roster and not only with the registries.
+    /// </remarks>
+    private const int RepositoryPathReferences = 339;
 
     /// <summary>Fixture references of the form <c>path § heading</c>.</summary>
     private const int PathAndSectionReferences = 108;

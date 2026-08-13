@@ -6,7 +6,7 @@
   "notes": [
     "Entries are added before implementation and are never renumbered (docs/technical/91 § Verification registry).",
     "Every summary states the route the check takes to its subject, and names the gap where the route has one. See the same note in tests/verification/DAT-002.json.",
-    "This repository has no CI. Every gate below is a local ./build.sh run.",
+    "Every gate below is reached by CI as well as by hand - .github/workflows/fast.yml, on push and pull_request, invokes ./build.sh test-fast, whose PureTestProjects list in src/MechaMiner.Tools/Verbs/TestVerb.cs includes tests/MechaMiner.Content.Tests - and a re-run still reports only that a gate passed, never what it covered. An earlier version of this note said instead that this repository has no CI and that every gate is a local run; it was false against the committed workflow. See the same note in tests/verification/DAT-002.json.",
     "Fixture IDs are paths beneath tests/MechaMiner.Content.Tests/Fixtures/categories/. Every invalid fixture asserts the one diagnostic code it is named for.",
     "VER-DAT-003-026 is the over-strict control for this package.",
     "VER-DAT-003-003 is the compensation for recipes that are no longer human-legible. Once a recipe holds resource IDs rather than letters, a mis-assigned pair is invisible to a reader; resolving each ID to its canonical letter and comparing the concatenation to the weapon's own ID suffix restores the check a human used to perform by eye.",

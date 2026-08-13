@@ -69,9 +69,18 @@ internal sealed record DivergenceRow(
 /// loaded a definition from <c>content/&lt;category&gt;/</c> and ran a schema over it, and
 /// the mirror was green for the same reason an unrun check is green. The project had
 /// already written the consequence down about one schema -
-/// <c>tests/verification/DAT-001.json</c>, <c>VER-DAT-001-039</c>: "those two committed
-/// artifacts contradict each other today and nothing is red only because no check reads
-/// the corpus".
+/// <c>tests/verification/DAT-001.json</c>, <c>VER-DAT-001-039</c> - and that sentence is
+/// quoted here as a <b>superseded</b> one rather than as the record: it read "those two
+/// committed artifacts contradict each other today and nothing is red only because no
+/// check reads the corpus". Its first half stands. Its second half does not, and this
+/// class is why: it reads the corpus, and the position of that very disagreement -
+/// <c>resource.schema.json</c>, pointer <c>/id</c>, keyword <c>pattern</c> - is a
+/// committed line per resource file in the golden below. What replaced the false cause,
+/// in that entry and in <c>VER-DAT-006-001</c>, is the true one: the suite is green
+/// because the divergence is <em>pinned</em>, by
+/// <c>SchemaCorpusDivergenceTests.TheDivergenceIsExactlyThePinnedBaseline</c>. The old
+/// wording is kept visible rather than quietly rewritten, so the claim it made stops
+/// circulating without erasing that it was made.
 /// </para>
 /// <para>
 /// <b>Why a pinned baseline rather than a passing gate, recorded as forced rather than

@@ -18,9 +18,16 @@ namespace MechaMiner.Content.Tests.Categories;
 /// <para>
 /// A citation to a file or heading that is not there is worse than no citation: it
 /// sends the next reader to a document that does not say what they were told it says.
-/// This matters more than usual on this repository, which has no CI - every gate is a
-/// local run, so the written description of what a gate covers is doing work an
-/// automated re-run would otherwise do.
+/// An automated re-run does not catch that, and this repository has one: the workflow
+/// <c>.github/workflows/fast.yml</c> triggers on push and pull_request and invokes
+/// <c>./build.sh test-fast</c>, and <c>TestVerb.RunFastTier</c>'s <c>PureTestProjects</c>
+/// list in <c>src/MechaMiner.Tools/Verbs/TestVerb.cs</c> names this project, so this
+/// fixture runs there. What that run reports is that the gate passed, never what it
+/// covered, so the written description of what a gate covers is still doing work no
+/// re-run does. An earlier version of this paragraph gave the absence of CI as the
+/// reason instead, which was false against the workflow file already committed here;
+/// the mechanism is named above rather than the state asserted, so a reader who doubts
+/// it has two paths to open instead of a sentence to believe.
 /// </para>
 /// <para>
 /// This walk named DAT-002 and DAT-003 in source, and
@@ -310,8 +317,11 @@ internal sealed class CategoryVerificationRegistryTests
     /// <summary>
     /// A summary states the route the check takes to its subject, not only the property
     /// it forbids. A description broader than the thing it describes reads as a stronger
-    /// guarantee than it is, which on a repository with no CI is the whole of what a
-    /// reader has to go on.
+    /// guarantee than it is, and no automated re-run narrows it: CI runs this suite by the
+    /// workflow and verb path this fixture's own remarks name, and reports that the gate
+    /// passed rather than what it covered - so the summary stays the whole of what a
+    /// reader has to go on. This gave the absence of CI as that reason until today, which
+    /// was false.
     /// </summary>
     /// <remarks>
     /// <para>

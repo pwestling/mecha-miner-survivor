@@ -388,6 +388,35 @@
       ],
       "tier": "fast",
       "status": "registered"
+    },
+    {
+      "id": "VER-FND-005-013",
+      "summary": "The obligation VER-FND-005-010 left for whoever merged master has been discharged, and this entry records what the discharge measured rather than that it happened. Appended rather than folded into VER-FND-005-010, so that entry's figures stay readable as what was true when it was written; two of them are now superseded and are named here so a reader is not left to diff them. SUPERSEDED: 'at this revision that set is 13 scripts, of which 10 are gates' is now 17 scripts of which 13 are gates, and 'no entry needs the field at this revision' is now one entry needs it. WHAT ARRIVED AND WHEN. The three ContentImport .py scripts did not arrive by the route VER-FND-005-010 predicted. It predicted them arriving when master merged into the base chain; what happened instead is that this gate merged INTO claude/hearth-thread-hrufl9, a branch that had already merged master and therefore already carried all three. The prediction was right about the mechanism and wrong about the direction, and the mechanism is what mattered: both enumerators found all three the moment the gate landed, and the gate went red with exactly three unclassified-script findings and nothing else. Measured in a clean checkout of the merge result, before the classification: exit 4, 3 findings about the repository, 0 failing negative controls, failing section 2. After: exit 0, PASS. THE THREE CLASSIFICATIONS, each a gate, each with its own reason in INVENTORY and its own reason in EXEMPT, no reason shared between them - the shared-reason defect this list already had to strike once is the reason that constraint was honoured explicitly. check_quote_mismatch_evidence.py is single-mode, checked and not assumed: the file contains 0 occurrences of argparse or add_argument and its main takes no parameters, so field 3 has nothing to name. derive_citation_pass_expectations.py is the first and only entry to SET field 3, with --verify, and the gate confirms the mechanism works end to end by reporting it as classified only as the --verify invocation. verify_content.py asserts its own A1 through A27 table over 138 definition files and 1375 source_refs, failing on any FAILURE row and never on a warning. WHY ALL THREE ARE EXEMPT RATHER THAN WIRED, and it is not a judgement call: VerbContext.RunRepositoryScript hard-codes bash as the program at src/MechaMiner.Tools/Cli/VerbContext.cs:97, so no verb can exec a .py at all, and the verb that would own all three, content, is VerbDescriptor.AwaitingOwner with owner DAT-006 at src/MechaMiner.Tools/Cli/VerbRegistry.cs:71-74 with no handler member, so there is no member for a call site to live in. Unlike the .sh exemptions above, these three could not be wired-and-measured, so their reasons state what blocks a call site with file and line instead of what a wiring attempt printed, and each records the script's own standalone result. TWO OF THE THREE ARE RED STANDALONE AND THE ENTRIES SAY SO. check_quote_mismatch_evidence.py exits 0 (394 of 394 normalized forms reproduced, 0 cases move). derive_citation_pass_expectations.py --verify exits 1 with 7 findings, all explained by this branch's RSC- migration deleting six canonical_letter citations that the frozen artifact at --previous-ref still expects; its --previous-ref defaults to origin/master, a moving ref rather than a pinned sha, which moved d88c621 to 76ef7a1 during the single task that wrote this entry. verify_content.py exits 1 with one FAILURE, and that failure is the merge's own doing: docs/technical/delivery-waves.md:598 arrives from the base carrying the first abbreviation-shaped period in docs/, which the quotation matcher's sentence-terminator rule was measured safe only against a corpus without. Absent at 9ded240 and at 327a3db, present at 1c2f106 - checked in all three. Repair belongs to DAT-006, which owns the rule and the audit document, and the script itself instructs the reader not to edit the flagged quotation. A LIMIT OBSERVED WHILE MEASURING THIS, not closed here: the enumerators walk the filesystem and PRUNED_DIRS does not include .claude, so a checkout with git worktrees under .claude/worktrees/ enumerates every script inside them and fails with one finding per file - 30 of them on the machine this was measured on, against 3 real ones. .gitignore ignores that path and the enumerators do not consult git. CI is unaffected because a fresh clone has no worktrees, which is exactly why this is recorded rather than assumed harmless: it makes the gate unrunnable locally in the one configuration where a developer is most likely to run it. FOLLOW-UP (FND-005, which owns the enumerators): either add .claude to PRUNED_DIRS or filter the enumeration through git check-ignore, and add a control that plants a script under an ignored directory. Status is registered rather than implemented: the before and after above were observed locally in a clean checkout, and neither has been observed in a CI run.",
+      "task": "TASK-FND-005-001",
+      "requirements": [
+        "TR-BLD-005",
+        "TR-QUA-001"
+      ],
+      "technicalSources": [
+        "docs/technical/91-verification-strategy.md#fast-pull-request-suite",
+        "docs/technical/100-build-dependencies-and-release-operations.md#standard-command-surface"
+      ],
+      "gameplaySources": [],
+      "selector": {
+        "kind": "script",
+        "value": "build/verify-gate-wiring.sh"
+      },
+      "fixtures": [],
+      "scenarios": [],
+      "evidenceKinds": [
+        "command-exit-code",
+        "command-output"
+      ],
+      "platforms": [
+        "linux-x64"
+      ],
+      "tier": "fast",
+      "status": "registered"
     }
   ]
 }

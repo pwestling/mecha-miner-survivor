@@ -1,0 +1,65 @@
+{
+  "id": "MCH-05",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "mech.MCH-05.name",
+  "summary_key": "mech.MCH-05.summary",
+  "tags": [],
+  "source_refs": [
+    "GDD-INITIAL-MECH-CATALOG#catalog-overview",
+    "signature_weapon_id: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "resolved_baseline: GDD-INITIAL-MECH-CATALOG#mch-05--bastion",
+    "trait_stacking: GDD-INITIAL-MECH-CATALOG#trait-comparison-and-stacking",
+    "initial_availability: GDD-INITIAL-MECH-CATALOG#initial-availability",
+    "player_facing_identity: GDD-INITIAL-MECH-CATALOG#player-facing-identity-4",
+    "top_down_silhouette[]: GDD-INITIAL-MECH-CATALOG#top-down-silhouette-4",
+    "trait_notes[]: GDD-INITIAL-MECH-CATALOG#signature-and-trait-4"
+  ],
+  "signature": "Reactor Pulse",
+  "signature_weapon_id": "W-CE",
+  "inherent_trait": {
+    "name": "Reinforced Chassis",
+    "effect": "+25 maximum Hull Integrity",
+    "affected_statistic": "maximum Hull Integrity",
+    "modifier": {
+      "flat_hull": 25
+    }
+  },
+  "selection_role": "Durable close-pressure platform",
+  "player_facing_identity": "Bastion is the durable close-pressure chassis. Reactor Pulse damages enemies around the mech, and extra Hull Integrity gives the player more room to survive positioning errors without providing Armor or passive Recovery.",
+  "resolved_baseline": {
+    "text": "Bastion deploys at full current Hull Integrity, normally `125 / 125` before account PowerUps.",
+    "current_hull_integrity": 125,
+    "maximum_hull_integrity": 125,
+    "before_account_power_ups": true
+  },
+  "trait_notes": [
+    "The flat mech bonus applies after the shared account baseline. The selection screen displays the final current and maximum values.",
+    "The trait does not reduce individual hits, repair automatically, improve health packs, or change contact-damage cadence."
+  ],
+  "top_down_silhouette": [
+    "Broad square torso, heavy shoulder blocks, and a large visible circular reactor core.",
+    "Short thick limbs keep its footprint visually dense without changing the shared collision rules.",
+    "Four corner armor masses distinguish it from Lodestar's open radial vanes.",
+    "Reactor Pulse originates from the central core and expands beyond the chassis outline."
+  ],
+  "trait_stacking": {
+    "changed_baseline": {
+      "text": "125 maximum Hull",
+      "statistic": "maximum Hull Integrity",
+      "value": 125
+    },
+    "with_matching_utility_rank_3_before_power_ups": {
+      "text": "170 with Reinforced Bulkhead",
+      "utility": "Reinforced Bulkhead",
+      "value": 170
+    }
+  },
+  "initial_availability": {
+    "text": "Available",
+    "available": true,
+    "recommended_default": false
+  },
+  "cross_doc_notes": []
+}

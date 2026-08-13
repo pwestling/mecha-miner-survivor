@@ -1,0 +1,72 @@
+{
+  "id": "W-CE-critical-mass-cycle",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-CE-critical-mass-cycle.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#critical-mass-cycle--amplification--2-eidolon-coral",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#critical-mass-cycle--amplification--2-eidolon-coral"
+  ],
+  "weapon_id": "W-CE",
+  "weapon_name": "Reactor Pulse",
+  "class": "Amplification",
+  "cost": {
+    "resource": "Eidolon Coral",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-CE-kinetic-vent",
+      "W-CE-supernova-cycle"
+    ],
+    "irreversible_within_run": true,
+    "existing_common_ore_stat_tracks_still_apply": true,
+    "adds_new_stat_track": false,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run."
+  },
+  "availability": {
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite.",
+    "purchase": "Installing one is a single deterministic purchase costing exactly two units of its assigned specialized material."
+  },
+  "effects": {
+    "charge_name": "Critical Mass",
+    "charges_granted_per_enemy_hit_by_pulse": 1,
+    "charge_maximum": 20,
+    "charges_apply_to_next_pulse_only": true,
+    "per_charge_damage_bonus": {
+      "percent": 2
+    },
+    "per_charge_radius_bonus": {
+      "percent": 1
+    },
+    "maximum_damage_bonus": {
+      "percent": 40
+    },
+    "maximum_radius_bonus": {
+      "percent": 20
+    },
+    "charge_consumption": "Charges are consumed by the next pulse and replaced by the count that pulse hits",
+    "charges_from_lone_boss": 1
+  },
+  "rules": [
+    {
+      "text": "Every enemy hit by a pulse gives one Critical Mass charge for the next pulse, capped at 20 charges."
+    },
+    {
+      "text": "Each charge gives the next pulse +2% Damage and +1% radius, for maximum bonuses of +40% Damage and +20% radius."
+    },
+    {
+      "text": "Charges are consumed by the next pulse and replaced by the count that pulse hits, allowing sustained crowd contact to maintain the bonus."
+    },
+    {
+      "text": "A boss alone supplies one charge; the large benefit requires horde pressure around it."
+    }
+  ]
+}

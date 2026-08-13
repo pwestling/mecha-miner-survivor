@@ -1,0 +1,60 @@
+{
+  "id": "MCH-02",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "mech.MCH-02.name",
+  "summary_key": "mech.MCH-02.summary",
+  "tags": [],
+  "source_refs": [
+    "GDD-INITIAL-MECH-CATALOG#catalog-overview",
+    "signature_weapon_id: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "trait_stacking: GDD-INITIAL-MECH-CATALOG#trait-comparison-and-stacking",
+    "initial_availability: GDD-INITIAL-MECH-CATALOG#initial-availability",
+    "player_facing_identity: GDD-INITIAL-MECH-CATALOG#player-facing-identity-1",
+    "top_down_silhouette[]: GDD-INITIAL-MECH-CATALOG#top-down-silhouette-1",
+    "trait_notes[]: GDD-INITIAL-MECH-CATALOG#signature-and-trait-1",
+    "inherent_trait.effect_detail: GDD-INITIAL-MECH-CATALOG#signature-and-trait-1"
+  ],
+  "signature": "Rail Lance",
+  "signature_weapon_id": "W-AB",
+  "inherent_trait": {
+    "name": "Heavy Calibration",
+    "effect": "+15% weapon damage",
+    "effect_detail": "+15% damage to all equipped weapons",
+    "affected_statistic": "weapon damage",
+    "modifier": {
+      "percent": 15
+    }
+  },
+  "selection_role": "Deliberate high-impact line striker",
+  "player_facing_identity": "Pike is a long-axis striker built around deliberate facing. Its slower Rail Lance rewards lining up crowds, while its general damage bonus ensures every later weapon benefits even if the run moves away from piercing attacks.",
+  "trait_notes": [
+    "Uses the same weapon-attribution boundary as Harmonic Calibrator. It affects weapon-created mines, drones, turrets, delayed attacks, and persistent zones, but not environmental damage or non-weapon temporary effects.",
+    "It does not alter Rail Lance cadence, projectile speed, width, range, or penetration allowance."
+  ],
+  "top_down_silhouette": [
+    "Long narrow body with an unmistakable forward lance boom.",
+    "Two small rear stabilizer fins counterbalance the extended nose.",
+    "Minimal side bulk keeps the silhouette visually linear even when the weapon is not firing.",
+    "The chassis rotates continuously with persistent facing so the player can read its firing line before the next lance."
+  ],
+  "trait_stacking": {
+    "changed_baseline": {
+      "text": "115% weapon damage",
+      "statistic": "weapon damage",
+      "percent": 115
+    },
+    "with_matching_utility_rank_3_before_power_ups": {
+      "text": "135% with Harmonic Calibrator",
+      "utility": "Harmonic Calibrator",
+      "percent": 135
+    }
+  },
+  "initial_availability": {
+    "text": "Available",
+    "available": true,
+    "recommended_default": false
+  },
+  "cross_doc_notes": []
+}

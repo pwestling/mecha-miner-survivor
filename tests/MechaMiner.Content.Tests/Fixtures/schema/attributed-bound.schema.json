@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mechaminer.local/fixtures/attributed-bound.schema.json",
+  "title": "A schema carrying one properly attributed bound",
+  "description": "The counterpart to no-bounds.schema.json. The per-document bound-coverage check needs a document that is unambiguously bounded, so that an exemption naming this file is unambiguously a false claim about the corpus. The bound carries its x-authority so the document is clean under the attribution gate as well, and the only thing a control built on it can be failing for is the exemption.",
+  "type": "object",
+  "properties": {
+    "charge": {
+      "type": "integer",
+      "description": "One bound, one authority keyed by the bound it explains.",
+      "minimum": 1,
+      "x-authority": {
+        "minimum": {
+          "kind": "structural",
+          "rationale": "a charge counts discrete uses, and a negative count is not a smaller charge but a different kind of thing; 1 is the smallest count this fixture has any use for"
+        }
+      }
+    }
+  }
+}

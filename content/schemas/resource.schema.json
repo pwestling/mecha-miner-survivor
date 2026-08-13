@@ -1,0 +1,313 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mechaminer.local/schemas/resource.schema.json",
+  "title": "SCH-CNT-002 resource definition",
+  "description": "A resource definition. The project-owned typed validator in src/MechaMiner.Content/Categories/ remains authoritative; this schema is the draft 2020-12 mirror kept for editor and tool interoperability, and a fixture corpus proves the two reach the same accept/reject verdict on every structural case. See content/schemas/README.md. One schema with a resource_class discriminator rather than two directories: splitting the layout would have to be atomic across tooling, schemas, importers and clean-checkout tests, which is not worth paying for eight files.",
+  "type": "object",
+  "additionalProperties": false,
+  "propertyNames": {
+    "$ref": "#/$defs/snake_case_field"
+  },
+  "required": [
+    "id",
+    "schema_version",
+    "content_version",
+    "status",
+    "tags",
+    "source_refs",
+    "resource_class",
+    "inventory_scope",
+    "persistence_class"
+  ],
+  "properties": {
+    "id": {
+      "title": "A stable, case-sensitive ASCII content ID",
+      "type": "string",
+      "pattern": "^RSC-[0-9]{2}$"
+    },
+    "schema_version": {
+      "$ref": "#/$defs/version"
+    },
+    "content_version": {
+      "$ref": "#/$defs/version"
+    },
+    "status": {
+      "$ref": "#/$defs/status"
+    },
+    "name_key": {
+      "$ref": "#/$defs/name_key"
+    },
+    "summary_key": {
+      "$ref": "#/$defs/summary_key"
+    },
+    "tags": {
+      "$ref": "#/$defs/tags"
+    },
+    "source_refs": {
+      "$ref": "#/$defs/source_refs"
+    },
+    "presentation_id": {
+      "$ref": "#/$defs/presentation_id"
+    },
+    "resource_class": {
+      "type": "string",
+      "description": "Which of the three resource shapes this definition is. The token is the union discriminator: it decides whether canonical_letter and resonance_behavior are required or forbidden.",
+      "enum": [
+        "specialized-material",
+        "common-ore",
+        "hyper-gold"
+      ]
+    },
+    "canonical_letter": {
+      "type": "string",
+      "pattern": "^[A-F]$",
+      "description": "The player-visible letter. Doc 40 lists the ID and the canonical letter as two fields; the letter is what lets a weapon recipe of opaque resource IDs still be checked against the weapon's own W-xy suffix."
+    },
+    "inventory_scope": {
+      "type": "string",
+      "description": "Whether units survive the end of a run.",
+      "enum": [
+        "run-local",
+        "cross-run"
+      ]
+    },
+    "persistence_class": {
+      "type": "string",
+      "description": "The persistence class, as a token rather than the sentence that was standing in for one.",
+      "enum": [
+        "run-local-consumable",
+        "run-local-currency",
+        "banked-at-extraction"
+      ]
+    },
+    "maximum_safe_count": {
+      "type": "integer",
+      "description": "The maximum count a run may safely hold. No accepted document states one for any resource, so all eight omit the key and the compiler materializes the documented default.",
+      "minimum": 1,
+      "x-authority": {
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+        }
+      }
+    },
+    "material_character": {
+      "type": "string",
+      "description": "Authored art direction."
+    },
+    "loose_association": {
+      "type": "string",
+      "description": "Authored art direction."
+    },
+    "primary_color": {
+      "type": "string",
+      "description": "Authored art direction."
+    },
+    "icon_and_silhouette_cue": {
+      "type": "string",
+      "description": "Authored art direction."
+    },
+    "audio_character": {
+      "type": "string",
+      "description": "Authored art direction."
+    },
+    "shared_economy_tier": {
+      "type": "boolean",
+      "description": "Whether the material sits in the shared economy tier."
+    },
+    "resonance_behavior": {
+      "title": "A specialized material's resonance behavior",
+      "description": "Present on a specialized material and forbidden on a currency: neither common ore nor Hyper Gold has a geode that projects a field.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "behavior_kind": {
+          "type": "string",
+          "description": "The registered resonance behavior. Doc 40 requires resonance behavior registration where applicable; no definition carries a token yet, so the field is validated but not required, and becomes required in the change that mints the vocabulary. A lower-kebab-case token. Whether it resolves to exactly one registered behavior descriptor is the behavior registry's check and is deliberately not asserted here.",
+          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
+        },
+        "effect_name": {
+          "type": "string",
+          "description": "The effect's authored name."
+        },
+        "modifier_percent": {
+          "type": "integer",
+          "description": "The magnitude in percentage points. The direction is carried by modifier_direction, so the magnitude itself is positive.",
+          "exclusiveMinimum": 0,
+          "maximum": 100,
+          "x-authority": {
+            "exclusiveMinimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "a share expressed in percentage points; zero would be the absence of the entry rather than a value of it, so it is excluded rather than admitted as a share of none"
+            },
+            "maximum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "a share expressed in percentage points; one hundred of them is the whole, and a share cannot exceed the thing it is a share of"
+            }
+          }
+        },
+        "modifier_direction": {
+          "type": "string",
+          "description": "Which way the modifier moves the statistic.",
+          "enum": [
+            "increase",
+            "decrease"
+          ]
+        },
+        "edge_case_rule": {
+          "type": "string",
+          "description": "The edge case this material's field resolves."
+        }
+      },
+      "required": [
+        "effect_name",
+        "modifier_percent",
+        "modifier_direction"
+      ]
+    },
+    "scope": {
+      "type": "string",
+      "description": "Authored scope prose."
+    },
+    "availability": {
+      "type": "string",
+      "description": "Authored availability prose."
+    },
+    "primary_purpose": {
+      "type": "string",
+      "description": "Authored purpose prose."
+    },
+    "secured_only_by_mission_extraction": {
+      "type": "boolean",
+      "description": "Whether units are banked only by extracting."
+    },
+    "dropped_by_ordinary_enemies_and_elites": {
+      "type": "boolean",
+      "description": "Whether ordinary defeats drop it."
+    },
+    "increased_by_power_ups": {
+      "type": "boolean",
+      "description": "Whether account PowerUps increase the yield."
+    }
+  },
+  "$defs": {
+    "snake_case_field": {
+      "title": "A schema-declared field name",
+      "description": "Property names use snake_case.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "version": {
+      "title": "A positive integer version",
+      "description": "The initial schema_version and content_version of every first-authored definition is 1.",
+      "type": "integer",
+      "minimum": 1,
+      "x-authority": {
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Initial versions",
+          "kind": "sourced",
+          "derivation": "the initial value of every first-authored definition is 1 and both versions only ever increment, so no valid version is below 1; there is no upper bound because a definition may be revised without limit"
+        }
+      }
+    },
+    "status": {
+      "title": "Lifecycle state",
+      "type": "string",
+      "enum": [
+        "development",
+        "enabled",
+        "disabled",
+        "retired"
+      ]
+    },
+    "name_key": {
+      "title": "Localization key for the player-facing name",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*\\.[A-Za-z0-9][A-Za-z0-9_-]*\\.name$"
+    },
+    "summary_key": {
+      "title": "Localization key for the concise player-facing summary",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*\\.[A-Za-z0-9][A-Za-z0-9_-]*\\.summary$"
+    },
+    "tags": {
+      "title": "Closed query and tooling vocabulary",
+      "description": "The vocabulary starts empty, so [] is the only accepted value.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": []
+      }
+    },
+    "source_refs": {
+      "title": "The sources this definition implements",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(?:[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*|\\[\\]|\\[[0-9]+\\]|\\[[0-9]+\\.\\.[0-9]+\\])*: )?(?:(?:GDD|TDD)-[A-Z0-9-]+|DEC-[0-9]{3}|TDR-[0-9]{3}|TR-[A-Z]+-[0-9]{3})(?:#[a-z0-9-]+)?$"
+      }
+    },
+    "presentation_id": {
+      "title": "Logical presentation entry, required absent",
+      "description": "Required absent: a definition carrying this field is an error. No accepted document says what a presentation definition contains, so no ID grammar has been minted for one, and minting a shape for a category with zero members would be inventing structure ahead of need. The field was declared-optional with a non-empty-string constraint, which accepted any string an author invented and validated nothing about it; rejecting the field outright fails loudly the first time somebody adds one instead of accepting an unauthorized value. The subschema is 'not' over the empty schema, which rejects every instance, so the fault is the field's presence rather than its shape and an authored empty string is rejected by the same rule rather than as an empty declared-optional field. The typed validator reports MMC-2010 and names the field. When an accepted document mints a presentation ID grammar, this declaration becomes that grammar; until then it has no minLength, because a length bound on a value that can never be authored explains nothing.",
+      "not": {}
+    }
+  },
+  "allOf": [
+    {
+      "title": "canonical_letter and resonance_behavior follow resource_class",
+      "description": "A specialized material carries both; a currency carries neither. Expressed as a two-arm oneOf because the alternative - one nullable field per case - is the encoding doc 40 removes by banning null.",
+      "oneOf": [
+        {
+          "title": "the specialized-material arm",
+          "properties": {
+            "resource_class": {
+              "const": "specialized-material"
+            }
+          },
+          "required": [
+            "resource_class",
+            "canonical_letter",
+            "resonance_behavior"
+          ]
+        },
+        {
+          "title": "the currency arm",
+          "properties": {
+            "resource_class": {
+              "enum": [
+                "common-ore",
+                "hyper-gold"
+              ]
+            }
+          },
+          "required": [
+            "resource_class"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "canonical_letter"
+                ]
+              },
+              {
+                "required": [
+                  "resonance_behavior"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "id": "W-CE-kinetic-vent",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-CE-kinetic-vent.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#kinetic-vent--functional--2-cinderglass",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#kinetic-vent--functional--2-cinderglass"
+  ],
+  "weapon_id": "W-CE",
+  "weapon_name": "Reactor Pulse",
+  "class": "Functional",
+  "cost": {
+    "resource": "Cinderglass",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-CE-critical-mass-cycle",
+      "W-CE-supernova-cycle"
+    ],
+    "irreversible_within_run": true,
+    "existing_common_ore_stat_tracks_still_apply": true,
+    "adds_new_stat_track": false,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run."
+  },
+  "availability": {
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite.",
+    "purchase": "Installing one is a single deterministic purchase costing exactly two units of its assigned specialized material."
+  },
+  "effects": {
+    "applies_on_every_pulse": true,
+    "affected_enemies": "ordinary enemies",
+    "push_distance_m": 1.0,
+    "push_direction": "radially outward",
+    "slow": {
+      "percent": 25
+    },
+    "slow_duration_seconds": 1.0,
+    "boss_and_elite_handling": "Bosses and elites receive globally resisted displacement and slow.",
+    "unchanged_stats": [
+      "Damage",
+      "radius",
+      "pulse rate"
+    ]
+  },
+  "rules": [
+    {
+      "text": "Every pulse pushes ordinary enemies 1.0M radially outward and slows them by 25% for 1.0 s."
+    },
+    {
+      "text": "Bosses and elites receive globally resisted displacement and slow."
+    },
+    {
+      "text": "Damage, radius, and pulse rate are unchanged. The weapon becomes a repeating breathing-space tool for mining holds."
+    }
+  ]
+}

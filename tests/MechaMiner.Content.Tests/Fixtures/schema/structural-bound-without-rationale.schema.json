@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Negative control: a structural bound whose entry states no rationale",
+  "description": "The subschema below says plenty, and none of it is attached to the number. A structural bound has no citation to go stale, so the only thing standing between it and a limit chosen to make something pass is a stated reason - and the reason has to sit in the entry for that bound rather than in prose the whole subschema shares. It is never loaded as a real schema.",
+  "type": "object",
+  "properties": {
+    "presentation_id": {
+      "type": "string",
+      "description": "Omitted when a definition never appears in-world, and the empty string is what the compiler materializes for an omitted field.",
+      "minLength": 1,
+      "x-authority": {
+        "minLength": {
+          "kind": "structural"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "id": "MCH-04",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "mech.MCH-04.name",
+  "summary_key": "mech.MCH-04.summary",
+  "tags": [],
+  "source_refs": [
+    "GDD-INITIAL-MECH-CATALOG#catalog-overview",
+    "signature_weapon_id: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "trait_stacking: GDD-INITIAL-MECH-CATALOG#trait-comparison-and-stacking",
+    "initial_availability: GDD-INITIAL-MECH-CATALOG#initial-availability",
+    "player_facing_identity: GDD-INITIAL-MECH-CATALOG#player-facing-identity-3",
+    "top_down_silhouette[]: GDD-INITIAL-MECH-CATALOG#top-down-silhouette-3",
+    "trait_notes[]: GDD-INITIAL-MECH-CATALOG#signature-and-trait-3"
+  ],
+  "signature": "Gravity Projector",
+  "signature_weapon_id": "W-AD",
+  "inherent_trait": {
+    "name": "Field Geometry",
+    "effect": "+15% weapon area",
+    "affected_statistic": "weapon area",
+    "modifier": {
+      "percent": 15
+    }
+  },
+  "selection_role": "Crowd-shaping field controller",
+  "player_facing_identity": "Lodestar controls broad spaces. Its Gravity Projector immediately demonstrates field placement and grouping, while its trait expands every later weapon dimension explicitly classified as Area.",
+  "trait_notes": [
+    "Uses the same Area mappings and exclusions as Field Expander: scalable radii, widths, blast areas, projectile bodies, cones, and persistent damage zones qualify.",
+    "It does not alter targeting range, placement range, travel distance, orbit radius, mining zones, pickup radius, or resonance fields unless an accepted weapon rule classifies that exact dimension as Area.",
+    "Gravity Projector's field radius receives the bonus in every branch."
+  ],
+  "top_down_silhouette": [
+    "Circular central body surrounded by four evenly spaced field vanes or emitter arms.",
+    "Radial negative spaces remain visible when the model is small or surrounded by enemies.",
+    "A luminous center identifies the gravity source without relying on its resource colors.",
+    "The silhouette is orientation-neutral enough to suit automatic field placement while a small forward marker still communicates persistent facing."
+  ],
+  "trait_stacking": {
+    "changed_baseline": {
+      "text": "115% weapon area",
+      "statistic": "weapon area",
+      "percent": 115
+    },
+    "with_matching_utility_rank_3_before_power_ups": {
+      "text": "135% with Field Expander",
+      "utility": "Field Expander",
+      "percent": 135
+    }
+  },
+  "initial_availability": {
+    "text": "Available",
+    "available": true,
+    "recommended_default": false
+  },
+  "cross_doc_notes": []
+}

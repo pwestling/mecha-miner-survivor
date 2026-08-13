@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Control: a schema with no numeric bound anywhere",
+  "description": "Zero bound keywords, so the attribution walk finds nothing to attribute. This is the vacuous-pass control: a walk that reports success here must also report that it saw no bounds, or an empty content/schemas would look exactly like a clean one.",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

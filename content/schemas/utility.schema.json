@@ -1,0 +1,595 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mechaminer.local/schemas/utility.schema.json",
+  "title": "SCH-CNT-002 utility definition",
+  "description": "A utility definition. The project-owned typed validator in src/MechaMiner.Content/Categories/ remains authoritative; this schema is the draft 2020-12 mirror kept for editor and tool interoperability, and a fixture corpus proves the two reach the same accept/reject verdict on every structural case. See content/schemas/README.md. Ranks are integers with zero meaning Installed: the authored strings were display text and were ordinal, so they sort and validate as integers. The catalog_wide_rules block is not declared - fourteen sentences byte-identical across all thirteen utilities is a catalog rule, not per-utility data.",
+  "type": "object",
+  "additionalProperties": false,
+  "propertyNames": {
+    "$ref": "#/$defs/snake_case_field"
+  },
+  "required": [
+    "id",
+    "schema_version",
+    "content_version",
+    "status",
+    "tags",
+    "source_refs",
+    "ore_only_exception",
+    "behavior_kind",
+    "effect_kind",
+    "affected_stat_names",
+    "acquisition",
+    "availability",
+    "effect_rules"
+  ],
+  "properties": {
+    "id": {
+      "title": "A stable, case-sensitive ASCII content ID",
+      "type": "string",
+      "pattern": "^UTL-[A-FR][1-9]$"
+    },
+    "schema_version": {
+      "$ref": "#/$defs/version"
+    },
+    "content_version": {
+      "$ref": "#/$defs/version"
+    },
+    "status": {
+      "$ref": "#/$defs/status"
+    },
+    "name_key": {
+      "$ref": "#/$defs/name_key"
+    },
+    "summary_key": {
+      "$ref": "#/$defs/summary_key"
+    },
+    "tags": {
+      "$ref": "#/$defs/tags"
+    },
+    "source_refs": {
+      "$ref": "#/$defs/source_refs"
+    },
+    "presentation_id": {
+      "$ref": "#/$defs/presentation_id"
+    },
+    "material_id": {
+      "type": "string",
+      "pattern": "^RSC-[0-9]{2}$",
+      "description": "The material this utility is assigned to. Absent exactly when ore_only_exception is true: doc 40 names the two as alternatives."
+    },
+    "ore_only_exception": {
+      "type": "boolean",
+      "description": "Whether this is the ore-only radar exception. One boolean gates nine fields that were previously nine nulls each saying the same thing."
+    },
+    "primary_role": {
+      "type": "string",
+      "description": "The role this utility fills."
+    },
+    "coverage_role": {
+      "type": "string",
+      "description": "What coverage this utility provides."
+    },
+    "behavior_kind": {
+      "type": "string",
+      "description": "The registered behavior. A lower-kebab-case token. Whether it resolves to exactly one registered behavior descriptor is the behavior registry's check and is deliberately not asserted here.",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
+    },
+    "effect_kind": {
+      "type": "string",
+      "description": "How the rank values combine with the statistics they name. The closest thing to a registered kind anywhere in the authored tree.",
+      "enum": [
+        "additive-percent",
+        "flat-additive-hull",
+        "recharging-charge",
+        "additive-hull-per-second",
+        "directional-bearings"
+      ]
+    },
+    "affected_stat_names": {
+      "type": "array",
+      "description": "The named statistics this utility modifies.",
+      "items": {
+        "type": "string",
+        "description": "A statistic from the shared vocabulary every trait, utility, PowerUp and relic modifies.",
+        "enum": [
+          "weapon-damage",
+          "weapon-attack-rate",
+          "weapon-area",
+          "weapon-duration",
+          "weapon-damage-to-elites-and-bosses",
+          "maximum-hull-integrity",
+          "armor",
+          "recovery",
+          "revival-charges",
+          "movement-speed",
+          "discovery-radius",
+          "forward-extraction-rate",
+          "extraction-zone-radius",
+          "mined-common-ore",
+          "recharge-time",
+          "stored-charges",
+          "control-resistance"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "stacking_classification": {
+      "type": "string",
+      "description": "How this utility's value combines with others naming the same statistic.",
+      "enum": [
+        "additive-percent-same-statistic",
+        "flat-before-percent",
+        "additive-hull-per-second"
+      ]
+    },
+    "stored_charges": {
+      "type": "integer",
+      "description": "How many charges a recharging utility holds. Hoisted to the definition because it was constant across every rank row of the one utility that has it.",
+      "minimum": 1,
+      "x-authority": {
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Unit and numeric policy",
+          "kind": "sourced",
+          "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+        }
+      }
+    },
+    "ranks": {
+      "type": "array",
+      "description": "The rank rows, starting at rank zero for Installed. A uniform rank-and-value pair replaces thirteen differently-named payload keys; the unit comes from effect_kind and the statistic from affected_stat_names, so nothing is lost.",
+      "items": {
+        "title": "A utility rank",
+        "description": "One rank row.",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "rank": {
+            "type": "integer",
+            "description": "The rank, where zero means Installed.",
+            "minimum": 0,
+            "x-authority": {
+              "minimum": {
+                "source": "TDD-CONTENT-DATA",
+                "section": "Unit and numeric policy",
+                "kind": "sourced",
+                "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+              }
+            }
+          },
+          "value": {
+            "type": "number",
+            "description": "The value at this rank.",
+            "minimum": 0,
+            "x-authority": {
+              "minimum": {
+                "source": "TDD-CONTENT-DATA",
+                "section": "Unit and numeric policy",
+                "kind": "sourced",
+                "derivation": "the section states that durations are nonnegative and that rates cannot be negative, so the floor of every duration and rate is zero and there is no upper bound the section supplies"
+              }
+            }
+          }
+        },
+        "required": [
+          "rank",
+          "value"
+        ]
+      }
+    },
+    "acquisition": {
+      "title": "How a utility is acquired",
+      "description": "Cost, slots, and commitment.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "rank_count": {
+          "type": "integer",
+          "description": "How many ranks above Installed. The rank array's length is checked against this plus one.",
+          "minimum": 0,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes counts integral; this one is summed into a report column across the catalog, so zero is authored rather than omitted and the floor is zero rather than one"
+            }
+          }
+        },
+        "rank_ore_costs": {
+          "type": "array",
+          "description": "One price per rank above Installed.",
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "x-authority": {
+              "minimum": {
+                "source": "TDD-CONTENT-DATA",
+                "section": "Unit and numeric policy",
+                "kind": "sourced",
+                "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+              }
+            }
+          }
+        },
+        "material_unit_cost": {
+          "type": "integer",
+          "description": "The fabrication cost in material units.",
+          "minimum": 1,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+            }
+          }
+        },
+        "common_ore_cost": {
+          "type": "integer",
+          "description": "The fabrication cost in common ore, on the ore-only radar alone.",
+          "minimum": 1,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+            }
+          }
+        },
+        "utility_slots_filled": {
+          "type": "integer",
+          "description": "How many loadout slots this utility occupies.",
+          "minimum": 1,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+            }
+          }
+        },
+        "unique_in_loadout": {
+          "type": "boolean",
+          "description": "Whether only one copy may be installed."
+        },
+        "dismantlable": {
+          "type": "boolean",
+          "description": "Whether an installed utility can be dismantled."
+        },
+        "replaceable": {
+          "type": "boolean",
+          "description": "Whether an installed utility can be replaced."
+        },
+        "sellable": {
+          "type": "boolean",
+          "description": "Whether an installed utility can be sold."
+        },
+        "refundable_during_run": {
+          "type": "boolean",
+          "description": "Whether a purchase can be refunded mid-run."
+        },
+        "requires_manual_activation": {
+          "type": "boolean",
+          "description": "Whether the player activates it."
+        },
+        "has_alternative_recipes": {
+          "type": "boolean",
+          "description": "Whether alternative recipes exist."
+        },
+        "has_branches": {
+          "type": "boolean",
+          "description": "Whether the utility has branches."
+        },
+        "previews_all_four_effect_tiers": {
+          "type": "boolean",
+          "description": "Whether the fabrication screen previews every tier."
+        },
+        "rank_values_are_totals_not_cumulative_additions": {
+          "type": "boolean",
+          "description": "Whether a rank's value is the total or an addition."
+        }
+      },
+      "required": [
+        "rank_count",
+        "utility_slots_filled",
+        "unique_in_loadout",
+        "dismantlable",
+        "replaceable",
+        "sellable",
+        "refundable_during_run",
+        "requires_manual_activation",
+        "has_alternative_recipes",
+        "has_branches"
+      ]
+    },
+    "availability": {
+      "title": "When a utility is available",
+      "description": "Pool and unlock.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pool_availability": {
+          "type": "string",
+          "description": "Which pool this utility comes from.",
+          "enum": [
+            "fresh-profile",
+            "hyper-gold-unlock",
+            "always-available"
+          ]
+        },
+        "unlock_id": {
+          "type": "string",
+          "pattern": "^UNL-[0-9]{2}$",
+          "description": "The unlock that grants it. Present exactly when the pool token says the utility is behind one; the unlock's cost and name are the unlock's own fields and a copy here would be a second writer on them."
+        },
+        "always_present_in_fixed_fabrication_catalog": {
+          "type": "boolean",
+          "description": "Whether the utility is always in the fabrication catalog."
+        }
+      },
+      "required": [
+        "pool_availability"
+      ]
+    },
+    "tracking": {
+      "title": "What a utility tracks",
+      "description": "The tracked category count is not declared: it is the length of tracked_categories.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "provides_direction_only": {
+          "type": "boolean",
+          "description": "Whether only a bearing is shown."
+        },
+        "provides_exact_distance": {
+          "type": "boolean",
+          "description": "Whether an exact distance is shown."
+        },
+        "provides_map_marker": {
+          "type": "boolean",
+          "description": "Whether a map marker is placed."
+        },
+        "tracks_relic_caches": {
+          "type": "boolean",
+          "description": "Whether relic caches are tracked."
+        },
+        "maximum_simultaneous_bearings": {
+          "type": "integer",
+          "description": "How many bearings may show at once.",
+          "minimum": 1,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+            }
+          }
+        },
+        "bearing_fan_threshold_degrees": {
+          "type": "integer",
+          "description": "How close two bearings must be before they fan.",
+          "minimum": 0,
+          "maximum": 360,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section names _degrees as a unit suffix; the smallest angular threshold is no separation at all, which is zero degrees"
+            },
+            "maximum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section names _degrees as a unit suffix; the largest angular separation two bearings can have is a full turn, which is three hundred and sixty degrees"
+            }
+          }
+        },
+        "bearing_cluster_collapse_above_count": {
+          "type": "integer",
+          "description": "How many bearings collapse into a cluster.",
+          "minimum": 1,
+          "x-authority": {
+            "minimum": {
+              "source": "TDD-CONTENT-DATA",
+              "section": "Unit and numeric policy",
+              "kind": "sourced",
+              "derivation": "the section makes integer currency and rank values integral in source; a count of things that exist begins at one, because a count of zero is the absence of the field rather than a value of it"
+            }
+          }
+        },
+        "tracked_categories": {
+          "type": "array",
+          "description": "What the utility tracks.",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "provides_direction_only",
+        "provides_exact_distance",
+        "provides_map_marker",
+        "tracks_relic_caches",
+        "maximum_simultaneous_bearings",
+        "bearing_fan_threshold_degrees",
+        "bearing_cluster_collapse_above_count",
+        "tracked_categories"
+      ]
+    },
+    "effect_rules": {
+      "type": "array",
+      "description": "Rules governing the effect.",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "$defs": {
+    "snake_case_field": {
+      "title": "A schema-declared field name",
+      "description": "Property names use snake_case.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "version": {
+      "title": "A positive integer version",
+      "description": "The initial schema_version and content_version of every first-authored definition is 1.",
+      "type": "integer",
+      "minimum": 1,
+      "x-authority": {
+        "minimum": {
+          "source": "TDD-CONTENT-DATA",
+          "section": "Initial versions",
+          "kind": "sourced",
+          "derivation": "the initial value of every first-authored definition is 1 and both versions only ever increment, so no valid version is below 1; there is no upper bound because a definition may be revised without limit"
+        }
+      }
+    },
+    "status": {
+      "title": "Lifecycle state",
+      "type": "string",
+      "enum": [
+        "development",
+        "enabled",
+        "disabled",
+        "retired"
+      ]
+    },
+    "name_key": {
+      "title": "Localization key for the player-facing name",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*\\.[A-Za-z0-9][A-Za-z0-9_-]*\\.name$"
+    },
+    "summary_key": {
+      "title": "Localization key for the concise player-facing summary",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*\\.[A-Za-z0-9][A-Za-z0-9_-]*\\.summary$"
+    },
+    "tags": {
+      "title": "Closed query and tooling vocabulary",
+      "description": "The vocabulary starts empty, so [] is the only accepted value.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": []
+      }
+    },
+    "source_refs": {
+      "title": "The sources this definition implements",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(?:[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*|\\[\\]|\\[[0-9]+\\]|\\[[0-9]+\\.\\.[0-9]+\\])*: )?(?:(?:GDD|TDD)-[A-Z0-9-]+|DEC-[0-9]{3}|TDR-[0-9]{3}|TR-[A-Z]+-[0-9]{3})(?:#[a-z0-9-]+)?$"
+      }
+    },
+    "presentation_id": {
+      "title": "Logical presentation entry, required absent",
+      "description": "Required absent: a definition carrying this field is an error. No accepted document says what a presentation definition contains, so no ID grammar has been minted for one, and minting a shape for a category with zero members would be inventing structure ahead of need. The field was declared-optional with a non-empty-string constraint, which accepted any string an author invented and validated nothing about it; rejecting the field outright fails loudly the first time somebody adds one instead of accepting an unauthorized value. The subschema is 'not' over the empty schema, which rejects every instance, so the fault is the field's presence rather than its shape and an authored empty string is rejected by the same rule rather than as an empty declared-optional field. The typed validator reports MMC-2010 and names the field. When an accepted document mints a presentation ID grammar, this declaration becomes that grammar; until then it has no minLength, because a length bound on a value that can never be authored explains nothing.",
+      "not": {}
+    }
+  },
+  "allOf": [
+    {
+      "title": "the ore-only exception gates nine fields at once",
+      "description": "One boolean decides whether a utility is assigned to a material or is the ore-only radar. Nine fields follow from it, which is why it is a discriminator and not nine nullable fields.",
+      "oneOf": [
+        {
+          "title": "the material-utility arm",
+          "properties": {
+            "ore_only_exception": {
+              "const": false
+            }
+          },
+          "required": [
+            "ore_only_exception",
+            "material_id",
+            "ranks"
+          ]
+        },
+        {
+          "title": "the ore-only radar arm",
+          "properties": {
+            "ore_only_exception": {
+              "const": true
+            }
+          },
+          "required": [
+            "ore_only_exception"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "material_id"
+                ]
+              },
+              {
+                "required": [
+                  "ranks"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "an unlock reference follows the pool token",
+      "oneOf": [
+        {
+          "title": "the unlocked arm",
+          "properties": {
+            "availability": {
+              "properties": {
+                "pool_availability": {
+                  "const": "hyper-gold-unlock"
+                }
+              },
+              "required": [
+                "pool_availability",
+                "unlock_id"
+              ]
+            }
+          },
+          "required": [
+            "availability"
+          ]
+        },
+        {
+          "title": "the already-available arm",
+          "properties": {
+            "availability": {
+              "properties": {
+                "pool_availability": {
+                  "enum": [
+                    "fresh-profile",
+                    "always-available"
+                  ]
+                }
+              },
+              "required": [
+                "pool_availability"
+              ],
+              "not": {
+                "required": [
+                  "unlock_id"
+                ]
+              }
+            }
+          },
+          "required": [
+            "availability"
+          ]
+        }
+      ]
+    }
+  ]
+}

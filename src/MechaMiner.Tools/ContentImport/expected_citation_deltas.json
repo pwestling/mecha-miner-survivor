@@ -1,0 +1,768 @@
+{
+ "schema": "citation-pass-expectations/1",
+ "sweep_ref": "b4823048603d61ca54bc3595accee030c2ad898f",
+ "previous_pass_ref": "4eda0c5a57f419c5668710563afddf6acde06058",
+ "min_words": 6,
+ "sweep_totals": {
+  "absent_from_cited_section": 145,
+  "inside_the_frozen_378": 129,
+  "outside_the_frozen_378": 16
+ },
+ "previous_pass_59_pairs": {
+  "derived_from": "4eda0c5a57f419c5668710563afddf6acde06058",
+  "located_somewhere_records": 248,
+  "grouping_key": "(file, pointer with every array index collapsed)",
+  "literal_readings_that_do_not_reproduce": {
+   "(file, pointer)": 248,
+   "(file, existing citation scope)": 38
+  },
+  "no_collapse_rule": "The two content/enemies/EN-06.json groups (specialist_attack.projectile.lifetime_description and specialist_attack.resonance_interactions.flux_amber) share a target section and would collapse to one specialist_attack: element, giving 64 groups and 58 new. They are kept separate because that collapse SHADOWS specialist_attack.projectile.lifetime_description behind the pre-existing specialist_attack.projectile: TDD-ENCOUNTERS#needler element, which is more specific than a bare specialist_attack: prefix. Measured by performing the collapse and running check_quote_mismatch_evidence.py: disagreements: 1, 'EN-06 :: specialist_attack.projectile.lifetime_description: stored exact, recomputed no-match', RESULT: FAIL. hard_control_interaction is NOT the field at risk - it carries its own equally specific element and is unaffected.",
+  "variants": {
+   "[n] -> []": {
+    "groups": 65,
+    "files": 37,
+    "already_correct_all_exact": 6,
+    "already_correct_any_exact": 6,
+    "new": 59,
+    "new_files": 31,
+    "pairs": [
+     "content/bosses/BOSS-01.json :: persistence.reentry.behavior",
+     "content/bosses/BOSS-02.json :: persistence.reentry.behavior",
+     "content/bosses/BOSS-03.json :: persistence.reentry.behavior",
+     "content/bosses/BOSS-04.json :: persistence.reentry.behavior",
+     "content/enemies/EN-06.json :: specialist_attack.hard_control_interaction",
+     "content/enemies/EN-06.json :: specialist_attack.projectile.lifetime_description",
+     "content/enemies/EN-06.json :: specialist_attack.resonance_interactions.flux_amber",
+     "content/mechs/MCH-01.json :: player_facing_identity",
+     "content/mechs/MCH-01.json :: top_down_silhouette[]",
+     "content/mechs/MCH-01.json :: trait_notes[]",
+     "content/mechs/MCH-02.json :: player_facing_identity",
+     "content/mechs/MCH-02.json :: top_down_silhouette[]",
+     "content/mechs/MCH-02.json :: trait_notes[]",
+     "content/mechs/MCH-03.json :: player_facing_identity",
+     "content/mechs/MCH-03.json :: top_down_silhouette[]",
+     "content/mechs/MCH-03.json :: trait_notes[]",
+     "content/mechs/MCH-04.json :: player_facing_identity",
+     "content/mechs/MCH-04.json :: top_down_silhouette[]",
+     "content/mechs/MCH-04.json :: trait_notes[]",
+     "content/mechs/MCH-05.json :: player_facing_identity",
+     "content/mechs/MCH-05.json :: top_down_silhouette[]",
+     "content/mechs/MCH-05.json :: trait_notes[]",
+     "content/mechs/MCH-06.json :: player_facing_identity",
+     "content/mechs/MCH-06.json :: top_down_silhouette[]",
+     "content/mechs/MCH-06.json :: trait_notes[]",
+     "content/mining-sites/hyper-gold-sites.json :: depleted_state",
+     "content/mining-sites/rich-ore-seams.json :: depleted_state",
+     "content/mining-sites/standard-ore-seams.json :: depleted_state",
+     "content/relics/REL-01.json :: core_tradeoff",
+     "content/relics/REL-06.json :: core_tradeoff",
+     "content/relics/REL-08.json :: core_tradeoff",
+     "content/relics/REL-10.json :: core_tradeoff",
+     "content/utilities/UTL-A1.json :: catalog_wide_rules.modifier_and_timing_rules[]",
+     "content/utilities/UTL-A1.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[]",
+     "content/utilities/UTL-A2.json :: catalog_wide_rules.modifier_and_timing_rules[]",
+     "content/utilities/UTL-A2.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[]",
+     "content/utilities/UTL-B1.json :: catalog_wide_rules.modifier_and_timing_rules[]",
+     "content/utilities/UTL-B1.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[]",
+     "content/utilities/UTL-B2.json :: catalog_wide_rules.modifier_and_timing_rules[]",
+     "content/utilities/UTL-B2.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[]",
+     "content/utilities/UTL-C1.json :: catalog_wide_rules.modifier_and_timing_rules[]",
+     "content/utilities/UTL-C1.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[]",
+     "content/utilities/UTL-C2.json :: catalog_wide_rules.modifier_and_timing_rules[]",
+     "content/utilities/UTL-C2.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[]",
+     "content/utilities/UTL-D1.json :: catalog_wide_rules.modifier_and_timing_rules[]",
+     "content/utilities/UTL-D1.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[]",
+     "content/utilities/UTL-D2.json :: catalog_wide_rules.modifier_and_timing_rules[]",
+     "content/utilities/UTL-D2.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[]",
+     "content/utilities/UTL-E1.json :: catalog_wide_rules.modifier_and_timing_rules[]",
+     "content/utilities/UTL-E1.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[]",
+     "content/utilities/UTL-E2.json :: catalog_wide_rules.modifier_and_timing_rules[]",
+     "content/utilities/UTL-E2.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[]",
+     "content/utilities/UTL-E2.json :: installed_to_rank_3",
+     "content/utilities/UTL-F1.json :: catalog_wide_rules.modifier_and_timing_rules[]",
+     "content/utilities/UTL-F1.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[]",
+     "content/utilities/UTL-F2.json :: catalog_wide_rules.modifier_and_timing_rules[]",
+     "content/utilities/UTL-F2.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[]",
+     "content/utilities/UTL-R1.json :: catalog_wide_rules.modifier_and_timing_rules[]",
+     "content/utilities/UTL-R1.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[]"
+    ]
+   },
+   "[n] -> (removed)": {
+    "groups": 65,
+    "files": 37,
+    "already_correct_all_exact": 6,
+    "already_correct_any_exact": 6,
+    "new": 59,
+    "new_files": 31,
+    "pairs": [
+     "content/bosses/BOSS-01.json :: persistence.reentry.behavior",
+     "content/bosses/BOSS-02.json :: persistence.reentry.behavior",
+     "content/bosses/BOSS-03.json :: persistence.reentry.behavior",
+     "content/bosses/BOSS-04.json :: persistence.reentry.behavior",
+     "content/enemies/EN-06.json :: specialist_attack.hard_control_interaction",
+     "content/enemies/EN-06.json :: specialist_attack.projectile.lifetime_description",
+     "content/enemies/EN-06.json :: specialist_attack.resonance_interactions.flux_amber",
+     "content/mechs/MCH-01.json :: player_facing_identity",
+     "content/mechs/MCH-01.json :: top_down_silhouette",
+     "content/mechs/MCH-01.json :: trait_notes",
+     "content/mechs/MCH-02.json :: player_facing_identity",
+     "content/mechs/MCH-02.json :: top_down_silhouette",
+     "content/mechs/MCH-02.json :: trait_notes",
+     "content/mechs/MCH-03.json :: player_facing_identity",
+     "content/mechs/MCH-03.json :: top_down_silhouette",
+     "content/mechs/MCH-03.json :: trait_notes",
+     "content/mechs/MCH-04.json :: player_facing_identity",
+     "content/mechs/MCH-04.json :: top_down_silhouette",
+     "content/mechs/MCH-04.json :: trait_notes",
+     "content/mechs/MCH-05.json :: player_facing_identity",
+     "content/mechs/MCH-05.json :: top_down_silhouette",
+     "content/mechs/MCH-05.json :: trait_notes",
+     "content/mechs/MCH-06.json :: player_facing_identity",
+     "content/mechs/MCH-06.json :: top_down_silhouette",
+     "content/mechs/MCH-06.json :: trait_notes",
+     "content/mining-sites/hyper-gold-sites.json :: depleted_state",
+     "content/mining-sites/rich-ore-seams.json :: depleted_state",
+     "content/mining-sites/standard-ore-seams.json :: depleted_state",
+     "content/relics/REL-01.json :: core_tradeoff",
+     "content/relics/REL-06.json :: core_tradeoff",
+     "content/relics/REL-08.json :: core_tradeoff",
+     "content/relics/REL-10.json :: core_tradeoff",
+     "content/utilities/UTL-A1.json :: catalog_wide_rules.modifier_and_timing_rules",
+     "content/utilities/UTL-A1.json :: catalog_wide_rules.shared_acquisition_and_rank_rules",
+     "content/utilities/UTL-A2.json :: catalog_wide_rules.modifier_and_timing_rules",
+     "content/utilities/UTL-A2.json :: catalog_wide_rules.shared_acquisition_and_rank_rules",
+     "content/utilities/UTL-B1.json :: catalog_wide_rules.modifier_and_timing_rules",
+     "content/utilities/UTL-B1.json :: catalog_wide_rules.shared_acquisition_and_rank_rules",
+     "content/utilities/UTL-B2.json :: catalog_wide_rules.modifier_and_timing_rules",
+     "content/utilities/UTL-B2.json :: catalog_wide_rules.shared_acquisition_and_rank_rules",
+     "content/utilities/UTL-C1.json :: catalog_wide_rules.modifier_and_timing_rules",
+     "content/utilities/UTL-C1.json :: catalog_wide_rules.shared_acquisition_and_rank_rules",
+     "content/utilities/UTL-C2.json :: catalog_wide_rules.modifier_and_timing_rules",
+     "content/utilities/UTL-C2.json :: catalog_wide_rules.shared_acquisition_and_rank_rules",
+     "content/utilities/UTL-D1.json :: catalog_wide_rules.modifier_and_timing_rules",
+     "content/utilities/UTL-D1.json :: catalog_wide_rules.shared_acquisition_and_rank_rules",
+     "content/utilities/UTL-D2.json :: catalog_wide_rules.modifier_and_timing_rules",
+     "content/utilities/UTL-D2.json :: catalog_wide_rules.shared_acquisition_and_rank_rules",
+     "content/utilities/UTL-E1.json :: catalog_wide_rules.modifier_and_timing_rules",
+     "content/utilities/UTL-E1.json :: catalog_wide_rules.shared_acquisition_and_rank_rules",
+     "content/utilities/UTL-E2.json :: catalog_wide_rules.modifier_and_timing_rules",
+     "content/utilities/UTL-E2.json :: catalog_wide_rules.shared_acquisition_and_rank_rules",
+     "content/utilities/UTL-E2.json :: installed_to_rank_3",
+     "content/utilities/UTL-F1.json :: catalog_wide_rules.modifier_and_timing_rules",
+     "content/utilities/UTL-F1.json :: catalog_wide_rules.shared_acquisition_and_rank_rules",
+     "content/utilities/UTL-F2.json :: catalog_wide_rules.modifier_and_timing_rules",
+     "content/utilities/UTL-F2.json :: catalog_wide_rules.shared_acquisition_and_rank_rules",
+     "content/utilities/UTL-R1.json :: catalog_wide_rules.modifier_and_timing_rules",
+     "content/utilities/UTL-R1.json :: catalog_wide_rules.shared_acquisition_and_rank_rules"
+    ]
+   },
+   "[n] -> [*]": {
+    "groups": 65,
+    "files": 37,
+    "already_correct_all_exact": 6,
+    "already_correct_any_exact": 6,
+    "new": 59,
+    "new_files": 31,
+    "pairs": [
+     "content/bosses/BOSS-01.json :: persistence.reentry.behavior",
+     "content/bosses/BOSS-02.json :: persistence.reentry.behavior",
+     "content/bosses/BOSS-03.json :: persistence.reentry.behavior",
+     "content/bosses/BOSS-04.json :: persistence.reentry.behavior",
+     "content/enemies/EN-06.json :: specialist_attack.hard_control_interaction",
+     "content/enemies/EN-06.json :: specialist_attack.projectile.lifetime_description",
+     "content/enemies/EN-06.json :: specialist_attack.resonance_interactions.flux_amber",
+     "content/mechs/MCH-01.json :: player_facing_identity",
+     "content/mechs/MCH-01.json :: top_down_silhouette[*]",
+     "content/mechs/MCH-01.json :: trait_notes[*]",
+     "content/mechs/MCH-02.json :: player_facing_identity",
+     "content/mechs/MCH-02.json :: top_down_silhouette[*]",
+     "content/mechs/MCH-02.json :: trait_notes[*]",
+     "content/mechs/MCH-03.json :: player_facing_identity",
+     "content/mechs/MCH-03.json :: top_down_silhouette[*]",
+     "content/mechs/MCH-03.json :: trait_notes[*]",
+     "content/mechs/MCH-04.json :: player_facing_identity",
+     "content/mechs/MCH-04.json :: top_down_silhouette[*]",
+     "content/mechs/MCH-04.json :: trait_notes[*]",
+     "content/mechs/MCH-05.json :: player_facing_identity",
+     "content/mechs/MCH-05.json :: top_down_silhouette[*]",
+     "content/mechs/MCH-05.json :: trait_notes[*]",
+     "content/mechs/MCH-06.json :: player_facing_identity",
+     "content/mechs/MCH-06.json :: top_down_silhouette[*]",
+     "content/mechs/MCH-06.json :: trait_notes[*]",
+     "content/mining-sites/hyper-gold-sites.json :: depleted_state",
+     "content/mining-sites/rich-ore-seams.json :: depleted_state",
+     "content/mining-sites/standard-ore-seams.json :: depleted_state",
+     "content/relics/REL-01.json :: core_tradeoff",
+     "content/relics/REL-06.json :: core_tradeoff",
+     "content/relics/REL-08.json :: core_tradeoff",
+     "content/relics/REL-10.json :: core_tradeoff",
+     "content/utilities/UTL-A1.json :: catalog_wide_rules.modifier_and_timing_rules[*]",
+     "content/utilities/UTL-A1.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[*]",
+     "content/utilities/UTL-A2.json :: catalog_wide_rules.modifier_and_timing_rules[*]",
+     "content/utilities/UTL-A2.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[*]",
+     "content/utilities/UTL-B1.json :: catalog_wide_rules.modifier_and_timing_rules[*]",
+     "content/utilities/UTL-B1.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[*]",
+     "content/utilities/UTL-B2.json :: catalog_wide_rules.modifier_and_timing_rules[*]",
+     "content/utilities/UTL-B2.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[*]",
+     "content/utilities/UTL-C1.json :: catalog_wide_rules.modifier_and_timing_rules[*]",
+     "content/utilities/UTL-C1.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[*]",
+     "content/utilities/UTL-C2.json :: catalog_wide_rules.modifier_and_timing_rules[*]",
+     "content/utilities/UTL-C2.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[*]",
+     "content/utilities/UTL-D1.json :: catalog_wide_rules.modifier_and_timing_rules[*]",
+     "content/utilities/UTL-D1.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[*]",
+     "content/utilities/UTL-D2.json :: catalog_wide_rules.modifier_and_timing_rules[*]",
+     "content/utilities/UTL-D2.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[*]",
+     "content/utilities/UTL-E1.json :: catalog_wide_rules.modifier_and_timing_rules[*]",
+     "content/utilities/UTL-E1.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[*]",
+     "content/utilities/UTL-E2.json :: catalog_wide_rules.modifier_and_timing_rules[*]",
+     "content/utilities/UTL-E2.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[*]",
+     "content/utilities/UTL-E2.json :: installed_to_rank_3",
+     "content/utilities/UTL-F1.json :: catalog_wide_rules.modifier_and_timing_rules[*]",
+     "content/utilities/UTL-F1.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[*]",
+     "content/utilities/UTL-F2.json :: catalog_wide_rules.modifier_and_timing_rules[*]",
+     "content/utilities/UTL-F2.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[*]",
+     "content/utilities/UTL-R1.json :: catalog_wide_rules.modifier_and_timing_rules[*]",
+     "content/utilities/UTL-R1.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[*]"
+    ]
+   }
+  },
+  "pairs": [
+   "content/bosses/BOSS-01.json :: persistence.reentry.behavior",
+   "content/bosses/BOSS-02.json :: persistence.reentry.behavior",
+   "content/bosses/BOSS-03.json :: persistence.reentry.behavior",
+   "content/bosses/BOSS-04.json :: persistence.reentry.behavior",
+   "content/enemies/EN-06.json :: specialist_attack.hard_control_interaction",
+   "content/enemies/EN-06.json :: specialist_attack.projectile.lifetime_description",
+   "content/enemies/EN-06.json :: specialist_attack.resonance_interactions.flux_amber",
+   "content/mechs/MCH-01.json :: player_facing_identity",
+   "content/mechs/MCH-01.json :: top_down_silhouette[]",
+   "content/mechs/MCH-01.json :: trait_notes[]",
+   "content/mechs/MCH-02.json :: player_facing_identity",
+   "content/mechs/MCH-02.json :: top_down_silhouette[]",
+   "content/mechs/MCH-02.json :: trait_notes[]",
+   "content/mechs/MCH-03.json :: player_facing_identity",
+   "content/mechs/MCH-03.json :: top_down_silhouette[]",
+   "content/mechs/MCH-03.json :: trait_notes[]",
+   "content/mechs/MCH-04.json :: player_facing_identity",
+   "content/mechs/MCH-04.json :: top_down_silhouette[]",
+   "content/mechs/MCH-04.json :: trait_notes[]",
+   "content/mechs/MCH-05.json :: player_facing_identity",
+   "content/mechs/MCH-05.json :: top_down_silhouette[]",
+   "content/mechs/MCH-05.json :: trait_notes[]",
+   "content/mechs/MCH-06.json :: player_facing_identity",
+   "content/mechs/MCH-06.json :: top_down_silhouette[]",
+   "content/mechs/MCH-06.json :: trait_notes[]",
+   "content/mining-sites/hyper-gold-sites.json :: depleted_state",
+   "content/mining-sites/rich-ore-seams.json :: depleted_state",
+   "content/mining-sites/standard-ore-seams.json :: depleted_state",
+   "content/relics/REL-01.json :: core_tradeoff",
+   "content/relics/REL-06.json :: core_tradeoff",
+   "content/relics/REL-08.json :: core_tradeoff",
+   "content/relics/REL-10.json :: core_tradeoff",
+   "content/utilities/UTL-A1.json :: catalog_wide_rules.modifier_and_timing_rules[]",
+   "content/utilities/UTL-A1.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[]",
+   "content/utilities/UTL-A2.json :: catalog_wide_rules.modifier_and_timing_rules[]",
+   "content/utilities/UTL-A2.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[]",
+   "content/utilities/UTL-B1.json :: catalog_wide_rules.modifier_and_timing_rules[]",
+   "content/utilities/UTL-B1.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[]",
+   "content/utilities/UTL-B2.json :: catalog_wide_rules.modifier_and_timing_rules[]",
+   "content/utilities/UTL-B2.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[]",
+   "content/utilities/UTL-C1.json :: catalog_wide_rules.modifier_and_timing_rules[]",
+   "content/utilities/UTL-C1.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[]",
+   "content/utilities/UTL-C2.json :: catalog_wide_rules.modifier_and_timing_rules[]",
+   "content/utilities/UTL-C2.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[]",
+   "content/utilities/UTL-D1.json :: catalog_wide_rules.modifier_and_timing_rules[]",
+   "content/utilities/UTL-D1.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[]",
+   "content/utilities/UTL-D2.json :: catalog_wide_rules.modifier_and_timing_rules[]",
+   "content/utilities/UTL-D2.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[]",
+   "content/utilities/UTL-E1.json :: catalog_wide_rules.modifier_and_timing_rules[]",
+   "content/utilities/UTL-E1.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[]",
+   "content/utilities/UTL-E2.json :: catalog_wide_rules.modifier_and_timing_rules[]",
+   "content/utilities/UTL-E2.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[]",
+   "content/utilities/UTL-E2.json :: installed_to_rank_3",
+   "content/utilities/UTL-F1.json :: catalog_wide_rules.modifier_and_timing_rules[]",
+   "content/utilities/UTL-F1.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[]",
+   "content/utilities/UTL-F2.json :: catalog_wide_rules.modifier_and_timing_rules[]",
+   "content/utilities/UTL-F2.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[]",
+   "content/utilities/UTL-R1.json :: catalog_wide_rules.modifier_and_timing_rules[]",
+   "content/utilities/UTL-R1.json :: catalog_wide_rules.shared_acquisition_and_rank_rules[]"
+  ]
+ },
+ "sweep_16": [
+  {
+   "file": "content/bosses/BOSS-01.json",
+   "pointer": "persistence.reentry.trigger",
+   "field": "trigger",
+   "value": "remains far outside the combat area",
+   "cited": [
+    "TDD-ENCOUNTERS#boss-re-entry"
+   ],
+   "sections_containing_the_value": [
+    {
+     "cited_document": true,
+     "heading_level": 2,
+     "span": 10,
+     "target": "GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
+     "kind": "exact",
+     "where": "31-initial-alien-roster.md:167-176"
+    },
+    {
+     "cited_document": true,
+     "heading_level": 1,
+     "span": 211,
+     "target": "GDD-INITIAL-ALIEN-ROSTER#initial-alien-and-boss-roster",
+     "kind": "exact",
+     "where": "31-initial-alien-roster.md:8-218"
+    }
+   ],
+   "classification": "mis-citation - re-point",
+   "target": "GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
+   "expected_new_source_refs_element": "persistence.reentry.trigger: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward"
+  },
+  {
+   "file": "content/bosses/BOSS-02.json",
+   "pointer": "persistence.reentry.trigger",
+   "field": "trigger",
+   "value": "remains far outside the combat area",
+   "cited": [
+    "TDD-ENCOUNTERS#boss-re-entry"
+   ],
+   "sections_containing_the_value": [
+    {
+     "cited_document": true,
+     "heading_level": 2,
+     "span": 10,
+     "target": "GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
+     "kind": "exact",
+     "where": "31-initial-alien-roster.md:167-176"
+    },
+    {
+     "cited_document": true,
+     "heading_level": 1,
+     "span": 211,
+     "target": "GDD-INITIAL-ALIEN-ROSTER#initial-alien-and-boss-roster",
+     "kind": "exact",
+     "where": "31-initial-alien-roster.md:8-218"
+    }
+   ],
+   "classification": "mis-citation - re-point",
+   "target": "GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
+   "expected_new_source_refs_element": "persistence.reentry.trigger: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward"
+  },
+  {
+   "file": "content/bosses/BOSS-03.json",
+   "pointer": "persistence.reentry.trigger",
+   "field": "trigger",
+   "value": "remains far outside the combat area",
+   "cited": [
+    "TDD-ENCOUNTERS#boss-re-entry"
+   ],
+   "sections_containing_the_value": [
+    {
+     "cited_document": true,
+     "heading_level": 2,
+     "span": 10,
+     "target": "GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
+     "kind": "exact",
+     "where": "31-initial-alien-roster.md:167-176"
+    },
+    {
+     "cited_document": true,
+     "heading_level": 1,
+     "span": 211,
+     "target": "GDD-INITIAL-ALIEN-ROSTER#initial-alien-and-boss-roster",
+     "kind": "exact",
+     "where": "31-initial-alien-roster.md:8-218"
+    }
+   ],
+   "classification": "mis-citation - re-point",
+   "target": "GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
+   "expected_new_source_refs_element": "persistence.reentry.trigger: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward"
+  },
+  {
+   "file": "content/bosses/BOSS-04.json",
+   "pointer": "persistence.reentry.trigger",
+   "field": "trigger",
+   "value": "remains far outside the combat area",
+   "cited": [
+    "TDD-ENCOUNTERS#boss-re-entry"
+   ],
+   "sections_containing_the_value": [
+    {
+     "cited_document": true,
+     "heading_level": 2,
+     "span": 10,
+     "target": "GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
+     "kind": "exact",
+     "where": "31-initial-alien-roster.md:167-176"
+    },
+    {
+     "cited_document": true,
+     "heading_level": 1,
+     "span": 211,
+     "target": "GDD-INITIAL-ALIEN-ROSTER#initial-alien-and-boss-roster",
+     "kind": "exact",
+     "where": "31-initial-alien-roster.md:8-218"
+    }
+   ],
+   "classification": "mis-citation - re-point",
+   "target": "GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
+   "expected_new_source_refs_element": "persistence.reentry.trigger: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward"
+  },
+  {
+   "file": "content/branches/W-BC-suppressive-sequencer.json",
+   "pointer": "effects.target_preference",
+   "field": "target_preference",
+   "value": "any valid enemy not in the memory set",
+   "cited": [
+    "GDD-WEAPON-NUMERIC-CATALOG#suppressive-sequencer--functional--2-cinderglass"
+   ],
+   "sections_containing_the_value": [],
+   "classification": "NOT a mis-citation - value is not a verbatim quotation",
+   "target": null,
+   "expected_new_source_refs_element": null
+  },
+  {
+   "file": "content/branches/W-BF-tethered-reaper.json",
+   "pointer": "effects.single_target_ceiling_at_zero_blade_speed",
+   "field": "single_target_ceiling_at_zero_blade_speed",
+   "value": "the same as four ordinary cutters",
+   "cited": [
+    "GDD-WEAPON-NUMERIC-CATALOG#tethered-reaper--conversion--2-eidolon-coral"
+   ],
+   "sections_containing_the_value": [],
+   "classification": "NOT a mis-citation - value is not a verbatim quotation",
+   "target": null,
+   "expected_new_source_refs_element": null
+  },
+  {
+   "file": "content/maps/standard-map-generation-contract.json",
+   "pointer": "destructible_rock_rules.health_pack.persistence",
+   "field": "persistence",
+   "value": "persists until collected or run end",
+   "cited": [
+    "GDD-PLAYER-SURVIVABILITY-BASELINE#health-packs-and-destructible-rocks"
+   ],
+   "sections_containing_the_value": [
+    {
+     "cited_document": false,
+     "heading_level": 3,
+     "span": 28,
+     "target": "GDD-CORE-LOOP#combat-pressure",
+     "kind": "exact",
+     "where": "10-core-game-loop.md:109-136"
+    },
+    {
+     "cited_document": false,
+     "heading_level": 2,
+     "span": 10,
+     "target": "GDD-COMBAT#combat-progression",
+     "kind": "exact",
+     "where": "30-combat-weapons-movement-camera.md:96-105"
+    },
+    {
+     "cited_document": false,
+     "heading_level": 2,
+     "span": 130,
+     "target": "GDD-CORE-LOOP#decided-player-facing-rules",
+     "kind": "exact",
+     "where": "10-core-game-loop.md:35-164"
+    },
+    {
+     "cited_document": false,
+     "heading_level": 1,
+     "span": 194,
+     "target": "GDD-COMBAT#combat-weapons-movement-and-camera",
+     "kind": "exact",
+     "where": "30-combat-weapons-movement-camera.md:8-201"
+    }
+   ],
+   "classification": "mis-citation - re-point",
+   "target": "GDD-CORE-LOOP#combat-pressure",
+   "expected_new_source_refs_element": "destructible_rock_rules.health_pack.persistence: GDD-CORE-LOOP#combat-pressure"
+  },
+  {
+   "file": "content/mechs/MCH-02.json",
+   "pointer": "inherent_trait.effect_detail",
+   "field": "effect_detail",
+   "value": "+15% damage to all equipped weapons",
+   "cited": [
+    "GDD-INITIAL-MECH-CATALOG#catalog-overview"
+   ],
+   "sections_containing_the_value": [
+    {
+     "cited_document": true,
+     "heading_level": 3,
+     "span": 7,
+     "target": "GDD-INITIAL-MECH-CATALOG#signature-and-trait-1",
+     "kind": "exact",
+     "where": "36-initial-mech-catalog.md:84-90"
+    },
+    {
+     "cited_document": true,
+     "heading_level": 2,
+     "span": 24,
+     "target": "GDD-INITIAL-MECH-CATALOG#mch-02--pike",
+     "kind": "exact",
+     "where": "36-initial-mech-catalog.md:78-101"
+    },
+    {
+     "cited_document": true,
+     "heading_level": 1,
+     "span": 265,
+     "target": "GDD-INITIAL-MECH-CATALOG#initial-mech-catalog",
+     "kind": "exact",
+     "where": "36-initial-mech-catalog.md:8-272"
+    }
+   ],
+   "classification": "mis-citation - re-point",
+   "target": "GDD-INITIAL-MECH-CATALOG#signature-and-trait-1",
+   "expected_new_source_refs_element": "inherent_trait.effect_detail: GDD-INITIAL-MECH-CATALOG#signature-and-trait-1"
+  },
+  {
+   "file": "content/mining-sites/specialized-material-geodes.json",
+   "pointer": "partial_payout",
+   "field": "partial_payout",
+   "value": "none; no partial material or ore payout",
+   "cited": [
+    "GDD-MINING#specialized-material-geodes"
+   ],
+   "sections_containing_the_value": [],
+   "classification": "NOT a mis-citation - value is not a verbatim quotation",
+   "target": null,
+   "expected_new_source_refs_element": null
+  },
+  {
+   "file": "content/relics/REL-09.json",
+   "pointer": "core_tradeoff",
+   "field": "core_tradeoff",
+   "value": "Enemies move 50% faster during mining",
+   "cited": [
+    "GDD-INITIAL-RELIC-CATALOG#rel-09--claim-jumper-core"
+   ],
+   "sections_containing_the_value": [
+    {
+     "cited_document": true,
+     "heading_level": 2,
+     "span": 15,
+     "target": "GDD-INITIAL-RELIC-CATALOG#catalog-overview",
+     "kind": "exact",
+     "where": "69-initial-relic-catalog.md:24-38"
+    },
+    {
+     "cited_document": true,
+     "heading_level": 1,
+     "span": 189,
+     "target": "GDD-INITIAL-RELIC-CATALOG#initial-relic-catalog",
+     "kind": "exact",
+     "where": "69-initial-relic-catalog.md:8-196"
+    }
+   ],
+   "classification": "mis-citation - re-point",
+   "target": "GDD-INITIAL-RELIC-CATALOG#catalog-overview",
+   "expected_new_source_refs_element": "core_tradeoff: GDD-INITIAL-RELIC-CATALOG#catalog-overview"
+  },
+  {
+   "file": "content/utilities/UTL-B1.json",
+   "pointer": "installed_to_rank_3",
+   "field": "installed_to_rank_3",
+   "value": "+15 → +45 maximum Hull Integrity",
+   "cited": [
+    "GDD-UTILITY-CATALOG#utl-b1--reinforced-bulkhead"
+   ],
+   "sections_containing_the_value": [
+    {
+     "cited_document": true,
+     "heading_level": 2,
+     "span": 17,
+     "target": "GDD-UTILITY-CATALOG#catalog-overview",
+     "kind": "exact",
+     "where": "68-utility-catalog.md:33-49"
+    },
+    {
+     "cited_document": true,
+     "heading_level": 1,
+     "span": 297,
+     "target": "GDD-UTILITY-CATALOG#utility-catalog",
+     "kind": "exact",
+     "where": "68-utility-catalog.md:8-304"
+    }
+   ],
+   "classification": "mis-citation - re-point",
+   "target": "GDD-UTILITY-CATALOG#catalog-overview",
+   "expected_new_source_refs_element": "installed_to_rank_3: GDD-UTILITY-CATALOG#catalog-overview"
+  },
+  {
+   "file": "content/utilities/UTL-B2.json",
+   "pointer": "installed_to_rank_3",
+   "field": "installed_to_rank_3",
+   "value": "+5% → +20% forward extraction rate",
+   "cited": [
+    "GDD-UTILITY-CATALOG#utl-b2--extraction-accelerator"
+   ],
+   "sections_containing_the_value": [
+    {
+     "cited_document": true,
+     "heading_level": 2,
+     "span": 17,
+     "target": "GDD-UTILITY-CATALOG#catalog-overview",
+     "kind": "exact",
+     "where": "68-utility-catalog.md:33-49"
+    },
+    {
+     "cited_document": true,
+     "heading_level": 1,
+     "span": 297,
+     "target": "GDD-UTILITY-CATALOG#utility-catalog",
+     "kind": "exact",
+     "where": "68-utility-catalog.md:8-304"
+    }
+   ],
+   "classification": "mis-citation - re-point",
+   "target": "GDD-UTILITY-CATALOG#catalog-overview",
+   "expected_new_source_refs_element": "installed_to_rank_3: GDD-UTILITY-CATALOG#catalog-overview"
+  },
+  {
+   "file": "content/utilities/UTL-C1.json",
+   "pointer": "installed_to_rank_3",
+   "field": "installed_to_rank_3",
+   "value": "+8% → +20% weapon attack rate",
+   "cited": [
+    "GDD-UTILITY-CATALOG#utl-c1--cycle-capacitor"
+   ],
+   "sections_containing_the_value": [
+    {
+     "cited_document": true,
+     "heading_level": 2,
+     "span": 17,
+     "target": "GDD-UTILITY-CATALOG#catalog-overview",
+     "kind": "exact",
+     "where": "68-utility-catalog.md:33-49"
+    },
+    {
+     "cited_document": true,
+     "heading_level": 1,
+     "span": 297,
+     "target": "GDD-UTILITY-CATALOG#utility-catalog",
+     "kind": "exact",
+     "where": "68-utility-catalog.md:8-304"
+    }
+   ],
+   "classification": "mis-citation - re-point",
+   "target": "GDD-UTILITY-CATALOG#catalog-overview",
+   "expected_new_source_refs_element": "installed_to_rank_3: GDD-UTILITY-CATALOG#catalog-overview"
+  },
+  {
+   "file": "content/utilities/UTL-C2.json",
+   "pointer": "installed_to_rank_3",
+   "field": "installed_to_rank_3",
+   "value": "Negate one hit every 24s → 15s",
+   "cited": [
+    "GDD-UTILITY-CATALOG#utl-c2--capacitor-screen"
+   ],
+   "sections_containing_the_value": [
+    {
+     "cited_document": true,
+     "heading_level": 2,
+     "span": 17,
+     "target": "GDD-UTILITY-CATALOG#catalog-overview",
+     "kind": "exact",
+     "where": "68-utility-catalog.md:33-49"
+    },
+    {
+     "cited_document": true,
+     "heading_level": 1,
+     "span": 297,
+     "target": "GDD-UTILITY-CATALOG#utility-catalog",
+     "kind": "exact",
+     "where": "68-utility-catalog.md:8-304"
+    }
+   ],
+   "classification": "mis-citation - re-point",
+   "target": "GDD-UTILITY-CATALOG#catalog-overview",
+   "expected_new_source_refs_element": "installed_to_rank_3: GDD-UTILITY-CATALOG#catalog-overview"
+  },
+  {
+   "file": "content/utilities/UTL-E1.json",
+   "pointer": "installed_to_rank_3",
+   "field": "installed_to_rank_3",
+   "value": "+0.10 → +0.25 Hull Integrity per second",
+   "cited": [
+    "GDD-UTILITY-CATALOG#utl-e1--repair-swarm"
+   ],
+   "sections_containing_the_value": [
+    {
+     "cited_document": true,
+     "heading_level": 2,
+     "span": 17,
+     "target": "GDD-UTILITY-CATALOG#catalog-overview",
+     "kind": "exact",
+     "where": "68-utility-catalog.md:33-49"
+    },
+    {
+     "cited_document": true,
+     "heading_level": 1,
+     "span": 297,
+     "target": "GDD-UTILITY-CATALOG#utility-catalog",
+     "kind": "exact",
+     "where": "68-utility-catalog.md:8-304"
+    }
+   ],
+   "classification": "mis-citation - re-point",
+   "target": "GDD-UTILITY-CATALOG#catalog-overview",
+   "expected_new_source_refs_element": "installed_to_rank_3: GDD-UTILITY-CATALOG#catalog-overview"
+  },
+  {
+   "file": "content/utilities/UTL-F1.json",
+   "pointer": "installed_to_rank_3",
+   "field": "installed_to_rank_3",
+   "value": "+10% → +25% mined common ore",
+   "cited": [
+    "GDD-UTILITY-CATALOG#utl-f1--ore-catalyzer"
+   ],
+   "sections_containing_the_value": [
+    {
+     "cited_document": true,
+     "heading_level": 2,
+     "span": 17,
+     "target": "GDD-UTILITY-CATALOG#catalog-overview",
+     "kind": "exact",
+     "where": "68-utility-catalog.md:33-49"
+    },
+    {
+     "cited_document": true,
+     "heading_level": 1,
+     "span": 297,
+     "target": "GDD-UTILITY-CATALOG#utility-catalog",
+     "kind": "exact",
+     "where": "68-utility-catalog.md:8-304"
+    }
+   ],
+   "classification": "mis-citation - re-point",
+   "target": "GDD-UTILITY-CATALOG#catalog-overview",
+   "expected_new_source_refs_element": "installed_to_rank_3: GDD-UTILITY-CATALOG#catalog-overview"
+  }
+ ],
+ "expected_string_delta": {
+  "added": [
+   "core_tradeoff: GDD-INITIAL-RELIC-CATALOG#catalog-overview",
+   "destructible_rock_rules.health_pack.persistence: GDD-CORE-LOOP#combat-pressure",
+   "inherent_trait.effect_detail: GDD-INITIAL-MECH-CATALOG#signature-and-trait-1",
+   "installed_to_rank_3: GDD-UTILITY-CATALOG#catalog-overview",
+   "installed_to_rank_3: GDD-UTILITY-CATALOG#catalog-overview",
+   "installed_to_rank_3: GDD-UTILITY-CATALOG#catalog-overview",
+   "installed_to_rank_3: GDD-UTILITY-CATALOG#catalog-overview",
+   "installed_to_rank_3: GDD-UTILITY-CATALOG#catalog-overview",
+   "installed_to_rank_3: GDD-UTILITY-CATALOG#catalog-overview",
+   "persistence.reentry.trigger: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
+   "persistence.reentry.trigger: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
+   "persistence.reentry.trigger: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward",
+   "persistence.reentry.trigger: GDD-INITIAL-ALIEN-ROSTER#boss-arrival-persistence-and-reward"
+  ],
+  "removed": []
+ },
+ "expected_numeric_delta": {
+  "added": [],
+  "removed": []
+ }
+}

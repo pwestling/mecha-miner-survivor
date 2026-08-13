@@ -1,0 +1,132 @@
+{
+  "id": "UTL-R1",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "utility.UTL-R1.name",
+  "summary_key": "utility.UTL-R1.summary",
+  "tags": [],
+  "source_refs": [
+    "GDD-MAPS#resource-radar",
+    "id: TDD-CONTENT-DATA#utilities",
+    "id: GDD-UTILITY-CATALOG#shared-acquisition-and-rank-rules",
+    "name_key: GDD-GLOSSARY#resource-radar",
+    "name_key: GDD-PERMANENT-OPTION-UNLOCK-CATALOG#fresh-profile-baseline",
+    "external_numerics[]: TDD-MINING-PROGRESSION",
+    "external_numerics[]: GDD-INTERFACE-FLOW",
+    "external_numerics[]: GDD-UTILITY-CATALOG",
+    "external_numerics[]: GDD-PROGRESSION",
+    "catalog_wide_rules.modifier_and_timing_rules[]: GDD-UTILITY-CATALOG#modifier-and-timing-rules",
+    "catalog_wide_rules.shared_acquisition_and_rank_rules[]: GDD-UTILITY-CATALOG#shared-acquisition-and-rank-rules"
+  ],
+  "effect": {
+    "stat_names": [],
+    "value_kind": "directional-bearings"
+  },
+  "acquisition": {
+    "common_ore_cost": 300,
+    "utility_slots_filled": 1,
+    "rank_count": 0,
+    "rank_ore_costs": [],
+    "unique_in_loadout": true,
+    "has_branches": false,
+    "has_alternative_recipes": false,
+    "replaceable": false,
+    "dismantlable": false,
+    "sellable": false,
+    "refundable_during_run": false,
+    "requires_manual_activation": false
+  },
+  "availability": {
+    "fresh_profile": true,
+    "always_present_in_fixed_fabrication_catalog": true
+  },
+  "tracking": {
+    "maximum_simultaneous_bearings": 7,
+    "tracked_category_count": 7,
+    "tracked_categories": [
+      "Nearest remaining unopened geode of each of the four materials known to be present from the geological survey (four categories)",
+      "Nearest nondepleted standard ore seam",
+      "Nearest nondepleted rich ore seam",
+      "Nearest incomplete Hyper Gold site"
+    ],
+    "provides_direction_only": true,
+    "provides_exact_distance": false,
+    "provides_map_marker": false,
+    "tracks_relic_caches": false,
+    "bearing_fan_threshold_degrees": 6,
+    "bearing_cluster_collapse_above_count": 3
+  },
+  "effect_rules": [
+    "The blueprint is available from the beginning of the game and is always present in the fixed fabrication catalog.",
+    "It costs 300 common ore, so the ingredient needed to find a specialized resource cannot itself be missing.",
+    "During active play, the radar simultaneously tracks the nearest remaining unopened geode of each of the four materials known to be present from the geological survey, the nearest nondepleted standard ore seam, the nearest nondepleted rich ore seam, and the nearest incomplete Hyper Gold site.",
+    "Every tracked target produces a continuously updating directional indicator at the corresponding edge of the game screen, for at most seven indicators. The bearing persists even when its target enters the gameplay view and disappears only when the category retargets or exhausts.",
+    "Each indicator carries non-color identity cues for its material or mining-point class; no targeting or retargeting input is required.",
+    "It supplies direction rather than an exact map marker or exact distance.",
+    "It does not consume a weapon slot.",
+    "It occupies one of the mech's three utility slots.",
+    "It does not track relic caches or other non-mining discoveries.",
+    "The player must still traverse the map, survive the route, and perform mining extraction.",
+    "Opening a geode, depleting an ore seam, or completing a Hyper Gold site immediately retargets that category to its next-nearest valid site.",
+    "If no valid target in a tracked category remains, the radar reports that category as exhausted and shows no false direction."
+  ],
+  "commitment_and_presentation_rule": "Installing the radar permanently fills its utility slot for that run; it cannot be removed, replaced, dismantled, sold, or refunded. Bearings use category icons and patterns at the safe screen edge; bearings within six degrees fan outward, clusters beyond three collapse with a +N count, and exhaustion produces a brief strike-through before the bearing disappears. Exact behavior is defined by the interface specification.",
+  "design_role": "The radar converts 300 basic ore into navigation certainty. It is a recovery option, not a source of resources. Its substantial cost preserves the consequence of failing to find the desired material naturally, while its directional-only output preserves exploration.",
+  "catalog_wide_rules": {
+    "shared_acquisition_and_rank_rules": [
+      "Every non-radar utility costs one unit of its assigned specialized material and permanently fills one of three utility slots.",
+      "Each begins at its listed Installed effect and has three common-ore ranks costing 50, 100, and 150 ore.",
+      "The four values shown for a utility are its Installed, Rank 1, Rank 2, and Rank 3 totals—not cumulative additions.",
+      "A utility is unique within the loadout and cannot be fabricated twice.",
+      "Utilities have no branches, alternative recipes, replacement, dismantling, sale, or refund during a run.",
+      "Fabrication previews all four effect tiers, the current build's affected systems, and any equipped weapon that receives no benefit from a weapon-support utility.",
+      "The resource radar remains outside the material table: it costs 300 common ore, has no ranks, and retains its accepted seven-category directional behavior."
+    ],
+    "modifier_and_timing_rules": [
+      "Flat statistic changes apply before percentage modifiers. Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative.",
+      "Attack rate is represented as attacks per second or equivalent frequency; a +20% attack-rate total produces 1.2 times the unmodified activation frequency.",
+      "Recovery sources add in Hull Integrity per second.",
+      "Already-created finite projectiles, zones, mines, and similar weapon instances retain the damage, geometry, and lifetime with which they were created. New instances use the newly fabricated or ranked utility values.",
+      "Persistent autonomous units remain in place and use new utility values for attacks they perform after play resumes.",
+      "Fabrication and utility ranking occur during a complete-simulation pause, so no duration, cooldown, Recovery, or mining state advances while the purchase is reviewed.",
+      "If a later relic explicitly replaces a statistic or rule, its description must state whether it overrides or combines with these utilities. Silent exceptions are not allowed."
+    ]
+  },
+  "external_numerics": [
+    {
+      "statement": "Radar is a special always-unlocked utility costing 300 common ore; each active tick or relevant site transition queries the nearest incomplete standard seam, rich seam, Hyper Gold site, and unopened geode of each present material, returning bearing and category only.",
+      "value": 300,
+      "quote": "Radar is a special always-unlocked utility costing 300 common ore. Installation fills a utility slot and creates no active targeting choice. Each active tick or relevant site transition queries the nearest incomplete standard seam, rich seam, Hyper Gold site, and unopened geode of each present material. Results contain bearing and category only; distance and map location remain undisclosed."
+    },
+    {
+      "statement": "Up to seven resource bearings sit at the nearest point on the safe edge of the play viewport.",
+      "value": 7,
+      "quote": "After the resource radar is installed, up to seven resource bearings sit at the nearest point on the safe edge of the play viewport. Each uses the exact category icon and non-color pattern already used in the wallet and map."
+    },
+    {
+      "statement": "Bearings within six degrees form a small outward fan; more than three in that fan collapse the remainder into a +N cluster.",
+      "value": 6,
+      "quote": "- Bearings within six degrees form a small outward fan ordered clockwise. If more than three occupy that fan, the nearest three to the original bearing remain individually visible and the rest collapse into a `+N` cluster that expands briefly when its target categories change."
+    },
+    {
+      "statement": "The radar page shows its 300-common-ore cost, seven tracked categories, no ranks, and permanent utility-slot commitment.",
+      "value": 300,
+      "quote": "- The radar appears in the same page with its 300-common-ore cost, seven tracked categories, no ranks, and permanent utility-slot commitment."
+    },
+    {
+      "statement": "The radar remains outside the material table: it costs 300 common ore, has no ranks, and retains its accepted seven-category directional behavior.",
+      "value": 300,
+      "quote": "- The resource radar remains outside the material table: it costs 300 common ore, has no ranks, and retains its accepted seven-category directional behavior."
+    },
+    {
+      "statement": "The common-ore resource radar remains universally craftable for 300 ore as a navigation safety valve.",
+      "value": 300,
+      "quote": "The common-ore resource radar remains universally craftable for 300 ore as a navigation safety valve. Other utilities consume specialized ordinary resources without using the same narrow `A AND B` availability rule as base weapons."
+    },
+    {
+      "statement": "The radar has no initial upgrade track, unlike the twelve non-radar utilities with their 50/100/150-ore ranks.",
+      "quote": "All base effects, rank totals, stacking rules, exclusions, rounding behavior, and affected-system disclosures are authoritative in that catalog. Their exact numeric values remain playtest baselines."
+    }
+  ]
+}

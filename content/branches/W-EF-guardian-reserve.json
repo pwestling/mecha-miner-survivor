@@ -1,0 +1,71 @@
+{
+  "id": "W-EF-guardian-reserve",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-EF-guardian-reserve.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#guardian-reserve--functional--2-eidolon-coral",
+    "global_attack_rate_interaction: GDD-WEAPON-NUMERIC-CATALOG#global-weapon-attack-rate-mapping",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#guardian-reserve--functional--2-eidolon-coral"
+  ],
+  "weapon_id": "W-EF",
+  "weapon_name": "Missile Rack",
+  "class": "Functional",
+  "cost": {
+    "resource": "Eidolon Coral",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-EF-mirv-saturation",
+      "W-EF-spiral-barrage"
+    ],
+    "irreversible_within_run": true,
+    "existing_common_ore_stat_tracks_still_apply": true,
+    "adds_new_stat_track": false,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run."
+  },
+  "availability": {
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite.",
+    "purchase": "Installing one is a single deterministic purchase costing exactly two units of its assigned specialized material."
+  },
+  "effects": {
+    "reserve_capacity": 8,
+    "reserve_position": "orbiting reserve around the mech",
+    "dive_trigger_enemy_range_m": 6,
+    "dive_target": "nearest enemy entering the dive trigger range",
+    "dive_damage_of_current_damage": {
+      "percent": 125
+    },
+    "reserve_full_behavior": "If the reserve is full, newly produced missiles launch normally at any target in acquisition range.",
+    "stored_missiles_persist_until_fired": true,
+    "stored_missiles_retarget_normally": true,
+    "blocks_enemy_projectiles": false
+  },
+  "global_attack_rate_interaction": {
+    "branch_named_in_mapping": true,
+    "affected_timing": "Salvo production rate",
+    "unaffected_timing": "Missile movement, reserve life, and targeting"
+  },
+  "rules": [
+    {
+      "text": "Missiles enter an orbiting reserve around the mech instead of immediately choosing distant targets, up to eight stored missiles."
+    },
+    {
+      "text": "A reserve missile dives at the nearest enemy entering 6M, dealing 125% current Damage. If the reserve is full, newly produced missiles launch normally at any target in acquisition range."
+    },
+    {
+      "text": "Stored missiles persist until fired and retarget normally. They do not block enemy projectiles."
+    },
+    {
+      "text": "The branch banks damage during quiet traversal and releases it automatically when danger reaches the player."
+    }
+  ]
+}

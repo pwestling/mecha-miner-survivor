@@ -1,0 +1,147 @@
+{
+  "id": "W-CE",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "weapon.W-CE.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#rank-zero-values-and-ore-stat-increments",
+    "recipe_pair: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "signature_mech: GDD-INITIAL-MECH-CATALOG#catalog-overview",
+    "fabrication_cost: GDD-PROGRESSION#base-weapon-availability",
+    "base_automatic_attack: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "base_behavior: GDD-WEAPON-NUMERIC-CATALOG#w-ce--reactor-pulse",
+    "ore_upgradeable_stat_labels: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "damage_model: GDD-WEAPON-NUMERIC-CATALOG#base-weapon-summary",
+    "global_attack_rate_mapping: GDD-WEAPON-NUMERIC-CATALOG#global-weapon-attack-rate-mapping",
+    "branches.amplification.cost: GDD-WEAPON-NUMERIC-CATALOG#critical-mass-cycle--amplification--2-eidolon-coral",
+    "branches.amplification.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.amplification: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.amplification: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.functional.cost: GDD-WEAPON-NUMERIC-CATALOG#kinetic-vent--functional--2-cinderglass",
+    "branches.functional.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.functional: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.functional: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.conversion.cost: GDD-WEAPON-NUMERIC-CATALOG#supernova-cycle--conversion--2-flux-amber",
+    "branches.conversion.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.conversion: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.conversion: GDD-WEAPON-INDEX#catalog-lookup"
+  ],
+  "recipe_pair": {
+    "notation": "C + E",
+    "material_codes": [
+      "C",
+      "E"
+    ],
+    "material_names": [
+      "Cinderglass",
+      "Eidolon Coral"
+    ]
+  },
+  "signature_mech": {
+    "mech_id": "MCH-05",
+    "mech": "Bastion",
+    "is_initial_signature": true
+  },
+  "fabrication_cost": {
+    "materials": [
+      {
+        "material_code": "C",
+        "material": "Cinderglass",
+        "units": 1
+      },
+      {
+        "material_code": "E",
+        "material": "Eidolon Coral",
+        "units": 1
+      }
+    ],
+    "signature_weapon_begins_equipped_without_paying_cost": true,
+    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost."
+  },
+  "base_automatic_attack": {
+    "text": "Periodically damages every enemy around the mech"
+  },
+  "base_behavior": {
+    "text": "emits a radial pulse centered on the mech and damages every valid enemy in current radius."
+  },
+  "ore_upgradeable_stat_labels": {
+    "labels": [
+      "Damage",
+      "pulse radius",
+      "pulse rate"
+    ]
+  },
+  "ore_upgradeable_stats": [
+    {
+      "slot": 1,
+      "name": "Pulse damage",
+      "rank_zero": 27,
+      "increment_per_rank": 2.7,
+      "unit": "damage",
+      "discrete": false
+    },
+    {
+      "slot": 2,
+      "name": "Pulse radius",
+      "rank_zero": 3,
+      "increment_per_rank": 0.25,
+      "unit": "M",
+      "discrete": false
+    },
+    {
+      "slot": 3,
+      "name": "Pulse rate",
+      "rank_zero": 0.667,
+      "increment_per_rank": 0.067,
+      "unit": "activations per second",
+      "discrete": false
+    }
+  ],
+  "fixed_properties": {
+    "damages_every_valid_target_in_radius": true,
+    "has_target_or_overlap_maximum": false,
+    "raw": "Damages every valid target in radius"
+  },
+  "damage_model": {
+    "rank_zero_damage_model": "27 every 1.5 s",
+    "burst_10_dps": 18.9,
+    "sustained_30_dps": 18.0,
+    "favorable_horde_dps": 180,
+    "primary_limitation": "Low boss output in exchange for unconditional radial coverage"
+  },
+  "global_attack_rate_mapping": {
+    "affected_timing": "Pulse or supernova activation rate",
+    "unaffected_timing": "Charge tell and status durations"
+  },
+  "branches": {
+    "amplification": {
+      "name": "Critical-Mass Cycle",
+      "funding_material_code": "E",
+      "funding_material": "Eidolon Coral",
+      "cost": {
+        "material": "Eidolon Coral",
+        "units": 2
+      }
+    },
+    "functional": {
+      "name": "Kinetic Vent",
+      "funding_material_code": "C",
+      "funding_material": "Cinderglass",
+      "cost": {
+        "material": "Cinderglass",
+        "units": 2
+      }
+    },
+    "conversion": {
+      "name": "Supernova Cycle",
+      "funding_material_code": "F",
+      "funding_material": "Flux Amber",
+      "cost": {
+        "material": "Flux Amber",
+        "units": 2
+      }
+    }
+  }
+}

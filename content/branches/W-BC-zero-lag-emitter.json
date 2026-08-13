@@ -1,0 +1,59 @@
+{
+  "id": "W-BC-zero-lag-emitter",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-BC-zero-lag-emitter.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#zero-lag-emitter--amplification--2-barysteel",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#zero-lag-emitter--amplification--2-barysteel"
+  ],
+  "weapon_id": "W-BC",
+  "weapon_name": "Pulse Repeater",
+  "class": "Amplification",
+  "cost": {
+    "resource": "Barysteel",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-BC-suppressive-sequencer",
+      "W-BC-broadside-oscillator"
+    ],
+    "irreversible_within_run": true,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run."
+  },
+  "availability": {
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite."
+  },
+  "effects": {
+    "projectile_model": "instantaneous hitscan trace",
+    "projectile_travel_time_seconds": 0,
+    "range_changed": false,
+    "cadence_changed": false,
+    "trace_damage_percent_of_current_damage": {
+      "percent": 100
+    },
+    "ideal_stationary_target_dps_changed": false
+  },
+  "favorable_scene_effect": {
+    "qualitative": "removes travel-time misses and travel delay; realized gain should be largest against fast lateral targets"
+  },
+  "rules": [
+    {
+      "text": "Projectiles become instantaneous hitscan traces with otherwise unchanged range and cadence."
+    },
+    {
+      "text": "Each trace deals current Damage."
+    },
+    {
+      "text": "The branch removes travel-time misses and travel delay; its realized gain should be largest against fast lateral targets even though ideal stationary-target DPS is unchanged."
+    }
+  ]
+}

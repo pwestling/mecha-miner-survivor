@@ -1,0 +1,76 @@
+{
+  "id": "W-BD-hunter-mines",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-BD-hunter-mines.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#hunter-mines--conversion--2-flux-amber",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#hunter-mines--conversion--2-flux-amber"
+  ],
+  "weapon_id": "W-BD",
+  "weapon_name": "Mine Layer",
+  "class": "Conversion",
+  "cost": {
+    "resource": "Flux Amber",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-BD-seed-charges",
+      "W-BD-selective-detonators"
+    ],
+    "irreversible_within_run": true,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run."
+  },
+  "availability": {
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite."
+  },
+  "effects": {
+    "acquisition_range_m": 6,
+    "acquisition_target": "the nearest enemy",
+    "pursuit_speed_m_per_s": 3,
+    "maximum_pursuit_duration_seconds": 6.0,
+    "damage_percent_of_current_damage": {
+      "percent": 150
+    },
+    "blast_radius_percent_of_current": {
+      "percent": 85
+    },
+    "retargets_allowed": 1,
+    "retarget_condition": "its target dies",
+    "detonation_conditions": [
+      "on contact",
+      "at pursuit timeout if a target is inside its radius",
+      "at normal lifetime expiry"
+    ]
+  },
+  "favorable_scene_effect": {
+    "magnitude": {
+      "damage_percent_of_current_damage": {
+        "percent": 150
+      }
+    },
+    "qualitative": "better single-target reliability but less crowd coverage"
+  },
+  "rules": [
+    {
+      "text": "Armed mines acquire the nearest enemy within 6M and pursue at 3M/s for up to 6.0 s."
+    },
+    {
+      "text": "They deal 150% current Damage with 85% current blast radius."
+    },
+    {
+      "text": "A hunter may retarget once if its target dies. It detonates on contact, at pursuit timeout if a target is inside its radius, or at normal lifetime expiry."
+    },
+    {
+      "text": "The branch turns a route-defense tool into slow autonomous ordnance with better single-target reliability but less crowd coverage."
+    }
+  ]
+}

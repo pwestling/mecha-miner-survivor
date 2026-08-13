@@ -1,0 +1,149 @@
+{
+  "id": "W-AB",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "weapon.W-AB.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#rank-zero-values-and-ore-stat-increments",
+    "recipe_pair: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "signature_mech: GDD-INITIAL-MECH-CATALOG#catalog-overview",
+    "fabrication_cost: GDD-PROGRESSION#base-weapon-availability",
+    "base_automatic_attack: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "base_behavior: GDD-WEAPON-NUMERIC-CATALOG#w-ab--rail-lance",
+    "ore_upgradeable_stat_labels: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "damage_model: GDD-WEAPON-NUMERIC-CATALOG#base-weapon-summary",
+    "global_attack_rate_mapping: GDD-WEAPON-NUMERIC-CATALOG#global-weapon-attack-rate-mapping",
+    "branches.amplification.cost: GDD-WEAPON-NUMERIC-CATALOG#unbounded-bore--amplification--2-asterite",
+    "branches.amplification.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.amplification: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.amplification: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.functional.cost: GDD-WEAPON-NUMERIC-CATALOG#fracture-lance--functional--2-barysteel",
+    "branches.functional.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.functional: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.functional: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.conversion.cost: GDD-WEAPON-NUMERIC-CATALOG#kinetic-capacitor--conversion--2-cinderglass",
+    "branches.conversion.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.conversion: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.conversion: GDD-WEAPON-INDEX#catalog-lookup"
+  ],
+  "recipe_pair": {
+    "notation": "A + B",
+    "material_codes": [
+      "A",
+      "B"
+    ],
+    "material_names": [
+      "Asterite",
+      "Barysteel"
+    ]
+  },
+  "signature_mech": {
+    "mech_id": "MCH-02",
+    "mech": "Pike",
+    "is_initial_signature": true
+  },
+  "fabrication_cost": {
+    "materials": [
+      {
+        "material_code": "A",
+        "material": "Asterite",
+        "units": 1
+      },
+      {
+        "material_code": "B",
+        "material": "Barysteel",
+        "units": 1
+      }
+    ],
+    "signature_weapon_begins_equipped_without_paying_cost": true,
+    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost."
+  },
+  "base_automatic_attack": {
+    "text": "Fires a slow, high-impact, very fast shot along persistent facing and pierces a fixed number of targets"
+  },
+  "base_behavior": {
+    "text": "fires down the mech's current facing line. The projectile damages the first four enemies it crosses and then ends; terrain does not block it unless a future map feature explicitly says so."
+  },
+  "ore_upgradeable_stat_labels": {
+    "labels": [
+      "Damage",
+      "width",
+      "range"
+    ]
+  },
+  "ore_upgradeable_stats": [
+    {
+      "slot": 1,
+      "name": "Damage",
+      "rank_zero": 96,
+      "increment_per_rank": 9.6,
+      "unit": "damage",
+      "discrete": false
+    },
+    {
+      "slot": 2,
+      "name": "Beam width",
+      "rank_zero": 0.6,
+      "increment_per_rank": 0.06,
+      "unit": "M",
+      "discrete": false
+    },
+    {
+      "slot": 3,
+      "name": "Range",
+      "rank_zero": 12,
+      "increment_per_rank": 1.2,
+      "unit": "M",
+      "discrete": false
+    }
+  ],
+  "fixed_properties": {
+    "cadence_seconds": 3.0,
+    "projectile_speed_m_per_s": 30,
+    "pierce_target_count": 4,
+    "terrain_blocks_projectile": false,
+    "raw": "3.0 s cadence, 30M/s projectile, pierces four targets"
+  },
+  "damage_model": {
+    "rank_zero_damage_model": "96 every 3.0 s",
+    "burst_10_dps": 38.4,
+    "sustained_30_dps": 32.0,
+    "favorable_horde_dps": 128,
+    "primary_limitation": "Facing line and four-target pierce cap"
+  },
+  "global_attack_rate_mapping": {
+    "affected_timing": "Base firing cadence; Kinetic Capacitor charge accumulation",
+    "unaffected_timing": "Projectile speed and Fracture delay"
+  },
+  "branches": {
+    "amplification": {
+      "name": "Unbounded Bore",
+      "funding_material_code": "A",
+      "funding_material": "Asterite",
+      "cost": {
+        "material": "Asterite",
+        "units": 2
+      }
+    },
+    "functional": {
+      "name": "Fracture Lance",
+      "funding_material_code": "B",
+      "funding_material": "Barysteel",
+      "cost": {
+        "material": "Barysteel",
+        "units": 2
+      }
+    },
+    "conversion": {
+      "name": "Kinetic Capacitor",
+      "funding_material_code": "C",
+      "funding_material": "Cinderglass",
+      "cost": {
+        "material": "Cinderglass",
+        "units": 2
+      }
+    }
+  }
+}

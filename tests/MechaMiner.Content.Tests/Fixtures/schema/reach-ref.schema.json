@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Negative control: bare bound behind a $ref",
+  "description": "A bare numeric bound with no adjacent x-authority, placed in a $defs entry reached only through a $ref. This file exists to prove the attribution walk reaches that position; it is never loaded as a real schema.",
+  "$ref": "#/$defs/capacity",
+  "$defs": {
+    "capacity": {
+      "type": "integer",
+      "maximum": 2048
+    }
+  }
+}

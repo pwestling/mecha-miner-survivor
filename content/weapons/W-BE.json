@@ -1,0 +1,145 @@
+{
+  "id": "W-BE",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "weapon.W-BE.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#rank-zero-values-and-ore-stat-increments",
+    "recipe_pair: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "fabrication_cost: GDD-PROGRESSION#base-weapon-availability",
+    "base_automatic_attack: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "base_behavior: GDD-WEAPON-NUMERIC-CATALOG#w-be--sentry-pod",
+    "ore_upgradeable_stat_labels: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "damage_model: GDD-WEAPON-NUMERIC-CATALOG#base-weapon-summary",
+    "global_attack_rate_mapping: GDD-WEAPON-NUMERIC-CATALOG#global-weapon-attack-rate-mapping",
+    "branches.amplification.cost: GDD-WEAPON-NUMERIC-CATALOG#battery-overclock--amplification--2-eidolon-coral",
+    "branches.amplification.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.amplification: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.amplification: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.functional.cost: GDD-WEAPON-NUMERIC-CATALOG#guardian-firmware--functional--2-barysteel",
+    "branches.functional.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.functional: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.functional: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.conversion.cost: GDD-WEAPON-NUMERIC-CATALOG#forward-bastion--conversion--2-asterite",
+    "branches.conversion.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.conversion: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.conversion: GDD-WEAPON-INDEX#catalog-lookup"
+  ],
+  "recipe_pair": {
+    "notation": "B + E",
+    "material_codes": [
+      "B",
+      "E"
+    ],
+    "material_names": [
+      "Barysteel",
+      "Eidolon Coral"
+    ]
+  },
+  "fabrication_cost": {
+    "materials": [
+      {
+        "material_code": "B",
+        "material": "Barysteel",
+        "units": 1
+      },
+      {
+        "material_code": "E",
+        "material": "Eidolon Coral",
+        "units": 1
+      }
+    ],
+    "signature_weapon_begins_equipped_without_paying_cost": true,
+    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost."
+  },
+  "base_automatic_attack": {
+    "text": "Deploys temporary stationary gun platforms at the mech's position"
+  },
+  "base_behavior": {
+    "text": "deploys its first temporary pod immediately when acquired and another at the mech's position every 6.0 s, including when no enemy is present. Pods last 24 s, fire independently, and cannot be damaged. Deploying while three are active replaces the oldest pod, so a continuously owned weapon maintains three after its 12-second ramp."
+  },
+  "ore_upgradeable_stat_labels": {
+    "labels": [
+      "Damage",
+      "attack rate",
+      "range"
+    ]
+  },
+  "ore_upgradeable_stats": [
+    {
+      "slot": 1,
+      "name": "Shot damage",
+      "rank_zero": 8,
+      "increment_per_rank": 0.8,
+      "unit": "damage",
+      "discrete": false
+    },
+    {
+      "slot": 2,
+      "name": "Attack rate",
+      "rank_zero": 1.4,
+      "increment_per_rank": 0.14,
+      "unit": "activations per second",
+      "discrete": false
+    },
+    {
+      "slot": 3,
+      "name": "Range",
+      "rank_zero": 7,
+      "increment_per_rank": 0.7,
+      "unit": "M",
+      "discrete": false
+    }
+  ],
+  "fixed_properties": {
+    "deployment_cadence_seconds": 6.0,
+    "first_pod_deploys_immediately": true,
+    "pod_life_seconds": 24,
+    "maximum_active_pod_count": 3,
+    "oldest_pod_replaced_at_maximum": true,
+    "pods_destructible": false,
+    "raw": "One pod every 6 s, 24 s life, maximum three active; oldest replaced at cap"
+  },
+  "damage_model": {
+    "rank_zero_damage_model": "Up to 3 × 8 every 0.714 s",
+    "burst_10_dps": 15.7,
+    "sustained_30_dps": 33.6,
+    "favorable_horde_dps": 33.6,
+    "primary_limitation": "Six-second deployment ramp and stationary coverage"
+  },
+  "global_attack_rate_mapping": {
+    "affected_timing": "Pod or bastion shot rate",
+    "unaffected_timing": "Pod deployment cadence, setup hold, and pod life"
+  },
+  "branches": {
+    "amplification": {
+      "name": "Battery Overclock",
+      "funding_material_code": "E",
+      "funding_material": "Eidolon Coral",
+      "cost": {
+        "material": "Eidolon Coral",
+        "units": 2
+      }
+    },
+    "functional": {
+      "name": "Guardian Firmware",
+      "funding_material_code": "B",
+      "funding_material": "Barysteel",
+      "cost": {
+        "material": "Barysteel",
+        "units": 2
+      }
+    },
+    "conversion": {
+      "name": "Forward Bastion",
+      "funding_material_code": "A",
+      "funding_material": "Asterite",
+      "cost": {
+        "material": "Asterite",
+        "units": 2
+      }
+    }
+  }
+}

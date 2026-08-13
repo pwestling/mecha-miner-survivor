@@ -1,0 +1,36 @@
+{
+  "id": "SITE-01",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "mining_site.SITE-01.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-MINING#standard-ore-seams",
+    "depleted_state: GDD-MINING#specialized-material-geodes"
+  ],
+  "site_class": "standard-ore-seam",
+  "count_per_standard_map": 20,
+  "placement": "randomized locations",
+  "completion_only_reward": false,
+  "payout_per_installment": {
+    "resource": "common ore",
+    "amount": 10
+  },
+  "installment_duration_seconds": 1.5,
+  "installment_count": 10,
+  "total_payout_per_seam": {
+    "resource": "common ore"
+  },
+  "total_payout_per_map": {
+    "resource": "common ore"
+  },
+  "progress_decay": {
+    "grace_seconds": 0.5,
+    "decay_rate_multiplier_of_forward_rate": 4,
+    "secured_checkpoint": "each completed installment",
+    "rule": "Ore from completed intervals remains secured in the run inventory. Leaving only threatens progress toward the current unfinished interval."
+  },
+  "depleted_state": "non-interactive mapped landmark for the rest of the run",
+  "persistence": "run-local; unspent common ore is lost when the run ends"
+}

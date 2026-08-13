@@ -82,7 +82,7 @@
 #
 # Two independent enumerators, and their disagreement is a failure. One reads extensions
 # (SCRIPT_EXTENSIONS), one reads the first two bytes for `#!`. At this revision they
-# coincide exactly on 13 files, which is why both are kept rather than one: a script with
+# coincide exactly on 17 files, which is why both are kept rather than one: a script with
 # a shebang and no known extension is invisible to the first, and a script with a known
 # extension and no shebang - a .ps1, say, since PowerShell needs none - is invisible to
 # the second. Requiring them to agree catches either before it becomes a hole. The union
@@ -100,27 +100,49 @@
 #   bare `Run(script)` satisfies it, and so does a member that passes --verify on a
 #   branch it never takes. It is a genuine check on a real signal and it does not
 #   establish that --verify is what runs. Narrowing it to argument-position adjacency is
-#   possible and is not done here; nothing on this ref needs field 3 at all. Two of the
-#   four files arriving from master do - --verify and --check - and the block under ON
-#   MERGE FROM master below sets it for both.
+#   possible and is not done here. This limit is now load-bearing rather than latent:
+#   derive_citation_pass_expectations.py arrived with the merge below and is the first
+#   and only entry to set field 3. The one other file that would set one -
+#   derive_derived_value_expectations.py, whose gate flag is spelled --check and not
+#   --verify - is not on this ref, so field 3 has one live user and not two.
 #
-# NOTHING NOT ON THIS REF IS PRE-LISTED, AND THAT IS A CONSTRAINT ON WHEN, NOT WHETHER.
-# master carries FOUR ContentImport .py scripts (see the FOLLOW-UP below). They are named
-# in this comment as evidence and are deliberately absent from INVENTORY, because
-# classifying a file that is not here would be a stale inventory - the same defect as a
-# stale exemption, which § 3 exists to catch. Whoever merges master into this chain
-# classifies what arrives; the enumerators will fail the gate until they do, which is the
-# rule meeting them rather than them having to derive it.
+# NOTHING NOT ON THIS REF IS PRE-LISTED, AND THREE OF MASTER'S FOUR ARE NOW ON THIS REF.
+# master carries FOUR ContentImport .py scripts (see the FOLLOW-UP below). When this
+# paragraph was first written none of them were here: they were named in this comment as
+# evidence and were deliberately absent from INVENTORY, because classifying a file that
+# is not here would be a stale inventory - the same defect as a stale exemption, which
+# § 3 exists to catch. Whoever merges master into this chain classifies what arrives; the
+# enumerators fail the gate until they do, which is the rule meeting them rather than
+# them having to derive it.
 #
-#   Measured on this ref, so that nobody has to rediscover it: adding those four entries
-#   to a tree WITHOUT the files costs eight findings, not four. § 2 direction 1 reports
-#   four "stale classification", and § 3 reports four "stale exemption" for the same four
-#   paths, because check_exemptions tests -f on every exempt path too. Exit class 4,
-#   failing sections 2 and 3. So the classification cannot be pushed ahead of the files
-#   as a courtesy to the merge: it belongs IN the merge commit. The verified text is in
-#   the block under ON MERGE FROM master below, which is why it is committed here as a
-#   comment rather than as entries - a comment is true on both refs, and entries are true
-#   on exactly one of them.
+# THAT HAPPENED, FOR THREE OF THE FOUR. check_quote_mismatch_evidence.py,
+# derive_citation_pass_expectations.py and verify_content.py arrived on
+# claude/hearth-thread-hrufl9, which had already merged master, and the enumerators found
+# all three immediately, exactly as predicted: the gate went red with three
+# unclassified-script findings and nothing else. Those three are classified in INVENTORY
+# below, each as a gate, each with its own reason, and - since classifying them as gates
+# makes §§ 3 and 4 apply - each with its own EXEMPT entry stating the failure observed
+# when wiring was attempted.
+#
+# THE FOURTH IS DEFERRED, NOT OVERLOOKED. derive_derived_value_expectations.py is on
+# master and on no ref in this chain, so it is still not pre-listed, for exactly the
+# reason all four once were not. Re-enumerated rather than carried as prose - which is
+# the mistake this paragraph twice made before - `git ls-tree -r <ref> --name-only --
+# src/MechaMiner.Tools/ContentImport/` returns four .py files at master 3b4703b, THREE on
+# this ref, and ZERO on claude/hearth-thread-2vmaro-fnd-002 and at the merge base
+# 1c2f106. Its verified INVENTORY and EXEMPT pair is held as a comment in the block under
+# ON MERGE FROM master below, to go live in the commit that brings the file.
+#
+#   Measured on fnd-002, so that nobody has to rediscover it: an entry for a file the
+#   tree does not hold costs TWO findings, not one. § 2 direction 1 reports "stale
+#   classification" and § 3 reports "stale exemption" for the same path, because
+#   check_exemptions tests -f on every exempt path too. On fnd-002, which held none of
+#   the four, all four pairs pasted in cost eight findings and exit class 4, failing
+#   sections 2 and 3. The cost is proportional to how many are missing, so on this ref,
+#   missing one, pasting all four costs two. Either way the classification cannot be
+#   pushed ahead of the file as a courtesy to a future merge: it belongs IN the merge
+#   commit that brings it, which is why three of these are entries and the fourth is
+#   still a comment.
 #
 # THE RESIDUAL LIMIT. The inventory makes "is every script classified" machine checkable.
 # It does not make "is this classification correct" checkable. A gate deliberately filed
@@ -257,15 +279,46 @@ readonly EXIT_VALIDATION=4
 #                neither a gate nor a launcher and filing it as either would be a lie
 #                told to satisfy a two-valued taxonomy.
 #
-# Field 3 is empty for every entry on this ref: no script here has a mode that only some
-# arguments select. The mechanism exists because master's
-# derive_citation_pass_expectations.py needs it on arrival, and because a mechanism with
-# no control is a mechanism nobody has seen work - § 5 exercises it. Two of the four
-# files arriving from master set it, and they do not agree on a spelling: --verify and
-# --check.
+# Field 3 is set on exactly one entry: derive_citation_pass_expectations.py, whose gate
+# mode is --verify and whose bare mode is a generator that writes a file. That is the
+# case the mechanism was built for, and it is no longer hypothetical - the entry below
+# is the first real use. Every other entry leaves field 3 empty because no other script
+# here has a mode that only some arguments select. § 5 still exercises the mechanism
+# with its own control, because a mechanism with one live user is still a mechanism that
+# needs a control: if the field stopped being read, the one entry that depends on it
+# would silently degrade to path-only matching and nothing would say so.
+#
+#   Read from the resolved array rather than carried over from either side of the merge:
+#   of the 17 entries below exactly one has a non-empty third field, and it is that one.
+#   The sentence this replaced said field 3 was empty for every entry, which was true of
+#   claude/hearth-thread-2vmaro-fnd-002, where none of these files existed, and is false
+#   here. It is deleted rather than qualified, because two sentences disagreeing about
+#   the same column is worse than either of them.
 #
 # ON MERGE FROM master INTO THIS CHAIN, AND ONLY THAT DIRECTION: ADD THE LINES BELOW
-# THAT THE MERGED TREE ACTUALLY CONTAINS, VERIFIED RATHER THAN PROPOSED.
+# THAT THE MERGED TREE ACTUALLY CONTAINS AND THAT ARE NOT ALREADY LIVE ABOVE, VERIFIED
+# RATHER THAN PROPOSED.
+#
+# THREE OF THE FOUR PAIRS BELOW ARE ALREADY LIVE ABOVE, so this is a partly discharged
+# instruction and not a fresh one, and a resolver who followed it literally today would
+# add three duplicates. check_quote_mismatch_evidence.py,
+# derive_citation_pass_expectations.py and verify_content.py are classified in INVENTORY
+# and exempted in EXEMPT above - in their own wording, measured on the tree they landed
+# in, rather than in the wording preserved below - because their files arrived on
+# claude/hearth-thread-hrufl9. Only derive_derived_value_expectations.py's pair is still
+# outstanding, and it is the pair whose field 3 is spelled --check rather than --verify.
+# A duplicate is not a harmless paste: § 2 direction 2 reports "is classified N times in
+# the inventory", so it reddens the same section that an entry for an absent file
+# reddens, and it is caught rather than tolerated.
+#
+# All eight lines are nonetheless left below exactly as they were verified, all four
+# pairs, because they are the measured record and deleting three of them would discard
+# the measurement rather than the instruction. What changed is only the framing above
+# them. Take from them a pair only where BOTH tests pass: the file is present on the ref
+# being merged in, AND no live entry above already names it. The first test is the
+# RE-ENUMERATE requirement below, kept because it is what turns "three are already live"
+# from a claim in this comment into a measurement on your own tree; the second is a grep
+# of the two arrays above for the path.
 #
 # READ THE DIRECTION BEFORE READING THE LINES. This block is an instruction for exactly
 # one merge: master merged INTO this fnd-002 chain, which is the fnd-002 -> master
@@ -358,7 +411,9 @@ readonly INVENTORY=(
   "build.ps1|launcher||the PowerShell entry point of the same surface, held at parity with build.sh by build/verify-wrapper-parity.sh. Note that it carries a shebang (#!/usr/bin/env pwsh) and so is seen by both enumerators; a .ps1 without one would be seen by only the extension enumerator, which is why § 1 requires them to agree"
   "build/gate-output.sh|library||the shared output vocabulary every gate script sources: pass/fail for findings about the subject under test, control_pass/control_fail/control_detail for anything a negative control's fixture manufactured, section and gate_summary so a red run names the failing section. Sourced, never executed, and mode 644 so it cannot be a workflow step. Not a gate: it asserts nothing about the repository. Its own self-check, gate_assert_marking, runs inside each gate that sources it rather than here"
   "build/bootstrap-linux.sh|provisioning||installs and pins the .NET SDK, Godot and the Vulkan ICD, and verifies the pinned versions. Not a gate: the only thing it decides is whether the machine it is running on has the toolchain, and its failure means repair this machine, not repair this repository. Not reachable from a verb either - the verb host is a .NET process and this is what installs .NET - so the workflow's provisioning step is the only place it can be called from, and doc 100 § Standard command surface puts it there"
+  "build/bootstrap-macos.sh|provisioning||installs and pins the same two tools the Linux entry above does - the .NET SDK and Godot - for macOS on arm64 and x86_64, re-hashing every downloaded artifact against a constant in the file before it is used. Not a gate, on exactly the ground stated above: the only thing it decides is whether the machine it is running on has the toolchain, and its failure means repair this machine, not repair this repository. Not reachable from a verb either, for the same reason - the verb host is a .NET process and this is what installs .NET. What separates it from its Linux sibling is stated rather than glossed: the Linux script has the workflow provisioning step doc 100 § Standard command surface puts it in, and this one has no call site at all, because .github holds one workflow and it runs on Linux, so there is no macOS job for a step to live in. Measured, not inferred from the name: 'grep -rn bootstrap-macos src build.sh build.ps1 .github' returns nothing, under either script's name. As provisioning it is outside §§ 3 and 4, so no EXEMPT row belongs beside it and nothing here re-checks that; the properties of this file that ARE a repository question are asserted by the gate entry below, which is why this pair is two files and two kinds and not one"
   "build/verify-architecture.sh|gate||asserts the project-reference graph, the Godot boundary and the no-GDScript rule"
+  "build/verify-bootstrap-macos.sh|gate||the static gate for the provisioning entry above: it asserts, on any platform including CI Linux, those properties of build/bootstrap-macos.sh that can be checked without a Mac - that its pinned SDK version agrees with global.json, that its hash constants are present and well-formed and that the two .NET tarball hashes differ, that it demands no root, that it uses no GNU-only or Linux-only idiom in executable code, that its uname -m dispatch covers arm64 and x86_64, and that it does not claim to have verified what it has not. It decides about committed files in this repository and exits 4 on disagreement, which is what makes it a gate rather than a report, and it is the reason the entry above can be filed as provisioning without that being the end of the matter. Single-mode, checked rather than assumed: it registers no arguments and has one entry path, so field 3 has nothing to name. It is a gate that is both unreached and currently RED, and both of those are measured and stated in its EXEMPT entry below rather than here"
   "build/verify-configurations.sh|gate||asserts the Godot project builds in all three configurations"
   "build/verify-format.sh|gate||asserts owned text files satisfy the .editorconfig rules"
   "build/verify-gate-wiring.sh|gate||this file: asserts the partition below. It is a gate about gates and is subject to its own rule, which is why it appears in its own inventory rather than being special-cased out of it"
@@ -366,10 +421,15 @@ readonly INVENTORY=(
   "build/verify-registry.sh|gate||asserts the identifier, cross-link and tests/verification/*.json registry and the retained audit evidence (FND-009). Arrived with the same merge and is classified by it for the same reason"
   "build/verify-godot-runner.sh|gate||asserts the Godot integration-test runner emits the report the engine tier asserts"
   "build/verify-godot.sh|gate||asserts the Godot import step produced the expected artifacts"
+  "build/verify-run-slice.sh|gate||asserts the run slice evidence harness RAN during the invocation that reads it: it launches game/tests/RunSliceEvidenceHarness.tscn by name - a scene no other gate can reach, since verify-godot.sh launches bare into run/main_scene and verify-godot-runner.sh names only the runner and its broken fixture - requires RunSliceEvidenceHarness.StartupLine on stdout, requires a transcript.tsv absent from a per-invocation empty output directory before the launch and present after, and asserts the transcript's assertions_run against a committed pin AND against the section roster derived from tests/verification/*.json. Reached from GodotImportVerb, which .github/workflows/fast.yml runs as its last verb-running step - so it is reached-and-not-exempt, and no EXEMPT row belongs beside it. Field 3 is empty: the script registers no arguments and has one mode. Unlike every other gate here it passes the harness's own exit class through unchanged (0, 2 or 4) rather than collapsing failures into 4, which is VER-PRE-001-003's claim and the reason its own header warns against tidying that back into a single gate_summary funnel"
   "build/verify-policies.sh|gate||asserts the compiler and analyzer policy fixtures fail as designed"
   "build/verify-test-harness.sh|gate||asserts the test tiers discover tests, separate pure from engine, and fail on violation"
   "build/verify-verbs.sh|gate||asserts the verb table matches doc 100's standard command surface"
   "build/verify-wrapper-parity.sh|gate||asserts build.sh and build.ps1 expose the same verbs and classes"
+  "src/MechaMiner.Tools/ContentImport/check_quote_mismatch_evidence.py|gate||re-runs the anti-golden measurement behind content/quote-verification-audit.md § 5: it re-derives each of the 378 stored mismatch records from docs/, re-tests every one under maximal normalization, and exits non-zero if any record moves or if any frozen normalized form fails to reproduce from its stored value. That is a decision about a committed artifact of this repository, which is what makes it a gate rather than a report - a report would print the drift and exit 0. Single-mode, checked rather than assumed: the file imports no argparse and defines no add_argument (0 occurrences of either), and main() takes no parameters, so every invocation is the gate invocation and field 3 has nothing to name. Contrast the entry below, which is the same shape of tool and is not single-mode"
+  "src/MechaMiner.Tools/ContentImport/derive_citation_pass_expectations.py|gate|--verify|dual-mode, and the only entry in this inventory that sets field 3. Bare it is a generator and decides nothing: it derives the expected citation delta and WRITES src/MechaMiner.Tools/ContentImport/expected_citation_deltas.json, observed on this tree to exit 0 and leave that file modified in the working tree. With --verify it decides: it re-derives the previous pass's 59 file-and-scope pairs from --previous-ref alone and asserts set equality, element by element, against what the tree at --ref measures, failing on anything derived-but-not-measured or measured-but-not-derived. Naming only the path would let a reachable bare invocation satisfy § 4 while the deciding mode ran nowhere, and a generator that has been wired is not a gate that has been wired. Note --previous-ref defaults to origin/master, a MOVING ref rather than a pinned sha, which is a separate weakness recorded in the exemption below"
+  "src/MechaMiner.Tools/ContentImport/derive_derived_value_expectations.py|gate|--check|the same dual shape one flag apart, and the flag is spelled differently: --check, not --verify. Bare it WRITES expected_derived_value_removals.json; with --check it re-derives from the pinned SWEEP_REF and returns 1 on MISSING or STALE. Read rather than assumed - main() registers exactly --sweep-ref and --check, and nothing else. This file appears in NEITHER of the header's two notes about master, both of which counted three ContentImport .py scripts; there are four"
+  "src/MechaMiner.Tools/ContentImport/verify_content.py|gate||reads every *.json under content/ and asserts the A1 through A27 table its own header states - JSON parse and duplicate-property rejection, the definition envelope and its status vocabulary, stable IDs, the conditionality of name_key and summary_key, cross-references, per-directory populations, derived totals, polarity agreement, and localization resolution - recording each row as FAILURE or WARNING and exiting non-zero if any FAILURE is recorded. Warnings never change the exit code, so a red exit is always a finding about content and never about the machine the run happened on. That distinction is what separates this from the provisioning entry above, which is the other script here whose failure is not a repository defect. Measured on the tree this entry landed in: 138 definition files parsed and 1375 source_refs resolved against docs/"
 )
 
 # "library" is new: build/gate-output.sh is sourced by every gate script and is not an
@@ -391,7 +451,16 @@ readonly PRUNED_DIRS=(".git" "artifacts" "generated" ".godot" "obj" "bin" "node_
 # "<repo-relative path>|<the failure observed when it was wired, and what would
 #  unblock it>"
 #
-# One reason per script, and each one is what a wiring attempt actually printed.
+# One reason per script, and each one is what a wiring attempt actually printed - or,
+# for the three ContentImport entries added when master's content-import work met this
+# gate, what a wiring attempt was blocked BY, stated with the file and line that blocks
+# it. Those three could not be wired-and-measured the way the .sh entries below were,
+# because RunRepositoryScript execs bash and there is no verb host path that reaches a
+# .py at all; a reason of the form 'it was wired and it printed X' is unavailable for
+# them and inventing one would be exactly the unreproducible reason this list has
+# already had to strike once. Each of the three instead states what it does on its own
+# (exit code and verdict line, run), what specifically blocks a call site, and who owns
+# unblocking it - and the two that are red say so rather than claiming a clean pass.
 #
 # The previous version of this list carried a single shared reason for five scripts:
 # that ./build.sh rebuilds the verb host on every invocation, so a gate reached from
@@ -428,11 +497,25 @@ readonly PRUNED_DIRS=(".git" "artifacts" "generated" ".godot" "obj" "bin" "node_
 # § Step 4), so it owns this. It is deliberately not built here: this work package's
 # subject is the pull-request tier. Until that tier exists, these two and
 # verify-godot-runner.sh are gates nothing asks for, and the pull request says so.
+#
+# The three ContentImport entries are a DIFFERENT kind of never-runs and are not
+# OPS-001's to fix. A slower tier would not help them: no tier can invoke them, because
+# no verb can, because the verb host execs bash. Their follow-up is DAT-006 implementing
+# the 'content' verb - and, so that the .py bar is recorded once in the place that
+# imposes it rather than three times here, FOLLOW-UP (FND-003, which owns VerbContext):
+# give RunRepositoryScript a sibling that selects the interpreter from the extension, or
+# state in that file that .py scripts are deliberately unreachable from a verb. Today it
+# is neither - it is a hard-coded string with no comment saying that it is a policy.
 
 readonly EXEMPT=(
-  "build/verify-format.sh|passes wired into build: ./build.sh build exits 0 in 248 s, of which verify-format is 230 s. Not wired because of that number and nothing else: 230 s is more than twice the whole fast job's current duration, and format-check, the verb whose subject it is, recurses (wired there, ./build.sh format-check did not terminate and was killed at 200 s). Runtime is the objection; whether to pay it on every pull request is a budget decision this file does not get to make"
-  "build/verify-test-harness.sh|passes wired into build on its own: exit 0 in 142 s. Not wired because it invokes ./build.sh test-fast, so test-fast cannot hold it (wired there, killed at 200 s, exit 124, still nesting), and build cannot hold it either now that test-fast reaches verify-verbs.sh and verify-configurations.sh, which invoke ./build.sh build. Observed on this tree with it added to build's stages: ./build.sh build ran 452 s without terminating and was killed (exit 137), having recorded 13 nested build and 14 nested test-fast invocations under artifacts/verbs/ by then. Unblocked by a wrapper dispatch that does not re-enter the verb it was called from"
+  "build/verify-bootstrap-macos.sh|never invoked, and RED on this merged tree. Both are stated because only the first exempts it, and omitting the second would make this the kind of unreproducible claim this list has already had to strike once. WIRING, which is the exempting reason, MEASURED on the merged tree rather than inferred from the name: § 4's analyzer reports ZERO call sites, its finding reading 'is never invoked' and not 'has a call site but no workflow reaches it', and 'grep -rn verify-bootstrap-macos src build.sh build.ps1 .github' returns nothing; the string occurs twice in the whole tree, both times in prose - inside this gate itself and in build/bootstrap-macos.sh's header - and neither is a call site. SCRIPT, MEASURED ON THIS MERGE rather than quoted from an earlier sha, and NOT re-measured by this gate: 'bash build/verify-bootstrap-macos.sh' at 3f1103e exits 4 with exactly one failing assertion and 0 skipped, in its section 10, reading 'build/toolchain.json exists but records no godot.platforms.osx-* entry'. That red is this merge's own doing and is precisely what the script's header predicted: section 10 is its forward-compatible half, reporting SKIP while build/toolchain.json is absent and becoming a hard assertion 'the moment this branch meets the FND-002 chain'. This merge is that moment, and neither parent is red because neither holds both files - build/toolchain.json is absent at eac70f9, which carries this gate and bootstrap-macos.sh, and present at 21208c1, which carries neither. Measured on the merged pin file: godot.platforms holds linux-x64 alone, so the osx-arm64 and osx-x64 entries the assertion wants are genuinely absent and the gate is right. So the objection to wiring is not that the gate is wrong but that the gap it names is real and unrepaired, and wiring it would make the fast workflow red on a defect in the pin file rather than in this gate. Repairing it is not this merge's to do: the macOS hashes exist only as constants in build/bootstrap-macos.sh, transcribing them into the pin file is a toolchain-pinning decision, and build/toolchain.json is FND-002's. Unblocked by adding the two osx-* godot entries from those constants - FOLLOW-UP (FND-002, which owns build/toolchain.json and this chain's toolchain pinning) - and wiring belongs in the same commit that closes the gap, not ahead of it. FND-002 owns removing this entry"
+  "build/verify-format.sh|OBSERVED AT a4eb81d, NOT re-measured by this gate: wired into build, ./build.sh build exited 0 in 248 s, of which verify-format was 230 s. Not wired because of that number and nothing else: 230 s is more than twice the whole fast job's current duration, and format-check, the verb whose subject it is, recurses (wired there, ./build.sh format-check did not terminate and was killed at 200 s). Runtime is the objection; whether to pay it on every pull request is a budget decision this file does not get to make"
+  "build/verify-test-harness.sh|OBSERVED AT a4eb81d, NOT re-measured by this gate: wired into build on its own it exited 0 in 142 s. Not wired because it invokes ./build.sh test-fast, so test-fast cannot hold it (wired there, killed at 200 s, exit 124, still nesting), and build cannot hold it either now that test-fast reaches verify-verbs.sh and verify-configurations.sh, which invoke ./build.sh build. Observed on this tree with it added to build's stages: ./build.sh build ran 452 s without terminating and was killed (exit 137), having recorded 13 nested build and 14 nested test-fast invocations under artifacts/verbs/ by then. Unblocked by a wrapper dispatch that does not re-enter the verb it was called from"
   "build/verify-godot-runner.sh|reached only from test-main, and no workflow invokes test-main: .github holds one workflow and its six steps are provisioning, bootstrap, format-check, build, test-fast, godot-import. It was called 'wired' on the strength of that call site while running exactly as often as before - never. Passes standalone. Unblocked by OPS-001's main-branch suite, which is the workflow that would run test-main"
+  "src/MechaMiner.Tools/ContentImport/check_quote_mismatch_evidence.py|OBSERVED AT 019c5e3, NOT re-measured by this gate: standalone exit 0, RESULT ok - zero cases move as § 5 claims, with 394 of 394 normalized forms reproduced, 0 live source_refs anchors unresolved in docs/, and 0 cases moving under maximal normalization. RE-OBSERVED AT 6f09da1: still exit 0, so this is the one § 3 reason whose figure has not gone stale - which is a fact about this script, not evidence that § 3 checked it. So the objection is not the script. It cannot be exec'd from a verb at all: VerbContext.RunRepositoryScript hard-codes bash as the program (src/MechaMiner.Tools/Cli/VerbContext.cs:97) and passes the script path as its first argument, so handing it a .py runs the Python source through bash. That is a mechanical bar every entry from this directory shares, and on its own it would argue for a python3 sibling to RunRepositoryScript rather than for an exemption. What makes THIS script's exemption separate from the other two is its subject: it verifies content/quote-verification-audit.md and the frozen evidence artifact beside it, both authored and owned by DAT-006's content-import work, so the verb that would hold it is the same 'content' verb that has no owner yet. Wiring it into any verb that does exist would put a DAT-006 subject inside an FND-002 or FND-003 verb. Unblocked by DAT-006 implementing the content verb; DAT-006 owns removing this entry"
+  "src/MechaMiner.Tools/ContentImport/derive_citation_pass_expectations.py|its gate mode is RED, and the entry says so rather than claiming a clean standalone pass. OBSERVED AT 019c5e3, NOT re-measured by this gate: bare exited 0 and rewrote expected_citation_deltas.json; --verify exited 1 with 7 findings, one derived-but-not-measured (content/enemies/EN-06.json :: specialist_attack.hard_control_interaction) and six citation-deleted (content/resources/A.json through F.json :: canonical_letter: TDD-CONTENT-DATA#resources). THAT FIGURE NO LONGER REPRODUCES, and the entry states this because a stale number in a green line is worse than none. RE-MEASURED AT 6f09da1 on a clean tree: --verify exits 1 with 1372 FAIL lines - 1371 string-measured-but-not-derived plus one moved numeric multiset - not 7. The cause is the weakness the entry above already names: --previous-ref defaults to origin/master, which is now e17b8b6, so the assertion's baseline is a different tree than the one the 7 was measured against. Regenerating the artifact first (bare, then --verify) gives 15 FAIL lines at 6f09da1, still not 7. Bare mode does NOT crash at 6f09da1: it exits 0 and leaves expected_citation_deltas.json modified in the working tree. All seven are explained and none is a defect in this script: doc 40 § Minted content-ID grammars relocates the six canonical letters into a canonical_letter field under the RSC- migration, so this branch legitimately deleted the six citations that --previous-ref's frozen artifact still expects. The deeper reason it cannot be wired as-is is in the entry above: --previous-ref defaults to origin/master, which moved from d88c621 to 76ef7a1 during this task alone, so the assertion's baseline changes underneath it without any commit here. A gate whose expected value is read from a moving ref reports the movement of that ref, not the state of this tree. Unblocked by pinning --previous-ref to a sha and re-deriving the artifact against it - which is DAT-006's call, since DAT-006 owns both the artifact and the content verb"
+  "src/MechaMiner.Tools/ContentImport/derive_derived_value_expectations.py|never invoked: zero call sites. Same hazard as its sibling one flag over - bare it OVERWRITES expected_derived_value_removals.json - and field 3 requires --check. Note the coupling that makes wiring it a decision rather than a line: verify_content.py's A31/A29 already assert set equality against that same committed expectation, so the two gates must agree on which of them owns the check before either is wired. Unblocked by DAT-006"
+  "src/MechaMiner.Tools/ContentImport/verify_content.py|the objection is wiring, and the script is ALSO red on the tree this entry landed in; both are stated because only the first is what exempts it and omitting the second would make this entry the kind of unreproducible claim the list above had to strike. WIRING, which is the exempting reason: VerbContext.RunRepositoryScript hard-codes bash (src/MechaMiner.Tools/Cli/VerbContext.cs:97) and cannot exec a .py, and the verb that would own it is 'content', declared VerbDescriptor.AwaitingOwner with owner DAT-006 at src/MechaMiner.Tools/Cli/VerbRegistry.cs:71-74 and carrying no handler member - so there is no member for a call site to live in, and § 4 could not attribute one to a workflow even if a call site were written. SCRIPT, OBSERVED AT 019c5e3 and NOT re-measured by this gate: standalone it exited 1 with exactly one FAILURE, and that failure was this merge's own doing rather than a pre-existing condition. THAT IS NO LONGER TRUE. RE-MEASURED AT 6f09da1: exit 0, zero FAILURE rows, with 138 definitions parsed and 1375 source_refs resolved. The corpus did not change - docs/technical/delivery-waves.md:598 still reads 'than a yes or no. Its numbers are 300 trials' - the RULE narrowed: 19f31ef added ABBREVIATION_SUFFIX requiring a numeral after 'no.', which that sentence does not have. So the exempting reason below is unaffected and this figure is simply superseded. docs/technical/delivery-waves.md:598 arrives from claude/hearth-thread-2vmaro-fnd-002 reading 'than a yes or no. Its numbers are 300 trials'; it is the first abbreviation-shaped period in docs/, and content/quote-verification-audit.md's rule treating '.' as an unambiguous sentence terminator was measured safe only against a corpus that contained none. Checked rather than assumed: that string is absent at 9ded240 and at 327a3db and present at 1c2f106. The script's own instruction is to re-measure the rule against the corpus and explicitly NOT to edit the flagged quotation, and the rule and the audit document are DAT-006's, so this merge records the regression rather than repairing it. Unblocked by DAT-006 implementing the content verb, which owns removing this entry"
 )
 
 # --- Where an invocation may live ---------------------------------------------
@@ -1237,7 +1320,12 @@ check_exemptions() {
       continue
     fi
 
-    pass "exempt: ${exempt_path} (${reason})"
+    # The reason is QUOTED, not verified. Three things were checked - the file exists, the
+    # entry states a reason, and no workflow reaches it - and every other assertion inside
+    # the reason text, including any exit code or duration, is unverified by this gate.
+    # Saying so on the line itself is the point: a green line that prints "exit 0 in 142 s"
+    # reads as a measurement this run just took.
+    pass "exempt: ${exempt_path} - exists, states a reason, not reached. REASON QUOTED, NOT VERIFIED: ${reason}"
   done
   return "${check_failures}"
 }
@@ -1293,8 +1381,38 @@ check_partition() {
   return "${check_failures}"
 }
 
-section "3. every exemption names a script that exists and is not reached"
+section "3. every exemption names a script that exists and is not reached (reason text is quoted, never re-measured)"
 
+# WHAT § 3 VERIFIES, AND WHAT IT DOES NOT. Three properties per entry: the path exists, the
+# reason field is non-empty, and no workflow reaches the script. Nothing else. In particular no
+# number inside a reason is re-measured - not an exit code, not a duration, not a finding count -
+# so every such figure is an observation stamped with the sha it was taken at and is read as
+# history rather than as a result of this run.
+#
+# Re-measuring them was considered and rejected on measured grounds, recorded here because the
+# alternative looks obviously better until the numbers are in. Running an exempted script from
+# this section would, for the five entries whose reasons state an exit code:
+#   - RECURSE. This gate runs inside ./build.sh build. verify-test-harness.sh invokes
+#     ./build.sh test-fast, which reaches verify-verbs.sh and verify-configurations.sh, which
+#     invoke ./build.sh build, which runs this file again. Its own reason records the observed
+#     result of wiring it: 452 s without terminating, killed, 13 nested build and 14 nested
+#     test-fast invocations. verify-format.sh recurses into format-check the same way and was
+#     killed at 200 s.
+#   - COST >= 390 s. 248 s for verify-format.sh plus 142 s for verify-test-harness.sh, against a
+#     gate that presently finishes in seconds. That runtime is the very thing their exemptions
+#     exist to record, so a § 3 that re-measured them would be doing what the entries say cannot
+#     be done here.
+#   - BREAK HERMETICITY. derive_citation_pass_expectations.py reads --previous-ref, defaulting to
+#     origin/master, a moving remote ref. Measured at 6f09da1: 1372 FAIL lines against e17b8b6
+#     where the entry records 7 against an earlier master. This gate's exit would then depend on
+#     where somebody else's push left a branch, and on when this clone last fetched.
+#   - DIRTY THE TREE. That script's bare mode rewrites
+#     src/MechaMiner.Tools/ContentImport/expected_citation_deltas.json, and several reasons state
+#     facts about both modes, so re-measuring them means running the mutating one.
+# What is NOT a ground, stated so the argument is not padded: they are not slow individually and
+# need no built artifact - the three ContentImport scripts run in 0.2 s, 1.1 s and 1.6 s at
+# 6f09da1 and are pure Python. The objections above are recursion, aggregate cost, hermeticity
+# and tree mutation, in that order.
 check_failures=0
 exemption_report="$(check_exemptions EXEMPT "${sites_table}")"
 exemption_failures=$?

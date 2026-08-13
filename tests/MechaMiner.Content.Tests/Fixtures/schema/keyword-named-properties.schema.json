@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Negative control: declared properties named after schema keywords",
+  "description": "Every schema keyword is a legal property name. The properties declared here are named maximum, $defs, $ref, type and x-authority, so a walk that mistakes the properties map for a schema object reads an attributed bound out of the property names alone. The one real bound is capacity's maximum, which carries no x-authority and must still be reported. This file exists to prove the walk tells a map of subschemas from a subschema; it is never loaded as a real schema.",
+  "type": "object",
+  "properties": {
+    "maximum": {
+      "type": "integer"
+    },
+    "$defs": {
+      "type": "string"
+    },
+    "$ref": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    },
+    "x-authority": {
+      "type": "string"
+    },
+    "capacity": {
+      "type": "integer",
+      "maximum": 2048
+    }
+  }
+}

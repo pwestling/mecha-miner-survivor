@@ -1,0 +1,63 @@
+{
+  "id": "W-DE-focal-array",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-DE-focal-array.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#focal-array--conversion--2-cinderglass",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#focal-array--conversion--2-cinderglass"
+  ],
+  "weapon_id": "W-DE",
+  "weapon_name": "Scatter Array",
+  "class": "Conversion",
+  "cost": {
+    "resource": "Cinderglass",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-DE-saturation-choke",
+      "W-DE-concussive-fan"
+    ],
+    "irreversible_within_run": true,
+    "existing_common_ore_stat_tracks_still_apply": true,
+    "adds_new_stat_track": false,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run."
+  },
+  "availability": {
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite.",
+    "purchase": "Installing one is a single deterministic purchase costing exactly two units of its assigned specialized material."
+  },
+  "effects": {
+    "pellet_count": 5,
+    "pellet_path": "All five pellets spread and then curve inward to converge on a focal point",
+    "focal_point_location": "centered on persistent mech facing at current maximum range",
+    "pellet_damage_of_current_damage": {
+      "percent": 140
+    },
+    "maximum_pellets_on_a_target_at_the_focal_point": 5,
+    "rank_zero_damage_per_attack_at_focal_point": 63,
+    "rotates_focal_point_toward_enemies_independently_of_mech_facing": false
+  },
+  "rules": [
+    {
+      "text": "All five pellets spread and then curve inward to converge on a focal point centered on persistent mech facing at current maximum range."
+    },
+    {
+      "text": "Each pellet deals 140% current Damage. A target at the focal point can take all five, for 63 rank-zero damage per attack."
+    },
+    {
+      "text": "Targets much closer than the focal point are likely to receive only part of the volley; the weapon does not rotate the focal point toward an enemy independently of mech facing."
+    },
+    {
+      "text": "This converts a close crowd fan into a precise medium-range execution weapon."
+    }
+  ]
+}

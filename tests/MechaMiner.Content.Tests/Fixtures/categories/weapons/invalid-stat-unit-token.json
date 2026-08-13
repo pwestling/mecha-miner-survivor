@@ -1,0 +1,65 @@
+{
+  "id": "W-AB",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "weapon.W-AB.name",
+  "summary_key": "weapon.W-AB.summary",
+  "tags": [],
+  "source_refs": [
+    "TR-DAT-003"
+  ],
+  "recipe_pair_material_ids": [
+    "RSC-01",
+    "RSC-02"
+  ],
+  "signature_mech_id": "MCH-02",
+  "behavior_kind": "piercing-line-shot",
+  "targeting_policy": "nearest-in-facing",
+  "rock_targeting_behavior": "damages-rocks-in-path",
+  "ore_upgradeable_stats": [
+    {
+      "slot": 1,
+      "name": "Damage",
+      "unit": "damage",
+      "rank_zero": 96,
+      "increment_per_rank": 8,
+      "discrete": false
+    },
+    {
+      "slot": 2,
+      "name": "Beam width",
+      "unit": "M",
+      "rank_zero": 0.4,
+      "increment_per_rank": 0.02,
+      "discrete": false
+    },
+    {
+      "slot": 3,
+      "name": "Cycle rate",
+      "unit": "activations-per-second",
+      "rank_zero": 0.33,
+      "increment_per_rank": 0.01,
+      "discrete": false
+    }
+  ],
+  "fixed_properties": {
+    "cadence_seconds": 3.0,
+    "pierce_target_cap": 6
+  },
+  "global_attack_rate_mapping": {
+    "affected_timings": [
+      "cycle interval"
+    ],
+    "unaffected_timings": [
+      "beam dwell"
+    ]
+  },
+  "branch_ids": [
+    "W-AB-unbounded-bore",
+    "W-AB-fracture-lance",
+    "W-AB-kinetic-capacitor"
+  ],
+  "base_automatic_attack_text": "Fires a piercing line along the mech's facing.",
+  "base_behavior_text": "The beam pierces every target in its path and stops at terrain."
+}

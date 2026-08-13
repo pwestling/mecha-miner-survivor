@@ -1,0 +1,113 @@
+{
+  "id": "UTL-C2",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "utility.UTL-C2.name",
+  "summary_key": "utility.UTL-C2.summary",
+  "tags": [],
+  "source_refs": [
+    "GDD-UTILITY-CATALOG#utl-c2--capacitor-screen",
+    "external_numerics[]: GDD-PLAYER-SURVIVABILITY-BASELINE",
+    "catalog_wide_rules.modifier_and_timing_rules[]: GDD-UTILITY-CATALOG#modifier-and-timing-rules",
+    "catalog_wide_rules.shared_acquisition_and_rank_rules[]: GDD-UTILITY-CATALOG#shared-acquisition-and-rank-rules",
+    "installed_to_rank_3: GDD-UTILITY-CATALOG#catalog-overview"
+  ],
+  "material": "Cinderglass",
+  "primary_role": "Automatic defense",
+  "installed_to_rank_3": "Negate one hit every 24s → 15s",
+  "effect": {
+    "stat_names": [
+      "Recharge time",
+      "Stored charges"
+    ],
+    "value_kind": "recharging-charge"
+  },
+  "ranks": [
+    {
+      "state": "Installed",
+      "recharge_seconds": 24,
+      "stored_charges": 1
+    },
+    {
+      "state": "Rank 1",
+      "recharge_seconds": 21,
+      "stored_charges": 1
+    },
+    {
+      "state": "Rank 2",
+      "recharge_seconds": 18,
+      "stored_charges": 1
+    },
+    {
+      "state": "Rank 3",
+      "recharge_seconds": 15,
+      "stored_charges": 1
+    }
+  ],
+  "acquisition": {
+    "material_unit_cost": 1,
+    "utility_slots_filled": 1,
+    "rank_count": 3,
+    "rank_ore_costs": [
+      50,
+      100,
+      150
+    ],
+    "rank_values_are_totals_not_cumulative_additions": true,
+    "unique_in_loadout": true,
+    "has_branches": false,
+    "has_alternative_recipes": false,
+    "replaceable": false,
+    "dismantlable": false,
+    "sellable": false,
+    "refundable_during_run": false,
+    "requires_manual_activation": false,
+    "previews_all_four_effect_tiers": true
+  },
+  "availability": {
+    "fresh_profile": false,
+    "unlock_id": "UNL-01",
+    "unlock_name": "Advanced Utility Suite",
+    "unlock_cost_hyper_gold": 600
+  },
+  "effect_rules": [
+    "The utility begins charged when fabricated. When charged, it completely negates the first contact, projectile, or hazard damage instance that would otherwise remove Hull Integrity, then begins recharging.",
+    "It holds at most one charge. Ranking it shortens recharge but does not immediately restore a missing charge.",
+    "The recharge timer advances only during active gameplay simulation and freezes during fabrication, pause, relic resolution, and other complete-simulation pauses.",
+    "A negated hit causes no Hull loss and does not trigger effects that require damage taken. Further simultaneous or later hits apply normally after the charge is consumed.",
+    "A clear shield ring and utility-slot charge indicator communicate ready, consumed, and recharging states without requiring player input."
+  ],
+  "catalog_wide_rules": {
+    "shared_acquisition_and_rank_rules": [
+      "Every non-radar utility costs one unit of its assigned specialized material and permanently fills one of three utility slots.",
+      "Each begins at its listed Installed effect and has three common-ore ranks costing 50, 100, and 150 ore.",
+      "The four values shown for a utility are its Installed, Rank 1, Rank 2, and Rank 3 totals—not cumulative additions.",
+      "A utility is unique within the loadout and cannot be fabricated twice.",
+      "Utilities have no branches, alternative recipes, replacement, dismantling, sale, or refund during a run.",
+      "Fabrication previews all four effect tiers, the current build's affected systems, and any equipped weapon that receives no benefit from a weapon-support utility.",
+      "The resource radar remains outside the material table: it costs 300 common ore, has no ranks, and retains its accepted seven-category directional behavior."
+    ],
+    "modifier_and_timing_rules": [
+      "Flat statistic changes apply before percentage modifiers. Percentage modifiers to the same named statistic add together, and the displayed final result is authoritative.",
+      "Attack rate is represented as attacks per second or equivalent frequency; a +20% attack-rate total produces 1.2 times the unmodified activation frequency.",
+      "Recovery sources add in Hull Integrity per second.",
+      "Already-created finite projectiles, zones, mines, and similar weapon instances retain the damage, geometry, and lifetime with which they were created. New instances use the newly fabricated or ranked utility values.",
+      "Persistent autonomous units remain in place and use new utility values for attacks they perform after play resumes.",
+      "Fabrication and utility ranking occur during a complete-simulation pause, so no duration, cooldown, Recovery, or mining state advances while the purchase is reviewed.",
+      "If a later relic explicitly replaces a statistic or rule, its description must state whether it overrides or combines with these utilities. Silent exceptions are not allowed."
+    ]
+  },
+  "external_numerics": [
+    {
+      "statement": "Capacitor Screen's full-hit negation is step 5 of the accepted player damage-resolution order.",
+      "value": 5,
+      "quote": "5. Apply an eligible full-hit negation such as Capacitor Screen."
+    },
+    {
+      "statement": "Emergency Reboot's two-second all-damage invulnerability does not consume the Capacitor Screen charge.",
+      "value": 2,
+      "quote": "- Emergency Reboot's accepted two-second all-damage invulnerability is an explicit exception. Attacks ignored during Reboot invulnerability do not consume Capacitor Screen."
+    }
+  ]
+}

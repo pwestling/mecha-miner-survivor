@@ -1,0 +1,48 @@
+# authority: docs/technical/20-simulation-core.md § Authoritative random-number contract
+# random schema version: 1
+# derived by: an independent pure-Python PCG-XSH-RR 64/32 + SplitMix64 reference,
+#   not by the C# implementation under test. See Goldens/README.md.
+#
+# Unit-interval double conversion, doc 20:87: "A [0,1) double is built from 53
+# random bits under one golden-tested conversion."
+#
+# DECISION fixed here (doc 20:87 does not state the bit layout): two 32-bit
+# draws are concatenated with the FIRST draw as the HIGH half, and the top 53
+# bits of that 64-bit value form the mantissa:
+#   hi    = next_uint32()            first draw
+#   lo    = next_uint32()            second draw
+#   bits  = ((ulong)hi << 32) | lo
+#   m53   = bits >> 11               top 53 bits; the low 11 bits are discarded
+#   value = m53 * (1.0 / 9007199254740992.0)     9007199254740992 = 2^53
+# Chosen over the MT19937 genrand_res53 27/26 split because (x >> 11) * 2^-53 is
+# the dominant published construction for a [0,1) double from a 64-bit source,
+# it is one obvious C# expression, and "the first draw is the more significant
+# half" is the natural reading of draw order. Each value consumes exactly two
+# draws.
+#
+# The comparison authority for a value is 'ieee754', the raw bit pattern of the
+# double (BitConverter.DoubleToUInt64Bits), so the conversion is pinned
+# independently of any double-to-text formatting. 'decimal' is the shortest
+# round-trippable rendering (C# ToString("R", InvariantCulture) on .NET Core,
+# which equals Python repr) and is present for human review.
+#
+# Stream: master=0x0123456789ABCDEF family=0x0100 instance=0x0000000000000000
+#
+# columns: index, m53 (hex, 53 bits), ieee754 (hex bit pattern), decimal
+# entries=16
+00	0x008AA5BB4C027A	0x3F9154B769804F40	0.01692473012378959
+01	0x0B4C14E40CA171	0x3FD69829C81942E2	0.353037305268158
+02	0x118A7CDCA120A3	0x3FE18A7CDCA120A3	0.5481552418869068
+03	0x17F51B8A1341D8	0x3FE7F51B8A1341D8	0.7486703583509167
+04	0x1A718989FCCF96	0x3FEA718989FCCF96	0.8263595290250005
+05	0x114EDB7A4000AA	0x3FE14EDB7A4000AA	0.5408761394210349
+06	0x17EFF68F487F58	0x3FE7EFF68F487F58	0.7480423735141626
+07	0x0CDB8B71A0910B	0x3FD9B716E3412216	0.4017998904496677
+08	0x19400765BA2B5F	0x3FE9400765BA2B5F	0.7890660273418283
+09	0x13ABFF4EE56A77	0x3FE3ABFF4EE56A77	0.6147457638683836
+10	0x118AD7A0DA730D	0x3FE18AD7A0DA730D	0.5481985227266662
+11	0x12E3AC4A72517F	0x3FE2E3AC4A72517F	0.5902921155962274
+12	0x0A257743D43BFC	0x3FD44AEE87A877F8	0.31707347152575904
+13	0x0D57236590C3AD	0x3FDAAE46CB21875A	0.4168869956684965
+14	0x117CA740951584	0x3FE17CA740951584	0.5464664708494387
+15	0x1058C67BDED787	0x3FE058C67BDED787	0.5108368319840658

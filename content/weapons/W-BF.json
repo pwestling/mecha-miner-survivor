@@ -1,0 +1,143 @@
+{
+  "id": "W-BF",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "weapon.W-BF.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#rank-zero-values-and-ore-stat-increments",
+    "recipe_pair: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "fabrication_cost: GDD-PROGRESSION#base-weapon-availability",
+    "base_automatic_attack: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "base_behavior: GDD-WEAPON-NUMERIC-CATALOG#w-bf--orbital-cutters",
+    "ore_upgradeable_stat_labels: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "damage_model: GDD-WEAPON-NUMERIC-CATALOG#base-weapon-summary",
+    "global_attack_rate_mapping: GDD-WEAPON-NUMERIC-CATALOG#global-weapon-attack-rate-mapping",
+    "branches.amplification.cost: GDD-WEAPON-NUMERIC-CATALOG#kinetic-flywheel--amplification--2-flux-amber",
+    "branches.amplification.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.amplification: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.amplification: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.functional.cost: GDD-WEAPON-NUMERIC-CATALOG#deflection-ring--functional--2-barysteel",
+    "branches.functional.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.functional: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.functional: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.conversion.cost: GDD-WEAPON-NUMERIC-CATALOG#tethered-reaper--conversion--2-eidolon-coral",
+    "branches.conversion.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.conversion: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.conversion: GDD-WEAPON-INDEX#catalog-lookup"
+  ],
+  "recipe_pair": {
+    "notation": "B + F",
+    "material_codes": [
+      "B",
+      "F"
+    ],
+    "material_names": [
+      "Barysteel",
+      "Flux Amber"
+    ]
+  },
+  "fabrication_cost": {
+    "materials": [
+      {
+        "material_code": "B",
+        "material": "Barysteel",
+        "units": 1
+      },
+      {
+        "material_code": "F",
+        "material": "Flux Amber",
+        "units": 1
+      }
+    ],
+    "signature_weapon_begins_equipped_without_paying_cost": true,
+    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost."
+  },
+  "base_automatic_attack": {
+    "text": "Maintains contact-damage discs orbiting the mech"
+  },
+  "base_behavior": {
+    "text": "four cutters orbit the mech at a fixed 2.2M radius. Each cutter may damage a given enemy once per second while their collision shapes overlap."
+  },
+  "ore_upgradeable_stat_labels": {
+    "labels": [
+      "Damage",
+      "cutter size",
+      "orbit speed"
+    ]
+  },
+  "ore_upgradeable_stats": [
+    {
+      "slot": 1,
+      "name": "Contact damage",
+      "rank_zero": 8,
+      "increment_per_rank": 0.8,
+      "unit": "damage",
+      "discrete": false
+    },
+    {
+      "slot": 2,
+      "name": "Cutter radius",
+      "rank_zero": 0.4,
+      "increment_per_rank": 0.04,
+      "unit": "M",
+      "discrete": false
+    },
+    {
+      "slot": 3,
+      "name": "Orbit speed",
+      "rank_zero": 0.5,
+      "increment_per_rank": 0.05,
+      "unit": "revolutions per second",
+      "discrete": false
+    }
+  ],
+  "fixed_properties": {
+    "cutter_count": 4,
+    "orbit_radius_m": 2.2,
+    "per_cutter_per_enemy_repeat_interval_seconds": 1.0,
+    "cutters_destructible": false,
+    "raw": "Four cutters, 2.2M orbit radius, 1.0 s per-cutter/per-enemy repeat interval"
+  },
+  "damage_model": {
+    "rank_zero_damage_model": "4 × 8 per 1.0 s contact cycle",
+    "burst_10_dps": 32.0,
+    "sustained_30_dps": 32.0,
+    "favorable_horde_dps": 128,
+    "primary_limitation": "Requires close orbit contact"
+  },
+  "global_attack_rate_mapping": {
+    "affected_timing": "Per-cutter/per-enemy contact-repeat rate; Reaper contact-repeat rate",
+    "unaffected_timing": "Physical orbit speed and blade movement"
+  },
+  "branches": {
+    "amplification": {
+      "name": "Kinetic Flywheel",
+      "funding_material_code": "F",
+      "funding_material": "Flux Amber",
+      "cost": {
+        "material": "Flux Amber",
+        "units": 2
+      }
+    },
+    "functional": {
+      "name": "Deflection Ring",
+      "funding_material_code": "B",
+      "funding_material": "Barysteel",
+      "cost": {
+        "material": "Barysteel",
+        "units": 2
+      }
+    },
+    "conversion": {
+      "name": "Tethered Reaper",
+      "funding_material_code": "E",
+      "funding_material": "Eidolon Coral",
+      "cost": {
+        "material": "Eidolon Coral",
+        "units": 2
+      }
+    }
+  }
+}

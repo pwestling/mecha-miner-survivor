@@ -1,0 +1,60 @@
+{
+  "id": "W-BE-guardian-firmware",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-BE-guardian-firmware.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#guardian-firmware--functional--2-barysteel",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#guardian-firmware--functional--2-barysteel"
+  ],
+  "weapon_id": "W-BE",
+  "weapon_name": "Sentry Pod",
+  "class": "Functional",
+  "cost": {
+    "resource": "Barysteel",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-BE-battery-overclock",
+      "W-BE-forward-bastion"
+    ],
+    "irreversible_within_run": true,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run."
+  },
+  "availability": {
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite."
+  },
+  "effects": {
+    "priority_radius_from_mech_m": 4,
+    "fallback_targeting": "normal nearest-target behavior",
+    "push_distance_m": 0.8,
+    "push_direction": "away from the mech",
+    "stagger_seconds": 0.25,
+    "control_applies_to": "ordinary enemies",
+    "boss_and_elite_control_handling": "global control resistance",
+    "damage_changed": false,
+    "attack_rate_changed": false
+  },
+  "favorable_scene_effect": {
+    "qualitative": "converts distributed fire into a mobile defensive screen"
+  },
+  "rules": [
+    {
+      "text": "Pods prioritize enemies within 4M of the mech, then fall back to normal nearest-target behavior."
+    },
+    {
+      "text": "Every hit pushes an ordinary enemy 0.8M away from the mech and staggers it for 0.25 s. Bosses and elites use global control resistance."
+    },
+    {
+      "text": "Damage and attack rate are unchanged; the branch converts distributed fire into a mobile defensive screen."
+    }
+  ]
+}

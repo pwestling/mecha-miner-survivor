@@ -1,0 +1,71 @@
+{
+  "id": "W-BC-broadside-oscillator",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-BC-broadside-oscillator.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#broadside-oscillator--conversion--2-eidolon-coral",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
+    "availability: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#broadside-oscillator--conversion--2-eidolon-coral"
+  ],
+  "weapon_id": "W-BC",
+  "weapon_name": "Pulse Repeater",
+  "class": "Conversion",
+  "cost": {
+    "resource": "Eidolon Coral",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-BC-zero-lag-emitter",
+      "W-BC-suppressive-sequencer"
+    ],
+    "irreversible_within_run": true,
+    "rule": "Major weapon branches are mutually exclusive and irreversible: once the player commits that weapon to one branch, the other two cannot be installed during the same run."
+  },
+  "availability": {
+    "rule": "All three branches appear immediately after the weapon is equipped and require no common-ore rank, weapon level, elapsed time, or boss prerequisite."
+  },
+  "effects": {
+    "automatic_target_selection": false,
+    "pulses_per_attack_event": 2,
+    "pulse_directions_relative_to_mech_facing": [
+      "directly left",
+      "directly right"
+    ],
+    "pulse_damage_percent_of_current_damage": {
+      "percent": 100
+    },
+    "pulse_range_percent_of_current_range": {
+      "percent": 100
+    },
+    "pulses_may_hit_separate_targets": true,
+    "maximum_pulse_hits_per_target_per_attack_event": 2
+  },
+  "favorable_scene_effect": {
+    "magnitude": {
+      "raw_output_multiplier_maximum": 2
+    },
+    "qualitative": "demands continuous facing and lateral positioning"
+  },
+  "rules": [
+    {
+      "text": "Automatic target selection is removed."
+    },
+    {
+      "text": "Every attack event fires two full-damage pulses simultaneously, one directly left and one directly right relative to mech facing."
+    },
+    {
+      "text": "Both pulses use current range and may hit separate targets; a sufficiently large target intersecting both traces may take both hits."
+    },
+    {
+      "text": "The result has up to 2× raw output but demands continuous facing and lateral positioning."
+    }
+  ]
+}

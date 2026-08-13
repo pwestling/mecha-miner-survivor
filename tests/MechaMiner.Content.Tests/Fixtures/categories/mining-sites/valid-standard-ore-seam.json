@@ -1,0 +1,36 @@
+{
+  "id": "SITE-01",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "mining_site.SITE-01.name",
+  "summary_key": "mining_site.SITE-01.summary",
+  "tags": [],
+  "source_refs": [
+    "TR-DAT-002"
+  ],
+  "site_class": "standard-ore-seam",
+  "count_per_standard_map": 20,
+  "placement": "randomized locations",
+  "extraction_zone_radius_m": 3.0,
+  "extraction_duration_seconds": 15,
+  "installment_count": 10,
+  "installment_duration_seconds": 1.5,
+  "completion_only_reward": false,
+  "payout_per_installment": {
+    "amount": 10,
+    "resource_id": "RSC-07"
+  },
+  "partial_payout": "each completed installment is secured",
+  "progress_decay": {
+    "decay_rate_multiplier_of_forward_rate": 4,
+    "grace_seconds": 0.5,
+    "secured_checkpoint": "each completed installment"
+  },
+  "depleted_state_kind": "non-interactive-landmark",
+  "reactivatable": false,
+  "persistence_class": "run-local-currency",
+  "rules": [
+    "Progress decays four times as fast as it accrues after the grace window."
+  ]
+}

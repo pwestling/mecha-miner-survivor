@@ -10,10 +10,17 @@
 # Requirements: TR-CTR-001, TR-BLD-006, TR-FND-001, TR-FND-002
 # Verification: VER-FND-001-003, VER-FND-001-004, VER-FND-001-005
 #
-# This is a real assertion, not a review aid: the reference graph is read from
-# MSBuild's own evaluation of every project (so implicit SDK-injected package
-# references are included), the Godot dependency is read from the committed
-# NuGet lock files, and every mismatch exits nonzero.
+# This is a real assertion, not a review aid: the Godot boundary is read from the
+# RESOLVED compile-time reference set of every project - what the compiler is
+# actually handed, after MSBuild has evaluated imports, central package
+# management, SDK injection and assembly resolution - plus the committed NuGet
+# lock files for transitive package routes. Every mismatch exits nonzero.
+#
+# The boundary is derived from how MSBuild can acquire a reference at all, not
+# from the routes this script happened to check first. Reading PackageReference
+# alone missed a raw <Reference> with a HintPath, an <Import> of a props file that
+# adds one, and anything SDK- or central-package-injected; all of those land in
+# ReferencePath, so ReferencePath is what is asserted.
 #
 # The Godot boundary is asserted TWICE, over two different reference sets, because
 # neither set can see what the other catches - § 4 reads what each project
@@ -37,9 +44,40 @@
 # reader's defect cannot hide from both.
 #
 # Exit classes follow doc 100 § Standard command surface: 0 success,
-# 4 validation failure.
+# 4 validation failure. There is deliberately no exit 1: a wrapper that returns
+# it has leaked an unclassified failure from an underlying tool. `set -e` is
+# therefore NOT used - it would abort on the first failing helper, return 1, and
+# skip every remaining section - matching every other gate script in build/.
+# Helpers that can fail return nonzero and their callers count a failure and
+# continue, so one broken project cannot hide the checks that follow it.
+#
+# PRECONDITION: `dotnet restore` MUST have run against this checkout first.
+#
+# Section 6 reads the resolved reference set via `dotnet msbuild
+# -getItem:ReferencePath -t:ResolveAssemblyReferences`, and
+# ResolveAssemblyReferences cannot run without obj/project.assets.json, which
+# only a restore produces. On a plain checkout with no obj/ this script
+# therefore exits 4 with NINE failures - one per project in the solution,
+# MechaMiner.Game included - all reading "the resolved compile-time reference
+# set could not be evaluated". That is the gate failing closed rather than
+# passing something it could not measure, and it is working as intended.
+#
+# Sequence it AFTER restore wherever it is wired. Measured on master 5805908 in
+# one fresh worktree on a quiet box, single variable: with zero
+# project.assets.json it exits 4 with 9 failures; after `dotnet restore
+# MechaMiner.sln --locked-mode` produced 9 assets files, the same tree exits 0
+# with 74 assertions.
+#
+# Known wording defect, recorded rather than silently changed: those nine
+# assertions report the THIRD outcome ("I could not measure") when the actual
+# condition is the SECOND ("a precondition was not met"). A reader who meets
+# "could not be evaluated" on a loaded machine will reach for contention and be
+# wrong - that misdiagnosis has already cost one round, twice. The message
+# should say that no restore has been performed. The wording is left to the
+# FND-001 gate owner because it changes assertion text that round evidence
+# quotes verbatim.
 
-set -euo pipefail
+set -uo pipefail
 
 readonly REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly EXIT_VALIDATION=4
@@ -123,33 +161,73 @@ readonly EXPECTED_PROJECTS=(
   "game/MechaMiner.Game.csproj|MechaMiner.Content,MechaMiner.Diagnostics,MechaMiner.Persistence,MechaMiner.Simulation|yes"
 )
 
-# The one value that can never be a legitimate item identity, printed when MSBuild could
-# not be asked. Without it, a failed evaluation is indistinguishable from a project that
-# genuinely declares nothing: the exit status would be discarded by the pipeline, every
-# comparison would run against an empty set, and a project with a forbidden edge would be
-# reported as compliant. Emitting a value that matches no accepted set instead turns a
-# discarded status into a visible failure.
-readonly EVALUATION_FAILED="MSBUILD-EVALUATION-FAILED"
-
 msbuild_items() {
-  # $1 project, $2 item name. Prints one Identity per line, sorted.
-  local document status
-  document="$(dotnet msbuild "${REPO_ROOT}/$1" -nologo "-getItem:$2" 2>/dev/null)"
-  status=$?
-  if [[ "${status}" -ne 0 || -z "${document}" ]]; then
-    printf '%s\n' "${EVALUATION_FAILED}"
-    return 0
+  # $1 project, $2 item name or comma-separated list of them, $3 optional target
+  # to run first. Prints one Identity per line, sorted.
+  #
+  # Returns nonzero when MSBuild cannot evaluate the project, or its output is not
+  # the JSON expected, or it does not contain every requested item name. Callers
+  # MUST convert that into a counted failure: an unparseable evaluation used to
+  # crash python under `set -e` and abort the whole script with exit 1, which both
+  # leaked an unclassified exit class and skipped every later section.
+  local project="$1" item="$2" target="${3:-}"
+  local -a command=(dotnet msbuild "${REPO_ROOT}/${project}" -nologo "-getItem:${item}")
+  if [[ -n "${target}" ]]; then
+    # BuildProjectReferences=false keeps reference resolution from compiling the
+    # referenced projects. Without it, any compile error anywhere in the graph makes
+    # this evaluation fail for every project downstream of it, and the reference
+    # boundary becomes unverifiable for reasons unrelated to the boundary. Godot
+    # arrives as an assembly or package reference, never as a ProjectReference, so
+    # nothing this section asserts depends on those projects having been built.
+    command+=("-t:${target}" "-p:BuildProjectReferences=false")
   fi
 
-  if ! printf '%s' "${document}" | python3 -c '
+  local output
+  output="$("${command[@]}" 2>/dev/null)" || return 1
+  printf '%s' "${output}" | python3 -c '
 import json, sys
-document = json.load(sys.stdin)
-for identity in sorted(item["Identity"] for item in document.get("Items", {}).get(sys.argv[1], [])):
-    if identity.strip():
-        sys.stdout.write(identity + "\n")
-' "$2"; then
-    printf '%s\n' "${EVALUATION_FAILED}"
-  fi
+try:
+    document = json.load(sys.stdin)
+except ValueError:
+    sys.exit(1)
+items = document.get("Items")
+if not isinstance(items, dict):
+    sys.exit(1)
+for name in sys.argv[1].split(","):
+    # A requested item name that is absent means the MSBuild contract changed;
+    # that must fail loudly rather than read as "no such reference".
+    if name not in items:
+        sys.exit(1)
+    for identity in sorted(entry.get("Identity", "") for entry in items[name]):
+        if identity.strip():
+            sys.stdout.write(identity + "\n")
+' "${item}"
+}
+
+compiled_source_files() {
+  # $1 project. Prints the absolute path of every file in the project's evaluated
+  # Compile item set - the actual compiler input, after default globs, explicit
+  # includes, links and any <Import>ed contribution. FullPath rather than
+  # Identity, because a linked file's Identity is relative to the project and can
+  # point anywhere. Returns nonzero when the project cannot be evaluated or the
+  # Compile item name is absent from the output; an EMPTY Compile set is valid
+  # (several projects in this repository have no sources yet).
+  local output
+  output="$(dotnet msbuild "${REPO_ROOT}/$1" -nologo -getItem:Compile 2>/dev/null)" || return 1
+  printf '%s' "${output}" | python3 -c '
+import json, sys
+try:
+    document = json.load(sys.stdin)
+except ValueError:
+    sys.exit(1)
+items = document.get("Items")
+if not isinstance(items, dict) or "Compile" not in items:
+    sys.exit(1)
+for entry in items["Compile"]:
+    path = (entry.get("FullPath") or "").strip()
+    if path:
+        sys.stdout.write(path + "\n")
+'
 }
 
 msbuild_property() {
@@ -228,7 +306,7 @@ for entry in items["ReferencePath"]:
 
 project_name() {
   local base="${1##*[/\\]}"
-  printf '%s' "${base%.csproj}"
+  printf '%s' "${base%.*proj}"
 }
 
 # --- The two comparisons, as functions -------------------------------------------------
@@ -240,9 +318,28 @@ project_name() {
 # $1 project path, $2 accepted comma-separated reference set.
 # Sets EDGES_ACTUAL. Returns 0 when the evaluated set equals the accepted set.
 EDGES_ACTUAL=""
+# $1 project path, $2 the accepted comma-separated reference set.
+# Sets EDGES_ACTUAL and EDGES_UNPROVED. Returns 0 when the evaluated edge set equals the
+# accepted one, and 2 without a verdict when MSBuild could not evaluate the project.
+#
+# The evaluation is captured and its STATUS CHECKED before it is filtered, because a
+# pipeline discards the producer's exit status. That matters more here than anywhere else
+# in this script: MechaMiner.Content and MechaMiner.Diagnostics both accept the EMPTY
+# reference set, so a failed evaluation - which yields nothing - would compare equal to
+# their accepted rows and be reported as compliant. "Could not be asked" and "declares
+# nothing" are different answers and only one of them is a pass.
+EDGES_ACTUAL=""
+EDGES_UNPROVED="no"
 edges_match() {
-  EDGES_ACTUAL="$(msbuild_items "$1" ProjectReference \
-    | sed -E 's|.*[/\\]||; s|\.csproj$||' | sort | paste -sd, -)"
+  local project_references
+  EDGES_ACTUAL=""
+  EDGES_UNPROVED="no"
+  if ! project_references="$(msbuild_items "$1" ProjectReference)"; then
+    EDGES_UNPROVED="yes"
+    return 2
+  fi
+  EDGES_ACTUAL="$(printf '%s\n' "${project_references}" \
+    | sed -E 's|.*[/\\]||; s|\.[A-Za-z]+proj$||' | sort | paste -sd, -)"
   [[ "${EDGES_ACTUAL}" == "$2" ]]
 }
 
@@ -251,22 +348,23 @@ edges_match() {
 # engine dependency matches what doc 115 allows for it.
 #
 # GODOT_UNPROVED is the third outcome, and it is deliberately not folded into the
-# mismatch return. The evaluated package list is obtained first and checked on its own
-# before it is filtered, because a failed MSBuild evaluation yields an empty list and an
-# empty list is exactly what a project with no Godot dependency looks like - every "must
-# not reference Godot" row would otherwise pass without anything having been evaluated.
-# Two independent mechanisms cover that, and both are kept on purpose:
+# mismatch return. The declared item list is obtained first and its STATUS CHECKED on its
+# own before it is filtered, because a failed MSBuild evaluation yields an empty list and
+# an empty list is exactly what a project with no Godot dependency looks like - every
+# "must not reference Godot" row would otherwise pass without anything having been
+# evaluated. A pipeline discards the producer's exit status, so the capture and the check
+# are separate statements here rather than one pipeline.
 #
-#   - msbuild_items emits EVALUATION_FAILED rather than nothing, so a discarded exit
-#     status still produces a value that matches no accepted set. This also covers a
-#     zero-exit-but-empty document and a python parse failure, and it protects § 3.
-#   - the sentinel is then detected here by name and reported as "unproved" rather than
-#     as a Godot verdict, so § 4 says the boundary was not tested instead of implying it
-#     was tested and passed.
+# The DECLARED signal reads Reference AND PackageReference, not PackageReference alone. A
+# raw <Reference> with a HintPath is not a PackageReference and contributes nothing to
+# packages.lock.json, so reading packages alone let a project declare the engine and still
+# be reported as having no Godot dependency. § 4a's own rationale states that the case § 4
+# catches and § 4a cannot is "a declared dependency whose RESOLUTION FAILS ... a
+# <Reference> with a broken HintPath", which is only true of a § 4 that reads Reference
+# items - so this is the query that makes that documented division of labour hold.
 #
-# Only after the list is known good is it filtered for Godot. At that point grep's exit 1
-# genuinely means "no Godot package", which is the outcome this row is testing for, so the
-# `|| true` there is not masking anything.
+# Only after the list is known good is it filtered for Godot, by assembly name rather than
+# by a leading-anchor grep, so a HintPath's directory prefix cannot hide the name.
 GODOT_EVALUATED=""
 GODOT_LOCKED=""
 GODOT_UNPROVED="no"
@@ -274,29 +372,18 @@ godot_matches() {
   local project="$1" allowed="$2"
   local directory="${REPO_ROOT}/$(dirname "${project}")"
   local lock_file="${directory}/packages.lock.json"
-  local evaluated_packages package_probe_status=0
+  local declared_references
 
   GODOT_UNPROVED="no"
+  GODOT_EVALUATED=""
 
-  # msbuild_items returns 0 and reports failure in-band via the sentinel, but its status is
-  # still checked: if a future edit gives it a nonzero exit, that must fail the gate rather
-  # than silently become an empty package list again.
-  evaluated_packages="$(msbuild_items "${project}" PackageReference)" || package_probe_status=$?
-
-  # The sentinel is matched deliberately: a project whose items could not be evaluated must
-  # not read as "has no Godot dependency".
-  GODOT_EVALUATED="$(printf '%s\n' "${evaluated_packages}" \
-    | grep -iE "^(Godot|${EVALUATION_FAILED})" || true)"
-
-  if [[ "${package_probe_status}" -ne 0 ]]; then
+  if ! declared_references="$(msbuild_items "${project}" Reference,PackageReference)"; then
     GODOT_UNPROVED="yes"
-    GODOT_EVALUATED="msbuild_items exited ${package_probe_status}"
+    GODOT_EVALUATED="Reference,PackageReference could not be evaluated"
     return 2
   fi
-  if [[ "${GODOT_EVALUATED}" == *"${EVALUATION_FAILED}"* ]]; then
-    GODOT_UNPROVED="yes"
-    return 2
-  fi
+
+  GODOT_EVALUATED="$(printf '%s\n' "${declared_references}" | godot_assembly_names)"
 
   GODOT_LOCKED=""
   if [[ -f "${lock_file}" ]]; then
@@ -338,21 +425,119 @@ for path in "${EXPECTED_PATHS[@]}"; do
 done
 
 section "2. solution contains exactly the accepted projects (VER-FND-001-003)"
+#
+# The project set is compared UNFILTERED. Selecting only *.csproj before comparing
+# turned the C#-only rule into a filter instead of an assertion: a tenth project
+# written in another language (a .vbproj referencing Godot through a bare
+# <Reference>) was dropped from the actual set, so the comparison still reported
+# "exactly the 9 accepted projects" while ten projects built. Every project the
+# solution lists must be one of the accepted paths, and must be a .csproj.
 actual_solution="$(cd "${REPO_ROOT}" && dotnet sln MechaMiner.sln list \
-  | grep -E '\.csproj$' | tr '\\' '/' | sort)"
+  | grep -E '\.[A-Za-z]+proj$' | tr '\\' '/' | sort)"
 expected_solution="$(printf '%s\n' "${EXPECTED_PROJECTS[@]}" | cut -d'|' -f1 | sort)"
-if [[ "${actual_solution}" == "${expected_solution}" ]]; then
+if [[ -z "${actual_solution}" ]]; then
+  fail "could not read any project from MechaMiner.sln"
+elif [[ "${actual_solution}" == "${expected_solution}" ]]; then
   pass "MechaMiner.sln references exactly the ${#EXPECTED_PROJECTS[@]} accepted projects"
 else
   fail "MechaMiner.sln project set differs from the accepted decomposition"
   diff <(printf '%s\n' "${expected_solution}") <(printf '%s\n' "${actual_solution}") || true
 fi
 
+non_csharp="$(printf '%s\n' "${actual_solution}" | grep -vE '\.csproj$' || true)"
+if [[ -z "${non_csharp}" ]]; then
+  pass "every project in MechaMiner.sln is a C# project (TR-FND-002)"
+else
+  fail "non-C# project in MechaMiner.sln (TR-FND-002 permits C# only): $(printf '%s' "${non_csharp}" | paste -sd' ' -)"
+fi
+
+section "2a. every accepted project builds in every solution configuration (VER-FND-001-003)"
+#
+# Solution membership is not the same as being built. Deleting a single
+# "<GUID>.Debug|Any CPU.Build.0" line leaves `dotnet sln list` reporting nine
+# projects while `dotnet build` compiles eight, so § 2 alone reports success
+# for a solution that silently stops building a project. Assert the build flag
+# per accepted project per solution configuration. Only the presence of the flag
+# is asserted here, not which configuration it maps to.
+#
+# Numbered 2a rather than as a new § 3: § 3a and § 7a already establish the suffix
+# as this file's idiom for a check inserted between two existing ones, and round
+# evidence quotes this gate's section numbers verbatim.
+build_flag_report="$(cd "${REPO_ROOT}" && python3 - MechaMiner.sln \
+  "$(printf '%s\n' "${EXPECTED_PROJECTS[@]}" | cut -d'|' -f1)" <<'PY'
+import re, sys
+
+solution = open(sys.argv[1]).read()
+expected = [line for line in sys.argv[2].splitlines() if line.strip()]
+
+
+def section(name):
+    # Skips the GlobalSection header line itself, so its "= preSolution" suffix is
+    # not mistaken for a configuration entry.
+    found = re.search(
+        r"GlobalSection\(%s\)[^\n]*\n(.*?)EndGlobalSection" % name, solution, re.S)
+    return found.group(1) if found else ""
+
+
+configurations = [
+    name for name in (
+        line.split("=")[0].strip()
+        for line in section("SolutionConfigurationPlatforms").splitlines()
+        if "=" in line
+    ) if name
+]
+project_configurations = section("ProjectConfigurationPlatforms")
+
+# Path -> GUID for every project entry, normalised to forward slashes.
+guids = {
+    path.replace("\\", "/"): guid
+    for _name, path, guid in re.findall(
+        r'^Project\("\{[^}]+\}"\)\s*=\s*"([^"]+)",\s*"([^"]+)",\s*"\{([^}]+)\}"',
+        solution, re.M)
+}
+
+if not configurations:
+    print("ERROR|the solution declares no configuration, so this check would be vacuous")
+    raise SystemExit(0)
+
+for path in expected:
+    guid = guids.get(path)
+    if guid is None:
+        print("FAIL|%s is not present in the solution at all" % path)
+        continue
+    missing = [
+        configuration for configuration in configurations
+        if "{%s}.%s.Build.0" % (guid, configuration) not in project_configurations
+    ]
+    if missing:
+        print("FAIL|%s has no build flag for: %s" % (path, ", ".join(missing)))
+    else:
+        print("OK|%s builds in all %d configurations" % (path, len(configurations)))
+PY
+)" || build_flag_report="ERROR|the solution configuration section could not be parsed"
+
+if [[ -z "${build_flag_report}" ]]; then
+  fail "the solution build-flag check produced no result for any accepted project"
+fi
+while IFS='|' read -r verdict detail; do
+  [[ -n "${verdict}" ]] || continue
+  case "${verdict}" in
+    OK) pass "${detail}" ;;
+    *) fail "${detail}" ;;
+  esac
+done <<<"${build_flag_report}"
+
 section "3. project reference edges match the accepted boundary (VER-FND-001-004)"
 for entry in "${EXPECTED_PROJECTS[@]}"; do
   IFS='|' read -r project expected_refs _godot <<<"${entry}"
   if edges_match "${project}" "${expected_refs}"; then
     pass "$(project_name "${project}") -> [${expected_refs}]"
+  elif [[ "${EDGES_UNPROVED}" == "yes" ]]; then
+    # Reported before the mismatch branch so that a project whose items could not be read
+    # is never described as "references []" - "[]" would read as an answer, and there was
+    # none. Content and Diagnostics accept the empty set, so this distinction is the only
+    # thing standing between a failed evaluation and a false pass on those two rows.
+    fail "$(project_name "${project}") could not be evaluated by MSBuild (missing, malformed, or unrestored project), so its reference boundary is unproved, which is not the same as satisfied"
   else
     fail "$(project_name "${project}") references [${EDGES_ACTUAL}], accepted set is [${expected_refs}]"
   fi
@@ -382,6 +567,37 @@ for entry in "${EXPECTED_PROJECTS[@]}"; do
 done
 
 section "4. only game/ may reference Godot (VER-FND-001-004)"
+#
+# Three independent signals, because each covers routes the others miss:
+#
+#   resolved  the ASSEMBLY IDENTITY of every ReferencePath entry after
+#             ResolveAssemblyReferences - the actual compile line. This is the
+#             authoritative signal: it covers PackageReference,
+#             a raw <Reference> with a HintPath, a <Reference> contributed by an
+#             <Import>ed props/targets file, a Directory.Build.* contribution,
+#             central package management including GlobalPackageReference, and
+#             SDK-injected references, because all of them are resolved before the
+#             compiler is invoked.
+#   declared  Reference and PackageReference items, so a declared dependency is
+#             still reported when resolution fails (a broken HintPath would
+#             otherwise leave the intent invisible).
+#   locked    the committed lock file, which covers transitive package routes that
+#             no single project declares.
+#
+# Reading PackageReference alone was the original defect: a raw <Reference> is not
+# a PackageReference and contributes nothing to packages.lock.json, so a project
+# could expose a Godot type on its public API surface with this section reporting
+# "has no Godot dependency".
+#
+# The resolved signal reads the reference's ASSEMBLY IDENTITY, not its file name,
+# because a file name is not an identity. Copying
+# ~/.nuget/packages/godotsharp/4.7.1/lib/net8.0/GodotSharp.dll to
+# build/probe/Engine.dll and referencing it as <Reference Include="Engine"> with a
+# HintPath put the real Godot assembly on MechaMiner.Content's compile line, let it
+# compile Godot.Vector2, and this section still reported "MechaMiner.Content has no
+# Godot dependency". FusionName is what ResolveAssemblyReferences read out of that
+# file's own metadata: "GodotSharp, Version=4.7.1.0, Culture=neutral,
+# PublicKeyToken=null", regardless of what the file was called.
 for entry in "${EXPECTED_PROJECTS[@]}"; do
   IFS='|' read -r project _expected_refs godot_allowed <<<"${entry}"
   # From the base branch, kept verbatim in substance because this branch did not have it:
@@ -585,538 +801,566 @@ assert_absent_pattern \
   '*.csproj' \
   src tests game
 
-section "6. no Godot types outside game/ (VER-FND-001-004)"
+section "6. no Godot types in C# source outside game/ (VER-FND-001-004)"
 #
-# The Godot namespace as a token in any position, not only after `using`.
+# THE RULE, AND WHY IT IS NEITHER OF THE TWO IT REPLACES.
 #
-# The previous expression was `(^|[^A-Za-z.])using[[:space:]]+Godot([;.]|$)`, which
-# required the literal token `using` followed by whitespace followed by `Godot`. It
-# caught `using Godot;` and `global using Godot;` and missed `using static Godot.GD;`,
-# `using GD = Godot.GD;`, `using GodotAlias = Godot;` and a fully-qualified
-# `Godot.GD.Print` with no import at all.
+# Two expressions have held this section, and both were wrong in opposite
+# directions. Neither is restored here.
 #
-# WHAT THIS SCAN IS NOT: A COMPLETE ACCOUNT OF THE WAYS C# CAN NAME A NAMESPACE. This
-# comment used to call those five imports plus the qualified form "the six ways C# offers
-# of naming a namespace". That is a completeness claim, and it is false. Measured
-# counterexamples, each a real reference that resolves to `Godot`, none of them caught
-# here:
+#   `using[[:space:]]+Godot([;.]|$)` tested one import spelling while the section
+#   title claimed to check for types. A fully-qualified `Godot.Vector2` with no
+#   import at all, `using static Godot.Mathf;`, `using GD2 = Godot;` and
+#   `using Alias = Godot;` all passed it. Note what the defect actually was: each
+#   of those is a POSITION the pattern failed to describe - `Godot.Vector2` has no
+#   using, `using static Godot.Mathf` has a word between `using` and `Godot`, and
+#   `using GD2 = Godot` has the name on the far side of an `=`. The pattern was too
+#   specific about position; position was not the wrong thing to look at.
 #
-#   - a reference split across two physical lines: `global using` newline `    Godot;`,
-#     `using` newline `    Godot;`, and `Godot` newline `    .GD.Print("y");`. Both
-#     readers decide per line, so neither sees any of the three. `using static` newline
-#     `    Godot.GD;` IS caught, because its second line still contains `Godot.` - a
-#     line-splitting hole with a narrow, non-obvious edge, which is the shape a
-#     hand-written scan produces.
-#   - an identifier written with a Unicode escape: `using \u0047odot;` and
-#     `\u0047odot.GD.Print()` both bind to `Godot`, and after stripping the text still
-#     reads `\u0047odot`.
+#   The bare token in ANY position, `(^|[^A-Za-z0-9_.])Godot([^A-Za-z0-9_]|$)`
+#   against raw file text, fixed those false negatives and bought false positives.
+#   Measured on the merged tree: it fires on 65 lines across 19 files, and 64 of
+#   those lines are doc comments, `//` comments and string literals - mostly prose
+#   explaining why this boundary exists, e.g. an invariant quoted as "has no
+#   dependency on Godot, files, Steam". The 65th is
+#   src/MechaMiner.Tools/Toolchain/ToolchainPins.cs, where the line is
+#   `public GodotPin Godot { get; set; } = new();` - a property named `Godot` whose
+#   type `GodotPin` is ours, mapping the `godot` key of build/toolchain.json. That
+#   is C# code and not prose, so no amount of comment stripping reaches it, and it
+#   names no Godot type. The old rule's answer was that prose "should be reworded",
+#   which makes the writing serve the checker and proves nothing about the boundary.
 #
-# So this scan covers the naming forms its corpus names and no more. The corpus below
-# records the uncovered ones as the `k*` class - k1 `global using` / `    Godot;`, k2
-# `using` / `    Godot;`, k3 `Godot` / `    .GD.Print("y");`, k4 `using \u0047odot;`, k5
-# `\u0047odot.GD.Print("x");` - asserted as missed, so the gap is measured rather than
-# merely admitted.
+# So: the token is unchanged and still matches in any position, and it is required
+# to sit in a position where a Godot TYPE reference actually puts it. Two branches,
+# applied to text with comments and string literals already removed:
 #
-# CLOSING THEM IS RULED OUT, and this is the ruling rather than a deferral. It needs a
-# parser: read the reference graph from a C# syntax tree (Microsoft.CodeAnalysis.CSharp)
-# and comments, literals, line splits and identifier escapes stop being cases at all. Four
-# independent constraints forbid adding it - doc 114 § Default mandate withholds agent
-# autonomy for a new third-party dependency, doc 114 § Explicit escalation boundary makes a
-# new foundational dependency human-only, doc 100 § Dependency policy requires a recorded
-# dependency request and this repository has no dependency ledger, and
-# Directory.Packages.props says in as many words not to add a package for build
-# convenience. The five stay open, named, and asserted. ProjectGraph.NamesGodotNamespace
-# carries the same list and the same ruling.
+#   A. QUALIFIER - the token followed by optional whitespace and a `.`. Covers
+#      `Godot.Vector2`, `Godot.GD.Print`, `global::Godot.Node`, `[Godot.Export]`,
+#      `List<Godot.Node>`, `using static Godot.Mathf`, `using GD2 = Godot.X`.
+#   B. USING DIRECTIVE - the token anywhere inside a using directive, in any of its
+#      spellings: `using Godot;`, `using static Godot...`, `using Alias = Godot...`,
+#      and `global using Godot;`.
 #
-# DO NOT CLOSE THEM BY ADDING ANOTHER SUBSTITUTION PASS, and do not hand-roll a tokenizer
-# either. Both of the two most recent defects in this scan were introduced by adding a
-# pass: one closed the character-literal hole and opened a commoner apostrophe-prose hole,
-# the other rewrote a safe `grep -lE` into a `printf | grep -q` pipe whose SIGPIPE status
-# reported a real violation as `ok`.
+# WHY THAT LOSES NO COVERAGE. A Godot type cannot be named from C# without one or
+# the other. An unqualified `Vector2` compiles only if some using directive imports
+# the namespace; an alias is established by a using directive; a global using is a
+# using directive. The two branches are therefore not a sample of the ways to reach
+# the engine, they are the closure of them. Three consequences were checked rather
+# than assumed, and each is the reason for a control in § 6a:
 #
-# GODOT_TOKEN below is character-for-character the same expression as
-# ProjectGraph.GodotNamespaceToken in src/MechaMiner.Tools/Audit/ProjectGraph.cs. The two
-# are two readers of one rule, and the design intent is real: a rule enforced in one place
-# can be changed in one place and silently diverge from the documented boundary. But be
-# accurate about what the pair currently buys, because the previous wording oversold it.
-# Over the 46-file corpus described below the two readers DISAGREE on nine files - the C#
-# reader catches four positives this one misses, and clears four lookalikes this one
-# flags. This is not two views of one rule; it is one precise reader and one approximate
-# one. The approximate one keeps the property that matters for a prohibition, in that a
-# violation it cannot see is one the C# reader can - but it is not authoritative, and
-# § 6's `ok` is not an independent confirmation of test-fast's. ONE exact reader would
-# serve the single-owner intent better than two inexact ones that disagree; the escalation
-# above is why there is not one yet. Until there is, if the expression changes, change it
-# in both files and keep both controls green.
+#   * A using directive MAY SPAN LINES. `using` NEWLINE `Godot;` is one directive
+#     and compiles - verified by building it, not by reading the grammar - as does
+#     `global using` NEWLINE `Godot;`. Branch B therefore matches a DIRECTIVE SPAN,
+#     from `using` to its `;`, across newlines, and not "a line that looks like a
+#     using". A per-line test is the obvious simplification here and it is a hole;
+#     § 6a holds it open.
+#   * A global using in ANOTHER FILE of the same project lets a file name a Godot
+#     type while containing no `Godot` text at all. That file is not the finding;
+#     the file holding the directive is, and both readers below scan every file of
+#     the project, so the project is still reported.
+#   * A `<Using Include="Godot" />` in the .csproj puts the directive in a
+#     GENERATED file, obj/<project>.GlobalUsings.g.cs, which reader 1 prunes. This
+#     is precisely why reader 2 exists and why it deliberately includes obj/.
+#     Verified by building a project with `<Using Include>` and reading the
+#     generated file: it contains `global using <namespace>;`, which branch B
+#     matches.
 #
-# Matching `Godot[.]` alone would not be sufficient: `using GodotAlias = Godot;` has
-# no dot after the token. The trailing class is therefore "any non-identifier
-# character or end of line", and the leading class excludes `.` and identifier
-# characters so `MechaMiner.GodotLike` and `NotGodotish` do not match.
-readonly GODOT_TOKEN='(^|[^A-Za-z0-9_.])Godot([^A-Za-z0-9_]|$)'
+# WHAT STILL DEFEATS IT is unchanged by this work and is not claimed to be fixed:
+# the unicode-escaped identifier and the renamed GodotSharp assembly, both written
+# up in full in the note on the second reader below. Neither attacks the position
+# branches; both attack the TOKEN, and they defeat this rule exactly as they defeat
+# the two it replaces.
+#
+# WHAT THE STRIPPER HANDLES, AND WHAT IT DOES NOT. It is a single-pass scanner over
+# the file, not a sequence of substitutions, so a construct one pass understands
+# cannot be cut in half by another: `//` and `///` to end of line, `/* */`
+# INCLUDING multi-line, `"..."` with backslash escapes, verbatim `@"..."` with `""`
+# as the escaped quote and newlines inside it, interpolated `$"..."`, the combined
+# `$@"` and `@$"`, raw `"""..."""` fences, and single-character literals `'x'` and
+# `'\n'`. Every removal leaves a space, so deleting a literal cannot splice two
+# identifiers into a token nobody wrote. It does NOT: decode `\uXXXX` identifier
+# escapes (defeat 1 above); understand nested raw-string fences longer than the one
+# that opened them; or track `#if` regions, so text inside a disabled `#if` block is
+# scanned as if it were live, which is fail-closed rather than fail-open. It KEEPS
+# the code inside an interpolation hole - `$"{Godot.GD.X()}"` still matches -
+# because that text is code, and stripping it would be a false negative.
+readonly GODOT_SCAN_ROOTS=(src tests build/policy-fixtures)
 
-# Where the token may legitimately appear if the file names the namespace: on a
-# `using` directive line (which covers all five import spellings), or in
-# namespace-qualifier position anywhere (which covers the fully-qualified form).
-readonly GODOT_USING_LINE='^[[:space:]]*(global[[:space:]]+)?using[[:space:]]'
-readonly GODOT_QUALIFIER='(^|[^A-Za-z0-9_.])Godot[[:space:]]*\.'
+# The predicate, in one place. Prints "<path>\t<reason>" for each file that names a
+# Godot type and nothing for the others, so an empty result means "none of these
+# files", never "the reader failed".
+#
+# Both readers below call this function, and so do the controls in § 6a. That is
+# what makes those controls in band: they drive this program against injected
+# fixtures rather than re-implementing the rule beside it, so a control cannot pass
+# against logic the gate does not use.
+godot_offenders() {
+  [[ "$#" -gt 0 ]] || return 0
+  python3 - "$@" <<'GODOTSCAN'
+import re
+import sys
 
-# Comments and string literals are removed before the scan, for the same reason the
-# C# reader removes them: 96 lines under src/ and tests/ spell `Godot` as a bare
-# English word in a comment or a diagnostic message, and most of them are prose
-# explaining why this boundary exists. Rewording those to satisfy a text scan would
-# make the code worse and prove nothing about the boundary.
-#
-# WHAT THIS STRIPPER IS AND IS NOT. Sequential regular-expression substitutions cannot
-# decide C# lexical context: each pass is blind to what the others did, so a construct
-# only one of them understands can be cut in half by another. It therefore errs in BOTH
-# directions, and the previously stated claim that its "error direction is a false
-# negative ... never a false accusation" was measured false. Over a 46-file corpus, each
-# member compiled against a Godot shim so every positive is a resolvable reference and
-# every lookalike genuinely is not, this stripper causes four false accusations that the
-# C# reader correctly clears:
-#
-#   - a single-line block comment, `/* Godot.GD is engine-only */`;
-#   - the same text inside a multi-line block comment;
-#   - a multi-line `@"` string containing `Godot.GD.Print(x);`; and
-#   - a multi-line `"""` raw string containing `Godot.`.
-#
-# `sed` strips `//` to end of line and never `/* */` in any form, and it has no state
-# across lines, so a literal that spans lines is not tracked. The block-comment cases are
-# not covered by any "constructs spanning lines" caveat: the first is on one line. Those
-# four are the reason this pass must not be the authority on this rule; they are recorded
-# in the corpus below as `k*` probes, which assert the CURRENT verdict rather than the
-# correct one so that a change here shows up rather than passing unremarked.
-#
-# The three substitutions run in this order for three separate reasons, two of which
-# were holes:
-#
-#   1. Character literals go first, and the content is exactly one character or one
-#      escape - `'([^'\\]|\\.)'` and not `'([^'\\]|\\.)*'`. Without this pass at all,
-#      the `"` inside `'"'` was read as a string opener, so the scan ran on to the next
-#      `"` and deleted everything between - which on `char q = '"'; Godot.GD.Print("y");`
-#      is the reference itself. But the unbounded `*` form that closed that hole opened a
-#      commoner one: run before the string pass, it happily pairs apostrophes belonging to
-#      two DIFFERENT string literals and deletes everything between them, so
-#      `var s = "don't"; Godot.GD.Print("won't");` became `var s =  );` and
-#      `/* it's */ Godot.GD.Print("won't");` became `/* it t");`. English prose in
-#      diagnostic strings is the commonest shape in this repository, and both of those
-#      lines are references this gate reported `ok` on. A C# character literal holds one
-#      character or one escape, so requiring exactly that costs nothing and cannot span
-#      two literals. This is a bound on the damage the pass can do, not a claim that
-#      substitution passes can decide lexical context - they cannot, and the false
-#      accusations above are the standing proof.
-#   2. Strings go before comments. The previous order deleted from the first `//` to end
-#      of line first, so `string u = "http://example.invalid"; Godot.GD.Print(x);` lost
-#      its reference to a `//` that was inside a literal. A URL beside a Godot call is
-#      ordinary code, and the C# reader already got this case right.
-#   3. Comments go last, over what is left, so a `//` outside any literal still takes
-#      the rest of its line.
-#
-# Each removal leaves a space rather than nothing, so deleting a literal cannot splice
-# two identifiers into a token nobody wrote.
-godot_strip_comments_and_strings() {
-  sed -E \
-    -e "s/'([^'\\\\]|\\\\.)'/ /g" \
-    -e 's/@?"([^"\\]|\\.)*"/ /g' \
-    -e 's,//.*,,' \
-    "$1"
-}
+TOKEN = re.compile(r'(^|[^A-Za-z0-9_.])Godot([^A-Za-z0-9_]|$)')
+QUALIFIER = re.compile(r'(^|[^A-Za-z0-9_.])Godot\s*\.')
+# A using DIRECTIVE SPAN: `using` (optionally `global using`) through its `;`,
+# newlines included. Anchored to the start of a line or to the end of a previous
+# statement or block so that the word `using` inside an expression is not a span.
+USING_DIRECTIVE = re.compile(
+    r'(?:^|(?<=[;{}]))[ \t\r\n]*(?:global[ \t\r\n]+)?using(?=[ \t\r\n])[^;]*;',
+    re.MULTILINE)
 
-# Prints the files under the given roots that name the Godot namespace.
-#
-# NEVER PUT AN EARLY-EXITING READER ON THE RIGHT OF A PIPE IN THIS FILE. `grep -q` and
-# `head` stop reading the moment they have their answer; the writer on the left then dies
-# of SIGPIPE, and under `set -o pipefail` the pipeline's status is 141. Inside an `if`
-# condition 141 reads as "no match", so the file is not emitted, `stray_godot` comes back
-# empty and § 6 prints `ok` over a real violation.
-#
-# That was live at 4859a90, in both branches below, written as
-# `printf '%s\n' "${stripped}" | grep -qE ...`, and its miss rate rises with file size,
-# because the writer only dies once it has more to write than the 64 KiB pipe buffer
-# holds. Measured against a file that names `Godot.GD` early with the bulk after it:
-#
-#     88 B (the size the f1-f9 probe fixtures used to be)     0 of 100 missed
-#     26 KB                                                   0 of 100 missed
-#     84 KB                                                  78 of 100 missed
-#    371 KB                                                 100 of 100 missed
-#
-# and through the using-line branch: 13 of 100 at 21 KB, 49 of 100 at 70 KB, 100 of 100
-# at 306 KB. Every probe fixture was a single short line, so the control could not fail:
-# the stripped text fitted inside the pipe buffer, the writer never blocked, and no
-# SIGPIPE was reachable. A one-line fixture is not a control for this class of defect, it
-# is a control that structurally cannot see it - which is why several rounds of attacking
-# this scan did not find it. The corpus below therefore carries two production-sized
-# probes, one per branch.
-#
-# Note the direction of the size dependency: a reference LATE in a large file survives,
-# because grep has to read to the end before it can match and the writer finishes first.
-# The broken case is an early reference in a large file, which is where `using` directives
-# and a type's first statements actually live - so the failing shape is the ordinary one.
-#
-# The fix is a here-string, not a pipe: `<<<` has no left-hand process to signal. The
-# using-line branch captures its intermediate result in a variable rather than piping
-# grep into grep, so neither reader can be killed. This prohibition was safe when it was a
-# `grep -lE` over file arguments; it broke when that was rewritten into a `printf | grep -q`
-# pipe. Two rewrites of this scan have now introduced a false pass.
-godot_namespace_hits() {
-  local root file stripped using_lines
-  for root in "$@"; do
-    while IFS= read -r file; do
-      stripped="$(godot_strip_comments_and_strings "${file}")"
-      if grep -qE "${GODOT_QUALIFIER}" <<<"${stripped}"; then
-        printf '%s\n' "${file}"
+
+def strip_comments_and_strings(text):
+    out = []
+    i, n = 0, len(text)
+    while i < n:
+        char = text[i]
+        pair = text[i:i + 2]
+        if pair == '//':
+            end = text.find('\n', i)
+            end = n if end < 0 else end
+            out.append(' ')
+            i = end
+            continue
+        if pair == '/*':
+            end = text.find('*/', i + 2)
+            end = n if end < 0 else end + 2
+            out.append(' ' + '\n' * text.count('\n', i, end))
+            i = end
+            continue
+        fence = re.match(r'"{3,}', text[i:])
+        if fence:
+            mark = fence.group(0)
+            end = text.find(mark, i + len(mark))
+            end = n if end < 0 else end + len(mark)
+            out.append(' ' + '\n' * text.count('\n', i, end))
+            i = end
+            continue
+        opener = re.match(r'(\$@|@\$|@|\$)"', text[i:])
+        if opener or char == '"':
+            prefix = opener.group(1) if opener else ''
+            verbatim = '@' in prefix
+            interpolated = '$' in prefix
+            i += len(prefix) + 1
+            out.append(' ')
+            depth = 0
+            while i < n:
+                char = text[i]
+                if interpolated and depth == 0 and char == '{':
+                    if text[i:i + 2] == '{{':
+                        i += 2
+                        continue
+                    depth = 1
+                    out.append(' ')
+                    i += 1
+                    continue
+                if interpolated and depth > 0:
+                    # Inside an interpolation hole this is code, so keep it.
+                    if char == '{':
+                        depth += 1
+                    elif char == '}':
+                        depth -= 1
+                        if depth == 0:
+                            out.append(' ')
+                            i += 1
+                            continue
+                    out.append(char)
+                    i += 1
+                    continue
+                if verbatim:
+                    if char == '"':
+                        if text[i:i + 2] == '""':
+                            i += 2
+                            continue
+                        i += 1
+                        break
+                    if char == '\n':
+                        out.append('\n')
+                    i += 1
+                    continue
+                if char == '\\':
+                    i += 2
+                    continue
+                if char == '"':
+                    i += 1
+                    break
+                if char == '\n':      # an unterminated non-verbatim literal
+                    break
+                i += 1
+            out.append(' ')
+            continue
+        literal = re.match(r"'([^'\\\n]|\\.)'", text[i:])
+        if literal:
+            out.append(' ')
+            i += literal.end()
+            continue
+        out.append(char)
+        i += 1
+    return ''.join(out)
+
+
+def reason(text):
+    stripped = strip_comments_and_strings(text)
+    if QUALIFIER.search(stripped):
+        return 'names Godot in qualifier position'
+    for span in USING_DIRECTIVE.finditer(stripped):
+        if TOKEN.search(span.group(0)):
+            return 'imports Godot on a using directive'
+    return ''
+
+
+for path in sys.argv[1:]:
+    try:
+        with open(path, encoding='utf-8', errors='replace') as handle:
+            body = handle.read()
+    except OSError as error:
+        print('%s\tcould not be read (%s)' % (path, error.strerror))
         continue
-      fi
-
-      # grep's exit 1 here means "this file declares no using directives", which is an
-      # ordinary outcome rather than a failure, so this is the one place `|| true` is
-      # right. The result is held in a variable so the token test below reads a
-      # here-string instead of the far end of a pipe.
-      using_lines="$(grep -E "${GODOT_USING_LINE}" <<<"${stripped}" || true)"
-      if [[ -n "${using_lines}" ]] && grep -qE "${GODOT_TOKEN}" <<<"${using_lines}"; then
-        printf '%s\n' "${file}"
-      fi
-    done < <(find "${root}" -name '*.cs' -not -path '*/obj/*' -not -path '*/bin/*' -print | sort)
-  done
+    why = reason(body)
+    if why:
+        print('%s\t%s' % (path, why))
+GODOTSCAN
 }
 
-godot_scan_roots_present=1
-for root in src tests; do
+# A scan root that has moved would make the search silently cover nothing, so its
+# absence is a failure rather than an empty pass.
+scan_roots_present=1
+for root in "${GODOT_SCAN_ROOTS[@]}"; do
   if [[ ! -d "${REPO_ROOT}/${root}" ]]; then
-    # A moved scan root would make the search cover nothing, and an empty search is
-    # not a satisfied prohibition.
-    fail "Godot source scan root is missing: ${root}/, so this prohibition was not searched for"
-    godot_scan_roots_present=0
+    fail "Godot source scan root is missing: ${root}/"
+    scan_roots_present=0
   fi
 done
 
-# THIS PASS IS A SCREEN, AND ITS OUTPUT ABOUT src/ AND tests/ IS NOT A VERDICT.
-#
-# It used to fail the gate on its own reading, which made an approximate reader
-# authoritative over a prohibition. Measured over the 46-file corpus below, it makes four
-# false accusations the C# reader correctly clears - x1 a single-line
-# `/* Godot.GD is engine-only */`, x2 the same in a multi-line block comment, x3 a
-# multi-line `@"` string containing `Godot.GD.Print(x);`, x4 a multi-line `"""` string
-# containing `Godot.` - because its `sed` strips `//` and never `/* */` in any form and has
-# no state across lines. Any of those four is ordinary prose about this very boundary, and
-# writing one would have turned `./build.sh build` red over code that is correct.
-#
-# THE AUTHORITATIVE READER IS ArchitectureRuleTests.TheGodotImportRuleCatchesEveryWayOfNaming-
-# TheNamespace, over ProjectGraph.NamesGodotNamespace, and it runs in test-fast. On the same
-# corpus it catches the same 31 of 36 references this screen catches and makes ZERO false
-# accusations. Nothing is lost by not deciding here: every reference this screen can see, the
-# C# reader can see too - its five escapes are a subset of this one's, verified probe by
-# probe - so the repository-level guarantee is unchanged while four ways to fail the build
-# over correct code are removed. CI runs both verbs, so both readers still run on every pull
-# request.
-#
-# What that costs, stated rather than implied: `./build.sh build` alone no longer enforces
-# the Godot prohibition. A `using Godot;` added under src/ is reported here as a candidate
-# and does not fail this gate; test-fast fails on it. If you want the prohibition inside
-# `build`, the way to get it is the C# reader, not this one.
-#
-# The control below is a different matter and DOES fail the gate. It asserts what this
-# screen does - which forms it catches, which lookalikes it clears, which references it
-# cannot see, which non-references it accuses - and that is a claim about this script rather
-# than about the repository, so drift in the screen is still a hard failure.
-if [[ "${godot_scan_roots_present}" -eq 1 ]]; then
-  stray_godot="$(cd "${REPO_ROOT}" && godot_namespace_hits src tests)"
-  if [[ -z "${stray_godot}" ]]; then
-    pass "screen: no C# file under src/ or tests/ names the Godot namespace by this scan's reading. Not a verdict - see the note above; ArchitectureRuleTests over ProjectGraph.NamesGodotNamespace decides this rule, in test-fast"
+if [[ "${scan_roots_present}" -eq 1 ]]; then
+  # bin/ and obj/ are build outputs regenerated from the sources scanned here, and
+  # a stale one must not decide this gate either way.
+  godot_scan_files=()
+  mapfile -d '' -t godot_scan_files < <(cd "${REPO_ROOT}" && find "${GODOT_SCAN_ROOTS[@]}" \
+    -name '*.cs' -not -path '*/obj/*' -not -path '*/bin/*' -print0 2>/dev/null | sort -z)
+
+  # An empty file set is a broken search, not a clean repository. The scan-root
+  # check above catches a moved directory; this catches a find that matched nothing
+  # in directories that do exist.
+  if [[ "${#godot_scan_files[@]}" -eq 0 ]]; then
+    fail "the Godot source scan matched no .cs file at all under $(printf '%s/ ' "${GODOT_SCAN_ROOTS[@]}")- the search is broken, not the tree clean"
+  # The status is checked rather than the output trusted: a scanner that died prints
+  # nothing, and nothing must never read as "no violations".
+  elif ! godot_scan_raw="$(cd "${REPO_ROOT}" && godot_offenders "${godot_scan_files[@]}")"; then
+    fail "the Godot source scan failed to run over ${#godot_scan_files[@]} file(s), so this assertion is unverified rather than clean"
   else
-    # Deliberately not `fail`. A candidate is a thing to look at, and this reader is known
-    # to accuse four shapes of correct code.
-    pass "screen: $(printf '%s' "${stray_godot}" | grep -c . || true) candidate(s) to look at, which this approximate reader believes name the Godot namespace: $(printf '%s' "${stray_godot}" | paste -sd' ' -). NOT A FINDING. This scan makes four known false accusations (see the x* class below); ArchitectureRuleTests in test-fast is what decides, and its verdict is the one to act on"
+    stray_godot="$(printf '%s' "${godot_scan_raw}" | cut -f1 | sort)"
+    if [[ -z "${stray_godot}" ]]; then
+      pass "none of the ${#godot_scan_files[@]} C# file(s) under $(printf '%s/ ' "${GODOT_SCAN_ROOTS[@]}")names a Godot type"
+    else
+      fail "Godot type named outside game/: $(printf '%s' "${stray_godot}" | paste -sd' ' -)"
+    fi
   fi
 fi
 
-# --- § 6 control corpus ----------------------------------------------------------------
+# Second reader of the same rule, over a file set the directory scan cannot have.
 #
-# The scan above has only ever run against a compliant tree, so on its own it is
-# indistinguishable from a scan that matches nothing. This corpus is the same 46 files
-# ArchitectureRuleTests feeds the C# reader, in the same four classes, so a divergence
-# between the two readers is a failing control rather than a silent disagreement. Every
-# member has been compiled against a Godot shim: each `f*` and `k*` file fails to compile
-# without the shim, so every positive is a reference that really resolves to `Godot`, and
-# each `n*` and `x*` file compiles without it, so no lookalike is secretly a reference.
+# A directory scan only sees the directories it names. A pure project that
+# <Compile Include=>s a file from anywhere else compiles source this section never
+# looks at: pulling generated/HiddenGodotSource.cs into MechaMiner.Content let it
+# compile Godot.Vector2 while this section reported "no C# file under src/ tests/
+# build/policy-fixtures/ names a Godot type" and the gate exited 0. The file set is
+# therefore also taken from each pure project's EVALUATED Compile item set - the
+# real compiler input, after default globs, explicit includes, links, and any
+# <Import>ed contribution - wherever those files live, including under obj/ and
+# outside the repository's source directories entirely.
 #
-#   f*  a real reference this reader MUST catch.
-#   n*  not a reference; this reader must NOT flag it.
-#   k*  a real reference this reader CANNOT see. Asserted as missed, so the gap is
-#       measured instead of unmeasured. If one starts being caught, this control fails and
-#       tells you to move it to `f*` - a gap closing is a visible edit in the diff, which
-#       is the same ratchet the audit-expectations census uses.
-#   x*  not a reference, and this reader flags it anyway. Asserted as flagged, for the same
-#       reason. The C# reader clears all four; see the header above.
+# The two readers deliberately share one rule: both call godot_offenders, the single
+# program defined above, so the stripping and the two position branches exist in one
+# place and cannot drift apart. Only the file set differs.
 #
-# WHY THE PROBES ARE NOT ALL ONE SHORT LINE, which is what they used to be. Two whole
-# classes of defect are invisible to a single-line fixture:
+# THE SHARED RULE HAS NOW CHANGED, and this note records it because the change is the
+# one this paragraph used to anticipate. It previously read "the SHARED RULE CHANGES
+# AT FND-004", describing a rule that strips comments and string literals before
+# applying the token and requires it in `using` or qualifier position. That change is
+# implemented above, taken by BOTH readers together in the same commit as the note
+# always required, and its controls are in § 6a. It was NOT taken as FND-004 spells
+# it: FND-004 applies the token per line, and a using directive may span lines, so
+# branch B matches a directive span instead. Two things did not change - the token
+# itself is character-for-character what it was, and defeats 1 and 2 below are still
+# open:
 #
-#   - a stripper defect that swallows the rest of a line cannot be seen by a probe whose
-#     line holds nothing else. All six original spellings stayed green while
-#     `char q = '"'; Godot.GD.Print("y");` passed the real scan. f07-f12 and f14-f17
-#     are therefore same-line probes: a decoy the stripper has to get right, followed on
-#     the same line by a reference it has to keep. None is contrived - a URL, a quote
-#     character, or an apostrophe in English prose beside a Godot call is ordinary code.
-#   - a SIGPIPE defect in the scan pipeline only fires once the writer has more to write
-#     than the 64 KiB pipe buffer holds. Every fixture was ~75 bytes, so the writer never
-#     blocked and the false pass documented on godot_namespace_hits was structurally
-#     unreachable by this control. f30 and f31 are therefore PRODUCTION-SIZED - a few
-#     hundred KiB each, one per scan branch, with the reference near the top and the bulk
-#     after it, because that is the shape that breaks and it is also the shape a real
-#     source file has. Do not shrink them: at fixture size they prove nothing.
+#   1. A using directive written with a UNICODE-ESCAPED IDENTIFIER. C# allows
+#      \uXXXX escapes inside identifiers, so `using \u0047odot;` is the very same
+#      using directive as `using Godot;` to the compiler, while the file contains
+#      no occurrence of the token either reader matches. The stripper above does not
+#      decode identifier escapes, so this is open exactly as it was.
+#   2. Source that names no Godot type at all because the type comes from a
+#      RENAMED ASSEMBLY. GodotSharp.dll's identity lives in its `#Strings` heap,
+#      and it ships with PublicKeyToken=null, so a 10-byte patch renames the
+#      assembly with nothing to re-sign; the reference then resolves under a name
+#      the assembly-identity reader does not recognise and the source names types
+#      from a namespace the token does not match. This is an attack on the shared
+#      rule's premise - "Godot arrives under a name we can recognise" - not on
+#      either file set.
+#   3. The two combined, which is how the escape was actually demonstrated.
+#
+# Whoever performs the FND-004 merge owns all three. They are named here, rather than
+# quietly inherited, because the position branches above narrow WHERE the token has to
+# sit and therefore do nothing about a token that is not in the file to begin with:
+# both defeats survive this change untouched, and a rule that strips prose and reads
+# position is not thereby a rule that cannot be evaded.
+for entry in "${EXPECTED_PROJECTS[@]}"; do
+  IFS='|' read -r project _expected_refs godot_allowed <<<"${entry}"
+  [[ "${godot_allowed}" == "no" ]] || continue
+  name="$(project_name "${project}")"
 
-readonly PROBE_AP="'"
+  if ! compiled_sources="$(compiled_source_files "${project}")"; then
+    fail "${name}: the evaluated Compile item set could not be read, so the source side of its Godot boundary is unverified"
+    continue
+  fi
 
-godot_probe_dir="$(mktemp -d)"
-godot_probe="${godot_probe_dir}/probe"
-mkdir -p "${godot_probe}"
+  compiled_count=0
+  compiled_offenders=()
+  compiled_existing=()
+  while IFS= read -r source; do
+    [[ -n "${source}" ]] || continue
+    compiled_count=$((compiled_count + 1))
+    if [[ ! -f "${source}" ]]; then
+      # A compile input that does not exist would fail the build, but it must not
+      # read here as a file that was scanned and found clean.
+      compiled_offenders+=("${source#"${REPO_ROOT}/"} (missing)")
+      continue
+    fi
+    compiled_existing+=("${source}")
+  done <<<"${compiled_sources}"
 
-# $1 file name, $2.. the lines of the file.
-probe_file() {
-  local name="$1"
-  shift
-  printf '%s\n' "$@" >"${godot_probe}/${name}"
-}
+  # The same predicate reader 1 used, over this project's real compiler input.
+  if [[ "${#compiled_existing[@]}" -gt 0 ]]; then
+    if ! compiled_report="$(godot_offenders "${compiled_existing[@]}")"; then
+      fail "${name}: the Godot scan failed to run over its ${#compiled_existing[@]} compile input(s), so the source side of its Godot boundary is unverified"
+      continue
+    fi
+    while IFS= read -r offender; do
+      [[ -n "${offender}" ]] || continue
+      compiled_offenders+=("${offender#"${REPO_ROOT}/"}")
+    done < <(printf '%s' "${compiled_report}" | cut -f1)
+  fi
 
-# --- f*: real references this reader must catch ---
-probe_file 'f01-using.cs' \
-  'using Godot;' \
-  'internal static class P { internal static int R() => 1; }'
-probe_file 'f02-global-using.cs' \
-  'global using Godot;' \
-  'internal static class P { internal static int R() => 1; }'
-probe_file 'f03-using-static.cs' \
-  'using static Godot.GD;' \
-  'internal static class P { internal static int R() => 1; }'
-probe_file 'f04-alias-type.cs' \
-  'using GD = Godot.GD;' \
-  'internal static class P { internal static int R() => 1; }'
-probe_file 'f05-alias-namespace.cs' \
-  'using GodotAlias = Godot;' \
-  'internal static class P { internal static int R() => 1; }'
-probe_file 'f06-fully-qualified.cs' \
-  'internal static class P { internal static void R() {' \
-  'Godot.GD.Print("x");' \
-  '} }'
-probe_file 'f07-char-literal-quote.cs' \
-  'internal static class P { internal static void R() {' \
-  "char q = ${PROBE_AP}\"${PROBE_AP}; Godot.GD.Print(q);" \
-  '} }'
-probe_file 'f08-comment-in-string.cs' \
-  'internal static class P { internal static void R() {' \
-  'string s = "// not a comment"; Godot.GD.Print(s);' \
-  '} }'
-probe_file 'f09-url-in-string.cs' \
-  'internal static class P { internal static void R() {' \
-  'string u = "http://example.invalid/x"; Godot.GD.Print(u);' \
-  '} }'
-probe_file 'f10-two-apostrophes.cs' \
-  'internal static class P { internal static void R() {' \
-  "string s = \"don${PROBE_AP}t\"; Godot.GD.Print(\"won${PROBE_AP}t\");" \
-  '} }'
-probe_file 'f11-apostrophe-in-block-comment.cs' \
-  'internal static class P { internal static void R() {' \
-  "/* it${PROBE_AP}s fine */ Godot.GD.Print(\"won${PROBE_AP}t\");" \
-  '} }'
-probe_file 'f12-apostrophe-in-line-comment.cs' \
-  'internal static class P { internal static void R() {' \
-  "// it${PROBE_AP}s fine" \
-  "Godot.GD.Print(\"won${PROBE_AP}t\");" \
-  '} }'
-probe_file 'f13-linesplit-using-static.cs' \
-  'using static' \
-  '    Godot.GD;' \
-  'internal static class P { internal static int R() => 1; }'
-probe_file 'f14-escaped-quote-in-string.cs' \
-  'internal static class P { internal static void R() {' \
-  'string s = "a\"b"; Godot.GD.Print(s);' \
-  '} }'
-probe_file 'f15-verbatim-doubled-quote.cs' \
-  'internal static class P { internal static void R() {' \
-  'string s = @"a""b"; Godot.GD.Print(s);' \
-  '} }'
-probe_file 'f16-raw-string.cs' \
-  'internal static class P { internal static void R() {' \
-  'string s = """x"""; Godot.GD.Print(s);' \
-  '} }'
-probe_file 'f17-interpolated-apostrophe.cs' \
-  'internal static class P { internal static void R() {' \
-  "int x = 1; string s = $\"it${PROBE_AP}s {x}\"; Godot.GD.Print(s);" \
-  '} }'
-probe_file 'f18-attribute.cs' \
-  '[Godot.GlobalClass]' \
-  'internal sealed class P { internal int R() => 1; }'
-probe_file 'f19-typeof.cs' \
-  'internal static class P { internal static void R() {' \
-  'System.Type t = typeof(Godot.Node); Godot.GD.Print(t);' \
-  '} }'
-probe_file 'f20-field-type.cs' \
-  'internal sealed class P { private Godot.Node? _n; internal object? R() => _n; }'
-probe_file 'f21-base-type.cs' \
-  'internal sealed class P : Godot.Node { internal int R() => 1; }'
-probe_file 'f22-using-subnamespace.cs' \
-  'using Godot.Collections;' \
-  'internal static class P { internal static int R() => 1; }'
-probe_file 'f23-generic-argument.cs' \
-  'internal static class P { internal static void R() {' \
-  'var l = new System.Collections.Generic.List<Godot.Node>(); Godot.GD.Print(l.Count);' \
-  '} }'
-probe_file 'f24-space-before-semicolon.cs' \
-  'using Godot ;' \
-  'internal static class P { internal static int R() => 1; }'
-probe_file 'f25-space-around-dot.cs' \
-  'internal static class P { internal static void R() {' \
-  'Godot . GD.Print("x");' \
-  '} }'
-probe_file 'f26-block-comment-close-then-reference.cs' \
-  'internal static class P { internal static void R() {' \
-  '/* a comment that' \
-  '   spans lines and ends here */ Godot.GD.Print("y");' \
-  '} }'
-probe_file 'f27-escaped-apostrophe-char.cs' \
-  'internal static class P { internal static void R() {' \
-  "char q = ${PROBE_AP}\\${PROBE_AP}${PROBE_AP}; Godot.GD.Print(q);" \
-  '} }'
-probe_file 'f28-conditional-compilation.cs' \
-  'internal static class P { internal static void R() {' \
-  '#if DEBUG' \
-  'Godot.GD.Print("d");' \
-  '#else' \
-  'Godot.GD.Print("r");' \
-  '#endif' \
-  '} }'
-probe_file 'f29-nested-namespace-type.cs' \
-  'internal static class P { internal static void R() {' \
-  'var a = new Godot.Collections.Array(); Godot.GD.Print(a.Count);' \
-  '} }'
-
-# f30/f31: production-sized, one per branch of godot_namespace_hits, reference first and
-# bulk after. See the SIGPIPE note on that function for the measured miss rates by size.
-{
-  printf '%s\n' 'internal static class P { internal static void R() {' 'Godot.GD.Print("early");'
-  seq 1 12000 | sed 's/.*/    System.GC.KeepAlive(&);/'
-  printf '%s\n' '} }'
-} >"${godot_probe}/f30-production-size-qualifier.cs"
-{
-  printf '%s\n' 'using Godot;'
-  seq 1 14000 | sed 's/.*/using Filler.N&;/'
-  printf '%s\n' 'internal static class P { internal static int R() => 1; }'
-} >"${godot_probe}/f31-production-size-using.cs"
-
-# --- n*: not references; must not be flagged ---
-probe_file 'n1-qualified-lookalike.cs' \
-  'using MechaMiner.GodotLike;' \
-  'internal static class P { internal static int R() => 1; }'
-probe_file 'n2-embedded-token.cs' \
-  'internal static class N { internal static string R() => "NotGodotish"; }'
-probe_file 'n3-bare-lookalike.cs' \
-  'using MechaMiner.GodotLike;' \
-  'internal static class N { internal static void R() => GodotLike.Do(); }'
-probe_file 'n4-member-named-godot.cs' \
-  '// Only game/ may reference Godot.' \
-  'internal sealed class N { public int Godot { get; set; } }'
-probe_file 'n5-comment-and-diagnostic.cs' \
-  '// Only game/ may reference Godot, which is why this project does not.' \
-  'internal static class N { internal static string R() => "launched no Godot process"; }'
-probe_file 'n6-qualifier-in-string.cs' \
-  'internal static class N { internal static string R() => "call Godot.GD.Print here"; }'
-
-# --- k*: real references beyond this reader, asserted as missed ---
-probe_file 'k1-linesplit-global-using.cs' \
-  'global using' \
-  '    Godot;' \
-  'internal static class P { internal static int R() => 1; }'
-probe_file 'k2-linesplit-using.cs' \
-  'using' \
-  '    Godot;' \
-  'internal static class P { internal static int R() => 1; }'
-probe_file 'k3-linesplit-qualifier.cs' \
-  'internal static class P { internal static void R() {' \
-  'Godot' \
-  '    .GD.Print("y");' \
-  '} }'
-probe_file 'k4-unicode-escape-using.cs' \
-  'using \u0047odot;' \
-  'internal static class P { internal static int R() => 1; }'
-probe_file 'k5-unicode-escape-qualifier.cs' \
-  'internal static class P { internal static void R() {' \
-  '\u0047odot.GD.Print("x");' \
-  '} }'
-
-# --- x*: non-references this reader accuses, asserted as flagged ---
-probe_file 'x1-block-comment-one-line.cs' \
-  'internal static class N {' \
-  '    /* Godot.GD is engine-only, so nothing here calls it. */' \
-  '    internal static int R() => 1; }'
-probe_file 'x2-block-comment-multi-line.cs' \
-  'internal static class N {' \
-  '    /*' \
-  '     * Godot.GD is engine-only.' \
-  '     * game/ owns every call to Godot.GD.Print.' \
-  '     */' \
-  '    internal static int R() => 1; }'
-probe_file 'x3-verbatim-string-multi-line.cs' \
-  'internal static class N {' \
-  '    private const string S = @"' \
-  'Godot.GD.Print(x);' \
-  '";' \
-  '    internal static string R() => S; }'
-probe_file 'x4-raw-string-multi-line.cs' \
-  'internal static class N {' \
-  '    private const string S = """' \
-  '        Godot.GD.Print(x);' \
-  '        """;' \
-  '    internal static string R() => S; }'
-
-godot_probe_hits="$(godot_namespace_hits "${godot_probe}")"
-
-# Exact whole-line match through a here-string. Not `printf ... | grep -q`: that is the
-# pipeline whose SIGPIPE status silently reported caught probes as missed inside the very
-# message that listed them.
-probe_hit() {
-  grep -qxF "${godot_probe}/$1" <<<"${godot_probe_hits}"
-}
-
-# The four classes, asserted per file rather than by a count. A count can agree with a
-# corpus that lost a member; a per-file assertion cannot.
-probe_missed=()
-probe_falsely_flagged=()
-probe_gap_closed=()
-probe_accusation_gone=()
-for probe_name in $(cd "${godot_probe}" && ls *.cs | sort); do
-  case "${probe_name}" in
-    f*) probe_hit "${probe_name}" || probe_missed+=("${probe_name}") ;;
-    n*) ! probe_hit "${probe_name}" || probe_falsely_flagged+=("${probe_name}") ;;
-    k*) ! probe_hit "${probe_name}" || probe_gap_closed+=("${probe_name}") ;;
-    x*) probe_hit "${probe_name}" || probe_accusation_gone+=("${probe_name}") ;;
-  esac
+  if [[ "${#compiled_offenders[@]}" -eq 0 ]]; then
+    pass "${name} compiles ${compiled_count} source file(s), none naming a Godot type"
+  else
+    fail "${name} compiles source that names a Godot type: $(printf '%s ' "${compiled_offenders[@]}")"
+  fi
 done
 
-probe_count() {
-  # $1 class prefix. Counts files, not hits.
-  local n
-  n="$(cd "${godot_probe}" && ls -1 "$1"*.cs)"
-  grep -c . <<<"${n}"
+section "6a. negative controls: the Godot boundary rule can actually fail, in both directions (VER-FND-001-004)"
+#
+# § 6 had no control at all, which is how it carried two successive rules that were
+# each wrong in a different direction without either being caught by a run. Both
+# directions are asserted here, because a rule that only ever gets stricter passes a
+# one-directional control forever:
+#
+#   MUST RED - the four spellings that defeated `using[[:space:]]+Godot([;.]|$)`, so
+#   that expression cannot come back unnoticed, plus the line-spanning directive that
+#   defeats a per-line reading of branch B.
+#   MUST NOT RED - the prose and identifier cases the bare any-position token
+#   falsely accused, each drawn from a shape that is actually in this repository.
+#
+# The fixtures live under build/policy-fixtures/, which is one of § 6's own scan
+# roots, and they are written and removed inside this section. They CANNOT be left in
+# the tree: the four must-red fixtures would be found by reader 1 on the next run and
+# would redden § 6 for real. That is why they are created after § 6 has scanned,
+# removed here, and their removal asserted below against reader 1's own verdict.
+#
+# The controls call godot_offenders - the same program §§ 6's two readers just ran,
+# not a copy of the expression - so a control cannot pass against logic the gate does
+# not use, and changing the rule without changing these is not possible.
+readonly GODOT_CONTROL_DIR="${REPO_ROOT}/build/policy-fixtures/godot-boundary-controls"
+
+remove_godot_controls() {
+  rm -rf "${GODOT_CONTROL_DIR}"
 }
 
-if [[ "${#probe_missed[@]}" -ne 0 ]]; then
-  fail "control: the Godot scan missed real references it must catch: ${probe_missed[*]}"
-elif [[ "${#probe_falsely_flagged[@]}" -ne 0 ]]; then
-  fail "control: the Godot scan flagged ${probe_falsely_flagged[*]}, which do not name the Godot namespace"
-elif [[ "${#probe_gap_closed[@]}" -ne 0 ]]; then
-  fail "control: ${probe_gap_closed[*]} is recorded as beyond this reader and was caught; that is an improvement, so move it from the k* class to f* in this file AND in ArchitectureRuleTests, and update the two readers' scores in both headers"
-elif [[ "${#probe_accusation_gone[@]}" -ne 0 ]]; then
-  fail "control: ${probe_accusation_gone[*]} is recorded as a false accusation this reader makes and it no longer makes it; that is an improvement, so move it from the x* class to n* in this file AND in ArchitectureRuleTests"
+remove_godot_controls
+trap remove_godot_controls EXIT
+mkdir -p "${GODOT_CONTROL_DIR}"
+
+# "<file>|<must-red: yes|no>|<what it is>"
+readonly GODOT_CONTROL_CASES=(
+  "QualifiedNoUsing.cs|yes|a fully-qualified Godot.Vector2 with no using directive at all"
+  "UsingStatic.cs|yes|using static Godot.Mathf"
+  "UsingAlias.cs|yes|using GD2 = Godot"
+  "PlainUsing.cs|yes|a plain using Godot;"
+  "UsingSpanningLines.cs|yes|a using directive split across a newline, which compiles and which a per-line branch B would miss"
+  "PropertyNamedGodot.cs|no|a property named Godot whose type GodotPin is ours - the ToolchainPins.cs shape"
+  "LineComment.cs|no|Godot named in a // comment"
+  "DocComment.cs|no|Godot named in a /// doc comment"
+  "StringLiteral.cs|no|Godot named inside a string literal"
+  "BlockComment.cs|no|Godot named inside a multi-line /* */ block comment"
+  "VerbatimString.cs|no|Godot named inside a multi-line verbatim @\" string"
+)
+
+cat >"${GODOT_CONTROL_DIR}/QualifiedNoUsing.cs" <<'FIXTURE'
+// Control fixture, written and removed by build/verify-architecture.sh.
+namespace Fixture;
+internal sealed class QualifiedNoUsing
+{
+    private Godot.Vector2 position;
+}
+FIXTURE
+
+cat >"${GODOT_CONTROL_DIR}/UsingStatic.cs" <<'FIXTURE'
+using static Godot.Mathf;
+namespace Fixture;
+internal sealed class UsingStatic { }
+FIXTURE
+
+cat >"${GODOT_CONTROL_DIR}/UsingAlias.cs" <<'FIXTURE'
+using GD2 = Godot;
+namespace Fixture;
+internal sealed class UsingAlias { }
+FIXTURE
+
+cat >"${GODOT_CONTROL_DIR}/PlainUsing.cs" <<'FIXTURE'
+using Godot;
+namespace Fixture;
+internal sealed class PlainUsing { }
+FIXTURE
+
+# `using` and the namespace on separate lines is ONE directive and compiles; this was
+# verified by building it, not inferred from the grammar.
+cat >"${GODOT_CONTROL_DIR}/UsingSpanningLines.cs" <<'FIXTURE'
+using
+Godot;
+namespace Fixture;
+internal sealed class UsingSpanningLines { }
+FIXTURE
+
+# The exact shape of src/MechaMiner.Tools/Toolchain/ToolchainPins.cs: a property named
+# Godot, of a type of ours, bound to the `godot` key of build/toolchain.json.
+cat >"${GODOT_CONTROL_DIR}/PropertyNamedGodot.cs" <<'FIXTURE'
+namespace Fixture;
+internal sealed class GodotPin { }
+internal sealed class PropertyNamedGodot
+{
+    public GodotPin Godot { get; set; } = new();
+}
+FIXTURE
+
+# Every must-not-red fixture below carries a QUALIFIER-SHAPED occurrence, `Godot.`, and
+# not merely a bare `Godot`. That is deliberate and it is what makes them controls rather
+# than decoration: bare undotted prose - "no dependency on Godot, files, Steam" - is
+# already cleared by the position branches whether the stripper runs or not, so a fixture
+# spelled that way would stay green with the stripper deleted and would prove nothing
+# about it. `Godot.NET.Sdk` in a doc comment is not a hypothetical shape either; it is
+# what src/MechaMiner.Tools/Cli/WorkflowConfiguration.cs, Verbs/BuildVerb.cs and
+# Verbs/GodotImportVerb.cs actually say, and `Godot.Collections` is what
+# tests/.../SimulationAssemblyDeterminismTests.cs says. Without stripping, those real
+# files red.
+cat >"${GODOT_CONTROL_DIR}/LineComment.cs" <<'FIXTURE'
+namespace Fixture;
+internal sealed class LineComment
+{
+    // Restore is deliberately not given a configuration. Godot.NET.Sdk decides it,
+    // and this simulation has no dependency on Godot, files or Steam.
+    private int step;
+}
+FIXTURE
+
+cat >"${GODOT_CONTROL_DIR}/DocComment.cs" <<'FIXTURE'
+namespace Fixture;
+/// <summary>Pure logic.</summary>
+/// <remarks><c>Godot.NET.Sdk</c> defines the configuration; <c>Godot.Collections</c>
+/// is forbidden here, and this type names neither.</remarks>
+internal sealed class DocComment { }
+FIXTURE
+
+cat >"${GODOT_CONTROL_DIR}/StringLiteral.cs" <<'FIXTURE'
+namespace Fixture;
+internal sealed class StringLiteral
+{
+    public const string Forbidden = "Godot";
+    public const string Hint = "a pure test must not call Godot.GD.Print or launch Godot";
+}
+FIXTURE
+
+cat >"${GODOT_CONTROL_DIR}/BlockComment.cs" <<'FIXTURE'
+namespace Fixture;
+/*
+ * Godot.GD is engine-only and must not appear here.
+ * Godot.Vector2 likewise.
+ */
+internal sealed class BlockComment { }
+FIXTURE
+
+cat >"${GODOT_CONTROL_DIR}/VerbatimString.cs" <<'FIXTURE'
+namespace Fixture;
+internal sealed class VerbatimString
+{
+    public const string Report = @"line one
+Godot.GD.Print(x);
+""quoted"" and still inside the literal";
+}
+FIXTURE
+
+godot_control_failures=0
+for entry in "${GODOT_CONTROL_CASES[@]}"; do
+  IFS='|' read -r control_file control_must_red control_what <<<"${entry}"
+  control_path="${GODOT_CONTROL_DIR}/${control_file}"
+
+  if [[ ! -f "${control_path}" ]]; then
+    control_fail "control fixture ${control_file} was not written, so its case was not tested"
+    godot_control_failures=$((godot_control_failures + 1))
+    continue
+  fi
+
+  if ! control_report="$(godot_offenders "${control_path}")"; then
+    control_fail "the rule failed to run against ${control_file}, so ${control_what} is untested"
+    godot_control_failures=$((godot_control_failures + 1))
+    continue
+  fi
+
+  # Parameter expansion rather than `| head -n 1 | cut -f2`: this file forbids an
+  # early-exiting reader on the right of a pipe, and that prohibition does not get an
+  # exception for a control.
+  control_reason="${control_report%%$'\n'*}"
+  control_reason="${control_reason#*$'\t'}"
+
+  if [[ "${control_must_red}" == "yes" ]]; then
+    if [[ -n "${control_reason}" ]]; then
+      control_pass "reds as it must: ${control_what} (${control_reason})"
+    else
+      control_fail "DID NOT RED: ${control_what}. The rule cannot see a real Godot reference in this position, so § 6's green means nothing for it"
+      godot_control_failures=$((godot_control_failures + 1))
+    fi
+  else
+    if [[ -z "${control_reason}" ]]; then
+      control_pass "stays green as it must: ${control_what}"
+    else
+      control_fail "FALSELY ACCUSED: ${control_what} was reported as '${control_reason}'. Rewording prose to satisfy this gate is not the fix; the rule is wrong"
+      godot_control_failures=$((godot_control_failures + 1))
+    fi
+  fi
+done
+
+# Each misbehaving case already emitted control_fail, which counts itself as a failing
+# negative control and names this section. The aggregate is therefore stated without
+# counting again, and never as a finding about the repository: a control that malfunctions
+# is a defect in this gate, not in the tree it is scanning.
+if [[ "${godot_control_failures}" -eq 0 ]]; then
+  control_pass "all ${#GODOT_CONTROL_CASES[@]} Godot-boundary controls behaved as designed, in both directions"
 else
-  # Deliberately not "every way C# can name the namespace". The k* class is the measured
-  # list of ways it cannot, and the x* class is the measured list of non-references it
-  # accuses; both are stated in the header with why.
-  pass "control: $(probe_count f) real references are caught (including two production-sized files, several hundred KiB each, one per scan branch - at fixture size the pipeline defect this scan carried was unreachable), $(probe_count n) lookalikes are cleared, $(probe_count k) references are recorded as beyond a text scan and confirmed missed, and $(probe_count x) non-references are recorded as accused by this reader and cleared by the C# one"
+  control_detail <<<"${godot_control_failures} of ${#GODOT_CONTROL_CASES[@]} Godot-boundary controls did not behave as designed; § 6's verdict is not trustworthy on this run"
 fi
 
-rm -rf "${godot_probe_dir}"
+remove_godot_controls
+trap - EXIT
+
+# The fixtures must be gone, or this section has littered a scan root with files that
+# would redden § 6 on the next run. Asserted by re-running reader 1's own file search,
+# not by testing for the directory, so a fixture left anywhere under the roots counts.
+godot_leftovers="$(cd "${REPO_ROOT}" && find "${GODOT_SCAN_ROOTS[@]}" -path '*godot-boundary-controls*' -name '*.cs' 2>/dev/null | sort)"
+if [[ -z "${godot_leftovers}" ]]; then
+  control_pass "every control fixture was removed from the scan roots"
+else
+  control_fail "control fixtures were left behind and will redden § 6 on the next run: $(printf '%s' "${godot_leftovers}" | paste -sd' ' -)"
+fi
 
 section "7. no GDScript in the repository (VER-FND-001-005)"
 #
@@ -1283,6 +1527,8 @@ else
     fail "negative-control fixture missing: ${control}"
   elif edges_match "${control}" "${diagnostics_accepted_refs}"; then
     pass "control: a compliant Diagnostics project compares equal to [${diagnostics_accepted_refs}]"
+  elif [[ "${EDGES_UNPROVED}" == "yes" ]]; then
+    fail "control: the compliant Diagnostics fixture could not be evaluated by MSBuild, so the comparison was never exercised on compliant input and every negative control below is meaningless"
   else
     fail "control: a compliant Diagnostics project reported [${EDGES_ACTUAL}]; the comparison reports a difference for compliant input, so every negative control below is meaningless"
   fi
@@ -1298,6 +1544,11 @@ else
     edge_controls_run=$((edge_controls_run + 1))
     if edges_match "${control}" "${diagnostics_accepted_refs}"; then
       fail "control: Diagnostics with ${injected} was NOT rejected; § 3 accepted [${EDGES_ACTUAL}] against [${diagnostics_accepted_refs}]"
+    elif [[ "${EDGES_UNPROVED}" == "yes" ]]; then
+      # Rejected, but as "could not be evaluated" rather than as "has the forbidden edge".
+      # An unevaluable fixture is also "not accepted", and would prove only that MSBuild
+      # could not read it - the same distinction the Godot control below draws.
+      fail "control: Diagnostics with ${injected} was rejected because MSBuild could not evaluate the fixture, so § 3's edge comparison was never exercised"
     elif [[ "${EDGES_ACTUAL}" != "${referenced}" ]]; then
       # It was rejected, but not for the reason the control exists to prove. An empty
       # evaluated set would also be "rejected", and would mean MSBuild evaluated nothing.

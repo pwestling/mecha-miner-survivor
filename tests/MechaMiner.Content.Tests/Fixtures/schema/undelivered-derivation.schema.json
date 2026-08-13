@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Negative control for the x-authority derivation requirement",
+  "description": "A bound that says where its number came from but not why it is that number. This file exists to prove the derivation gate can fail; it is never loaded as a real schema.",
+  "type": "object",
+  "properties": {
+    "capacity": {
+      "type": "integer",
+      "maximum": 2048,
+      "x-authority": {
+        "maximum": {
+          "source": "TDD-COMBAT",
+          "section": "Performance and capacity",
+          "kind": "sourced"
+        }
+      }
+    }
+  }
+}

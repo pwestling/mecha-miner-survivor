@@ -1,0 +1,76 @@
+{
+  "id": "EN-06",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "enemy.EN-06.name",
+  "summary_key": "enemy.EN-06.summary",
+  "tags": [],
+  "source_refs": [
+    "TR-DAT-002"
+  ],
+  "family": "Needler",
+  "spawn_classification": "baseline-replenishment",
+  "earliest_minute": 12,
+  "first_playable_subset": {
+    "included": false,
+    "temporary_substitute_enemy_id": "EN-04"
+  },
+  "hull": 110,
+  "contact_damage": 14,
+  "control_resistance_percent": 35,
+  "post_hard_control_immunity_seconds": 0.25,
+  "movement_speed_percent_of_mech_base": 55,
+  "body_scale_multiplier": 0.9,
+  "contact_shape": "circle",
+  "movement_collision": {
+    "solid_to_mech": false,
+    "solid_to_other_enemies": false,
+    "solid_to_mining_points_and_pickups": false,
+    "constrained_by_solid_world_terrain": true
+  },
+  "behavior_kind": "contact-pursuer-with-telegraphed-projectile",
+  "specialist_attack": {
+    "kind": "telegraphed-straight-projectile",
+    "cadence_seconds": 4.5,
+    "charge_duration_seconds": 0.8,
+    "movement_speed_while_charging_multiplier": 0.5,
+    "returns_to_full_pursuit_after_firing": true,
+    "projectile": {
+      "damage": 14,
+      "speed_percent_of_mech_base": 75,
+      "homing": false,
+      "leads_target": false,
+      "retargets": false,
+      "splits": false,
+      "explodes": false,
+      "leaves_hazard": false,
+      "applies_status": false,
+      "snapshot_at_creation": [
+        "speed",
+        "damage",
+        "terrain-collision",
+        "no-homing"
+      ]
+    },
+    "readability_requirements": [
+      "bright body contraction",
+      "contrasting line flash"
+    ]
+  },
+  "fixed_profile": true,
+  "scales_with_elapsed_time_or_player_state": false,
+  "elite_eligible": false,
+  "drops": {
+    "xp": 0,
+    "common_ore": 0,
+    "specialized_material_units": 0,
+    "hyper_gold_units": 0,
+    "repair_pickups": 0,
+    "temporary_pickups": 0
+  },
+  "description": "A ranged specialist that stops to fire one telegraphed shot.",
+  "contact_footprint": {
+    "contact_and_weapon_hurt_diameter_m": 0.72
+  }
+}

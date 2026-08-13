@@ -1,0 +1,61 @@
+{
+  "id": "FORMULA-01",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "weapon.FORMULA-01.name",
+  "summary_key": "weapon.FORMULA-01.summary",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#individual-stat-upgrades",
+    "price_curve_decision: GDD-WEAPON-INDEX#design-state"
+  ],
+  "currency": "common ore",
+  "formula": "5n(n + 1)",
+  "variable": {
+    "symbol": "n",
+    "meaning": "purchase number, equal to the weapon's current shared upgrade depth plus one"
+  },
+  "equivalent_by_depth": {
+    "formula": "5(d + 1)(d + 2)",
+    "variable": {
+      "symbol": "d",
+      "meaning": "current shared upgrade depth"
+    }
+  },
+  "first_ten_prices": [
+    10,
+    30,
+    60,
+    100,
+    150,
+    210,
+    280,
+    360,
+    450,
+    550
+  ],
+  "cumulative_cost_checkpoints": [
+    {
+      "purchases": 3,
+      "cumulative_cost": 100
+    },
+    {
+      "purchases": 4,
+      "cumulative_cost": 200
+    },
+    {
+      "purchases": 5,
+      "cumulative_cost": 350
+    },
+    {
+      "purchases": 10,
+      "cumulative_cost": 2200
+    }
+  ],
+  "applies_to": "Every common-ore stat track of every base weapon; all three tracks of a weapon share one depth and therefore one next price.",
+  "defining_prose": "For purchase number `n`, the shared next price is `5n(n + 1)` common ore. Because `n` is current depth plus one, a depth-`d` weapon pays `5(d + 1)(d + 2)`. The first ten prices are 10, 30, 60, 100, 150, 210, 280, 360, 450, and 550 ore. Cumulative cost reaches 100 after three purchases, 200 after four, 350 after five, and 2,200 after ten.",
+  "price_curve_decision": {
+    "id": "DEC-085"
+  }
+}

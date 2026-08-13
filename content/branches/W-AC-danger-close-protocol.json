@@ -1,0 +1,57 @@
+{
+  "id": "W-AC-danger-close-protocol",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "branch.W-AC-danger-close-protocol.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#danger-close-protocol--conversion--2-flux-amber",
+    "rules[]: GDD-WEAPON-NUMERIC-CATALOG#danger-close-protocol--conversion--2-flux-amber",
+    "prerequisites: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches",
+    "exclusivity: GDD-WEAPON-STAT-AND-BRANCH-UPGRADES#weapon-branches"
+  ],
+  "weapon_id": "W-AC",
+  "weapon_name": "Cluster Mortar",
+  "branch_class": "Conversion",
+  "cost": {
+    "resource": "Flux Amber",
+    "amount": 2
+  },
+  "prerequisites": [],
+  "exclusivity": {
+    "scope": "weapon",
+    "mutually_exclusive_with": [
+      "W-AC-saturation-cascade",
+      "W-AC-interdiction-payload"
+    ],
+    "irreversible": true
+  },
+  "effects": {
+    "removes_mortar_targeting": true,
+    "impact_point": "mech position sampled at the instant of firing",
+    "shell_damage_percent_of_current_damage": 180,
+    "shell_blast_radius_percent_of_current_radius": 160,
+    "attack_rate": "normal",
+    "warning_marker_visible_during_delay": true,
+    "impact_delay_seconds": 1.2,
+    "mech_immune_to_own_mortar": true
+  },
+  "expected_effect": {
+    "narrative": "trades remote safety for an obvious close-range damage and coverage increase"
+  },
+  "rules": [
+    {
+      "text": "Mortar targeting is removed. Every shell lands centered on the mech's position sampled at the instant of firing."
+    },
+    {
+      "text": "The shell deals 180% current Damage and has 160% current blast radius at the normal attack rate."
+    },
+    {
+      "text": "The warning marker remains visible during the 1.2 s delay, allowing the player to drag a pursuing horde into the strike zone."
+    },
+    {
+      "text": "The mech is immune to its own mortar. The conversion trades remote safety for an obvious close-range damage and coverage increase."
+    }
+  ]
+}

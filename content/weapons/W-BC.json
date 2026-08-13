@@ -1,0 +1,147 @@
+{
+  "id": "W-BC",
+  "schema_version": 1,
+  "content_version": 1,
+  "status": "enabled",
+  "name_key": "weapon.W-BC.name",
+  "tags": [],
+  "source_refs": [
+    "GDD-WEAPON-NUMERIC-CATALOG#rank-zero-values-and-ore-stat-increments",
+    "recipe_pair: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "signature_mech: GDD-INITIAL-MECH-CATALOG#catalog-overview",
+    "fabrication_cost: GDD-PROGRESSION#base-weapon-availability",
+    "base_automatic_attack: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "base_behavior: GDD-WEAPON-NUMERIC-CATALOG#w-bc--pulse-repeater",
+    "ore_upgradeable_stat_labels: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "damage_model: GDD-WEAPON-NUMERIC-CATALOG#base-weapon-summary",
+    "global_attack_rate_mapping: GDD-WEAPON-NUMERIC-CATALOG#global-weapon-attack-rate-mapping",
+    "branches.amplification.cost: GDD-WEAPON-NUMERIC-CATALOG#zero-lag-emitter--amplification--2-barysteel",
+    "branches.amplification.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.amplification: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.amplification: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.functional.cost: GDD-WEAPON-NUMERIC-CATALOG#suppressive-sequencer--functional--2-cinderglass",
+    "branches.functional.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.functional: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.functional: GDD-WEAPON-INDEX#catalog-lookup",
+    "branches.conversion.cost: GDD-WEAPON-NUMERIC-CATALOG#broadside-oscillator--conversion--2-eidolon-coral",
+    "branches.conversion.cost: GDD-PROGRESSION#weapon-stat-and-branch-upgrading",
+    "branches.conversion: GDD-WEAPON-CATALOG#accepted-base-catalog-assignment",
+    "branches.conversion: GDD-WEAPON-INDEX#catalog-lookup"
+  ],
+  "recipe_pair": {
+    "notation": "B + C",
+    "material_codes": [
+      "B",
+      "C"
+    ],
+    "material_names": [
+      "Barysteel",
+      "Cinderglass"
+    ]
+  },
+  "signature_mech": {
+    "mech_id": "MCH-01",
+    "mech": "Kestrel",
+    "is_initial_signature": true
+  },
+  "fabrication_cost": {
+    "materials": [
+      {
+        "material_code": "B",
+        "material": "Barysteel",
+        "units": 1
+      },
+      {
+        "material_code": "C",
+        "material": "Cinderglass",
+        "units": 1
+      }
+    ],
+    "signature_weapon_begins_equipped_without_paying_cost": true,
+    "rule": "Fabricating a base weapon costs exactly one unit of each material in its recipe pair. The signature weapon begins equipped without paying that cost."
+  },
+  "base_automatic_attack": {
+    "text": "Rapidly fires finite-speed projectiles at the nearest valid enemy"
+  },
+  "base_behavior": {
+    "text": "selects the nearest enemy within current range and fires a rapid projectile toward that enemy's current position. The projectile continues on its fired trajectory without homing, damages the first enemy it reaches, and then ends. Target selection updates between shots."
+  },
+  "ore_upgradeable_stat_labels": {
+    "labels": [
+      "Damage",
+      "attack rate",
+      "range"
+    ]
+  },
+  "ore_upgradeable_stats": [
+    {
+      "slot": 1,
+      "name": "Damage",
+      "rank_zero": 12,
+      "increment_per_rank": 1.2,
+      "unit": "damage",
+      "discrete": false
+    },
+    {
+      "slot": 2,
+      "name": "Attack rate",
+      "rank_zero": 2.667,
+      "increment_per_rank": 0.267,
+      "unit": "activations per second",
+      "discrete": false
+    },
+    {
+      "slot": 3,
+      "name": "Range",
+      "rank_zero": 8,
+      "increment_per_rank": 0.8,
+      "unit": "M",
+      "discrete": false
+    }
+  ],
+  "fixed_properties": {
+    "projectile_speed_m_per_s": 16,
+    "hit_push_m": 0.25,
+    "raw": "16M/s projectile, 0.25M hit push"
+  },
+  "damage_model": {
+    "rank_zero_damage_model": "12 every 0.375 s",
+    "burst_10_dps": 32.4,
+    "sustained_30_dps": 32.0,
+    "favorable_horde_dps": 32,
+    "primary_limitation": "One automatically selected target per projectile"
+  },
+  "global_attack_rate_mapping": {
+    "affected_timing": "Projectile or trace firing rate",
+    "unaffected_timing": "Projectile travel and status durations"
+  },
+  "branches": {
+    "amplification": {
+      "name": "Zero-Lag Emitter",
+      "funding_material_code": "B",
+      "funding_material": "Barysteel",
+      "cost": {
+        "material": "Barysteel",
+        "units": 2
+      }
+    },
+    "functional": {
+      "name": "Suppressive Sequencer",
+      "funding_material_code": "C",
+      "funding_material": "Cinderglass",
+      "cost": {
+        "material": "Cinderglass",
+        "units": 2
+      }
+    },
+    "conversion": {
+      "name": "Broadside Oscillator",
+      "funding_material_code": "E",
+      "funding_material": "Eidolon Coral",
+      "cost": {
+        "material": "Eidolon Coral",
+        "units": 2
+      }
+    }
+  }
+}

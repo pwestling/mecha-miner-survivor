@@ -322,8 +322,8 @@ internal sealed class VerificationRegistryTests
         // FND-003 is one and declares six - and the seven are pinned as
         // RegistriesWithNoNunitSelector rather than restated here, because an enumeration in a
         // comment is what went stale. Out of how many follows from
-        // <see cref="VerificationRegistry.RegistriesOnDisk"/>, the count
-        // <see cref="EveryRegistryOnDiskIsDiscoveredAndWalked"/> asserts, and is not transcribed
+        // VerificationRegistry.RegistriesOnDisk, the count
+        // EveryRegistryOnDiskIsDiscoveredAndWalked asserts, and is not transcribed
         // here for the same reason: that literal is gated and a copy of it in prose is not. The
         // non-vacuity guarantee this walk needs is held one level up, over the whole set, by
         // EverySelectorKindIsOneSomeWalkResolves.
@@ -909,7 +909,23 @@ internal sealed class VerificationRegistryTests
     /// between lineages whose implemented-grammar rosters differ, and this figure moves with that
     /// roster and not only with the registries.
     /// </remarks>
-    private const int RepositoryPathReferences = 339;
+    /// <remarks>
+    /// 345 now, and the delta is the rest of one family rather than one more entry. The previous
+    /// remark re-pinned this literal for VER-DAT-001-043 alone; VER-DAT-001-047 shares that
+    /// selector and named doc 40 by itself, so the same six roster-derived paths were missing there
+    /// too - the envelope schema and the five category schemas. Three entries share
+    /// <c>DocumentGrammarAgreementTests</c> and all three now name all seven files, which is why
+    /// this delta closes the family instead of adding to it: the fix was made by grouping every
+    /// entry in <c>DAT-001.json</c> by selector and measuring each selector's file access, not by
+    /// following one shortfall to the next. The six added strings are bare paths with no
+    /// whitespace, no <c> § </c> and no <c> case=</c>, so all six land in this form and
+    /// <see cref="PathAndSectionReferences"/>, <see cref="PathAndCaseReferences"/> and
+    /// <see cref="ProseReferences"/> do not move; no entry was added, so
+    /// <see cref="RegistryEntries"/> does not move either. That enumeration also found entries
+    /// under other selectors short of their measured reads, recorded in <c>DAT-001.json</c>'s notes
+    /// and deliberately not fixed, so this literal will move again when they are.
+    /// </remarks>
+    private const int RepositoryPathReferences = 345;
 
     /// <summary>Fixture references of the form <c>path § heading</c>.</summary>
     private const int PathAndSectionReferences = 108;

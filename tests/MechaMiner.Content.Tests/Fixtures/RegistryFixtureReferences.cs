@@ -43,7 +43,22 @@ namespace MechaMiner.Content.Tests.Fixtures;
 /// each form is asserted against committed literals by
 /// <see cref="VerificationRegistryTests.TheFixtureReferenceCensusIsWhatIsDeclared"/> and
 /// written to the run's output. The 22 prose references are reported as what they are -
-/// unverifiable - rather than passing quietly among the 432 that are checked.
+/// unverifiable - rather than passing quietly among the 439 checkable ones: the repository-path,
+/// path-and-section and path-and-case references, measured over <c>tests/verification/</c> at
+/// <c>a45497c</c>.
+/// </para>
+/// <para>
+/// <b>Neither figure in that sentence is pinned here, and both can be checked.</b> "Checkable" is
+/// <see cref="IsVerifiable"/>, which excludes <see cref="Form.Prose"/> and nothing else, so 439 is
+/// the sum of the census's three non-prose literals - 326 repository-path, 108 path-and-section, 5
+/// path-and-case - and equally its 461 references less the 22 prose ones. Both readings are
+/// asserted by the census named above, so a reader who doubts 439 can add those literals rather
+/// than re-walk the directory - and a re-measurement that moves them dates this sentence too.
+/// 432 is the superseded figure. It was correct at <c>d1a81c3</c>, which wrote it beside
+/// <c>RepositoryPathReferences = 319</c>, and it was left behind by <c>3b5ed6e</c>, which re-pinned
+/// that literal to 326 for the seven behavior-token fixtures <c>VER-DAT-002-037</c> names as its
+/// evidence. The path-and-section, path-and-case and prose counts have not moved since
+/// <c>d1a81c3</c>, so the whole 432-to-439 delta is that entry's +7.
 /// </para>
 /// <para>
 /// <b>Classification is by shape, never by existence.</b> A tempting reading of "is this a

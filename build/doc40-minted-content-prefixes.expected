@@ -39,6 +39,28 @@
 # NOT WIRED INTO A GATE. Nothing reads this file automatically. It is merge evidence, and
 # leaving it unread is deliberate for the same reason PR #7 leaves eight verify-*.sh scripts
 # unwired: which gate runs when is a workflow-contract decision, not part of resolving a merge.
+#
+# SUPERSEDED. THE THREE LINES ABOVE ARE NO LONGER TRUE AND ARE KEPT WHERE THEY ARE, at lines
+# 39-41, because build/verify-registry.sh's stage-7 header cites them by that line range as
+# the record of the state it found. Both of their claims have failed, in different ways:
+#
+#   * "Nothing reads this file automatically" was TRUE WHEN WRITTEN, at 2ed9b09, where a
+#     grep for this file's name over build/, .github/, scripts/, tests/ and src/ returned
+#     nothing. It became false at 72d7314, which added stage 7 to build/verify-registry.sh.
+#     That stage binds this path, hands it to its comparison, turns any disagreement into a
+#     fail line and exits MMT-4001, and counts this file's prefixes in its pass line. It is
+#     reached automatically: ./build.sh test-fast runs verify-registry.sh, and the fast
+#     workflow runs test-fast. So this file IS a gate input. Adding or removing a prefix
+#     here without the matching table row in doc 40 now reddens that gate by name, and so
+#     does the reverse.
+#   * "PR #7 leaves eight verify-*.sh scripts unwired" was also true at 2ed9b09 and is not
+#     now. Which gates are deliberately unwired is stated once, as data, in the EXEMPT array
+#     of build/verify-gate-wiring.sh, whose § 3 prints one line per entry and whose § 4 fails
+#     if the reached-or-exempt partition breaks. That array is the answer; a figure written
+#     here would be a second copy of it, free to drift, and it has drifted - the eight was
+#     measured before three of those scripts were wired and before the ContentImport gates
+#     were classified at all. No number replaces it on purpose.
+#
 # Re-run the comparison by hand with:
 #
 #   grep -oE '^\| `[A-Z]+-`' docs/technical/40-content-data-and-validation.md \

@@ -89,6 +89,34 @@ internal sealed class VerificationEntry
     /// entry whose approach a later package replaces.
     /// </summary>
     public string? Successor { get; set; }
+
+    /// <summary>
+    /// The work package an entry's execution is deferred to, when the entry is registered
+    /// here but cannot run until another package provides what it needs.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// MODELLED SO THE FIELD CAN BE READ, AND FOR NO OTHER PURPOSE. Nothing keys behaviour
+    /// on this value: it is not validated, not required, not cross-checked against the
+    /// work-package register, and no rule consults it. Adding a member is what makes the
+    /// registries carrying it parseable, and any rule about what a legitimate deferral
+    /// looks like belongs to whoever owns that rule, not to this DTO.
+    /// </para>
+    /// <para>
+    /// It is modelled rather than ignored because
+    /// <c>src/MechaMiner.Tools/Audit/ToolsJsonContextAccess.cs</c> sets
+    /// <c>UnmappedMemberHandling.Disallow</c>, which the class remarks above state as
+    /// deliberate: an unregistered field is a hard deserialization error rather than a
+    /// silent drop. That is the correct default and is kept. The consequence was that four
+    /// committed registries - <c>PRE-001</c>, <c>SIM-003</c>, <c>SIM-007</c> and
+    /// <c>UI-002</c> - could not be read AT ALL, so every entry in them went uncounted and
+    /// unvalidated rather than one field going unread. Seven entries across those four
+    /// files carry it today, with values <c>OPS-001</c>, <c>FND-005</c> and <c>QUA-005</c>.
+    /// Registering the field here is the "contract change that was not registered" half of
+    /// that rule being discharged, which is the remedy the rule asks for.
+    /// </para>
+    /// </remarks>
+    public string? DeferredTo { get; set; }
 }
 
 /// <summary>How one verification entry is executed.</summary>

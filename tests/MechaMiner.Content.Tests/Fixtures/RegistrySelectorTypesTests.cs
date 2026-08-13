@@ -268,6 +268,179 @@ internal sealed class RegistrySelectorTypesTests
     }
 
     /// <summary>
+    /// The derived scan roots are non-empty and reach the projects that actually hold selector
+    /// targets, and a type declared in none of them still fails.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// THE TWO LEGS ANSWER THE TWO WAYS A DERIVED ROOT SET CAN BE WRONG, AND NEITHER IS A
+    /// TWO-SET COMPARISON. <see cref="RegistrySelectorTypes.SourceRoots"/> globs
+    /// <c>tests/*.Tests</c> instead of restating the projects, which removes the drift this
+    /// suite was bitten by - but a glob that stops matching produces an EMPTY root set, and an
+    /// empty scan answers every selector in the corpus with a confident "declared nowhere". So
+    /// the first leg is a vacuity anchor.
+    /// </para>
+    /// <para>
+    /// The second is the one that matters more, because WIDENING A SCAN AND DISABLING A CHECK
+    /// PRODUCE THE SAME DIFF SUMMARY. Adding two roots made 25 registry failures stop; so would
+    /// making the resolver incapable of refusing anything. "The failures stopped" is therefore
+    /// not a report about the fix - this control's result is, and it is shown red by
+    /// construction rather than asserted, with a name no root declares.
+    /// </para>
+    /// <para>
+    /// <c>MechaMiner.Diagnostics.Tests</c> and <c>MechaMiner.Tools.Tests</c> are named because
+    /// they are the two the roster omitted and the two that <c>FND-004</c>, <c>FND-007</c>,
+    /// <c>FND-008</c> and <c>FND-009</c> name selectors in. Naming them is not a restatement of
+    /// the glob's output: it is the claim that the glob still reaches the projects the corpus
+    /// actually depends on, which an empty or narrowed glob would break.
+    /// </para>
+    /// </remarks>
+    [Test]
+    public void TheDerivedScanRootsAreNonEmptyReachTheRealProjectsAndStillRefuseTheAbsent()
+    {
+        IReadOnlyList<string> roots = RegistrySelectorTypes.SourceRoots;
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                roots,
+                Is.Not.Empty,
+                "the derived scan root set is EMPTY, so every selector would be reported as "
+                    + "declared nowhere and the whole corpus would fail for one reason. A glob "
+                    + "that stops matching must not read as a corpus that stopped being valid");
+
+            Assert.That(
+                roots,
+                Does.Contain("MechaMiner.Diagnostics.Tests"),
+                () => "the derived roots no longer reach MechaMiner.Diagnostics.Tests, which "
+                    + "holds the selector targets of FND-004, FND-007 and FND-008. Roots: "
+                    + string.Join(", ", roots));
+            Assert.That(
+                roots,
+                Does.Contain("MechaMiner.Tools.Tests"),
+                () => "the derived roots no longer reach MechaMiner.Tools.Tests, which holds "
+                    + "the selector targets of FND-009. Roots: " + string.Join(", ", roots));
+            Assert.That(
+                roots,
+                Does.Contain("shared"),
+                () => "tests/shared is a declared non-project root and is not in the derived "
+                    + "set, so linked types every test assembly really declares would be "
+                    + "reported as declared nowhere. Roots: " + string.Join(", ", roots));
+
+            // The control. A type name in none of the roots must still be refused, or the
+            // widening above is indistinguishable from having disabled the check.
+            const string absent =
+                "MechaMiner.Nonexistent.Tests.NoSuchFixtureDeclaredAnywhere";
+            Assert.That(
+                RegistrySelectorTypes.Unresolved(absent),
+                Is.Not.Null,
+                "a selector naming a type declared in NONE of the scanned roots resolved. "
+                    + "Widening the root set has made the resolver unable to fail, which has "
+                    + "the same diff summary as fixing its reach and none of the value");
+
+            // And the refusal must enumerate the roots it actually searched, not claim tests/.
+            Assert.That(
+                RegistrySelectorTypes.Unresolved(absent),
+                Does.Contain("MechaMiner.Diagnostics.Tests"),
+                () => "the refusal message does not enumerate the scanned roots, so it can "
+                    + "again overstate its reach and report a reach limit as a defect in the "
+                    + "registries. Message: " + RegistrySelectorTypes.Unresolved(absent));
+        });
+    }
+
+    /// <summary>
+    /// Each of the three reference forms added for non-path references refuses as well as
+    /// accepts, so none of them is a bucket that gave up checking.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// THE ALTERNATIVE TO THESE THREE FORMS WAS <c>Prose</c>, WHICH CHECKS NOTHING. Six
+    /// references were being reported as missing files; routing them to prose would have traded
+    /// six false accusations for six silently abandoned checks, and nothing afterwards would
+    /// have marked the loss. So each form has to be shown refusing something, or it is prose
+    /// with a longer name.
+    /// </para>
+    /// <para>
+    /// Two of the three assert the OPPOSITE of "exists at this path", which is the reusable
+    /// shape here: a reference's assertion need not be existence, and an inverted assertion is
+    /// still an assertion. <see cref="RegistryFixtureReferences.Form.ExpectedOutput"/> fails on
+    /// PRESENCE in the committed tree, and
+    /// <see cref="RegistryFixtureReferences.Form.RedactionSample"/> fails on presence outside
+    /// <c>tests/</c>.
+    /// </para>
+    /// </remarks>
+    [Test]
+    public void EachNonPathReferenceFormRefusesAsWellAsAccepts()
+    {
+        Expect.Multiple(() =>
+        {
+            // TypeName: the real one resolves, and a name no root declares does not.
+            Assert.That(
+                RegistryFixtureReferences.Unresolved("FailingLogSink"),
+                Is.Null,
+                "FailingLogSink is declared at "
+                    + "tests/MechaMiner.Diagnostics.Tests/Logging/FailingLogSink.cs and must "
+                    + "resolve as a TypeName reference");
+            Assert.That(
+                RegistryFixtureReferences.Unresolved("NoSuchTypeIsDeclaredAnywhere"),
+                Is.Not.Null,
+                "a TypeName reference naming a type declared in none of the scanned roots "
+                    + "resolved, so this form accepts anything PascalCase and checks nothing");
+
+            // ExpectedOutput: an ignored, uncommitted output resolves; a COMMITTED path under
+            // the same output root must not.
+            Assert.That(
+                RegistryFixtureReferences.Unresolved("artifacts/benchmark/sample-report.json"),
+                Is.Null,
+                "an expected output that is gitignored and uncommitted must resolve: its "
+                    + "absence from the tree is the property, not a defect");
+            const string committedOutput = "artifacts/benchmark/sample-report.json";
+            Assert.That(
+                RegistryFixtureReferences.Unresolved(
+                    committedOutput,
+                    new HashSet<string>(StringComparer.Ordinal) { committedOutput }),
+                Is.Not.Null,
+                "a path under artifacts/ that git TRACKS resolved. An expected output that has "
+                    + "been committed is evidence that cannot have come from this run, and it "
+                    + "is the one thing this inverted form exists to catch. The committed set is "
+                    + "injected because nothing under artifacts/ IS committed - that is the state "
+                    + "this form asserts, so the refusing leg has no natural probe");
+
+            // RedactionSample: the declared samples resolve, and a value planted outside tests/
+            // does not.
+            Assert.That(
+                RegistryFixtureReferences.Unresolved("/home/someone-else/notes.txt"),
+                Is.Null,
+                "a redaction sample confined to tests/ must resolve: the registry that declares "
+                    + "it and the test that feeds it to redaction are where it belongs");
+            Assert.That(
+                RegistryFixtureReferences.Unresolved("/" + LeakedSampleProbe),
+                Is.Not.Null,
+                "a redaction sample that appears in a committed file OUTSIDE tests/ resolved, "
+                    + "so this form is not the leak detector it claims to be");
+        });
+    }
+
+    /// <summary>A string that must appear in a committed file outside <c>tests/</c>.</summary>
+    /// <remarks>
+    /// <c>.gitignore</c> is committed, outside <c>tests/</c>, and contains <c>artifacts/</c>, so
+    /// the absolute-looking value <c>/artifacts/</c> is present outside the test material and
+    /// must be refused. Asserted by <see cref="TheLeakProbeIsActuallyPresentOutsideTests"/>.
+    /// </remarks>
+    private const string LeakedSampleProbe = "artifacts/";
+
+    /// <summary>The leak probe really is present in a committed file outside tests/.</summary>
+    [Test]
+    public void TheLeakProbeIsActuallyPresentOutsideTests()
+    {
+        Assert.That(
+            RegistryFixtureReferences.CommittedFilesOutsideTestsContaining(LeakedSampleProbe),
+            Is.Not.Empty,
+            "the leak probe appears in no committed file outside tests/, so the leak-detector "
+                + "leg of the control above would hold vacuously");
+    }
+
+    /// <summary>
     /// Whether <paramref name="type"/> is a type a scan of this repository's test sources could
     /// be expected to have a declaration line for.
     /// </summary>
@@ -309,7 +482,7 @@ internal sealed class RegistrySelectorTypesTests
     /// <see cref="MechaMiner.Content.Tests.Categories.BehaviorTokenCallSiteTests"/>, one added
     /// type in <c>MechaMiner.Content.Tests</c>.
     /// </remarks>
-    private const int TypesIndexed = 222;
+    private const int TypesIndexed = 234;
 
     /// <summary>
     /// Members the source index records across every type it finds.
@@ -337,7 +510,7 @@ internal sealed class RegistrySelectorTypesTests
     /// concrete thing a re-measurement here can hide.
     /// </para>
     /// </remarks>
-    private const int MembersIndexed = 1198;
+    private const int MembersIndexed = 1310;
 
     /// <summary>The negative control: the resolver must be able to fail.</summary>
     [Test]

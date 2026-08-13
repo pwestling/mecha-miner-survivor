@@ -154,8 +154,45 @@ internal sealed class RegistryFinding
 /// </remarks>
 internal static class RegistryValidator
 {
+    /// <summary>
+    /// The selector kinds a <c>SCH-QUA-001</c> entry may declare.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <c>engine-scene</c> is here because OMITTING IT WAS AN INCOMPLETE VOCABULARY, NOT A
+    /// PROHIBITION. It is a live selector kind with a live consumer: six entries carry it
+    /// (<c>VER-PRE-001-001</c>, <c>VER-PRE-001-002</c>, <c>VER-PRE-002-001</c>,
+    /// <c>VER-UI-002-001</c>, <c>VER-UI-002-002</c>, <c>VER-UI-002-003</c>), their values name
+    /// a section of a Godot scene - <c>VER-PRE-001-001</c> selects
+    /// <c>game/tests/RunSliceEvidenceHarness.tscn § interpolation-is-presentation-only</c> -
+    /// and <c>build/verify-run-slice.sh</c> derives its expected section roster from exactly
+    /// these entries, filtering on <c>kind == "engine-scene"</c> at its line 378 and failing
+    /// outright at its line 936 if that roster comes out empty. So another gate already treats
+    /// the kind as valid and load-bearing, and this list rejecting it made the two disagree.
+    /// </para>
+    /// <para>
+    /// Why it is added rather than the registries being changed: a scene section is not any of
+    /// the other four. It is not a <c>command</c> or a <c>script</c> the build can run, it is
+    /// not an <c>nunit</c> test method - the <c>nunit</c> branch below resolves those against
+    /// discovered tests, which would fail for a scene - and calling it <c>manual</c> would
+    /// assert that a human performs it when a gate executes it. Re-labelling would have made
+    /// six entries lie about how they are verified in order to satisfy a list that was simply
+    /// missing an entry.
+    /// </para>
+    /// <para>
+    /// No behaviour is keyed on the new value here. It is accepted as a kind and nothing more;
+    /// the roster and section checks that give it meaning stay in
+    /// <c>build/verify-run-slice.sh</c>, which owns them.
+    /// </para>
+    /// <para>
+    /// Four of these six were invisible until <c>deferredTo</c> was modelled on
+    /// <see cref="VerificationEntry"/>: <c>PRE-001</c> and <c>UI-002</c> failed to deserialize
+    /// altogether, so their entries were never reached by this check. They are findings this
+    /// validator gained reach over, not new defects.
+    /// </para>
+    /// </remarks>
     private static readonly ImmutableArray<string> SelectorKinds =
-        ImmutableArray.Create("command", "script", "nunit", "manual");
+        ImmutableArray.Create("command", "script", "nunit", "manual", "engine-scene");
 
     private static readonly ImmutableArray<string> Tiers =
         ImmutableArray.Create("fast", "main", "nightly", "device");
@@ -186,6 +223,46 @@ internal static class RegistryValidator
     /// (<c>VER-FND-009-011</c>).
     /// </remarks>
     internal const string ForbiddenSectionSignEscape = "\\u00a7";
+
+    /// <summary>
+    /// The 1-based numbers of the lines of <paramref name="text"/> that contain
+    /// <paramref name="needle"/>, in order.
+    /// </summary>
+    private static ImmutableArray<int> LinesContaining(string text, string needle)
+    {
+        ImmutableArray<int>.Builder lines = ImmutableArray.CreateBuilder<int>();
+        string[] split = text.Split('\n');
+        for (int index = 0; index < split.Length; index++)
+        {
+            if (split[index].Contains(needle, StringComparison.OrdinalIgnoreCase))
+            {
+                lines.Add(index + 1);
+            }
+        }
+
+        return lines.ToImmutable();
+    }
+
+    /// <summary>
+    /// How many times <paramref name="needle"/> occurs in <paramref name="text"/>.
+    /// </summary>
+    /// <remarks>
+    /// Occurrences, not lines that contain one. A single line of registry prose routinely
+    /// carries several section signs, so the two figures diverge and reporting the smaller
+    /// one would understate the work a fix has to do.
+    /// </remarks>
+    private static int CountOccurrences(string text, string needle)
+    {
+        int count = 0;
+        int at = text.IndexOf(needle, StringComparison.OrdinalIgnoreCase);
+        while (at >= 0)
+        {
+            count++;
+            at = text.IndexOf(needle, at + needle.Length, StringComparison.OrdinalIgnoreCase);
+        }
+
+        return count;
+    }
 
     /// <summary>Validates every rule and returns the findings in canonical order.</summary>
     internal static ImmutableArray<RegistryFinding> Validate(RegistrySources sources)
@@ -434,15 +511,28 @@ internal static class RegistryValidator
             RegistryDocument document = sources.VerificationRegistries[fileIndex];
             string path = document.Path;
 
-            if (document.Text.Contains(ForbiddenSectionSignEscape, StringComparison.OrdinalIgnoreCase))
+            // Located at the FIRST offending line and detailed with every one of them, not at
+            // ":1". A rule that reports a whole-file location sends the reader to the opening
+            // brace of a 500-line registry to hunt for a six-character escape by eye, and it
+            // makes one finding look like one defect: these seven files carried 193 escapes on
+            // 163 lines, so the finding count and the occurrence count differ by 186 and the
+            // location was the only thing that could have said so.
+            ImmutableArray<int> escapeLines = LinesContaining(
+                document.Text, ForbiddenSectionSignEscape);
+            if (!escapeLines.IsEmpty)
             {
+                int escapes = CountOccurrences(document.Text, ForbiddenSectionSignEscape);
                 findings.Add(new RegistryFinding(
                     RegistryRule.NonCanonicalEncoding,
                     RegistrySeverity.Error,
                     path,
-                    path + ":1",
+                    path + ":" + escapeLines[0].ToString(CultureInfo.InvariantCulture),
                     "escapes the section sign as " + ForbiddenSectionSignEscape
-                    + " instead of writing it as literal UTF-8; .editorconfig already fixes charset = utf-8 "
+                    + " instead of writing it as literal UTF-8, "
+                    + escapes.ToString(CultureInfo.InvariantCulture) + " time(s) on "
+                    + escapeLines.Length.ToString(CultureInfo.InvariantCulture)
+                    + " line(s): " + string.Join(",", escapeLines)
+                    + "; .editorconfig already fixes charset = utf-8 "
                     + "for every file, and sibling registries must spell it the same way"));
             }
 

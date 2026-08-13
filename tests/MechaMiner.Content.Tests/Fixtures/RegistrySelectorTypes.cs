@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -50,18 +52,100 @@ namespace MechaMiner.Content.Tests.Fixtures;
 internal static class RegistrySelectorTypes
 {
     /// <summary>
-    /// The directories under <c>tests/</c> whose sources the index reads: the four test
-    /// projects doc 100 prescribes, plus <c>tests/shared</c>, whose files are linked into all
-    /// four and so declare types that are really in every test assembly.
+    /// The directories under <c>tests/</c> whose sources the index reads: every test project,
+    /// found by globbing rather than restated, plus <see cref="NonProjectSourceRoots"/>.
     /// </summary>
-    private static readonly string[] TestSourceDirectories =
+    /// <remarks>
+    /// <para>
+    /// <c>MechaMiner.Diagnostics.Tests</c> AND <c>MechaMiner.Tools.Tests</c> WERE MISSING, AND
+    /// THAT WAS THE WHOLE OF A 25-FAILURE DIAGNOSIS. Registries <c>FND-004</c>,
+    /// <c>FND-007</c>, <c>FND-008</c> and <c>FND-009</c> name selectors in exactly those two
+    /// projects - <c>BuildIdentityTests</c>, <c>DiagnosticLogTests</c>,
+    /// <c>RotatingLogFileTests</c>, <c>BenchmarkReportTests</c>, <c>ArchitectureRuleTests</c> -
+    /// and every one of those types exists in the tree. Reflection can never see them, because
+    /// <c>MechaMiner.Content.Tests</c> references only <c>MechaMiner.Content</c> and that edge
+    /// is fixed by the accepted architecture, so this index is their ONLY resolution route and
+    /// its roster omitted both projects. The registries were correct throughout.
+    /// </para>
+    /// <para>
+    /// WHY NEITHER PARENT COULD HAVE CAUGHT IT. Those four registries exist only on
+    /// <c>18b847b9</c>; this file exists only on <c>aecd36aa</c>. No single parent had both, so
+    /// the omission was unobservable until the merge put the data and the reader together. The
+    /// union of two green trees is not a tested tree.
+    /// </para>
+    /// <para>
+    /// WIDENING A SCAN AND DISABLING A CHECK PRODUCE THE SAME DIFF SUMMARY. Twenty-five
+    /// failures stopping is not evidence this is the former.
+    /// <see cref="RegistrySelectorTypesTests"/> carries the control that separates them: a
+    /// selector naming a type declared in none of these roots must still fail.
+    /// </para>
+    /// <para>
+    /// DERIVED RATHER THAN LISTED, WHICH IS WHY THE TWO NAMES ABOVE DO NOT APPEAR BELOW. A
+    /// hand-maintained roster of the test projects is the same defect class that produced this
+    /// bug: adding a project silently reintroduces the gap, and the failure lands on whoever
+    /// next writes a registry entry naming it rather than on whoever added the project. An
+    /// assertion would keep the list and bolt a drift detector onto it; deriving deletes the
+    /// thing that can drift, and needs no two-set anchor because there is no second set left to
+    /// disagree with. <see cref="SourceRoots"/> globs <c>tests/*.Tests</c>.
+    /// </para>
+    /// <para>
+    /// The one anchor it does need is a VACUITY anchor, not a two-set one: a glob that stops
+    /// matching yields an empty root set, and an empty scan answers every selector with a
+    /// confident "declared nowhere". <see cref="RegistrySelectorTypesTests"/> asserts the
+    /// derived set is non-empty and contains the projects that actually hold selector targets,
+    /// and pairs that with the negative control that a type declared in none of the roots still
+    /// fails - so the scan can neither silently narrow nor silently accept.
+    /// </para>
+    /// </remarks>
+    /// <summary>
+    /// Roots under <c>tests/</c> that are NOT test projects and so are not matched by the
+    /// <c>*.Tests</c> glob, each with the reason it must be scanned anyway.
+    /// </summary>
+    /// <remarks>
+    /// Declared with reasons rather than appended as a bare tail, so a later reader can tell a
+    /// deliberate extra from a leftover. An entry whose reason no longer holds should be
+    /// removed, and an entry with no reason should never have been added.
+    /// </remarks>
+    private static readonly (string Directory, string Reason)[] NonProjectSourceRoots =
     [
-        "MechaMiner.Content.Tests",
-        "MechaMiner.Game.Tests",
-        "MechaMiner.Persistence.Tests",
-        "MechaMiner.Simulation.Tests",
-        "shared",
+        ("shared",
+            "not a test project: every test .csproj links it with "
+            + "<Compile Include=\"../shared/**/*.cs\">, so the types it declares really are "
+            + "declared in every test assembly and a selector may legitimately name one"),
     ];
+
+    /// <summary>
+    /// THE SINGLE SOURCE OF TRUTH FOR THE SCAN'S REACH. <see cref="BuildSourceIndex"/> iterates
+    /// it and the unresolved-selector message enumerates it, so the message cannot be wrong
+    /// about which roots were searched.
+    /// </summary>
+    internal static ImmutableArray<string> SourceRoots { get; } = DeriveSourceRoots();
+
+    private static ImmutableArray<string> DeriveSourceRoots()
+    {
+        SortedSet<string> roots = new(StringComparer.Ordinal);
+        string testsRoot = Path.Combine(TestArtifacts.RepositoryRoot, "tests");
+        if (Directory.Exists(testsRoot))
+        {
+            foreach (string directory in Directory.EnumerateDirectories(testsRoot))
+            {
+                string name = Path.GetFileName(directory);
+                if (name.EndsWith(".Tests", StringComparison.Ordinal))
+                {
+                    roots.Add(name);
+                }
+            }
+        }
+
+        // Added unconditionally, so an extra that has been deleted from disk surfaces as a
+        // declared root the calibration test finds missing rather than as a silent narrowing.
+        foreach ((string directory, string _) in NonProjectSourceRoots)
+        {
+            roots.Add(directory);
+        }
+
+        return [.. roots];
+    }
 
     /// <summary>A file-scoped or block namespace declaration.</summary>
     private static readonly Regex NamespaceDeclaration = new(
@@ -291,10 +375,19 @@ internal static class RegistrySelectorTypes
                     + " but no member '" + member + "' is declared in it");
         }
 
+        // The roots are ENUMERATED FROM THE SET THE SCAN ITERATES, never restated. The message
+        // this replaces said "declared anywhere under tests/" while the scan covered five named
+        // directories, so it reported the registries as wrong when the truth was that it had
+        // not looked - a reach limit rendered as an accusation against the corpus. Derived from
+        // SourceRoots, the message cannot be wrong about the scan, and the next omission
+        // presents as a visibly short list of roots instead of somebody else's defect.
         return (
             Route.None,
             "'" + selector + "' is not a type in " + ThisAssembly.GetName().Name
-                + ", and neither it nor its declaring type is declared anywhere under tests/");
+                + ", and neither it nor its declaring type is declared in any of the "
+                + SourceRoots.Length.ToString(CultureInfo.InvariantCulture)
+                + " scanned source roots (tests/"
+                + string.Join(", tests/", SourceRoots) + ")");
     }
 
     /// <summary>
@@ -341,6 +434,31 @@ internal static class RegistrySelectorTypes
     }
 
     /// <summary>
+    /// Whether any type the source index found has <paramref name="simpleName"/> as its final
+    /// name segment.
+    /// </summary>
+    /// <remarks>
+    /// For <see cref="RegistryFixtureReferences.Form.TypeName"/>, where a registry names a test
+    /// double by its bare name - <c>FailingLogSink</c> - rather than by a namespace-qualified
+    /// one. Matching on the last segment is what the reference form actually promises; requiring
+    /// a qualified name would reject the convention rather than check it.
+    /// </remarks>
+    internal static bool DeclaresTypeNamed(string simpleName)
+    {
+        foreach (string fullyQualified in Sources.Value.Members.Keys)
+        {
+            int lastDot = fullyQualified.LastIndexOf('.');
+            string leaf = lastDot < 0 ? fullyQualified : fullyQualified[(lastDot + 1)..];
+            if (string.Equals(leaf, simpleName, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// The members the source index recorded directly in <paramref name="fullyQualifiedType"/>, or
     /// <see langword="null"/> when it recorded no such type at all - a distinction the member-level
     /// calibration needs, because an unknown type and a known type with a missing member are
@@ -359,7 +477,7 @@ internal static class RegistrySelectorTypes
     {
         SourceIndex index = new();
 
-        foreach (string project in TestSourceDirectories)
+        foreach (string project in SourceRoots)
         {
             string root = Path.Combine(TestArtifacts.RepositoryRoot, "tests", project);
             if (!Directory.Exists(root))

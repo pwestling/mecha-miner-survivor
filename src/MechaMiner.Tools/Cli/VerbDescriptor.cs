@@ -11,7 +11,16 @@ namespace MechaMiner.Tools.Cli;
 /// Registration is an explicit table in <see cref="VerbRegistry"/>. There is no
 /// reflection, attribute discovery, or assembly scanning: doc 100 § C# project
 /// standards requires that "generated/explicit registries make missing behavior a
-/// build error", and doc 114 § C# and domain defaults forbids a runtime registry.
+/// build error". That clause is the whole of the reflection ground.
+/// </para>
+/// <para>
+/// Doc 114 § C# and domain defaults supports the same table for a different reason:
+/// "Use a small manual composition root; do not add a dependency-injection
+/// container, service locator, or mutable global registry." That is why this table is
+/// an immutable array composed at its declaration rather than something populated at
+/// startup. Doc 114 says nothing about reflection - the word does not occur in it -
+/// and an earlier version of this remark cited it as forbidding "a runtime registry",
+/// which is not what it says.
 /// </para>
 /// <para>
 /// A verb whose behavior is owned by a work package that has not landed is still

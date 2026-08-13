@@ -25,10 +25,7 @@
     "minimum": 8,
     "maximum": 10
   },
-  "geodes_per_standard_map": {
-    "minimum": 32,
-    "maximum": 40
-  },
+  "geodes_per_standard_map": {},
   "abundance_states": [
     {
       "survey_state": "Scarce",
@@ -47,10 +44,7 @@
     }
   ],
   "survey_disclosure": "The geological survey reports both the abundance label and detected geode count, but not their locations.",
-  "common_ore_from_completion_jackpots_per_map": {
-    "minimum": 1600,
-    "maximum": 2000
-  },
+  "common_ore_from_completion_jackpots_per_map": {},
   "extraction_duration_seconds": 20,
   "completion_only_reward": true,
   "completion_payout": [

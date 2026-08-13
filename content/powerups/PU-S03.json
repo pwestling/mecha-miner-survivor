@@ -57,8 +57,7 @@
         "text": "+0.03 Hull/s",
         "hull_per_second": 0.03
       },
-      "price_hyper_gold": 50,
-      "cumulative_cost_hyper_gold": 50
+      "price_hyper_gold": 50
     },
     {
       "rank": 2,
@@ -66,8 +65,7 @@
         "text": "+0.06 Hull/s",
         "hull_per_second": 0.06
       },
-      "price_hyper_gold": 100,
-      "cumulative_cost_hyper_gold": 150
+      "price_hyper_gold": 100
     },
     {
       "rank": 3,
@@ -75,8 +73,7 @@
         "text": "+0.09 Hull/s",
         "hull_per_second": 0.09
       },
-      "price_hyper_gold": 150,
-      "cumulative_cost_hyper_gold": 300
+      "price_hyper_gold": 150
     },
     {
       "rank": 4,
@@ -84,8 +81,7 @@
         "text": "+0.12 Hull/s",
         "hull_per_second": 0.12
       },
-      "price_hyper_gold": 225,
-      "cumulative_cost_hyper_gold": 525
+      "price_hyper_gold": 225
     },
     {
       "rank": 5,
@@ -93,8 +89,7 @@
         "text": "+0.15 Hull/s",
         "hull_per_second": 0.15
       },
-      "price_hyper_gold": 300,
-      "cumulative_cost_hyper_gold": 825
+      "price_hyper_gold": 300
     }
   ],
   "rules": [

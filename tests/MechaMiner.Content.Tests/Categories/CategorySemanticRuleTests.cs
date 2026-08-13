@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text.Json.Nodes;
@@ -234,6 +235,14 @@ internal sealed class CategorySemanticRuleTests
                 () => "a recipe resolving to AC under the ID W-AB must fail; this is the check "
                     + "that replaces reading the pair by eye: "
                     + string.Join("; ", mismatched.Diagnostics));
+            Assert.That(
+                Codes(mismatched),
+                Does.Not.Contain(ContentDiagnosticCodes.RecipeResourceLetterUnresolved),
+                () => "and must fail as a mismatch only. Without this, the split into two codes is "
+                    + "proved in one direction: MMC-7009's own test shows the unresolved branch "
+                    + "does not emit MMC-7005, and nothing showed the mismatch branch does not "
+                    + "emit MMC-7009, so making the mismatch emit both would pass the suite: "
+                    + string.Join("; ", mismatched.Diagnostics));
         });
     }
 
@@ -432,6 +441,32 @@ internal sealed class CategorySemanticRuleTests
                     + string.Join("; ", spelling.Diagnostics));
 
             Assert.That(
+                Codes(spelling),
+                Does.Not.Contain(ContentDiagnosticCodes.RecipeResourceLetterUnresolved),
+                () => "and as a mismatch only. Both of RSC-02 and RSC-01 carry letters, so the "
+                    + "unresolved branch has nothing to report here, and asserting its absence "
+                    + "is what keeps the two codes mutually exclusive rather than one code that "
+                    + "sometimes brings a second along: "
+                    + string.Join("; ", spelling.Diagnostics));
+
+            Assert.That(
+                Codes(spelling),
+                Is.EqualTo(new[] { ContentDiagnosticCodes.RecipeLettersMismatch }),
+                () => "and it is the ONLY code this branch emits on this input. What was proved "
+                    + "before this assertion existed was narrower than it read: the two codes "
+                    + "are mutually exclusive in both directions, and a fault-free weapon is "
+                    + "silent - RecipeLettersSpellTheWeaponIdAndAMismatchIsCaught asserts "
+                    + "clean.Diagnostics is empty. Neither bounds a FAULT path. Naming the "
+                    + "sibling code in a Does.Not.Contain says which one other code is absent "
+                    + "and leaves the rest of the emit set open. Measured at f9e616a: emitting "
+                    + "MMC-7008 from this branch, or from the unresolved branch, left all 1498 "
+                    + "Content tests green, while emitting it unconditionally reddened exactly "
+                    + "one test - the fault-free assertion - which is what shows the probe was "
+                    + "live rather than inert. Comparing the whole set closes the fault path, "
+                    + "and bounds its size as well as its membership: "
+                    + string.Join("; ", spelling.Diagnostics));
+
+            Assert.That(
                 Codes(pairs),
                 Does.Not.Contain(ContentDiagnosticCodes.CatalogDuplicateIdentity),
                 () => "and the sorting check must stay indifferent - a material pair is "
@@ -439,6 +474,92 @@ internal sealed class CategorySemanticRuleTests
                     + "difference between the two checks is load-bearing rather than an "
                     + "inconsistency to harmonise: " + string.Join("; ", pairs.Diagnostics));
         });
+    }
+
+    /// <summary>
+    /// A recipe naming a resource that carries no canonical letter is reported as an
+    /// unresolved letter and never as a spelling mismatch.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <see cref="CatalogChecks.RecipeLettersSpellTheWeaponId"/> has two rejections and
+    /// they used to share one code, which meant no test could say which of them had run.
+    /// The unresolved branch had no negative control at all: the only thing reaching it
+    /// did so by accident, and it asserted nothing about which branch fired. A branch in
+    /// that state can stop firing, or start firing on every weapon in the catalog, without
+    /// one assertion changing colour.
+    /// </para>
+    /// <para>
+    /// So the assertion here is a pair. <c>RSC-08</c> is hyper gold: a resource the catalog
+    /// really holds, loaded alongside the six lettered materials, that simply has no
+    /// <c>canonical_letter</c> to resolve to - which is what makes this a test of the
+    /// letter table rather than of catalog membership. The unresolved code must fire, and
+    /// the spelling code must not, because an unresolvable recipe has no spelling to
+    /// disagree with the weapon ID and reporting one as the other sends the reader to edit
+    /// the recipe when the fix is to give the resource its letter.
+    /// </para>
+    /// </remarks>
+    [Test]
+    public void ARecipeNamingAnUnletteredResourceIsUnresolvedAndNotAMismatch()
+    {
+        List<ResourceDefinition> resources = SixMaterials();
+        resources.Add(Load<ResourceDefinition>(
+            "resources/valid-currency-hyper-gold.json", DefinitionKind.Resource));
+
+        WeaponDefinition unlettered = Load<WeaponDefinition>(
+            "weapons/catalog-recipe-resource-unlettered.json", DefinitionKind.Weapon);
+
+        DiagnosticBag bag = new();
+        CatalogChecks.RecipeLettersSpellTheWeaponId(
+            new[] { unlettered }, resources, CatalogPath, bag);
+
+        Expect.Multiple(() =>
+        {
+            Assert.That(
+                Codes(bag),
+                Does.Contain(ContentDiagnosticCodes.RecipeResourceLetterUnresolved),
+                () => "W-AB naming RSC-08, which carries no canonical letter, must be "
+                    + "reported as an unresolved letter: " + string.Join("; ", bag.Diagnostics));
+
+            Assert.That(
+                Codes(bag),
+                Does.Not.Contain(ContentDiagnosticCodes.RecipeLettersMismatch),
+                () => "and must not be reported as a spelling mismatch - a recipe that "
+                    + "cannot be resolved has no spelling to compare against the weapon ID, "
+                    + "and one code for both faults is a report no reader can act on: "
+                    + string.Join("; ", bag.Diagnostics));
+
+            Assert.That(
+                RelatedIdsOf(bag, ContentDiagnosticCodes.RecipeResourceLetterUnresolved),
+                Does.Contain("RSC-08"),
+                () => "and must name the resource that did not resolve, because that is the "
+                    + "one the fix is applied to: " + string.Join("; ", bag.Diagnostics));
+
+            Assert.That(
+                Codes(bag),
+                Is.EqualTo(new[] { ContentDiagnosticCodes.RecipeResourceLetterUnresolved }),
+                () => "and it is the ONLY code this branch emits on this input - the other "
+                    + "fault path, bounded the same way and for the same reason. The absence "
+                    + "assertion above names one code; this one bounds the whole set, so a "
+                    + "third code added to this branch is red here instead of green everywhere. "
+                    + "Measured at f9e616a: MMC-7008 emitted from this branch left all 1498 "
+                    + "Content tests green before this line existed: "
+                    + string.Join("; ", bag.Diagnostics));
+        });
+    }
+
+    private static IReadOnlyList<string> RelatedIdsOf(DiagnosticBag bag, string code)
+    {
+        List<string> related = new();
+        foreach (ContentDiagnostic diagnostic in bag.Diagnostics)
+        {
+            if (string.Equals(diagnostic.Code, code, StringComparison.Ordinal))
+            {
+                related.AddRange(diagnostic.RelatedIds);
+            }
+        }
+
+        return related;
     }
 
     private static List<ResourceDefinition> SixMaterials()

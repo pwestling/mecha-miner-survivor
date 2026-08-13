@@ -69,6 +69,7 @@ internal static class CategoryFixtureCorpus
         Good("weapons/catalog-duplicate-recipe-pair.json", DefinitionKind.Weapon),
         Good("weapons/catalog-recipe-letters-mismatch.json", DefinitionKind.Weapon),
         Good("weapons/catalog-recipe-pair-reversed.json", DefinitionKind.Weapon),
+        Good("weapons/catalog-recipe-resource-unlettered.json", DefinitionKind.Weapon),
         Good("branches/catalog-duplicate-branch-class.json", DefinitionKind.Branch),
         Good("utilities/catalog-duplicate-installed-identity.json", DefinitionKind.Utility),
         Good("utilities/catalog-shifted-pool-availability.json", DefinitionKind.Utility),
@@ -86,12 +87,16 @@ internal static class CategoryFixtureCorpus
             ContentDiagnosticCodes.ConditionalFieldMissing),
         Bad("resources/invalid-resource-class-token.json", DefinitionKind.Resource,
             ContentDiagnosticCodes.TokenOutsideVocabulary),
+        Bad("resources/invalid-resonance-behavior-kind-prose.json", DefinitionKind.Resource,
+            ContentDiagnosticCodes.BehaviorTokenMalformed),
 
         // --- mechs ----------------------------------------------------------
         Bad("mechs/invalid-signature-weapon-display-name.json", DefinitionKind.Mech,
             ContentDiagnosticCodes.ReferenceGrammarMismatch),
         Bad("mechs/invalid-trait-modifier-kind.json", DefinitionKind.Mech,
             ContentDiagnosticCodes.TokenOutsideVocabulary),
+        Bad("mechs/invalid-trait-behavior-kind-prose.json", DefinitionKind.Mech,
+            ContentDiagnosticCodes.BehaviorTokenMalformed),
 
         // --- enemies --------------------------------------------------------
         Bad("enemies/invalid-armor-declared.json", DefinitionKind.Enemy,
@@ -103,6 +108,8 @@ internal static class CategoryFixtureCorpus
         Bad("enemies/invalid-derived-world-speed.json", DefinitionKind.Enemy,
             ContentDiagnosticCodes.DerivedValueAuthored),
         Bad("enemies/invalid-behavior-kind-prose.json", DefinitionKind.Enemy,
+            ContentDiagnosticCodes.BehaviorTokenMalformed),
+        Bad("enemies/invalid-specialist-attack-kind-prose.json", DefinitionKind.Enemy,
             ContentDiagnosticCodes.BehaviorTokenMalformed),
         Bad("enemies/invalid-elite-field-on-enemy.json", DefinitionKind.Enemy,
             ContentDiagnosticCodes.UnknownField),
@@ -118,6 +125,8 @@ internal static class CategoryFixtureCorpus
             ContentDiagnosticCodes.DiscriminatorArmMismatch),
         Bad("bosses/invalid-null-nested.json", DefinitionKind.Boss,
             ContentDiagnosticCodes.NullValue),
+        Bad("bosses/invalid-boss-behavior-kind-prose.json", DefinitionKind.Boss,
+            ContentDiagnosticCodes.BehaviorTokenMalformed),
 
         // --- mining sites ---------------------------------------------------
         Bad("mining-sites/invalid-site-class-token.json", DefinitionKind.MiningSite,
@@ -164,6 +173,15 @@ internal static class CategoryFixtureCorpus
             ContentDiagnosticCodes.ArrayCardinalityWrong),
         Bad("weapons/invalid-price-formula-script-string.json",
             DefinitionKind.WeaponStatPriceFormula, ContentDiagnosticCodes.UnknownField),
+        Bad("weapons/invalid-weapon-behavior-kind-prose.json", DefinitionKind.Weapon,
+            ContentDiagnosticCodes.BehaviorTokenMalformed),
+        Bad("weapons/invalid-targeting-policy-prose.json", DefinitionKind.Weapon,
+            ContentDiagnosticCodes.BehaviorTokenMalformed),
+        Bad("weapons/invalid-rock-targeting-behavior-prose.json", DefinitionKind.Weapon,
+            ContentDiagnosticCodes.BehaviorTokenMalformed),
+        Bad("weapons/invalid-price-formula-kind-prose.json",
+            DefinitionKind.WeaponStatPriceFormula,
+            ContentDiagnosticCodes.BehaviorTokenMalformed),
 
         // --- branches -------------------------------------------------------
         Bad("branches/invalid-branch-class-token.json", DefinitionKind.Branch,
@@ -182,6 +200,8 @@ internal static class CategoryFixtureCorpus
             ContentDiagnosticCodes.UnknownField),
         Bad("branches/invalid-expected-effect-no-qualitative.json", DefinitionKind.Branch,
             ContentDiagnosticCodes.RequiredFieldMissing),
+        Bad("branches/invalid-branch-behavior-kind-prose.json", DefinitionKind.Branch,
+            ContentDiagnosticCodes.BehaviorTokenMalformed),
 
         // --- utilities ------------------------------------------------------
         Bad("utilities/invalid-rank-count-mismatch.json", DefinitionKind.Utility,
@@ -192,6 +212,8 @@ internal static class CategoryFixtureCorpus
             ContentDiagnosticCodes.ConditionalFieldForbidden),
         Bad("utilities/invalid-material-utility-without-material.json", DefinitionKind.Utility,
             ContentDiagnosticCodes.ConditionalFieldMissing),
+        Bad("utilities/invalid-utility-behavior-kind-prose.json", DefinitionKind.Utility,
+            ContentDiagnosticCodes.BehaviorTokenMalformed),
 
         // --- relics ---------------------------------------------------------
         Bad("relics/invalid-unlock-id-on-fresh-relic.json", DefinitionKind.Relic,

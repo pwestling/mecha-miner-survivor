@@ -13,7 +13,7 @@
   "branch_class": "amplification",
   "cost_material_id": "RSC-01",
   "cost_units": 2,
-  "behavior_kind": "remove-pierce-cap",
+  "behavior_kind": "perpendicular-shockwave-per-hit",
   "effects": {
     "pierce_target_cap_removed": true,
     "unchanged_stats": [

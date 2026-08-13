@@ -151,8 +151,11 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
            carry a unit suffix.
       A name "says _percent" wherever the token appears, not only at the
       end - 40:95 constrains what the name says and 40:96's terminal-unit
-      rule is about unit suffixes, so the 52 mid-name spellings such as
-      percent_of_mech_base_speed are correct and are not flagged. Rule 4
+      rule is about unit suffixes, so the mid-name spellings such as
+      percent_of_mech_base_speed are correct and are not flagged. Measured
+      with PERCENT_TOKEN_KEY, this tree holds 50 such occurrences across 33
+      distinct property names; the figure here read 52 and matched neither
+      quantity, so it is now stated with the unit it is counted in. Rule 4
       excludes a unit-or-kind token wherever it appears too, for the
       mirror-image reason: the tree's
       single_target_ceiling_multiplier_at_full_bonus has `multiplier` as
@@ -215,19 +218,33 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
           own it. content/maps/ joined the rule because the health pack
           stored 0.75 = its authored 0.25 M pickup radius + 0.50 M
           (docs/72:185).
-      Checked on KEY NAMES in the covered directories, so a rename inside
-      one of them cannot slip past. It does NOT catch the value reappearing
-      under an unrelated name or in an uncovered directory - see the
-      per-rule scopes above and README.md.
+      Checked on KEY NAMES in the covered directories. That catches a
+      rename ONLY INTO A NAME THE PATTERN STILL MATCHES, which is a narrow
+      thing and was previously written as though it were a general one: an
+      earlier revision of this paragraph said "a rename inside one of them
+      cannot slip past" and then, in the next sentence, that a value
+      reappearing under an unrelated name is not caught. Those contradict,
+      and the second is the true one. A20 has NO value layer, so a derived
+      footprint value reintroduced under any name the pattern misses, or in
+      an uncovered directory, passes - see the per-rule scopes above and
+      README.md.
       Mandate: docs/technical/40-content-data-and-validation.md:114
       ("Validation derives world speeds/footprints and compares them with
       the survivability report")                                      FAILURE
 
-  A21 content/ holds exactly EXPECTED_CONTENT_DEFINITION_JSON_FILES (138)
-      DEFINITION *.json files, so a definition in a directory no A12 row
-      covers is still caught, AND the non-JSON files under content/ are
+  A21 content/ holds exactly as many DEFINITION *.json files as the A28
+      manifest has pairs, so a definition in a directory no A12 row covers is
+      still caught, AND the non-JSON files under content/ are
       exactly the three named in EXPECTED_CONTENT_NON_JSON (README.md,
       quote-verification-audit.md, transcription-notes.md).
+      The count's expectation is len() of the A28 manifest, not a literal.
+      There was a literal 138 here; A28 is the record of WHICH 138, and two
+      independent literals asserted by a comment to be the same number is a
+      defect this repository has already been burned by. The count row is
+      therefore redundant BY CONSTRUCTION - it still reddens on an added or
+      deleted definition, but it cannot disagree with the manifest. A21 no
+      longer sees a RENAME at all; that is A28's row, and the count row
+      staying green under a rename is exactly the hole A28 was added for.
       BOTH rows exclude every directory in NON_DEFINITION_DIRS, via
       in_non_definition_dir(), which is the population load_definitions()
       loads. The count row used to be a bare CONTENT.rglob("*.json") that
@@ -330,13 +347,16 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       present-and-null field asks runtime to guess. Absence is spelled by
       omitting the key.
       275 nulls across 101 of 138 definition files were disposed of in the
-      pass that added this: 246 keys omitted, 20 relic rarity/weighting
-      fields and 4 boss armor fields REMOVED as fields no schema will
-      declare, 3 external_numerics[n].value keys removed as shape defects,
-      and 2 nested id keys removed because the objects holding them are not
-      independently addressable. The two nested ids were briefly planned as
-      declared exceptions; removing the key instead made the assertion
-      unconditional.
+      pass that added this, and that tally was counted as that pass
+      finished: 246 keys omitted, 20 relic rarity/weighting fields and 4
+      boss armor fields REMOVED as fields no schema will declare, 3
+      external_numerics[n].value keys removed as shape defects, and 2
+      nested id keys removed because the objects holding them are not
+      independently addressable. It is the record of that one disposal and
+      no assertion recomputes it - what a green run asserts is zero nulls
+      today, which says nothing about how many there once were. The two
+      nested ids were briefly planned as declared exceptions; removing the
+      key instead made the assertion unconditional.
       Negative control: `"probe_null": null` injected at the top level of
       content/enemies/EN-01.json -> FAIL, "1 null(s) under content/ ...
       ['content/enemies/EN-01.json.probe_null']".
@@ -367,16 +387,457 @@ ASSERTION TABLE - what this script claims, and the mandate behind each claim
       substring matching finds "st." inside 93 ordinary words ending a
       sentence ("first.", "specialist.", "cost.", ... 21 forms) and "ver."
       inside 5 ("forever.", "solver.", "hover."). None of those 98 is an
-      abbreviation. The bounded form finds zero today.
+      abbreviation. Those figures were measured at an earlier tree and the
+      corpus has grown since; re-measured over 201 docs/**/*.md files at
+      2026-08-11T01:16Z the same two searches find 104 hits across 23
+      distinct inside-word forms for "st." and 7 across 4 for "ver.". Each
+      count is kept WITH its form total on purpose: an earlier revision
+      carried the totals without the form counts, and a figure with no
+      shape to check it against is how a wrong number circulates.
+      The bounded form is NOT free of false positives, and the claim that
+      it "finds zero today" was true only while `no.` had no occurrence.
+      WORDHOOD IS THE WRONG TEST, and counting by it understated this.
+      An earlier revision said THREE of these eighteen tokens are also
+      ordinary English words - `no.`, `fig.` and `sec.` - and offered that
+      as the bound. The operative property is neither wordhood nor that
+      count: it is whether the token, spelled as this list spells it, can
+      END A SENTENCE without being an abbreviation. Those three can
+      because they are words. AT LEAST FIVE MORE can without being words
+      at all, because `re.IGNORECASE` is on the compiled pattern - never
+      mentioned in the text this replaces - so a capitalised or upper-case
+      form of a token matches it. Measured against this module's own
+      compiled ABBREVIATION_RX at 2026-08-11T04:09Z, each of these
+      matches at a plain sentence end with no abbreviation present:
+      `ca.` on "The tour ended in CA." (a US state code), `al.` on "His
+      brother is called Al." (a given name), `p.` on "The verdict was a
+      flat P.", `eq.` on "The band played the whole of EQ.", and `pp.` on
+      "Dynamics fell to pp." (a dynamic marking). So EIGHT of the
+      eighteen are known latent misfires rather than three - the three
+      words plus those five - and "at least" is meant literally: the five
+      were found by inspecting the list, not by exhausting it, and
+      `re.IGNORECASE` means every token has to be considered in every
+      capitalisation.
+      EIGHT AND NOT SEVEN, and the arithmetic is worth spelling out
+      because this paragraph carried the wrong total from the commit that
+      restructured it: three words plus five non-words is eight, and the
+      inline comment at ABBREVIATION_SUFFIX says seven for a different and
+      correct reason - it counts only the tokens that take NO suffix, so
+      it excludes `no.`. Fold `no.` back in, as this paragraph does when
+      it says "those three can", and the count is eight. Re-derived at
+      ecf733c against the compiled ABBREVIATION_RX, one innocent
+      sentence-final candidate per token, all eight matching: `no.`,
+      `fig.`, `sec.`, `ca.`, `al.`, `p.`, `eq.`, `pp.`. The other ten
+      match only where the token really is the abbreviation, which is the
+      gate working.
+      `no.` is only the one with an occurrence in the corpus TODAY, and
+      the other SEVEN are LATENT MISFIRES, not impossibilities: measured
+      the same way, "The dessert was a dried fig." matches `fig.` and
+      "Hold on a sec." matches `sec.`, each at a plain sentence end. Seven
+      is what the list that follows has always named - `fig.`, `sec.` and
+      the five above - so the "six" this sentence used to say was
+      contradicted by its own enumeration.
+      `no.` STAYS IN THE EIGHT DESPITE ITS SUFFIX, which is the part the
+      narrowing makes easy to miss. The suffix requires a following
+      numeral, so it clears the one real occurrence in docs/ - "than a yes
+      or no. Its numbers are 300 trials" no longer matches - but a sentence
+      ending in the word "no" whose NEXT sentence opens with a numeral
+      still matches on the same line: "The answer is no. 5 people agreed."
+      does. Narrowed is not the same as closed.
+      None of those sentences is in docs/ yet, which is the only reason
+      they are not failures today; the day one is written the gate reddens
+      on innocent prose. Do not read the `no.` narrowing as evidence the
+      other tokens are safe.
+      At b71371e the bounded form reports exactly 1 hit,
+      docs/technical/delivery-waves.md:598 "than a yes or no. Its numbers
+      are 300 trials", which is that word ending a sentence and not an
+      abbreviation at all. So `no.` ALONE is narrowed to require a
+      following numeral ("No. 5"); with that suffix the bounded form
+      reports 0. `fig.` and `sec.` are deliberately NOT suffixed here:
+      each suffix buys its own false negatives, and widening the narrowing
+      is a separate decision that must be proposed on its own with each
+      token's false-negative cost stated.
+      THE SUFFIX IS NECESSARY BUT NOT SUFFICIENT. It is a TRADE, not a
+      repair, and both directions are still wrong on purpose:
+        - RESIDUAL FALSE POSITIVE. A sentence-final "no" whose NEXT
+          sentence opens with a numeral still matches, because a lookahead
+          cannot tell it from a genuine "No. 5". "The answer is no. 5
+          people agreed." matches today. The rule is narrowed from every
+          sentence-final use to those followed by a digit, not freed of
+          them.
+        - FALSE NEGATIVES INTRODUCED. The number sense does NOT always
+          introduce a digit, so every number-sense form whose next
+          non-space character is not one is now missed entirely, where the
+          unsuffixed form caught it. Measured against the compiled
+          ABBREVIATION_RX, each of these is the number sense and none of
+          them matches: "See No. IV for details." (a roman numeral),
+          "Part No. A-12 shipped." and "Ticket No. ABC-123 was closed."
+          (alphanumeric part numbers), "Item No. (5) is missing." (a
+          bracketed numeral), and the bare cross-reference "see no.
+          above". That is the coverage this suffix gives up, and it is a
+          class, not the single example previously admitted.
+      The trade is taken because sentence-final "no" is common in ordinary
+      prose while the digitless number-sense forms above are rare here, so
+      the suffix retires many more false alarms than true positives.
+      It is recorded here rather than left to be discovered, because a
+      guard that swaps one error class for another is exactly the shape
+      that quietly stops being able to fail. Anyone tightening either
+      direction should re-measure both.
       THE FAILURE MESSAGE POINTS AT THE MATCHER, NOT AT A QUOTATION. The
       day someone writes "e.g." in a design document, nothing is wrong with
       any content string; what is wrong is that the quotation rule's
       premise no longer holds and the rule needs revisiting.
       Negative control: docs/ must not be modified, so the check runs
-      against a scratch tree - a byte copy of docs/ with "e.g." inserted
-      into one sentence -> FAIL naming that file and token.
+      against a scratch tree - a byte copy of docs/ with the token
+      inserted. One control per surviving sense, both measured at b71371e:
+      "e.g." mid-sentence -> FAIL naming that file and token, exit 1; and
+      a genuine "No. 5" mid-sentence -> FAIL naming that file and token,
+      exit 1, which is what proves the numeral suffix narrowed the rule
+      rather than disabled it.
       Mandate: content/quote-verification-audit.md (adopted rule and its
       stated corpus dependency)                                     FAILURE
+
+  A31 RENAMED FROM A28. If you arrived here from a review comment, a commit
+      message or a branch note that says "A28" and means the derived-value
+      families, this row is that rule and A31 is its label. The number is out
+      of sequence with its neighbours for that reason and not by accident.
+      WHY IT MOVED: two streams independently claimed A28. This branch's
+      derived-value-family rule (PR #10) and the definition (path, id)
+      manifest (master, PR #12) both wrote "A28", and the merge that brought
+      master in put both under one label. Master's shipped: it is on the trunk
+      and referenced from its own A21 row, this file's manifest section, the
+      tool README, content/README.md and .gitattributes. An identifier that
+      has shipped does not move - the same principle content IDs follow. This
+      branch's label had not shipped, so this is the side that moved. A28
+      below is master's and keeps its number. Two rules under one label is a
+      defect that compounds with every new reference, so it was fixed at the
+      merge rather than deferred.
+      ONE LABEL, NOT TWO, for the two layers below, and THE MAPPING IS THE
+      REASON: two table numbers would make "the rule the review calls A28"
+      ambiguous, which is the thing this note exists to prevent - a reader
+      arriving from an un-editable comment must land on one row rather than
+      choose between two. The layers also share one expectation file, one
+      mandate set and one summary heading, which is consistent with keeping
+      them together but is the weaker reason.
+      (An earlier draft cited A24a/A24b here as precedent for naming a rule's
+      internal parts. WITHDRAWN - that pair is two labels over one rule's two
+      halves, so it is precedent for SPLITTING and argued the opposite of what
+      it was cited for. See content/transcription-notes.md.)
+      THE CAUSE IS NOT FIXED HERE. Labels are still allocated by whoever adds
+      one, on their own branch, so the next two parallel additions collide the
+      same way - see the minted-assertion-label-table open item in
+      content/transcription-notes.md.
+      No definition carries a compiler-derived value from any of the SIX
+      families removed by the derived-value pass. SIX RULES WITH SIX
+      DIFFERENT SCOPES, for the same reason A20 is two rules with two
+      scopes: some of these patterns flag legitimately AUTHORED fields in
+      a directory they do not cover. An absolute metres-per-second value is
+      always derived in content/enemies/ and content/bosses/, where a speed
+      is authored as a percentage of the mech baseline - and always
+      authored in content/weapons/, where projectile_speed_m_per_s is the
+      real number. So the world-speed rule covers the first two and not the
+      third.
+      SIX, not the nine an earlier draft asserted: the damage-pressure
+      block (32 values) and the resonant hit counts (5) are the COMPARAND
+      40:114 has the compiler compare its derivation against, not derived
+      duplicates, and the stat price curve (14) would have moved fourteen
+      checkable numbers into an unchecked prose string. All 51 restored.
+      See pulled_from_this_pass in the expectation file.
+      TWO LAYERS, and neither is a complete guard on its own:
+      (1) a NAME layer over pointer SEGMENT NAMES. It catches a rename only
+      within its own word class. It does NOT make a rename impossible: a
+      value reintroduced under a name the class does not carry passes, and
+      that was measured, not assumed - a semantic-neighbour probe defeated
+      all nine drafts of these rules before they were widened, and a probe
+      chosen against the widened classes would defeat some of them too.
+      "MEASURED" THERE MEANS HAND-RUN, NOT COMPUTED, and the distinction
+      matters because every other figure in this row is one the tool just
+      computed: the out-of-word-class reintroduction reach - caught 0 of 6 -
+      is a HAND-RUN PROBE, six injections done by hand, one per family, and
+      no assertion in any run recomputes it. The note this layer prints
+      carries the same marker.
+      Segments, not just the leaf key, because some families store the
+      number under a generic leaf (`amount`, `minimum`, `maximum`) inside a
+      specifically named parent - a leaf-key-only rule would miss
+      total_payout_per_map.amount entirely.
+      EACH NAME ROW NOW PRINTS ITS OWN DENOMINATOR - numeric leaves visited
+      and files scanned, counted by the walk as it runs rather than restated
+      from a hand-run figure - and one further row ASSERTS the walk:
+      non-zero leaves over exactly DERIVED_NAME_WALK_SCOPE_FILES files. The
+      six family rows cannot catch an emptied walk between them, because
+      each reports "0 hits" and a rule that searched no file reports "0
+      hits" too. Before this the six printed `0 / 0 / ok` with no coverage
+      figure at all, the only assertion in this file reporting a result with
+      no measure of what it looked at. Negative controls, each injected
+      alone and reverted: emptying one family's `scopes` list, and
+      misspelling a scope directory, each FAIL naming the collapse.
+      (2) a VALUE layer, which is what a name rule cannot do: for each
+      removed value, no non-operand numeric leaf inside its own derivation
+      site may carry that value. Exact Fractions, no tolerance. This one
+      survives a rename, a relocation within the site, a different unit
+      suffix, and scalar -> [scalar]. THAT REINTRODUCTION REACH IS A
+      HAND-RUN PROBE TOO, not a figure any run recomputes: rename, unit
+      suffix and arity change caught 6 of 6 and a relocation OUT of the site
+      caught 0 of 6, twelve injections done by hand, six per row. The three
+      radii below are the computed figures in this paragraph; these two are
+      not. Its RADIUS is the limit and is stated
+      rather than hidden: the derivation site, not the file and not the
+      scope. The three radii are COMPUTED, in the generator's
+      measure_search_radii(), under one definition on the pinned sweep ref,
+      and carried in search_radius_measurement in the expectation file so
+      the ratio a reader is shown reproduces from the artifact: 1 : 40 : 668
+      coincidental pairs at site, file and scope radius, almost all
+      magnitude coincidences between unrelated quantities. An earlier
+      revision quoted 55 and 400; no code computed either and neither
+      reproduced. One exception is declared, enumerated and justified, and
+      it FAILS if it stops colliding on the current tree - a claim that was
+      false in both tools before this pass.
+      A SECOND LIMIT, which the reported radius concealed: the guard is only
+      as large as what survived inside the site. 13 of the 115 removed
+      values sit in a container the removal left with no numeric leaves at
+      all, so their guard searches nothing. That count is asserted
+      (EMPTY_SITE_GUARD_RECORDS) and the per-record distribution prints
+      beneath the table, because the earlier line - "299 numeric leaves
+      across 115 removed values" - is a mean of 2.6 that reads as coverage
+      of all 115 and is what hid the empty-site defect: for a root-level
+      pointer the site was computed as "" and then filtered out as falsy, so
+      six records searched zero leaves and could not fail on anything.
+      Two segment names are ALLOWLISTED, in the shape A20 allowlists
+      reference_diameter_m: `purchases` (the authored checkpoint index the
+      removed cumulative cost derives FROM, which matches only by
+      inheriting its parent's name) and total_seam_payout_multiplier (left
+      authored; its sibling exposure_per_secured_payout_multiplier has no
+      stated derivation at all).
+      The rules, scopes and allowlists are READ FROM
+      expected_derived_value_removals.json rather than duplicated here, so
+      the assertion and the prediction cannot drift apart.
+      Mandate: per family, the docs/ line recorded in that file -
+      40:114 (world speeds; the survivability report), 40:136 ("Validators
+      recompute total catalog costs"), 40:140 ("their totals"), 40:203
+      ("Recalculate ... price curves, total costs ... resource totals")
+                                                                    FAILURE
+
+  A29 The numeric multiset the tree LOST equals the committed expectation,
+      as SET EQUALITY over all 115 elements - each (file, pointer, value)
+      present in one side and the other - not as two totals that happen to
+      agree. 115 == 115 would also hold if one value were removed by
+      mistake and a different one kept by mistake; element-wise equality
+      would not.
+      Measured, not asserted: the sweep-ref tree is read out of git at the
+      SHA the expectation file names, its numeric leaves are enumerated,
+      and the worktree's are subtracted. The expectation file was committed
+      BEFORE any content/ file changed (see that commit's --stat), so this
+      check compares a prediction against a measurement rather than a diff
+      against itself.
+      It does NOT assert that the added side is empty. That row was
+      deliberately deleted this pass: it is a property of one commit range,
+      not an invariant. Adding an authored numeric leaf to EN-01 PASSES, by
+      design.
+      ONLY HALF OF THIS IS A STANDING INVARIANT, and the asymmetry is
+      stated because it is not obvious. The `missing` half - every predicted
+      removal must still be missing - holds for every future commit. The
+      `unexpected` half - nothing else may be missing - does not: deleting
+      any authored numeric leaf, for any reason, fails it. Controlled:
+      deleting EN-01.earliest_minute FAILS with "1 removed-but-unpredicted",
+      while retuning EN-01 hull 20 -> 25 in place passes. So a future commit
+      that legitimately deletes a field will false-fail A29 and the fix is
+      to re-derive the expectation from a newer sweep ref, deliberately.
+      Mandate: docs/technical/40-content-data-and-validation.md:100
+      ("Derived values include source operands and calculation version in
+      reports"), which is what makes a stored operand-plus-result pair the
+      compiler's to emit and not content's to author         FAILURE
+
+  A30 docs/data/contact-damage-pressure.csv and content/ agree on every
+      value they share - 98 comparisons, seven columns x 14 actors, exact
+      Fraction arithmetic. Four columns compare against an authored content
+      field; three against values derived from surviving operands, which is
+      the comparison docs/40 section "Enemies and bosses" describes. Two
+      unguarded mirrors of one report is the shape where a later edit to
+      either produces a silent contradiction, so agreement is ASSERTED
+      rather than observed (Ruling 45 observed it and nothing kept it).
+      The comparison COUNT is asserted at 98, because a mirror check over
+      zero values passes for free.
+      NO TOLERANCE, including inside the declared exceptions: a declared
+      lower-precision pair names the CSV's written value AND the single
+      exact content-side value it covers, so the band an earlier revision
+      allowed ([0.61875, 0.625) for EN-07's body_scale_multiplier) is gone.
+      Two pairs are declared, both EN-07's, and both record an OPEN design
+      question rather than settling it. A declared pair that stops
+      diverging FAILS in either direction.
+      Not settled by this rule: which mirror is authoritative. When that
+      lands the loser becomes derived and A30 becomes redundant in the good
+      way rather than wrong.
+      Mandate: docs/technical/40-content-data-and-validation.md:114
+      ("Validation derives world speeds/footprints and compares them with
+      the survivability report") and :203 ("Reports compare with accepted
+      gameplay tables")                                     FAILURE
+  LABEL MAP: A28 (this branch, before the merge with master) -> A31. Two
+     streams independently claimed A28 - this branch's six derived-value
+     families and the definition (path, id) manifest immediately below, which
+     came from master's PR #12. The A28 below is master's and is the one that
+     keeps the number, because it has shipped on the trunk. If a review
+     comment, commit message or note says "A28" and describes derived-value
+     families, name layers, value layers or the 115 removed values, it means
+     A31 above. Enumerated at the merge: master's PR added exactly {A28} and
+     this branch added {A28, A29, A30}, so A28 was the only collision - A29
+     and A30 are this branch's alone and did not move.
+     The allocation problem behind it is recorded as an open item (a minted
+     assertion-label table) in content/transcription-notes.md and is
+     deliberately not built in this PR.
+
+  A28 The definition population's (relative_path, id) PAIRS equal the
+      committed manifest at content-definition-manifest.txt, compared in both
+      directions: a path in the tree and not the manifest, a path in the
+      manifest and not the tree, and a path in both whose id differs are each
+      a separate failure naming the files. A fourth row compares the committed
+      file's BYTES against the generator's output byte-for-byte, so the header,
+      the line ORDER, whitespace padding and the line endings cannot drift
+      either. That row is the ONLY guard for reordering and padding: the three
+      pair rows compare two sets and a mapping, so a manifest whose lines are
+      reordered or padded still holds the same pairs.
+      The comparison reads with read_bytes() and the generator writes with
+      write_bytes(), both deliberately. Path.read_text() applies universal
+      newlines, so a manifest rewritten entirely in CRLF decoded to exactly the
+      generator's LF text: it passed with 0 failures while this very row
+      reported "identical", and every line of the file could be rewritten with
+      the gate green. Path.write_text() has the mirror defect - it translates
+      "\\n" to os.linesep, so the generator would emit CRLF on Windows and a byte
+      comparison against its own output could never converge there. A byte
+      comparison is the strict one: it keeps the reordering and padding guards
+      and adds line-ending drift, whereas relabelling the row as a TEXT
+      comparison would have kept the escape and merely described it.
+      .gitattributes pins the manifest to eol=lf so a checkout cannot
+      manufacture a false failure on a platform that would otherwise convert it.
+      WHY PAIRS AND NOT NAMES. Two edits were invisible to every other
+      assertion here. (1) Renaming a definition inside its own directory:
+      A21's count row compared a NUMBER and was blind to which files those
+      were, so `mv content/bosses/BOSS-01.json
+      content/bosses/ZZZ-not-a-boss.json` exited 0 with zero failures while
+      the non-JSON row beside it asserted an exact named tuple. (2) Editing
+      the id inside a file: BOSS-01 -> BOSS-99 still matched A12's
+      ^BOSS-\\d{2}$ selector, left the per-directory count at 4 and kept
+      uniqueness, so it too exited 0. A name roster closes only the first; the
+      pair closes both, and it also catches two files SWAPPING ids, which
+      changes no count, no pattern and no uniqueness fact.
+      NOT a relocation check - moving a file between directories was already
+      caught by A12's per-directory counts and was never open. A28 does redden
+      on a relocation too, because the path changed, but it is not what makes
+      that case fail.
+      WHY A MANIFEST AND NOT stem == id. That was measured and rejected: 130
+      of the 138 definitions have stem == id byte-for-byte and 8 do not, and
+      the mapping for those 8 is not a function of the string - four
+      mining-site classes are SITE-01..04 in DOCUMENT order (alphabetically
+      their stems give SITE-03, 02, 04, 01, so it is not even ordinal), plus
+      WAV-01, MGC-01, ELT-01 and FORMULA-01. Exempting those directories would
+      remove the check from precisely the eight files whose names are prose and
+      are therefore the ones anyone would actually rename: nobody tidies
+      BOSS-01.json, and standard-ore-seams.json is exactly the file someone
+      would.
+      THE MANIFEST IS AN EDIT TAX, NOT EVIDENCE, and its header says so.
+      Regenerating it makes this check agree with the tree again, so someone
+      who renames a file or edits an id and regenerates PASSES. What the
+      manifest buys is that the change cannot happen without a reviewable diff
+      in the same commit. It does not establish that any path or id is
+      correct; the design documents and the A12 rows that cite them do that.
+      REGENERATION follows the repository's existing convention rather than a
+      new one - tests/shared/GoldenText.cs, where MECHAMINER_GOLDEN_UPDATE=1
+      rewrites a golden AND THE TEST STILL FAILS. Same variable, same
+      semantics, including failing when the switch is set but the manifest
+      already matches. A regeneration can therefore never be the thing that
+      turns a run green.
+      The population is definition_paths(), which is in_non_definition_dir()
+      - the same predicate A21's two rows and load_definitions() use. There is
+      no second definition of what counts as a definition file.
+      Negative controls, each run and reverted: the rename above -> FAIL (2
+      failures, one per direction); the BOSS-01 -> BOSS-99 id edit -> FAIL (1
+      failure naming `BOSS-01 -> BOSS-99`); swapping BOSS-01 and BOSS-02's ids
+      -> FAIL (1 failure naming both), all three having been PASS/exit 0
+      before this check existed.
+      Mandate: docs/technical/40-content-data-and-validation.md:80 (`id` is an
+      envelope field, "stable category-valid ID") with :185, where the
+      canonical bundle "is ordered by category and stable ID" and hashes
+      identically "regardless of source file enumeration order". That last
+      clause is why the pair is the thing to record: the ID carries the
+      bundle's identity and the FILENAME does not, so the file stem is a human
+      handle that no compiled output would notice changing. Nothing downstream
+      of the compiler can catch a rename, which is precisely why it has to be
+      caught here.                                                   FAILURE
+
+  A32 canonical_letter, five rows over content/resources/, each asserted and
+      reported separately because each is blind to a different edit:
+        1. EXACTLY the six letter definitions carry the key, and the carrier
+           set is NAMED (A.json..F.json), not counted. A count of 6 passes
+           when the key is deleted from D.json and added to common-ore.json
+           in the same edit; the named set does not.
+        2. Each file's (id, canonical_letter) pair is one row of an EXPLICIT
+           EIGHT-ROW TABLE transcribed from 40:111 - RSC-01 -> A through
+           RSC-06 -> F, with RSC-07 and RSC-08 carrying NO letter. Until the
+           RSC- migration this row read "canonical_letter == that file's own
+           id", which held only while the two were the same string; the ids
+           are now RSC-01..RSC-08 and that comparison is gone. The table is
+           literal on purpose: 40:109 states "The ID and the letter are two
+           fields; neither is derived from the other", so computing the
+           letter from the id (chr(ord("A") + int(id[-2:]) - 1)) would
+           re-derive the document's mapping instead of checking it - it
+           would agree with itself for any tree and would keep passing if
+           40:111 were reassigned, which is the edit this row exists to
+           catch. The two no-letter rows are asserted with the same weight,
+           because arithmetic over "07" and "08" would invent "G" and "H".
+           The eight comparisons are NAMED on the passing run, not counted:
+           a green "8 agree, 0 disagree" tells the reader how many files the
+           row's argument rests on but not which, and the set is the half
+           worth auditing.
+        3. The six values are six DISTINCT letters and cover exactly
+           {A,B,C,D,E,F}. Redundant while rows 1 and 2 both hold, but what
+           it is redundant WITH is asymmetric and the earlier wording here
+           ("the row that survives if either is ever weakened") claimed
+           more than it does. Row 3 is a predicate over the VALUE SET only
+           - len(values), distinctness, and set equality with {A..F}. It
+           would INHERIT row 1's population claim if row 1 were weakened,
+           because six distinct letters cannot be present unless six
+           carriers are. It is BLIND to row 2's placement claim and would
+           inherit nothing from it: swapping B.json's and C.json's values
+           satisfies all three of row 3's conditions, and placement is the
+           defect A32 exists to catch.
+        4. common-ore.json and hyper-gold.json do not carry the KEY AT ALL.
+           A26 already forbids null repo-wide, so `"canonical_letter": null`
+           in a currency file is caught with or without this row. Absence is
+           nevertheless asserted here because A26 cannot see the defect this
+           row exists for: `"canonical_letter": ""` and
+           `"canonical_letter": "common-ore"` are both non-null, both pass
+           A26, and both assert the thing 40:106 does not say - that a
+           currency has a canonical letter. The omission is load-bearing
+           content, so it is asserted as omission rather than inferred from
+           the absence of a null.
+        5. content/resources/ holds exactly 8 definition files, because
+           rows 1-4 are all satisfied by a tree with a ninth resource in it.
+      WHY A VALUE MULTISET WOULD HAVE PROVEN NOTHING when the field was
+      ADDED. The six added values were the six ids, so they were already
+      leaves of this tree before the field existed: a multiset over
+      content/'s leaf values was by construction unchanged by that commit
+      and would have reported "no values gained or lost" having checked
+      nothing about the only thing that changed. That argument is about the
+      commit that added canonical_letter, and it is why rows 1 and 2 are
+      NAMED rather than counted. The RSC- migration is the opposite case: it
+      DOES move the multiset (each letter loses its id copy, the two slugs
+      lose theirs, eight RSC-0n arrive), and 40:113 states that delta, so
+      the migration has a multiset proof and this table has the placement
+      proof. Neither substitutes for the other.
+      Negative controls, each injected alone, run, and reverted:
+      delete D.json's key -> row 1 FAILs naming the carrier set; swap the
+      letters of the RSC-01 and RSC-02 files, i.e. RSC-01 -> "B" and
+      RSC-02 -> "A" (value multiset preserved) -> row 2 FAILs naming both
+      files; A.json "A" -> "B" -> row 3 FAILs on distinctness;
+      canonical_letter added to the RSC-07 file -> row 4 FAILs naming it,
+      and row 2 FAILs too, because RSC-07 takes no letter in the table;
+      a ninth resources/*.json -> row 5 FAILs on the count. A.json's value
+      set to null FAILs rows 2 and 3 here in addition to A26.
+      Mandate: docs/technical/40-content-data-and-validation.md:106, blob
+      4cded84 ("Resource definition fields include ID, canonical letter,
+      localization keys ...") for the field itself, PLUS 40:111 for row 2's
+      mapping table and 40:86 for the grammar A12's resources selector
+      transcribes. Row 2 DOES read the eight id values - it is the only row
+      here that reads one - and an earlier version of this line said no row
+      did, which was true only before the RSC- migration. FAILURE
 
 Not asserted here: no structural JSON Schema validation happens, because
 content/schemas/ (40:36) does not exist yet. Domain field names outside the
@@ -387,8 +848,12 @@ the schemas land. See content/transcription-notes.md.
 from __future__ import annotations
 
 import json
+import os
 import re
+import subprocess
 import sys
+import textwrap
+from fractions import Fraction
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -398,6 +863,36 @@ LOCALIZATION = CONTENT / "localization" / "en.json"
 
 # Directories under content/ that are not catalogs of definitions.
 NON_DEFINITION_DIRS = ("localization", "schemas")
+
+# A28 - the committed (path, id) manifest of the definition population.
+#
+# It lives beside this script rather than under content/ deliberately: a file
+# under content/ would have to be either a definition (and count itself) or a
+# non-JSON file (and join EXPECTED_CONTENT_NON_JSON), and a manifest is neither.
+# The two sibling data files expected_citation_deltas.json and
+# quote_mismatch_evidence.json already establish that committed tool data lives
+# here.
+#
+# It is TEXT, tab-separated and sorted by path, for the reason
+# docs/technical/91-verification-strategy.md gives for goldens generally -
+# "canonical, ordered, and reviewable text". One line per definition means a
+# rename is one removed line plus one added line and an edited id is a one-line
+# change, which is what makes the diff the reviewable artifact.
+CONTENT_DEFINITION_MANIFEST = (
+    Path(__file__).resolve().parent / "content-definition-manifest.txt"
+)
+
+# The repository's convention for regenerating a committed expectation, taken
+# from tests/shared/GoldenText.cs: the switch rewrites the file AND the check
+# still fails, so a regeneration can never be the thing that makes a run green.
+# The variable name is deliberately the same one, because this is the same act.
+GOLDEN_UPDATE_VARIABLE = "MECHAMINER_GOLDEN_UPDATE"
+
+# Placeholders for a definition whose id cannot be read. Neither can collide
+# with a real id, and neither appears in the committed manifest today: every
+# definition parses and every one carries an id (ID_NULL_EXPECTED is empty).
+MANIFEST_ID_ABSENT = "<no-id>"
+MANIFEST_ID_UNPARSEABLE = "<unparseable>"
 
 # A21 - the DEFINITION *.json inventory under content/. This is the sum of the
 # A12 rows, and it is asserted separately so that a definition file appearing in
@@ -416,7 +911,17 @@ NON_DEFINITION_DIRS = ("localization", "schemas")
 # it by agreeing with the polluted population; the expectation is instead rebased
 # onto the population the name now describes.
 #
-# So 138 rather than 139: content/localization/en.json leaves this count with
+# THE EXPECTED COUNT IS NO LONGER A LITERAL. It is len() of the A28 manifest,
+# which is the committed record of WHICH definitions exist. There was a literal
+# 138 here, and the manifest would have been a second statement of the same
+# number; two independent literals that a comment claims agree is a defect this
+# repository has already been burned by, so the count is derived and the two
+# cannot drift apart. The count row survives derivation because it is the
+# readable summary of the population's size and it still reddens on an added or
+# deleted definition - it is redundant BY CONSTRUCTION rather than
+# independently, which is the difference that matters.
+#
+# content/localization/en.json is outside that population along with
 # content/schemas/, because NON_DEFINITION_DIRS names them both. en.json loses no
 # coverage by leaving - A10/A11 assert it parses, is flat, is lexically sorted,
 # is duplicate-free, resolves every referenced key and orphans none, which is
@@ -426,8 +931,8 @@ NON_DEFINITION_DIRS = ("localization", "schemas")
 #
 # content/ also holds three Markdown files - README.md, transcription-notes.md
 # and quote-verification-audit.md - which are documentation, not content. So
-# `find content -type f` reports 142 while this count is 138; that difference is
-# correct and is not a discrepancy.
+# `find content -type f` reports 142 while the definition count is 138; that
+# difference is correct and is not a discrepancy.
 #
 # The non-JSON files are NAMED rather than counted, and the A21 row asserts the
 # exact list. It previously printed the list beside a blank expectation and a
@@ -436,7 +941,6 @@ NON_DEFINITION_DIRS = ("localization", "schemas")
 # updating this tuple is the record of it. That row is scoped to definition
 # directories for the same reason the count is: a README beside a schema is the
 # schema directory's business, not a stray file under a catalog.
-EXPECTED_CONTENT_DEFINITION_JSON_FILES = 138
 EXPECTED_CONTENT_NON_JSON = (
     "content/README.md",
     "content/quote-verification-audit.md",
@@ -599,11 +1103,20 @@ FORBIDDEN_KEYS = (
 EXPECTATIONS = [
     dict(
         dir="resources",
-        selector=("id_regex", r"^(?:[A-F]|common-ore|hyper-gold)$"),
+        # The selector is the MINTED GRAMMAR ROW, transcribed verbatim from
+        # 40:86 ("| `RSC-` | `^RSC-[0-9]{2}$` | resource | `content/resources/`
+        # | this section |"), and deliberately NOT the narrower ^RSC-0[1-8]$
+        # that this population would also satisfy. The point of copying the row
+        # is that the selector and the grammar cannot drift: a reader comparing
+        # the two sees one string. Admitting RSC-09..RSC-99 on PATTERN is not a
+        # hole, because `items` below is pinned at 8 - a ninth resource fails on
+        # the COUNT rather than sliding in on a pattern widened to fit it.
+        selector=("id_regex", r"^RSC-[0-9]{2}$"),
         items=8,
         aggregates=None,
         label="resources (6 specialized + common ore + Hyper Gold)",
-        source="docs/61-specialized-resource-identities.md:20 + docs/60-resources-crafting-progression.md:18",
+        source="docs/technical/40-content-data-and-validation.md:86 grammar row + :111 mapping; "
+               "docs/61-specialized-resource-identities.md:20 + docs/60-resources-crafting-progression.md:18",
     ),
     dict(
         dir="mechs",
@@ -622,9 +1135,16 @@ EXPECTATIONS = [
         items=10,
         aggregates=1,
         # The one aggregate is shared-elite-modifiers.json, the shared elite
-        # constants block. It is not an eleventh enemy: it has no id and no
-        # name_key (see ID_NULL_EXPECTED), so the id_regex selector correctly
-        # buckets it as the directory's aggregate. The former
+        # constants block. It is not an eleventh enemy: it carries the id
+        # ELT-01, which does not match this row's ^EN-\d{2}$ item selector, so
+        # the id_regex selector buckets it as the directory's aggregate. What
+        # makes it the aggregate is that its ID is not an item ID - NOT the
+        # absence of an id. It used to have none, and this comment used to say
+        # "it has no id and no name_key (see ID_NULL_EXPECTED)"; the integration
+        # owner has since minted ELT-01 and ID_NULL_EXPECTED is now empty, so
+        # only the name_key half of that was still true. It does still omit
+        # name_key, as a constants block with no player-facing name, and is
+        # listed in NAME_KEY_OMITTED for that. The former
         # elite-modifier-profile.json definition it replaced is deleted.
         label="ordinary enemies (+ 1 shared elite modifier constants block)",
         source="docs/31-initial-alien-roster.md:37 + docs/31-initial-alien-roster.md:104",
@@ -1903,30 +2423,403 @@ DEPLOYMENT_KEY = re.compile(r"(?i)deploy|ramp")
 DEPLOYMENT_INTERVAL_KEY = re.compile(r"(?i)deploy.*(?:interval|cadence|seconds|period)")
 
 
-def check_file_inventory() -> list[tuple]:
+MANIFEST_HEADER = """\
+# Committed manifest of the content/ definition population: one line per
+# definition file, "<path>\\t<id>", sorted by path.
+#
+# WHAT THIS IS FOR. Three edits used to be invisible to every assertion in
+# verify_content.py: renaming a definition file inside its own directory,
+# editing the id inside one, and swapping two ids between files. The inventory
+# assertion compared a COUNT, so a rename left the count unchanged and passed;
+# the id assertions checked a REGEX, per-directory counts and uniqueness, all of
+# which a plausible wrong id satisfies. Pairing the path with the id closes both
+# halves: the path set catches the rename and the id beside it catches the edit.
+#
+# WHAT THIS IS NOT. This manifest is an EDIT TAX, not evidence. It records what
+# the tree currently says, not what any document says it should say. Someone who
+# renames a file or changes an id and then regenerates this manifest passes the
+# check, and nothing here contradicts them - the manifest agrees with the tree
+# again by construction. Its whole value is that the change becomes LOUD: it
+# cannot happen without a diff to this file in the same commit, and that diff is
+# what a reviewer reads. It does not establish that any path or id is correct.
+# The authority for that is the design documents and the A12 per-directory rows
+# that cite them.
+#
+# HOW TO REGENERATE. Run verify_content.py with MECHAMINER_GOLDEN_UPDATE=1. That
+# rewrites this file AND STILL FAILS, deliberately: a regeneration can never be
+# the thing that turns a run green. Review the diff, confirm the rename or the
+# id change was intended, commit this file with it, then rerun without the
+# switch. Do not hand-edit - the generator is the only writer.
+#
+# Two placeholders can appear in the id column and neither is a real id:
+# <no-id> for a definition with no id (A5/A6 also fail) and <unparseable> for
+# one that did not parse (A1 also fails).
+"""
+
+
+def definition_paths() -> list[Path]:
+    """The definition population, as paths, in sorted order.
+
+    The single enumeration behind both A21 rows and the A28 manifest, scoped by
+    in_non_definition_dir() - the same rule load_definitions() uses. There is
+    deliberately no second notion of what counts as a definition file.
+    """
+    return sorted(p for p in CONTENT.rglob("*.json") if not in_non_definition_dir(p))
+
+
+def manifest_id(path: Path, docs: dict[Path, object]) -> str:
+    """The id to record for path, or a placeholder saying why there is none."""
+    if path not in docs:
+        return MANIFEST_ID_UNPARSEABLE
+    doc = docs[path]
+    if not isinstance(doc, dict):
+        return MANIFEST_ID_UNPARSEABLE
+    value = doc.get("id")
+    if isinstance(value, str) and value:
+        return value
+    return MANIFEST_ID_ABSENT
+
+
+def actual_manifest(docs: dict[Path, object]) -> list[tuple[str, str]]:
+    """The (path, id) pairs the tree currently holds, sorted by path."""
+    return [(rel(p), manifest_id(p, docs)) for p in definition_paths()]
+
+
+def render_manifest(pairs: list[tuple[str, str]]) -> str:
+    """The manifest's canonical text: header, then one tab-separated pair a line."""
+    lines = [f"{path}\t{identifier}" for path, identifier in sorted(pairs)]
+    return MANIFEST_HEADER + "\n".join(lines) + "\n"
+
+
+def parse_manifest(text: str) -> tuple[list[tuple[str, str]], list[str]]:
+    """Parse manifest text into sorted pairs, plus a list of malformed lines."""
+    pairs: list[tuple[str, str]] = []
+    malformed: list[str] = []
+    for number, raw in enumerate(text.splitlines(), start=1):
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        fields = raw.split("\t")
+        if len(fields) != 2 or not fields[0].strip() or not fields[1].strip():
+            malformed.append(f"line {number}: {raw!r}")
+            continue
+        pairs.append((fields[0].strip(), fields[1].strip()))
+    return sorted(pairs), malformed
+
+
+def write_manifest(pairs: list[tuple[str, str]]) -> bool:
+    """Write the manifest as UTF-8 with LF endings. True when it was written.
+
+    write_bytes, not write_text: Path.write_text opens in text mode with
+    newline=None, which translates every "\\n" to os.linesep - so the generator
+    would emit CRLF on Windows and LF elsewhere, and a byte comparison against
+    its own output could never converge there. The manifest's bytes are the
+    thing being asserted, so the writer pins them.
+    """
+    try:
+        CONTENT_DEFINITION_MANIFEST.write_bytes(render_manifest(pairs).encode("utf-8"))
+        return True
+    except OSError as exc:
+        fail(
+            f"A28 could not write {rel(CONTENT_DEFINITION_MANIFEST)}: {exc}. The manifest path "
+            f"must be a writable regular file."
+        )
+        return False
+
+
+def _byte_difference(committed: bytes, expected: bytes) -> str:
+    """Name the kind of byte difference, so the failure is a diagnosis.
+
+    A byte comparison that only said "differs" would be a worse gate than the
+    newline-normalising one it replaced: line endings are invisible in a terminal,
+    and so is a trailing space. This says which it is.
+    """
+    crlf = b"\r\n"
+    cr = b"\r"
+    notes: list[str] = []
+    if crlf in committed:
+        notes.append(f"the committed file has {committed.count(crlf)} CRLF line ending(s)")
+    elif cr in committed:
+        notes.append(f"the committed file has {committed.count(cr)} lone CR(s)")
+    if committed.replace(crlf, b"\n").replace(cr, b"\n") == expected:
+        notes.append("line endings are the ONLY difference")
+    elif sorted(committed.split(b"\n")) == sorted(expected.split(b"\n")):
+        notes.append("the same lines are present but their ORDER differs")
+    else:
+        stripped = b"\n".join(line.rstrip() for line in committed.split(b"\n"))
+        if stripped == expected:
+            notes.append("trailing whitespace is the ONLY difference")
+        for offset, (a, b) in enumerate(zip(committed, expected)):
+            if a != b:
+                notes.append(
+                    f"first difference at byte {offset}: committed {bytes([a])!r} vs expected "
+                    f"{bytes([b])!r}"
+                )
+                break
+        else:
+            notes.append(
+                f"one is a prefix of the other: committed {len(committed)} byte(s) vs expected "
+                f"{len(expected)}"
+            )
+    return ("; ".join(notes) + ".") if notes else ""
+
+
+def check_definition_manifest(docs: dict[Path, object]) -> tuple[list[tuple], int | None]:
+    """A28 - the tree's (path, id) pairs equal the committed manifest, both ways.
+
+    Returns the rows and the manifest's length, which A21's count row uses as its
+    expectation so that the size and the membership record cannot disagree.
+
+    The comparison is deliberately three-sided rather than a set equality, so the
+    failure text names the edit that happened: a path only in the tree is an
+    added or renamed-to file, a path only in the manifest is a deleted or
+    renamed-from file, and a path in both with a different id is an edited id.
+    A rename inside one directory produces one of each of the first two, which is
+    exactly the shape the old count-only row could not see.
+    """
+    actual_pairs = actual_manifest(docs)
+    actual_by_path = dict(actual_pairs)
+    update_requested = os.environ.get(GOLDEN_UPDATE_VARIABLE) == "1"
+
+    if not CONTENT_DEFINITION_MANIFEST.is_file():
+        # is_file() is False for a directory or a special file at this path too, not
+        # only for an absent one. write_manifest() reports the OSError in that case
+        # rather than raising, so absurd input fails with a diagnosis instead of a
+        # traceback, and this message does not claim a write that did not happen.
+        existed = CONTENT_DEFINITION_MANIFEST.exists()
+        if write_manifest(actual_pairs):
+            fail(
+                f"A28 manifest {rel(CONTENT_DEFINITION_MANIFEST)} did not exist and has been "
+                f"written with the {len(actual_pairs)} (path, id) pair(s) found in the tree. It "
+                f"records what the tree says, not what the documents say - review it against the "
+                f"A12 rows and the design documents before committing it, then rerun. This check "
+                f"fails on a freshly written manifest on purpose."
+            )
+        return (
+            [
+                (
+                    "committed (path, id) manifest",
+                    f"{rel(CONTENT_DEFINITION_MANIFEST)} present, a regular file",
+                    "exists but is not a regular file" if existed else "absent",
+                    "FAIL",
+                )
+            ],
+            None,
+        )
+
+    # read_bytes, not read_text: text mode applies universal newlines, so a
+    # manifest rewritten with CRLF - all 168 lines of it - decoded to exactly the
+    # generator's LF text and the comparison below passed while the row claimed
+    # the bytes were identical. The bytes are read raw and decoded explicitly.
+    try:
+        committed_bytes = CONTENT_DEFINITION_MANIFEST.read_bytes()
+    except OSError as exc:
+        fail(
+            f"A28 could not read {rel(CONTENT_DEFINITION_MANIFEST)}: {exc}. The manifest path "
+            f"must be a readable regular file; a directory or a special file there is not a "
+            f"manifest."
+        )
+        return (
+            [
+                (
+                    "committed (path, id) manifest",
+                    "readable regular file",
+                    f"unreadable: {type(exc).__name__}",
+                    "FAIL",
+                )
+            ],
+            None,
+        )
+    try:
+        committed_text = committed_bytes.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        fail(
+            f"A28 manifest {rel(CONTENT_DEFINITION_MANIFEST)} is not valid UTF-8: {exc}. "
+            f"Regenerate it with {GOLDEN_UPDATE_VARIABLE}=1."
+        )
+        return (
+            [
+                (
+                    "committed (path, id) manifest",
+                    "valid UTF-8",
+                    "undecodable",
+                    "FAIL",
+                )
+            ],
+            None,
+        )
+    manifest_pairs, malformed = parse_manifest(committed_text)
+    manifest_by_path = dict(manifest_pairs)
+    if malformed:
+        fail(
+            f"A28 manifest {rel(CONTENT_DEFINITION_MANIFEST)} has {len(malformed)} malformed "
+            f"line(s); each data line must be '<path>\\t<id>': {malformed[:10]}"
+        )
+    if len(manifest_by_path) != len(manifest_pairs):
+        counted: dict[str, int] = {}
+        for path, _ in manifest_pairs:
+            counted[path] = counted.get(path, 0) + 1
+        duplicates = sorted(path for path, n in counted.items() if n > 1)
+        fail(
+            f"A28 manifest {rel(CONTENT_DEFINITION_MANIFEST)} lists a path more than once, so "
+            f"one of its rows is unreachable: {len(manifest_pairs)} row(s) over "
+            f"{len(manifest_by_path)} distinct path(s). Regenerate it. Paths: {duplicates[:10]}"
+        )
+
+    only_in_tree = sorted(set(actual_by_path) - set(manifest_by_path))
+    only_in_manifest = sorted(set(manifest_by_path) - set(actual_by_path))
+    changed_ids = sorted(
+        (path, manifest_by_path[path], actual_by_path[path])
+        for path in set(actual_by_path) & set(manifest_by_path)
+        if manifest_by_path[path] != actual_by_path[path]
+    )
+    # The committed BYTES must equal what the generator produces, the way a
+    # golden does. Pair equality alone would leave the header and the line format
+    # uncompared, so a stale header - including this file's own statement of what
+    # it does and does not prove - could sit there indefinitely, and
+    # GOLDEN_UPDATE_VARIABLE would refuse to rewrite it on the grounds that the
+    # pairs already agree.
+    #
+    # This row is also the ONLY guard for two edits the three pair rows cannot
+    # see, because those are set and dict comparisons: the data lines REORDERED
+    # while holding the same pairs, and whitespace PADDING before a tab. Both
+    # survive a newline-normalising comparison, so the fix for the CRLF escape was
+    # to compare more strictly rather than to relabel the row - a byte comparison
+    # keeps both of those guards and adds line-ending drift on top.
+    rendered_bytes = render_manifest(actual_pairs).encode("utf-8")
+    bytes_match = committed_bytes == rendered_bytes
+    pairs_match = not (only_in_tree or only_in_manifest or changed_ids or malformed)
+    matches = bytes_match and pairs_match
+
+    rows = [
+        (
+            "definition paths in the tree but not in the manifest",
+            0,
+            f"{len(only_in_tree)}{': ' + ', '.join(only_in_tree[:5]) if only_in_tree else ''}",
+            "ok" if not only_in_tree else "FAIL",
+        ),
+        (
+            "definition paths in the manifest but not in the tree",
+            0,
+            f"{len(only_in_manifest)}"
+            f"{': ' + ', '.join(only_in_manifest[:5]) if only_in_manifest else ''}",
+            "ok" if not only_in_manifest else "FAIL",
+        ),
+        (
+            "paths whose id differs from the manifest",
+            0,
+            f"{len(changed_ids)}"
+            + (
+                ": " + ", ".join(f"{p} {was} -> {now}" for p, was, now in changed_ids[:5])
+                if changed_ids
+                else ""
+            ),
+            "ok" if not changed_ids else "FAIL",
+        ),
+        (
+            "committed bytes byte-for-byte equal the generator's output "
+            "(header, line order, padding, LF endings)",
+            "identical",
+            "identical" if bytes_match else "differs",
+            "ok" if bytes_match else "FAIL",
+        ),
+        (
+            "(path, id) pairs recorded [an edit tax, not evidence the ids are right]",
+            len(manifest_by_path),
+            len(actual_by_path),
+            "ok" if matches else "FAIL",
+        ),
+    ]
+
+    if only_in_tree:
+        fail(
+            f"A28 {len(only_in_tree)} definition file(s) are in the tree but not in "
+            f"{rel(CONTENT_DEFINITION_MANIFEST)}: {only_in_tree[:10]}. A file was added, or "
+            f"renamed to this name. If it was renamed, the matching 'in the manifest but not "
+            f"in the tree' row names the old name - a rename inside one directory shows as both, "
+            f"and used to show as nothing at all because the inventory compared only a count."
+        )
+    if only_in_manifest:
+        fail(
+            f"A28 {len(only_in_manifest)} definition file(s) are in "
+            f"{rel(CONTENT_DEFINITION_MANIFEST)} but not in the tree: {only_in_manifest[:10]}. "
+            f"A file was deleted, or renamed away from this name."
+        )
+    if changed_ids:
+        fail(
+            f"A28 {len(changed_ids)} definition file(s) carry an id that differs from "
+            f"{rel(CONTENT_DEFINITION_MANIFEST)}: "
+            f"{[f'{p}: {was} -> {now}' for p, was, now in changed_ids[:10]]}. Nothing else here "
+            f"sees this: the A12 selectors match an id PATTERN, the per-directory count is "
+            f"unchanged and uniqueness still holds, so a wrong-but-plausible id passed every "
+            f"other assertion. If the new id is intended, regenerate the manifest with "
+            f"{GOLDEN_UPDATE_VARIABLE}=1 and commit the diff."
+        )
+    if pairs_match and not bytes_match:
+        fail(
+            f"A28 {rel(CONTENT_DEFINITION_MANIFEST)} records the right (path, id) pairs but its "
+            f"bytes are not what the generator produces - the header, the line ORDER, whitespace "
+            f"padding or the line endings have drifted, or the file was hand-edited. This row is "
+            f"the only one that sees any of those: the three rows above compare sets and a "
+            f"mapping, so a reordered or padded manifest holds the same pairs. "
+            f"{_byte_difference(committed_bytes, rendered_bytes)} Regenerate it with "
+            f"{GOLDEN_UPDATE_VARIABLE}=1 and commit the result."
+        )
+
+    if update_requested:
+        if matches:
+            fail(
+                f"{GOLDEN_UPDATE_VARIABLE} was set but {rel(CONTENT_DEFINITION_MANIFEST)} "
+                f"already matches the tree. Unset it: regenerating the manifest is a deliberate "
+                f"act with a reviewed rename or id change behind it, not a routine step."
+            )
+        elif write_manifest(actual_pairs):
+            fail(
+                f"{rel(CONTENT_DEFINITION_MANIFEST)} has been rewritten because "
+                f"{GOLDEN_UPDATE_VARIABLE}=1, and this check STILL FAILS on purpose - a "
+                f"regeneration may never be what turns a run green. Review the diff above "
+                f"against the A12 rows and the design documents, confirm the change was "
+                f"intended, commit the new manifest with it, then rerun without "
+                f"{GOLDEN_UPDATE_VARIABLE}. Regenerating makes the check agree with the tree "
+                f"again; it does not make the tree right."
+            )
+
+    return rows, len(manifest_by_path)
+
+
+def check_file_inventory(manifest_size: int | None) -> list[tuple]:
     """A21 - the definition *.json inventory under content/.
 
     Both rows are scoped to the definition population by in_non_definition_dir(),
-    the same rule load_definitions() uses. Neither may go back to enumerating
-    content/ bare: NON_DEFINITION_DIRS names directories this script has already
-    decided are not catalogs of definitions, and a count that ignores that
-    decision charges the next branch to author content/schemas/ with a definition
-    it never added.
+    the same rule load_definitions() uses, via definition_paths(). Neither may go
+    back to enumerating content/ bare: NON_DEFINITION_DIRS names directories this
+    script has already decided are not catalogs of definitions, and a count that
+    ignores that decision charges the next branch to author content/schemas/ with
+    a definition it never added.
+
+    The count's expectation is manifest_size - len() of the A28 manifest - not a
+    literal. Two literals asserted to be the same number is a defect, and the
+    manifest is the one that says WHICH files those are. When the manifest is
+    missing A28 has already failed, so the row reports that rather than comparing
+    against a number it does not have.
     """
-    definitions = sorted(p for p in CONTENT.rglob("*.json") if not in_non_definition_dir(p))
+    definitions = definition_paths()
     other_files = sorted(
         p
         for p in CONTENT.rglob("*")
         if p.is_file() and p.suffix != ".json" and not in_non_definition_dir(p)
     )
     actual = len(definitions)
+    count_ok = manifest_size is not None and actual == manifest_size
     rows = [
         (
             "definition *.json files under content/ (excluding "
             f"{', '.join(NON_DEFINITION_DIRS)})",
-            EXPECTED_CONTENT_DEFINITION_JSON_FILES,
+            "n/a - A28 manifest missing"
+            if manifest_size is None
+            else f"{manifest_size} (= len(A28 manifest))",
             actual,
-            "ok" if actual == EXPECTED_CONTENT_DEFINITION_JSON_FILES else "FAIL",
+            "ok" if count_ok else "FAIL",
         ),
         (
             "non-JSON files (documentation, not content)",
@@ -1943,14 +2836,251 @@ def check_file_inventory() -> list[tuple]:
             f"content/ was reported and tolerated in the same breath. It is now an expectation: a "
             f"new documentation file is added here deliberately, and anything else is a finding."
         )
-    if actual != EXPECTED_CONTENT_DEFINITION_JSON_FILES:
+    if manifest_size is not None and actual != manifest_size:
         fail(
-            f"content/ holds {actual} definition *.json file(s), expected "
-            f"{EXPECTED_CONTENT_DEFINITION_JSON_FILES}. Either a definition was added or removed "
-            f"without updating EXPECTED_CONTENT_DEFINITION_JSON_FILES and the matching A12 row, or "
-            f"a file is in a directory no A12 row covers. Files under "
-            f"content/{{{','.join(NON_DEFINITION_DIRS)}}}/ are NOT in this count and cannot cause "
-            f"this failure."
+            f"content/ holds {actual} definition *.json file(s), expected {manifest_size} - the "
+            f"number of pairs in {rel(CONTENT_DEFINITION_MANIFEST)}. A definition was added or "
+            f"removed without regenerating the manifest and updating the matching A12 row, or a "
+            f"file is in a directory no A12 row covers. A28 names the files; this row only counts "
+            f"them. Files under content/{{{','.join(NON_DEFINITION_DIRS)}}}/ are NOT in this count "
+            f"and cannot cause this failure."
+        )
+    return rows
+
+
+# --------------------------------------------------------------------------
+# A32 - canonical_letter on exactly the six letter resources.
+#
+# 40:106 (blob 4cded84) lists "canonical letter" among the resource definition
+# fields. It says that about the six-material set; it does not say it about
+# common ore or Hyper Gold, which are the ordinary-crafting and cross-run
+# currencies and have no letter to carry. Their omission is therefore authored
+# content, not an oversight, and row 4 asserts it as such.
+#
+# ROW 2 READS THE id VALUES, and since the RSC- migration it is the only row
+# that does. It used to compare each file's canonical_letter against its own id,
+# which worked only while the two were the same string. The ids are now
+# RSC-01..RSC-08 (40:86 grammar, 40:111 mapping), so that comparison is gone and
+# row 2 is the transcribed mapping table below instead. Rows 1/3/4/5 never read
+# an id and are unaffected. An earlier draft of this comment predicted the ids
+# would become "RSC-A..RSC-F"; 40:111 assigns RSC-01..RSC-08, and the prediction
+# was wrong about the form as well as needing re-statement.
+# --------------------------------------------------------------------------
+
+RESOURCES_DIR = CONTENT / "resources"
+CANONICAL_LETTER_KEY = "canonical_letter"
+CANONICAL_LETTERS = ("A", "B", "C", "D", "E", "F")
+CANONICAL_LETTER_CARRIERS = tuple(f"{letter}.json" for letter in CANONICAL_LETTERS)
+# The two currencies, which must NOT carry the key in any form.
+CANONICAL_LETTER_OMITTERS = ("common-ore.json", "hyper-gold.json")
+RESOURCE_DEFINITION_COUNT = 8
+
+# Row 2's comparand: the eight-row mapping table, TRANSCRIBED from 40:111.
+#
+# THE ORDERING SENTENCE THIS TRANSCRIBES, quoted so the table can be audited
+# without leaving this file: "Which number goes to which resource is fixed here:
+# `RSC-01` through `RSC-06` take `A` through `F` in letter order, `RSC-07` is
+# `common-ore`, and `RSC-08` is `hyper-gold`. Both halves are **assigned here**
+# and neither is transcribed." (40:111) The same paragraph records WHY the two
+# currency rows are stated rather than inferred from the order the resources
+# appear in the catalog: "no assertion can catch a wrong choice of mapping - only
+# a wrong implementation of one - so the choice closes in this section or
+# nowhere."
+#
+# WHY EIGHT LITERAL ROWS AND NOT chr(ord("A") + int(id[-2:]) - 1). Arithmetic
+# was considered and is wrong here, not merely verbose. 40:109 states that "The
+# ID and the letter are two fields; neither is derived from the other", so a
+# computed letter would RE-DERIVE the document's mapping instead of CHECKING it:
+# it would agree with itself for any tree, and it would keep passing unchanged if
+# 40:111 were ever edited to assign the numbers differently - which is the one
+# edit this row exists to catch. Eight literal rows disagree with the tree the
+# moment either side moves. The two None rows carry the same weight: they assert
+# that 40:111 gives RSC-07 and RSC-08 no letter, which arithmetic over "07" and
+# "08" would silently invent as "G" and "H".
+RESOURCE_ID_TO_CANONICAL_LETTER = {
+    "RSC-01": "A",
+    "RSC-02": "B",
+    "RSC-03": "C",
+    "RSC-04": "D",
+    "RSC-05": "E",
+    "RSC-06": "F",
+    "RSC-07": None,   # common ore - no canonical letter (40:111)
+    "RSC-08": None,   # Hyper Gold - no canonical letter (40:111)
+}
+
+
+def check_canonical_letters(docs: dict[Path, object]) -> list[tuple]:
+    """A32 - canonical_letter is on exactly A-F and pairs with the id per 40:111."""
+    paths = sorted(RESOURCES_DIR.glob("*.json")) if RESOURCES_DIR.is_dir() else []
+    carried: dict[str, object] = {}
+    ids: dict[str, object] = {}
+    for path in paths:
+        doc = docs.get(path)
+        if not isinstance(doc, dict):
+            continue
+        ids[path.name] = doc.get("id")
+        if CANONICAL_LETTER_KEY in doc:
+            carried[path.name] = doc[CANONICAL_LETTER_KEY]
+
+    # ---- row 1: the carrier set, NAMED. A count is blind to a correlated swap.
+    carriers = sorted(carried)
+    expected_carriers = sorted(CANONICAL_LETTER_CARRIERS)
+    row1_ok = carriers == expected_carriers
+
+    # ---- row 2: each file's (id, canonical_letter) pair is one row of the
+    # transcribed 40:111 table. Keyed by the id, so a file whose id and letter
+    # were BOTH edited in step still has to land on a table row. `agreed` is
+    # collected for the PASSING display only: a green run used to print a count
+    # and name the files solely on failure, so the reader auditing a passing run
+    # had to take the comparand set on trust. `mismatches` alone decides status.
+    mismatches: list[str] = []
+    agreed: list[str] = []
+    seen_ids: dict[object, str] = {}
+    for name in sorted(set(CANONICAL_LETTER_CARRIERS) | set(CANONICAL_LETTER_OMITTERS)):
+        if name not in ids:
+            mismatches.append(f"{name}: not a parsed definition")
+            continue
+        rid = ids[name]
+        actual = carried.get(name, None)
+        if rid in seen_ids:
+            mismatches.append(
+                f"{name}: id {rid!r} is already carried by {seen_ids[rid]}; "
+                f"each table row is one file"
+            )
+            continue
+        seen_ids[rid] = name
+        if not isinstance(rid, str) or rid not in RESOURCE_ID_TO_CANONICAL_LETTER:
+            mismatches.append(
+                f"{name}: id is {rid!r}, which is not one of the eight ids the 40:111 "
+                f"table assigns ({', '.join(RESOURCE_ID_TO_CANONICAL_LETTER)})"
+            )
+            continue
+        expected_letter = RESOURCE_ID_TO_CANONICAL_LETTER[rid]
+        if actual != expected_letter:
+            mismatches.append(
+                f"{name}: id {rid!r} takes {CANONICAL_LETTER_KEY}="
+                f"{expected_letter!r} in the 40:111 table, but this file has "
+                f"{actual!r}" + ("" if name in carried else " (key absent)")
+            )
+        else:
+            agreed.append(
+                f"{name}: {rid}"
+                + (f"={expected_letter!r}" if expected_letter is not None else "=no letter")
+            )
+    # Every row of the table must be claimed by exactly one file, so a missing
+    # id cannot pass by simply not being looked for.
+    unclaimed = [rid for rid in RESOURCE_ID_TO_CANONICAL_LETTER if rid not in seen_ids]
+    if unclaimed:
+        mismatches.append(
+            f"no definition carries {', '.join(unclaimed)}, which the 40:111 table assigns"
+        )
+
+    # ---- row 3: six distinct letters covering exactly {A..F}. repr() so a
+    # non-string value (null, a number, an object) cannot raise in sorted().
+    values = [carried[name] for name in CANONICAL_LETTER_CARRIERS if name in carried]
+    distinct = {repr(v) for v in values}
+    row3_ok = (
+        len(values) == len(CANONICAL_LETTERS)
+        and len(distinct) == len(CANONICAL_LETTERS)
+        and {v for v in values if isinstance(v, str)} == set(CANONICAL_LETTERS)
+    )
+
+    # ---- row 4: the currencies do not carry the KEY. Not "is not null" - see
+    # the block comment above and the A32 docstring entry for why A26 is not
+    # enough here.
+    offenders = [name for name in CANONICAL_LETTER_OMITTERS if name in carried]
+
+    # ---- row 5: the population itself, so rows 1-4 cannot pass on a tree that
+    # has grown a ninth resource.
+    row5_ok = len(paths) == RESOURCE_DEFINITION_COUNT
+
+    rows = [
+        (
+            "row 1: files carrying canonical_letter are exactly A-F (named, not counted)",
+            ", ".join(expected_carriers),
+            ", ".join(carriers) or "none",
+            "ok" if row1_ok else "FAIL",
+        ),
+        (
+            "row 2: (id, canonical_letter) matches the transcribed 40:111 table, "
+            "all eight rows",
+            f"{len(RESOURCE_ID_TO_CANONICAL_LETTER)} agree, named",
+            (
+                f"{len(agreed)} agree: " + ", ".join(agreed)
+                if not mismatches
+                else f"{len(agreed)} agree, {len(mismatches)} disagree: "
+                + "; ".join(mismatches)
+            ),
+            "ok" if not mismatches else "FAIL",
+        ),
+        (
+            "row 3: the six values are distinct and cover exactly {A,B,C,D,E,F}",
+            "6 distinct: " + ", ".join(CANONICAL_LETTERS),
+            f"{len(distinct)} distinct: " + (", ".join(sorted(distinct)) or "none"),
+            "ok" if row3_ok else "FAIL",
+        ),
+        (
+            "row 4: the two currencies do not carry the KEY AT ALL (absence, not null)",
+            "0 of " + ", ".join(CANONICAL_LETTER_OMITTERS),
+            f"{len(offenders)} carry it" + (f": {', '.join(offenders)}" if offenders else ""),
+            "ok" if not offenders else "FAIL",
+        ),
+        (
+            "row 5: content/resources/ holds exactly 8 definition files",
+            RESOURCE_DEFINITION_COUNT,
+            len(paths),
+            "ok" if row5_ok else "FAIL",
+        ),
+    ]
+
+    if not row1_ok:
+        fail(
+            f"A32 row 1: the files under content/resources/ carrying "
+            f"{CANONICAL_LETTER_KEY!r} are {carriers}, expected exactly {expected_carriers}. "
+            f"40:106 (blob 4cded84) gives the canonical letter to the six-material set and to "
+            f"nothing else. This row NAMES the carriers rather than counting them because a "
+            f"count of 6 also passes when the key is deleted from one letter file and added to "
+            f"a currency in the same edit."
+        )
+    if mismatches:
+        fail(
+            f"A32 row 2: {len(mismatches)} resource(s) whose (id, {CANONICAL_LETTER_KEY}) pair "
+            f"is not the pair 40:111 assigns: {mismatches}. The table in this file is a verbatim "
+            f"transcription of that paragraph - `RSC-01` through `RSC-06` take `A` through `F` in "
+            f"letter order, `RSC-07` is common ore and `RSC-08` is Hyper Gold, and the last two "
+            f"take no letter. Fix the tree to match the document, or - if the DOCUMENT changed - "
+            f"re-transcribe the table deliberately in the same commit. Do not replace the table "
+            f"with arithmetic over the id: 40:109 states the ID and the letter are two fields "
+            f"with neither derived from the other, so a computed letter would agree with itself "
+            f"for any tree and would not notice 40:111 being reassigned. This row is also the "
+            f"only one that catches two letter files SWAPPING values: a swap leaves the value "
+            f"SET unchanged, so rows 1 and 3 both still pass."
+        )
+    if not row3_ok:
+        fail(
+            f"A32 row 3: the {len(values)} {CANONICAL_LETTER_KEY} value(s) present are "
+            f"{sorted(distinct)}, expected 6 distinct letters covering exactly "
+            f"{list(CANONICAL_LETTERS)}. Two materials cannot share a letter and no letter of "
+            f"the accepted set may go unassigned (40:106, blob 4cded84)."
+        )
+    if offenders:
+        fail(
+            f"A32 row 4: {offenders} carry the key {CANONICAL_LETTER_KEY!r}. common ore and "
+            f"Hyper Gold are the ordinary-crafting and cross-run currencies; 40:106 gives the "
+            f"canonical letter to the six-material set only, so the right way to spell 'has no "
+            f"letter' is to OMIT the key (40:90 materializes the default for an absent optional "
+            f"field). A26 already rejects the null spelling repo-wide, but a non-null wrong "
+            f"value - \"\" or \"common-ore\" - passes A26 and still asserts that a currency has a "
+            f"canonical letter, which is what this row exists to catch."
+        )
+    if not row5_ok:
+        fail(
+            f"A32 row 5: content/resources/ holds {len(paths)} *.json file(s), expected "
+            f"{RESOURCE_DEFINITION_COUNT} (6 specialized + common ore + Hyper Gold, the same "
+            f"population the A12 resources row asserts). Rows 1-4 of A32 are all satisfied by a "
+            f"tree that has grown a ninth resource, so the population is asserted beside them. A "
+            f"new resource is added deliberately, with its A12 row, its A28 manifest line and a "
+            f"decision recorded about whether it carries a canonical letter."
         )
     return rows
 
@@ -1989,8 +3119,1140 @@ def check_derived_footprint_fields(docs: dict[Path, object]) -> list[tuple]:
     return rows
 
 
+# --------------------------------------------------------------------------
+# A29 / A31 - the six derived-value families the compiler owns.
+#
+# The rules live in expected_derived_value_removals.json, which was committed in
+# its own commit BEFORE any content/ file changed. Reading them from there rather
+# than restating them here is deliberate: a rule restated in two places can drift,
+# and the whole point of the prediction-first ordering is that the assertion and
+# the prediction are the same artifact.
+# --------------------------------------------------------------------------
+
+DERIVED_EXPECTATION = Path(__file__).resolve().parent / "expected_derived_value_removals.json"
+
+# The two counts the generator declares, restated here ON PURPOSE. This is the
+# one place in the A29/A31 code where duplication is right: everything else is
+# read from the expectation file so the assertion and the prediction cannot drift,
+# but a count read only from the file it is meant to police cannot police it. An
+# empty `families` list, a family with no records, and the counts overwritten with
+# 9999/99 all passed verify_content.py before these existed - only
+# `derive --check` caught them, by regenerating and byte-comparing, which is a
+# file-integrity check and not an assertion inside the rule.
+DECLARED_FAMILY_COUNT = 6
+DECLARED_TOTAL_REMOVED = 115
+
+# How many removed values sit in a container the removal left with no numeric
+# leaves at all, so that A31's value layer searches nothing for them. Asserted,
+# not remarked on: emptying a container empties its guard, and the number must not
+# grow without someone deciding that it may. The 13 are the `{}` and
+# `{"resource": "common ore"}` residues under content/resources/,
+# content/mining-sites/ - NOT the six root-level records, whose site is the
+# document itself.
+EMPTY_SITE_GUARD_RECORDS = 13
+
+# The three search-radius figures A31 PRINTS on a green run, declared here so that
+# the tool which prints them also asserts them. They are computed by
+# derive_derived_value_expectations.py on the pinned sweep ref and byte-checked by
+# `derive --check`; that is a different tool, which nobody running verify_content.py
+# has to run. Measured before this existed: editing file_radius_pairs back to the old
+# unreproducible 55 made A31 print "1 : 55 : 668" at exit 0 with 0 failures. A figure
+# a reader meets on a passing run and no assertion binds is indistinguishable from a
+# figure that was made up, which is precisely what 55 and 400 were.
+# (site, file, scope), as measured on the expectation's sweep_ref.
+SEARCH_RADIUS_DECLARED = (1, 40, 668)
+
+# The scope-file population A31's NAME layer walks, summed over the six families'
+# scopes. Pinned here so a scope list that is emptied or misspelled cannot quietly
+# shrink the walk to nothing while the six family rows keep printing `0 / ok` - a
+# rule that searched no file finds no hit, and "0 hits" is the same string either
+# way. It is 54 = enemies 11 + bosses 4 (family 1) + powerups 13 + utilities 13 +
+# resources 8 + mining-sites 4 + maps 1, the same per-directory populations A12
+# asserts; families overlap no directory, so the sum is also the distinct count.
+#
+# ONLY the file population is pinned. The LEAF count is asserted non-zero and
+# printed as measured, never pinned: a leaf count moves with any authored value
+# edit anywhere in seven directories, so pinning it would turn every ordinary
+# content change into a failure here, while a file population moves only when a
+# definition file is added or removed - which is deliberate, and which A12 and
+# A28 already require a decision for.
+DERIVED_NAME_WALK_SCOPE_FILES = 54
+
+
+def load_derived_expectation() -> dict:
+    if not DERIVED_EXPECTATION.exists():
+        fail(
+            f"A29/A31: {rel(DERIVED_EXPECTATION)} is missing. It is the committed prediction of "
+            f"exactly which derived values this tree no longer authors, and both rules read their "
+            f"scopes and patterns from it. Regenerate it with "
+            f"derive_derived_value_expectations.py --write."
+        )
+        return {}
+    return json.loads(DERIVED_EXPECTATION.read_text())
+
+
+def check_derived_expectation_counts(docs: dict[Path, object]) -> list[tuple]:
+    """A29/A31 vacuity guards - the four declared counts, asserted HERE.
+
+    `total_removed`, `family_count`, `declared_family_count` and
+    `declared_total_removed` were written by the generator and read by nothing in
+    this file: `grep -n declared verify_content.py` returned no hit anywhere in the
+    A29/A31 code. verify_content.py on its own therefore passed every vacuity
+    injection - an empty `families` list, a scope pointed at a directory holding no
+    definitions, every family's `records` emptied, an empty
+    `removed_numeric_multiset` with `sweep_ref` repinned to HEAD, and the counts
+    overwritten with 9999/99. Only `derive --check` caught those, and it caught
+    them by regenerating the file and byte-comparing it: a file-integrity check,
+    which fails for any edit at all and says nothing about whether the RULE has
+    content. These rows are the rule saying it.
+
+    The scope row is deliberately measured against the CURRENT tree rather than
+    against the sweep ref, because a scope that resolves to nothing here is a rule
+    searching nothing here, whatever it searched when the prediction was written.
+    """
+    expectation = load_derived_expectation()
+    if not expectation:
+        return []
+    families = expectation.get("families") or []
+    built_records = sum(len(f.get("records") or []) for f in families)
+    multiset = expectation.get("removed_numeric_multiset") or []
+
+    empty_families = sorted(f.get("name", "?") for f in families if not (f.get("records") or []))
+
+    # The three figures A31 prints, plus the prose half of the same measurement. The
+    # numbers and the sentence are two writers on one measurement, so an edit to
+    # either alone has to fail: the row above pins the numbers, this pins the sentence
+    # to them.
+    measured_radii = expectation.get("search_radius_measurement") or {}
+    site, file_r, scope_r = (measured_radii.get(k) for k in
+                             ("site_radius_pairs", "file_radius_pairs", "scope_radius_pairs"))
+    conclusion = measured_radii.get("conclusion") or ""
+    if not all(isinstance(n, int) for n in (site, file_r, scope_r)):
+        radius_conclusion_state = "radii missing or not integers"
+    else:
+        wanted = (
+            f"Ratio {site} : {file_r} : {scope_r}",
+            f"file would need {file_r - site} more",
+            f"scope {scope_r - site} more",
+        )
+        absent = [w for w in wanted if w not in conclusion]
+        radius_conclusion_state = "consistent" if not absent else f"text disagrees: {absent}"
+
+    empty_scopes: list[str] = []
+    for family in families:
+        for scope in family.get("scopes") or []:
+            directory = scope.strip("/").split("/", 1)[1] if "/" in scope.strip("/") else ""
+            in_scope = files_in(directory, docs) if directory else {}
+            leaves = sum(1 for path in in_scope for _ in numeric_pointer_leaves(in_scope[path]))
+            if not in_scope or not leaves:
+                empty_scopes.append(f"{family.get('name', '?')} -> {scope}")
+
+    checks = [
+        (
+            "families in the expectation file",
+            DECLARED_FAMILY_COUNT,
+            len(families),
+            len(families) == DECLARED_FAMILY_COUNT,
+        ),
+        (
+            "family_count as written by the generator",
+            DECLARED_FAMILY_COUNT,
+            expectation.get("family_count"),
+            expectation.get("family_count") == DECLARED_FAMILY_COUNT,
+        ),
+        (
+            "declared_family_count as written by the generator",
+            DECLARED_FAMILY_COUNT,
+            expectation.get("declared_family_count"),
+            expectation.get("declared_family_count") == DECLARED_FAMILY_COUNT,
+        ),
+        (
+            "records summed over every family",
+            DECLARED_TOTAL_REMOVED,
+            built_records,
+            built_records == DECLARED_TOTAL_REMOVED,
+        ),
+        (
+            "total_removed as written by the generator",
+            DECLARED_TOTAL_REMOVED,
+            expectation.get("total_removed"),
+            expectation.get("total_removed") == DECLARED_TOTAL_REMOVED,
+        ),
+        (
+            "declared_total_removed as written by the generator",
+            DECLARED_TOTAL_REMOVED,
+            expectation.get("declared_total_removed"),
+            expectation.get("declared_total_removed") == DECLARED_TOTAL_REMOVED,
+        ),
+        (
+            "elements in removed_numeric_multiset (A29's comparand)",
+            DECLARED_TOTAL_REMOVED,
+            len(multiset),
+            len(multiset) == DECLARED_TOTAL_REMOVED,
+        ),
+        (
+            "families whose records list is EMPTY (a rule over no values passes free)",
+            0,
+            len(empty_families),
+            not empty_families,
+        ),
+        (
+            "family scopes holding no numeric leaves in the CURRENT tree",
+            0,
+            len(empty_scopes),
+            not empty_scopes,
+        ),
+        (
+            "search radii A31 PRINTS (site : file : scope), asserted by the tool that prints them",
+            " : ".join(str(n) for n in SEARCH_RADIUS_DECLARED),
+            " : ".join(str(measured_radii.get(k, "?"))
+                       for k in ("site_radius_pairs", "file_radius_pairs", "scope_radius_pairs")),
+            tuple(measured_radii.get(k) for k in
+                  ("site_radius_pairs", "file_radius_pairs", "scope_radius_pairs"))
+            == SEARCH_RADIUS_DECLARED,
+        ),
+        (
+            "the printed radii and the conclusion sentence's own arithmetic agree",
+            f"file-site={SEARCH_RADIUS_DECLARED[1] - SEARCH_RADIUS_DECLARED[0]}, "
+            f"scope-site={SEARCH_RADIUS_DECLARED[2] - SEARCH_RADIUS_DECLARED[0]} in the text",
+            radius_conclusion_state,
+            radius_conclusion_state == "consistent",
+        ),
+        (
+            "the pair definition is present, so the printed figures print with what they counted",
+            "present",
+            "present" if (measured_radii.get("definition") or "").strip() else "MISSING",
+            bool((measured_radii.get("definition") or "").strip()),
+        ),
+    ]
+    rows = [(label, expected, actual, "ok" if good else "FAIL")
+            for label, expected, actual, good in checks]
+    bad = [f"{label}: expected {expected}, got {actual!r}"
+           for label, expected, actual, good in checks if not good]
+    if bad:
+        fail(
+            f"A29/A31 {len(bad)} declared count(s)/vacuity guard(s) in "
+            f"{rel(DERIVED_EXPECTATION)} do not hold. These are the rows that stop the rule from "
+            f"passing over nothing, so a mismatch is a failure of the rule and not only of the "
+            f"file: {bad}"
+            + (f" empty families={empty_families}" if empty_families else "")
+            + (f" empty scopes={empty_scopes}" if empty_scopes else "")
+        )
+    return rows
+
+
+def pointer_segments(pointer: str) -> list[str]:
+    return [s for s in re.split(r"\.|\[\d+\]", pointer) if s]
+
+
+def derived_rule_matches(family: dict, pointer: str) -> bool:
+    """A31's matcher: a family's rule against a pointer's SEGMENT NAMES.
+
+    The allowlist is consulted on the LEAF segment, which is A20's semantics
+    (`if key in DERIVED_FOOTPRINT_FIELD_ALLOWED: continue`) - an allowlisted leaf
+    is exempt even when an ANCESTOR name matches, which is the only case that
+    arises: `purchases` matches nothing itself, it inherits the match from
+    `cumulative_cost_checkpoints` above it.
+    """
+    segments = pointer_segments(pointer)
+    if not segments:
+        return False
+    allow = family.get("allowlisted_segments") or {}
+    if segments[-1] in allow:
+        return False
+    child_rx = re.compile(family["pointer_segment_rule"])
+    parent = family.get("pointer_parent_rule")
+    if parent:
+        parent_rx = re.compile(parent)
+        for index, seg in enumerate(segments):
+            if parent_rx.search(seg) and any(child_rx.search(s) for s in segments[index + 1 :]):
+                return True
+        return False
+    return any(child_rx.search(seg) for seg in segments)
+
+
+def numeric_pointer_leaves(obj, prefix: str = ""):
+    """Yield (pointer, value) for every numeric leaf. Bools are not numbers."""
+    if isinstance(obj, dict):
+        items = obj.items()
+    elif isinstance(obj, list):
+        items = ((f"[{i}]", v) for i, v in enumerate(obj))
+    else:
+        return
+    for key, value in items:
+        child = key if (isinstance(obj, dict) and not prefix) else (
+            f"{prefix}.{key}" if isinstance(obj, dict) else f"{prefix}{key}"
+        )
+        if isinstance(value, bool):
+            continue
+        if isinstance(value, (int, float)):
+            yield child, value
+        else:
+            yield from numeric_pointer_leaves(value, child)
+
+
+def check_derived_family_absence(docs: dict[Path, object]) -> list[tuple]:
+    """A31 - none of the six removed families may reappear.
+
+    Two layers. This is the NAME layer, over pointer segment names; it catches a
+    rename only within its own word class and cannot make one impossible. The
+    VALUE layer - no non-operand leaf inside a derivation site may carry the
+    derived value - is asserted by the generator against the pinned sweep ref and
+    recorded in the expectation file, because it is a property of the removal set
+    rather than of the current tree.
+
+    Every row carries the DENOMINATOR of its own search - the numeric leaves the
+    walk visited and the files it scanned - counted by the walk itself as it runs,
+    never restated from a hand-run figure. Without it these six rows printed
+    `0 / 0 / ok` and were the only assertion in this file that reported a result
+    with no measure of what it looked at (A26 prints files scanned, A27 files and
+    tokens, A29 `115 of 115`, A30 comparisons made, A31's own VALUE layer
+    `102 of 115` plus a distribution). A row reading `0` over 349 leaves and a row
+    reading `0` over no leaves at all are the same six characters on the page.
+    """
+    expectation = load_derived_expectation()
+    rows = []
+    walked_leaves = 0
+    walked_files = 0
+    for family in expectation.get("families", []):
+        hits: list[str] = []
+        family_leaves = 0
+        family_files = 0
+        for scope in family["scopes"]:
+            directory = scope.strip("/").split("/", 1)[1]
+            for path, doc in sorted(files_in(directory, docs).items()):
+                family_files += 1
+                for pointer, value in numeric_pointer_leaves(doc):
+                    family_leaves += 1
+                    if derived_rule_matches(family, pointer):
+                        hits.append(f"{rel(path)}.{pointer} = {value!r}")
+        walked_leaves += family_leaves
+        walked_files += family_files
+        rows.append(
+            (
+                f"no {family['name']} value in {' + '.join(family['scopes'])}",
+                0,
+                f"{len(hits)} of {family_leaves} numeric leaf/leaves "
+                f"in {family_files} file(s)",
+                "ok" if not hits else "FAIL",
+            )
+        )
+        if hits:
+            fail(
+                f"A31 {len(hits)} field(s) under {' + '.join(family['scopes'])} hold a "
+                f"'{family['name']}' value, which the compiler owns per "
+                f"{family['doc_assignment'].split(' - ')[0]}. Matched on pointer segment names "
+                f"/{family['pointer_segment_rule']}/"
+                + (f" under /{family['pointer_parent_rule']}/" if family.get("pointer_parent_rule")
+                   else "")
+                + f". This is the NAME layer, which catches a rename only within its own word "
+                f"class - a value reintroduced under a name the class does not carry passes it, and "
+                f"the value layer is what covers that: {hits[:10]}"
+            )
+
+    # The walk asserted, not only printed. The six rows above cannot fail on an
+    # empty walk: every one of them is `0 hits`, which is exactly what a rule
+    # searching nothing reports. This row is what a scope-list regression hits.
+    coverage_ok = walked_leaves > 0 and walked_files == DERIVED_NAME_WALK_SCOPE_FILES
+    rows.append(
+        (
+            "the walk itself: numeric leaves visited (non-zero) and scope files scanned",
+            f"non-zero leaves, {DERIVED_NAME_WALK_SCOPE_FILES} file(s)",
+            f"{walked_leaves} leaf/leaves, {walked_files} file(s)",
+            "ok" if coverage_ok else "FAIL",
+        )
+    )
+    if not coverage_ok:
+        fail(
+            f"A31 NAME layer walked {walked_leaves} numeric leaf/leaves across {walked_files} "
+            f"file(s), expected a non-zero leaf count over exactly "
+            f"{DERIVED_NAME_WALK_SCOPE_FILES} file(s). The six family rows above CANNOT catch "
+            f"this: each reports `0 hits`, and a rule that searched no file reports `0 hits` too, "
+            f"so an emptied or misspelled `scopes` entry in "
+            f"{rel(DERIVED_EXPECTATION)} collapses the walk while six rows keep printing `ok`. "
+            f"The leaf count is asserted non-zero rather than pinned because it moves with any "
+            f"authored value edit; the file count is pinned because it moves only when a "
+            f"definition file is added or removed, which A12 already requires a decision for."
+        )
+
+    return rows, (
+        "NOT CAUGHT by this layer: a derived value reintroduced under a name outside the family's "
+        "word class, or in a directory the family does not scope. Probed per family with a "
+        "semantic-neighbour name - caught 0 of 6. That figure is a HAND-RUN PROBE, not a "
+        "measurement this run made: six injections, one per family, each reintroducing the family's "
+        "value under a name outside its word class, and no assertion here recomputes it. This "
+        "layer catches a rename only WITHIN its own word class. Layer 2 below is the one that "
+        "does not depend on the name at all.",
+    )
+
+
+def derivation_site(pointer: str) -> str:
+    """The pointer of the object that HELD the removed leaf.
+
+    A trailing `[i]` means the container is the list, so the index is dropped;
+    otherwise the last dotted segment is dropped. A ROOT-LEVEL leaf has neither,
+    and the object that held it is the DOCUMENT ITSELF - returned as "" and read
+    by is_in_site() as the whole document, NOT as "no site".
+
+    That last case was a hole rather than a subtlety. An earlier revision returned
+    "" here and then filtered with `if not (site and ...): continue`, so a falsy
+    site skipped EVERY leaf: six root-level records searched nothing at all and
+    could not fail on any injection, including the removed value reinjected into
+    the same file. The six were content/resources/common-ore.json
+    seam_total_per_map, content/resources/hyper-gold.json run_ceiling, and
+    total_depletion_seconds plus total_uninterrupted_extraction_per_map_seconds on
+    both content/mining-sites/*-ore-seams.json.
+
+    Kept as a shared helper with the same name and body in the generator, because
+    `derive --check` regenerates the expectation from the same definition and the
+    two must not drift.
+    """
+    if pointer.endswith("]"):
+        return pointer[: pointer.rindex("[")]
+    return pointer.rsplit(".", 1)[0] if "." in pointer else ""
+
+
+def is_in_site(leaf: str, site: str) -> bool:
+    """Is `leaf` the site itself or inside its subtree? "" is the document root."""
+    if site == "":
+        return True
+    return leaf == site or leaf.startswith(site + ".") or leaf.startswith(site + "[")
+
+
+def check_derived_family_values(docs: dict[Path, object]) -> list[tuple]:
+    """A31's VALUE layer, over the CURRENT tree - the half a name rule cannot do.
+
+    For every value this pass removed, no non-operand numeric leaf inside its own
+    derivation site may carry that value. Compared exactly, as Fractions, with no
+    tolerance: a stored 32.0 and a stored 32 are the same number and both fail.
+
+    This is what makes the guard indifferent to spelling. A reintroduction
+    survives a rename, a relocation inside the site, a different unit suffix and a
+    change of arity (32.0 -> [32.0]) without changing the number, and all four are
+    caught here while all four defeat the name layer.
+
+    TWO THINGS LIMIT ITS REACH AND BOTH PRINT ON A GREEN RUN.
+
+    (1) THE RADIUS: the derivation site, not the file and not the scope. A value
+        relocated OUT of its site still passes. The choice is measured, not
+        assumed - the generator's measure_search_radii() counts what each
+        candidate radius would flag under one definition and writes the three
+        numbers into search_radius_measurement in the expectation file, which is
+        where the ratio printed below comes from.
+
+    (2) THE GUARD IS ONLY AS BIG AS WHAT SURVIVED IN THE SITE. Emptying a
+        container empties its guard: where the removal left the containing object
+        with no numeric leaves at all, this layer searches ZERO leaves for that
+        record and cannot fail on anything short of a leaf reappearing inside that
+        same object. The count of such records is asserted and printed, because a
+        mean ("299 leaves across 115 values") reads as coverage of all 115 and is
+        exactly what hid the empty-site bug above.
+    """
+    expectation = load_derived_expectation()
+    exceptions = {
+        (e["file"], e["derived_pointer"], e["colliding_pointer"])
+        for e in expectation.get("value_collision_exceptions", [])
+    }
+    exceptions_used: set = set()
+    by_path = {rel(p): d for p, d in docs.items()}
+    rows = []
+    per_record: list[int] = []
+    for family in expectation.get("families", []):
+        hits: list[str] = []
+        for record in family["records"]:
+            doc = by_path.get(record["file"])
+            if doc is None:
+                continue
+            pointer = record["pointer"]
+            site = derivation_site(pointer)
+            own = {p.split("::", 1)[1] for p in record.get("operand_pointers", [])
+                   if p.split("::", 1)[0] == record["file"]}
+            target = Fraction(str(record["value"]))
+            searched_here = 0
+            for leaf, value in numeric_pointer_leaves(doc):
+                if not is_in_site(leaf, site):
+                    continue
+                searched_here += 1
+                if Fraction(str(value)) != target:
+                    continue
+                if leaf in own:
+                    continue
+                if (record["file"], pointer, leaf) in exceptions:
+                    exceptions_used.add((record["file"], pointer, leaf))
+                    continue
+                hits.append(f"{record['file']}.{leaf} = {value!r} (the removed {pointer})")
+            per_record.append(searched_here)
+        rows.append(
+            (
+                f"no {family['name']} VALUE at its derivation site",
+                0,
+                len(hits),
+                "ok" if not hits else "FAIL",
+            )
+        )
+        if hits:
+            fail(
+                f"A31 value layer: {len(hits)} numeric leaf/leaves carry a value this pass removed "
+                f"as a '{family['name']}', inside that value's own derivation site and not as one "
+                f"of its operands. Matched on the NUMBER, so a rename, a relocation within the "
+                f"site, a new unit suffix and a scalar-to-list change all fail it. If a hit is a "
+                f"genuine coincidence, add it to VALUE_COLLISION_EXCEPTIONS with a reason: "
+                f"{sorted(hits)[:10]}"
+            )
+
+    # A STALE DECLARED EXCEPTION FAILS, HERE AND NOT ONLY IN THE GENERATOR. This
+    # is A30's pattern - `set(CSV_MIRROR_ROUNDED) - declared_used`, computed
+    # against the tree in front of it - and it is here because the sentence "a
+    # stale exception now fails too" was false in BOTH tools: this file had no
+    # staleness check at all and consulted the set only as an exclusion, while the
+    # generator checked it against the pinned sweep ref, where the colliding value
+    # collides by construction. Control: content/utilities/UTL-R1.json
+    # acquisition.rank_count 0 -> 1 ends the only declared collision, and before
+    # this row both tools still exited 0.
+    stale = sorted(exceptions - exceptions_used)
+    rows.append(
+        (
+            "declared value-collision exceptions that no longer collide (stale exceptions)",
+            0,
+            len(stale),
+            "ok" if not stale else "FAIL",
+        )
+    )
+    if stale:
+        fail(
+            f"A31 value layer: {len(stale)} declared value-collision exception(s) no longer suppress "
+            f"anything on this tree, so the justification recorded for each is no longer true. A "
+            f"stale exception silently widens the gate - delete it from "
+            f"VALUE_COLLISION_EXCEPTIONS in the generator and regenerate: {stale}"
+        )
+
+    # A record whose containing object lost all its numeric leaves has an empty
+    # guard, and the count of those is an assertion rather than a remark: if a
+    # later pass empties more containers, this row moves and someone has to look.
+    blind = sum(1 for n in per_record if n == 0)
+    rows.append(
+        (
+            "removed values whose site still holds numeric leaves to search "
+            "(the rest have an EMPTY guard)",
+            f"{len(per_record) - EMPTY_SITE_GUARD_RECORDS} of {len(per_record)}",
+            f"{len(per_record) - blind} of {len(per_record)}",
+            "ok" if blind == EMPTY_SITE_GUARD_RECORDS else "FAIL",
+        )
+    )
+    if blind != EMPTY_SITE_GUARD_RECORDS:
+        fail(
+            f"A31 value layer: {blind} removed value(s) have a derivation site holding no numeric "
+            f"leaves, so this layer searches nothing for them; "
+            f"EMPTY_SITE_GUARD_RECORDS declares {EMPTY_SITE_GUARD_RECORDS}. This is not a pass/fail "
+            f"about the tree's correctness - it is the SIZE OF THE BLIND SPOT, and it is asserted so "
+            f"that emptying another container cannot shrink the guard quietly."
+        )
+
+    radii = expectation.get("search_radius_measurement") or {}
+    distribution = ", ".join(
+        f"{n} leaf/leaves x{per_record.count(n)}" for n in sorted(set(per_record))
+    )
+    # WHAT THIS CHECK SEARCHED AND WHAT IT CANNOT SEE, on the same table a passing
+    # run prints. A limitation recorded only in a docstring or a notes file is not
+    # disclosed to the person reading a green run. Reported as a DISTRIBUTION, not
+    # as a total or a mean: the previous line said "299 numeric leaves across 115
+    # removed values", which is a mean of 2.6 that reads as coverage of all 115
+    # and concealed 19 records searching nothing.
+    return rows, (
+        f"RADIUS SEARCHED: the object that held each removed leaf, plus its subtree. Per-record "
+        f"distribution over {len(per_record)} removed values - {distribution} - so the MINIMUM is "
+        f"{min(per_record) if per_record else 0} and {blind} record(s) search nothing at all. "
+        f"{len(exceptions)} declared exception(s), each asserted to still collide. Values compare "
+        f"exactly as Fractions; there is no tolerance and no rounding.",
+        f"NOT CAUGHT (1) - RADIUS: a removed value relocated OUT of its derivation site, elsewhere "
+        f"in the same file or anywhere else in the scope. Probed per family - caught 0 of 6. Rename, "
+        f"unit suffix and arity change (32.0 -> [32.0]) are caught 6 of 6. BOTH of those are "
+        f"HAND-RUN PROBES - twelve injections done by hand, six per row - and no assertion in this "
+        f"run recomputes either; unlike the three radii below, which this tool asserts. Wider radii "
+        f"were measured "
+        f"under one definition on the pinned sweep ref and are recorded in "
+        f"search_radius_measurement: {radii.get('site_radius_pairs', '?')} coincidental pair(s) at "
+        f"site radius, {radii.get('file_radius_pairs', '?')} at file radius and "
+        f"{radii.get('scope_radius_pairs', '?')} at scope radius. Widening needs that many "
+        f"hand-written exceptions, which is what makes it unlandable rather than merely unchosen. "
+        f"WHAT A PAIR IS, stated here rather than pointed at, because a reader meeting "
+        f"'{radii.get('site_radius_pairs', '?')} : {radii.get('file_radius_pairs', '?')} : "
+        f"{radii.get('scope_radius_pairs', '?')}' cannot otherwise tell what was counted: "
+        f"{(radii.get('definition') or 'DEFINITION MISSING from the expectation file').strip()} "
+        f"These three figures are ASSERTED by this tool against SEARCH_RADIUS_DECLARED "
+        f"({' : '.join(str(n) for n in SEARCH_RADIUS_DECLARED)}) in the A29/A31 declared-counts "
+        f"rows above, not merely printed from the expectation file; the file's own byte-integrity is "
+        f"a separate check (derive_derived_value_expectations.py --check).",
+        f"NOT CAUGHT (2) - EMPTY GUARDS: {blind} of {len(per_record)} removed values sit in a "
+        f"container the removal left with NO numeric leaves ({{}} and {{'resource': ...}} residues), "
+        f"so their guard searches nothing and only a leaf reappearing inside that same object could "
+        f"fail it. Emptying a container empties its guard. The 6 root-level records are NOT in this "
+        f"set any more - their site is the document, which is the object that held them.",
+    )
+
+
+# --------------------------------------------------------------------------
+# A30 - the docs CSV mirror and content/ must agree, value by value.
+#
+# docs/data/contact-damage-pressure.csv and content/ both carry the survivability
+# report. Ruling 45 found all overlapping values agreeing and said so; nothing
+# KEPT them agreeing. Two unguarded mirrors is the exact shape where a later edit
+# to one produces a silent contradiction, so agreement is asserted rather than
+# observed.
+#
+# This does NOT wait on the authority question (which of the two is the accepted
+# gameplay table docs/40 section 'Analytical' compares against). It is worth having
+# either way, and when the question lands, the loser becomes derived and this check
+# becomes redundant in the good way rather than wrong.
+#
+# NO TOLERANCE, AND THAT SENTENCE IS NOW TRUE FOR THE DECLARED PAIRS TOO. Values
+# compare exactly as Fractions. Where the CSV states a value at lower precision
+# than the derivation produces, the pair must be DECLARED below - enumerated with
+# a reason, never absorbed by a threshold.
+#
+# A declared entry names BOTH numbers: the CSV's written value and the EXACT
+# content-side value it is allowed to stand for. Both must hold. An earlier
+# revision required only that the content value ROUND to the CSV value at the
+# CSV's written precision, which is a tolerance of half the last decimal place
+# hiding inside a rule whose comment said "never absorbed by a threshold":
+# EN-07's body_scale_multiplier could sit anywhere in [0.61875, 0.625) undetected,
+# a band disclosed nowhere. It is now pinned to the single value 0.496, so any
+# retune of the scale fails, and the rounding clause is kept as a second condition
+# so a declaration cannot silently cover a pair that is not even close.
+# --------------------------------------------------------------------------
+PRESSURE_CSV = REPO_ROOT / "docs/data/contact-damage-pressure.csv"
+
+# (actor, column) -> (EXACT content-side value this declaration covers, reason).
+# The exact value is what removes the tolerance: nothing else passes, in either
+# direction.
+CSV_MIRROR_ROUNDED = {
+    ("EN-07", "contact_diameter_m"): (
+        "0.496",
+        "OPEN QUESTION, NOT A SETTLED ONE, and it is with the design owner: which contact diameter "
+        "was the Razorling meant to have? This entry records the question and the evidence on both "
+        "sides. It does not decide it, and an earlier version of this text did - it asserted the "
+        "0.496 was 'not a content defect, it is the exact product of the authored scale', which "
+        "reads as settled and is not supported. "
+        "THE DIVERGENCE: docs/31 section 'Ordinary roster overview' states the Razorling body scale "
+        "as 0.62x, so 0.62 x 0.80 = 0.496 M exactly; docs/72 section 'Collision and Contact "
+        "Footprints' states its footprint as 0.50 M and this CSV mirrors 72. EN-07 is the ONLY "
+        "actor whose derived diameter misses the CSV; the other 13 are exact. "
+        "THE ARGUMENT WITH FORCE, and it points at 0.50 being the exact one: every other ordinary "
+        "body scale is a multiple of 0.05 (0.55, 1.00, 1.30, 1.05, 1.20, 1.00, 1.10, 1.65, 1.35). "
+        "0.62 is not - but NEITHER IS 0.625. The Razorling breaks the pattern under either "
+        "hypothesis, so the pattern alone decides nothing; what the hypotheses differ on is whether "
+        "the break is MOTIVATED. Under 0.625 it is: a designer targeting a clean 0.50 M contact "
+        "diameter back-computes 0.50 / 0.80 = 0.625 and the scale is whatever falls out. Under 0.62 "
+        "it is not: someone working in 0.05 steps who wanted a small variant picks 0.60 or 0.65. A "
+        "motivated exception is better evidence than an unmotivated one, so this is the strongest "
+        "single argument on the table and it points at 0.625 - which is why the evidence LEANS that "
+        "way rather than sitting balanced. What it does not do is settle the question; see the "
+        "closing paragraphs. "
+        "THREE ARGUMENTS THAT DO NOT DISCRIMINATE, recorded as non-discriminating so a later reader "
+        "does not weigh them. (1) 'Both docs/72 figures come out exact under 0.625' is ONE "
+        "coincidence, not two: start distance is diameter / 2 + 0.50, so once the diameter is "
+        "exactly 0.50 the start distance is exactly 0.75 automatically. The second figure carries no "
+        "independent information. (2) 'docs/31 prints every scale at two decimals' is "
+        "ZERO-discriminating: all nine other scales are multiples of 0.05, so two decimals always "
+        "suffice for them - the column has never NEEDED a third decimal and therefore cannot "
+        "distinguish 'authored at two decimals' from 'presented at two decimals'. It is a fit over a "
+        "population incapable of falsifying it. (3) The delegation sentence at docs/31 section "
+        "'Ordinary roster overview' ('Exact derived values and boss circles appear in the "
+        "survivability baseline') obliges docs/72 to carry the exact value but says nothing about "
+        "WHICH value is exact, so it is consistent with both readings - which is why each side has "
+        "read it as supporting theirs. "
+        "WHAT IS WRONG IN THE REPOSITORY EITHER WAY: the framing 'content/ follows the source it "
+        "cites' is false for this field. EN-07's own source_refs scopes contact_footprint to "
+        "GDD-PLAYER-SURVIVABILITY-BASELINE#collision-and-contact-footprints - docs/72, the 0.50 "
+        "side - while the scale it stores comes from docs/31. Corrected in README.md too. "
+        "WHERE THE EVIDENCE POINTS, AND WHY THAT IS STILL NOT A DECISION: it LEANS TOWARD 0.625. "
+        "The motivated-exception argument above is the strongest single argument here and it points "
+        "that way, and the three arguments below discriminate nothing, so nothing pulls the other "
+        "way with comparable force. It is NOT DECISIVE, for two reasons that are not weak: it is an "
+        "inference about a designer's intent, and it runs against the LITERAL TEXT of docs/31, "
+        "which states 0.62x and is a document of record; and against the operand-home argument - "
+        "docs/31's roster is where body scales live, so the scale column is the natural home of the "
+        "authored quantity and docs/72's 0.50 M is the natural home of a presented consequence. A "
+        "leaning inference does not overturn a stated number, so the question stays OPEN and it is "
+        "the design owner's to close. "
+        "WHY THE CURRENT STATE IS HELD, AND ON WHAT GROUNDS: on COST, not on evidence - the lean is "
+        "recorded above and holding does not deny it. "
+        "The current state is internally consistent under the 0.62 reading. If that reading wins "
+        "there is nothing to do; if the other wins the work is one content value plus a document "
+        "revert, travelling with the merges. The magnitude is 0.8% of a hitbox, so nothing is at "
+        "risk in the interval, and the question belongs to the design owner as a DESIGN question "
+        "rather than being inferred from typography. "
+        "AND WHY HOLDING IS SAFE RATHER THAN MERELY CHEAP: A30 fails in BOTH directions while the "
+        "question is open. Because this entry pins the exact content-side value, changing "
+        "body_scale_multiplier fails; because a declared pair that stops diverging is a failure, "
+        "correcting docs/72 to 0.496 fails too. Neither side can be taken quietly."
+    ),
+    ("EN-07", "contact_start_distance_m"): (
+        "0.748",
+        "The same 0.496 propagated: 0.496 / 2 + 0.50 = 0.748, which docs/72 section 'Collision and "
+        "Contact Footprints' states as 0.75. ONE divergence, not two - and that is exactly why the "
+        "'both figures are exact under 0.625' argument carries no independent weight; see the "
+        "contact_diameter_m entry."
+    ),
+}
+
+CSV_MIRROR_EXPECTED_COMPARISONS = 98
+
+# How many definitions must author contact_footprint.reference_diameter_m, the
+# operand A30's diameter column multiplies. Ten - the ordinary enemy roster. The
+# four bosses author their diameters flat (docs/72:105-110) and have no reference,
+# which is why this is 10 and not 14.
+CSV_MIRROR_REFERENCE_DIAMETER_AUTHORS = 10
+
+
+def _csv_decimals(text: str) -> int:
+    return len(text.split(".", 1)[1]) if "." in text else 0
+
+
+def check_csv_mirror_agreement(docs: dict[Path, object]) -> list[tuple]:
+    """A30 - every value docs/data/contact-damage-pressure.csv shares with content/.
+
+    Seven columns x 14 actors. Four columns compare against an AUTHORED content
+    field; three compare against a value the compiler derives from surviving
+    operands, which is the comparison docs/40 section "Enemies and bosses" actually
+    describes ("derives world speeds/footprints and compares them with the
+    survivability report").
+    """
+    if not PRESSURE_CSV.exists():
+        fail(
+            f"A30 {rel(PRESSURE_CSV)} is missing, so the CSV/content mirror is unmeasured. This "
+            f"rule is not allowed to pass by being unable to run."
+        )
+        return [("pressure CSV readable", "present", "missing", "FAIL")], ()
+
+    contract = None
+    for path, doc in docs.items():
+        if path.name == "standard-map-generation-contract.json":
+            contract = doc
+    if not isinstance(contract, dict) or "reference_mech_speed_m_per_s" not in contract:
+        fail("A30 could not read reference_mech_speed_m_per_s, an operand of the speed column.")
+        return [("mech base speed readable", "present", "missing", "FAIL")], ()
+    base_speed = Fraction(str(contract["reference_mech_speed_m_per_s"]))
+
+    # THE PLAYER'S COLLISION RADIUS IS THE ONE OPERAND WITH NO AUTHORED MIRROR, and
+    # the asymmetry with reference_diameter_m below is deliberate rather than an
+    # oversight. docs/72:86 states it: "Contact begins when the enemy contact circle
+    # and the mech's 0.50M-radius collision circle overlap." It is a PLAYER-baseline
+    # constant, and A20's centre-distance rule exists precisely to keep it OUT of
+    # content/enemies/, content/bosses/ and content/maps/ - storing the sum there put
+    # a second writer on it in fifteen files (Ruling 12, content/transcription-notes.md
+    # sections on the centre distance). So there is nothing in the tree to read and
+    # this literal is the repository's only copy of it.
+    # SEARCHED BEFORE CONCLUDING: every numeric leaf equal to 0.5 under
+    # content/**/*.json is 20 leaves, none of them a player/mech footprint field
+    # (pulse intervals, arm/grace/decay seconds, per-rank increments, a charging
+    # multiplier, an anchor collapse distance); no key anywhere under content/ matches
+    # player_radius / collision_radius; and the only occurrences of the phrase are
+    # prose in content/README.md and content/transcription-notes.md, which are
+    # documentation of this derivation, not values it may read. If the mech baseline
+    # ever becomes authored content, read it here the way ref_diameter is read.
+    player_radius = Fraction("0.50")  # docs/72:86 - no authored mirror; see above
+
+    by_id = {}
+    for path, doc in docs.items():
+        if isinstance(doc, dict) and isinstance(doc.get("id"), str):
+            if path.parent.name in ("enemies", "bosses"):
+                by_id[doc["id"]] = doc
+
+    # THE OTHER OPERAND OF THE DIAMETER COLUMN IS AUTHORED, SO IT IS READ FROM THE
+    # TREE. All ten enemy files store contact_footprint.reference_diameter_m = 0.8,
+    # A20's DERIVED_FOOTPRINT_FIELD_ALLOWED allowlists it as authored and required to
+    # stay, and this derivation multiplies it. It used to be hardcoded here as
+    # Fraction("0.80"), which made the derivation agree with ITSELF rather than with
+    # the tree: setting the field to 1.0 in all ten files left the whole suite green,
+    # 0 failures, 10 of 10 escaped, and 0.9 and 0.8000001 likewise - while the sibling
+    # operand body_scale_multiplier went red, so the field was stored, mirrored in the
+    # CSV's derivation, allowlisted as authored, and read by nothing. THAT
+    # 10-of-10 ESCAPE FIGURE IS A HAND-RUN PROBE against the old hardcoded code -
+    # ten files rewritten per injection, three injections in all (1.0, 0.9,
+    # 0.8000001), each done by hand and reverted - and no assertion recomputes it.
+    # TWO ROWS, because reading it is not enough on its own. The per-actor read makes
+    # an edit to ONE file fail that actor's diameter and start-distance comparisons;
+    # the population and distinct-value rows make DELETING the field, or giving one
+    # file a different reference from the other nine, fail as well - the shared
+    # reference is one quantity with one owner, and a per-file reference would be a
+    # second owner smuggled in one file at a time.
+    authored_ref_diameters: dict[str, Fraction] = {}
+    for actor_id, doc in by_id.items():
+        footprint = doc.get("contact_footprint") or {}
+        if "reference_diameter_m" in footprint:
+            authored_ref_diameters[actor_id] = Fraction(str(footprint["reference_diameter_m"]))
+    distinct_ref_diameters = sorted(set(authored_ref_diameters.values()))
+
+    import csv as _csv
+
+    compared = 0
+    exact_hits = 0
+    declared_used: set = set()
+    mismatches: list[str] = []
+    missing_actors: list[str] = []
+    missing_ref_diameter: list[str] = []
+
+    with PRESSURE_CSV.open() as handle:
+        for row in _csv.DictReader(handle):
+            actor = row["actor_id"]
+            doc = by_id.get(actor)
+            if doc is None:
+                missing_actors.append(actor)
+                continue
+            footprint = doc.get("contact_footprint") or {}
+            if "contact_and_weapon_hurt_diameter_m" in footprint:
+                diameter = Fraction(str(footprint["contact_and_weapon_hurt_diameter_m"]))
+                diameter_basis = "authored contact_and_weapon_hurt_diameter_m"
+            elif actor in authored_ref_diameters:
+                ref_diameter = authored_ref_diameters[actor]
+                diameter = Fraction(str(doc["body_scale_multiplier"])) * ref_diameter
+                diameter_basis = (
+                    f"body_scale_multiplier x authored contact_footprint."
+                    f"reference_diameter_m {ref_diameter}"
+                )
+            else:
+                # No authored diameter and no authored reference to derive one from.
+                # The population row below is what reports this; skipping here also
+                # drops the comparison count, so the vacuity guard fails too.
+                missing_ref_diameter.append(actor)
+                continue
+            percent = Fraction(
+                str(doc["movement_speed"]["percent_of_mech_base_speed"]["percent"])
+            )
+            block = doc.get("damage_pressure") or {}
+
+            candidates = [
+                ("contact_diameter_m", diameter, diameter_basis),
+                ("contact_start_distance_m", diameter / 2 + player_radius,
+                 f"{diameter_basis} / 2 + {player_radius}"),
+                ("move_speed_mps", percent / 100 * base_speed,
+                 f"percent_of_mech_base_speed / 100 x {base_speed}"),
+                ("contact_damage", Fraction(str(doc["contact_damage"])), "authored contact_damage"),
+                ("control_resistance", Fraction(str(doc["control_resistance"]["percent"])) / 100,
+                 "authored control_resistance.percent / 100"),
+            ]
+            if "hits_to_defeat_100_hull" in block:
+                candidates.append(
+                    ("hits_to_defeat_100", Fraction(str(block["hits_to_defeat_100_hull"])),
+                     "authored damage_pressure.hits_to_defeat_100_hull")
+                )
+            if "continuous_overlap_time_to_defeat_seconds" in block:
+                candidates.append(
+                    ("continuous_overlap_ttd_s",
+                     Fraction(str(block["continuous_overlap_time_to_defeat_seconds"])),
+                     "authored damage_pressure.continuous_overlap_time_to_defeat_seconds")
+                )
+
+            for column, got, basis in candidates:
+                raw = row.get(column)
+                if raw is None or raw == "":
+                    continue
+                compared += 1
+                want = Fraction(raw)
+                if want == got:
+                    exact_hits += 1
+                    continue
+                key = (actor, column)
+                places = _csv_decimals(raw)
+                quantum = Fraction(10) ** places
+                rounded = Fraction(int(got * quantum + Fraction(1, 2)), quantum)
+                declared = CSV_MIRROR_ROUNDED.get(key)
+                # BOTH conditions. The exact-value clause is what makes "no
+                # tolerance" true: without it the declaration accepted any value
+                # rounding to the CSV's figure, a half-last-place band nobody had
+                # disclosed. The rounding clause stays so a declaration cannot
+                # cover a pair that is not even close to the CSV.
+                if declared is not None and got == Fraction(declared[0]) and rounded == want:
+                    declared_used.add(key)
+                    continue
+                mismatches.append(
+                    f"{actor}.{column}: CSV {raw} vs content {got} (= {float(got)!r}, from "
+                    f"{basis})"
+                )
+
+    stale = sorted(set(CSV_MIRROR_ROUNDED) - declared_used)
+    rows = [
+        (
+            f"docs CSV vs content/: every shared value agrees ({compared} compared, "
+            f"{exact_hits} exactly, {len(declared_used)} at the CSV's stated precision)",
+            0,
+            len(mismatches),
+            "ok" if not mismatches else "FAIL",
+        ),
+        (
+            f"comparisons made (vacuity guard; a mirror check over 0 values passes for free)",
+            CSV_MIRROR_EXPECTED_COMPARISONS,
+            compared,
+            "ok" if compared == CSV_MIRROR_EXPECTED_COMPARISONS else "FAIL",
+        ),
+        (
+            "declared lower-precision pairs that no longer diverge (stale exceptions)",
+            0,
+            len(stale),
+            "ok" if not stale else "FAIL",
+        ),
+        (
+            "enemy files authoring contact_footprint.reference_diameter_m (the operand "
+            "this rule reads instead of hardcoding)",
+            CSV_MIRROR_REFERENCE_DIAMETER_AUTHORS,
+            len(authored_ref_diameters),
+            "ok" if len(authored_ref_diameters) == CSV_MIRROR_REFERENCE_DIAMETER_AUTHORS
+            else "FAIL",
+        ),
+        (
+            "distinct authored reference diameters (one shared reference, one owner)",
+            "1 (0.8)",
+            f"{len(distinct_ref_diameters)} ({', '.join(str(float(d)) for d in distinct_ref_diameters) or 'none'})",
+            "ok" if len(distinct_ref_diameters) == 1 else "FAIL",
+        ),
+    ]
+    if mismatches:
+        fail(
+            f"A30 {len(mismatches)} value(s) disagree between {rel(PRESSURE_CSV)} and content/. "
+            f"Both carry the survivability report and neither is derived from the other, so a "
+            f"divergence is a silent contradiction between two mirrors: {sorted(mismatches)[:10]}"
+        )
+    if compared != CSV_MIRROR_EXPECTED_COMPARISONS:
+        fail(
+            f"A30 compared {compared} value(s), expected {CSV_MIRROR_EXPECTED_COMPARISONS}. A "
+            f"mirror-agreement rule that compares nothing passes vacuously, so the count is "
+            f"asserted. If a column or an actor was legitimately added or removed, update "
+            f"CSV_MIRROR_EXPECTED_COMPARISONS deliberately."
+        )
+    if missing_actors:
+        fail(
+            f"A30 {len(missing_actors)} CSV actor(s) have no definition under content/enemies/ or "
+            f"content/bosses/: {missing_actors}"
+        )
+    if stale:
+        fail(
+            f"A30 {len(stale)} declared lower-precision pair(s) now agree exactly. A stale "
+            f"exception silently widens the rule - delete it: {stale}"
+        )
+    if len(authored_ref_diameters) != CSV_MIRROR_REFERENCE_DIAMETER_AUTHORS:
+        fail(
+            f"A30 {len(authored_ref_diameters)} enemy definition(s) author "
+            f"contact_footprint.reference_diameter_m, expected "
+            f"{CSV_MIRROR_REFERENCE_DIAMETER_AUTHORS}. It is the authored operand this rule "
+            f"multiplies by body_scale_multiplier, and A20's DERIVED_FOOTPRINT_FIELD_ALLOWED "
+            f"allowlists it on the basis that it stays. Missing from: "
+            f"{sorted(set(by_id) - set(authored_ref_diameters))[:12]}"
+        )
+    if len(distinct_ref_diameters) != 1:
+        fail(
+            f"A30 the authored reference diameter is not one shared value: "
+            f"{[str(d) for d in distinct_ref_diameters]}. docs/72:86 gives ONE reference (the "
+            f"Ripper's 0.80 M rank-zero contact diameter) that every ordinary body scale "
+            f"multiplies, so a per-file reference is a second owner for one quantity."
+        )
+    if missing_ref_diameter:
+        fail(
+            f"A30 {len(missing_ref_diameter)} actor(s) have neither an authored contact diameter "
+            f"nor an authored reference to derive one from, so their diameter and start-distance "
+            f"columns were not compared: {sorted(missing_ref_diameter)}"
+        )
+    # A30's own limits, on the output a green run prints. A30 caught 7 of 8
+    # attacks when it was reviewed; the one that escaped went through the declared
+    # exception, which is the note below. THAT 7 of 8 IS A HAND-RUN PROBE - eight
+    # attacks tried by hand at review time - and no assertion recomputes it.
+    return rows, (
+        f"WHAT IS COMPARED: {compared} value(s) - the 7 CSV columns x 14 actors that both sides "
+        f"carry. 4 columns compare against an AUTHORED content field; 3 against values derived from "
+        f"surviving operands (diameter, start distance, world speed), which is the comparison docs/40 "
+        f"section 'Enemies and bosses' describes. The count is asserted at "
+        f"{CSV_MIRROR_EXPECTED_COMPARISONS} because a mirror check over zero values passes free.",
+        f"WHERE THE DERIVED COLUMNS' OPERANDS COME FROM, named because a hardcoded operand makes a "
+        f"derivation agree with itself: reference_mech_speed_m_per_s READ from "
+        f"content/maps/standard-map-generation-contract.json; contact_footprint."
+        f"reference_diameter_m READ per actor from the "
+        f"{len(authored_ref_diameters)} enemy definition(s) that author it (asserted above, one "
+        f"distinct value: {', '.join(str(float(d)) for d in distinct_ref_diameters) or 'none'}); "
+        f"body_scale_multiplier and the authored boss diameters READ per actor. The player's "
+        f"{float(player_radius):.2f} M collision radius is the ONLY hardcoded operand, from "
+        f"docs/72:86, and it "
+        f"is hardcoded because A20 keeps it out of content/ deliberately - it is a player-baseline "
+        f"constant and storing it in an enemy, boss or map file put a second writer on it.",
+        f"DECLARED EXCEPTIONS ARE EXACT PAIRS, NOT BANDS: {len(CSV_MIRROR_ROUNDED)} declared, each "
+        f"naming the CSV value AND the single exact content-side value it covers ("
+        + ", ".join(f"{a}.{c} = {v[0]}" for (a, c), v in sorted(CSV_MIRROR_ROUNDED.items()))
+        + "). An earlier revision required only that the content value round to the CSV's written "
+        "precision, which let EN-07's body_scale_multiplier sit anywhere in [0.61875, 0.625) "
+        "undetected while this module's comment claimed NO TOLERANCE. There is now no band.",
+        "NOT CAUGHT by A30: a value neither side carries, a column the CSV does not have, and an "
+        "edit made to BOTH mirrors in the same commit - it asserts agreement, not correctness. It "
+        "also does not settle which mirror is authoritative; when that lands the loser becomes "
+        "derived and this rule becomes redundant rather than wrong. The EN-07 divergence is an OPEN "
+        "design question, recorded with its evidence in CSV_MIRROR_ROUNDED, and A30 fails in both "
+        "directions while it stays open.",
+    )
+
+
+def _numeric_multiset_at_ref(ref: str, paths: list[str]) -> dict[tuple[str, str], object]:
+    out: dict[tuple[str, str], object] = {}
+    for path in paths:
+        blob = subprocess.run(
+            ["git", "-C", str(REPO_ROOT), "show", f"{ref}:{path}"],
+            capture_output=True,
+            text=True,
+        )
+        if blob.returncode != 0:
+            continue
+        for pointer, value in numeric_pointer_leaves(json.loads(blob.stdout)):
+            out[(path, pointer)] = value
+    return out
+
+
+def check_derived_removal_delta() -> list[tuple]:
+    """A29 - the measured numeric delta IS the committed expectation, per element.
+
+    ONE ROW, AND DELIBERATELY ONE. Earlier drafts also asserted "0 numeric leaves
+    added" and "0 surviving numeric leaves changed value" against the sweep ref.
+    Both are true of THIS diff and neither belongs in a standing validator: they
+    are one-shot properties of one commit range, so the first ordinary tuning
+    commit after merge - EN-01 hull 20 -> 25, an authored non-derived value -
+    would fail a rule about derived values. Worse, the only way to clear that
+    failure is to re-pin sweep_ref to a newer commit, which makes A29 compare the
+    tree against itself and destroys the prediction-first property that is the
+    whole point. Those two measurements are evidence for this pull request and
+    live in its body.
+
+    ONLY HALF OF WHAT REMAINS IS A STANDING INVARIANT, and an earlier revision of
+    this docstring said the whole of it was. Set equality has two halves and they
+    have different futures:
+      `missing`    - every predicted removal must STILL be missing. This does hold
+                     for every future commit: nothing legitimately re-authors a
+                     value the compiler owns.
+      `unexpected` - nothing ELSE may be missing. This does NOT. Deleting any
+                     authored numeric leaf, for any reason, fails it.
+    Controlled individually: retuning EN-01 hull 20 -> 25 in place PASSES, adding
+    an authored numeric leaf to EN-01 PASSES, and deleting EN-01.earliest_minute
+    FAILS with "1 removed-but-unpredicted". So A29 WILL false-fail on a future
+    commit that deletes a field, and the fix then is to re-derive the expectation
+    from a newer sweep ref as a deliberate act - not to loosen this rule.
+    """
+    expectation = load_derived_expectation()
+    if not expectation:
+        return []
+    ref = expectation["sweep_ref"]
+
+    listing = subprocess.run(
+        ["git", "-C", str(REPO_ROOT), "ls-tree", "-r", "--name-only", ref, "content/"],
+        capture_output=True,
+        text=True,
+    )
+    if listing.returncode != 0:
+        fail(
+            f"A29 could not read the sweep ref {ref[:12]} out of git, so the removal delta is "
+            f"unmeasured. This rule is not allowed to pass by being unable to run: "
+            f"{listing.stderr.strip()}"
+        )
+        return [("sweep ref readable", ref[:12], "unreadable", "FAIL")]
+    sweep_paths = sorted(p for p in listing.stdout.splitlines() if p.endswith(".json"))
+
+    before = _numeric_multiset_at_ref(ref, sweep_paths)
+    after: dict[tuple[str, str], object] = {}
+    for path in sorted(CONTENT.rglob("*.json")):
+        for pointer, value in numeric_pointer_leaves(json.loads(path.read_text())):
+            after[(rel(path), pointer)] = value
+
+    measured_removed = {key: value for key, value in before.items() if key not in after}
+
+    predicted = {(f, p): v for f, p, v in expectation["removed_numeric_multiset"]}
+    n = len(predicted)
+
+    missing = sorted(key for key in predicted if key not in measured_removed)
+    unexpected = sorted(key for key in measured_removed if key not in predicted)
+    wrong_value = sorted(
+        f"{f}.{p}: predicted {predicted[(f, p)]!r}, tree had {measured_removed[(f, p)]!r}"
+        for (f, p) in predicted.keys() & measured_removed.keys()
+        if predicted[(f, p)] != measured_removed[(f, p)]
+    )
+
+    equal = not missing and not unexpected and not wrong_value
+    rows = [
+        (
+            f"set equality over {n} element(s): predicted removals == measured removals",
+            f"{n} of {n}",
+            f"{n - len(missing)} matched, {len(unexpected)} unpredicted, "
+            f"{len(wrong_value)} value mismatch(es)",
+            "ok" if equal else "FAIL",
+        ),
+    ]
+    if not equal:
+        fail(
+            f"A29 the removal set measured against {ref[:12]} is NOT the committed expectation. "
+            f"This is set equality over {n} elements, not a total: "
+            f"{len(missing)} predicted-but-still-present {missing[:6]}, "
+            f"{len(unexpected)} removed-but-unpredicted {unexpected[:6]}, "
+            f"{len(wrong_value)} predicted with the wrong value {wrong_value[:6]}"
+        )
+    return rows
+
+
 def check_derived_values(docs: dict[Path, object]) -> list[tuple]:
     rows = []
+
+    # THE BANNED VALUE IS DERIVED FROM THE TREE, not hardcoded, for the reason A30's
+    # reference diameter was: 12 is cadence x (pods - 1), and both operands are
+    # AUTHORED in content/weapons/W-BE.json (deployment_cadence_seconds = 6.0,
+    # maximum_active_pod_count = 3). Hardcoding the product made this ban agree with
+    # itself: retuning the pod cap to 4 makes the derived total 18, and a ban on 12
+    # would then police a figure nobody would author while the real derived value
+    # walked in unchallenged - the ban narrows to nothing, silently. So the product is
+    # computed from the two authored operands and DERIVED_DEPLOYMENT_SECONDS is the
+    # DECLARED expectation it must equal, which turns a retune into a deliberate
+    # re-declaration instead of a quiet loss of coverage.
+    pod_props: dict = {}
+    for _, doc in sorted(files_in("weapons", docs).items()):
+        if isinstance(doc, dict) and doc.get("id") == SENTRY_POD_WEAPON_ID:
+            pod_props = doc.get("fixed_properties") or {}
+    cadence = pod_props.get("deployment_cadence_seconds")
+    pods = pod_props.get("maximum_active_pod_count")
+    if (
+        isinstance(cadence, (int, float))
+        and not isinstance(cadence, bool)
+        and isinstance(pods, int)
+        and not isinstance(pods, bool)
+        and pods > 1
+    ):
+        derived_total = Fraction(str(cadence)) * (pods - 1)
+        basis = f"{cadence} x ({pods} - 1)"
+        rows.append(
+            (
+                "banned deployment total, derived from W-BE's authored operands "
+                f"({basis}), == the declared {DERIVED_DEPLOYMENT_SECONDS}",
+                DERIVED_DEPLOYMENT_SECONDS,
+                str(float(derived_total)),
+                "ok" if derived_total == DERIVED_DEPLOYMENT_SECONDS else "FAIL",
+            )
+        )
+        if derived_total != DERIVED_DEPLOYMENT_SECONDS:
+            fail(
+                f"the Sentry Pod deployment total derived from content/weapons/ is "
+                f"{float(derived_total)} s ({basis}), but DERIVED_DEPLOYMENT_SECONDS declares "
+                f"{DERIVED_DEPLOYMENT_SECONDS}. The ban below is on the DERIVED value, so a retune "
+                f"of the cadence or the pod cap has to re-declare it deliberately - otherwise this "
+                f"rule keeps banning a stale figure and stops covering the live one."
+            )
+    else:
+        derived_total = Fraction(DERIVED_DEPLOYMENT_SECONDS)
+        basis = f"declared {DERIVED_DEPLOYMENT_SECONDS} (operands not readable)"
+        warn(
+            f"{SENTRY_POD_WEAPON_ID}: deployment_cadence_seconds / maximum_active_pod_count were "
+            f"not both readable, so the banned deployment total falls back to the declared "
+            f"{DERIVED_DEPLOYMENT_SECONDS} s instead of being derived from the tree (field names "
+            f"are unvalidated until content/schemas/ exists)"
+        )
+        rows.append(
+            (
+                "banned deployment total, derived from W-BE's authored operands",
+                DERIVED_DEPLOYMENT_SECONDS,
+                "operands not readable - using the declared value",
+                "WARN",
+            )
+        )
+
     banned_hits: list[str] = []
     for path, doc in sorted(files_in("weapons", docs).items()):
         for jpath, key, value in walk(doc):
@@ -1999,12 +4261,13 @@ def check_derived_values(docs: dict[Path, object]) -> list[tuple]:
                 and DEPLOYMENT_KEY.search(key)
                 and not isinstance(value, bool)
                 and isinstance(value, (int, float))
-                and value == DERIVED_DEPLOYMENT_SECONDS
+                and Fraction(str(value)) == derived_total
             ):
                 banned_hits.append(f"{rel(path)}{jpath[1:]} = {value}")
     rows.append(
         (
-            "no authored 12 s deployment/ramp value in content/weapons/",
+            f"no authored {float(derived_total):g} s deployment/ramp value in content/weapons/ "
+            f"({basis})",
             0,
             len(banned_hits),
             "ok" if not banned_hits else "FAIL",
@@ -2013,8 +4276,8 @@ def check_derived_values(docs: dict[Path, object]) -> list[tuple]:
     if banned_hits:
         fail(
             f"{len(banned_hits)} deployment/ramp field(s) in content/weapons/ hold "
-            f"{DERIVED_DEPLOYMENT_SECONDS}, which is DERIVED from the {SENTRY_POD_DEPLOYMENT_SECONDS} s "
-            f"cadence, not authored (docs/71-initial-weapon-numeric-catalog.md:83, 40:100): "
+            f"{float(derived_total):g}, which is DERIVED from W-BE's authored operands "
+            f"({basis}), not authored (docs/71-initial-weapon-numeric-catalog.md:83, 40:100): "
             f"{banned_hits}"
         )
 
@@ -2421,11 +4684,14 @@ def check_no_doc_paths_in_values(docs: dict[Path, object]) -> list[tuple]:
 # default; a present-and-null one asks runtime to guess, which is what that line
 # forbids. So absence is spelled by omitting the key.
 #
-# 275 nulls across 101 of the 138 definition files were disposed of in one pass:
-# 246 keys omitted, 20 relic rarity/weighting fields removed as fields no schema
-# will declare, 4 boss armor fields removed for the same reason, 3
+# 275 nulls across 101 of the 138 definition files were disposed of in the pass
+# that added this rule, and that tally was counted as that pass finished: 246 keys
+# omitted, 20 relic rarity/weighting fields removed as fields no schema will
+# declare, 4 boss armor fields removed for the same reason, 3
 # external_numerics[n].value keys removed as shape defects, and 2 nested id keys
-# removed because the objects they sat on are not independently addressable.
+# removed because the objects they sat on are not independently addressable. It is
+# the record of that one disposal and no assertion recomputes it; a green run
+# asserts zero nulls today and says nothing about how many there once were.
 #
 # THERE IS NO EXCEPTION SET, deliberately. An earlier plan declared the two nested
 # `id` nulls in content/maps/standard-map-generation-contract.json as tolerated
@@ -2531,7 +4797,94 @@ def check_no_nulls() -> list[tuple]:
 # "burst." 4, and fifteen more - and "ver." hits 5, being "forever.", "solver." and
 # "hover.". Every one of them is a sentence end, not an abbreviation, and the word
 # boundary below removes all 98. A check that fires on those would be turned off
-# within a day, which would leave no check.
+# within a day, which would leave no check. (Those counts are from an earlier tree;
+# re-measured over 201 docs/**/*.md files at 2026-08-11T01:16Z the same two searches
+# find 104 hits across 23 distinct inside-word forms and 7 across 4. The argument is
+# unaffected.)
+#
+# THE WORD BOUNDARY IS NECESSARY BUT NOT SUFFICIENT, which is the correction this
+# block owed. It removes every word that merely ENDS with a listed token; it cannot
+# remove a word that IS one. THREE tokens here are also ordinary English words -
+# `no.`, `fig.` and `sec.` - so all three have a period that can be the sentence end
+# the selection criterion above excludes by definition. At b71371e the bounded form
+# fired on exactly that for `no.`, docs/technical/delivery-waves.md:598 "than a yes
+# or no. Its numbers are 300 trials", where the sentence does not continue past the
+# period and no quotation is at risk.
+#
+# ABBREVIATION_SUFFIX below therefore narrows `no.` ALONE, and the other seventeen
+# take no suffix. The reason is NOT "none of them can be a sentence end" - and it is
+# not "none of them is a word" either, which is a wrong bound this block carried in
+# place of an earlier wrong bound. The property that matters is whether a token can
+# END A SENTENCE without being an abbreviation, and wordhood is only one way to have
+# it. AT LEAST FIVE tokens have it without being words, because the pattern is
+# compiled with re.IGNORECASE and so matches any capitalisation. Measured against the
+# compiled ABBREVIATION_RX at 2026-08-11T04:09Z, each of these matches at a plain
+# sentence end with no abbreviation present: `ca.` on "The tour ended in CA.", `al.`
+# on "His brother is called Al.", `p.` on "The verdict was a flat P.", `eq.` on "The
+# band played the whole of EQ.", and `pp.` on "Dynamics fell to pp.". Two more do it
+# as words: "The dessert was a dried fig." matches `fig.` and "Hold on a sec."
+# matches `sec.`. That is seven of the eighteen, and "at least" is literal - the list
+# was assembled by inspection, and re.IGNORECASE means each token has to be
+# considered in every capitalisation before any of them can be called safe.
+# They take no suffix because none of those sentences occurs in docs/ TODAY, so none
+# is a failure yet - they are latent misfires waiting on prose, not impossibilities.
+# Anyone who reads this block as licence to assume the unsuffixed tokens cannot land
+# on a sentence end is being misled; that assumption is what this paragraph exists to
+# remove. Extending the suffix map is a separate decision, to be proposed with each
+# token's false-negative cost stated, and is not made here.
+#
+# NOR does the number sense always introduce a numeral, which is the other thing
+# this block used to assert. "See No. IV", "Part No. A-12", "Ticket No. ABC-123" and
+# "Item No. (5)" are all the number sense and none of them matches under the suffix -
+# see the false-negative list in the module docstring. The suffix distinguishes the
+# two senses well enough to be worth taking, instead of dropping the token and
+# leaving the "No. 5" form unchecked. It does not separate them cleanly.
+#
+# FLEET EXPOSURE IS TWO INDEPENDENT FACTS, AND A TRANSCRIBED COUNT OF IT ROTS. A
+# ref's exposure is the product of (a) whether it carries this gate unnarrowed and
+# (b) whether its own docs/ carries prose the unnarrowed form reddens. Those move
+# separately, so a ref flips green to red with NEITHER the gate nor the prose edited
+# on it - one merge bringing the other half across is enough, which is exactly how
+# this branch's base acquired the failure. Transcribed tallies of that have already
+# gone stale twice; one ref acquired the gate eight seconds after the commit that
+# wrote the numbers down. So the census is recorded as the command that regenerates
+# it, with the figures stamped rather than presented as standing fact:
+#
+#   f=src/MechaMiner.Tools/ContentImport/verify_content.py
+#   git for-each-ref --format='%(refname)' refs/remotes/origin | grep -v '/HEAD$' |
+#   while read -r r; do
+#     if git cat-file -e "$r:$f" 2>/dev/null; then
+#       git show "$r:$f" | grep -q ABBREVIATION_SUFFIX && g=narrowed || g=unnarrowed
+#     else g=none; fi
+#     git grep -q -P -i '(?<![A-Za-z0-9])no\.' "$r" -- 'docs/*.md' 'docs/**/*.md' \
+#       && p=prose || p=clean
+#     printf '%s\t%s\t%s\n' "$g" "$p" "$r"
+#   done | cut -f1,2 | sort | uniq -c
+#
+# If that has to travel through a writing path, swap `-P` for `-E` and the lookbehind
+# for '(^|[^A-Za-z0-9])no\.'. Measured identical cell-for-cell at 2026-08-11T01:21Z,
+# and it survives transcription: the lookbehind's less-than-then-exclamation pair is
+# eaten as an HTML comment opener by at least one publishing path in this project,
+# which silently turns the negative lookbehind into a positive one.
+#
+# At 2026-08-11T01:21Z, over 34 remote refs, that reports: unnarrowed+prose 4 (red
+# now), narrowed+prose 3 (green because FIXED), unnarrowed+clean 13, none+prose 8,
+# none+clean 6. Three minutes earlier, at 01:18Z, the first two cells read 5 and 2:
+# the ref that moved is this branch's own, flipped by the push of this very commit's
+# parent. THAT IS THE HALF-LIFE OF THESE NUMBERS, demonstrated rather than asserted.
+# Re-run the command; do not believe the five figures above.
+#
+# THE DIRECTION THAT MATTERS MOST, AND THAT NO EARLIER TALLY RECORDED: the 13
+# unnarrowed+clean refs - `master` AMONG THEM - are green TODAY ONLY BECAUSE THEIR
+# CORPUS HAPPENS TO BE CLEAN, and every one of them goes red on any merge that brings
+# the offending prose across. From outside, green-by-corpus and green-by-fix are
+# INDISTINGUISHABLE: both report RESULT: PASS, exit 0. Only green-by-fix survives a
+# merge. Reading a ref's passing gate as evidence the narrowing has reached it is
+# therefore wrong 13 times out of the 16 gate-carrying refs that pass at the stamp
+# above (13 unnarrowed+clean, plus the 3 narrowed+prose that pass because they are
+# fixed), and `master` is the costly instance - it is the ref everything else
+# eventually merges into. Anyone consolidating this file should
+# treat "the gate is green there" as no information at all and re-derive the cell.
 #
 # THE MESSAGE IS THE POINT. When this fails, no content string is wrong. What is
 # wrong is that the quotation rule's premise has lapsed. The message must send the
@@ -2544,8 +4897,32 @@ SENTENCE_INTERNAL_ABBREVIATIONS = (
     "no.", "fig.", "eq.", "sec.", "p.", "pp.", "ca.", "al.", "esp.", "incl.",
 )
 
+# A lookahead required AFTER a token, for the one token whose two senses the word
+# boundary cannot separate. Keyed by token so the other seventeen are untouched.
+#
+# `\s` HERE IS NEWLINE-SENSITIVE, AND THE PER-LINE SCAN IS WHAT CONTAINS IT. This
+# suffix is only well-behaved because check_no_abbreviation_periods matches one LINE
+# at a time: `\s*` would happily consume a newline, so on a whole-text scan the
+# lookahead would reach across a line break and "... is no.\n5 people agreed" would
+# match. Measured on that fixture ("The answer is no.\n5 people agreed.\n") at
+# 2026-08-11T01:14Z: whole-text finds 1, per-line finds 0. One is all it takes - the
+# point is containment, that the per-line loop is the only thing suppressing it. That
+# containment is INCIDENTAL rather than designed - nothing asserts it - so the cost
+# is stated in both directions. It means a `No.` separated from its numeral by a
+# line break is missed today; and it means anyone rewriting the loop to scan whole
+# text turns that miss into a false positive across the break, with no test naming
+# the behaviour they removed. Harmless now, invisible later, which is why it is
+# written down.
+ABBREVIATION_SUFFIX = {"no.": r"(?=\s*\d)"}
+
 ABBREVIATION_RX = tuple(
-    (abbr, re.compile(r"(?<![A-Za-z0-9])" + re.escape(abbr), re.IGNORECASE))
+    (
+        abbr,
+        re.compile(
+            r"(?<![A-Za-z0-9])" + re.escape(abbr) + ABBREVIATION_SUFFIX.get(abbr, ""),
+            re.IGNORECASE,
+        ),
+    )
     for abbr in SENTENCE_INTERNAL_ABBREVIATIONS
 )
 
@@ -2557,6 +4934,9 @@ def check_no_abbreviation_periods(docs_root: Path = DOCS) -> list[tuple]:
     for path in sorted(docs_root.rglob("*.md")):
         scanned += 1
         text = path.read_text(encoding="utf-8")
+        # Per LINE, not per file, and that is load-bearing for ABBREVIATION_SUFFIX:
+        # its `\s*` would cross a newline on a whole-text scan. See the comment on
+        # ABBREVIATION_SUFFIX before changing this loop.
         for lineno, line in enumerate(text.splitlines(), 1):
             for abbr, rx in ABBREVIATION_RX:
                 for m in rx.finditer(line):
@@ -2707,18 +5087,28 @@ def check_polarity_agreement(docs: dict[Path, object]) -> list[tuple]:
 # --------------------------------------------------------------------------
 
 
-def table(title: str, headers: tuple, rows: list[tuple]) -> None:
+def table(title: str, headers: tuple, rows: list[tuple], notes: tuple = ()) -> None:
+    """Print an assertion table, then any `notes` beneath it.
+
+    `notes` exists so a rule can disclose WHAT IT CANNOT SEE on the same output a
+    passing run produces. A limitation that lives only in a docstring or in
+    content/transcription-notes.md is not disclosed to the person reading a green
+    run, which is the only person who needs to be told.
+    """
     print(f"\n{title}")
-    if not rows:
+    if rows:
+        cols = [str(h) for h in headers]
+        body = [[("" if c is None else str(c)) for c in row] for row in rows]
+        widths = [max(len(cols[i]), *(len(r[i]) for r in body)) for i in range(len(cols))]
+        print("  " + "  ".join(c.ljust(widths[i]) for i, c in enumerate(cols)))
+        print("  " + "  ".join("-" * widths[i] for i in range(len(cols))))
+        for row in body:
+            print("  " + "  ".join(row[i].ljust(widths[i]) for i in range(len(cols))))
+    else:
         print("  (nothing to report)")
-        return
-    cols = [str(h) for h in headers]
-    body = [[("" if c is None else str(c)) for c in row] for row in rows]
-    widths = [max(len(cols[i]), *(len(r[i]) for r in body)) for i in range(len(cols))]
-    print("  " + "  ".join(c.ljust(widths[i]) for i, c in enumerate(cols)))
-    print("  " + "  ".join("-" * widths[i] for i in range(len(cols))))
-    for row in body:
-        print("  " + "  ".join(row[i].ljust(widths[i]) for i in range(len(cols))))
+    for note in notes:
+        for i, line in enumerate(textwrap.wrap(note, 104)):
+            print(("  ! " if i == 0 else "    ") + line)
 
 
 def main() -> int:
@@ -2742,9 +5132,16 @@ def main() -> int:
     ref_rows = check_references(docs)
     derived_rows = check_derived_values(docs)
     footprint_rows = check_derived_footprint_fields(docs)
+    derived_counts_rows = check_derived_expectation_counts(docs)
+    derived_family_rows, derived_family_notes = check_derived_family_absence(docs)
+    derived_value_rows, derived_value_notes = check_derived_family_values(docs)
+    csv_mirror_rows, csv_mirror_notes = check_csv_mirror_agreement(docs)
+    removal_delta_rows = check_derived_removal_delta()
     prefix_rows = check_scope_prefixes(docs)
     bound_rows = check_bound_spelling(docs)
-    inventory_rows = check_file_inventory()
+    manifest_rows, manifest_size = check_definition_manifest(docs)
+    inventory_rows = check_file_inventory(manifest_size)
+    canonical_letter_rows = check_canonical_letters(docs)
     percent_rows = check_percentage_point_policy(docs)
     doc_path_rows = check_no_doc_paths_in_values(docs)
     polarity_rows = check_polarity_agreement(docs)
@@ -2775,6 +5172,46 @@ def main() -> int:
         "A20 Footprint fields the compiler owns",
         ("check", "expected", "actual", "status"),
         footprint_rows,
+    )
+    table(
+        "A29/A31 declared counts and vacuity guards (asserted here, not only by derive --check)",
+        ("check", "expected", "actual", "status"),
+        derived_counts_rows,
+        (
+            "These rows exist because total_removed, family_count, declared_family_count and "
+            "declared_total_removed were written by the generator and read by nothing here. Without "
+            "them this file passes an empty family list, empty records, an empty removal multiset "
+            "and the counts overwritten with 9999/99. The last three rows are the same defect for "
+            "the three search radii A31 PRINTS: editing file_radius_pairs back to the old "
+            "unreproducible 55 used to make this tool print '1 : 55 : 668' at exit 0, with only "
+            "derive --check objecting.",
+        ),
+    )
+    table(
+        "A31 layer 1 of 2 - NAME: no derived-value family reappears under a matching name "
+        "(six rules, six scopes; catches a rename only within its own word class)",
+        ("check", "expected", "actual", "status"),
+        derived_family_rows,
+        derived_family_notes,
+    )
+    table(
+        "A31 layer 2 of 2 - VALUE: no removed value sits at a non-operand leaf inside its own "
+        "derivation site (exact Fractions; indifferent to name, unit suffix and arity)",
+        ("check", "expected", "actual", "status"),
+        derived_value_rows,
+        derived_value_notes,
+    )
+    table(
+        "A30 docs/data/contact-damage-pressure.csv and content/ agree on every shared value "
+        "(two unguarded mirrors of one report; exact Fractions, declared exceptions only)",
+        ("check", "expected", "actual", "status"),
+        csv_mirror_rows,
+        csv_mirror_notes,
+    )
+    table(
+        "A29 Removal delta == the expectation committed before the removals",
+        ("check", "expected", "actual", "status"),
+        removal_delta_rows,
     )
     table(
         "A24 No line-number citation and no repository path in any string value",
@@ -2808,7 +5245,32 @@ def main() -> int:
     )
     table("A10/A11 Localization", ("check", "expected", "actual", "status"), loc_rows)
     table("A19 Expected exception sets", ("set", "expected", "actual", "status"), set_rows)
+    table(
+        "A28 Definition (path, id) manifest "
+        f"[{rel(CONTENT_DEFINITION_MANIFEST)}; regenerate with {GOLDEN_UPDATE_VARIABLE}=1, "
+        "which rewrites it and still fails]",
+        ("check", "expected", "actual", "status"),
+        manifest_rows,
+    )
     table("A21 File inventory", ("check", "expected", "actual", "status"), inventory_rows)
+    table(
+        "A32 canonical_letter on exactly the six letter resources (40:106, blob 4cded84), "
+        "paired with the id per the transcribed 40:111 table; five rows, each blind to a "
+        "different edit",
+        ("check", "expected", "actual", "status"),
+        canonical_letter_rows,
+        (
+            "A value multiset proved NOTHING about this field when it was ADDED: the six added "
+            "values were the six ids, so they were already leaves of this tree and a leaf-value "
+            "comparison reported 'nothing gained or lost' having checked nothing that changed. "
+            "That is why rows 1 and 2 NAME their files instead of counting them. Row 2 binds each "
+            "file's letter to its id through the eight-row 40:111 table - never by arithmetic on "
+            "the id, which 40:109 forbids in substance by stating the two fields derive from each "
+            "other in neither direction; row 1 binds the carrier population by NAME, which is the "
+            "only row that survives a correlated delete-here/add-there edit keeping the count "
+            "at 6.",
+        ),
+    )
 
     print(f"\nA2-A9 envelope/naming: {stats['checked']} definition(s) checked, "
           f"{stats['source_refs']} source_refs resolved against docs/")

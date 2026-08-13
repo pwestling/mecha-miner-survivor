@@ -183,8 +183,7 @@
       "minimum_middle_band_sites": 1,
       "minimum_far_band_sites": 1,
       "allowed_in_initial_camera_view": false,
-      "maximum_in_optional_spur_pocket": 1,
-      "total_site_based_hyper_gold": 300
+      "maximum_in_optional_spur_pocket": 1
     },
     "relic_caches": {
       "count": 3,

@@ -15,7 +15,14 @@ namespace MechaMiner.Tools.Cli;
 /// § Standard command surface is registered here, in that document's table order,
 /// with its required effect quoted. Registration is a literal array: doc 100
 /// § C# project standards requires that "generated/explicit registries make missing
-/// behavior a build error", and doc 114 forbids reflection-based registration.
+/// behavior a build error", which is the reflection ground and doc 100's alone.
+/// </para>
+/// <para>
+/// Doc 114 § C# and domain defaults asks for the same shape on separate grounds -
+/// "Use a small manual composition root; do not add a dependency-injection container,
+/// service locator, or mutable global registry" - and a literal array satisfies both
+/// documents at once. Doc 114 carries no prohibition on reflection; the word occurs
+/// in it zero times, and an earlier version of this remark attributed one to it.
 /// </para>
 /// <para>
 /// A verb whose behavior belongs to a work package that has not landed is

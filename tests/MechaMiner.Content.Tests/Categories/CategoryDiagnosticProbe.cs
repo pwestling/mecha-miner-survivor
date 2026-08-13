@@ -60,10 +60,18 @@ internal static class CategoryDiagnosticProbe
         // Every catalog check run against a catalog that violates it. These are the same
         // negative cases CategorySemanticRuleTests asserts on individually; running them
         // here as well is what keeps the declared-code set honest when a check is added.
+        //
+        // Every resource below is built with its own stable ID. Resource()'s third
+        // argument to FixtureDocument.Read is a source-path label and not an ID, so
+        // varying only the letter used to leave every variant carrying valid-specialized-
+        // material.json's own RSC-01: two "different" resources collapsed to one entry in
+        // any table keyed by ID, and the recipe-letter check below was reaching its
+        // unresolved-resource branch rather than the spelling branch this probe means to
+        // exercise.
         List<ResourceDefinition> lettered = new()
         {
-            Resource("A"),
-            Resource("A"),
+            Resource("RSC-01", "A"),
+            Resource("RSC-02", "A"),
         };
         CatalogChecks.SixMaterialSetIsExactlyCovered(lettered, "content/", bag);
 
@@ -73,6 +81,9 @@ internal static class CategoryDiagnosticProbe
         CatalogChecks.FifteenDistinctRecipePairs(
             Array.Empty<WeaponDefinition>(), "content/", bag);
 
+        // Both branches of the recipe-letter check, because they report different codes:
+        // a recipe whose resources all resolve and spell AC under the ID W-AB, and a
+        // recipe naming hyper gold, which the catalog holds and gives no canonical letter.
         CatalogChecks.RecipeLettersSpellTheWeaponId(
             new[]
             {
@@ -80,7 +91,24 @@ internal static class CategoryDiagnosticProbe
                     .Load("weapons/catalog-recipe-letters-mismatch.json")
                     .Read<WeaponDefinition>(DefinitionKind.Weapon, "W-AB"),
             },
-            new[] { Resource("A"), Resource("C") },
+            new[] { Resource("RSC-01", "A"), Resource("RSC-03", "C") },
+            "content/",
+            bag);
+
+        CatalogChecks.RecipeLettersSpellTheWeaponId(
+            new[]
+            {
+                FixtureDocument
+                    .Load("weapons/catalog-recipe-resource-unlettered.json")
+                    .Read<WeaponDefinition>(DefinitionKind.Weapon, "W-AB"),
+            },
+            new[]
+            {
+                Resource("RSC-01", "A"),
+                FixtureDocument
+                    .Load("resources/valid-currency-hyper-gold.json")
+                    .Read<ResourceDefinition>(DefinitionKind.Resource, "RSC-08"),
+            },
             "content/",
             bag);
 
@@ -157,11 +185,22 @@ internal static class CategoryDiagnosticProbe
         return bag.Codes();
     }
 
-    private static ResourceDefinition Resource(string letter)
+    /// <summary>
+    /// A specialized material with the given stable ID and canonical letter.
+    /// </summary>
+    /// <remarks>
+    /// The ID is rewritten in the document, not only passed to
+    /// <see cref="FixtureDocument.Read{TDefinition}"/> - whose last argument names the
+    /// source path a diagnostic would cite and leaves the definition's own <c>id</c>
+    /// alone. Two variants that differ only in letter therefore share one ID, and every
+    /// check here that keys resources by ID would see one resource.
+    /// </remarks>
+    private static ResourceDefinition Resource(string id, string letter)
     {
         return FixtureDocument
             .Load("resources/valid-specialized-material.json")
+            .WithId("RSC-01", id)
             .With("canonical_letter", letter)
-            .Read<ResourceDefinition>(DefinitionKind.Resource, "RSC-" + letter);
+            .Read<ResourceDefinition>(DefinitionKind.Resource, id);
     }
 }

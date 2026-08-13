@@ -1,30 +1,72 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using MechaMiner.Tests.Support;
 
 namespace MechaMiner.Content.Tests.Fixtures;
 
 /// <summary>
-/// Reads <c>tests/verification/DAT-001.json</c>.
+/// Reads the verification registries under <c>tests/verification/</c>.
 /// </summary>
 /// <remarks>
-/// One reader, because there are now two questions asked of this file - whether its
-/// citations resolve (<see cref="VerificationRegistryTests"/>) and whether the fixture
+/// <para>
+/// One reader, because there are several questions asked of these files - whether their
+/// citations resolve (<see cref="VerificationRegistryTests"/> and
+/// <see cref="Categories.CategoryVerificationRegistryTests"/>) and whether the fixture
 /// corpus is claimed by them (<see cref="FixtureCorpusCoverageTests"/>) - and two copies
-/// of "where the registry is and what shape it has" would drift the day the registry
-/// moves.
+/// of "where a registry is and what shape it has" would drift the day one moves.
+/// </para>
+/// <para>
+/// <see cref="Packages"/> is discovered from the directory rather than listed here. A
+/// hand-maintained list of registries has the same defect as a hand-maintained list of
+/// checks: the registry added next is walked by nobody, and nothing says so. That was the
+/// actual state of this suite - two walks between them named DAT-001, DAT-002 and DAT-003,
+/// and the other eighteen registries on disk were validated by nothing.
+/// </para>
 /// </remarks>
 internal static class VerificationRegistry
 {
-    /// <summary>The registry's absolute path.</summary>
-    internal static string AbsolutePath { get; } = Path.Combine(
-        TestArtifacts.RepositoryRoot, "tests", "verification", "DAT-001.json");
+    /// <summary>
+    /// How many registries are on disk, written out.
+    /// </summary>
+    /// <remarks>
+    /// <b>A literal, and it has to be.</b> Every walk below is driven by
+    /// <see cref="Packages"/>, and a walk over a set that silently shrank reports nothing
+    /// wrong - a registry that stops being discovered (renamed to <c>.json.bak</c>, moved
+    /// one directory up, dropped by a bad merge) simply stops being checked and every
+    /// assertion still passes. A count derived from the same enumeration agrees with itself
+    /// on that input, so the expected number is the one part of this that must not be
+    /// computed. Changing it is a deliberate change to what this suite covers.
+    /// </remarks>
+    internal const int RegistriesOnDisk = 21;
 
-    /// <summary>Opens the registry. The caller disposes it.</summary>
-    internal static JsonDocument Open()
+    /// <summary>The directory holding every verification registry.</summary>
+    internal static string DirectoryPath { get; } = Path.Combine(
+        TestArtifacts.RepositoryRoot, "tests", "verification");
+
+    /// <summary>
+    /// Every registry package name on disk - the file name without its extension -
+    /// discovered from <see cref="DirectoryPath"/> and ordered so a walk is reproducible.
+    /// </summary>
+    internal static IReadOnlyList<string> Packages { get; } =
+        Directory.GetFiles(DirectoryPath, "*.json")
+            .Select(Path.GetFileNameWithoutExtension)
+            .Select(name => name!)
+            .OrderBy(name => name, StringComparer.Ordinal)
+            .ToArray();
+
+    /// <summary>The absolute path of one registry.</summary>
+    internal static string PathOf(string package)
     {
-        return JsonDocument.Parse(File.ReadAllBytes(AbsolutePath));
+        return Path.Combine(DirectoryPath, package + ".json");
+    }
+
+    /// <summary>Opens one registry. The caller disposes it.</summary>
+    internal static JsonDocument Open(string package)
+    {
+        return JsonDocument.Parse(File.ReadAllBytes(PathOf(package)));
     }
 
     /// <summary>Every entry of an opened registry.</summary>
@@ -37,16 +79,27 @@ internal static class VerificationRegistry
     }
 
     /// <summary>
-    /// Every repository-relative fixture path any entry cites that begins with
+    /// Every repository-relative fixture path a <b>DAT-001</b> entry cites that begins with
     /// <paramref name="prefix"/>.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Duplicates are kept. Two entries citing one fixture is not a fault - a fixture can
     /// be evidence for two claims - and a caller that cares can deduplicate.
+    /// </para>
+    /// <para>
+    /// DAT-001 alone, deliberately, and unlike the walks this is not extended to
+    /// <see cref="Packages"/>. Its one caller counts the result against a committed literal
+    /// (<c>FixtureCorpusCoverageTests.TheSchemaFixtureCountTheRegistryClaims</c>) which is a
+    /// statement about what DAT-001 claims; widening the source would change that number's
+    /// meaning without changing the number, which is the failure mode that literal exists to
+    /// prevent. Whether the schema corpus should be claimable from any registry is a separate
+    /// question from whether every registry is walked.
+    /// </para>
     /// </remarks>
     internal static IReadOnlyList<string> CitedFixturesUnder(string prefix)
     {
-        using JsonDocument registry = Open();
+        using JsonDocument registry = Open("DAT-001");
         List<string> cited = new();
 
         foreach (JsonElement entry in Entries(registry))

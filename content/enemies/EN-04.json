@@ -21,8 +21,7 @@
   "movement_speed": {
     "percent_of_mech_base_speed": {
       "percent": 52
-    },
-    "world_speed_m_per_s": 1.56
+    }
   },
   "contact_damage": 10,
   "body_scale_multiplier": 1.05,

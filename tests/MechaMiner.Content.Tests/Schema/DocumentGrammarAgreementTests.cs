@@ -80,7 +80,7 @@ internal sealed class DocumentGrammarAgreementTests
     /// prefix may only be removed from this list when doc 40 retires it under § Stable ID
     /// policy, which requires a migration/tombstone entry.
     /// </remarks>
-    private static readonly string[] TheSixteenMintedPrefixes =
+    private static readonly string[] TheNineteenMintedPrefixes =
     {
         "RSC-",
         "UTL-",
@@ -98,6 +98,9 @@ internal sealed class DocumentGrammarAgreementTests
         "FOOTPRINT-",
         "SIEGE-",
         "BOUNTY-",
+        "SITE-",
+        "ELT-",
+        "PLAYER-",
     };
 
     /// <summary>
@@ -105,18 +108,31 @@ internal sealed class DocumentGrammarAgreementTests
     /// paired with the two artifacts that must restate the document's grammar verbatim.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// The other eleven rows in doc 40's table name aggregates whose definitions have not
     /// been extracted yet; they have no schema and no category, and
     /// <see cref="TheMintedPrefixesWithNoImplementationAreExactlyTheElevenAggregates"/>
     /// states that gap by name rather than letting it pass unremarked.
+    /// </para>
+    /// <para>
+    /// <c>SITE-</c>, <c>ELT-</c> and <c>PLAYER-</c> joined this roster when doc 40 minted
+    /// them. They already carried a schema, an envelope alternative and a category
+    /// descriptor, so the alternative - leaving them out and widening the count pinned for
+    /// prefixes with no implementation - would have asserted by name that they have
+    /// neither, and kept the three artifacts that do restate their grammars out of the
+    /// three-way comparison. Moving them in is what starts comparing them.
+    /// </para>
     /// </remarks>
-    private static readonly MintedGrammar[] TheFiveImplementedGrammars =
+    private static readonly MintedGrammar[] TheEightImplementedGrammars =
     {
         new("RSC-", ContentCategory.Resource, "resource.schema.json"),
         new("UTL-", ContentCategory.Utility, "utility.schema.json"),
         new("WAV-", ContentCategory.Encounter, "encounter-schedule.schema.json"),
         new("MGC-", ContentCategory.Map, "map-generation-contract.schema.json"),
         new("FORMULA-", ContentCategory.Weapon, "weapon-stat-price-formula.schema.json"),
+        new("SITE-", ContentCategory.MiningSite, "mining-site.schema.json"),
+        new("ELT-", ContentCategory.Enemy, "elite-modifiers.schema.json"),
+        new("PLAYER-", ContentCategory.Player, "player-baseline.schema.json"),
     };
 
     /// <summary>
@@ -132,32 +148,33 @@ internal sealed class DocumentGrammarAgreementTests
     /// IDs". Those are legitimately absent from the table.
     /// </para>
     /// <para>
-    /// <c>SITE-</c>, <c>ELT-</c> and <c>PLAYER-</c> are not. No accepted document in this
-    /// tree mints them - not doc 40 and not any gameplay document - so they remain this
-    /// implementation's own claim. They are listed here so that the day a document mints
-    /// one, this assertion fails and forces the row to be wired up rather than the mint
-    /// going unnoticed.
+    /// <b><c>SITE-</c>, <c>ELT-</c> and <c>PLAYER-</c> used to be here, and that is what
+    /// this list is for.</b> They were this implementation's own claim while no accepted
+    /// document minted them, and they were named here so that the day one was minted this
+    /// assertion would fail and force the row to be wired up rather than the mint going
+    /// unnoticed. Doc 40 § Minted content-ID grammars now gives all three a row, so the day
+    /// arrived and the list did fail. They left it for the sanctioned reason - a document
+    /// mints them - and moved into <see cref="TheEightImplementedGrammars"/>, which is why
+    /// the recorded debt shrank from eleven grammars to eight. The remaining eight are
+    /// still debts, not exemptions.
     /// </para>
     /// </remarks>
     private static readonly string[] TheGrammarsNoDocumentMints =
     {
         "^MCH-[0-9]{2}$",
         "^EN-[0-9]{2}$",
-        "^ELT-[0-9]{2}$",
         "^BOSS-[0-9]{2}$",
         "^W-[A-F]{2}$",
         "^W-[A-F]{2}(-[a-z0-9]+)+$",
         "^REL-[0-9]{2}$",
         "^PU-[A-Z][0-9]{2}$",
         "^UNL-[0-9]{2}$",
-        "^SITE-[0-9]{2}$",
-        "^PLAYER-[0-9]{2}$",
     };
 
-    /// <summary>Names the five cases so a deleted row fails a case naming its prefix.</summary>
+    /// <summary>Names the eight cases so a deleted row fails a case naming its prefix.</summary>
     private static IEnumerable<TestCaseData> ImplementedGrammarCases()
     {
-        foreach (MintedGrammar grammar in TheFiveImplementedGrammars)
+        foreach (MintedGrammar grammar in TheEightImplementedGrammars)
         {
             yield return new TestCaseData(grammar).SetName(
                 "TheDocumentSchemaAndCodeStateOneGrammarFor_" + grammar.Prefix.TrimEnd('-'));
@@ -212,7 +229,7 @@ internal sealed class DocumentGrammarAgreementTests
     }
 
     /// <summary>
-    /// The document's table is exactly the sixteen prefixes named in this fixture.
+    /// The document's table is exactly the nineteen prefixes named in this fixture.
     /// </summary>
     /// <remarks>
     /// This is the assertion that catches an addition. Minting a prefix without wiring it
@@ -220,35 +237,35 @@ internal sealed class DocumentGrammarAgreementTests
     /// table was written to end.
     /// </remarks>
     [Test]
-    public void TheDocumentTableIsExactlyTheSixteenPrefixesNamedHere()
+    public void TheDocumentTableIsExactlyTheNineteenPrefixesNamedHere()
     {
         Expect.Multiple(() =>
         {
             Assert.That(
                 ReadDocumentTable().Keys,
-                Is.EquivalentTo(TheSixteenMintedPrefixes),
+                Is.EquivalentTo(TheNineteenMintedPrefixes),
                 "doc 40 § Minted content-ID grammars mints a different set of prefixes than "
-                    + nameof(TheSixteenMintedPrefixes) + " states");
+                    + nameof(TheNineteenMintedPrefixes) + " states");
 
             // The set assertion above compares the document against this fixture's roster,
             // which is the third anchor - but only against whatever the roster currently
             // holds. Deleting a row from the document and the matching line from
-            // TheSixteenMintedPrefixes in one edit shrinks both and leaves it green. The
-            // sixteen is advertised outside this file: VER-DAT-001-039's summary records
-            // that deleting the SIEGE- row "failed
-            // TheDocumentTableIsExactlyTheSixteenPrefixesNamedHere", and doc 40 names the
+            // TheNineteenMintedPrefixes in one edit shrinks both and leaves it green. The
+            // count is advertised outside this file: VER-DAT-001-039's summary records both
+            // moments - deleting the SIEGE- row failed this test at the sixteen it pinned
+            // before FND-004 merged, and it pins nineteen after - and doc 40 names the
             // eleven aggregates that make up part of the total. It is a promise, so it is
             // asserted.
             Assert.That(
-                TheSixteenMintedPrefixes,
-                Has.Length.EqualTo(16),
-                nameof(TheSixteenMintedPrefixes) + " no longer states sixteen prefixes. A "
+                TheNineteenMintedPrefixes,
+                Has.Length.EqualTo(19),
+                nameof(TheNineteenMintedPrefixes) + " no longer states nineteen prefixes. A "
                     + "prefix may only leave this roster when doc 40 retires it under "
                     + "§ Stable ID policy, which requires a migration or tombstone entry");
             Assert.That(
                 ReadDocumentTable(),
-                Has.Count.EqualTo(16),
-                "doc 40 § Minted content-ID grammars no longer mints sixteen prefixes");
+                Has.Count.EqualTo(19),
+                "doc 40 § Minted content-ID grammars no longer mints nineteen prefixes");
         });
     }
 
@@ -258,7 +275,7 @@ internal sealed class DocumentGrammarAgreementTests
     /// <remarks>
     /// Doc 40 mints these against definitions that have not been extracted yet. Naming
     /// them keeps the gap visible: when one gains a schema this fails, and the fix is to
-    /// move it into <see cref="TheFiveImplementedGrammars"/> so it starts being compared.
+    /// move it into <see cref="TheEightImplementedGrammars"/> so it starts being compared.
     /// A gate that silently skipped what it could not represent would have stopped being
     /// one.
     /// </remarks>
@@ -266,7 +283,7 @@ internal sealed class DocumentGrammarAgreementTests
     public void TheMintedPrefixesWithNoImplementationAreExactlyTheElevenAggregates()
     {
         List<string> implemented = new();
-        foreach (MintedGrammar grammar in TheFiveImplementedGrammars)
+        foreach (MintedGrammar grammar in TheEightImplementedGrammars)
         {
             implemented.Add(grammar.Prefix);
         }
@@ -295,9 +312,11 @@ internal sealed class DocumentGrammarAgreementTests
 
             // Doc 40 § Minted content-ID grammars states the eleven by name, and
             // VER-DAT-001-039's summary promises "eleven aggregate prefixes have no
-            // definition extracted yet and are asserted as an explicit list". Deleting a
-            // row from the document and its line from this literal together satisfies the
-            // set assertion; the count is what does not shrink with it.
+            // definition extracted yet and are asserted as an explicit list" - a figure
+            // FND-004 left untouched, because the three prefixes doc 40 gained were minted
+            // with a schema already behind them and went to TheEightImplementedGrammars.
+            // Deleting a row from the document and its line from this literal together
+            // satisfies the set assertion; the count is what does not shrink with it.
             Assert.That(
                 theElevenAggregates,
                 Has.Length.EqualTo(11),
@@ -307,7 +326,7 @@ internal sealed class DocumentGrammarAgreementTests
                 unimplemented,
                 Has.Count.EqualTo(11),
                 "eleven minted prefixes have no schema and no category today. If one gained "
-                    + "one, move it into " + nameof(TheFiveImplementedGrammars)
+                    + "one, move it into " + nameof(TheEightImplementedGrammars)
                     + " so it starts being compared three ways");
         });
     }
@@ -321,7 +340,7 @@ internal sealed class DocumentGrammarAgreementTests
     /// could be declared with an invented grammar and no assertion would range over it.
     /// </remarks>
     [Test]
-    public void TheDeclaredGrammarsNoDocumentMintsAreExactlyTheElevenNamedHere()
+    public void TheDeclaredGrammarsNoDocumentMintsAreExactlyTheEightNamedHere()
     {
         IReadOnlyDictionary<string, string> table = ReadDocumentTable();
         List<string> minted = new(table.Values);
@@ -346,20 +365,21 @@ internal sealed class DocumentGrammarAgreementTests
                 nameof(ContentCategories) + " declares a different set of undocumented "
                     + "grammars than " + nameof(TheGrammarsNoDocumentMints) + " records");
 
-            // The recorded debt is eleven grammars. Dropping one from ContentCategories and
-            // its line from TheGrammarsNoDocumentMints in one edit keeps the two sides
-            // equal and reduces what this test ranges over, which is how a recorded debt
-            // stops being recorded. The count is the part that does not move with it.
+            // The recorded debt is eight grammars, down from eleven when doc 40 minted
+            // SITE-, ELT- and PLAYER-. Dropping one from ContentCategories and its line
+            // from TheGrammarsNoDocumentMints in one edit keeps the two sides equal and
+            // reduces what this test ranges over, which is how a recorded debt stops being
+            // recorded. The count is the part that does not move with it.
             Assert.That(
                 TheGrammarsNoDocumentMints,
-                Has.Length.EqualTo(11),
-                nameof(TheGrammarsNoDocumentMints) + " no longer records eleven grammars. A "
+                Has.Length.EqualTo(8),
+                nameof(TheGrammarsNoDocumentMints) + " no longer records eight grammars. A "
                     + "grammar leaves this list when a document mints it - in which case it "
                     + "must appear in doc 40's table - or when the category is retired, not "
                     + "because the line was tidied away");
             Assert.That(
                 unminted,
-                Has.Count.EqualTo(11),
+                Has.Count.EqualTo(8),
                 nameof(ContentCategories) + " declares a different number of grammars no "
                     + "accepted document mints");
         });

@@ -9,12 +9,13 @@ namespace MechaMiner.Content.Ids;
 /// </summary>
 /// <remarks>
 /// <para>
-/// <b>Most of these prefixes come from an accepted document; three were minted here.</b>
+/// <b>Every prefix below now comes from an accepted document.</b>
 /// <c>docs/technical/40-content-data-and-validation.md</c> § Stable ID policy requires
-/// reusing accepted gameplay IDs "exactly", and the list below says which prefixes that
-/// covers and which it does not, because "derived from an accepted document" and "minted
-/// by this file" are not the same standing and a reader has to be able to tell them apart
-/// without opening every catalog.
+/// reusing accepted gameplay IDs "exactly", and the list below says which document covers
+/// which prefix, because "derived from an accepted document" and "minted by this file" are
+/// not the same standing and a reader has to be able to tell them apart without opening
+/// every catalog. Three prefixes were this file's own claim until recently; the paragraph
+/// on them below records that they are not any more.
 /// </para>
 /// <para>
 /// <b>From an accepted document.</b> The gameplay catalogs mint <c>MCH-</c>,
@@ -33,22 +34,31 @@ namespace MechaMiner.Content.Ids;
 /// document rather than standing in for it.
 /// </para>
 /// <para>
-/// <b>Minted by this implementation, with no accepted document behind them.</b>
-/// <c>SITE-</c>, <c>ELT-</c>, and <c>PLAYER-</c>. They were minted by decision of the
-/// integration owner because the definitions exist and every schema references other
-/// definitions by stable ID, and no document in this tree mints them: they are absent
-/// from doc 40's table, and doc 40 accounts for its absentees as prefixes "reused from
-/// the accepted gameplay register", which these are not - the register § Stable ID policy
-/// names is <c>MCH-01</c>, <c>EN-01</c>, <c>BOSS-01</c>, <c>W-AB</c>, <c>REL-01</c> "and
-/// equivalent utility/PowerUp/unlock IDs", and no gameplay catalog assigns an ID to a
-/// mining site, an elite modifier set, or the player baseline. A prefix here is not
-/// evidence that a document mints it; this paragraph is the list of the ones it does not.
+/// <b><c>SITE-</c>, <c>ELT-</c> and <c>PLAYER-</c> were minted by this implementation, and
+/// are now minted by doc 40 too.</b> They were minted by decision of the integration owner
+/// because the definitions exist and every schema references other definitions by stable
+/// ID, and for as long as no document in this tree minted them they stayed this file's own
+/// claim. Doc 40 § Minted content-ID grammars now gives each one a row - <c>SITE-</c> as
+/// <c>^SITE-[0-9]{2}$</c> over <c>content/maps/</c>, <c>ELT-</c> as
+/// <c>^ELT-[0-9]{2}$</c> over <c>content/enemies/</c>, and <c>PLAYER-</c> as
+/// <c>^PLAYER-[0-9]{2}$</c> over <c>content/player/</c>, all three minted under § Map
+/// generation - so for these three the grammars above restate the document rather than
+/// standing in for it, and no prefix here is an implementation-only mint today.
 /// </para>
 /// <para>
-/// Which of these three states a prefix is in is asserted, not just described:
+/// <b>What doc 40 still does not mint, and legitimately.</b> The accepted gameplay
+/// register it accounts for as prefixes "reused from the accepted gameplay register":
+/// § Stable ID policy names it as <c>MCH-01</c>, <c>EN-01</c>, <c>BOSS-01</c>,
+/// <c>W-AB</c>, <c>REL-01</c> "and equivalent utility/PowerUp/unlock IDs". Those are
+/// deliberately absent from the table, and they are the only prefixes here that are. A
+/// prefix here is still not evidence that a document mints it - that is asserted, below.
+/// </para>
+/// <para>
+/// Which of these states a prefix is in is asserted, not just described:
 /// <c>DocumentGrammarAgreementTests</c> reads doc 40's table and holds this file, the
-/// category schemas, and the document to one grammar per prefix, with the three above
-/// recorded by name as the ones no document mints.
+/// category schemas, and the document to one grammar per prefix, with the grammars no
+/// document mints recorded by name - eight of them, the reuse register alone, since
+/// <c>SITE-</c>, <c>ELT-</c> and <c>PLAYER-</c> left that list for doc 40's table.
 /// </para>
 /// <para>
 /// Two things this registry deliberately does not do. It does not bound a grammar to

@@ -207,24 +207,29 @@ readonly ROSTER_SIZE_AT_42A5C83=6
 #   The pin counts the in-band negative controls this script emits. It was 36 as counted at
 #   42a5c83, 45 as counted at e1ce969 (which added nine: § 6g's three, § 6h's three, § 6c's
 #   empty-roster case at both log sizes, and the metadata leg of the no-mutation
-#   measurement, which used to be one finding and is now two), and is 46 as counted at THIS
-#   commit, which added one - § 6d's chatty-stub row, the control that proves the version
-#   read takes the LAST NON-EMPTY stdout line and not the first. Nothing derives it: it is
-#   restated by hand whenever a control is added or removed, in the same commit
-#   that adds or removes one. A mismatch therefore means one of two things - a control was
-#   added and the total was not restated, which is bookkeeping, or a control that used to
-#   run has stopped running, which is the failure this pin exists to catch and which nothing
-#   else here would notice. Read a bare 46 with no ref stamp as a rumour rather than a
-#   measurement; the stamp is what makes the next reader able to tell a stale count from a
-#   regression.
+#   measurement, which used to be one finding and is now two), 46 as counted at cacbc63
+#   (which added one - § 6d's chatty-stub row, the control that proves the version read takes
+#   the LAST NON-EMPTY stdout line and not the first), and is 44 as counted at THIS commit,
+#   which REMOVED TWO FROM THE COUNT WITHOUT REMOVING ANY CHECK: § 6i's two legs are this
+#   gate's real measurement ABOUT THE REPOSITORY and not controls over a fixture, so they now
+#   emit unmarked through pass/fail and are no longer counted here. Both legs still run, on
+#   every invocation, and § 6i's row below records the drop rather than disappearing.
 #
-#   HOW 46 IS REACHED AT RUNTIME, AND WHY NO GREP FINDS IT. There are 13 literal
-#   control_pass/control_fail call sites and 7 literal `controls_run` increment sites in
-#   this file, and they multiply out to 46 emissions because most of them sit inside a
+#   Nothing derives it: it is restated by hand whenever a control is added or removed, in
+#   the same commit that adds or removes one. A mismatch therefore means one of two things -
+#   a control was added and the total was not restated, which is bookkeeping, or a control
+#   that used to run has stopped running, which is the failure this pin exists to catch and
+#   which nothing else here would notice. Read a bare 44 with no ref stamp as a rumour rather
+#   than a measurement; the stamp is what makes the next reader able to tell a stale count
+#   from a regression.
+#
+#   HOW 44 IS REACHED AT RUNTIME, AND WHY NO GREP FINDS IT. There are 11 literal
+#   control_pass/control_fail call sites and 6 literal `controls_run` increment sites in
+#   this file, and they multiply out to 44 emissions because most of them sit inside a
 #   table-driven loop and most of those loops run each row twice, once at fixture size and
-#   once at ~300 KB. One of the 13 sites - § 6h's unavailability branch, which reports three
+#   once at ~300 KB. One of the 11 sites - § 6h's unavailability branch, which reports three
 #   unproved controls if the throwaway repository cannot be created - does not run on a
-#   healthy machine at all, so a green run reaches 12 of them. Per section, as counted at
+#   healthy machine at all, so a green run reaches 10 of them. Per section, as counted at
 #   this commit:
 #
 #     6a launch evidence       4 rows x 2 log sizes  =  8
@@ -236,19 +241,28 @@ readonly ROSTER_SIZE_AT_42A5C83=6
 #     6f absent scene          1                    =  1
 #     6g mutation predicate    3 injected rows      =  3
 #     6h mutation predicate    3 real-repo cases    =  3
-#     6i the real-tree probe   2 legs               =  2
+#     6i the real-tree probe   2 legs, NOT CONTROLS =  0   (was 2 until this commit; see below)
 #                                                     --
-#                                                     46
+#                                                     44
+#
+#   § 6i's ROW IS KEPT AT ZERO RATHER THAN DELETED, and that is the point of writing it this
+#   way. Its two legs still run and still print a verdict each; what changed here is that
+#   they are recognised as the finding this gate exists to report ABOUT THE REPOSITORY rather
+#   than as controls proving the gate can fail, so they emit unmarked and leave the control
+#   count. A table that silently lost the row would leave the next reader reconciling 44
+#   against a remembered 46 by guessing, and the likeliest guess - "a control stopped
+#   running", which is exactly what this pin exists to catch - is the one thing that did not
+#   happen.
 #
 #   SO DO NOT "FIX" THIS CONSTANT FROM A GREP. `grep -c control_pass` over this file returns
-#   9 - six emitter call sites plus three prose mentions, two of them inside this very
-#   comment - and a reader who takes 9, or 13, or 7 for the runtime total will conclude the
+#   10 - five emitter call sites plus five prose mentions, two of them inside this very
+#   comment - and a reader who takes 10, or 11, or 6 for the runtime total will conclude the
 #   pin is wrong and either edit it or file a bug against a gate that is working. The runtime
 #   number and the static number differ BY DESIGN, because the loops are what make the
 #   control set cheap to extend. If this pin goes red, count the emissions in a real run's
 #   log - `grep -c '\[control-fixture\] control:'` returns exactly this number on a healthy
 #   run - before touching the constant.
-readonly EXPECTED_CONTROLS=46
+readonly EXPECTED_CONTROLS=44
 
 # The classes this script can return, named from src/MechaMiner.Tools/Cli/ExitClass.cs so
 # the shell side and the C# side cannot drift apart silently: InvalidInvocation = 2,
@@ -633,8 +647,14 @@ classify_tree_mutation() {
     return 1
   fi
 
+  # THE WINDOW IS NAMED, not pointed at. This verdict used to say "changed across the
+  # window", which is a bare deictic: nothing in PRINTED output said where that window
+  # started, so a reader holding only the log could not tell it opens at this gate's own
+  # BEFORE capture rather than at the verb's first step. The endpoints therefore travel with
+  # the finding. § 6g's first control row pins the endpoint clause as a required substring,
+  # so this string and that row move together or the gate reds on its own repair.
   if [[ "${before}" != "${after}" ]]; then
-    printf 'the %s changed across the window. Before: %s After: %s\n' \
+    printf 'the %s differs between its BEFORE capture and its AFTER capture, so something changed inside the window those two captures bracket. For the real measurement in § 6i that window opens before § 1 launches the harness and closes after § 6 finishes its controls, which is neither the lifetime of the verb nor this section alone; a control drives this same predicate over its own injected or throwaway-repository capture pair instead. Before: %s After: %s\n' \
       "${subject}" "${before//$'\n'/ | }" "${after//$'\n'/ | }"
     return 1
   fi
@@ -1355,9 +1375,16 @@ fi
 #       be unusable for everyone who runs this gate with work in progress;
 #   (c) a nonzero status at EITHER end must be red as UNPROVED RATHER THAN TRUE, because two
 #       failed captures compare equal and would otherwise manufacture the green.
+#
+# CASE (a)'s REQUIRED PHRASE PINS THE CHANGED-VERDICT'S ENDPOINT CLAUSE, the sentence naming
+# where the window opens and closes. That is deliberate - the endpoints are the part of that
+# verdict a reader holding only the log cannot get anywhere else, so they are asserted rather
+# than trusted. It also means the two are COUPLED: rewording classify_tree_mutation's
+# changed-verdict without updating this row reds the gate on its own repair, and both must
+# therefore change in the same commit.
 # "<label>|<before>|<after>|<before status>|<after status>|<expected problems>|<required phrase>"
 readonly MUTATION_CONTROLS=(
-  "two captures that differ, which must be red| M game/tests/X.tscn| M game/tests/X.tscn?? game/tests/Y.tscn|0|0|1|changed across the window"
+  "two captures that differ, which must be red| M game/tests/X.tscn| M game/tests/X.tscn?? game/tests/Y.tscn|0|0|1|opens before § 1 launches the harness and closes after § 6 finishes its controls"
   "two equal NON-EMPTY captures, which must PASS: a dirty-but-unchanged tree is not a failure| M game/tests/X.tscn| M game/tests/X.tscn|0|0|0|"
   "a nonzero status at both ends, which must be red as unproved rather than true|||3|3|1|unproved rather than true"
 )
@@ -1504,6 +1531,25 @@ fi
 # measurement for the stronger claim. The window spans § 1's REAL LAUNCH and every control
 # above; see the block before § 1 for why it is opened there rather than here.
 #
+# WHAT THE WINDOW DOES NOT COVER, SAID OUTRIGHT: ANY WRITE THAT COMPLETED BEFORE THIS GATE
+# STARTED. Both captures are taken by this process, so anything already written when the
+# BEFORE capture ran is present in BOTH captures and cancels out of the comparison by
+# construction. That is not a gap to repair - it is what "across the window" means - but it
+# has to be printed somewhere, because a reader holding only the log otherwise cannot tell
+# whether a green here also acquits the steps that ran ahead of this script.
+#
+# THE CASE THAT ACTUALLY MATTERS IS build/verify-godot.sh's COLD-CACHE IMPORT, and this file
+# already cites that script's own mutation probe twice as a trap precedent, so a reader has
+# every reason to think the two windows are related and no way to learn how. They are not
+# related. GodotImportVerb runs build/verify-godot.sh FIRST and requires it to exit 0 before
+# it invokes this script at all (src/MechaMiner.Tools/Verbs/GodotImportVerb.cs - Execute
+# returns RunSliceEvidence only after that check), so that script's `rm -rf game/.godot` and
+# the reimport it forces are both COMPLETE before the BEFORE capture is taken. Both captures
+# therefore see the identical post-import state and the import cannot appear in this
+# comparison whatever it did. verify-godot.sh makes its own claim about its own window, over
+# game/ and content only; this gate makes a different claim over a different window, and
+# neither stands in for the other.
+#
 # Emitted through one helper so there is one pass site and one fail site rather than four,
 # and so both legs are worded to the same discipline: each says what its own leg measured and
 # nothing about the other's subject.
@@ -1519,6 +1565,27 @@ fi
 # whether MUTATION_PATHSPEC is too wide: narrowing it to silence this is trading the
 # coverage the leg exists to give for a green, and the developer-local hazard it would be
 # bought with does not exist in CI in the first place.
+#
+# EMITTED UNMARKED, AND NOT COUNTED AS CONTROLS. These two legs are this gate's REAL FINDING
+# ABOUT THE REPOSITORY - the answer to "did the launch or the controls write to the tree" -
+# and build/gate-output.sh draws the boundary at exactly that: the marker belongs to output
+# from a section whose purpose is to prove the gate can fail, and this section's purpose is
+# to measure the tree. Routed through control_pass/control_fail they were marked, so the
+# filter that file advertises in every summary - `verify-run-slice ... | grep -v
+# '[control-fixture]'` - removed the mutation verdict along with the fixtures, and a reader
+# following the gate's own advice never saw the measurement at all. They also inflated
+# controls_run by two, which made a red leg report as a FAILING NEGATIVE CONTROL - a claim
+# that this gate cannot detect a mutation - when what it actually means is that something in
+# ${MUTATION_SCOPE} was written. build/verify-godot.sh already prints its own real mutation
+# verdict unmarked while its injected unreadable-git control stays marked; this puts the two
+# gates on the same side of the boundary.
+#
+# §§ 6g and 6h keep control_pass/control_fail and stay counted: their fixtures exist to prove
+# this same predicate can go red, which is the other side of that boundary.
+#
+# THE PASS/FAIL EMITTERS REFUSE A MESSAGE CARRYING THE MARKER, so the pass messages below
+# must not contain it - that refusal is the check that these legs are routed correctly, and
+# gate_assert_marking proves the refusal still works on every run.
 report_mutation_leg() {
   # $1 subject phrase for the predicate, $2 before, $3 after, $4 before status,
   # $5 after status, $6 the pass message - which must claim ONLY what this leg measured.
@@ -1528,11 +1595,10 @@ report_mutation_leg() {
   local leg_count=0
   leg_report="$(classify_tree_mutation "${subject}" "${before}" "${after}" \
     "${before_status}" "${after_status}")" || leg_count=$?
-  controls_run=$((controls_run + 1))
   if [[ "${leg_count}" -eq 0 ]]; then
-    control_pass "control: ${pass_message}"
+    pass "${pass_message}"
   else
-    control_fail "control: ${leg_report}"
+    fail "${leg_report}"
   fi
 }
 
@@ -1561,7 +1627,7 @@ report_mutation_leg \
   "tracked-file metadata (mtime, inode, size) of ${MUTATION_SCOPE}" \
   "${control_tree_metadata_before}" "${control_tree_metadata_after}" \
   "${control_tree_metadata_before_status}" "${control_tree_metadata_after_status}" \
-  "metadata leg: the mtime, inode and size of every TRACKED file in ${MUTATION_SCOPE} are unchanged across § 1's launch and every control above, so no tracked file in scope was written - including the byte-identical rewrite and the write-then-cleanup the content leg cannot see. Covers tracked files only: an untracked file created and deleted inside the window is outside both legs' reach. If this leg ever goes RED, note that in CI the tree is static - clean checkout, no other writer during the run - so a red there is a write by this gate or the harness; on a developer machine the same red may instead be a concurrent edit to tests/verification/*.json or game/tests/* inside a window open for up to ${LAUNCH_TIMEOUT_SECONDS}s, which is a truthful red about a real write. Either way the check to run is WHAT CHANGED, from the paths and mtimes the failure prints. Narrowing MUTATION_PATHSPEC is the WRONG fix: it buys a green by dropping coverage of files this gate actually reads"
+  "metadata leg: the mtime, inode and size of every TRACKED file in ${MUTATION_SCOPE} are unchanged across § 1's launch and every control above, so no tracked file in ${MUTATION_SCOPE} was written between the BEFORE capture taken before § 1's launch and the AFTER capture taken here - including the byte-identical rewrite and the write-then-cleanup the content leg cannot see. That window is also the bound on the claim: a write that FINISHED BEFORE THIS GATE STARTED is in both captures and cancels out by construction, and build/verify-godot.sh's cold-cache import is exactly that case - GodotImportVerb runs it to completion before invoking this script, so both captures see the same post-import tree and this leg says nothing about it. Covers tracked files only: an untracked file created and deleted inside the window is outside both legs' reach. If this leg ever goes RED, note that in CI the tree is static - clean checkout, no other writer during the run - so a red there is a write by this gate or the harness; on a developer machine the same red may instead be a concurrent edit to tests/verification/*.json or game/tests/* inside a window open for up to ${LAUNCH_TIMEOUT_SECONDS}s, which is a truthful red about a real write. Either way the check to run is WHAT CHANGED, from the paths and mtimes the failure prints. Narrowing MUTATION_PATHSPEC is the WRONG fix: it buys a green by dropping coverage of files this gate actually reads"
 
 cleanup_controls
 trap - EXIT

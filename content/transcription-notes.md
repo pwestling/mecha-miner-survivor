@@ -54,15 +54,27 @@ resolved, not ruled on; see “Sentry Pod deployment interval” in the shape no
 - **Affected definitions:** `EN-07` (`content/enemies/EN-07.json`).
 - **Ruling needed:** either the multiplier becomes `0.625`, or doc 72's stated diameter becomes
   `0.496 M`, or the multiplier is declared presentation-only and not a footprint input.
-- **RULED — third option, and the disagreement dissolves.** See
-  “Ruling 1 — enemies store a body scale, not a derived collision diameter” below. There was never
-  a second authored value: `docs/72:96`'s `0.50 M` is `0.496 M` typeset to two decimals, exactly as
-  every other row of that table is the body scale times `0.80 M` typeset to two decimals. The
-  authored quantity is the `0.62×` scale at `docs/31:45`; the diameter is derived and is now the
-  compiler's to produce (`docs/technical/40-content-data-and-validation.md:114`). The JSON no
-  longer carries a diameter, so nothing is internally inconsistent. The **docs side is being
-  corrected** — `docs/72:96` should read `0.496 M`, not `0.50 M`; that correction is not in this
-  pass's scope (`docs/` is out of scope here) and is the one action still open on C-1.
+- **RULED — third option, and the content-side disagreement dissolves.** See
+  “Ruling 1 — enemies store a body scale, not a derived collision diameter” below. The authored
+  quantity is the `0.62×` scale at `docs/31:45`; the diameter is derived and is now the compiler's
+  to produce (`docs/technical/40-content-data-and-validation.md:114`). The JSON no longer carries a
+  diameter, so nothing under `content/` is internally inconsistent, and `0.496` correctly appears in
+  no definition file.
+- **The reading behind that ruling, recorded here as an interpretation and not as a convention
+  quoted from doc 72.** The reading is that `docs/72:96`'s `0.50 M` is `0.496 M` typeset to two
+  decimals, as the rest of that column is a body scale times `0.80 M` typeset to two decimals.
+  **Doc 72 states no rounding or precision convention that these notes have read; the reading is an
+  inference from the shape of the table, made here.** It is also weak on its own evidence: the other
+  nine products are exact at two decimals, so that column has never needed a third decimal and
+  cannot distinguish a value authored at two decimals from one presented at two.
+- **What is still open on C-1 — a question, not an owed edit.** Whether `docs/72:96` should carry
+  the exact value is **contingent on two things nobody has checked**: whether that line is scoped to
+  the Razorling specifically or states a general/baseline figure, and whether doc 72 has a rounding
+  or precision convention under which `0.50` is already `0.496` rendered at two decimals. Until both
+  are answered, no docs-side edit is owed and none is in progress; these notes assert no answer. The
+  question belongs to the design-document holder (`docs/31`, `docs/72`). The evidence on both sides,
+  including which arguments are non-discriminating, is under “A30 — the two survivability mirrors
+  must agree”, and the item is listed in “Findings still open after this pass”.
 
 - **Transcription note, verbatim** (`content/enemies/EN-07.json`):
 
@@ -479,11 +491,17 @@ diameters were re-verified against the “Collision and Contact Footprints” ta
 Every row reproduces exactly, so nine of the ten removals lost nothing that the compiler cannot
 reproduce from the surviving scale and the `0.80 M` reference.
 
-**`docs/72:96`'s `0.50M` for Razorling is not a second authored value.** It is `0.496`
-typeset to the two decimals the whole column uses; the same rounding is invisible on the other
-nine rows only because their products happen to be exact at two decimals. Reading it as an
-authored diameter is what created contradiction C-1. The **docs side is being corrected** to
-`0.496 M`; that edit is outside this pass (`docs/` is out of scope for this worker).
+**`docs/72:96`'s `0.50M` for Razorling is read here as `0.496` typeset to the two decimals the whole
+column uses** — the reading stated under C-1, and stated there as an interpretation recorded in these
+notes rather than a convention quoted from doc 72. It is the reading this ruling was taken under, and
+it is not established: the same rounding is invisible on the other nine rows only because their
+products happen to be exact at two decimals, so the column cannot discriminate. The ruling does not
+depend on it settling either way — the diameter is derived under either reading and `content/` stores
+no diameter. **No docs-side edit follows from this ruling.** Whether `docs/72:96` should carry the
+exact value is open, contingent on the scope and precision-convention questions recorded under C-1,
+and owned by the design-document holder. *(An earlier revision of this paragraph asserted the `0.50M`
+was "not a second authored value" and reported the docs side as "being corrected" to `0.496 M`. Both
+are withdrawn: the first settles a question that is open, the second reported work nobody agreed to.)*
 
 **What the ruling did not determine, and I chose:**
 
@@ -829,14 +847,20 @@ The removed values were re-verified against the “Center distance that begins c
 | `EN-09` | Siegeback | 1.65 | 1.16 M | 1.160 |
 | `EN-10` | Dreadwing | 1.35 | 1.04 M | 1.040 |
 
-Nine rows reproduce exactly. `EN-07` is off by `0.002` for the *same* reason it was off by `0.004`
-on the diameter — it is `0.748` typeset to the two decimals the column uses — which is contradiction
-C-1 showing up a second time in a second derived column, and is further evidence that C-1 is a
-typesetting artefact rather than a competing authored value.
+Nine rows reproduce exactly. `EN-07` is off by `0.002` on the same row that was off by `0.004` on the
+diameter — contradiction C-1 showing up a second time in a second derived column. *(Corrected: this
+sentence called the second column “further evidence that C-1 is a typesetting artefact rather than a
+competing authored value”. It is not evidence for either reading. The centre distance is
+`diameter ÷ 2 + 0.50 M`, so it is a function of the diameter and repeats whatever the diameter does —
+one coincidence seen twice, not two. See the non-discriminating-arguments table under A30, which
+records the same argument in its `docs/72`-figures form.)*
 
 **Verifier.** `A20` in `src/MechaMiner.Tools/ContentImport/verify_content.py` now asserts that no
-enemy definition carries either derived field, matching on key names across `content/enemies/` so a
-rename cannot slip past it. `reference_diameter_m` is explicitly allowlisted there, because `0.80 M`
+enemy definition carries either derived field, matching on key names across `content/enemies/`. *(Corrected
+under Ruling 46: this sentence said "so a rename cannot slip past it", which is false in the same way three
+other copies of that claim were. Key-name matching catches a rename only into a name the pattern still
+matches; A20 has no value layer, so a rename outside the pattern passes. See Ruling 27.)*
+`reference_diameter_m` is explicitly allowlisted there, because `0.80 M`
 is the Ripper's authored rank-zero diameter and not a per-enemy derived value.
 
 **What the ruling did not determine, and I chose:** leaving `contact_footprint` as an object with
@@ -1060,8 +1084,9 @@ two scopes**, not one rule over one directory:
   with them;
 - the **centre-distance** rule covers `content/enemies/` **and** `content/bosses/`.
 
-Both still match on key names, so a rename cannot slip past either, and `reference_diameter_m` stays
-allowlisted for the reason Ruling 6 gave.
+Both still match on key names — which catches a rename only into a name the pattern still matches, not a
+rename generally; *corrected under Ruling 46, where this sentence read "so a rename cannot slip past
+either"* — and `reference_diameter_m` stays allowlisted for the reason Ruling 6 gave.
 
 **What the ruling did not determine, and I chose:** leaving `contact_footprint` on the bosses as an
 object with four remaining fields rather than flattening it, matching the choice Ruling 6 recorded for
@@ -2564,6 +2589,465 @@ expectation (which touches no `content/` file) to the commit making the change. 
   changes, which is the opposite of what it is for. The three Markdown files under `content/` are
   prose and are excluded from both multisets.
 
+#### Ruling 45 — 115 authored derived values removed, after three families were pulled back
+
+`docs/technical/40-content-data-and-validation.md` assigns these to the compiler, so a stored copy puts a
+second writer on each one: `40:114` derives world speeds and compares them with the survivability report,
+`40:136` has validators "recompute total catalog costs", `40:140` validates the four mining-site classes
+"and their totals", and `40:203` recalculates "price curves, total costs ... resource totals". Two earlier
+instances of exactly this are already gone (Ruling 30's boss centre distances, and the health pack's
+collection distance). **Every one of the 115 reproduced exactly** from operands that survive the removal,
+computed in exact rational arithmetic rather than binary float, so this pass found **no new value defect** —
+unlike the two that were found this way before.
+
+**The removal set is 115 across 6 families, and an earlier draft of this ruling claimed 166 across 9. The
+arithmetic is `166 − 32 − 5 − 14 = 115` and `9 − 3 = 6`, verified against the tree: the numeric leaf count
+under `content/` goes 2,303 → 2,188, with 115 removed, 0 added and 0 changed.** Three families were built,
+verified to reproduce exactly, and then **pulled back into the tree**:
+
+| Pulled | Values | Why it was wrong to remove |
+| --- | ---: | --- |
+| `damage_pressure` survivability block | 32 | **Comparand, not a derived duplicate** (see below). |
+| resonant-value hit counts | 5 | Same — rows of the same survivability report, also stated in full in `docs/`. |
+| stat upgrade price curve | 14 | **Would have moved 14 checkable numbers into an unchecked string.** |
+
+**The reason these two were wrong to remove — and the withdrawal of the reason first given.** An earlier
+draft of this ruling argued that removing the report would make the `docs/40` § *Enemies and bosses*
+comparison a **tautology**: a
+comparand produced by the code it is checked against agrees always and catches nothing. **That argument is
+withdrawn.** It was wrong on this tree. `docs/data/contact-damage-pressure.csv` carries the same report —
+`hits_to_defeat_100` and `continuous_overlap_ttd_s` for all 14 actors — and `docs/72` § *Damage Pressure
+Reference* states all five
+resonant hit counts, so an independent comparand survives the removal either way.
+
+**The reason that is actually true: there are three writers on one report and no settled authority, so
+deleting any copy silently decides which survivor is authoritative.** The three are the docs table, the
+content block, and the compiler that `docs/40` § *Source-of-truth boundary* and § *Enemies and bosses* say
+derives the report. That decision has not been
+made by anyone, and this pass would have taken it **as a side effect of a commit whose stated purpose was
+deduplication**. Removing a redundant copy and choosing an authority are different acts, and only the first
+was authorised. **This reason generalises where the tautology version did not** — it holds whether or not
+another mirror happens to exist, which is exactly why it survives the measurement that killed the first
+version. The copy stays until the authority question is answered on purpose. Recorded as an open item.
+
+**Why the price curve was wrong to remove, and why editing the prose is not the fix.** All 14 values are
+still stated in the same file, in `defining_prose`: "The first ten prices are 10, 30, 60, 100, 150, 210,
+280, 360, 450, and 550 ore. Cumulative cost reaches 100 after three purchases, 200 after four, 350 after
+five, and 2,200 after ten." A31 matches **numeric leaves**, so removing the leaves moved 14 checkable
+numbers to a place no assertion looks — strictly worse than leaving them, because the redundancy survived
+and the checkability did not. **The prose was not edited**: that sentence is a verified doc quotation in
+`quote_mismatch_evidence.json`, so rewriting its numerals would falsify the citation while every validator
+stayed green. Whether authored prose should restate derived numbers is a real question and not one to
+settle inside a removal pass.
+
+**Reproducibility was never the discriminator, and that is the general lesson.** All 51 pulled values
+reproduce exactly; so do all 115 kept ones. **The operand/comparand distinction is orthogonal to
+reproducibility**, and a pass that only asks "does it recompute?" cannot see it. The same test was
+therefore applied to all six surviving families:
+
+| Surviving family | Is the removed leaf a comparand? | Where the independent side lives |
+| --- | --- | --- |
+| enemy and boss world speed (17) | No — it is the **derived** side `40:114` names | the survivability report, now restored |
+| PowerUp cumulative cost (58) | No | the doc-stated 9,450 that A14 checks, in `docs/` |
+| utility total rank ore cost (13) | No | `40:203`; operands (`rank_ore_costs`) retained |
+| resource aggregate total (13) | No | the 400-unit run ceiling stated at `50:24` and `10:86` |
+| mining-site aggregate total (13) | No | `40:140` "their totals" |
+| map-contract site-based Hyper Gold (1) | No | the 300 per map stated at `50:24` |
+
+**None of the six is a comparand that lives only in `content/`** — in every case the independent side is a
+`docs/` line or table, which is what makes the compiler's recomputation a real check rather than a
+self-comparison. That is the structural test, not a search for matching digits: a literal grep for these
+values across `docs/` is uninformative, because small integers like `3`, `4` and `100` appear throughout.
+
+**One sub-count from the earlier draft stands and is worth keeping:**
+
+- **17 world speeds, not the 14 the reconciliation named.** It counted the ten enemy and four boss
+  `movement_speed` entries. Three more are built identically from `percent_of_mech_base_speed` and the
+  `3.0 M/s` reference speed: `EN-06 :: specialist_attack.projectile.speed` (75% → 2.25),
+  `BOSS-01 :: ability.charge_speed` (180% → 5.4), and `BOSS-03 :: ability.projectile.speed` (75% → 2.25).
+- **58 PowerUp cumulative costs — correct as reported.**
+- The earlier draft's third correction — "32 numbers in the 14 `damage_pressure` blocks, not 14, because
+  the reported figure counted **containers** rather than **contents**" — was arithmetically right and is
+  still the right way to read that figure. It is now moot for the removal set, since all 32 are restored.
+
+**Nothing whose derivation a document does not assign was removed, even where the arithmetic works.** Six
+such things reproduce exactly and stay, each recorded with its arithmetic in
+`expected_derived_value_removals.json`: the Hyper Gold beacon threshold times (`40:140` lists beacon
+thresholds among a site's *authored* fields and gives the compiler only "their totals"),
+`sources[].depletion_seconds` in `content/resources/` (a duration is not a resource total — while the
+identically-derived `total_depletion_seconds` under `content/mining-sites/` *is* removed, because `40:140`
+names those totals), `resonant_damage` (see below — it is the cheapest open item, and it is *not* missing a
+rounding clause), `BOSS-01 :: ability.ordinary_contact_damage_replaced_during_charge`, and the three
+`relative_to_standard_seam` multipliers.
+
+**`resonant_damage` is not one clause short — it is zero clauses short, and this note corrects an earlier
+claim in this file and in `derive_derived_value_expectations.py` that "no document states that rounding".**
+It reproduces as `ceil(base_damage × 1.20)` for **all five**, verified in exact rational arithmetic:
+`EN-06 :: specialist_attack` 14 → `16.8` → **17**; `BOSS-01 :: ability` 27 → `32.4` → **33**;
+`BOSS-03 :: ability` 18 → `21.6` → **22**; `BOSS-04 :: ability` 35 → `42.0` → **42**;
+`shared-elite-modifiers :: worked_examples[0]` 36 → `43.2` → **44**. Both halves are documented:
+
+- the **×1.20** at `docs/61` § *Geode resonance behavior* (the accepted 20% modifier per material) and in
+  the table at `docs/72` § *Damage Pressure Reference*,
+  which states all five results;
+- the **rounding** at `docs/72` § *Incoming Damage Resolution*, step 3 of the damage-resolution order — "Round the result up to the next
+  whole Hull point" — immediately after step 2, "Multiply listed base damage by current attacker-side
+  damage modifiers". That composition *is* `ceil(base × modifier)`. the same section shows it worked through on a
+  sixth case (`38 × 1.20 = 45.6`, rounded up to 46).
+
+`ceil` is also the **only** rounding that reproduces all five: `32.4 → 33` and `43.2 → 44` rule out both
+`floor` and round-half. So nothing about this value is undecided. It stays only because it is the operand
+the removed `fresh_mech_hits_to_defeat_at_resonant_value` derives from, and the remaining question is
+narrow: no line in `40:` names *resonance damage* among what the compiler recomputes, the way `40:114` names
+world speeds. **This is the cheapest of the open items to close, and closing it is a documentation edit
+rather than a decision** — the arithmetic, the multiplier, the rounding and all five results are already
+written down; one `40:` line needs to say the compiler owns it.
+
+**The largest exclusion is the 45 weapon DPS estimates. State the gap precisely: `40:203` assigns the
+derivation to the compiler without stating a derivation that covers the set.** Not "45 values may be
+derived" — the assignment is explicit ("Recalculate DPS estimates"), and the set is 15 weapons × three
+fields (`burst_10_dps`, `sustained_30_dps`, `favorable_horde_dps`). What no document states is a rule, or a
+named set of rules, that reproduces all 45. That is a documentation gap at a specific line, not an open
+question about whether the values are derived.
+
+**The 45 do partition, and the partition is small. This pass measures 8 rules; the figure reported to it was
+12, and the difference is a counting convention, not a disagreement about any value.** All 45 reproduce
+either way. The 8 counts *distinct arithmetics*: 1 for `sustained_30_dps`, 6 for `burst_10_dps`, 1 shape for
+`favorable_horde_dps`. Counting the horde multiplier's documented cases as separate rules — four for
+line/contact, five for the mortar, eight for Gravity Projector, ten for Reactor Pulse, two per missile blast
+(`docs/71` § *Base Weapon Summary*) — turns that one shape into five, giving 12. **Neither number is wrong; the useful figure is
+whichever a validator has to implement**, and a validator implementing the horde column needs one
+multiplication plus a per-weapon constant it reads from `docs/71` § *Base Weapon Summary*, so this ruling states 8 and shows the
+5-way split inside the horde entry rather than hiding it. The count is recorded both ways so a later reader
+does not have to reconcile them.
+
+**The partition, measured in exact rational
+arithmetic, never binary float; **no stored value was changed to make any of it fit**:
+
+- **`sustained_30_dps` — 15 of 15, one rule.** The steady-state ideal DPS of `docs/70` § *Ideal single-target DPS*
+  (`damage per hit × damaging hits per activation × activations per second`), rounded to one decimal place.
+  `W-AB` `96 / 3 = 32.0`; `W-AD` `36 × 1.5 / 2.5 = 21.6`; `W-BE` `3 × 8 × 1.4 = 33.6`;
+  `W-CF` `2 × 18 = 36.0` at the two-segment overlap cap; `W-AF` `18 × 2 = 36.0` at full focus;
+  `W-EF` `4 × 26 / 3 = 34.666… → 34.7`, the only one where the rounding is load-bearing.
+- **`burst_10_dps` — 6 rules, and they group by the warmup shapes `docs/70` § *Opening burst and sustained DPS* already names**
+  ("charge time, deployment buildup, actor capacity, delayed impacts, focus growth, mine setup"):
+  - **10 of 15 by one rule** — `ceil(10 / cadence)` activations land in the first 10 s counting the one at
+    t = 0, so `damage × ceil(10 / T) / 10`. `W-AB` `4 × 96 / 10 = 38.4`; `W-AC` `3 × 128 / 10 = 38.4`;
+    `W-AD` `4 × 54 / 10 = 21.6`; `W-BC` `27 × 12 / 10 = 32.4`; `W-BF` `10 × 32 / 10 = 32.0`;
+    `W-CD` and `W-DF` `20 × 16 / 10 = 32.0`; `W-CE` `7 × 27 / 10 = 18.9`; `W-DE` `10 × 45 / 10 = 45.0`;
+    `W-EF` `4 × 104 / 10 = 41.6`.
+  - **`W-AF`, focus growth:** `∫₀⁵ 18(1 + t/5) dt + 36 × 5 = 135 + 180 = 315`, `/10 = 31.5`. Operands all
+    authored: base rate 18, `focus_multiplier_minimum` 1, `focus_multiplier_maximum` 2,
+    `focus_fill_seconds_at_rank_zero` 5.0.
+  - **`W-BD`, mine setup:** `floor((10 − 0.5) / 1) = 9` mines detonate, `9 × 27 / 10 = 24.3`, from
+    `placement_interval_base_travel_seconds` 1 and `arm_seconds` 0.5.
+  - **`W-BE`, deployment buildup:** pod 1 covers 10 s and pod 2 covers 4 s for 14 pod-seconds,
+    `14 × 8 × 1.4 / 10 = 15.68 → 15.7`, from `deployment_cadence_seconds` 6.0 and
+    `first_pod_deploys_immediately`.
+  - **`W-CF`, overlap ramp:** the two-segment cap is reached after two 0.25 s placement intervals, so
+    `(10 − 2 × 0.25) × 2 × 18 / 10 = 34.2`.
+  - **`W-AE`, no warmup at all:** its burst is its steady rate, `3 × 8 / 0.75 = 32.0`. The general
+    activation-count rule would give `14 × 24 / 10 = 33.6`. `32.0` also falls out of the count rule if the
+    three drones fire staggered at third-cycle offsets (14 + 13 + 13 = 40 shots × 8 = 320), so `W-AE` is
+    genuinely ambiguous between two rules that agree on the answer — the stagger is stated nowhere.
+- **`favorable_horde_dps` — 15 of 15 by one *shape*, but the shape has a free parameter that is stored
+  nowhere.** Every value is `sustained_30_dps × k` for an integer `k`, rounded to a whole number where the
+  product is not one: `W-AB` `32 × 4 = 128`; `W-AC` `32 × 5 = 160`; `W-AD` `21.6 × 8 = 172.8 → 173`;
+  `W-BD` `27 × 5 = 135`; `W-BF` `32 × 4 = 128`; `W-CD` `32 × 5 = 160`; `W-CE` `18 × 10 = 180`;
+  `W-CF` `36 × 4 = 144`; `W-DF` `32 × 4 = 128`; `W-EF` `34.666… × 2 = 69.33 → 69`; and `k = 1` for
+  `W-AE`, `W-AF`, `W-BC`, `W-BE`, `W-DE`. **An earlier draft of this ruling claimed the 15 `k` values
+  "appear nowhere in `docs/` or in `content/`". That was wrong, and `docs/71` § *Base Weapon Summary* states all of them**:
+  "The favorable-horde column uses approximately four simultaneous victims for line/contact weapons, five
+  for the mortar, eight for Gravity Projector, ten for Reactor Pulse, and two victims per missile blast. It
+  exists to catch order-of-magnitude errors; benchmark-scene captures supersede it once a playable build
+  exists." That maps onto the measured `k` exactly: four for the line/contact weapons (`W-AB` pierce line,
+  `W-BF` cutters, `W-CF` wake trail, `W-DF` ram contact), five for the mortar (`W-AC`), eight for
+  `W-AD`, ten for `W-CE`, and two **per missile blast** for `W-EF`, whose four missiles × two victims × 26
+  gives `208 / 3 = 69.33 → 69`. `W-CD`'s five is its own authored chain cap ("maximum five total targets"),
+  and the five `k = 1` weapons each carry a limitation clause saying so ("Total output is split rather than
+  multiplied by crowds", "One automatically selected target per projectile", and so on). **The negative
+  claim was the defect, not the arithmetic** — searching `content/` and stopping there is not searching
+  `docs/`, and the figures were sitting in the same document as the DPS table itself. The same line settles
+  the field's status: it "exists to catch order-of-magnitude errors" and "benchmark-scene captures supersede
+  it", so `favorable_horde_dps` is an **analytic placeholder for a measurement**, which is also what
+  `docs/70` § *Horde damage throughput* says when it defines horde throughput as counting "actual hits rather than multiplying
+  single-target DPS by a theoretical unlimited target count".
+
+**What that means for the two candidate readings.** The set does *not* need something close to 45 rules, so
+this is not an ad-hoc-computation problem. It needs **one rule for `sustained_30_dps`, six for
+`burst_10_dps` grouped by the warmup families `docs/70` § *Opening burst and sustained DPS* already names, and an admission that
+`favorable_horde_dps` is an analytic placeholder for a measurement, per `docs/71` § *Base Weapon Summary*.**. The documentation edit is
+correspondingly small: `40:203` should say DPS estimates are derived **per warmup family**, name each
+family's rule, cross-reference `docs/71` § *Base Weapon Summary* for the horde multipliers it already states, state
+the one-decimal rounding (load-bearing only for `W-EF` sustained and `W-BE` burst), and stop assigning
+`favorable_horde_dps` to the compiler until its per-weapon `k` is authored somewhere. Until that exists,
+removing these 45 would replace a stated number with an unstated one, so the family stays **out of scope,
+not cleared** — but the pass that closes it is now a documentation pass, not an investigation.
+
+**Six values are derived AND operands, so they stay, and the operand role wins.** Chief among them
+`total_cost_hyper_gold`, which carries its own `DEC-120#decision` citation and is the operand A14's second
+row sums to the doc-stated 9,450; and `resonant_damage`, which the removed
+`fresh_mech_hits_to_defeat_at_resonant_value` derives from.
+
+**A14 needed no rewrite, and this was checked rather than assumed.** Its PowerUp rows sum
+`ranks[].price_hyper_gold` (58 rank rows) and the per-entry `total_cost_hyper_gold` (13 entries); neither is
+in the removal set, so both still recompute 9,450, and the option-unlock 2,150 row never touched the
+PowerUps at all. Negative control: `PU-C01 :: ranks[0].price_hyper_gold` 50 → 60 → **FAIL**, "PowerUp rank
+prices sum to 9460 Hyper Gold across 58 rank rows, expected 9450".
+
+**A31 is now two layers, and the second one is the point: names are widenable forever, values are not.**
+*(`A31` is this rule; it was `A28` until the merge with master collided with PR #12's manifest rule of the
+same name — see "Assertion-label collision resolved" near the end of this document for the mapping.)*
+The word-class widening below is kept as the record of how the name layer got where it is, but **widening
+word lists was the wrong response to the hole and has stopped.** Nine drafts of a name rule were defeated
+by nine semantic-neighbour probes; widening them would be defeated by a tenth probe chosen against the new
+lists, and there is no draft at which that stops. The rule now also asks the question a name cannot: **for
+each removed value, no non-operand numeric leaf inside its own derivation site may carry that value**,
+compared exactly as `Fraction` with no tolerance. That survives a rename, a relocation within the site, a
+different unit suffix, and a change of arity (`32.0` → `[32.0]`), because none of those change the number.
+
+**Its radius is the limit, and the radius is now COMPUTED rather than quoted.** The site is the object that
+held the removed leaf — not the file, not the scope. `measure_search_radii()` in the generator counts, under
+one definition on the pinned `sweep_ref`, how many `(removed value, numeric leaf)` pairs each candidate
+radius would flag: a pair counts when the leaf holds the removed value exactly, is not the removed leaf, and
+is not one of that value's own operands in that file. The three counts are **1 : 40 : 668** at site, file and
+scope radius, they are carried in `search_radius_measurement` in the expectation file, and that is where the
+figures on a green run come from. Almost all of the widening is magnitude coincidences between unrelated
+quantities: a `1.5` m/s world speed against a `1.5`-second control-immunity window, a hit count of `4`
+against `maximum_simultaneous_bosses`. An exception list of 39 or 667 entries cannot be justified entry by
+entry, so the radius is narrow **and is stated to be narrow**.
+
+**Correction, Ruling 46.** This paragraph previously quoted **55** at file radius and **400** at scope
+radius. Neither reproduced: no code computed either, a hand count varies with which exclusions it applies
+(file radius comes out anywhere from 34 to 61 and scope radius from 326 to 3,495 depending on the choice),
+and both numbers were printed to every reader on a green run. They are computed now, under one stated
+definition, so the ratio a reader is shown is regenerable from the artifact. The design conclusion the old
+numbers supported — site radius is one, everything wider is at least an order of magnitude worse — is
+unchanged.
+
+At site radius the exception list is **one entry**: `UTL-R1`'s removed `acquisition.total_rank_ore_cost` is
+`0`, being the sum of an empty `rank_ore_costs` list, and its `acquisition.rank_count` is independently `0` —
+two quantities that are both zero, not one quantity written twice. A declared exception that **stops**
+colliding fails, in `verify_content.py` and in the generator, each measured against the tree in front of it.
+
+**Both layers were probed, per family, with four attack classes — 24 injections, each into a real
+`content/` file, measured with the real `verify_content.py`, and reverted.** The value layer is what fires;
+the name layer fires on none of them, because each probe name sits outside its word class, which is the
+whole reason the value layer exists:
+
+| Attack | What it changes | Name layer | Value layer | Result |
+| --- | --- | ---: | ---: | --- |
+| **rename** — a name the word class does not carry, same site, same number | spelling | 0/6 | **6/6** | caught |
+| **unit suffix** — `…_in_units` appended, same site, same number | spelling | 0/6 | **6/6** | caught |
+| **arity** — the number wrapped as `[value]`, same site | shape | 0/6 | **6/6** | caught |
+| **relocation** — same file, same number, moved *out* of the derivation site | position | 0/6 | **0/6** | **misses, by design** |
+
+**The relocation row is the radius, reported rather than buried.** It is not a bug to fix by widening: the
+computed ratio is 1 : 40 : 668 at site, file and scope radius, and an exception list of 39 or 667 entries is
+not auditable. The honest claim is "indifferent to name, unit and arity within the derivation site", and that is
+now what the code, the tool README and this record all say.
+
+### Ruling 46 — the A31 value layer's own review pass: two blockers, both of them "the check did not run"
+
+The value layer shipped with no review pass behind it. It got one, and the two defects it found are the
+same shape: **a guard that reported a limit it did not have.** Both are now fixed and controlled.
+
+**Blocker 1 — the value layer searched ZERO leaves for 19 of the 115 records, and 6 of those could not fail
+on their own value.** The derivation site was computed as "the substring before the last `[` if the pointer
+ends `]`, else before the last `.`, else `""`", and then filtered with `if not (site and …): continue`. For a
+**root-level pointer** — no `.`, no trailing `]` — the site came out `""`, which is falsy, so the filter
+skipped **every leaf in the file**. The six affected records are `common-ore.json :: seam_total_per_map`
+(3600), `hyper-gold.json :: run_ceiling` (400), `rich-ore-seams.json :: total_depletion_seconds` (15) and
+`:: total_uninterrupted_extraction_per_map_seconds` (120), and `standard-ore-seams.json ::
+total_depletion_seconds` (15) and `:: total_uninterrupted_extraction_per_map_seconds` (300). **The correct
+reading of "the object that held the removed leaf" for a root-level leaf is the whole document**, and that is
+what `derivation_site()`/`is_in_site()` now implement, identically in `verify_content.py` and in the
+generator so `--check` stays consistent.
+
+Negative controls, run and reverted **individually**, one per record: injecting the removed value at file
+root under the off-class name `probe_zzz` now **FAILs** for all six, each naming its own family. The same
+value nested one level deeper as `probe_obj.probe_zzz` **also FAILs** for all six, which is the expected
+consequence of the site being the document: the subtree walk reaches it.
+
+**The second half, disclosed rather than buried: emptying a container empties the guard.** Fixing the
+root-site case takes the count of records searching zero leaves from 19 to **13**. The remaining 13 are the
+`{}` and `{"resource": "common ore"}` residues — the removal left their containing object with **no numeric
+leaves at all**, so there is nothing at their site for the layer to compare against and only a leaf
+reappearing *inside that same object* could fail. That count is now **asserted**
+(`EMPTY_SITE_GUARD_RECORDS = 13`) and printed, so emptying another container cannot shrink the guard
+quietly.
+
+**What concealed it was a mean.** The disclosure line read "299 numeric leaves across 115 removed values",
+which is 2.6 per record and reads as coverage of all 115. It is replaced by the **distribution** — `0 ×13,
+1 ×17, 2 ×2, 3 ×60, 5 ×4, 6 ×13, 7 ×1, 8 ×2, 11 ×2, 18 ×1` — with the minimum and the zero-count called out.
+A total or a mean over a population is not a statement about its members; that is the same lesson as the
+`docs/31` two-decimal argument above, arriving from the other direction.
+
+**Blocker 2 — "a stale exception fails too" was false in BOTH tools.** The generator's guard loaded the file
+from `Tree(sweep_ref)` — the pinned `fefb7a3`, where the colliding value collides *by construction* — so a
+declared exception was "still colliding" forever, whatever the tree did. And `verify_content.py` had **no
+staleness guard at all**: it consulted the set only as an exclusion. Proof: changing
+`content/utilities/UTL-R1.json :: acquisition.rank_count` from `0` to `1` ends the only declared collision,
+and both tools still exited **0**.
+
+A30 does this correctly sixty lines away — `stale = sorted(set(CSV_MIRROR_ROUNDED) - declared_used)`,
+computed against the current tree, where only an exception the scan actually *reached* counts as used. That
+pattern is copied into A31 in both tools, in two halves: **unused on the sweep ref** (it suppresses nothing)
+and **no longer colliding in the worktree** (its justification stopped being true, read from disk, not from
+the pinned blob). Control, the same injection: `rank_count` `0 → 1` now FAILs `verify_content.py`
+("1 declared value-collision exception(s) no longer suppress anything on this tree") **and** the generator
+("no longer collides in the CURRENT worktree"), and is reverted.
+
+**Finding 3 — four declared counts were written and never compared.** `total_removed`, `family_count`,
+`declared_family_count` and `declared_total_removed` were produced by the generator and read by nothing in
+`verify_content.py`; `grep -n declared verify_content.py` returned no hit anywhere in the A31/A29 code. So
+`verify_content.py` **alone** passed every vacuity injection. All four are now asserted in
+`verify_content.py`, against literals restated there on purpose — a count read only from the file it is meant
+to police cannot police it — together with per-family record-emptiness and a live scope check. Five
+injections into the expectation file, each run and reverted individually, each against `verify_content.py`
+alone:
+
+| Injection | Before | After |
+| --- | --- | --- |
+| `"families": []` | PASS | **FAIL**, 3 failures |
+| one family's scope repointed at `content/schemas/` (no definitions) | PASS | **FAIL**, 1 failure |
+| every family's `records` emptied | PASS | **FAIL**, 3 failures |
+| `removed_numeric_multiset` emptied and `sweep_ref` repinned to HEAD | PASS | **FAIL**, 1 failure |
+| the four counts overwritten `9999`/`99` | PASS | **FAIL**, 4 count rows red |
+
+`derive --check` caught these before, by regenerating the file and byte-comparing it. That is a
+**file-integrity** check: it fails for any edit at all, including a comment, and says nothing about whether
+the rule has content. The rule now says it.
+
+**What A31 still does not do.** The name layer catches a rename only within its own word class; the value
+layer catches relocation only within the derivation site. Neither makes reintroduction impossible, and the
+three places that previously claimed otherwise have been corrected — `verify_content.py`'s assertion table
+("so a rename cannot reintroduce the field under a new spelling"), its A31 failure message ("so a rename
+does not evade it"), and the tool README's A20 paragraph ("so that a *rename* inside a covered directory
+cannot slip past"). All three were false in the same way, and the notes had already recorded the correct
+limitation for A20 under Ruling 27 — "a value injected under an unmatched name passes" — so the code
+contradicted the record rather than extending it.
+
+**Correction, Ruling 46: three was not all of them, because the pass grepped the FILES it had in hand
+instead of the CLAIM.** Four more copies of the same assertion survived it, and one — `verify_content.py`'s
+A20 block — contradicted itself inside two consecutive sentences ("a rename inside one of them cannot slip
+past. It does NOT catch the value reappearing under an unrelated name"). The other three are this record's
+own Ruling 6 and Ruling 8 verifier notes and the comment above `FAMILIES` in
+`derive_derived_value_expectations.py`. All four are corrected, and the method that found them is the method
+to use: **grep the repository for the assertion's substance, not the file you last edited.** The same audit
+found a stale "166-element prediction" and a stale "nine guards"/"the other eight" pair describing the
+current rule set, both left behind when 166 became 115 and nine became six.
+
+**The history: A31 was nine rules with nine scopes, for A20's reason, and its word classes came out of a
+failed control.**
+The first draft of the mining-site rule was `total|jackpot`; the negative control renamed
+`total_payout_per_map` to `aggregate_payout_per_map` and **passed**. The four aggregate-total families now
+match the word class `total|sum|aggregate|combined|overall|grand`. `content/powerups/` deliberately does not
+use that class — `total_` is authored twice over there, as `total_cost_hyper_gold` and as every rank's
+`total_effect`, so the class would flag 71 surviving fields (verifiable with
+`grep -ho '"total_[a-z_]*"' content/powerups/*.json | sort | uniq -c`: 13 `total_cost_hyper_gold` +
+58 `total_effect`). All nine controls were then run and reverted **individually**, each reintroducing its
+field under a *different* name; all nine failed.
+
+**Then the nine controls were re-run against a harder probe, and all nine passed — meaning all nine guards
+missed.** The nine renames above were renames: the same field spelled differently, still inside the guard's
+word list. The second round injected, per guard, a field that is **semantically inside the family but
+lexically outside the pattern** — the shape that had already defeated the mining-site rule once, when
+`aggregate_payout_per_map` walked past `total|jackpot`. F8 was not an isolated slip. **Nine of nine word
+lists had the same hole**, because nine word lists were written the same way: by listing the spellings
+already present in the tree rather than by naming what the family is about. Per guard, probe → result:
+
+| Guard | Probe injected | Before | After widening |
+| --- | --- | --- | --- |
+| enemy and boss world speed | `movement_speed.traverse_rate_metres_per_second` | missed | fires |
+| damage-pressure survivability block | `survivability_pressure.hits_to_defeat_100_hull` | missed | fires |
+| resonant-value hit count | `…resonant_damage_reference.impacts_to_destroy_fresh_mech` | missed | fires |
+| PowerUp cumulative cost | `ranks[0].accrued_cost_hyper_gold` | missed | fires |
+| utility total rank ore cost | `acquisition.accrued_rank_ore_cost` | missed | fires |
+| stat upgrade price curve | `price_ladder` | missed | fires |
+| resource aggregate total | `sources[0].yield_per_seam` | missed | fires |
+| mining-site aggregate total | `rolled_up_payout_per_map` | missed | fires |
+| map-contract site-based Hyper Gold | `site_placement.hyper_gold_sites.hyper_gold_from_all_sites` | missed | fires |
+
+Each was injected into a real `content/` file, measured with the real `verify_content.py`, and reverted;
+the harness was itself positively controlled first by re-injecting `acquisition.total_rank_ore_cost`, which
+fired. Each rule was then rewritten to match **what the family is about** rather than the spellings in the
+tree: the world-speed rule now matches the *unit* (`m_per_s`, `metres_per_second`, `velocity`, `traverse`)
+rather than the field name; the damage-pressure parent is now the word class `pressure|survivability`
+instead of the single name `damage_pressure`; the price-curve rule is now a price-or-cost word crossed with
+a series word (`curve|table|ladder|schedule|steps|series|…`) rather than the two spellings in use; and the
+four aggregate families share one `AGGREGATE_WORDS` class that adds the cumulative half
+(`cumulative|accru|accumulat|rolled_up|to_date|so_far|subtotal|tally|…`) to the summation half. **Every
+widened rule was re-controlled at the pinned `sweep_ref`: each still matches its own removal set and nothing
+else in its scope, so the 115-element prediction is byte-identical and no `content/` value moved.**
+
+Two exclusions from the widened classes are deliberate and recorded beside the rules, because they are the
+same collision `total_` is in `content/powerups/`: `payout` is **not** in the mining-site class
+(`payout_per_installment`, `completion_payout` and `exposure_per_secured_payout_multiplier` are authored
+there), and a bare `all` is **not** in the aggregate class (`content/maps/` authors
+`maximum_hyper_gold_sites_across_all_pockets` and `maximum_share_of_all_geodes_per_major_region`, which are
+authored bounds on counts, not sums — so the class carries `from_all` and `all_sites$` instead).
+
+**The limit is unchanged and is worth stating plainly: a word class is still a word class.** Widening moved
+each guard from "catches renames" to "catches renames and the obvious semantic neighbours", not to "cannot
+be evaded". A tenth probe chosen adversarially against the *new* lists would pass some of them too. The
+guard raises the cost of the mistake; only a structural rule does better, which is why the damage-pressure
+family is asserted structurally (no numeric leaf of any name under the block) rather than by leaf name.
+
+#### Value-preservation record — tenth pass
+
+**Two multisets, over two different value types, with their scopes named.** This pass changes **numbers and
+no strings**, which is the mirror image of the ninth pass, so the string multiset is not the proof that
+covers this diff. Both were run; neither stands in for the other.
+
+**Range for both: `fefb7a3` (the merge of PR #8, and the expectation file's own pinned `sweep_ref`) → this
+pass's commit.** Scope: **all 139 `*.json` files under `content/`**, so nothing can hide outside the 49
+touched files. The file count is unchanged at 139, so A21 is unaffected.
+
+- **Numeric multiset — changed, and the expected difference was committed one commit earlier, in a commit
+  containing no `content/` file at all.** Scope: numeric leaves (`int`/`float`, `bool` excluded).
+  **2,303 → 2,188, −115 net = 0 added, 115 removed**, and the measured multiset equals the committed
+  expectation as **set equality over 115 elements** — every `(file, pointer, value)` predicted is missing,
+  nothing unpredicted is missing, and no predicted element had a different value in the tree than the
+  expectation recorded. `115 == 115` would also hold if one value were removed by mistake and a different
+  one kept by mistake; element-wise equality would not.
+- **String multiset — unchanged. Scope: string leaves. 5,275 → 5,275, difference added `{}`, removed `{}`.**
+  **No prose, citation or quotation changed in this pass**, which is what keeps
+  `check_quote_mismatch_evidence.py` at 394/394 with zero cases moving. This proof says nothing about the
+  numbers.
+- **0 surviving `(file, JSON path)` pairs changed value, and 0 numeric leaves added.** Both **measured over
+  this range and reported here, and both deliberately NOT left as standing assertions in A29.** They are
+  one-shot properties of one commit range, not invariants: the first ordinary tuning commit after merge —
+  `EN-01` hull 20 → 25, an authored non-derived value — would fail a rule about derived values, and the only
+  way to clear that failure is to re-pin `sweep_ref` to a newer commit, which makes A29 compare the tree
+  against itself and destroys the prediction-first property that is the entire point of the ordering.
+  **A29 is now one row: set equality over the removal set.**
+
+  **Correction, Ruling 46: only HALF of that row holds for every future commit**, and this line said the
+  whole of it did. Set equality has two halves. The `missing` half — every predicted removal is still
+  missing — does hold forever; nothing legitimately re-authors a value the compiler owns. The `unexpected`
+  half — nothing *else* is missing — does not: deleting any authored numeric leaf fails it. Controlled
+  individually: `EN-01` hull `20 → 25` in place **passes**; adding an authored numeric leaf to `EN-01`
+  **passes**; deleting `EN-01.earliest_minute` **FAILs**, "1 removed-but-unpredicted". So A29 will
+  false-fail on a future commit that deletes a field, and the fix then is to re-derive the expectation from
+  a newer `sweep_ref` deliberately, not to loosen the rule. The docstring and the tool `README.md` now say
+  this.
+- **`null` count: 0 → 0**, still with no declared exceptions.
+- **No list was emptied, and no object was left empty.** `first_ten_prices` — the one list an earlier draft
+  emptied and dropped — is **restored** with all ten elements, so the question of what to do with a
+  container the removal empties **does not arise in this pass**. That is worth stating because the earlier
+  draft resolved it inconsistently: it dropped the emptied `first_ten_prices` array while leaving four
+  `cumulative_cost_checkpoints[]` objects as `{"purchases": n}` shells, which is two different answers to
+  one question. Lists that were *already* empty at the sweep ref — five utility `external_numerics`, and
+  `UTL-R1`'s `effect.stat_names` and `acquisition.rank_ore_costs` — were left exactly as they were; a first
+  draft of the removal pruned those too, which would have deleted `rank_ore_costs`, **an operand**. **The
+  policy is therefore still unwritten**, and it is recorded as an open item rather than settled silently by
+  whichever containers this pass happened to touch.
+- **No `source_refs` scope prefix was left dangling (A22 still 0).** Every removal takes leaves out of an
+  object that survives: `damage_pressure` keeps its `assumptions` string, `movement_speed` keeps
+  `percent_of_mech_base_speed`, and `total_cost_hyper_gold` — the one prefixed field in the PowerUp
+  catalog — was never a candidate.
+
 ### Per-definition notes, by catalog
 
 #### Weapons (`content/weapons/`)
@@ -3860,6 +4344,41 @@ expectation (which touches no `content/` file) to the commit making the change. 
 5. docs/61-specialized-resource-identities.md:126 records that Hyper Gold's appearance and audio identity are explicitly undecided, so no icon or audio identity is authored here.
 6. Localization keys are not authored here; content/localization/ is owned by a separate stream.
 7. runCeiling 400 and increasedByPowerUps=false are from docs/60-resources-crafting-progression.md:80.
+8. **`resource_class` is authored, not transcribed, and no document sources it.** `content/resources/hyper-gold.json:17`
+   reads `"resource_class": "cross-run progression resource"`. The value is left exactly as authored; this note
+   records the search that failed to find a source for it, because "no source exists" and "nobody looked" are
+   indistinguishable on the page otherwise.
+   - **The search, run rather than assumed.** `git grep -i "cross-run progression resource" <ref> -- 'docs/*'` over
+     every one of the 18 `origin` refs this repository has, `origin/master` included — **zero hits in any design or
+     technical document that could serve as a source.** The corpus is the point of the entry: this is not "the phrase
+     is missing from the document I happened to open", it is the phrase missing from `docs/` on every ref.
+   - **The one hit anywhere, and why it is not a source.**
+     `docs/technical/40-content-data-and-validation.md:131` on `origin/claude/hearth-thread-2vmaro-fnd-002` contains
+     the phrase, but it contains it as a *quotation of this field value* inside its own record that the phrase
+     "returns zero verbatim hits in `docs/` on any ref of this repository". Citing it would be circular — its copy of
+     the phrase is derived from this file, so it corroborates the failed search rather than answering it.
+   - **The near miss, and why it does not qualify.** The closest thing in `docs/` is the heading
+     `## Cross-run progression loop` at `docs/60-resources-crafting-progression.md:53`. It names a **loop** — the
+     earn/bank/spend cycle — not a class of resource, and putting a process name into a classification field is a
+     different claim from the one the document makes. The other near misses name the concept without spelling any
+     class: `docs/40-mining-and-extraction.md:119` "the resource used for cross-run progression",
+     `docs/glossary.md:254` "which serves cross-run progression". None of the three states a class name.
+   - **Left as authored rather than replaced.** There is no sourced phrase to put in its place, so replacing it would
+     swap one unsourced value for another and destroy the record of which one was actually authored. Hyper Gold is
+     also the only one of the three class values in this position: per the same `fnd-002` section, `specialized-material`
+     is transcribed from `docs/65:19` and `common-ore` from `docs/60:212`, while `hyper-gold` is stated there to be
+     **assigned** rather than transcribed.
+   - **Expected to be replaced by a token, not sourced.** The document owner is minting a closed `resource_class`
+     vocabulary — `docs/technical/40` § *Minted value vocabularies* on `origin/claude/hearth-thread-2vmaro-fnd-002`
+     grants the field and assigns the token `hyper-gold` to this resource. The successor to this value is therefore a
+     **granted token**, not a document quotation, and the search above should not be re-run in the hope of a different
+     answer.
+   - **Deliberately not asserted.** No check in `src/MechaMiner.Tools/ContentImport/verify_content.py` references
+     `specialized-material`, `common-ore` or `hyper-gold` as class tokens, and none couples `resource_class` to
+     `canonical_letter`. That vocabulary is not minted on `master`, and importing an ungranted vocabulary into the
+     checker whose job is to adjudicate authorisation would beg the question it exists to answer. Asserting the
+     current prose values instead is the mirror error: it would ratify as a contract the prose the grant is about to
+     replace. Both were considered and left out; when the grant lands on `master`, the coupling is the row to add.
 
 #### Mining sites (`content/mining-sites/`)
 
@@ -4114,10 +4633,235 @@ misdescribes a measurement from a name that correctly describes a classification
 naming defect from a design ambiguity wearing a naming defect's clothes. Both need a citation check before
 a rename, which is why every ruling above quotes the line it relied on.
 
+### Corrected claim about the tree — `content/README.md` on behavior kinds
+
+**This one is ours, not a design source's.** The two contradictions above are between the code and the
+documents it cites; this is a false statement in a file this stream owns, so it is recorded separately.
+
+`content/README.md` step 3 of the `DAT-004` walkthrough read: "No behavior kinds are named in this tree
+yet; they must be assigned with the registry." **The first clause is true of minted registry tokens and
+false of the field.** `behavior_kind` exists on every ordinary enemy and every boss and already holds a
+value — a prose sentence — at **14 sites**, so `DAT-004` faces a 14-site migration, not a greenfield.
+
+**The count was measured here rather than taken on report; the figure supplied was 15 and the tree says
+14.** All 14 are top-level `behavior_kind`: `EN-01`–`EN-10` and `BOSS-01`–`BOSS-04`. Nine read
+`"pure contact pursuer"`; `EN-06` reads `"pursuit and contact plus one telegraphed straight projectile"`;
+all four bosses read `"persistent giant pursuer with exactly one additional behavior"`. Zero of the 14 hold
+a single token, which is why the original sentence was defensible about tokens and misleading about work
+remaining.
+
+**Widening to all six spaces `CTR-CNT-002` names** — `behavior_kind`, targeting policy, formula, modifier
+hook, formation, effect — gives **65 prose value positions and 24 single-token ones**. The 24 are
+`effect.value_kind` on all 13 utilities, `unlocks.kind` on the six option unlocks, and five of the seven
+`spawn_formations[].formation` names, so the tree does already carry minted tokens in registry-token
+positions; the README's own token census at lines 177–186 counts them, which makes the old sentence
+inconsistent with the same file two hundred lines earlier.
+
+**Nothing was annotated and no value changed.** The registry vocabulary is being re-keyed by field space
+and token together because a flat namespace collides in this tree, and both collisions cited in the
+correction were verified here rather than restated: `UTL-E1` holds the identical string
+`"Recovery sources add in Hull Integrity per second."` at both `effect.stacking_classification` and
+`catalog_wide_rules.modifier_and_timing_rules[2]`, and the bare value `"damage"` sits at 36 sites under 7
+distinct leaf names, meaning a stat name, a unit, a display label and a snapshot-field enumerator. The
+figure offered for that second one was "three things across five field paths"; the tree says seven leaf
+names across thirty-six sites, so the correction records the measured pair. Annotating before the field
+spaces settle would be annotate-twice churn, so the README now states the migration size and stops there.
+**65 is an upper bound on sites to annotate, not a settled classification.**
+
+### A30 (new) — the two survivability mirrors must agree, asserted rather than observed
+
+Ruling 45 *observed* that `docs/data/contact-damage-pressure.csv` and the `content/` `damage_pressure`
+blocks agree. Nothing **kept** them agreeing, and two unguarded mirrors of one report is precisely the shape
+where a later edit to one produces a silent contradiction. A30 asserts agreement on **every** value the two
+share: seven columns × 14 actors, **98 comparisons**, in exact rational arithmetic with no tolerance.
+
+Four columns compare against an authored content field (`contact_damage`, `hits_to_defeat_100`,
+`continuous_overlap_ttd_s`, `control_resistance`, the last as `percent / 100`). Three compare against a value
+the compiler derives from surviving operands — `contact_diameter_m`, `contact_start_distance_m` and
+`move_speed_mps` — which is the comparison `docs/40` § *Enemies and bosses* actually describes. **It is not
+gated on the authority question**: it is worth having either way, and when that question lands the loser
+becomes derived and this check becomes redundant in the good way rather than wrong.
+
+**Negative control.** `EN-03 :: damage_pressure.hits_to_defeat_100_hull` 8 → 9, against the CSV's 8, and
+A30 **failed**: "1 value(s) disagree between docs/data/contact-damage-pressure.csv and content/ ...
+EN-03.hits_to_defeat_100: CSV 8 vs content 9". Reverted.
+
+**Writing it found a divergence that already existed: 96 of the 98 agree exactly, not all 98.** `EN-07`
+Razorling is the one actor whose derived contact diameter does not land on the CSV's two decimal places.
+`docs/31` § *Ordinary roster overview* states its body scale as `0.62×`, so the exact derived diameter is
+`0.62 × 0.80 = 0.496 M`; `docs/72` § *Collision and Contact Footprints* states its footprint as `0.50 M`,
+and the CSV mirrors 72. The propagated start distance is `0.496 / 2 + 0.50 = 0.748` against a stated `0.75`.
+**Two `docs/` sources disagree. Which one is exact is an OPEN DESIGN QUESTION, with the design owner, and
+this record no longer settles it.** An earlier version of this paragraph did settle it — it asserted the
+`0.496` was "not a content defect" but "the exact product of the authored scale", and that `content/`
+"faithfully transcribes the `0.62` from the source it cites". Both halves are withdrawn. The declaration
+stays, the value stays, and the reason is now the question plus the evidence.
+
+**The argument that has force, and it was in nobody's list.** Every other ordinary body scale is a multiple
+of `0.05` — `0.55`, `1.00`, `1.30`, `1.05`, `1.20`, `1.00`, `1.10`, `1.65`, `1.35`. `0.62` is not, **but
+neither is `0.625`.** So the Razorling breaks the pattern under either hypothesis and the pattern alone
+decides nothing; what the hypotheses differ on is whether the break is **motivated**. Under `0.625` it is: a
+designer targeting a clean `0.50 M` contact diameter back-computes `0.50 / 0.80 = 0.625`, and the scale is
+whatever falls out of that. Under `0.62` it is not: someone working in `0.05` steps who wanted a small
+variant picks `0.60` or `0.65`. **A motivated exception beats an unmotivated one, and this favours `0.50`
+being the exact figure.**
+
+**Three arguments that do not discriminate, recorded as non-discriminating so a later reader does not weigh
+them.** This matters more than the conclusion: an argument listed as evidence gets weighed by whoever reads
+the list next.
+
+| Argument | Why it carries no information |
+| --- | --- |
+| "Both `docs/72` figures come out exact under `0.625`" | **One coincidence, not two.** Start distance is `diameter ÷ 2 + 0.50`, so once the diameter is exactly `0.50` the start distance is exactly `0.75` automatically. The second figure is a function of the first and adds nothing. |
+| "`docs/31`'s Body column prints every scale at two decimals, so `0.62×` is what `0.625` looks like at two places" | **Zero-discriminating.** All nine other scales are multiples of `0.05`, so two decimals always suffice for them. The column has never *needed* a third decimal, and therefore cannot distinguish "authored at two decimals" from "presented at two decimals". It is a fit over a population incapable of falsifying it — the same failure class as measuring narrowly and writing broadly. |
+| "`docs/31` § *Ordinary roster overview* delegates exactness to `docs/72` (\"Exact derived values and boss circles appear in the survivability baseline\")" | **Consistent with both readings.** It obliges `docs/72` to carry the exact value; it says nothing about *which* value is exact. That is why each side has read it as supporting theirs. |
+
+**What is wrong in the repository under either reading.** The framing "`content/` follows the source it
+cites" is false for this field, and it was the reason given here. `EN-07`'s own `source_refs` scopes
+`contact_footprint` to `GDD-PLAYER-SURVIVABILITY-BASELINE#collision-and-contact-footprints` — `docs/72`, the
+`0.50` side — while the scale it stores comes from `docs/31`. So for the footprint, content does **not**
+follow the source it cites. Corrected in the tool `README.md` as well.
+
+**Why the outcome is nonetheless to hold.** The evidence is balanced and none of it is decisive. The current
+state is internally consistent under the `0.62` reading. If that reading wins there is nothing to do; if the
+other wins, the work is one `content/` value plus a document revert, travelling with the merges. The
+magnitude is 0.8% of a hitbox, so nothing is at risk in the interval, and the question belongs to the design
+owner as a **design** question — which contact diameter the Razorling was meant to have — rather than being
+inferred from typography. **`body_scale_multiplier` is NOT changed by this pass.**
+
+**And why holding is safe rather than merely cheap: A30 fails in both directions while the question is
+open.** Each declared pair names the CSV's written value **and the single exact content-side value** it
+covers, so changing `body_scale_multiplier` fails; and a declared pair that stops diverging fails, so
+correcting `docs/72` to `0.496` fails too. Neither side can be taken quietly. Both controlled — scale
+`0.62 → 0.61875` (which the previous revision **passed**) now FAILs on both the divergence row and the
+staleness row, and the CSV row rewritten to `0.496`/`0.748` FAILs on the staleness row. Every other actor's
+derived diameter is exact, so nothing else is hiding behind the declaration.
+
+**Correction, Ruling 46: the declared exception carried a tolerance, inside a rule whose comment said it had
+none.** The declaration used to require only that the content value **round** to the CSV value at the CSV's
+written precision — half of the last decimal place, disclosed nowhere. `body_scale_multiplier` could sit
+anywhere in `[0.61875, 0.625)` undetected while the module comment said **"NO TOLERANCE. Values compare
+exactly as Fractions … never absorbed by a threshold."** A declaration now names both numbers exactly; the
+rounding clause is kept as a *second* condition so a declaration cannot cover a pair that is not even close.
+
+The rule also carries a **vacuity guard**: the comparison count is asserted at 98, because a mirror-agreement
+rule that compares nothing passes for free. **And it now discloses its own limits on a green run** — A30 was
+the only new rule passed no `notes=` tuple, so nothing about it printed when it passed, and it was **absent
+from the assertion-table docstring** that enumerates A1–A29. Both fixed.
+
+**Citation convention for everything added in this pass.** New citations name the document and its
+**section heading** (`docs/71` § *Base Weapon Summary*) rather than a bare `file:line`. Line numbers on
+this project have been wrong twice already and do not survive an editorial pass; a heading does, and
+heading-plus-anchor is what `source_refs` uses throughout `content/`, so a bare `file:line` in these
+notes was inconsistent with the data beside it. (The `40:114` spelling in the previous sentence names the
+**form** being retired; it is not a citation.) Pre-existing references in that form, in rulings written
+before this convention, are left as they are — rewriting them is an editorial pass of its own, and
+quotations that record what a *source* said keep the reference that source used.
+
+**Correction, Ruling 46: the conversion was incomplete inside its own declared scope.** Seventeen lines
+added by the commit that introduced this convention still carried a bare `file:line` —
+`verify_content.py` 2, `derive_derived_value_expectations.py` 5, `expected_derived_value_removals.json` 3
+(all three regenerated from generator strings) and these notes 7. Several were **new prose, not preserved
+quotations**, including A30's own module comment and docstring, and one claim was rendered both ways in the
+same commit: the tool `README.md` used headings while the generated `pulled_because` string used the bare
+form. All seventeen are converted. The declared scope is "citations added by this convention's commit
+onward"; the audit that establishes it is `git diff 13ad963 -- <file> | grep '^+'` filtered for `file:line`
+spellings that name no document section, and it now returns exactly one line — the sentence above that names
+the retired form.
+
+### Assertion-label collision resolved — `A28` (this branch) → **`A31`**
+
+**The mapping, stated once and plainly: the derived-value-family rule was `A28` and is now `A31`.** Every
+occurrence in this document, in `verify_content.py`, in `derive_derived_value_expectations.py`, in
+`expected_derived_value_removals.json` and in the tool `README.md` has moved. `A28` in this repository now
+means exactly one rule: **master's definition `(relative_path, id)` manifest**, from PR #12.
+
+**Why there were two.** Two streams claimed the label in parallel and neither could see the other. This
+branch's derived-value pass added `A28`, `A29` and `A30`; master's PR #12 added `A28` for the manifest. The
+merge (`b7aea04`) brought both into one file under one label and left a visible banner between the blocks
+rather than deciding. Enumerated at the merge-base rather than assumed: master added exactly `{A28}`, this
+branch added `{A28, A29, A30}`, and the intersection is `{A28}` — **`A28` was the only collision**, so `A29`
+and `A30` are this branch's alone and did not move.
+
+**Why this side moved and not master's.** Master's `A28` is merged and referenced on the trunk — from its own
+`A21` row, the manifest section of `verify_content.py`, the tool `README.md`, `content/README.md` and
+`.gitattributes`. **An identifier that has shipped does not move**, which is the same principle the content
+IDs follow and the reason `stem == id` was rejected in favour of a recorded pair. This branch's label had not
+shipped. Two rules under one label is a defect that compounds with every new reference, so it was fixed at
+the merge instead of deferred.
+
+**`A31`, and one label rather than two.** `A31` is the next unused number, verified by enumeration rather than
+assumed — see the follow-up item for the measured starting state and the refs it covers. The rule's two
+layers — NAME and VALUE — stay under the single label they already shared, and **the reason that carries the
+decision is the mapping: two numbers would make "the rule the review calls `A28`" ambiguous**, which is
+exactly what the mapping above exists to prevent. A reader arriving from an un-editable comment must land on
+one row, not choose between two. That the layers also share one expectation file, one mandate set and one
+summary heading is consistent with keeping them together, but it is the weaker reason and not the one to
+lean on.
+
+**A retracted argument, recorded because someone will otherwise re-derive it.** An earlier draft of this
+section cited `A24a`/`A24b` as this file's precedent for naming a rule's internal parts rather than promoting
+them to rows. **That citation points the wrong way and is withdrawn.** `A24a`/`A24b` are two labels covering
+one rule's two halves — it is precedent for *splitting*, so citing it in support of keeping two layers under
+one label argues the opposite of what it shows, and a later reader would have been able to cite our own note
+as precedent for splitting `A31`. The decision is unchanged; only this support for it is gone.
+
+**THE CAVEAT ON EVERY LABEL MEASUREMENT, INCLUDING THIS ONE: an enumeration over a clone measures the refs
+that clone has fetched, not the repository.** `git grep`, `git log --all` and `for-each-ref` are all bounded by
+the local ref set, and they report cleanly and confidently on whatever subset that happens to be — there is no
+warning at the boundary. Two sessions on this project disagreed today about whether a given commit existed and
+**both were reporting honestly**, because each was answering from a differently-populated clone. So "the label
+is free" is only ever as wide as the refs consulted, and the refs must be named for the claim to be checkable.
+
+**What this pass actually covered, in two stages.** The first enumeration ran over the worktree at `b7aea04`
+plus three git objects (`fefb7a3`, `5d1b8f3`, `f3159a6`) — that is **2 fetched refs**, while
+`git ls-remote --heads origin` reports **16**. The gap was not visible from inside the clone: `refs/heads/master`
+here sits at `739bf29`, an ancestor of `origin/master` from before `verify_content.py` existed, so even the
+local branch of that name was not the trunk. The measurement was then widened: all 16 heads fetched and the
+assertion-table rows enumerated per ref, with the per-ref result recorded in the follow-up item below.
+**`A31` is unused on every remote head**, so the choice stands on a repository-wide measurement rather than a
+two-ref one. Even that is bounded — by `git ls-remote` at one moment, which is why the follow-up says the
+minted table's starting state must be re-measured across every remote head at the time it is minted rather
+than copied from here.
+
+**A live review comment on PR #10 still says `A28` and cannot be edited.** That is why the mapping is
+recorded in three places a reader can reach from that comment — here, in the `A31` row of
+`verify_content.py`'s assertion table, and where the merge banner used to sit between the two blocks — rather
+than only in the commit message.
+
+**The rename was verified by re-running a negative control per layer under the new label, not by reading the
+diff.** A find-and-replace can move a name and leave the rule attached to nothing, so both layers were made
+to fail on purpose and the failing text was read for the new label:
+
+- **Layer 1 (NAME), isolated by choosing a value the pass did not remove.** `BOSS-01 ::
+  ability.charge_speed.world_speed_m_per_s = 7.7` → **FAIL**, "`A31` 1 field(s) under `content/enemies/` +
+  `content/bosses/` hold a 'enemy and boss world speed' value … `['content/bosses/BOSS-01.json.
+  ability.charge_speed.world_speed_m_per_s = 7.7']`", exit 1. The value layer stayed `ok`, which is what
+  makes this layer 1's control and not both layers'.
+- **Layer 2 (VALUE), isolated by choosing a name the word class does not carry.** the removed
+  `5.4` put back inside its own derivation site as `BOSS-01 :: ability.charge_speed.tuning_scalar` →
+  **FAIL**, "`A31` value layer: 1 numeric leaf/leaves carry a value this pass removed as a 'enemy and boss
+  world speed', inside that value's own derivation site and not as one of its operands … `['content/bosses/
+  BOSS-01.json.ability.charge_speed.tuning_scalar = 5.4 (the removed
+  ability.charge_speed.world_speed_m_per_s)']`", exit 1. The name layer stayed `ok`.
+
+Both edits were reverted and the file is byte-identical to `b7aea04`; the suite returns to PASS, 0 failures.
+
 ### Findings still open after this pass
 
 | Finding | Owner needed |
 | --- | --- |
+| **Cheapest open item.** `resonant_damage` reproduces as `ceil(base × 1.20)` for all five and both halves are already documented (`docs/61` § *Geode resonance behavior* and `docs/72` § *Damage Pressure Reference* for the ×1.20, `docs/72` § *Incoming Damage Resolution* step 3 for the round-up). Only a `40:` line assigning its recomputation to the compiler is missing. **Documentation edit, not a decision.** | document owner (`docs/technical/40`) |
+| `docs/40` § *Analytical* assigns "Recalculate DPS estimates" without stating a derivation covering the 45. They partition into **8 rules** — 1 for `sustained_30_dps`, 6 for `burst_10_dps` by the warmup families `docs/70` § *Opening burst and sustained DPS* already names, and 1 shape for `favorable_horde_dps` whose per-weapon `k` is stored nowhere. That section should name the families per rule and stop assigning `favorable_horde_dps`, which `docs/70` § *Horde damage throughput* defines as a measurement. | document owner (`docs/technical/40`, `docs/70`) |
+| `favorable_horde_dps` is an analytic placeholder, not a derivation: `docs/71` § *Base Weapon Summary* states every simultaneous-victim count and says "benchmark-scene captures supersede it once a playable build exists". `docs/40` § *Analytical* should stop assigning it to the compiler. *(An earlier draft of this table said the counts were authored nowhere — that was false; they are in `docs/71` § *Base Weapon Summary*.)* | document owner (`docs/70`, `docs/71`) |
+| **Three writers on the survivability report, and no settled authority.** `docs/data/contact-damage-pressure.csv`, the `damage_pressure` blocks in `content/`, and the compiler (`docs/40` § *Source-of-truth boundary*, § *Enemies and bosses*) all carry it. **Deleting any copy silently decides which survivor is authoritative** — a decision nobody has made, and one a deduplication pass must not take as a side effect. Needs a deliberate answer naming the owner; until then all copies stay and A30 asserts the two stored ones agree. *(The tautology argument once offered for this is withdrawn — the CSV supplies an independent comparand regardless.)* | document owner (`docs/technical/40`) |
+| **No written policy for a container the removal pass empties.** This pass empties no container *of its last member*, but it leaves **13** with no numeric leaves, which is what empties their A31 guard (row below); and the earlier draft answered the question two ways at once — dropped an emptied array, kept four `{"purchases": n}` object shells. Needs one rule before the next removal pass. | validator stream |
+| A31's value layer has a **derivation-site radius**, chosen because the computed coincidence ratio is 1 : 40 : 668 at site, file and scope radius. Relocation outside the site still passes. Widening the radius needs a way to classify magnitude coincidences that is not a hand-written exception list. | validator stream |
+| **A31's value layer has an EMPTY guard for 13 of the 115 removed values** — their container was left with no numeric leaves at all, so the layer searches nothing for them and only a leaf reappearing inside that same object could fail it. Asserted and printed (`EMPTY_SITE_GUARD_RECORDS`) rather than fixed: fixing it means widening the radius for exactly those records, which is the same unsolved problem as the row above. | validator stream |
+| **The `docs/72` versus `docs/31` Razorling diameter question** — `0.50 M`, or `0.62 × 0.80 = 0.496 M`? Evidence recorded in `CSV_MIRROR_ROUNDED`, including which arguments are non-discriminating and why. A30 fails in both directions while it is open, so holding is safe. | design owner (`docs/31`, `docs/72`) |
+| A20 still has **no value layer** — it is key-name patterns only, so the limitation Ruling 27 records for it still stands in full. **The design to copy is A31's value layer *after it has been attacked and reviewed*, not merely after it shipped.** It is new machinery with no review pass behind it; replicating an unreviewed design into a second checker doubles the surface of any mistake in it, which is why A20's value layer was deliberately kept out of this pass rather than forgotten. Whoever picks this up should copy something that has been tested, not something that passed. | validator stream, after A31 layer 2 review |
+| **Assertion labels have no minted-label table, which is the cause of the `A28` collision and will cause the next one.** A label is allocated by whoever adds an assertion, on their own branch, from whatever number looks free *there* — so two branches adding rules in parallel both pick the same next number, and nothing detects it until they meet. `A28` → `A31` only got caught because it arrived through a merge that put the two blocks in one file; a collision between two branches that touch different regions, or one landing before the other is written, produces two rules under one label with no banner and no reader noticing. **The project already solved exactly this for content IDs**: `docs/technical/40` carries a minted-prefix table and a check reads it, so a prefix is *granted* rather than guessed. The analogue is a **minted assertion-label table** — one place where a label is granted, with the rule that a new assertion takes the next *unallocated* label from the table rather than the next number that looks free on the branch you happen to be on, and a check that fails when the table and the assertions disagree (a label in the table with no assertion, an assertion with no table row, or one label on two rules). Deliberately **not built in the PR that hit the collision**: minting a table is a convention change that needs the document owner's agreement on where the table lives and what the check reads, and doing it inside a rename pass would ship an unreviewed convention alongside a mechanical fix. **Starting state, measured so it is not re-measured later — but re-measure it across every remote head before minting, and see the caveat below: `A1`–`A30` are in use on `origin/master` + this branch, `A24a`/`A24b` are `A24`'s two halves, `A31` is this branch's and everything above it is free. Per-ref, over all 16 `origin` heads: `origin/master` and `origin/claude/verify-content-manifest` hold `A1`–`A28`; `origin/claude/hearth-thread-2vmaro-content-gate` and `origin/claude/hearth-thread-hrufl9` hold `A1`–`A27`; `origin/claude/hearth-thread-lmz5z8` (this branch) holds `A1`–`A31` less nothing; the remaining 11 heads have no `verify_content.py` at all. So the highest label anywhere is `A31` and no unfetched branch was sitting on it.** | validator stream + document owner (`docs/technical/40`) |
+| `DAT-004` behavior-registry migration is **14 sites**, all `behavior_kind` on the ten enemies and four bosses, each holding prose where a token will go. Blocked on the registry being re-keyed by field space *and* token, because a flat namespace collides in this tree (`UTL-E1`'s duplicated string; `"damage"` at 36 sites under 7 leaf names). 65 prose sites across all six `CTR-CNT-002` spaces is the upper bound. | schema stream / registry owner |
 | `obstacle_free_radius_in_mining_zone_diameters` — radius or diameter? Factor of two. | document owner (`docs/51`) |
 | `REL-07 :: effects.explosion_area_multiplier` is still `null` from the same sentence whose sibling was omitted | integration owner |
 | One focus ceiling under two names across `W-AF.json` and `W-AF-coherence-memory.json`, plus a boolean named `changes_focus_maximum_multiplier` | schema stream |
@@ -4125,3 +4869,301 @@ a rename, which is why every ruling above quotes the line it relied on.
 | `world_scale`, `eruption_damage_as_seconds_of_current_segment_damage`, `forward_reach_m`, bare `range`, `barrier_thickness_source`, `shockwave_reach_per_side_m`, `link_length_and_formation_size_scale_with` | schema stream / document owners |
 | Formula strings versus a registered formula kind (`40:99`) — already an A17 warning | schema stream |
 | Extraction-zone / resonance-field radii (3.0 M / 6.0 M) awaiting a decision-record citation; minute 33's reconstruction markers awaiting a doc correction | document owner (Ruling 22) |
+
+## Behavior-token grant handoff — decision material for the mint
+
+**What this section is.** The decision material behind a **behavior-token grant** that another stream is
+writing into a design document. It is not the grant, it mints nothing, and it changes no value under
+`content/`: everything below is a measurement, landed here so the stream that writes the grant reads it at
+a ref rather than taking it by message. Where the material recommends a token it says on what evidence;
+where it declines to mint one it says what would settle the question instead of guessing.
+
+**Measured 2026-08-06, at `origin/master` = `3016fbc9a0df3e7bcf77eaa3a79d78e069f68b2a`.** Every count,
+every quoted phrase and every "granted but unused" claim below is a measurement of *that* tree and of no
+other tree. Two classes of fact come from a second ref and are marked where they appear: the **schema
+shapes, the definition-reader call sites and the fixture-coverage figures** were measured at
+`origin/claude/hearth-thread-hrufl9` = `551d0ebecedb7e22444d4ccf65342b2553265719`, because
+`content/schemas/` and the readers exist on that ref and on no other — the same absence this file's own
+header records, and the same absence `40:125` runs into when it cites two `content/schemas/*.json` files.
+
+**This section deliberately carries no resource `id`, in any of its spellings.** A resource `id` is a
+per-ref fact rather than a property of the vocabulary being granted, so decision material that quotes one
+goes stale the moment an id migration merges; where the material needed to point at a resource it names
+that resource's own field instead, and the six geode rows below are identified by their `effect_name`.
+**The one apparent counterexample is not one:** `common-ore-yield-amplifier` (assignment 11 below) contains
+`common-ore` because it is a proposed behavior token slugged from `UTL-F1`'s own `effect.stat_names` value
+`["Mined common ore"]`, which is byte-identical at `3016fbc` and at `c503db1` — across the very id migration
+that renamed the resources — so it is a behavior token and not a resource reference.
+
+**Citation shorthand.** `40:NNN` is `docs/technical/40-content-data-and-validation.md:NNN`, as everywhere
+above in this file. `22:NNN` is `docs/technical/22-combat-and-weapon-runtime.md:NNN`, used here for the
+first time in this file.
+
+**The population — 141 instances across twelve fields.**
+
+| disposition | instances |
+| --- | --: |
+| transcribed (a phrase already in the tree or in doc 22, slugged) | 100 |
+| assigned (a token this material proposes, with a justification) | 32 |
+| declined (no token can be minted yet, and why) | 8 |
+| omitted (the field has no referent at this level) | 1 |
+| **total** | **141** |
+
+`weapon.targeting_policy` is 15 of those: 8 transcribed, **0 assigned**, 6 declined, 1 omitted. Its
+`assigned` cell is deliberately empty — the last candidate for it was withdrawn (see "the eleven flagged
+inconsistencies", I-3) — and an empty cell there is an acceptable outcome rather than a defect.
+
+### The 32 assignments
+
+#### `utility.behavior_kind` (13)
+
+Shared rule, stated once: the **qualifier is verbatim** from the definition's `effect.stat_names` (which
+hrufl9 renames `affected_stat_names`, top-level and required); only the **head noun** is granted, from a
+three-way choice — `-expander` for a radius, area or capacity, `-amplifier` for a magnitude,
+`-accelerator` for a rate. A reader who rejects the three-way choice can substitute one uniform
+`-modifier` without touching a single qualifier.
+
+1. `UTL-A1` → `weapon-damage-amplifier` — `stat_names` is `["Weapon damage"]` alone, so the one statistic raised fully describes the behavior, and damage is a magnitude rather than a rate or a volume.
+2. `UTL-A2` → `discovery-radius-expander` — `["Discovery radius"]`; naming the statistic is exactly what separates it from `UTL-A1`, with which the struck `additive-percent` derivation would have collapsed it.
+3. `UTL-B1` → `maximum-hull-expander` — `["Maximum Hull Integrity"]`; the token names the ceiling raised, not the `flat-additive-hull` arithmetic that raises it, and a maximum is a capacity.
+4. `UTL-B2` → `forward-extraction-accelerator` — `["Forward extraction rate"]` supplies the head noun itself; "forward" stays because it distinguishes this from `UTL-D2`'s extraction-zone geometry.
+5. `UTL-C1` → `attack-rate-accelerator` — `["Weapon attack rate"]`, a rate; "weapon" is dropped because every weapon-facing utility would carry it. A strict-verbatim reader should prefer `weapon-attack-rate-accelerator`.
+6. `UTL-C2` → `stored-charge-recharger` — the only two-entry list, `["Recharge time","Stored charges"]`, and the only utility with no `stacking_classification` key; the token names the refilling pool, not either statistic alone.
+7. `UTL-D1` → `movement-speed-accelerator` — `["Movement speed"]`; this also keeps the fixture corpus's `extraction-zone-expander` off this ID, which here is not an arguable classification but a wrong one.
+8. `UTL-D2` → `extraction-zone-expander` — `["Extraction-zone radius"]`, a radius, so both halves come from the definition; the fixture corpus guessed this same spelling, which is corroboration and never authority (`40:125`).
+9. `UTL-E1` → `hull-recovery-regenerator` — `["Recovery"]` alone is too bare to name a behavior, so "hull" is borrowed from `value_kind`'s `additive-hull-per-second`, the sibling that says what recovers.
+10. `UTL-E2` → `elite-and-boss-damage-amplifier` — `["Weapon damage to elites and bosses"]`; the conditional audience *is* the behavior, and dropping it makes this token a synonym of `UTL-A1`'s.
+11. `UTL-F1` → `common-ore-yield-amplifier` — `["Mined common ore"]` names a material while the utility modifies a quantity, so "yield" is what makes the token a behavior rather than a resource.
+12. `UTL-F2` → `weapon-area-expander` — `["Weapon area"]`; an area is a volume, and "weapon" is kept — unlike `UTL-C1` — because bare "area" would collide with the extraction-zone and discovery-radius geometries.
+13. `UTL-R1` → `directional-resource-radar` — the only utility whose `stat_names` is **empty**, which is why the struck `directional-bearings` named an output format instead; `40:273`'s "assigned material or ore-only radar exception" licenses "radar".
+
+#### `weapon.rock_targeting_behavior` (15) — both spellings assigned
+
+Criterion, stated once, from `22:90`: does the attack, at the weapon's level *or* at the level of an actor
+it spawns, select a target from enemy candidates? `fallback-when-no-enemy-in-domain` takes all four
+content words from `22:90`'s own sentence ("A rock becomes an eligible fallback only when no valid enemy
+lies in that weapon's acquisition domain"); `incidental-geometry-only` takes "geometric" and "incidentally"
+from the next sentence and adds "only" to mark that this side has no other route to a rock.
+
+14. `W-AC` → `fallback-when-no-enemy-in-domain` — "selects the densest enemy concentration within 12M" plus `fixed_properties.targeting_range_m` is an acquisition domain by definition, so a rock enters only when that domain is empty.
+15. `W-AD` → `fallback-when-no-enemy-in-domain` — "places a field at the current center of the densest enemy concentration within 10M" with its own `targeting_range_m` makes the empty-domain state evaluable.
+16. `W-AE` → `fallback-when-no-enemy-in-domain` — the drones "acquire targets independently", so the domain is the spawned actor's; answering the rock field at the actor level is exactly what its declined `targeting_policy` refuses to do (I-5).
+17. `W-AF` → `fallback-when-no-enemy-in-domain` — "locks to one target in range" plus `fixed_properties.focus_resets_on_target_loss` proves it tracks target identity, which makes "no valid enemy in domain" a real state for it.
+18. `W-BC` → `fallback-when-no-enemy-in-domain` — "selects the nearest enemy within current range" is an explicit selection step, so the fallback applies exactly when that selection returns nothing.
+19. `W-BE` → `fallback-when-no-enemy-in-domain` — pods "fire independently", so the pod's empty domain is the condition; the untargeted deployment step is not the attack, and `22:90` governs attacks.
+20. `W-CD` → `fallback-when-no-enemy-in-domain` — "strikes the nearest target within 8M" plus `initial_acquisition_range_m` names acquisition and domain in one sentence, and `22:90`'s "Rocks never consume enemy-only chain slots" is written for it.
+21. `W-EF` → `fallback-when-no-enemy-in-domain` — "dividing them across valid targets when possible" plus `acquire_range_m: 12` makes the salvo enemy-targeting, so a rock must not eat a missile an enemy could have taken.
+22. `W-AB` → `incidental-geometry-only` — "fires down the mech's current facing line" with no selection step, and `22:45` selects a *direction* rather than a target, so there is no domain that could be empty.
+23. `W-BD` → `incidental-geometry-only` — a mine triggers "on the first valid enemy entering their radius", a proximity trigger rather than an acquisition domain, so a rock inside the radius can only be incidental.
+24. `W-BF` → `incidental-geometry-only` — "four cutters orbit the mech" damaging an enemy "while their collision shapes overlap" is pure geometry, with no candidate list for a fallback to substitute into.
+25. `W-CE` → `incidental-geometry-only` — `damages_every_valid_target_in_radius: true` with `has_target_or_overlap_maximum: false` says the pulse selects nobody, and a weapon that selects nobody has no empty-domain state.
+26. `W-CF` → `incidental-geometry-only` — "movement leaves damaging trail segments", limited only by `simultaneous_segment_overlap_maximum_per_target`, so contact is decided by overlap rather than by acquisition.
+27. `W-DE` → `incidental-geometry-only` — "fires five pellets across a 60° facing cone" and "each pellet ends on its first target": the cone is aimed, the pellets are not, so a rock hit follows from the spread.
+28. `W-DF` → `incidental-geometry-only` — "projects a short damaging field in front of the mech", gated on `activation_movement_speed_threshold_of_base`, is a facing-aligned volume with no candidate list at any level.
+
+#### `branch.behavior_kind` (3)
+
+29. `W-BD-seed-charges` → `seeded-micro-mines` — built from `micro_mines_per_parent_explosion: 4` and `micro_mine_placement: "evenly around the blast edge"`; doc 22's leftover fragment "arming/lifetime" describes the parent mine, though the branch does carry its own `micro_mine_arm_seconds`, so a reader may argue the fragment fits.
+30. `W-DF-momentum-cascade` → `momentum-stacks` — keeps doc 22's noun from `22:58`'s "movement stacks" but takes its qualifier from the branch's own `stack_name: "Momentum"`, because "movement stacks" is shared verbatim with `22:56`.
+31. `W-CF-runaway-wake` → `wake-movement-ramp` — this branch has no stack counter, only `ramp_starts_after_continuous_movement_seconds` and `maximum_reached_at_continuous_movement_seconds`, so "stacks" is inaccurate and "ramp" names the continuous function; flatter alternative `wake-movement-stacks`.
+
+#### `weapon-stat-price-formula.formula_kind` (1)
+
+32. `FORMULA-01` → `quadratic-in-purchase-number` — `formula: "5n(n + 1)"` with `variable.meaning` "purchase number…"; the token names the curve's degree and its variable, leaving the coefficient 5 a parameter. `quadratic-price-curve` is shorter but drops the variable.
+
+### The 8 declinations — what is missing, and what would settle each
+
+- **`weapon.behavior_kind` · `W-AB`.** `22:45`'s "fast finite piercing **projectile/trace** along selected direction" names two members of `22:35` at once (`finite projectile`, `hitscan trace`) and the rule may neither pick one nor concatenate them; both readings are live (`projectile_speed_m_per_s: 30` argues finite projectile, while branch `W-BC-zero-lag-emitter` exists to convert a projectile *to* a trace). The slug rule cannot help — it would happily mint a sixteenth primitive. **Settled by:** an edit to `22:45` replacing `projectile/trace` with one member, or, if the slash is deliberate, a doc-22 sentence permitting two primitives per weapon *plus* a ruling on what `40:311`'s "exactly one registered descriptor" then means.
+- **`weapon.behavior_kind` · `W-DF`.** `22:58`'s "persistent facing-aligned contact capsule/rectangle" matches no member of the fifteen: `persistent field` is placed in the world while `W-DF`'s volume is rigidly attached to facing and gated on movement, and `orbit contact` is an orbiting actor. **Settled by:** a sixteenth member on `22:35` naming a mech-attached contact volume, or a doc-22 sentence filing `W-DF` under `persistent field`. A schema change cannot settle it.
+- **`weapon.targeting_policy` · `W-AF`.** Retention, not acquisition: `22:85` lists "current target retention/hysteresis" as a bullet separate from `22:34`'s six policies, `22:92` says "Beams and homing actors use behavior-specific retention hysteresis", and the file says "locks to one target in range" without saying which. **Settled by:** a seventh member on `22:34` naming retention/hysteresis targeting, or a separately granted `target_retention` field, so the two concerns `22:85` keeps apart are not forced into one token.
+- **`weapon.targeting_policy` · `W-AE`.** The policy belongs to the spawned actor: drones "acquire targets independently" and "Several drones may choose the same target", and `22:48` books "actor transforms and targets" as the persistent state, so `nearest` would be true of the drone and false of the weapon. **Settled by:** a decision on where two-level targeting lives — an `actor_targeting_policy` field, or a nested actor block for weapons that spawn autonomous actors — or a doc-22 sentence stating that a weapon's `targeting_policy` is the policy of whatever actor performs the attack.
+- **`weapon.targeting_policy` · `W-BD`.** No member covers a trigger volume: `facing` fails (the mine is dropped at the mech's own position on a travel interval, no direction chosen), `nearest` fails ("the first valid enemy entering their radius" is temporal, not metric), `radial` fails (the radius is a trigger threshold, not a direction of fire). **Settled by:** a seventh member on `22:34` for proximity or trigger-volume targeting, or a doc-22 sentence that a weapon whose attack is performed by a placed child has no weapon-level policy — which converts this into an omission. **Settle with `W-CF` or not at all.**
+- **`weapon.targeting_policy` · `W-BF`.** `radial` is the near miss and fails on geometry: radial motion runs *along* the radius outward, whereas four cutters at a fixed `orbit_radius_m: 2.2` (`cutter_count: 4`) move tangentially, orthogonal to it; `facing` fails because the orbit is unchanged by where the mech points. **Settled by:** a member on `22:34` for fixed-radius tangential sweep, or a doc-22 sentence declaring `radial` to cover any mech-centred geometry regardless of direction of motion — which must then also rule on `W-CF`.
+- **`weapon.targeting_policy` · `W-CF`.** `facing` fails on direction: a trail is laid at positions the mech has *already occupied*, so its orientation is the mech's history rather than its current aim, and `simultaneous_segment_overlap_maximum_per_target` exists precisely because the two diverge when the mech turns. **Settled by:** a member on `22:34` for path-history geometry, or a doc-22 sentence that `facing` covers direction of travel as well as of aim — which must then also rule on `W-BD`. **Settle with `W-BD` or not at all.**
+- **`weapon.targeting_policy` · `W-EF`** *(newly declined; was assigned `nearest`)*. The weapon's own fields state a **distribution** rule and decline an ordering: `base_behavior` "dividing them across valid targets when possible", branch `W-EF-mirv-saturation.effects.micro_missile_targeting` "They select distinct nearby targets before assigning extras", branch `W-EF-guardian-reserve.effects.reserve_full_behavior` "newly produced missiles launch normally at **any target** in acquisition range". `22:34` has no distribution member. Targeting is also booked at the missile rather than the weapon: `22:59` "**missile target/turn state**", `global_attack_rate_mapping.unaffected_timing` "Missile movement, reserve life, and **targeting**", and `22:92`'s "**homing actors** use behavior-specific retention hysteresis" covers "A missile can retarget if its target dies". The only route to `nearest` was `22:88`'s global tie-break ("then distance squared"), which applies to every target request in the game and so discriminates nothing. **Settled by:** *either* an edit to `content/weapons/W-EF.json`'s `base_behavior` naming which target a missile takes (which converts the site to a **transcription** outright), *or* a member on `22:34` for multi-target salvo distribution, *or* the same two-level-actor decision as `W-AE` and `W-BE`, since `22:59` books target state at the missile.
+
+**The omission (1) — `weapon.targeting_policy` · `W-BE`.** Not a declination. Pods "fire independently" and
+`22:52` books "creation order, life, target/fire state" as the pod's state, so this is a positive finding
+that the pod owns the targeting and the weapon-level field has no referent — a claim about where the field
+belongs, not about what the vocabulary lacks. **Settled by** the same decision as `W-AE`.
+
+### The 100 transcription sources as text, under six rules
+
+Every phrase below is quoted verbatim from `3016fbc`. Where a rule maps many phrases mechanically the rule
+is stated once. **All slugs are the character rules of the next subsection applied to the quoted phrase and
+to nothing else.**
+
+**R-A — in-field retokenisation (15).** The source field is the very field being minted, so the only act is
+the slug rule. `enemy.behavior_kind`, `boss.behavior_kind`, `enemy.specialist_attack.kind`.
+
+| verbatim source phrase | token | instances |
+| --- | --- | --- |
+| `pure contact pursuer` | `pure-contact-pursuer` | `EN-01`…`EN-05`, `EN-07`…`EN-10` (9) |
+| `pursuit and contact plus one telegraphed straight projectile` | `pursuit-and-contact-plus-one-telegraphed-straight-projectile` | `EN-06` (1) |
+| `persistent giant pursuer with exactly one additional behavior` | `persistent-giant-pursuer-with-exactly-one-additional-behavior` | `BOSS-01`…`BOSS-04` (4) |
+| `telegraphed straight non-homing projectile` | `telegraphed-straight-non-homing-projectile` | `EN-06` `specialist_attack.kind` (1) |
+
+**R-B — sibling name field in the same file (12).** `mech.inherent_trait.behavior_kind` from that trait's
+`name`; `resource.resonance_behavior.behavior_kind` from that block's `effect_name`. **Both of these are
+the two call sites with zero fixture coverage** — see their own rows in "the two optional fields" below,
+where the coverage fact is recorded per row rather than as a footnote.
+
+The six mech traits: `Accelerated Feed` → `accelerated-feed` (`MCH-01`) · `Heavy Calibration` →
+`heavy-calibration` (`MCH-02`) · `Industrial Extractors` → `industrial-extractors` (`MCH-03`) ·
+`Field Geometry` → `field-geometry` (`MCH-04`) · `Reinforced Chassis` → `reinforced-chassis` (`MCH-05`) ·
+`Overdrive Treads` → `overdrive-treads` (`MCH-06`).
+
+The six geode resonance effects, one per geode resource and named by `effect_name` rather than by any
+resource `id`: `Focused Assault` → `focused-assault` · `Dense Plating` → `dense-plating` ·
+`Charged Payloads` → `charged-payloads` · `Vector Lock` → `vector-lock` · `Synchronized Aggression` →
+`synchronized-aggression` · `Overclocked Motion` → `overclocked-motion`.
+
+**Both halves are one-time authoring-input derivations, and the mech half is the stronger case.** At
+hrufl9, `mech.schema.json` replaces `inherent_trait.name` with `name_key` under
+`additionalProperties: false`, so the mech source field **does not exist after the mint** — the same
+constraint the relic hooks carry. The resource source `effect_name` **does** survive (declared and
+required on hrufl9's `resource.schema.json`). Neither may ever be written as a validator-time
+recomputation.
+
+**R-C — the whole `behavior_registration.hook` string slugged into one `relic.behavior_kind` (10).**
+Invents zero names, asserts no hook vocabulary, asserts no one-hook-per-relic shape. Each string is also
+byte-identical to the left cell of doc 22's hook table (`22:154`–`22:163`), so both sources are available
+and an edit to either is detectable. `behavior_registration` does not survive the mint — one-time
+derivation only. 10 of 10 slugs distinct, 10 of 10 match the pattern.
+
+| verbatim hook | token | relic |
+| --- | --- | --- |
+| `activation-rate transformation and opposite geometry` | `activation-rate-transformation-and-opposite-geometry` | `REL-01` |
+| `delayed transform history and attack duplication` | `delayed-transform-history-and-attack-duplication` | `REL-02` |
+| `targeting replacement and facing conversion` | `targeting-replacement-and-facing-conversion` | `REL-03` |
+| `cadence/damage/area/duration transformation` | `cadence-damage-area-duration-transformation` | `REL-04` |
+| `output capture and global beat release` | `output-capture-and-global-beat-release` | `REL-05` |
+| `per-hit pull and clustered target multiplier` | `per-hit-pull-and-clustered-target-multiplier` | `REL-06` |
+| `direct-damage reduction and generational death explosion` | `direct-damage-reduction-and-generational-death-explosion` | `REL-07` |
+| `position-history heat and conditional modifiers/self-damage` | `position-history-heat-and-conditional-modifiers-self-damage` | `REL-08` |
+| `mining-rate and conditional enemy-speed transformation` | `mining-rate-and-conditional-enemy-speed-transformation` | `REL-09` |
+| `weapon-slot activation gate and rotating phase` | `weapon-slot-activation-gate-and-rotating-phase` | `REL-10` |
+
+**R-D — `weapon.behavior_kind` is the member of `22:35` that doc 22's own "Primary runtime model" cell
+names (13).** `22:35` verbatim, the stated set: `finite projectile, homing projectile, hitscan trace, beam,
+sector volley, chain, circle pulse, delayed impact, persistent field, trail segment, orbit contact,
+deployable, drone, mine, and explosion`. Matching is by the model cell, never by the weapon's flavour text.
+
+`choose ground target, schedule delayed circular impact` → `delayed-impact` (`W-AC`) ·
+`targeted persistent circle with damage ticks and inward pull` → `persistent-field` (`W-AD`) ·
+`three persistent autonomous actors that reposition and fire` → `drone` (`W-AE`) ·
+`continuous target lock and damage-rate accumulator` → `beam` (`W-AF`) ·
+`repeated nearest-target projectile` → `finite-projectile` (`W-BC`; the file adds "continues on its fired
+trajectory **without homing**") · `distance-traveled production, arming, proximity detonation` → `mine`
+(`W-BD`) · `timed deployment of capacity-limited persistent turrets` → `deployable` (`W-BE`) ·
+`four analytic orbit actors with per-target contact cadence` → `orbit-contact` (`W-BF`) ·
+`discrete chain chosen from spatial candidates` → `chain` (`W-CD`) ·
+`periodic mech-centered circle` → `circle-pulse` (`W-CE`) ·
+`distance-traveled trail-segment production` → `trail-segment` (`W-CF`) ·
+`facing/targeted five-projectile sector volley` → `sector-volley` (`W-DE`) ·
+`four-missile homing salvo` → `homing-projectile` (`W-EF`).
+Granted but unused members: `hitscan trace`, `explosion`. `W-AB` and `W-DF` are the two declinations.
+
+**R-E — `weapon.targeting_policy` is the member of `22:34` whose own word appears in a source sentence
+(8).** `22:34` verbatim, the stated set: `nearest, priority, concentration, facing, radial, and
+fallback-rock targeting;`. The test is the member *word*, present, not a paraphrase.
+
+`fires down the mech's current facing line` → `facing` (`W-AB`) ·
+`selects the densest enemy concentration within 12M` → `concentration` (`W-AC`) ·
+`the densest enemy concentration within 10M` → `concentration` (`W-AD`) ·
+`selects the nearest enemy within current range` → `nearest` (`W-BC`) ·
+`strikes the nearest target within 8M` → `nearest` (`W-CD`) ·
+`emits a radial pulse centered on the mech` → `radial` (`W-CE`) ·
+`fires five pellets across a 60° facing cone` → `facing` (`W-DE`) ·
+`persistent facing-aligned contact capsule/rectangle` (`22:58`) **and** `pushed along the mech's facing
+direction` (the definition's own `base_behavior`) → `facing` (`W-DF`).
+Granted but unused members: `priority`, `fallback-rock`.
+
+**R-F — `branch.behavior_kind` is the branch obligation fragment in doc 22's third column, slugged (42).**
+Each weapon row lists exactly three fragments after the `;`, matched to the three branch definitions
+semantically, and each match is confirmed against the branch's own `effects` keys. 42 of 45; the three
+mismatches are assignments 29–31 above.
+
+| weapon | fragment → token, three per row |
+| --- | --- |
+| `W-AB` (`22:45`) | `shockwaves` → `shockwaves` (fracture-lance) · `charge-by-travel` → `charge-by-travel` (kinetic-capacitor) · `unlimited pierce` → `unlimited-pierce` (unbounded-bore) |
+| `W-AC` (`22:46`) | `seeded secondary blasts` → `seeded-secondary-blasts` (saturation-cascade) · `lingering field` → `lingering-field` (interdiction-payload) · `danger-close center replacement` → `danger-close-center-replacement` (danger-close-protocol) |
+| `W-AD` (`22:47`) | `delayed echo` → `delayed-echo` (echo-well) · `end burst/launch` → `end-burst-launch` (gravity-slingshot) · `collection mass and singularity cycle` → `collection-mass-and-singularity-cycle` (singularity-forge) |
+| `W-AE` (`22:48`) | `temporary clone cap` → `temporary-clone-cap` (replicator-swarm) · `shared focus` → `shared-focus` (wolfpack-protocol) · `rotating containment links` → `rotating-containment-links` (containment-lattice) |
+| `W-AF` (`22:49`) | `memory decay` → `memory-decay` (coherence-memory) · `exposure debuff` → `exposure-debuff` (target-designator) · `facing beam hysteresis` → `facing-beam-hysteresis` (cutting-vector) |
+| `W-BC` (`22:50`) | `hitscan replacement` → `hitscan-replacement` (zero-lag-emitter) · `recent-hit preference/slow` → `recent-hit-preference-slow` (suppressive-sequencer) · `fixed lateral pair` → `fixed-lateral-pair` (broadside-oscillator) |
+| `W-BD` (`22:51`) | `selective population trigger` → `selective-population-trigger` (selective-detonators) · `hunter state` → `hunter-state` (hunter-mines) · *third fragment `arming/lifetime` is assignment 29* |
+| `W-BE` (`22:52`) | `overclock count` → `overclock-count` (battery-overclock) · `guardian priority` → `guardian-priority` (guardian-firmware) · `anchored bastion packing` → `anchored-bastion-packing` (forward-bastion) |
+| `W-BF` (`22:53`) | `flywheel stacks` → `flywheel-stacks` (kinetic-flywheel) · `projectile interception` → `projectile-interception` (deflection-ring) · `delayed-path reaper` → `delayed-path-reaper` (tethered-reaper) |
+| `W-CD` (`22:54`) | `unlimited dense chain` → `unlimited-dense-chain` (total-conduction) · `hard control` → `hard-control` (disruption-current) · `moving ball-lightning actor` → `moving-ball-lightning-actor` (ball-lightning-projector) |
+| `W-CE` (`22:55`) | `victim charge` → `victim-charge` (critical-mass-cycle) · `push/slow` → `push-slow` (kinetic-vent) · `long-charge supernova cycle` → `long-charge-supernova-cycle` (supernova-cycle) |
+| `W-CF` (`22:56`) | `enemy-carried trails` → `enemy-carried-trails` (carrier-ignition) · `loop detection/consumption` → `loop-detection-consumption` (circuit-closure) · *third fragment `movement stacks` is assignment 31* |
+| `W-DE` (`22:57`) | `all-target cone wave` → `all-target-cone-wave` (saturation-choke) · `once-per-volley control` → `once-per-volley-control` (concussive-fan) · `focal convergence` → `focal-convergence` (focal-array) |
+| `W-DF` (`22:58`) | `transferred launched-enemy collision` → `transferred-launched-enemy-collision` (impact-transfer) · `stationary ring` → `stationary-ring` (siege-anchor) · *third fragment `movement stacks` is assignment 30* |
+| `W-EF` (`22:59`) | `split children` → `split-children` (mirv-saturation) · `reserve queue` → `reserve-queue` (guardian-reserve) · `rotating radial spiral` → `rotating-radial-spiral` (spiral-barrage) |
+
+**Row count check.** 15 + 12 + 10 + 13 + 8 + 42 = **100**, which is the transcribed cell of the population
+table above.
+
+### The granted character rules, each with the case that forces it
+
+No document mandates any of this. Every clause is granted, and the grant should say so.
+
+1. **Space becomes `-`.** *Forced by* every one of the 141 sources; shortest case `pure contact pursuer` (`EN-01`), which without the rule is not a token at all. The one clause no reader will contest.
+2. **`/` becomes `-` — replace, never drop, never interpret.** *Forced by* `REL-04`'s `cadence/damage/area/duration transformation` (three slashes; without the rule the slug fails the pattern outright) **and** by `REL-08`'s `position-history heat and conditional modifiers/self-damage`, where the slash joins a compound rather than separating alternatives. Two forcing cases for two different reasons, and **the rule is deliberately blind to the difference**: `cadence-damage-area-duration-transformation` reads as four things and `modifiers-self-damage` as two, and the token cannot say which. A reader who wants that distinction must ask for a different field, not a different slug rule. Forced again four times in the branch set — `end burst/launch`, `recent-hit preference/slow`, `push/slow`, `loop detection/consumption`.
+3. **Capitals become lowercase.** *Forced by* `Accelerated Feed` (an `inherent_trait.name`), `Focused Assault` (a `resonance_behavior.effect_name`), and `["Maximum Hull Integrity"]` (`UTL-B1`'s `effect.stat_names`). **Not** forced by the ten relic hooks or by any doc-22 fragment — all of those are already lowercase — so the relic and branch tranches cannot validate this clause and the mech, resource and utility tranches must.
+4. **An existing `-` passes through unchanged and is never doubled.** *Forced by* six of the ten hooks (`activation-rate`, `per-hit`, `direct-damage`, `position-history`, `mining-rate`, `weapon-slot`), by `["Extraction-zone radius"]` (`UTL-D2`), and by ten branch fragments (`charge-by-travel`, `danger-close…`, `recent-hit…`, `delayed-path…`, `all-target…`, `once-per-volley…`, `enemy-carried…`, `moving ball-lightning…`, `long-charge…`, `transferred launched-enemy…`). A naive "replace non-alphanumerics with `-`" reading is fine; an "insert `-` at word boundaries" reading yields `activation--rate` and fails the pattern.
+5. **Runs of separators collapse to one; leading and trailing separators are stripped.** *Forced by* **nothing in the corpus** — no source string in any of the twelve fields has adjacent, leading or trailing separators. **This clause is DEFENSIVE and must be labelled as such in the grant**, so that no reader hunts for the case that motivated it.
+6. **No clause is granted for any other character**, because none is needed: across all 141 sources the only non-alphanumerics are space, `/` and `-`. No digit-initial string occurs (the pattern requires `^[a-z]`), no apostrophe, no non-ASCII. **Two near-misses that must never become token sources:** a geode resource's `short_modifier` contains a Unicode minus (`−20%`), and `W-DE`'s `base_behavior` contains `60°`. If either field is ever promoted to a source, this clause list is incomplete.
+
+The pattern being satisfied throughout, identically on all twelve fields:
+`^[a-z][a-z0-9]*(-[a-z0-9]+)*$`.
+
+### The eleven flagged inconsistencies — these go into the grant as flagged, not smoothed
+
+- **I-1.** The ruling that hrufl9 is the transcription source has an **empty antecedent**: no definition on that ref carries a minted behavior token — every one lives under `tests/**/Fixtures/` — and `40:125` denies fixture strings authority anyway ("a token that has only ever appeared in a schema `enum`, a code comment, or a chat log carries no authority here"). An earlier pass applied that ruling five times; all five applications are withdrawn. What hrufl9 legitimately supplies is the grammar and the field names, not tokens.
+- **I-2.** hrufl9's `relic.schema.json` says a relic-to-hook mapping "is therefore not derivable today", yet the same sentence's tail permits the slug ("this token asserts neither a hook vocabulary nor a one-hook-per-relic shape"). The grant must **quote the tail clause, not the head**, or a reader who quotes only the head will conclude the mint defied the schema author.
+- **I-3.** `W-EF` was assigned under one ruling and declined under another; **the discriminator test resolves it to declined**, which is what empties `weapon.targeting_policy`'s `assigned` cell. An empty `assigned` cell is an acceptable outcome, not a defect.
+- **I-4.** `22:58` is unusable for one of `W-DF`'s fields and authoritative for another: its `behavior_kind` is declined because the eleven words match no member of `22:35`, while `targeting_policy` transcribes `facing` from the same words. This is weaker than previously stated — `W-DF`'s own `base_behavior` also contains "pushed along the mech's **facing** direction", so the site survives on the definition and not only on doc 22.
+- **I-5.** The two-level-actor finding is answered on `rock_targeting_behavior` and refused on `targeting_policy` for the **same four** weapons (`W-AE`, `W-BE`, `W-AF`, and now `W-EF`): each gets a rock token reasoned at the spawned actor's or the retained target's level, while its policy is declined or omitted because the weapon level is the wrong level. Defensible, because `22:90` is written about *attacks* and `22:34` about *weapons* — but the grant must say so, or one defect appears to get two dispositions.
+- **I-6.** The framing paragraph's citation and count were both wrong: the compiler assertion is at **`40:311`**, not `40:307`, and it asserts the one-descriptor check over **seven** kinds of thing (`behavior_kind`, targeting policy, formula, modifier hook, formation, effect, presentation recipe), two of which are outside this family and one of which is not the relic hook. State it as **four granted, seven asserted, zero overlap** — stronger, and true.
+- **I-7.** Five of the twelve fields end with a vocabulary `40:127` will not call grounded (`branch`, `relic`, `utility`, `mech.inherent_trait`, `resource.resonance_behavior` — 80 of the 141 instances): "A vocabulary is **grounded** only when the document it cites **states the set**. A resolving citation is necessary and not sufficient." Use doc 40's own "Token provenance" column (`40:159`) and record `branch` as fragments rather than as a vocabulary.
+- **I-8.** The utility head nouns `-expander`, `-amplifier` and `-accelerator` appear in no document and in no definition — the only place in the package where a morpheme has no source at all. Only the qualifiers are transcribed. The utility vocabulary must not be presented on the same footing as `enemy.behavior_kind`'s, whose tokens are the authored strings themselves.
+- **I-9.** `boss.behavior_kind`'s single token is shared by all four bosses, so `40:311`'s "exactly one registered descriptor" gives four bosses with differing abilities one descriptor whose parameter schema must then carry the ability. Correct as a transcription — what differs per boss lives in the excluded field `boss.ability.kind` — but a registry-shape consequence to raise before the grant lands, not after the manifest is emitted.
+- **I-10.** The registry namespace is undeclared. `SemanticCheck.BehaviorToken` applies one grammar with **no per-field namespace**, and `40:311` speaks of "every content `behavior_kind`" as one population, so `facing` as a targeting policy and any future `facing` as a behavior kind would be one descriptor. No collision exists today (`facing`, `facing-beam-hysteresis` and `targeting-replacement-and-facing-conversion` are distinct). The grant must say whether the registry is one namespace or twelve: it reads as one and is authored as twelve.
+- **I-11.** Four survivors, one line each: `22:34`'s unused `fallback-rock` member covers the same distinction as the whole of `rock_targeting_behavior`, which `22:86` frames as a **boolean** ("whether destructible rocks are fallback candidates") rather than as a token pair; granting lower-kebab on twelve fields settles the eight camelCase value tokens' grammar by implication unless the grant says it binds only the fields it names (those eight are measured in Ruling 39 above, and Ruling 39's reason for leaving them alone still stands); and `40:125` still cites two `content/schemas/*.json` files that exist on no ref but hrufl9 — a defect doc 40 now names in its own text, which is the model to copy.
+
+**Ruling A, offered to resolve I-4 and the two "movement stacks" assignments.** That `22:58` names a
+movement effect usable as a `behavior_kind` source, **and** that its phrase "movement stacks" fails to
+uniquely identify a behavior, are **two different properties of one line, both true**: the line is a usable
+source for `W-DF`'s fields, while the three-word fragment it shares verbatim with `22:56` cannot name two
+different branches. Non-uniqueness of a fragment is not unusability of the line.
+
+**Ruling B, offered to resolve I-10.** The grammar check is **field-blind** — `SemanticCheck.BehaviorToken`
+is a `TokenGrammar.IsWellFormed` call emitting `BehaviorTokenMalformed`, with no vocabulary parameter and
+no field parameter. Per-field vocabularies are therefore a **documentary convention that no check
+enforces**. The existing instance is `boss.behavior_kind`'s one token four ways: nothing in the twelve
+schemas prevents it and nothing detects it.
+
+### The two optional fields — values ready for coupling, with coverage recorded per row
+
+Both fields already have a reader and a guard, and **neither guard has ever run**. The coverage fact is
+recorded **inside each row**, deliberately and not as a footnote, because a reader who takes one row on its
+own must not come away believing the vocabulary is enforced there. Call sites, guards, `required` lists and
+fixture counts in this table were measured at hrufl9 (`551d0be`), not at `3016fbc`; the tokens were
+measured at `3016fbc`.
+
+| field | reader, pointer and guard (at `551d0be`) | fixture coverage (at `551d0be`) | tokens ready (at `3016fbc`) | how it should land |
+| --- | --- | --- | --- | --- |
+| `mech.inherent_trait.behavior_kind` | `MechDefinition.cs`, pointer `/inherent_trait/behavior_kind`, guarded by `if (trait.BehaviorKind is not null)`; absent from `mech.schema.json`'s `inherent_trait.required`, which is `[name_key, affected_statistic, modifier_kind, modifier_value]` | **UNEXERCISED — zero fixture coverage.** All four mech fixtures carry an `inherent_trait` block and not one of them sets `behavior_kind`, so this call site has never run and nothing in the corpus would catch a wrong token here | **6**, from `inherent_trait.name`: `accelerated-feed`, `heavy-calibration`, `industrial-extractors`, `field-geometry`, `reinforced-chassis`, `overdrive-treads` — 6 of 6 distinct, 6 of 6 match the pattern | as **populated optional fields**; `required` is **not** being flipped |
+| `resource.resonance_behavior.behavior_kind` | `ResourceDefinition.cs`, pointer `/resonance_behavior/behavior_kind`, guarded by `if (resonance.BehaviorKind is not null)`; optional by its own schema prose | **UNEXERCISED — zero fixture coverage.** All five resource fixtures carry a `resonance_behavior` block and not one of them sets `behavior_kind`, so this call site has never run and nothing in the corpus would catch a wrong token here | **6**, from `resonance_behavior.effect_name`: `focused-assault`, `dense-plating`, `charged-payloads`, `vector-lock`, `synchronized-aggression`, `overclocked-motion` — 6 of 6 distinct, 6 of 6 match the pattern; the two currency resources correctly have no `resonance_behavior` block and so contribute none | as **populated optional fields**; `required` is **not** being flipped |
+
+**On flipping `required`, for the schema owner and for nobody else.** hrufl9's `resource.schema.json` says
+the field "becomes required in the change that mints the vocabulary". **That precondition is now met** —
+values exist for all six instances — so requiring the field in the same change would redden nothing. The
+same is true of the mech field. This is reported, not proposed; the decision is the schema owner's.
+
+**The consequence of zero coverage, worth one sentence in the grant.** These are the only two of the twelve
+call sites whose guard has never been exercised, so they are the two places where a token that is wrong, or
+a guard that misbehaves on an absent field, would not be caught by the existing corpus — which is why the
+two rows above carry the fact themselves.

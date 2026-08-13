@@ -19,16 +19,12 @@
   },
   "installment_duration_seconds": 1.5,
   "installment_count": 10,
-  "total_depletion_seconds": 15,
   "total_payout_per_seam": {
-    "resource": "common ore",
-    "amount": 100
+    "resource": "common ore"
   },
   "total_payout_per_map": {
-    "resource": "common ore",
-    "amount": 2000
+    "resource": "common ore"
   },
-  "total_uninterrupted_extraction_per_map_seconds": 300,
   "progress_decay": {
     "grace_seconds": 0.5,
     "decay_rate_multiplier_of_forward_rate": 4,

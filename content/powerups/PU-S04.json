@@ -58,8 +58,7 @@
         "text": "1 per run",
         "revival_charges_per_run": 1
       },
-      "price_hyper_gold": 500,
-      "cumulative_cost_hyper_gold": 500
+      "price_hyper_gold": 500
     }
   ],
   "revival": {

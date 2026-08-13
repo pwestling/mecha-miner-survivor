@@ -1,5 +1,5 @@
 {
-  "id": "hyper-gold",
+  "id": "RSC-08",
   "schema_version": 1,
   "content_version": 1,
   "status": "enabled",
@@ -7,6 +7,7 @@
   "tags": [],
   "source_refs": [
     "GDD-PROGRESSION#progression-layers",
+    "resource_class: TDD-CONTENT-DATA#minted-value-vocabularies",
     "sources[]: GDD-MINING#hyper-gold-sites",
     "GDD-PROGRESSION#cross-run-progression-loop"
   ],
@@ -14,7 +15,7 @@
   "availability": "100 from each of three completion-only 45-second threat-beacon sites",
   "primary_purpose": "Buy permanent numerical power and permanent content or option unlocks",
   "persistence": "Banked at timed mission extraction; forfeited on death beforehand",
-  "resource_class": "cross-run progression resource",
+  "resource_class": "hyper-gold",
   "inventory_scope": "cross-run",
   "sources": [
     {
@@ -22,18 +23,15 @@
       "sites_per_map": 3,
       "extraction_seconds": 45,
       "award_per_completion": 100,
-      "partial_payout": false,
-      "total_per_map": 300
+      "partial_payout": false
     },
     {
       "source": "interval boss drop",
       "award_per_boss": 25,
       "boss_count": 4,
-      "total_per_run": 100,
       "requires_mining_progress": false
     }
   ],
-  "run_ceiling": 400,
   "secured_only_by_mission_extraction": true,
   "increased_by_power_ups": false
 }

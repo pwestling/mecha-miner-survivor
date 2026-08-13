@@ -34,8 +34,7 @@
   "movement_speed": {
     "percent_of_mech_base_speed": {
       "percent": 50
-    },
-    "world_speed_m_per_s": 1.5
+    }
   },
   "contact_damage": 38,
   "control_resistance": {

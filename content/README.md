@@ -104,10 +104,16 @@ will *own* each directory, not work this branch closed.
 
 **138 definition files plus `content/localization/en.json`** — 139 `*.json` files under `content/` in
 total. The two numbers are different things and are stated separately on purpose. The definition count
-is what the per-directory rows above sum to, and **138 is what the verifier asserts**, as
-`EXPECTED_CONTENT_DEFINITION_JSON_FILES`: `A21`'s inventory covers the population `load_definitions()`
+is what the per-directory rows above sum to, and **138 is what the verifier asserts** — no longer as a
+literal, but as the number of rows in the `A28` manifest
+(`src/MechaMiner.Tools/ContentImport/content-definition-manifest.txt`), which records the
+`(path, id)` pair of every definition. `A21`'s inventory covers the population `load_definitions()`
 loads, which is every `*.json` under `content/` except those beneath a `NON_DEFINITION_DIRS` directory
-(`localization`, `schemas`). The 139 total is asserted by nothing; it is the whole-tree number, and the
+(`localization`, `schemas`). `A28` is what catches a definition being **renamed inside its own
+directory** or having **its `id` edited**, neither of which changes any count: regenerate the manifest
+with `MECHAMINER_GOLDEN_UPDATE=1`, which rewrites it and still fails, then review and commit the diff.
+The manifest is an edit tax that makes such a change loud in review — it is not evidence that any path
+or `id` is correct. The 139 total is asserted by nothing; it is the whole-tree number, and the
 whole tree is what `A26` scans for `null`, which is why `en.json` leaves the definition count without
 losing coverage. `content/` also holds three Markdown files (this one, `transcription-notes.md` and
 `quote-verification-audit.md`) which are documentation, not content, and are counted in neither figure.
@@ -406,8 +412,29 @@ What to run once the schemas land, in this order:
    `docs/technical/40-content-data-and-validation.md:120`).
 3. `DAT-004` behavior-registry validation — every `behavior_kind`, targeting policy, formula, modifier
    hook, formation, and effect must resolve to exactly one registered descriptor
-   (`CTR-CNT-002`, `docs/technical/115-component-contract-and-schema-registry.md:62`). No behavior
-   kinds are named in this tree yet; they must be assigned with the registry.
+   (`CTR-CNT-002`, `docs/technical/115-component-contract-and-schema-registry.md:62`). **No registry
+   token has been minted for a `behavior_kind`, but the field is not greenfield: 14 sites already
+   hold a prose sentence where a token will go**, so this is a 14-site migration rather than a fresh
+   authoring job. All 14 are `behavior_kind` at the top level of an enemy or boss: the ten ordinary
+   enemies (`EN-01`–`EN-10`) and the four bosses (`BOSS-01`–`BOSS-04`). Nine read
+   `"pure contact pursuer"`, `EN-06` reads
+   `"pursuit and contact plus one telegraphed straight projectile"`, and all four bosses read
+   `"persistent giant pursuer with exactly one additional behavior"`. Counting the other five spaces
+   the same sentence names, **65 value positions across the six spaces hold prose and 24 hold a
+   single token** — the 24 being `effect.value_kind` on all 13 utilities, `unlocks.kind` on the six
+   option unlocks, and five of the seven `spawn_formations[].formation` names. That 65 is an upper
+   bound on sites to annotate, not a settled classification: the registry vocabulary is being
+   re-keyed by field space *and* token together, because a flat namespace has real collisions in this
+   tree. Two, measured here rather than assumed: `UTL-E1` carries the identical string
+   `"Recovery sources add in Hull Integrity per second."` at both `effect.stacking_classification`
+   and `catalog_wide_rules.modifier_and_timing_rules[2]`, so one string is simultaneously an effect
+   classification and a catalog-wide rule; and the bare value `"damage"` appears at **36 sites under
+   7 distinct leaf names** (`ore_upgradeable_stats[].name`, `.unit`,
+   `ore_upgradeable_stat_labels.labels[]`, `unchanged_stats[]`, `clone_inherits_current[]`,
+   `snapshot_at_creation[]`, `echo_uses_full_strength_current_values[]`), meaning a stat name, a
+   unit, a display label and a snapshot-field enumerator. **None of the 14 values, and none of the
+   65, are changed here.** Annotating before the field spaces are settled would be annotate-twice
+   churn; this entry is the record of the size, not a migration.
 4. `DAT-005` cross-reference, semantic, analytical, localization, asset, and source-trace validators.
    Asset and presentation checks will fail until `content/presentation/` exists.
 5. `DAT-006` bundle compile and hash — `generated/content.bundle.json` plus

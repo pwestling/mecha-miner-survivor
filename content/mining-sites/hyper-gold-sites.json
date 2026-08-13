@@ -21,8 +21,7 @@
   },
   "partial_payout": "none; no partial Hyper Gold is granted merely for building progress",
   "total_payout_per_map": {
-    "resource": "Hyper Gold",
-    "amount": 300
+    "resource": "Hyper Gold"
   },
   "progress_decay": {
     "grace_seconds": 0.5,

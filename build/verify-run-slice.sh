@@ -205,20 +205,22 @@ readonly ROSTER_SIZE_AT_42A5C83=6
 # control's fixture produced.
 #
 #   The pin counts the in-band negative controls this script emits. It was 36 as counted at
-#   42a5c83 and is 45 as counted at THIS commit, which added nine (§ 6g's three, § 6h's
-#   three, § 6c's empty-roster case at both log sizes, and the metadata leg of the
-#   no-mutation measurement, which used to be one finding and is now two). Nothing derives
-#   it: it is restated by hand whenever a control is added or removed, in the same commit
+#   42a5c83, 45 as counted at e1ce969 (which added nine: § 6g's three, § 6h's three, § 6c's
+#   empty-roster case at both log sizes, and the metadata leg of the no-mutation
+#   measurement, which used to be one finding and is now two), and is 46 as counted at THIS
+#   commit, which added one - § 6d's chatty-stub row, the control that proves the version
+#   read takes the LAST NON-EMPTY stdout line and not the first. Nothing derives it: it is
+#   restated by hand whenever a control is added or removed, in the same commit
 #   that adds or removes one. A mismatch therefore means one of two things - a control was
 #   added and the total was not restated, which is bookkeeping, or a control that used to
 #   run has stopped running, which is the failure this pin exists to catch and which nothing
-#   else here would notice. Read a bare 45 with no ref stamp as a rumour rather than a
+#   else here would notice. Read a bare 46 with no ref stamp as a rumour rather than a
 #   measurement; the stamp is what makes the next reader able to tell a stale count from a
 #   regression.
 #
-#   HOW 45 IS REACHED AT RUNTIME, AND WHY NO GREP FINDS IT. There are 13 literal
+#   HOW 46 IS REACHED AT RUNTIME, AND WHY NO GREP FINDS IT. There are 13 literal
 #   control_pass/control_fail call sites and 7 literal `controls_run` increment sites in
-#   this file, and they multiply out to 45 emissions because most of them sit inside a
+#   this file, and they multiply out to 46 emissions because most of them sit inside a
 #   table-driven loop and most of those loops run each row twice, once at fixture size and
 #   once at ~300 KB. One of the 13 sites - § 6h's unavailability branch, which reports three
 #   unproved controls if the throwaway repository cannot be created - does not run on a
@@ -228,7 +230,7 @@ readonly ROSTER_SIZE_AT_42A5C83=6
 #     6a launch evidence       4 rows x 2 log sizes  =  8
 #     6b assertions_run        4 rows x 2 sizes      =  8
 #     6c registry roster       5 rows x 2 sizes      = 10
-#     6d engine pin            3 rows               =  3
+#     6d engine pin            4 rows               =  4
 #     6e exit-code conduit     3 rows x 2 attempts   =  6
 #     6f coherent scene        1                    =  1
 #     6f absent scene          1                    =  1
@@ -236,7 +238,7 @@ readonly ROSTER_SIZE_AT_42A5C83=6
 #     6h mutation predicate    3 real-repo cases    =  3
 #     6i the real-tree probe   2 legs               =  2
 #                                                     --
-#                                                     45
+#                                                     46
 #
 #   SO DO NOT "FIX" THIS CONSTANT FROM A GREP. `grep -c control_pass` over this file returns
 #   9 - six emitter call sites plus three prose mentions, two of them inside this very
@@ -246,7 +248,7 @@ readonly ROSTER_SIZE_AT_42A5C83=6
 #   control set cheap to extend. If this pin goes red, count the emissions in a real run's
 #   log - `grep -c '\[control-fixture\] control:'` returns exactly this number on a healthy
 #   run - before touching the constant.
-readonly EXPECTED_CONTROLS=45
+readonly EXPECTED_CONTROLS=46
 
 # The classes this script can return, named from src/MechaMiner.Tools/Cli/ExitClass.cs so
 # the shell side and the C# side cannot drift apart silently: InvalidInvocation = 2,
@@ -435,9 +437,21 @@ compare_section_roster() {
 # VER-PRE-001-007(b) as a function, so § 6 can drive it over injected candidates without
 # breaking this machine's PATH. $1 candidate executable. Prints one problem per line and
 # returns the count; on success prints the version string it observed.
+#
+# THIS GATE IS NOT THE FIRST OR ONLY CHECK OF THE GODOT PIN, said plainly because the
+# opposite is an easy thing to assume from a gate that opens by checking it:
+# ToolchainInspector.ProbeGodot compares the same prefix, DoctorVerb reports it,
+# BootstrapVerb runs doctor after installing (BootstrapVerb.cs:113, "DoctorVerb.Report"),
+# and build/verify-verbs.sh drives that path over a deliberately substituted godot. What
+# this gate uniquely does is check the pin INSIDE THE GATE, before § 1 launches anything -
+# which is still worth doing, because every section below reads evidence a run produces and
+# a gate that skips the pin turns "this machine lacks the pinned toolchain" into a list of
+# validation failures about the repository. It is an independent, early, in-band check; it
+# is not the sole one, and a reader who deletes doctor's check because this exists has
+# removed the one a developer actually reads.
 classify_engine() {
   local candidate="$1"
-  local version status=0
+  local version status=0 chatter="" stderr_file line trimmed last='(no output)'
 
   if ! command -v "${candidate}" >/dev/null 2>&1; then
     printf 'the pinned Godot executable %q was not found. Discovery order is MECHAMINER_GODOT then godot on PATH (build/toolchain.json). This is class %s, missing or mismatched pinned environment, and NOT class %s: a gate that returns a validation class for a broken toolchain has told the reader to fix the repository when the machine is what is broken\n' \
@@ -445,20 +459,67 @@ classify_engine() {
     return 1
   fi
 
-  # No `| head -1` on the version read: under pipefail a downstream command that exits
-  # first turns a healthy read into 141. Take the first line by parameter expansion.
-  version="$("${candidate}" --version 2>&1)" || status=$?
+  # THIS INVOCATION DELIBERATELY MATCHES ToolchainInspector.ProbeGodot's, ARGUMENT FOR
+  # ARGUMENT AND LINE-PICK FOR LINE-PICK, and the match is the point rather than a
+  # coincidence of style. ProbeGodot runs `--headless --version` and then takes the LAST
+  # NON-EMPTY LINE, with its own comment saying why: "A headless Godot process can print
+  # engine chatter before the version, so the last nonempty line is the version string."
+  # build/bootstrap-linux.sh:119 reads the same `--headless --version`. Both of those ran
+  # green in CI at 7c18787 on a GitHub ubuntu-24.04 runner, which is the evidence that a
+  # Godot on a display-less runner reports a stream whose last non-empty line begins with
+  # the pin - and it is the only evidence anything here has, since this gate had never run
+  # in CI when it was written.
+  #
+  # The three ways this read used to diverge from the proven one, each of which reddens a
+  # PR on an environment verdict while every other gate passes because none of them looks
+  # at the version at all:
+  #
+  #   NO --headless. Display-init chatter is not suppressed on a runner with no display,
+  #   so the stream acquires lines nobody predicted.
+  #   2>&1 ON THE VERSION READ. A driver or Wayland/X warning on stderr becomes a
+  #   candidate line for the prefix test.
+  #   THE FIRST LINE INSTEAD OF THE LAST NON-EMPTY ONE. Any preamble line then becomes
+  #   `version`, fails the prefix test, and exits class 3.
+  #
+  # Stderr is captured SEPARATELY and used only in the diagnostics below: it must be able
+  # to explain a failure without being able to cause one.
+  stderr_file="$(mktemp "${TMPDIR:-/tmp}/verify-run-slice-godot-stderr.XXXXXX")" \
+    || stderr_file="/dev/null"
+  version="$("${candidate}" --headless --version 2>"${stderr_file}")" || status=$?
+  chatter="$(strip_ansi <"${stderr_file}" | tr -d '\r')"
+  [[ "${stderr_file}" == "/dev/null" ]] || rm -f -- "${stderr_file}"
+  # Flattened by parameter expansion, so a multi-line warning cannot turn one problem
+  # description into several and break every caller's one-problem-per-line contract.
+  chatter="${chatter//$'\n'/ | }"
   version="$(strip_ansi <<<"${version}" | tr -d '\r')"
-  version="${version%%$'\n'*}"
+
+  # LAST NON-EMPTY LINE, BY A READ LOOP. Not `| tail -1` and not `| head -1`: under
+  # pipefail a downstream command that exits first turns a healthy read into 141, which is
+  # the shape this gate refuses everywhere else. A here-string feeds the loop, so the
+  # assignments below happen in THIS shell rather than in a pipeline's subshell. Each line
+  # is trimmed before being judged non-empty, matching ProbeGodot's LastNonEmptyLine, so a
+  # whitespace-only chatter line cannot become the version.
+  while IFS= read -r line; do
+    trimmed="${line#"${line%%[![:space:]]*}"}"
+    trimmed="${trimmed%"${trimmed##*[![:space:]]}"}"
+    [[ -n "${trimmed}" ]] && last="${trimmed}"
+  done <<<"${version}"
+  version="${last}"
+
   if [[ "${status}" -ne 0 ]]; then
-    printf 'the pinned Godot executable %q would not report its version (exit %s), so the pin is unproved rather than satisfied. Class %s\n' \
-      "${candidate}" "${status}" "${EXIT_ENVIRONMENT}"
+    printf 'the pinned Godot executable %q would not report its version (exit %s), so the pin is unproved rather than satisfied. Class %s. Its stderr said: %s\n' \
+      "${candidate}" "${status}" "${EXIT_ENVIRONMENT}" "${chatter:-(nothing)}"
     return 1
   fi
 
   if [[ "${version}" != "${EXPECTED_VERSION_PREFIX}"* ]]; then
-    printf 'the executable %q reports %q, which is not the pinned %q from build/toolchain.json. Class %s, not class %s\n' \
-      "${candidate}" "${version}" "${EXPECTED_VERSION_PREFIX}" "${EXIT_ENVIRONMENT}" "${EXIT_VALIDATION}"
+    # The quoted string is the LAST NON-EMPTY line of stdout. If it looks like engine
+    # chatter rather than a version, the executable is printing something after its version
+    # and the read above is what needs revisiting - not the pin. Stderr is reported beside
+    # it, and took no part in the comparison.
+    printf 'the executable %q reports %q, which is not the pinned %q from build/toolchain.json. Class %s, not class %s. Its stderr said: %s\n' \
+      "${candidate}" "${version}" "${EXPECTED_VERSION_PREFIX}" "${EXIT_ENVIRONMENT}" "${EXIT_VALIDATION}" \
+      "${chatter:-(nothing)}"
     return 1
   fi
 
@@ -505,6 +566,29 @@ capture_tree_content() {
 # deleted inside the window appears in neither leg, because git ls-files never named it.
 # The pass message says so; widening the leg to the untracked set would make it report every
 # build output the launch legitimately produces.
+#
+# WHY A LOCAL RED HERE MAY NOT BE THIS GATE'S DOING, and why the fix is never to narrow
+# MUTATION_PATHSPEC. The pathspec covers tests/verification/*.json and game/tests/*, which
+# are files people and other agents edit. The window this leg spans includes § 1's launch,
+# so it can be open for up to LAUNCH_TIMEOUT_SECONDS (180). ANY write to a tracked file in
+# scope inside that window moves an mtime and reds this leg - including a write this gate
+# had nothing to do with.
+#
+#   IN CI THE HAZARD DOES NOT EXIST. The workflow runs on a clean checkout and nothing else
+#   writes to the tree while the job runs, so the tree is static for the whole window and a
+#   red in CI means a write by this gate or by the harness it launched. THE HAZARD IS
+#   DEVELOPER-LOCAL ONLY.
+#
+#   SO ON A DEVELOPER MACHINE, THE QUESTION TO ASK IS *WHAT CHANGED*, NOT *IS THE PATHSPEC
+#   TOO WIDE*. The verdict names the paths; `git status` and the reported mtimes say whether
+#   an editor, a rebase or a sibling agent touched one of them mid-run. Re-run on a quiet
+#   tree and the leg goes green.
+#
+#   NARROWING THE PATHSPEC TO MAKE THIS QUIETER IS THE WRONG FIX. A red about a real write
+#   is exactly what this leg exists to produce; a red is truthful even when its cause is a
+#   concurrent edit rather than this gate. Dropping paths out of scope trades real coverage
+#   of the files this gate reads for the comfort of a green, and the write it was built to
+#   catch would then land in a path nobody is watching.
 capture_tree_metadata() {
   local root="$1"
   shift
@@ -1047,21 +1131,45 @@ done
 # Control (iii) without breaking this machine's PATH: the same classify_engine that § 0
 # ran, over injected candidates. A stub reporting the pinned string proves the predicate
 # accepts as well as refuses, which is what stops "everything is class 3" passing here.
+#
+# AND ONE STUB THAT PRINTS CHATTER BEFORE ITS VERSION, which is the control the accept
+# case alone cannot be: a stub whose ONLY stdout line is the version is satisfied by a
+# first-line read and by a last-non-empty-line read alike, so it proves nothing about which
+# line classify_engine takes. The chatty stub reproduces what ProbeGodot's comment says a
+# headless Godot does on a display-less runner - engine chatter, then the version - so a
+# regression back to `${version%%$'\n'*}` turns this control red instead of turning a CI
+# run red. Its stderr line is there for the other half: a warning on stderr must not become
+# a candidate for the prefix test, and the accept has to survive a noisy stderr.
 cat >"${CONTROL_ROOT}/godot-pinned" <<PINNED
 #!/usr/bin/env bash
 # A stub reporting the pinned version. Written and removed by build/verify-run-slice.sh.
 printf '%s\n' "${EXPECTED_VERSION_PREFIX}.a13da4feb"
 PINNED
+cat >"${CONTROL_ROOT}/godot-chatty" <<CHATTY
+#!/usr/bin/env bash
+# A stub reporting the pinned version AFTER engine chatter, with a driver warning on
+# stderr. Written and removed by build/verify-run-slice.sh. The blank line is deliberate:
+# the read must skip it rather than take it as the last line.
+printf 'Godot Engine v%s.a13da4feb - https://godotengine.org\n' "${EXPECTED_VERSION_PREFIX}"
+printf 'OpenGL API 3.3.0 NVIDIA 550.54.14 - Compatibility - Using Device: NVIDIA\n'
+printf 'WARNING: This method is deprecated\n' >&2
+printf 'ERROR: Cannot open X display, DISPLAY is not set\n' >&2
+printf '4.6.0.stale.mono.official.notthepin\n' >&2
+printf '\n'
+printf '%s\n' "${EXPECTED_VERSION_PREFIX}.a13da4feb"
+CHATTY
 cat >"${CONTROL_ROOT}/godot-unpinned" <<'UNPINNED'
 #!/usr/bin/env bash
 # A stub reporting a version that is not the pin. Written by build/verify-run-slice.sh.
 printf '%s\n' "4.6.0.stable.mono.official.deadbeef"
 UNPINNED
-chmod +x "${CONTROL_ROOT}/godot-pinned" "${CONTROL_ROOT}/godot-unpinned"
+chmod +x "${CONTROL_ROOT}/godot-pinned" "${CONTROL_ROOT}/godot-chatty" \
+  "${CONTROL_ROOT}/godot-unpinned"
 
 # "<label>|<candidate>|<expected problems>"
 readonly ENGINE_CONTROLS=(
   "a stub reporting the pinned version is accepted|${CONTROL_ROOT}/godot-pinned|0"
+  "a stub printing engine chatter, a blank line and a stderr warning BEFORE the pinned version is accepted, so the read takes the last non-empty stdout line and not the first|${CONTROL_ROOT}/godot-chatty|0"
   "control (iii), an absent executable|${CONTROL_ROOT}/godot-does-not-exist|1"
   "control (iii), an executable that is not the pinned Godot|${CONTROL_ROOT}/godot-unpinned|1"
 )
@@ -1399,6 +1507,18 @@ fi
 # Emitted through one helper so there is one pass site and one fail site rather than four,
 # and so both legs are worded to the same discipline: each says what its own leg measured and
 # nothing about the other's subject.
+#
+# READING A RED FROM THE METADATA LEG. In CI it means this gate or the harness it launched
+# wrote to a tracked file in ${MUTATION_SCOPE}: the checkout is clean and no other writer
+# touches the tree while the job runs, so the tree is STATIC across the window. On a
+# developer machine the tree is not static - tests/verification/*.json and game/tests/* are
+# under active edit, and the window is open across § 1's launch for up to
+# ${LAUNCH_TIMEOUT_SECONDS}s - so a red there may be a concurrent edit by a person or
+# another agent. It is still a TRUTHFUL red: something in scope was written. The check to
+# run is WHAT CHANGED, from the paths and mtimes the verdict prints. The check NOT to run is
+# whether MUTATION_PATHSPEC is too wide: narrowing it to silence this is trading the
+# coverage the leg exists to give for a green, and the developer-local hazard it would be
+# bought with does not exist in CI in the first place.
 report_mutation_leg() {
   # $1 subject phrase for the predicate, $2 before, $3 after, $4 before status,
   # $5 after status, $6 the pass message - which must claim ONLY what this leg measured.
@@ -1441,7 +1561,7 @@ report_mutation_leg \
   "tracked-file metadata (mtime, inode, size) of ${MUTATION_SCOPE}" \
   "${control_tree_metadata_before}" "${control_tree_metadata_after}" \
   "${control_tree_metadata_before_status}" "${control_tree_metadata_after_status}" \
-  "metadata leg: the mtime, inode and size of every TRACKED file in ${MUTATION_SCOPE} are unchanged across § 1's launch and every control above, so no tracked file in scope was written - including the byte-identical rewrite and the write-then-cleanup the content leg cannot see. Covers tracked files only: an untracked file created and deleted inside the window is outside both legs' reach"
+  "metadata leg: the mtime, inode and size of every TRACKED file in ${MUTATION_SCOPE} are unchanged across § 1's launch and every control above, so no tracked file in scope was written - including the byte-identical rewrite and the write-then-cleanup the content leg cannot see. Covers tracked files only: an untracked file created and deleted inside the window is outside both legs' reach. If this leg ever goes RED, note that in CI the tree is static - clean checkout, no other writer during the run - so a red there is a write by this gate or the harness; on a developer machine the same red may instead be a concurrent edit to tests/verification/*.json or game/tests/* inside a window open for up to ${LAUNCH_TIMEOUT_SECONDS}s, which is a truthful red about a real write. Either way the check to run is WHAT CHANGED, from the paths and mtimes the failure prints. Narrowing MUTATION_PATHSPEC is the WRONG fix: it buys a green by dropping coverage of files this gate actually reads"
 
 cleanup_controls
 trap - EXIT
